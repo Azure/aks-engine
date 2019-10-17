@@ -168,7 +168,7 @@ func TestLoadContainerServiceWithNilProperties(t *testing.T) {
 	jsonWithoutProperties := `{
         "type": "Microsoft.ContainerService/managedClusters",
         "name": "[parameters('clusterName')]",
-        "apiVersion": "2017-07-01",
+        "apiVersion": "vlabs",
         "location": "[resourceGroup().location]"
         }`
 

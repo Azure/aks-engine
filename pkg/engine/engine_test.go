@@ -237,7 +237,7 @@ func TestExpected(t *testing.T) {
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
 			if certsGenerated {
-				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+				t.Errorf("cert generation unexpected for %s, apiversion: %s, path: %s ", containerService.Properties.OrchestratorProfile.OrchestratorType, version, tuple.APIModelFilename)
 			}
 
 			armTemplate, params, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
