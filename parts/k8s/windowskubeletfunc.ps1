@@ -418,6 +418,8 @@ if (!`$hnsNetwork)
     write-host "Using adapter `$adapterName with IP address `$managementIP"
     `$mgmtIPAfterNetworkCreate
 
+    `$stopWatch = New-Object System.Diagnostics.Stopwatch
+    `$stopWatch.Start()
     # Fixme : use a smallest range possible, that will not collide with any pod space
     New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName `$adapterName -Name `$global:ExternalNetwork -Verbose
 
@@ -432,10 +434,12 @@ if (!`$hnsNetwork)
         sleep -Milliseconds 1000
     }
 
+    `$stopWatch.Stop()
     if (-not `$mgmtIPAfterNetworkCreate)
     {
         throw "Failed to find `$managementIP after creating `$global:ExternalNetwork network"
     }
+    write-host "It took `$(`$StopWatch.Elapsed.Seconds) seconds to create the `$global:ExternalNetwork network."
 }
 
 # Find if network created by CNI exists, if yes, remove it
