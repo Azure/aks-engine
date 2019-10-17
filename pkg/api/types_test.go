@@ -4512,6 +4512,15 @@ func getMockAddon(name string) KubernetesAddon {
 				MemoryLimits:   "150Mi",
 			},
 		},
+		Pools: []AddonNodePoolsConfig{
+			AddonNodePoolsConfig{
+				Name: "pool1",
+				Config: map[string]string{
+					"min-nodes": "3",
+					"max-nodes": "3",
+				},
+			},
+		},
 	}
 }
 
@@ -5046,6 +5055,19 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 	}
 }
 
+func TestGetAddonPoolsIndexByName(t *testing.T) {
+	addonName := "testaddon"
+	addon := getMockAddon(addonName)
+	i := addon.GetAddonPoolsIndexByName("pool1")
+	if i != 0 {
+		t.Fatalf("GetAddonPoolsIndexByName() did not return the expected index value 0, instead returned: %d", i)
+	}
+	i = addon.GetAddonPoolsIndexByName("nonExistentContainerName")
+	if i != -1 {
+		t.Fatalf("GetAddonPoolsIndexByName() did not return the expected index value -1, instead returned: %d", i)
+	}
+}
+
 func TestGetAddonContainersIndexByName(t *testing.T) {
 	addonName := "testaddon"
 	addon := getMockAddon(addonName)
@@ -5055,7 +5077,7 @@ func TestGetAddonContainersIndexByName(t *testing.T) {
 	}
 	i = addon.GetAddonContainersIndexByName("nonExistentContainerName")
 	if i != -1 {
-		t.Fatalf("getAddonContainersIndexByName() did not return the expected index value 0, instead returned: %d", i)
+		t.Fatalf("getAddonContainersIndexByName() did not return the expected index value -1, instead returned: %d", i)
 	}
 }
 
@@ -5154,6 +5176,95 @@ func TestGetAgentPoolIndexByName(t *testing.T) {
 
 			if actual != test.expectedIndex {
 				t.Errorf("expected agent pool index %d, but got %d", test.expectedIndex, actual)
+			}
+		})
+	}
+}
+
+func TestGetAgentPoolByName(t *testing.T) {
+	cases := []struct {
+		name          string
+		profileName   string
+		properties    *Properties
+		expectedIndex int
+	}{
+		{
+			name:        "1 pool",
+			profileName: "myagentpool",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: 0,
+		},
+		{
+			name:        "3 pool",
+			profileName: "myagentpool2",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool2",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool3",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: 1,
+		},
+		{
+			name:        "non-existent pool name",
+			profileName: "bogon",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool2",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool3",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: -1,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.properties.GetAgentPoolByName(c.profileName)
+			if c.expectedIndex != -1 {
+				if actual != c.properties.AgentPoolProfiles[c.expectedIndex] {
+					t.Errorf("expected agent pool %#v, but got %#v", c.properties.AgentPoolProfiles[c.expectedIndex], actual)
+				}
+			} else {
+				if actual != nil {
+					t.Errorf("expected nil response, got %#v", actual)
+				}
 			}
 		})
 	}
