@@ -411,8 +411,19 @@ func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, h
 	return version
 }
 
-func IsValidMinVersion(orchType, orchVer, minVersion string) (bool, error) {
-	version := GetValidPatchVersion(orchType, orchVer, false, false)
+func IsValidMinVersion(orchType, orchRelease, orchVersion, minVersion string) (bool, error) {
+	version := RationalizeReleaseAndVersion(
+		orchType,
+		orchRelease,
+		orchVersion,
+		false,
+		false)
+	if version == "" {
+		return false, errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine",
+			orchType,
+			orchRelease,
+			orchVersion)
+	}
 	sv, err := semver.Make(version)
 	if err != nil {
 		return false, errors.Errorf("could not validate version %s", version)

@@ -634,7 +634,7 @@ func (a *Properties) validateAddons() error {
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
 					}
@@ -674,7 +674,7 @@ func (a *Properties) validateAddons() error {
 				}
 			case "azure-policy":
 				if to.Bool(addon.Enabled) {
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
 					}
