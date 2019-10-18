@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pkg/errors"
 )
 
 // AllKubernetesSupportedVersions is a whitelist map of all supported Kubernetes version strings
@@ -408,6 +409,22 @@ func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, h
 		}
 	}
 	return version
+}
+
+func IsValidMinVersion(orchType, orchVer, minVersion string) (bool, error) {
+	version := GetValidPatchVersion(orchType, orchVer, false, false)
+	sv, err := semver.Make(version)
+	if err != nil {
+		return false, errors.Errorf("could not validate version %s", version)
+	}
+	m, err := semver.Make(minVersion)
+	if err != nil {
+		return false, errors.New("could not validate version")
+	}
+	if sv.LT(m) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // IsKubernetesVersionGe returns true if actualVersion is greater than or equal to version

@@ -634,7 +634,7 @@ func (a *Properties) validateAddons() error {
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
-					isValidVersion, err := a.isValidVersion("1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
 					}
@@ -674,12 +674,12 @@ func (a *Properties) validateAddons() error {
 				}
 			case "azure-policy":
 				if to.Bool(addon.Enabled) {
-					isValidVersion, err := a.isValidVersion("1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
 					}
 					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible orchestratorRelease")
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
 					}
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
@@ -1471,30 +1471,6 @@ func (a *Properties) validateContainerRuntime() error {
 	}
 
 	return nil
-}
-
-func (a *Properties) isValidVersion(k8sVersion string) (bool, error) {
-	version := common.RationalizeReleaseAndVersion(
-		a.OrchestratorProfile.OrchestratorType,
-		a.OrchestratorProfile.OrchestratorRelease,
-		a.OrchestratorProfile.OrchestratorVersion,
-		false,
-		false)
-	if version == "" {
-		return false, errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
-	}
-	sv, err := semver.Make(version)
-	if err != nil {
-		return false, errors.Errorf("could not validate version %s", version)
-	}
-	minVersion, err := semver.Make(k8sVersion)
-	if err != nil {
-		return false, errors.New("could not validate version")
-	}
-	if sv.LT(minVersion) {
-		return false, nil
-	}
-	return true, nil
 }
 
 func validateName(name string, label string) error {
