@@ -31710,6 +31710,7 @@ if (` + "`" + `$hnsNetwork)
 }
 
 # Restart Kubeproxy, which would wait, until the network is created
+# This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
 Restart-Service Kubeproxy
 
 ` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
@@ -31836,6 +31837,7 @@ try
 
     ` + "`" + `$hnsNetwork = New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix ` + "`" + `$podCIDR -Gateway ` + "`" + `$masterSubnetGW -Name ` + "`" + `$global:NetworkMode.ToLower() -Verbose
     # New network has been created, Kubeproxy service has to be restarted
+    # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
     Start-Sleep 10
@@ -31871,6 +31873,8 @@ while (!` + "`" + `$hnsNetwork)
 # cleanup the persisted policy lists
 #
 ipmo ` + "`" + `$global:HNSModule
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
 $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
