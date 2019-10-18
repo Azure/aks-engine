@@ -13,8 +13,10 @@
             "pools": [
               {
                 "name": "agentpool",
-                "min-nodes": "1",
-                "max-nodes": "5"
+                "config": {
+                  "min-nodes": "1",
+                  "max-nodes": "5"
+                }
               }
             ],
             "config": {
