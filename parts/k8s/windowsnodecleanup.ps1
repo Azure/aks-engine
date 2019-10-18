@@ -1,10 +1,26 @@
 $global:LogPath = "c:\k\windowsnodecleanup.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
+$global:MasterSubnet = "{{MasterSubnet}}"
+$global:NetworkMode = "L2Bridge"
+$global:NetworkPlugin = "{{NetworkPlugin}}"
+
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
 function Write-Log ($message) {
     $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
+}
+
+function Get-DefaultGateway($CIDR) {
+    return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
+}
+
+# Note: this is needed for creating the l2bridge network for kubenet.
+# This requires that the kubelet has been started at least once to get data from the control plane.
+# This is currently done as part of the initial set up CSE.
+function Get-PodCIDR() {
+    $podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    return $podCIDR
 }
 
 Write-Log "Entering windowsnodecleanup.ps1"
@@ -65,10 +81,16 @@ if ($hnsNetwork) {
     Write-Log "removing old HNS network"
     Remove-HnsNetwork $hnsNetwork
 
-    Start-Sleep 10 
+    Start-Sleep 10
 }
 
-# TODO: if network plugin is kubenet create l2bridge network
+if ($global:NetworkPlugin -eq 'kubenet') {
+    Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
+    $podCIDR = Get-PodCIDR
+    $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
+    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
+    Start-sleep 10
+}
 
 #
 # Start Services
