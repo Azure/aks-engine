@@ -22,18 +22,18 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10112019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = getLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
 		}
 	} else {
 		workspaceDomain = getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10112019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -226,7 +226,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "7.0.0-4",
+			"dockerProviderVersion": "7.0.0-5",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
