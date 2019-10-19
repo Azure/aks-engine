@@ -365,7 +365,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 			},
 			{
 				Name:           "gatekeeper",
-				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.1",
+				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
 				CPULimits:      "100m",

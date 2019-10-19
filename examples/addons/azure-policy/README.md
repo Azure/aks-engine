@@ -96,7 +96,7 @@ Plese follow the README here for further information: https://github.com/open-po
 | Name           | Required | Description                       | Default Value                                        |
 | -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
 | name           | no       | container name                    | "gatekeeper"                                         |
-| image          | no       | image                             | "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.1" |
+| image          | no       | image                             | "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2" |
 | cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
 | memoryRequests | no       | memory requests for the container | "256Mi"                                              |
 | cpuLimits      | no       | cpu limits for the container      | "100m"                                               |
