@@ -476,7 +476,6 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
 
 	if resourceName != "" && resourceMap != nil {
-		filteredDependencies := []string{}
 		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
 		if !ok {
 			logger.Warnf("Could not find dependencies for resourceName: %s", resourceName)
@@ -485,17 +484,15 @@ func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap 
 
 		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
 			dependency := dependencies[dIndex].(string)
-			if !(strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID)) {
-				filteredDependencies = append(filteredDependencies, dependency)
-			} else {
-				logger.Info(fmt.Sprintf("Removing nsg dependency from resource:%s", resourceName))
+			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
 			}
 		}
 
-		if len(filteredDependencies) > 0 {
-			resourceMap[dependsOnFieldName] = filteredDependencies
+		if len(dependencies) > 0 {
+			resourceMap[dependsOnFieldName] = dependencies
 		} else {
-			resourceMap[dependsOnFieldName] = []string{}
+			delete(resourceMap, dependsOnFieldName)
 		}
 
 		return
