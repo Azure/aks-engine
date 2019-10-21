@@ -235,9 +235,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
-		if o.KubernetesConfig.CloudProviderBackoff == nil {
-			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(true)
+			}
+		} else {
+			o.KubernetesConfig.CloudProviderBackoffMode = "v1"
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
+			}
 		}
+
 		// Enforce sane cloudprovider backoff defaults.
 		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 

@@ -4416,6 +4416,40 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
+	// Test cloudprovider defaults for backoff mode v2
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffMode: CloudProviderBackoffModeV2,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig cloudprovider backoff v2 configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
 }
 
 func getMockAddon(name string) KubernetesAddon {

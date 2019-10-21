@@ -91,6 +91,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
+				CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
 				CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:       kubernetesConfig.CloudProviderBackoffRetries,
 				CloudProviderBackoffJitter:        strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),

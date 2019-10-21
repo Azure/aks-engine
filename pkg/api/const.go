@@ -285,6 +285,7 @@ const (
 )
 
 const (
+	CloudProviderBackoffModeV2 = "v2"
 	// DefaultKubernetesCloudProviderBackoffRetries is 6, takes effect if DefaultKubernetesCloudProviderBackoff is true
 	DefaultKubernetesCloudProviderBackoffRetries = 6
 	// DefaultKubernetesCloudProviderBackoffJitter is 1, takes effect if DefaultKubernetesCloudProviderBackoff is true
@@ -396,8 +397,6 @@ const (
 	DefaultKubernetesCtrlMgrTerminatedPodGcThreshold = "5000"
 	// DefaultKubernetesCtrlMgrUseSvcAccountCreds is "true", see --use-service-account-credentials at https://kubernetes.io/docs/admin/kube-controller-manager/
 	DefaultKubernetesCtrlMgrUseSvcAccountCreds = "false"
-	// DefaultKubernetesCloudProviderBackoff is false to disable cloudprovider backoff implementation for API calls
-	DefaultKubernetesCloudProviderBackoff = true
 	// DefaultKubernetesCloudProviderRateLimit is false to disable cloudprovider rate limiting implementation for API calls
 	DefaultKubernetesCloudProviderRateLimit = true
 	// DefaultTillerMaxHistory limits the maximum number of revisions saved per release. Use 0 for no limit.

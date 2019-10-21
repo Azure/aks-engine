@@ -184,6 +184,31 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate cloudprovider config", func() {
+			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
+				err = sshConn.CopyTo(cloudproviderConfigValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := fmt.Sprintf("BACKOFF_MODE=%s", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffMode)
+				// TODO test remaining cloudprovider config
+				cloudproviderConfigValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, cloudproviderConfigValidateScript)
+				err = sshConn.Execute(cloudproviderConfigValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, cloudproviderConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
 		It("should have the expected k8s version", func() {
 			nodeList, err := node.GetReady()
 			Expect(err).NotTo(HaveOccurred())
