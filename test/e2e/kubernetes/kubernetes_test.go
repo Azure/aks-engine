@@ -1887,7 +1887,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have healthy time synchronization", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				timeSyncValidateScript := "time-sync-validate.sh"
