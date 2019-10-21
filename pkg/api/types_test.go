@@ -4417,7 +4417,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for backoff mode v2
-	v = "1.15.0"
+	v = "1.14.0"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
