@@ -89,8 +89,6 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	Expect(err).NotTo(HaveOccurred())
-	success := false
 	if !cfg.BlockSSHPort {
 		masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
