@@ -21,9 +21,6 @@ function Update-WinCNI
     $wincniFile = [Io.path]::Combine($CNIPath, $wincni)
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
-
-# TODO: Move the code that creates the wincni configuration file out of windowskubeletfunc.ps1 and put it here
-
 function Get-DefaultGateway($CIDR) {
     return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
 }
@@ -122,16 +119,3 @@ function Get-PodCIDRForNode {
     Write-Log "Pod CIDR: $podCIDR"
     return $podCIDR
 }
-
-function Create-WinCNINetwork {
-    param(
-        [string]$networkMode,
-        [string]$addressPrefix,
-        [string]$gateway,
-        [string]$name
-    )
-
-    Write-Log "Creating a new hns network: -Type $networkMode  -AddressPrefix $addressPrefix -Gateway $gateway -Name $name"
-    New-HNSNetwork -Type $networkMode -AddressPrefix $addressPrefix -Gateway $gateway -Name $name -Verbose
-}
-

@@ -1,3 +1,9 @@
+<#
+.DESCRIPTION
+    This script is intended to be run each time a windows nodes is restarted and performs
+    cleanup actions to help ensure the node comes up cleanly.
+#>
+
 $global:LogPath = "c:\k\windowsnodecleanup.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
@@ -83,6 +89,10 @@ if ($hnsNetwork) {
 
     Start-Sleep 10
 }
+
+#
+# Create required networks
+#
 
 if ($global:NetworkPlugin -eq 'kubenet') {
     Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"

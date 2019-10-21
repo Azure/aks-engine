@@ -241,6 +241,10 @@ try
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
+        Write-Log "Disable firewall to enable pods to talk to service endpoints"
+        #TODO: Kubelet should eventually do this
+        netsh advfirewall set allprofiles state off
+
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
             Write-Log "Installing Azure VNet plugins"
@@ -267,12 +271,27 @@ try
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
-
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
-            Get-HnsPsm1 -HNSModule $global:HNSModule
+
+            Write-Log "Creating WinCNI network config file"
+            Write-WinCNIConfig `
+                -cniConfigPath "c:\k\cni\config\$($NetworkMode).conf" `
+                -networkMode $global:NetworkMode `
+                -kubeDnsServiceIp $KubeDnsServiceIp `
+                -kubeDnsSearchPath "svc.cluster.local" `
+                -kubeClusterCIDR $KubeClusterCIDR `
+                -masterSubnet $global:MasterSubnet `
+                -kubeServiceCIDR $global:KubeServiceCIDR
         }
+
+        Write-Log "Creating ext HNS network"
+        # This is done so network connectivity to the node is not lost when other networks are added/removed
+        Get-HnsPsm1 -HNSModule $global:HNSModule
+        Import-Module $global:HNSModule
+        # Fixme : use a smallest range possible, that will not collide with any pod space
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name "ext" -Verbose
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
