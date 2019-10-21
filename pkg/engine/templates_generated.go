@@ -26376,6 +26376,7 @@ metadata:
 spec:
   ports:
   - port: 443
+    targetPort: 8443
   selector:
     control-plane: controller-manager
     controller-tools.k8s.io: "1.0"
@@ -26406,8 +26407,7 @@ spec:
       - args:
         - --auditInterval={{ContainerConfig "auditInterval"}}
         - --constraintViolationsLimit={{ContainerConfig "constraintViolationsLimit"}}
-        command:
-        - /root/manager
+        - --port=8443
         env:
         - name: POD_NAMESPACE
           valueFrom:
@@ -26431,14 +26431,14 @@ spec:
         imagePullPolicy: Always
         name: manager
         ports:
-        - containerPort: 443
+        - containerPort: 8443
           name: webhook-server
           protocol: TCP
         volumeMounts:
         - mountPath: /certs
           name: cert
           readOnly: true
-      terminationGracePeriodSeconds: 10
+      terminationGracePeriodSeconds: 60
       volumes:
       - name: cert
         secret:
