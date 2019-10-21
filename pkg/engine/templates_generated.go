@@ -10115,10 +10115,7 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       containers:
-      - command:
-        - /hyperkube
-        - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
+      - command: ["/hyperkube", "kube-proxy", "--config=/var/lib/kube-proxy/config.yaml"]
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -15178,6 +15175,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
+K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
@@ -15425,11 +15423,22 @@ extractHyperkube() {
 
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-            extractHyperkube "docker"
+        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
+            # TODO: move this URL var to install-dependencies.sh?
+            K8S_DOWNLOAD_URL="https://kubernetesreleases.blob.core.windows.net/k8s-staging/v${KUBERNETES_VERSION}/release-tars/kubernetes-server-linux-amd64.tar.gz"
+            K8S_TGZ_TMP=$(echo ${K8S_DOWNLOAD_URL} | cut -d "/" -f 7)
+            mkdir -p "${K8S_DOWNLOADS_DIR}"
+            retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${K8S_DOWNLOAD_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
+            tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+                --strip-components=3 -C /usr/local/bin kubernetes/server/bin/kubelet kubernetes/server/bin/kubectl
+            rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
         else
-            installImg
-            extractHyperkube "img"
+            if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+                extractHyperkube "docker"
+            else
+                installImg
+                extractHyperkube "img"
+            fi
         fi
     fi
     mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
@@ -17487,11 +17496,17 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-
     sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
+{{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
+    sed -i "s|<img>|{{WrapAsParameter "kubeAPIServerSpec"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubeControllerManagerSpec"}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
+    sed -i "s|<img>|{{WrapAsParameter "kubeSchedulerSpec"}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    sed -i "s|\"/hyperkube\", ||g" /etc/kubernetes/manifests/kube-*.yaml
+{{else}}
     for a in "/etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-scheduler.yaml"; do
       sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g" $a
     done
+{{end}}
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
 {{ if HasCosmosEtcd  }}
@@ -17502,11 +17517,20 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+{{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
+    {{ if IsIPv6DualStackFeatureEnabled }}
+    sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ else }}
+    sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+    {{ end }}
+    sed -i "s|\"/hyperkube\", ||g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
+{{else}}
     {{ if IsIPv6DualStackFeatureEnabled }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
+{{end}}
     KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
 {{if NeedsKubeDNSWithExecHealthz}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
@@ -33028,6 +33052,30 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
     "kubernetesKubeletClusterDomain": {
       "metadata": {
         "description": "--cluster-domain Kubelet config"
+      },
+      "type": "string"
+    },
+    "kubeAPIServerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-apiserver."
+      },
+      "type": "string"
+    },
+    "kubeControllerManagerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-controller-manager."
+      },
+      "type": "string"
+    },
+    "kubeProxySpec": {
+      "metadata": {
+        "description": "The container spec for kube-proxy."
+      },
+      "type": "string"
+    },
+    "kubeSchedulerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-scheduler."
       },
       "type": "string"
     },

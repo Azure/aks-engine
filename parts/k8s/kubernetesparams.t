@@ -197,6 +197,30 @@
       },
       "type": "string"
     },
+    "kubeAPIServerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-apiserver."
+      },
+      "type": "string"
+    },
+    "kubeControllerManagerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-controller-manager."
+      },
+      "type": "string"
+    },
+    "kubeProxySpec": {
+      "metadata": {
+        "description": "The container spec for kube-proxy."
+      },
+      "type": "string"
+    },
+    "kubeSchedulerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-scheduler."
+      },
+      "type": "string"
+    },
     "kubernetesHyperkubeSpec": {
       "metadata": {
         "description": "The container spec for hyperkube."

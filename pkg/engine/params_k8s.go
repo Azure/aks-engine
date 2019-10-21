@@ -25,6 +25,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
 		mcrKubernetesImageBase := kubernetesConfig.MCRKubernetesImageBase
+		// TODO: switch upstream to MCR when Kubernetes core components are published there
+		upstreamKubernetesImageBase := "upstream.azurecr.io/oss/kubernetes/"
 		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
 
 		if properties.IsAzureStackCloud() {
@@ -44,6 +46,18 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
+
+			kubeAPIServerSpec := upstreamKubernetesImageBase + k8sComponents["kube-apiserver"]
+			addValue(parametersMap, "kubeAPIServerSpec", kubeAPIServerSpec)
+
+			kubeControllerManagerSpec := upstreamKubernetesImageBase + k8sComponents["kube-controller-manager"]
+			addValue(parametersMap, "kubeControllerManagerSpec", kubeControllerManagerSpec)
+
+			kubeSchedulerSpec := upstreamKubernetesImageBase + k8sComponents["kube-scheduler"]
+			addValue(parametersMap, "kubeSchedulerSpec", kubeSchedulerSpec)
+
+			kubeProxySpec := upstreamKubernetesImageBase + k8sComponents["kube-proxy"]
+			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
 
 			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
 			if properties.IsAzureStackCloud() {

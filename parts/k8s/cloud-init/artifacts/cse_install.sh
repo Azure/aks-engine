@@ -6,6 +6,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
+K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
@@ -253,11 +254,22 @@ extractHyperkube() {
 
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-            extractHyperkube "docker"
+        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
+            # TODO: move this URL var to install-dependencies.sh?
+            K8S_DOWNLOAD_URL="https://kubernetesreleases.blob.core.windows.net/k8s-staging/v${KUBERNETES_VERSION}/release-tars/kubernetes-server-linux-amd64.tar.gz"
+            K8S_TGZ_TMP=$(echo ${K8S_DOWNLOAD_URL} | cut -d "/" -f 7)
+            mkdir -p "${K8S_DOWNLOADS_DIR}"
+            retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${K8S_DOWNLOAD_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
+            tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+                --strip-components=3 -C /usr/local/bin kubernetes/server/bin/kubelet kubernetes/server/bin/kubectl
+            rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
         else
-            installImg
-            extractHyperkube "img"
+            if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+                extractHyperkube "docker"
+            else
+                installImg
+                extractHyperkube "img"
+            fi
         fi
     fi
     mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
