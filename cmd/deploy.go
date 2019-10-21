@@ -525,8 +525,7 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 //get domain of azure log analytics workspace based on the cloud or azure stack dependenciesLocation
 func (dc *deployCmd) getLogAnalyticsWorkspaceDomain() string {
 	var workspaceDomain string
-	var cloudOrDependenciesLocation string
-	cloudOrDependenciesLocation = dc.containerService.GetCloudSpecConfig().CloudName
+	cloudOrDependenciesLocation := dc.containerService.GetCloudSpecConfig().CloudName
 	if dc.containerService.Properties.IsAzureStackCloud() {
 		cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
 	}
