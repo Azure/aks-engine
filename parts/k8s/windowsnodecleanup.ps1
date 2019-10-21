@@ -7,6 +7,7 @@
 $global:LogPath = "c:\k\windowsnodecleanup.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
+# Node the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeCleanupScriptTask() not during template generation
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "L2Bridge"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
@@ -45,11 +46,6 @@ Stop-Service kubelet
 #
 # Perform cleanup
 #
-
-Write-Log "Cleaning up persisted HNS policy lists"
-# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
-# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
-Get-HnsPolicyList | Remove-HnsPolicyList
 
 $hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
 if ($hnsNetwork) {
@@ -95,6 +91,11 @@ if ($hnsNetwork) {
 #
 # Create required networks
 #
+
+Write-Log "Cleaning up persisted HNS policy lists"
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
+Get-HnsPolicyList | Remove-HnsPolicyList
 
 if ($global:NetworkPlugin -eq 'kubenet') {
     Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
