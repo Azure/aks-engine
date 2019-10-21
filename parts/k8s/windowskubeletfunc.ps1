@@ -368,6 +368,11 @@ Install-KubernetesServices {
         throw "Unknown network type $NetworkPlugin, can't configure kubelet"
     }
 
+    if ($NetworkPlugin -eq "kubenet") {
+        Write-Log "Running kubelet until podCIDR is set for node"
+        Get-PodCIDRForNode -kubeletArgList $KubeletArgList
+    }
+
     # Used in WinCNI version of kubeletstart.ps1
     $KubeletArgListStr = ""
     $KubeletArgList | Foreach-Object {
