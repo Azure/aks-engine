@@ -18,7 +18,10 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent := k8sComponentVersions["1.17"]
 	expected := map[string]string{
-		"hyperkube":                        "hyperkube-amd64:v1.17.0",
+		"kube-scheduler":                   "kube-scheduler:v1.17.0",
+		"kube-controller-manager":          "kube-controller-manager:v1.17.0",
+		"kube-apiserver":                   "kube-apiserver:v1.17.0",
+		"kube-proxy":                       "kube-proxy:v1.17.0",
 		"ccm":                              "azure-cloud-controller-manager:v0.3.0",
 		CloudNodeManagerAddonName:          "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                       "v1.17.0-1int.zip",

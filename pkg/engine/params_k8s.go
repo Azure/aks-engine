@@ -45,6 +45,18 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
 
+			kubeAPIServerSpec := kubernetesImageBase + k8sComponents["kube-apiserver"]
+			addValue(parametersMap, "kubeAPIServerSpec", kubeAPIServerSpec)
+
+			kubeControllerManagerSpec := kubernetesImageBase + k8sComponents["kube-controller-manager"]
+			addValue(parametersMap, "kubeControllerManagerSpec", kubeControllerManagerSpec)
+
+			kubeSchedulerSpec := kubernetesImageBase + k8sComponents["kube-scheduler"]
+			addValue(parametersMap, "kubeSchedulerSpec", kubeSchedulerSpec)
+
+			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
+			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
+
 			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
 			if properties.IsAzureStackCloud() {
 				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
