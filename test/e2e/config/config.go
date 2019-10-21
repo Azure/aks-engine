@@ -43,6 +43,7 @@ type Config struct {
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
+	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom clould

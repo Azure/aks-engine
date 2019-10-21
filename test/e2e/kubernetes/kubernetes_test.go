@@ -89,35 +89,37 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
-	masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-	masterName := masterNodes[0].Metadata.Name
-	if strings.Contains(masterName, "vmss") {
-		masterSSHPort = "50001"
-	} else {
-		masterSSHPort = "22"
-	}
-	masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
-	longRunningApacheDeploymentName = "php-apache-long-running"
-	kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-	sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
-	Expect(err).NotTo(HaveOccurred())
-	success := false
-	for i := 0; i < 3; i++ {
-		sshAddErr := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
-		if sshAddErr == nil {
-			success = true
-			break
+	if !cfg.BlockSSHPort {
+		masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
+		Expect(err).NotTo(HaveOccurred())
+		masterName := masterNodes[0].Metadata.Name
+		if strings.Contains(masterName, "vmss") {
+			masterSSHPort = "50001"
+		} else {
+			masterSSHPort = "22"
 		}
-		if i > 1 {
-			log.Printf("Error while setting up ssh key forwarding:%s\n", sshAddErr)
+		masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
+		longRunningApacheDeploymentName = "php-apache-long-running"
+		kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
+		Expect(err).NotTo(HaveOccurred())
+		sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
+		Expect(err).NotTo(HaveOccurred())
+		success := false
+		for i := 0; i < 3; i++ {
+			sshAddErr := util.AddToSSHKeyChain(masterSSHPrivateKeyFilepath)
+			if sshAddErr == nil {
+				success = true
+				break
+			}
+			if i > 1 {
+				log.Printf("Error while setting up ssh key forwarding:%s\n", sshAddErr)
+			}
+			time.Sleep(10 * time.Second)
 		}
-		time.Sleep(10 * time.Second)
+		Expect(success).To(BeTrue())
+		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
+		Expect(err).NotTo(HaveOccurred())
 	}
-	Expect(success).To(BeTrue())
-	firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
-	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
@@ -139,47 +141,51 @@ var _ = AfterSuite(func() {
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
 		It("should validate host OS DNS", func() {
-			var nodeList *node.List
-			var err error
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodeList, err = node.GetReady()
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
 			} else {
-				var nodes []node.Node
-				nodes, err = node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
-				nodeList = &node.List{
-					Nodes: nodes,
-				}
-			}
-			Expect(err).NotTo(HaveOccurred())
-			hostOSDNSValidateScript := "host-os-dns-validate.sh"
-			err = sshConn.CopyTo(hostOSDNSValidateScript)
-			Expect(err).NotTo(HaveOccurred())
-			envString := "NODE_HOSTNAMES='"
-			for _, node := range nodeList.Nodes {
-				envString += fmt.Sprintf("%s ", node.Metadata.Name)
-			}
-			lookupRetries := 3
-			envString += fmt.Sprintf("' LOOKUP_RETRIES=%d", lookupRetries)
-			hostOSDNSValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, hostOSDNSValidateScript)
-			var success bool
-			// Retry for up to 5 minutes host vm DNS validation
-			for i := 0; i < 30; i++ {
-				err := sshConn.Execute(hostOSDNSValidationCommand, true)
-				if err == nil {
-					success = true
-					break
+				var nodeList *node.List
+				var err error
+				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+					nodeList, err = node.GetReady()
 				} else {
-					time.Sleep(10 * time.Second)
+					var nodes []node.Node
+					nodes, err = node.GetByRegexWithRetry(firstMasterRegexStr, 3*time.Minute, cfg.Timeout)
+					nodeList = &node.List{
+						Nodes: nodes,
+					}
 				}
-			}
-			Expect(success).To(BeTrue())
-			hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-			for _, node := range nodeList.Nodes {
-				if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
+				Expect(err).NotTo(HaveOccurred())
+				hostOSDNSValidateScript := "host-os-dns-validate.sh"
+				err = sshConn.CopyTo(hostOSDNSValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := "NODE_HOSTNAMES='"
+				for _, node := range nodeList.Nodes {
+					envString += fmt.Sprintf("%s ", node.Metadata.Name)
+				}
+				lookupRetries := 3
+				envString += fmt.Sprintf("' LOOKUP_RETRIES=%d", lookupRetries)
+				hostOSDNSValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, hostOSDNSValidateScript)
+				var success bool
+				// Retry for up to 5 minutes host vm DNS validation
+				for i := 0; i < 30; i++ {
+					err := sshConn.Execute(hostOSDNSValidationCommand, true)
+					if err == nil {
+						success = true
+						break
+					} else {
+						time.Sleep(10 * time.Second)
+					}
+				}
+				Expect(success).To(BeTrue())
+				hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
+				for _, node := range nodeList.Nodes {
+					if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
 			}
 		})
@@ -218,20 +224,24 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should display the installed Ubuntu version on the master node", func() {
-			if eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
+			if !eng.ExpandedDefinition.Properties.MasterProfile.IsUbuntu() {
+				Skip("This is not an ubuntu master")
+			} else if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else {
 				lsbReleaseCmd := fmt.Sprintf("lsb_release -a && uname -r")
 				err := sshConn.Execute(lsbReleaseCmd, true)
 				Expect(err).NotTo(HaveOccurred())
 				kernelVerCmd := fmt.Sprintf("cat /proc/version")
 				err = sshConn.Execute(kernelVerCmd, true)
 				Expect(err).NotTo(HaveOccurred())
-			} else {
-				Skip("This is not an ubuntu master")
 			}
 		})
 
 		It("should display the installed docker runtime on all nodes", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -255,7 +265,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate that every linux node has a root password", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -275,7 +287,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -302,7 +316,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate all CIS VHD-paved files", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -330,7 +346,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate kernel module configuration", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -357,7 +375,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate installed software packages", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
@@ -380,7 +400,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate that every linux node has the right sshd config", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -407,7 +429,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate password enforcement configuration", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -434,36 +458,40 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate auditd configuration", func() {
-			var auditDNodePrefixes []string
-			var lowPriVMSSPrefixes []string
-			if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-				if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-					auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
-				}
-			}
-			for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-				if profile.IsLowPriorityScaleSet() {
-					lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
-				} else if to.Bool(profile.AuditDEnabled) {
-					auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
-				}
-			}
-			nodeList, err := node.GetReady()
-			Expect(err).NotTo(HaveOccurred())
-			auditdValidateScript := "auditd-validate.sh"
-			err = sshConn.CopyTo(auditdValidateScript)
-			Expect(err).NotTo(HaveOccurred())
-			for _, node := range nodeList.Nodes {
-				if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
-					var enabled bool
-					if node.HasSubstring(auditDNodePrefixes) {
-						enabled = true
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else {
+				var auditDNodePrefixes []string
+				var lowPriVMSSPrefixes []string
+				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
+						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 					}
-					err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
-					Expect(err).NotTo(HaveOccurred())
-					auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-					err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
+				}
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if profile.IsLowPriorityScaleSet() {
+						lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
+					} else if to.Bool(profile.AuditDEnabled) {
+						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
+					}
+				}
+				nodeList, err := node.GetReady()
+				Expect(err).NotTo(HaveOccurred())
+				auditdValidateScript := "auditd-validate.sh"
+				err = sshConn.CopyTo(auditdValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				for _, node := range nodeList.Nodes {
+					if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
+						var enabled bool
+						if node.HasSubstring(auditDNodePrefixes) {
+							enabled = true
+						}
+						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+						Expect(err).NotTo(HaveOccurred())
+						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
+						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
 				}
 			}
 		})
@@ -1884,7 +1912,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have healthy time synchronization", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				timeSyncValidateScript := "time-sync-validate.sh"
