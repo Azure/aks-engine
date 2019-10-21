@@ -347,5 +347,5 @@ try
 catch
 {
     Write-Error $_
-    return 1
+    exit 1
 }

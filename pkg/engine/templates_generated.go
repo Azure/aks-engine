@@ -31079,6 +31079,7 @@ function Retry-Command
     }
 }
 
+<<<<<<< HEAD
 function Get-NetworkLogCollectionScripts {
     Write-Log "Getting CollectLogs.ps1 and depencencies"
     mkdir 'c:\k\debug'
@@ -31091,6 +31092,10 @@ function Get-NetworkLogCollectionScripts {
 }
 
 function Register-NodeCleanupScriptTask {
+=======
+function Register-NodeCleanupScriptTask
+{
+>>>>>>> updated generated templates
     Write-Log "Creating a startup task to run on-restart.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodecleanup.ps1') |
@@ -31101,9 +31106,16 @@ function Register-NodeCleanupScriptTask {
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowsnodecleanup.ps1` + "`" + `""
     $prinical = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
+<<<<<<< HEAD
     $definition = New-ScheduledTask -Action $action -Principal $prinical -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }`)
+=======
+    $definition = New-ScheduledTask -Action $action -Principal $prinical -Trigger $trigger -Description "k8s-node-cleanup-job"
+    Register-ScheduledTask -TaskName "k8s-node-cleanup-job" -InputObject $definition
+}
+`)
+>>>>>>> updated generated templates
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -31469,7 +31481,11 @@ try
 catch
 {
     Write-Error $_
+<<<<<<< HEAD
     [Enviornment]::Exit(1)
+=======
+    exit 1
+>>>>>>> updated generated templates
 }
 `)
 
