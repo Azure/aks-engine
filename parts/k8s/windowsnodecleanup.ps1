@@ -47,6 +47,8 @@ Stop-Service kubelet
 #
 
 Write-Log "Cleaning up persisted HNS policy lists"
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
 $hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
