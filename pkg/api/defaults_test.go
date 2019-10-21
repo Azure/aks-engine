@@ -3564,3 +3564,84 @@ func TestImageReference(t *testing.T) {
 		})
 	}
 }
+
+func TestCustomHyperkubeDistro(t *testing.T) {
+	cases := []struct {
+		name                      string
+		cs                        ContainerService
+		isUpgrade                 bool
+		isScale                   bool
+		expectedMasterProfile     MasterProfile
+		expectedAgentPoolProfiles []AgentPoolProfile
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1604,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsUpgrade:  c.isUpgrade,
+				IsScale:    c.isScale,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
+			if c.cs.Properties.MasterProfile.Distro != c.expectedMasterProfile.Distro {
+				t.Errorf("expected %s, but got %s", c.expectedMasterProfile.Distro, c.cs.Properties.MasterProfile.Distro)
+			}
+			for i, profile := range c.cs.Properties.AgentPoolProfiles {
+				if profile.Distro != c.expectedAgentPoolProfiles[i].Distro {
+					t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].Distro, profile.Distro)
+				}
+			}
+		})
+	}
+}
