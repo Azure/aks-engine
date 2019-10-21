@@ -424,7 +424,7 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 		} else if p.MasterProfile.Distro == AKS1804Deprecated {
 			p.MasterProfile.Distro = AKSUbuntu1804
 		}
-	} else if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+	} else if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" && p.MasterProfile.Distro == "" {
 		p.MasterProfile.Distro = Ubuntu
 	}
 
@@ -655,7 +655,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 				} else if profile.Distro == AKS1804Deprecated {
 					profile.Distro = AKSUbuntu1804
 				}
-			} else if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+			} else if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" && profile.Distro == "" {
 				profile.Distro = Ubuntu
 			}
 			// The AKS Distro is not available in Azure German Cloud.

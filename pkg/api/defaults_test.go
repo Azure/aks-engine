@@ -3623,6 +3623,69 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "custom hyperkube w/ distro",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{
+						Distro: Ubuntu1804,
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Distro: Ubuntu1804,
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ mixed distro config",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:   "pool1",
+							Distro: Ubuntu1804,
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
 	}
 
 	for _, c := range cases {
