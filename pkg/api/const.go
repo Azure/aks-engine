@@ -397,8 +397,6 @@ const (
 	DefaultKubernetesCtrlMgrTerminatedPodGcThreshold = "5000"
 	// DefaultKubernetesCtrlMgrUseSvcAccountCreds is "true", see --use-service-account-credentials at https://kubernetes.io/docs/admin/kube-controller-manager/
 	DefaultKubernetesCtrlMgrUseSvcAccountCreds = "false"
-	// DefaultKubernetesCloudProviderBackoff is false to disable cloudprovider backoff implementation for API calls
-	DefaultKubernetesCloudProviderBackoff = false
 	// DefaultKubernetesCloudProviderRateLimit is false to disable cloudprovider rate limiting implementation for API calls
 	DefaultKubernetesCloudProviderRateLimit = true
 	// DefaultTillerMaxHistory limits the maximum number of revisions saved per release. Use 0 for no limit.
