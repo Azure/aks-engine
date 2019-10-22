@@ -137,6 +137,8 @@ retrycmd_get_executable() {
 }
 wait_for_file() {
     retries=$1; wait_sleep=$2; filepath=$3
+    paved=/opt/azure/cloud-init-files.paved
+    grep -Fq '${filepath}' $paved && return 0
     for i in $(seq 1 $retries); do
         grep -Fq '#EOF' $filepath && break
         if [ $i -eq $retries ]; then
@@ -146,6 +148,7 @@ wait_for_file() {
         fi
     done
     sed -i "/#EOF/d" $filepath
+    echo $filepath >> $paved
 }
 wait_for_apt_locks() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
