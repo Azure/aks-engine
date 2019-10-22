@@ -26,7 +26,9 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
 		mcrKubernetesImageBase := kubernetesConfig.MCRKubernetesImageBase
 		// TODO: switch upstream to MCR when Kubernetes core components are published there
-		upstreamKubernetesImageBase := "upstream.azurecr.io/oss/kubernetes/"
+		// upstreamKubernetesImageBase := "upstream.azurecr.io/oss/kubernetes/"
+		// HACK: use canonical repository until Azure publishing is sorted out
+		upstreamKubernetesImageBase := "k8s.gcr.io/"
 		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
 
 		if properties.IsAzureStackCloud() {
