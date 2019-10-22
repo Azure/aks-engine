@@ -8,9 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
@@ -384,6 +383,68 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultAzureDiskCSIDriverAddonsConfig := KubernetesAddon{
+		Name:    AzureDiskCSIDriverAddonName,
+		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "csi-provisioner",
+				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+			},
+			{
+				Name:  "csi-attacher",
+				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+			},
+			{
+				Name:  "csi-cluster-driver-registrar",
+				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+			},
+			{
+				Name:  "livenessprobe",
+				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+			},
+			{
+				Name:  "csi-node-driver-registrar",
+				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+			},
+			{
+				Name:  "azuredisk-csi",
+				Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+			},
+		},
+	}
+
+	defaultAzureFileCSIDriverAddonsConfig := KubernetesAddon{
+		Name:    AzureFileCSIDriverAddonName,
+		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "csi-provisioner",
+				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+			},
+			{
+				Name:  "csi-attacher",
+				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+			},
+			{
+				Name:  "csi-cluster-driver-registrar",
+				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+			},
+			{
+				Name:  "livenessprobe",
+				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+			},
+			{
+				Name:  "csi-node-driver-registrar",
+				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+			},
+			{
+				Name:  "azurefile-csi",
+				Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+			},
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -404,6 +465,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
+		defaultAzureDiskCSIDriverAddonsConfig,
+		defaultAzureFileCSIDriverAddonsConfig,
 		defaultsAzurePolicyAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists

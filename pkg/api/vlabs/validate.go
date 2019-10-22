@@ -672,6 +672,15 @@ func (a *Properties) validateAddons() error {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
 					}
 				}
+			case "azuredisk-csi-driver", "azurefile-csi-driver":
+				if to.Bool(addon.Enabled) {
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.13 or above", addon.Name))
+					}
+					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true.", addon.Name))
+					}
+				}
 			case "azure-policy":
 				if to.Bool(addon.Enabled) {
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")

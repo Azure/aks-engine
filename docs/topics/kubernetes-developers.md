@@ -53,18 +53,24 @@ For VERSION, we recommend that you provide a value which would help you identify
 ```
 NOTE: Make sure the service principal provided to run `aks-engine deploy` has access to pull images from this private registry. https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-service-principal#use-an-existing-service-principal
 
-* AKS Engine uses the `aks-ubuntu-1604` image for the master and Linux agents. This image contains prebuilt versions of kubelet and kubectl, thus the provision scripts will not copy the desired kubelet binary ( and kubectl ) from the custom hyperkube image. In order to get over this limitation it is required to specify `ubuntu` for the master and Linux agents in "masterProfile" and each agent pool under `agentPoolProfiles`.
+* AKS Engine defaults to the `ubuntu` "distro" for `customHyperkubeImage` scenarios, which will build Linux VM nodes using the Ubuntu 16.04-LTS image SKU. You may also use Ubuntu 18.04-LTS-built VMs by explicitly setting the "distro" configuration accordingly. The "distro" configuration is applied distinctly to master VMs, and to the VMs in any configured agent pools (you may use different "distro" values in the masterProfile, and in each agentPoolProfile, according to your cluster requirements), for example:
 
 ```
+...
 "masterProfile": {
-    "distro": "ubuntu"
-}
-
+    ...
+    "distro": "ubuntu-18.04"
+    ...
+},
+...
 "agentPoolProfiles": [
     {
-        "distro": "ubuntu"
+        ...
+        "distro": "ubuntu-18.04"
+        ...
     }
 ]
+...
 ```
 
 * Run `aks-engine deploy` [as normal](../tutorials/deploy.md).

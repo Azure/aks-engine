@@ -422,7 +422,7 @@ func (p *Properties) setExtensionDefaults() {
 
 func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	if p.MasterProfile.Distro == "" && p.MasterProfile.ImageRef == nil {
-		if p.OrchestratorProfile.IsKubernetes() {
+		if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
@@ -644,7 +644,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 
 		if profile.OSType != Windows {
 			if profile.Distro == "" && profile.ImageRef == nil {
-				if p.OrchestratorProfile.IsKubernetes() {
+				if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {

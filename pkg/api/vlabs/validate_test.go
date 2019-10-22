@@ -1680,6 +1680,110 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should error when missing the subnet for Application Gateway",
 		)
 	}
+
+	// Basic tests for azuredisk-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azuredisk-csi-driver",
+		)
+	}
+
+	// Basic tests for azurefile-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azurefile-csi-driver",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {
