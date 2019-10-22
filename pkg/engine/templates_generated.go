@@ -15600,7 +15600,7 @@ ps auxfww > /opt/azure/provision-ps.log &
 
 if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
-    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
+    apt_get_purge 20 30 120 apache2-utils &
 fi
 
 if $REBOOTREQUIRED; then
