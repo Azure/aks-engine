@@ -31079,7 +31079,6 @@ function Retry-Command
     }
 }
 
-<<<<<<< HEAD
 function Get-NetworkLogCollectionScripts {
     Write-Log "Getting CollectLogs.ps1 and depencencies"
     mkdir 'c:\k\debug'
@@ -31092,10 +31091,6 @@ function Get-NetworkLogCollectionScripts {
 }
 
 function Register-NodeCleanupScriptTask {
-=======
-function Register-NodeCleanupScriptTask
-{
->>>>>>> updated generated templates
     Write-Log "Creating a startup task to run on-restart.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodecleanup.ps1') |
@@ -31106,20 +31101,10 @@ function Register-NodeCleanupScriptTask
     $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowsnodecleanup.ps1` + "`" + `""
     $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
-<<<<<<< HEAD
-<<<<<<< HEAD
-    $definition = New-ScheduledTask -Action $action -Principal $prinical -Trigger $trigger -Description "k8s-restart-job"
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
-}`)
-=======
-    $definition = New-ScheduledTask -Action $action -Principal $prinical -Trigger $trigger -Description "k8s-node-cleanup-job"
-=======
-    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-node-cleanup-job"
->>>>>>> CR feedback + moving clearning HNS policy list after deleting containers
-    Register-ScheduledTask -TaskName "k8s-node-cleanup-job" -InputObject $definition
 }
 `)
->>>>>>> updated generated templates
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -31428,8 +31413,36 @@ try
         # This is done so network connectivity to the node is not lost when other networks are added/removed
         Get-HnsPsm1 -HNSModule $global:HNSModule
         Import-Module $global:HNSModule
+
+        $netAdapters = @(Get-NetAdapter -Physical)
+        if ($netAdapters.Count -eq 0) {
+            throw "Failed to find any physical network adapters"
+        }
+
+        $managementIP = (Get-NetIPAddress -ifIndex $netAdapters[0].ifIndex -AddressFamily IPv4).IPAddress
+        $adapterName = $netAdapters[0].Name
+
+        Write-Log "Using adapter $adapterName with IP address $managementIP"
+
         # Fixme : use a smallest range possible, that will not collide with any pod space
-        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name "ext" -Verbose
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name "ext" -Verbose
+
+        # Wait for switch to be created and ip address to be assigned
+        for ($i = 0; $i -lt 60; $i++) {
+            $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
+            if ($mgmtIPAfterNetworkCreate) {
+                break
+            }
+            Write-Log "Waiting for IP address to be assigned..."
+            Start-Sleep -Milliseconds 1000
+        }
+
+        if (-not $mgmtIPAfterNetworkCreate) {
+            throw "Failed to find $managementIP after creating $($global:ExternalNetwork) network"
+        }
+        else {
+            Write-Log "IP address has been assigned"
+        }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices ` + "`" + `
@@ -31485,11 +31498,7 @@ try
 catch
 {
     Write-Error $_
-<<<<<<< HEAD
-    [Enviornment]::Exit(1)
-=======
-    exit 1
->>>>>>> updated generated templates
+    rruurnrn 1
 }
 `)
 

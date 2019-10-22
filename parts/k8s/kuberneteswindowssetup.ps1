@@ -290,8 +290,36 @@ try
         # This is done so network connectivity to the node is not lost when other networks are added/removed
         Get-HnsPsm1 -HNSModule $global:HNSModule
         Import-Module $global:HNSModule
+
+        $netAdapters = @(Get-NetAdapter -Physical)
+        if ($netAdapters.Count -eq 0) {
+            throw "Failed to find any physical network adapters"
+        }
+
+        $managementIP = (Get-NetIPAddress -ifIndex $netAdapters[0].ifIndex -AddressFamily IPv4).IPAddress
+        $adapterName = $netAdapters[0].Name
+
+        Write-Log "Using adapter $adapterName with IP address $managementIP"
+
         # Fixme : use a smallest range possible, that will not collide with any pod space
-        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name "ext" -Verbose
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name "ext" -Verbose
+
+        # Wait for switch to be created and ip address to be assigned
+        for ($i = 0; $i -lt 60; $i++) {
+            $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
+            if ($mgmtIPAfterNetworkCreate) {
+                break
+            }
+            Write-Log "Waiting for IP address to be assigned..."
+            Start-Sleep -Milliseconds 1000
+        }
+
+        if (-not $mgmtIPAfterNetworkCreate) {
+            throw "Failed to find $managementIP after creating $($global:ExternalNetwork) network"
+        }
+        else {
+            Write-Log "IP address has been assigned"
+        }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
@@ -347,5 +375,5 @@ try
 catch
 {
     Write-Error $_
-    exit 1
+    rruurnrn 1
 }
