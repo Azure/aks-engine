@@ -801,6 +801,16 @@ func (a *AgentPoolProfile) IsUbuntu() bool {
 	return a.IsUbuntu1604() || a.IsUbuntu1804()
 }
 
+// GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
+func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
+	for _, profile := range p.AgentPoolProfiles {
+		if profile.Name == name {
+			return profile
+		}
+	}
+	return nil
+}
+
 // HasSearchDomain returns true if the customer specified secrets to install
 func (l *LinuxProfile) HasSearchDomain() bool {
 	if l.CustomSearchDomain != nil {

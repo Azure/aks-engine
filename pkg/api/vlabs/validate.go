@@ -627,10 +627,45 @@ func (a *Properties) validateAddons() error {
 				}
 			}
 
+			if addon.Mode != "" {
+				if addon.Mode != AddonModeEnsureExists && addon.Mode != AddonModeReconcile {
+					return errors.Errorf("addon %s has a mode configuration '%s', must be either %s or %s", addon.Name, addon.Mode, AddonModeEnsureExists, AddonModeReconcile)
+				}
+			}
+
 			switch addon.Name {
 			case "cluster-autoscaler":
-				if to.Bool(addon.Enabled) && isAvailabilitySets {
-					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
+				if to.Bool(addon.Enabled) {
+					if isAvailabilitySets {
+						return errors.Errorf("cluster-autoscaler addon can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
+					}
+					for _, pool := range addon.Pools {
+						if pool.Name == "" {
+							return errors.Errorf("cluster-autoscaler addon pools configuration must have a 'name' property that correlates with a pool name in the agentPoolProfiles array")
+						}
+						if a.GetAgentPoolByName(pool.Name) == nil {
+							return errors.Errorf("cluster-autoscaler addon pool 'name' %s does not match any agentPoolProfiles nodepool name", pool.Name)
+						}
+						if pool.Config != nil {
+							var min, max int
+							var err error
+							if pool.Config["min-nodes"] != "" {
+								min, err = strconv.Atoi(pool.Config["min-nodes"])
+								if err != nil {
+									return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid 'min-nodes' config, must be a string int, got %s", pool.Name, pool.Config["min-nodes"])
+								}
+							}
+							if pool.Config["max-nodes"] != "" {
+								max, err = strconv.Atoi(pool.Config["max-nodes"])
+								if err != nil {
+									return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid 'max-nodes' config, must be a string int, got %s", pool.Name, pool.Config["max-nodes"])
+								}
+							}
+							if min > max {
+								return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid config, 'max-nodes' %d must be greater than 'min-nodes' %d", pool.Name, max, min)
+							}
+						}
+					}
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {

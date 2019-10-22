@@ -169,3 +169,11 @@ const BasicLoadBalancerSku = "Basic"
 
 // StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 const StandardLoadBalancerSku = "Standard"
+
+// addons consts
+const (
+	// AddonModeEnsureExists
+	AddonModeEnsureExists = "EnsureExists"
+	// AddonModeReconcile
+	AddonModeReconcile = "Reconcile"
+)
