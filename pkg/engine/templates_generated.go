@@ -17496,6 +17496,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
+
     sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
 {{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
     sed -i "s|<img>|{{WrapAsParameter "kubeAPIServerSpec"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
