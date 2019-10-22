@@ -1,5 +1,5 @@
 $REPO_PATH = "github.com/Azure/aks-engine"
-$DEV_ENV_IMAGE = "quay.io/deis/go-dev:v1.23.5"
+$DEV_ENV_IMAGE = "quay.io/deis/go-dev:v1.23.6"
 $DEV_ENV_WORK_DIR = "/go/src/$REPO_PATH"
 
 # Ensure docker is configured for linux containers
