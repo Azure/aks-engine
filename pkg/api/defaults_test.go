@@ -1447,6 +1447,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1460,6 +1461,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1473,6 +1475,7 @@ func TestDistroDefaults(t *testing.T) {
 			"1804_upgrade_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKSUbuntu1804,
 			AKSUbuntu1804,
@@ -1486,6 +1489,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1499,6 +1503,7 @@ func TestDistroDefaults(t *testing.T) {
 			"deprecated_distro_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1512,6 +1517,7 @@ func TestDistroDefaults(t *testing.T) {
 			"docker_engine_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKSDockerEngine,
@@ -1525,6 +1531,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1538,6 +1545,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1551,6 +1559,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
