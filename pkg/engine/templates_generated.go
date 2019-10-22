@@ -15578,12 +15578,6 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-echo "Custom script finished successfully"
-
-echo $(date),$(hostname), endcustomscript>>/opt/m
-mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
-ps auxfww > /opt/azure/provision-ps.log &
-
 if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
     apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
@@ -15601,6 +15595,12 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+
+echo "Custom script finished successfully"
+echo $(date),$(hostname), endcustomscript>>/opt/m
+mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
+ps auxfww > /opt/azure/provision-ps.log &
+
 #EOF
 `)
 
