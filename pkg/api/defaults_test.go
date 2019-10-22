@@ -1447,6 +1447,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1460,6 +1461,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1473,6 +1475,7 @@ func TestDistroDefaults(t *testing.T) {
 			"1804_upgrade_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKSUbuntu1804,
 			AKSUbuntu1804,
@@ -1486,6 +1489,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1499,6 +1503,7 @@ func TestDistroDefaults(t *testing.T) {
 			"deprecated_distro_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1512,6 +1517,7 @@ func TestDistroDefaults(t *testing.T) {
 			"docker_engine_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKSDockerEngine,
@@ -1525,6 +1531,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1538,6 +1545,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1551,6 +1559,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -3661,6 +3670,150 @@ func TestImageReference(t *testing.T) {
 					if profile.ImageRef.Version != c.expectedAgentPoolProfiles[i].ImageRef.Version {
 						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Version, profile.ImageRef.Version)
 					}
+				}
+			}
+		})
+	}
+}
+
+func TestCustomHyperkubeDistro(t *testing.T) {
+	cases := []struct {
+		name                      string
+		cs                        ContainerService
+		isUpgrade                 bool
+		isScale                   bool
+		expectedMasterProfile     MasterProfile
+		expectedAgentPoolProfiles []AgentPoolProfile
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1604,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ distro",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{
+						Distro: Ubuntu1804,
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Distro: Ubuntu1804,
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ mixed distro config",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:   "pool1",
+							Distro: Ubuntu1804,
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsUpgrade:  c.isUpgrade,
+				IsScale:    c.isScale,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
+			if c.cs.Properties.MasterProfile.Distro != c.expectedMasterProfile.Distro {
+				t.Errorf("expected %s, but got %s", c.expectedMasterProfile.Distro, c.cs.Properties.MasterProfile.Distro)
+			}
+			for i, profile := range c.cs.Properties.AgentPoolProfiles {
+				if profile.Distro != c.expectedAgentPoolProfiles[i].Distro {
+					t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].Distro, profile.Distro)
 				}
 			}
 		})
