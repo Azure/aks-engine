@@ -534,6 +534,7 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -557,7 +558,6 @@ type AgentPoolProfile struct {
 	MinCount                            *int                 `json:"minCount,omitempty"`
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
-	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
