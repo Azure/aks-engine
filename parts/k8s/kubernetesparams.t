@@ -295,7 +295,8 @@
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
-        "cloudProviderBackoff": true,
+        "cloudProviderBackoff": false,
+        "cloudProviderBackoffMode": "v1",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,

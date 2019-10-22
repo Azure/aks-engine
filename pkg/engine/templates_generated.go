@@ -14297,6 +14297,7 @@ configureK8s() {
     "routeTableName": "${ROUTE_TABLE}",
     "primaryAvailabilitySetName": "${PRIMARY_AVAILABILITY_SET}",
     "primaryScaleSetName": "${PRIMARY_SCALE_SET}",
+    "cloudProviderBackoffMode": "${CLOUDPROVIDER_BACKOFF_MODE}",
     "cloudProviderBackoff": ${CLOUDPROVIDER_BACKOFF},
     "cloudProviderBackoffRetries": ${CLOUDPROVIDER_BACKOFF_RETRIES},
     "cloudProviderBackoffExponent": ${CLOUDPROVIDER_BACKOFF_EXPONENT},
@@ -14305,6 +14306,8 @@ configureK8s() {
     "cloudProviderRatelimit": ${CLOUDPROVIDER_RATELIMIT},
     "cloudProviderRateLimitQPS": ${CLOUDPROVIDER_RATELIMIT_QPS},
     "cloudProviderRateLimitBucket": ${CLOUDPROVIDER_RATELIMIT_BUCKET},
+    "cloudProviderRatelimitQPSWrite": ${CLOUDPROVIDER_RATELIMIT_QPS_WRITE},
+    "cloudProviderRatelimitBucketWrite": ${CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE},
     "useManagedIdentityExtension": ${USE_MANAGED_IDENTITY_EXTENSION},
     "userAssignedIdentityID": "${USER_ASSIGNED_IDENTITY_ID}",
     "useInstanceMetadata": ${USE_INSTANCE_METADATA},
@@ -14317,6 +14320,10 @@ configureK8s() {
 }
 EOF
     set -x
+    if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
+        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+    fi
     if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
@@ -30193,7 +30200,8 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
-        "cloudProviderBackoff": true,
+        "cloudProviderBackoff": false,
+        "cloudProviderBackoffMode": "v1",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,
