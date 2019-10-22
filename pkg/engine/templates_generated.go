@@ -31498,7 +31498,7 @@ try
 catch
 {
     Write-Error $_
-    rruurnrn 1
+    exit 1
 }
 `)
 
