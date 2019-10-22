@@ -2,6 +2,9 @@
 	"env": {
     "REGION_OPTIONS": "westeurope",
     "GINKGO_SKIP": "should have healthy time synchronization"
+  },
+  "options": {
+		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15", "1.16"]
 	},
 	"apiModel": {
         "apiVersion": "vlabs",
