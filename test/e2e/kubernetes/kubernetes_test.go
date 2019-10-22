@@ -165,7 +165,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				var err error
 				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 					nodeList, err = node.GetReady()
-				} else
+				} else {
 					nodeList = &node.List{
 						Nodes: masterNodes,
 					}
