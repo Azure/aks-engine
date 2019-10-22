@@ -1956,89 +1956,6 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedUseManagedIdentity: "true",
 		},
 		{
-			name: "availability set",
-			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
-				Enabled: to.BoolPtr(true),
-				Mode:    api.AddonModeEnsureExists,
-				Config: map[string]string{
-					"scan-interval": "1m",
-					"v":             "3",
-				},
-				Containers: []api.KubernetesContainerSpec{
-					{
-						Name:           api.ClusterAutoscalerAddonName,
-						CPURequests:    "100m",
-						MemoryRequests: "300Mi",
-						CPULimits:      "100m",
-						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
-					},
-				},
-				Pools: []api.AddonNodePoolsConfig{
-					{
-						Name: "pool1",
-						Config: map[string]string{
-							"min-nodes": "1",
-							"max-nodes": "10",
-						},
-					},
-					{
-						Name: "pool2",
-						Config: map[string]string{
-							"min-nodes": "1",
-							"max-nodes": "3",
-						},
-					},
-				},
-			},
-			cs: &api.ContainerService{
-				Properties: &api.Properties{
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
-						KubernetesConfig: &api.KubernetesConfig{
-							NetworkPlugin: api.NetworkPluginAzure,
-							Addons: []api.KubernetesAddon{
-								{
-									Name:    api.ClusterAutoscalerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-							UseManagedIdentity: true,
-						},
-					},
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:                "pool1",
-							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
-						},
-						{
-							Name:                "pool2",
-							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
-						},
-					},
-				},
-			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
-			expectedCPUReqs:            "100m",
-			expectedCPULimits:          "100m",
-			expectedMemReqs:            "300Mi",
-			expectedMemLimits:          "300Mi",
-			expectedScanInterval:       "1m",
-			expectedVersion:            "3",
-			expectedMode:               api.AddonModeEnsureExists,
-			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119\n        - --nodes=1:3:k8s-pool2-49584119",
-			expectedVMType:             "c3RhbmRhcmQ=", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
-			expectedCloud:              "AzurePublicCloud",
-			expectedUseManagedIdentity: "true",
-		},
-		{
 			name: "non-MSI scenario",
 			addon: api.KubernetesAddon{
 				Name:    ClusterAutoscalerAddonName,
@@ -2094,12 +2011,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						{
 							Name:                "pool1",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 					},
 				},
@@ -2112,8 +2029,8 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedScanInterval:       "1m",
 			expectedVersion:            "3",
 			expectedMode:               api.AddonModeEnsureExists,
-			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119\n        - --nodes=1:3:k8s-pool2-49584119",
-			expectedVMType:             "c3RhbmRhcmQ=", // base 64 encoding of vmss
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
 			expectedVolumeMounts:       "",
 			expectedVolumes:            "",
 			expectedHostNetwork:        "",
@@ -2176,12 +2093,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						{
 							Name:                "pool1",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 					},
 				},
@@ -2195,8 +2112,8 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedScanInterval:       "1m",
 			expectedVersion:            "3",
 			expectedMode:               api.AddonModeEnsureExists,
-			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119\n        - --nodes=1:3:k8s-pool2-49584119",
-			expectedVMType:             "c3RhbmRhcmQ=", // base 64 encoding of vmss
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
 			expectedVolumeMounts:       "",
 			expectedVolumes:            "",
 			expectedHostNetwork:        "",
@@ -2259,12 +2176,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						{
 							Name:                "pool1",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 					},
 				},
@@ -2278,8 +2195,8 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedScanInterval:       "1m",
 			expectedVersion:            "3",
 			expectedMode:               api.AddonModeEnsureExists,
-			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119\n        - --nodes=1:3:k8s-pool2-49584119",
-			expectedVMType:             "c3RhbmRhcmQ=", // base 64 encoding of vmss
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
 			expectedVolumeMounts:       "",
 			expectedVolumes:            "",
 			expectedHostNetwork:        "",
@@ -2342,12 +2259,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						{
 							Name:                "pool1",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 						{
 							Name:                "pool2",
 							Count:               1,
-							AvailabilityProfile: api.AvailabilitySet,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 					},
 				},
@@ -2361,8 +2278,8 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedScanInterval:       "1m",
 			expectedVersion:            "3",
 			expectedMode:               api.AddonModeEnsureExists,
-			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119\n        - --nodes=1:3:k8s-pool2-49584119",
-			expectedVMType:             "c3RhbmRhcmQ=", // base 64 encoding of vmss
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
 			expectedVolumeMounts:       "",
 			expectedVolumes:            "",
 			expectedHostNetwork:        "",
