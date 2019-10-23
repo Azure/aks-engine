@@ -22,6 +22,7 @@ Container Monitoring can be onboarded either through the monitoring add-on or th
 Following are supported options to enable container-monitoring add-on during the cluster creation or post cluster creation.
 
 > Note: option 1) and 2) are supported only through `aks-engine deploy` command.
+> Note: For Azure stack cloud environments, only option 3) and 4) are supported.
 
 ### 1. Using Default Log Analytics Workspace
 
@@ -49,7 +50,7 @@ Azure Log analytics workspace can be in any Azure subscription in which you have
              }
      }
 
-Refer to [Sample Kubernetes definition file with monitoringa addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
+Refer to [Sample Kubernetes definition file with monitoring addon using existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_log_analytics_workspace.json)
 
 ### 3. Using Workspace GUID or Key
 
@@ -64,7 +65,7 @@ You can also configure with workspace GUID and Key of the existing Log analytics
             }
           }
 
-Refer to [Sample Kubernetes definition file with monitoringa addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
+Refer to [Sample Kubernetes definition file with monitoring addon using workspace GUID and key of the existing log analytics workspace](../../examples/addons/container-monitoring/kubernetes-container-monitoring_existing_workspace_id_and_key.json)
 
 ### 4. Using Azure Monitor for containers Helm chart
 
@@ -78,10 +79,35 @@ After successful onboarding, navigating to [Azure Monitor for containers](https:
 
 ## Required Roles and Permissions
 
-- User requires the reader role permission on the Azure Log Analytics workspace and AKS Engine cluster resource group to view and monitor, and analyze health of your onboarded AKS Engine cluster, pods and containers etc.
 - For onboarding monitoring addon
      -  If the existing Azure Log Analytics workspace is used, then the Log Analytics Contributor role on existing Azure Log Analytics is required
      -  For the new Azure Log Analytics workspace, user requires the contributor role on the Subscription or the Resource group where the AKS Engine cluster resources will be deployed
+
+  - User requires the reader role permission on the Azure Log Analytics workspace
+  - For Azure AKS-Engine clusters, user requires reader role permission on cluster resource group and resources under that
+
+## Supported Azure Cloud Environment(s)
+
+ -  Azure Public Cloud
+ -  Azure China Cloud
+ -  Azure US Government Cloud
+ -  Azure Stack Cloud
+
+### Disable Monitoring
+
+After you enable monitoring of your AKS Engine cluster, you can stop container monitoring on the cluster if you decide you no longer want to monitor it.
+
+- If you have onboarded the monitoring using the HELM chart, then you can disable monitoring by uninstalling the chart. Refer Uninstalling the Chart section in [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
+
+- If you have onboarded using the Container Monitoring addon, then you can remove monitoring addon with below steps
+
+      1. ssh to master node of your AKS Engine cluster master node and navigate to /etc/kubernetes/addons directory
+      2. delete all the resources related to container monitoring addon with `kubectl delete -f omsagent-daemonset.yaml` command against your AKS Engine cluster
+      3. delete the container monitoring addon manifest file omsagent-daemonset.yaml  under /etc/kubernetes/addons
+
+### Upgrade Container Monitoring Addon
+
+For upgrading the container monitoring addon, you can disable the monitoring addon as described in Disable Monitoring section and use the HELM chart to install and upgrade.
 
 ## Contact
 

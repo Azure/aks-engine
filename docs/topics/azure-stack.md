@@ -12,6 +12,7 @@
     * [agentPoolProfiles](#agentPoolProfiles)
 * [Azure Stack Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Instances](#disconnected-azure-stack-instances)
+* [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Unsupported Addons](#unsupported-addons)
 * [Known Issues and Limitations](#known-issues-and-limitations)
 * [Frequently Asked Questions](#frequently-asked-questions)
@@ -135,6 +136,11 @@ The `AKS Base Image` marketplace item has to be available in your Azure Stack's 
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
+## Azure Monitor for containers
+
+Azure Monitor for containers supports the monitoring of AKS-Engine clusters hosted in Azure Stack Cloud Environment(s).
+Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details how to onboard and monitor the cluster, nodes, pods and containers inventory, performance metrics, health and logs etc.
+
 ## Unsupported Addons
 
 AKS Engine includes a number of optional [addons](../topics/clusterdefinitions.md#addons) that can be deployed as part of the cluster provisioning process.
@@ -145,7 +151,6 @@ The list below includes the addons currently unsupported on Azure Stack:
 * ACI Connector
 * Blobfuse Flex Volume
 * Cluster Autoscaler
-* Container Monitoring
 * KeyVault Flex Volume
 * NVIDIA Device Plugin
 * Rescheduler
