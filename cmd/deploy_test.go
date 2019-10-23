@@ -667,7 +667,6 @@ func TestAPIModelWithContainerMonitoringAddonWithNoConfigInCmd(t *testing.T) {
 	}
 
 	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithNoConfig
-
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
@@ -851,253 +850,141 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 	}
 
 	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
-
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
-	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         "westus",
-		containerService: cs,
-		apiVersion:       ver,
 
-		client: &armhelpers.MockAKSEngineClient{},
-		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
+	type WorkspaceInfo struct {
+		WorkspaceGUID   string
+		WorkspaceKey    string
+		WorkspaceDomain string
+	}
+
+	cases := []struct {
+		dc               *deployCmd
+		location         string
+		expectedResponse WorkspaceInfo
+	}{
+		{
+			dc: &deployCmd{
+				apimodelPath:     "./this/is/unused.json",
+				outputDirectory:  "_test_output",
+				forceOverwrite:   true,
+				location:         "westus",
+				containerService: cs,
+				apiVersion:       ver,
+
+				client: &armhelpers.MockAKSEngineClient{},
+				authProvider: &mockAuthProvider{
+					authArgs: &authArgs{},
+				},
+			},
+			location: "westus",
+			expectedResponse: WorkspaceInfo{
+				WorkspaceGUID:   "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+				WorkspaceKey:    "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				WorkspaceDomain: "b3BpbnNpZ2h0cy5henVyZS5jb20=",
+			},
+		},
+		{
+			dc: &deployCmd{
+				apimodelPath:     "./this/is/unused.json",
+				outputDirectory:  "_test_output",
+				forceOverwrite:   true,
+				location:         "chinaeast2",
+				containerService: cs,
+				apiVersion:       ver,
+
+				client: &armhelpers.MockAKSEngineClient{},
+				authProvider: &mockAuthProvider{
+					authArgs: &authArgs{},
+				},
+			},
+			location: "chinaeast2",
+			expectedResponse: WorkspaceInfo{
+				WorkspaceGUID:   "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+				WorkspaceKey:    "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				WorkspaceDomain: "b3BpbnNpZ2h0cy5henVyZS5jbg==",
+			},
+		},
+		{
+			dc: &deployCmd{
+				apimodelPath:     "./this/is/unused.json",
+				outputDirectory:  "_test_output",
+				forceOverwrite:   true,
+				location:         "usgovvirginia",
+				containerService: cs,
+				apiVersion:       ver,
+
+				client: &armhelpers.MockAKSEngineClient{},
+				authProvider: &mockAuthProvider{
+					authArgs: &authArgs{},
+				},
+			},
+			location: "usgovvirginia",
+			expectedResponse: WorkspaceInfo{
+				WorkspaceGUID:   "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+				WorkspaceKey:    "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				WorkspaceDomain: "b3BpbnNpZ2h0cy5henVyZS51cw==",
+			},
+		},
+		{
+			dc: &deployCmd{
+				apimodelPath:     "./this/is/unused.json",
+				outputDirectory:  "_test_output",
+				forceOverwrite:   true,
+				location:         "germanynortheast",
+				containerService: cs,
+				apiVersion:       ver,
+
+				client: &armhelpers.MockAKSEngineClient{},
+				authProvider: &mockAuthProvider{
+					authArgs: &authArgs{},
+				},
+			},
+			location: "germanynortheast",
+			expectedResponse: WorkspaceInfo{
+				WorkspaceGUID:   "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
+				WorkspaceKey:    "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ==",
+				WorkspaceDomain: "b3BpbnNpZ2h0cy5henVyZS5kZQ==",
+			},
 		},
 	}
-	err = autofillApimodel(deployCmd)
-	if err != nil {
-		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
-	}
 
-	defer os.RemoveAll(deployCmd.outputDirectory)
+	for _, c := range cases {
+		c.dc.containerService.Location = c.location
+		err = autofillApimodel(c.dc)
+		if err != nil {
+			t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
+		}
 
-	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
+		defer os.RemoveAll(c.dc.outputDirectory)
 
-	if k8sConfig == nil {
-		t.Fatalf("expected valid kubernetes config")
-	}
+		k8sConfig := c.dc.containerService.Properties.OrchestratorProfile.KubernetesConfig
+		if k8sConfig == nil {
+			t.Fatalf("expected valid kubernetes config")
+		}
+		if len(k8sConfig.Addons) != 1 {
+			t.Fatalf("expected one addon")
+		}
+		addon := k8sConfig.Addons[0]
+		if addon.Name != "container-monitoring" {
+			t.Fatalf("unexpected addon found : %s", addon.Name)
+		}
 
-	if len(k8sConfig.Addons) != 1 {
-		t.Fatalf("expected one addon")
-	}
+		if addon.Config["workspaceGuid"] != c.expectedResponse.WorkspaceGUID {
+			t.Fatalf("expected workspaceGuid : %s but got : %s", c.expectedResponse.WorkspaceGUID, addon.Config["workspaceGuid"])
+		}
 
-	addon := k8sConfig.Addons[0]
+		if addon.Config["workspaceKey"] != c.expectedResponse.WorkspaceKey {
+			t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
+			t.Fatalf("expected workspaceKey : %s but got : %s", c.expectedResponse.WorkspaceKey, addon.Config["workspaceKey"])
+		}
 
-	if addon.Name != "container-monitoring" {
-		t.Fatalf("unexpected addon found : %s", addon.Name)
-	}
-
-	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
-	}
-
-	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
-	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
-		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
-		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
-	}
-}
-
-func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmdInMooncake(t *testing.T) {
-	apiloader := &api.Apiloader{
-		Translator: nil,
-	}
-
-	chinaCloudRegion := "chinaeast2"
-	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
-	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
-	cs.Location = chinaCloudRegion
-	if err != nil {
-		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
-	}
-	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         chinaCloudRegion,
-		containerService: cs,
-		apiVersion:       ver,
-
-		client: &armhelpers.MockAKSEngineClient{},
-		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
-		},
-	}
-	err = autofillApimodel(deployCmd)
-	if err != nil {
-		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
-	}
-
-	defer os.RemoveAll(deployCmd.outputDirectory)
-
-	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
-
-	if k8sConfig == nil {
-		t.Fatalf("expected valid kubernetes config")
-	}
-
-	if len(k8sConfig.Addons) != 1 {
-		t.Fatalf("expected one addon")
-	}
-
-	addon := k8sConfig.Addons[0]
-
-	if addon.Name != "container-monitoring" {
-		t.Fatalf("unexpected addon found : %s", addon.Name)
-	}
-
-	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
-	}
-
-	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
-	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
-		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
-		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
-	}
-
-	expectedWorkspaceDomainInBase64 := "b3BpbnNpZ2h0cy5henVyZS5jbg=="
-	if addon.Config["workspaceDomain"] != expectedWorkspaceDomainInBase64 {
-		t.Fatalf("unexpected workspaceDomain : %s", addon.Config["workspaceDomain"])
-		t.Fatalf("expected workspaceDomain : %s but got : %s", expectedWorkspaceDomainInBase64, addon.Config["workspaceDomain"])
-	}
-}
-
-func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmdInFairFax(t *testing.T) {
-	apiloader := &api.Apiloader{
-		Translator: nil,
-	}
-
-	usGovCloudRegion := "usgovvirginia"
-	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
-	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
-	cs.Location = usGovCloudRegion
-	if err != nil {
-		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
-	}
-	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         usGovCloudRegion,
-		containerService: cs,
-		apiVersion:       ver,
-
-		client: &armhelpers.MockAKSEngineClient{},
-		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
-		},
-	}
-	err = autofillApimodel(deployCmd)
-	if err != nil {
-		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
-	}
-
-	defer os.RemoveAll(deployCmd.outputDirectory)
-
-	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
-
-	if k8sConfig == nil {
-		t.Fatalf("expected valid kubernetes config")
-	}
-
-	if len(k8sConfig.Addons) != 1 {
-		t.Fatalf("expected one addon")
-	}
-
-	addon := k8sConfig.Addons[0]
-
-	if addon.Name != "container-monitoring" {
-		t.Fatalf("unexpected addon found : %s", addon.Name)
-	}
-
-	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
-	}
-
-	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
-	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
-		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
-		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
-	}
-
-	expectedWorkspaceDomainInBase64 := "b3BpbnNpZ2h0cy5henVyZS51cw=="
-	if addon.Config["workspaceDomain"] != expectedWorkspaceDomainInBase64 {
-		t.Fatalf("unexpected workspaceDomain : %s", addon.Config["workspaceDomain"])
-		t.Fatalf("expected workspaceDomain : %s but got : %s", expectedWorkspaceDomainInBase64, addon.Config["workspaceDomain"])
-	}
-}
-
-func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmdInGermanCloud(t *testing.T) {
-	apiloader := &api.Apiloader{
-		Translator: nil,
-	}
-
-	germanCloudRegion := "germanynortheast"
-	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
-	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
-	cs.Location = germanCloudRegion
-	if err != nil {
-		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
-	}
-	deployCmd := &deployCmd{
-		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
-		forceOverwrite:   true,
-		location:         germanCloudRegion,
-		containerService: cs,
-		apiVersion:       ver,
-
-		client: &armhelpers.MockAKSEngineClient{},
-		authProvider: &mockAuthProvider{
-			authArgs: &authArgs{},
-		},
-	}
-	err = autofillApimodel(deployCmd)
-	if err != nil {
-		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
-	}
-
-	defer os.RemoveAll(deployCmd.outputDirectory)
-
-	k8sConfig := deployCmd.containerService.Properties.OrchestratorProfile.KubernetesConfig
-
-	if k8sConfig == nil {
-		t.Fatalf("expected valid kubernetes config")
-	}
-
-	if len(k8sConfig.Addons) != 1 {
-		t.Fatalf("expected one addon")
-	}
-
-	addon := k8sConfig.Addons[0]
-
-	if addon.Name != "container-monitoring" {
-		t.Fatalf("unexpected addon found : %s", addon.Name)
-	}
-
-	expectedWorkspaceGUIDInBase64 := "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw"
-	if addon.Config["workspaceGuid"] != expectedWorkspaceGUIDInBase64 {
-		t.Fatalf("expected workspaceGuid : %s but got : %s", expectedWorkspaceGUIDInBase64, addon.Config["workspaceGuid"])
-	}
-
-	expectedWorkspaceKeyInBase64 := "NEQrdnlkNS9qU2NCbXNBd1pPRi8wR09CUTVrdUZRYzlKVmFXK0hsbko1OGN5ZVBKY3dUcGtzK3JWbXZnY1hHbW15dWpMRE5FVlBpVDhwQjI3NGE5WWc9PQ=="
-	if addon.Config["workspaceKey"] != expectedWorkspaceKeyInBase64 {
-		t.Fatalf("unexpected workspaceKey : %s", addon.Config["workspaceKey"])
-		t.Fatalf("expected workspaceKey : %s but got : %s", expectedWorkspaceKeyInBase64, addon.Config["workspaceKey"])
-	}
-
-	expectedWorkspaceDomainInBase64 := "b3BpbnNpZ2h0cy5henVyZS5kZQ=="
-	if addon.Config["workspaceDomain"] != expectedWorkspaceDomainInBase64 {
-		t.Fatalf("unexpected workspaceDomain : %s", addon.Config["workspaceDomain"])
-		t.Fatalf("expected workspaceDomain : %s but got : %s", expectedWorkspaceDomainInBase64, addon.Config["workspaceDomain"])
+		if addon.Config["workspaceDomain"] != c.expectedResponse.WorkspaceDomain {
+			t.Fatalf("unexpected workspaceDomain : %s", addon.Config["workspaceDomain"])
+			t.Fatalf("expected workspaceDomain : %s but got : %s", c.expectedResponse.WorkspaceDomain, addon.Config["workspaceDomain"])
+		}
 	}
 }
