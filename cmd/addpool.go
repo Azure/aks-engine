@@ -140,15 +140,18 @@ func (sc *addPoolCmd) load() error {
 		return errors.Errorf("specified agent pool spec does not exist (%s)", sc.agentPoolPath)
 	}
 
-	// TODO: Load agentpool and put it somewhere
-
-	if sc.containerService.Properties.IsAzureStackCloud() {
-		writeCustomCloudProfile(sc.containerService)
-		err = sc.containerService.Properties.SetAzureStackCloudSpec()
-		if err != nil {
-			return errors.Wrap(err, "error parsing the api model")
-		}
+	sc.agentPool, err = apiloader.LoadAgentPoolFromFile(sc.agentPoolPath)
+	if err != nil {
+		return errors.Wrap(err, "error parsing the agent pool")
 	}
+
+	// if sc.containerService.Properties.IsAzureStackCloud() {
+	// 	writeCustomCloudProfile(sc.containerService)
+	// 	err = sc.containerService.Properties.SetAzureStackCloudSpec()
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "error parsing the api model")
+	// 	}
+	// }
 
 	if err = sc.authArgs.validateAuthArgs(); err != nil {
 		return err
@@ -419,7 +422,6 @@ func (sc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 	// }
 	// sc.agentPool.Count = countForTemplate
 
-	// TODO: set sc.agentPool from json
 	sc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{sc.agentPool}
 
 	_, err = sc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
