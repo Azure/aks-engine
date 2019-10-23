@@ -857,7 +857,7 @@
     "github.com/fatih/structs",
     "github.com/ghodss/yaml",
     "github.com/go-bindata/go-bindata/go-bindata",
-    "github.com/gofrs/uuid",
+    "github.com/google/uuid",
     "github.com/google/go-cmp/cmp",
     "github.com/imdario/mergo",
     "github.com/influxdata/influxdb/client/v2",
