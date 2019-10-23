@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -194,9 +195,12 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 			return errors.Wrap(err, "failed to get VMSS list in the resource group")
 		}
 		for _, vmss := range vmssListPage.Values() {
-			vmssName := *vmss.Name
-			if apc.agentPool.Name == vmssName {
-				return errors.New("An agent pool with the given name already exists in the cluster")
+			segments := strings.Split(*vmss.Name, "-")
+			if len(segments) == 4 && segments[0] == "k8s" {
+				vmssName := segments[1]
+				if apc.agentPool.Name == vmssName {
+					return errors.New("An agent pool with the given name already exists in the cluster")
+				}
 			}
 		}
 	}
