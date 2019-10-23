@@ -358,7 +358,11 @@ func autofillApimodel(dc *deployCmd) error {
 
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
-		workspaceDomain := dc.getLogAnalyticsWorkspaceDomain()
+		cloudOrDependenciesLocation := dc.containerService.GetCloudSpecConfig().CloudName
+		if dc.containerService.Properties.IsAzureStackCloud() {
+			cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
+		}
+		workspaceDomain := helpers.GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation)
 		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
 			return errors.Wrap(err, "Failed to configure container monitoring addon")
@@ -520,27 +524,4 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 		log.Infoln("workspaceDomain:", workspaceDomain)
 	}
 	return nil
-}
-
-//get domain of azure log analytics workspace based on the cloud or azure stack dependenciesLocation
-func (dc *deployCmd) getLogAnalyticsWorkspaceDomain() string {
-	var workspaceDomain string
-	cloudOrDependenciesLocation := dc.containerService.GetCloudSpecConfig().CloudName
-	if dc.containerService.Properties.IsAzureStackCloud() {
-		cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
-	}
-	cloudOrDependenciesLocation = strings.ToLower(strings.TrimSpace(cloudOrDependenciesLocation))
-	switch cloudOrDependenciesLocation {
-	case "azurepubliccloud", "public":
-		workspaceDomain = "opinsights.azure.com"
-	case "azurechinacloud", "china":
-		workspaceDomain = "opinsights.azure.cn"
-	case "azureusgovernmentcloud", "usgovernment":
-		workspaceDomain = "opinsights.azure.us"
-	case "azuregermancloud", "german":
-		workspaceDomain = "opinsights.azure.de"
-	default:
-		workspaceDomain = "opinsights.azure.com"
-	}
-	return workspaceDomain
 }

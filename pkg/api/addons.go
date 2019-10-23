@@ -11,6 +11,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
@@ -26,12 +27,12 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
-		workspaceDomain = getLogAnalyticsWorkspaceDomain(dependenciesLocation)
+		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
 			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
 		}
 	} else {
-		workspaceDomain = getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
+		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
 			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
 		}
@@ -506,23 +507,4 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
-}
-
-// get log analyticsworkspace domain based on the cloudName or dependenciesLocation for azure stack
-func getLogAnalyticsWorkspaceDomain(cloudName string) string {
-	var workspaceDomain string
-	cloudName = strings.ToLower(strings.TrimSpace(cloudName))
-	switch cloudName {
-	case "azurepubliccloud", "public":
-		workspaceDomain = "opinsights.azure.com"
-	case "azurechinacloud", "china":
-		workspaceDomain = "opinsights.azure.cn"
-	case "azureusgovernmentcloud", "usgovernment":
-		workspaceDomain = "opinsights.azure.us"
-	case "azuregermancloud", "german":
-		workspaceDomain = "opinsights.azure.de"
-	default:
-		workspaceDomain = "opinsights.azure.com"
-	}
-	return workspaceDomain
 }
