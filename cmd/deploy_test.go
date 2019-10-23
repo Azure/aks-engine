@@ -1044,7 +1044,7 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmdI
 	germanCloudRegion := "germanynortheast"
 	apimodel := ExampleAPIModelWithContainerMonitoringAddonWithWorkspaceGUIDAndKeyConfig
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
-	cs.Location = usGovCloudRegion
+	cs.Location = germanCloudRegion
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
