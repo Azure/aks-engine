@@ -490,3 +490,24 @@ func setContainerServiceDefaultsv20170131(c *v20170131.ContainerService) {
 		}
 	}
 }
+
+// LoadAgentPoolFromFile loads an AKS Cluster Agent Pool from a JSON file
+func (a *Apiloader) LoadAgentPoolFromFile(jsonFile string) (*AgentPoolProfile, error) {
+	contents, e := ioutil.ReadFile(jsonFile)
+	if e != nil {
+		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
+	}
+	return a.LoadAgentPool(contents)
+}
+
+// LoadAgentPool loads an unversioned AKS Cluster Agent Pool and returns it
+func (a *Apiloader) LoadAgentPool(contents []byte) (*AgentPoolProfile, error) {
+	agentPoolProfile := &AgentPoolProfile{}
+	if e := json.Unmarshal(contents, &agentPoolProfile); e != nil {
+		return nil, e
+	}
+	if e := checkJSONKeys(contents, reflect.TypeOf(*agentPoolProfile), reflect.TypeOf(TypeMeta{})); e != nil {
+		return nil, e
+	}
+	return agentPoolProfile, nil
+}
