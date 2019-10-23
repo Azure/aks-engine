@@ -829,12 +829,10 @@ func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB, ipv6DualStackEnab
 				}
 				backendAddressPools = append(backendAddressPools, lbBackendAddressPools)
 			} else {
-				if isStandardLB {
-					agentLbBackendAddressPools := compute.SubResource{
-						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
-					}
-					backendAddressPools = append(backendAddressPools, agentLbBackendAddressPools)
+				agentLbBackendAddressPools := compute.SubResource{
+					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 				}
+				backendAddressPools = append(backendAddressPools, agentLbBackendAddressPools)
 			}
 			ipconfig.LoadBalancerBackendAddressPools = &backendAddressPools
 			if ipv6DualStackEnabled && !isStandardLB {

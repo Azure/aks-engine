@@ -631,12 +631,14 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorVersion: "1.14.4",
-				KubernetesConfig: &api.KubernetesConfig{
-					LoadBalancerSku: StandardLoadBalancerSku,
+				KubernetesConfig:    &api.KubernetesConfig{
+					// LoadBalancerSku: StandardLoadBalancerSku,
 				},
 			},
 		},
 	}
+
+	// test CreateAgentLoadBalancer with basic LB
 	actual := CreateAgentLoadBalancer(cs.Properties, false)
 
 	expected := LoadBalancerARM{
@@ -665,24 +667,6 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 						},
 					},
 				},
-				OutboundRules: &[]network.OutboundRule{
-					{
-						Name: to.StringPtr("LBOutboundRule"),
-						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
-							FrontendIPConfigurations: &[]network.SubResource{
-								{
-									ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
-								},
-							},
-							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
-							},
-							Protocol:             network.Protocol1All,
-							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-							EnableTCPReset:       to.BoolPtr(true),
-						},
-					},
-				},
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",
@@ -697,4 +681,31 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
+	// test CreateAgentLoadBalancer with standard LB
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+	actual = CreateAgentLoadBalancer(cs.Properties, false)
+	expected.OutboundRules = &[]network.OutboundRule{
+		{
+			Name: to.StringPtr("LBOutboundRule"),
+			OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+				FrontendIPConfigurations: &[]network.SubResource{
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+					},
+				},
+				BackendAddressPool: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+				},
+				Protocol:             network.Protocol1All,
+				IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+				EnableTCPReset:       to.BoolPtr(true),
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
+	}
 }

@@ -287,13 +287,17 @@ func CreateAgentLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM 
 						},
 					},
 				},
-				OutboundRules: createOutboundRules(prop),
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",
 			},
 			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
 		},
+	}
+
+	// create outbound rules only for standard loadbalancer sku
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules = createOutboundRules(prop)
 	}
 
 	return loadBalancer

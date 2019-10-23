@@ -307,7 +307,6 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 	}
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
 		profile.LoadBalancerBackendAddressPoolIDs == nil &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 		!isHostedMaster {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
 	}
@@ -352,9 +351,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 					)
 				}
 			} else {
-				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-					!isHostedMaster {
+				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() && !isHostedMaster {
 					agentLbBackendAddressPools := network.BackendAddressPool{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					}

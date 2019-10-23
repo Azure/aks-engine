@@ -48,9 +48,11 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
 		!isHostedMaster &&
-		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
 		isForMaster := false
+		// bootstrap lb by default for basic and standard LB SKU with all
+		// agent nodes in backend pool to reduce number of ARM calls made
+		// while first creating a service in cluster.
 		publicIPAddress := CreatePublicIPAddress(isForMaster)
 		loadBalancer := CreateAgentLoadBalancer(cs.Properties, true)
 		armResources = append(armResources, publicIPAddress, loadBalancer)

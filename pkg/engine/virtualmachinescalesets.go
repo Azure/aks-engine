@@ -502,9 +502,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 					)
 				}
 			} else {
-				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-					!isHostedMaster {
+				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() && !isHostedMaster {
 					agentLbBackendAddressPools := compute.SubResource{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					}

@@ -691,6 +691,15 @@ func TestCreateAgentVMASNICWithSLB(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing: %s", diff)
 	}
+
+	// Test AgentVMAS NIC with Basic LB, should add dependsOn for agentLbID and adds agentLbBackendPoolName as backendaddress pool
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
+	actual = createAgentVMASNetworkInterface(cs, profile)
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing: %s", diff)
+	}
 }
 
 func TestCreateAgentVMASNICWithSLBHostedMaster(t *testing.T) {

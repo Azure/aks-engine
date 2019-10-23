@@ -178,6 +178,13 @@ func TestK8sVars(t *testing.T) {
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
 	}
 
+	expectedMap["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
+	expectedMap["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
+	expectedMap["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
+	expectedMap["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
+	expectedMap["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+	expectedMap["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+
 	diff := cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -405,6 +412,12 @@ func TestK8sVars(t *testing.T) {
 	delete(expectedMap, "masterEtcdPeerURLs")
 	delete(expectedMap, "masterEtcdClusterStates")
 	delete(expectedMap, "masterEtcdClientURLs")
+	delete(expectedMap, "agentPublicIPAddressName")
+	delete(expectedMap, "agentLbID")
+	delete(expectedMap, "agentLbIPConfigID")
+	delete(expectedMap, "agentLbIPConfigName")
+	delete(expectedMap, "agentLbName")
+	delete(expectedMap, "agentLbBackendPoolName")
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -648,6 +661,13 @@ func TestK8sVars(t *testing.T) {
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 	}
+	expectedMap["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
+	expectedMap["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
+	expectedMap["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
+	expectedMap["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
+	expectedMap["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+	expectedMap["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+
 	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -688,12 +708,7 @@ func TestK8sVars(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedMap["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
-	expectedMap["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
-	expectedMap["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
-	expectedMap["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
-	expectedMap["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
-	expectedMap["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+
 	expectedMap["loadBalancerSku"] = api.StandardLoadBalancerSku
 	diff = cmp.Diff(varMap, expectedMap)
 
