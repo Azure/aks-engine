@@ -425,7 +425,6 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
     for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
-      # TODO: change base repo URL when Azure publishing is available
       CONTAINER_IMAGE="k8s.gcr.io/${component}:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
