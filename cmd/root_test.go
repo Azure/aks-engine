@@ -16,7 +16,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"gopkg.in/ini.v1"
 )
@@ -129,7 +129,7 @@ func TestGetSelectedCloudFromAzConfig(t *testing.T) {
 }
 
 func TestGetCloudSubFromAzConfig(t *testing.T) {
-	goodUUID, err := uuid.FromString("ccabad21-ea42-4ea1-affc-17ae73f9df66")
+	goodUUID, err := uuid.Parse("ccabad21-ea42-4ea1-affc-17ae73f9df66")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -203,7 +203,7 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 
 func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 	cs := prepareCustomCloudProfile()
-	subscriptionID, _ := uuid.FromString("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
+	subscriptionID, _ := uuid.Parse("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
 
 	for _, test := range []struct {
 		desc     string

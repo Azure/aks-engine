@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -114,7 +114,7 @@ func (gc *generateCmd) validate(cmd *cobra.Command, args []string) error {
 		return errors.Errorf("specified api model does not exist (%s)", gc.apimodelPath)
 	}
 
-	gc.ClientID, _ = uuid.FromString(gc.rawClientID)
+	gc.ClientID, _ = uuid.Parse(gc.rawClientID)
 
 	return nil
 }
