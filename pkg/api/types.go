@@ -1964,6 +1964,10 @@ func (k *KubernetesConfig) PrivateJumpboxProvision() bool {
 
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
+	if k == nil {
+		return false
+	}
+
 	runtime := strings.ToLower(k.ContainerRuntime)
 	return runtime == Docker || runtime == ""
 }

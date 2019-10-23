@@ -43,6 +43,10 @@ func InitializeTemplateGenerator(ctx Context) (*TemplateGenerator, error) {
 		Translator: ctx.Translator,
 	}
 
+	if t.Translator == nil {
+		t.Translator = &i18n.Translator{}
+	}
+
 	if err := t.verifyFiles(); err != nil {
 		return nil, err
 	}
