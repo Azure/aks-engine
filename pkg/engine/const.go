@@ -76,6 +76,12 @@ const (
 	ACIConnectorAddonName = "aci-connector"
 	// AppGwIngressAddonName appgw addon
 	AppGwIngressAddonName = "appgw-ingress"
+	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
+	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
 	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
@@ -139,6 +145,8 @@ const (
 	AzureStackSuffix = "-azs"
 	// AzureStackPrefix is appended to windows binary version for Azure Stack instances
 	AzureStackPrefix = "azs-"
+	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
+	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
 )
 
 const (
@@ -180,6 +188,7 @@ const (
 	dockerClearMountPropagationFlags         = "k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf"
 	systemdBPFMount                          = "k8s/cloud-init/artifacts/sys-fs-bpf.mount"
 	etcdSystemdService                       = "k8s/cloud-init/artifacts/etcd.service"
+	auditdRules                              = "k8s/cloud-init/artifacts/auditd-rules"
 	// scripts and service for enabling ipv6 dual stack
 	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
 	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"

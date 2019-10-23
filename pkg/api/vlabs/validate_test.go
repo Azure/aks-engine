@@ -134,6 +134,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enableAggregatedAPIs requires the enableRbac feature as a prerequisite",
 		},
+		"should error when KubernetesConfig has enableRBAC disabled for >= 1.15": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					KubernetesConfig: &KubernetesConfig{
+						EnableRbac: &falseVal,
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
+		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -554,8 +566,32 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 		}
+	}
 
-		c = KubernetesConfig{
+	// Tests that apply to 1.6 and later releases
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
+		c := KubernetesConfig{
+			CloudProviderBackoff:   to.BoolPtr(true),
+			CloudProviderRateLimit: to.BoolPtr(true),
+		}
+		if err := c.Validate(k8sVersion, false, false); err != nil {
+			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
+		}
+	}
+
+	// Tests that apply to 1.8 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
+		c := KubernetesConfig{
+			UseCloudControllerManager: to.BoolPtr(true),
+		}
+		if err := c.Validate(k8sVersion, false, false); err != nil {
+			t.Error("should not error because UseCloudControllerManager is available since v1.8")
+		}
+	}
+
+	// Tests that apply to dualstack with 1.16 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.16.0", true, true) {
+		c := KubernetesConfig{
 			NetworkPlugin: "kubenet",
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
@@ -581,26 +617,58 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		if err := c.Validate(k8sVersion, false, true); err == nil {
 			t.Error("should error when more than 2 cluster subnets provided")
 		}
-	}
 
-	// Tests that apply to 1.6 and later releases
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
-		c := KubernetesConfig{
-			CloudProviderBackoff:   to.BoolPtr(true),
-			CloudProviderRateLimit: to.BoolPtr(true),
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
-			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
-		}
-	}
 
-	// Tests that apply to 1.8 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
-		c := KubernetesConfig{
-			UseCloudControllerManager: to.BoolPtr(true),
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when proxy mode is not set to ipvs")
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
-			t.Error("should not error because UseCloudControllerManager is available since v1.8")
+
+		c = KubernetesConfig{
+			ServiceCidr: "10.0.0.0/16,fe80:20d::/112",
+		}
+
+		if err := c.Validate(k8sVersion, false, false); err == nil {
+			t.Error("should error when more than 1 service cidr provided with ipv6dualstack feature disabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112,fec0::/7",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when more than 2 service cidr provided with ipv6dualstack feature enabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,2001:db8::/129",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err == nil {
+			t.Error("should error when secondary cidr is invalid with ipv6dualstack feature enabled")
+		}
+
+		c = KubernetesConfig{
+			NetworkPlugin: "kubenet",
+			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true); err != nil {
+			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
 		}
 	}
 }
@@ -1570,6 +1638,110 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err == nil {
 		t.Errorf(
 			"should error when missing the subnet for Application Gateway",
+		)
+	}
+
+	// Basic tests for azuredisk-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azuredisk-csi-driver",
+		)
+	}
+
+	// Basic tests for azurefile-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azurefile-csi-driver",
 		)
 	}
 }
@@ -3285,6 +3457,318 @@ func TestValidateFeatureFlags(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), test.expectedError) {
 				t.Errorf("%s expected error: %s but received: %s", testName, test.expectedError, err.Error())
+			}
+		})
+	}
+}
+
+func TestValidateMasterProfileImageRef(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"should error when masterProfile includes both an ImageRef and a Distro configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro: AKSUbuntu1604,
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+		},
+		"should error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro: AKSUbuntu1604,
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+		},
+		"should not error when masterProfile includes an ImageRef configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes an ImageRef configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					ImageRef: &ImageReference{
+						Name:           "name",
+						ResourceGroup:  "rg",
+						SubscriptionID: "sub-id",
+						Gallery:        "gallery",
+						Version:        "version",
+					},
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes a Distro configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro:    AKSUbuntu1604,
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes a Distro configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Distro:    AKSUbuntu1604,
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes neither an explicit Distro nor ImageRef configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when masterProfile includes neither an explicit Distro nor ImageRef configuration in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					DNSPrefix: "foo",
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateMasterProfile(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+		},
+		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+		},
+		"should not error when AgentPoolProfile includes an ImageRef configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes an ImageRef configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+						ImageRef: &ImageReference{
+							Name:           "name",
+							ResourceGroup:  "rg",
+							SubscriptionID: "sub-id",
+							Gallery:        "gallery",
+							Version:        "version",
+						},
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes a Distro configuration only": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes a Distro configuration only in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes neither an explicit Distro nor ImageRef configuration": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when AgentPoolProfile includes neither an explicit Distro nor ImageRef configuration in an upgrade context": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateAgentPoolProfiles(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
 			}
 		})
 	}

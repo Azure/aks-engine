@@ -13,8 +13,6 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 )
 
-const commandTimeout = 1 * time.Minute
-
 // PersistentVolume is used to parse data from kubectl get pv
 type PersistentVolume struct {
 	Metadata Metadata `json:"metadata"`
@@ -86,6 +84,7 @@ func DescribePVs() {
 
 // Describe will describe a pv resource
 func (pv *PersistentVolume) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "pv", pv.Metadata.Name)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))

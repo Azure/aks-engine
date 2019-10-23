@@ -310,6 +310,7 @@ type PrivateJumpboxProfile struct {
 
 // CloudProviderConfig contains the KubernetesConfig properties specific to the Cloud Provider
 type CloudProviderConfig struct {
+	CloudProviderBackoffMode          string `json:"cloudProviderBackoffMode,omitempty"`
 	CloudProviderBackoff              *bool  `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int    `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        string `json:"cloudProviderBackoffJitter,omitempty"`
@@ -348,6 +349,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                     string            `json:"networkPolicy,omitempty"`
 	NetworkPlugin                     string            `json:"networkPlugin,omitempty"`
@@ -387,6 +389,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        float64           `json:"cloudProviderBackoffJitter,omitempty"`
@@ -531,7 +534,6 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
-	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -555,6 +557,7 @@ type AgentPoolProfile struct {
 	MinCount                            *int                 `json:"minCount,omitempty"`
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount,omitempty"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
@@ -1299,6 +1302,11 @@ func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
 }
 
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (m *MasterProfile) IsAuditDEnabled() bool {
+	return to.Bool(m.AuditDEnabled)
+}
+
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
@@ -1426,6 +1434,11 @@ func (a *AgentPoolProfile) IsCoreOS() bool {
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
 	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
+}
+
+// IsAuditDEnabled returns true if the master profile is configured for auditd
+func (a *AgentPoolProfile) IsAuditDEnabled() bool {
+	return to.Bool(a.AuditDEnabled)
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
@@ -1660,7 +1673,12 @@ func (o *OrchestratorProfile) NeedsExecHealthz() bool {
 		!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")
 }
 
-// HasAadProfile  returns true if the has aad profile
+// GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
+func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
+	return o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"]
+}
+
+// HasAadProfile returns true if the has aad profile
 func (p *Properties) HasAadProfile() bool {
 	return p.AADProfile != nil
 }
@@ -1808,6 +1826,16 @@ func (p *Properties) HasNSeriesSKU() bool {
 	return false
 }
 
+// HasDCSeriesSKU returns whether or not there is an DC series SKU agent pool
+func (p *Properties) HasDCSeriesSKU() bool {
+	for _, profile := range p.AgentPoolProfiles {
+		if strings.Contains(profile.VMSize, "Standard_DC") {
+			return true
+		}
+	}
+	return false
+}
+
 // IsNVIDIADevicePluginEnabled checks if the NVIDIA Device Plugin addon is enabled
 // It is enabled by default if agents contain a GPU and Kubernetes version is >= 1.10.0
 func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
@@ -1945,14 +1973,16 @@ func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
 	if k.CloudProviderBackoffDuration == 0 {
 		k.CloudProviderBackoffDuration = DefaultKubernetesCloudProviderBackoffDuration
 	}
-	if k.CloudProviderBackoffExponent == 0 {
-		k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
-	}
-	if k.CloudProviderBackoffJitter == 0 {
-		k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
-	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
+	}
+	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
+		if k.CloudProviderBackoffExponent == 0 {
+			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
+		}
+		if k.CloudProviderBackoffJitter == 0 {
+			k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
+		}
 	}
 }
 

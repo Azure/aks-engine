@@ -92,7 +92,7 @@ $global:PrimaryScaleSetName = "{{WrapAsVariable "primaryScaleSetName"}}"
 $global:KubeClusterCIDR = "{{WrapAsParameter "kubeClusterCidr"}}"
 $global:KubeServiceCIDR = "{{WrapAsParameter "kubeServiceCidr"}}"
 $global:VNetCIDR = "{{WrapAsParameter "vnetCidr"}}"
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
+{{if IsKubernetesVersionGe "1.16.0"}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}"
 {{else}}
 $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}"
@@ -108,6 +108,7 @@ $global:ExcludeMasterFromStandardLB = "{{WrapAsVariable "excludeMasterFromStanda
 
 
 # Windows defaults, not changed by aks-engine
+$global:CacheDir = "c:\akse-cache"
 $global:KubeDir = "c:\k"
 $global:HNSModule = [Io.path]::Combine("$global:KubeDir", "hns.psm1")
 
@@ -160,6 +161,13 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        # Install OpenSSH if SSH enabled
+        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
+
+        if ( $sshEnabled ) {
+            Install-OpenSSH -SSHKeys $SSHKeys
+        }
+
         Write-Log "Apply telemetry data setting"
         Set-TelemetrySetting -WindowsTelemetryGUID $global:WindowsTelemetryGUID
 
@@ -186,7 +194,6 @@ try
             Write-Log "Overwriting kube node binaries from $global:WindowsKubeBinariesURL"
             Get-KubeBinaries -KubeBinariesURL $global:WindowsKubeBinariesURL
         }
-
 
         Write-Log "Write Azure cloud provider config"
         Write-AzureConfig `
@@ -229,7 +236,6 @@ try
                          -AgentKey $AgentKey `
                          -AgentCertificate $global:AgentCertificate
 
-
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
 
@@ -237,6 +243,7 @@ try
 
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
+            Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir `
                                 -AzureCNIBinDir $global:AzureCNIBinDir `
                                 -VNetCNIPluginsURL $global:VNetCNIPluginsURL
@@ -254,6 +261,7 @@ try
                     -SubscriptionId $global:SubscriptionId `
                     -ResourceGroup $global:ResourceGroup `
                     -AADClientId $AADClientId `
+                    -KubeDir $global:KubeDir `
                     -AADClientSecret $([System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String($AADClientSecret))) `
                     -NetworkAPIVersion $NetworkAPIVersion `
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
@@ -261,6 +269,7 @@ try
             }
 
         } elseif ($global:NetworkPlugin -eq "kubenet") {
+            Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
             Get-HnsPsm1 -HNSModule $global:HNSModule
         }
@@ -285,12 +294,7 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
-        # Install OpenSSH if SSH enabled
-        $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
-
-        if ( $sshEnabled ) {
-            Install-OpenSSH -SSHKeys $SSHKeys
-        }
+        Get-NetworkLogCollectionScripts
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
@@ -304,6 +308,12 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
+        if (Test-Path $CacheDir)
+        {
+            Write-Log "Removing aks-engine bits cache directory"
+            Remove-Item $CacheDir -Recurse -Force
+        }
+
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
     }
@@ -316,4 +326,5 @@ try
 catch
 {
     Write-Error $_
+    exit 1
 }

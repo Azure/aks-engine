@@ -47,7 +47,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "18.09.7"
+	KubernetesWindowsDockerVersion = "19.03.2"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -135,6 +135,10 @@ const (
 	DefaultACIConnectorAddonEnabled = false
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
 	DefaultAppGwIngressAddonEnabled = false
+	// DefaultAzureDiskCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Disk CSI Driver
+	DefaultAzureDiskCSIDriverAddonEnabled = true
+	// DefaultAzureFileCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure File CSI Driver
+	DefaultAzureFileCSIDriverAddonEnabled = true
 	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
 	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon
@@ -183,6 +187,10 @@ const (
 	ACIConnectorAddonName = "aci-connector"
 	// AppGwIngressAddonName appgw addon
 	AppGwIngressAddonName = "appgw-ingress"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
 	ClusterAutoscalerAddonName = "cluster-autoscaler"
 	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
@@ -265,27 +273,6 @@ const (
 
 	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
 	MaxAzureStackManagedDiskSize = "1023"
-
-	// DefaultAzureStackWindowsOffer sets the default WindowsOffer value in WindowsProfile for Azure Stack
-	DefaultAzureStackWindowsOffer = "WindowsServer"
-
-	// DefaultAzureStackWindowsSku sets the default WindowsSku value in WindowsProfile for Azure Stack
-	DefaultAzureStackWindowsSku = "2019-Datacenter-Core-with-Containers"
-
-	// DefaultAzureStackImageVersion sets the default ImageVersion value in WindowsProfile for Azure Stack
-	DefaultAzureStackImageVersion = "latest"
-)
-
-// WindowsProfile defaults
-const (
-	// DefaultWindowsPublisher sets the default WindowsPublisher value in WindowsProfile
-	DefaultWindowsPublisher = "MicrosoftWindowsServer"
-	// DefaultWindowsOffer sets the default WindowsOffer value in WindowsProfile
-	DefaultWindowsOffer = "WindowsServer"
-	// DefaultWindowsSku sets the default WindowsSku value in WindowsProfile
-	DefaultWindowsSku = "2019-Datacenter-Core-with-Containers-smalldisk"
-	// DefaultImageVersion sets the default ImageVersion value in WindowsProfile
-	DefaultImageVersion = "17763.737.1909062324"
 )
 
 const (
@@ -306,6 +293,7 @@ const (
 )
 
 const (
+	CloudProviderBackoffModeV2 = "v2"
 	// DefaultKubernetesCloudProviderBackoffRetries is 6, takes effect if DefaultKubernetesCloudProviderBackoff is true
 	DefaultKubernetesCloudProviderBackoffRetries = 6
 	// DefaultKubernetesCloudProviderBackoffJitter is 1, takes effect if DefaultKubernetesCloudProviderBackoff is true
@@ -336,11 +324,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.27"
+	AzureCniPluginVerLinux = "v1.0.28"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.27"
+	AzureCniPluginVerWindows = "v1.0.28"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.7.5"
@@ -417,8 +405,6 @@ const (
 	DefaultKubernetesCtrlMgrTerminatedPodGcThreshold = "5000"
 	// DefaultKubernetesCtrlMgrUseSvcAccountCreds is "true", see --use-service-account-credentials at https://kubernetes.io/docs/admin/kube-controller-manager/
 	DefaultKubernetesCtrlMgrUseSvcAccountCreds = "false"
-	// DefaultKubernetesCloudProviderBackoff is false to disable cloudprovider backoff implementation for API calls
-	DefaultKubernetesCloudProviderBackoff = true
 	// DefaultKubernetesCloudProviderRateLimit is false to disable cloudprovider rate limiting implementation for API calls
 	DefaultKubernetesCloudProviderRateLimit = true
 	// DefaultTillerMaxHistory limits the maximum number of revisions saved per release. Use 0 for no limit.
@@ -460,13 +446,13 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fd00:101::/8"
+	DefaultKubernetesClusterSubnetIPv6 = "fc00::/8"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.6"
+	DefaultMobyVersion = "3.0.7"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

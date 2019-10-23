@@ -170,7 +170,7 @@ Here are a few examples on how to use the REST API.
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics`
 
-```json
+```js
 [
     "cpu/usage",
     "network/rx_errors",
@@ -183,7 +183,7 @@ Here are a few examples on how to use the REST API.
 
 1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics/cpu/usage`
 
-```json
+```js
 {
     metrics: [
         {

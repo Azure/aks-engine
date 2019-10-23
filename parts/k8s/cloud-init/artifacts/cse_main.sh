@@ -58,15 +58,15 @@ if [[ "${GPU_NODE}" != "true" ]]; then
 fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
-if [[ "${IS_VHD}" = true ]]; then
-    if [ ! -f $VHD_LOGS_FILEPATH ]; then
-        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
-        exit $ERR_VHD_FILE_NOT_FOUND
-    fi
+if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
     cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
+    if [[ "${IS_VHD}" = true ]]; then
+        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
+        exit $ERR_VHD_FILE_NOT_FOUND
+    fi
     FULL_INSTALL_REQUIRED=true
 fi
 
@@ -75,7 +75,10 @@ if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
 else
     echo "Golden image; skipping dependencies installation"
 fi
-ensureAuditD
+
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
+    ensureAuditD
+fi
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
@@ -189,15 +192,9 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-echo "Custom script finished successfully"
-
-echo $(date),$(hostname), endcustomscript>>/opt/m
-mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
-ps auxfww > /opt/azure/provision-ps.log &
-
-if [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
+if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
     # TODO: remove once ACR is available on Azure Stack
-    apt_get_purge 20 30 120 apache2-utils || exit $ERR_APT_PURGE_FAIL
+    apt_get_purge 20 30 120 apache2-utils &
 fi
 
 if $REBOOTREQUIRED; then
@@ -212,4 +209,10 @@ else
       aptmarkWALinuxAgent unhold &
   fi
 fi
+
+echo "Custom script finished successfully"
+echo $(date),$(hostname), endcustomscript>>/opt/m
+mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
+ps auxfww > /opt/azure/provision-ps.log &
+
 #EOF

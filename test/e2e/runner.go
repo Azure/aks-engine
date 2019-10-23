@@ -59,12 +59,12 @@ func main() {
 		log.Fatalf("Error while trying to setup azure account: %s\n", err)
 	}
 
-	err := acct.Login()
+	err := acct.LoginWithRetry(3*time.Second, cfg.Timeout)
 	if err != nil {
 		log.Fatalf("Error while trying to login to azure account! %s\n", err)
 	}
 
-	err = acct.SetSubscription()
+	err = acct.SetSubscriptionWithRetry(3*time.Second, cfg.Timeout)
 	if err != nil {
 		log.Fatal("Error while trying to set azure subscription!")
 	}
@@ -94,9 +94,11 @@ func main() {
 			log.Fatalf("Error while trying to set storage account connection string: %s\n", err)
 		}
 		provision := true
+		rgExists := true
 		rg := cfg.SoakClusterName
-		err = acct.SetResourceGroup(rg)
+		err = acct.SetResourceGroupWithRetry(rg, 3*time.Second, 20*time.Second)
 		if err != nil {
+			rgExists = false
 			log.Printf("Error while trying to set RG:%s\n", err)
 		} else {
 			// set expiration time to 7 days = 168h for now
@@ -109,8 +111,10 @@ func main() {
 		}
 		if provision || cfg.ForceDeploy {
 			log.Printf("Soak cluster %s does not exist or has expired\n", rg)
-			log.Printf("Deleting Resource Group:%s\n", rg)
-			acct.DeleteGroup(rg, true)
+			if rgExists {
+				log.Printf("Deleting Resource Group:%s\n", rg)
+				acct.DeleteGroupWithRetry(rg, true, 3*time.Second, cfg.Timeout)
+			}
 			log.Printf("Deleting Storage files:%s\n", rg)
 			sa.DeleteFiles(cfg.SoakClusterName)
 			cfg.Name = ""
@@ -120,7 +124,7 @@ func main() {
 			if err != nil {
 				log.Printf("Error while trying to download _output dir: %s, will provision a new cluster.\n", err)
 				log.Printf("Deleting Resource Group:%s\n", rg)
-				acct.DeleteGroup(rg, true)
+				acct.DeleteGroupWithRetry(rg, true, 3*time.Second, cfg.Timeout)
 				log.Printf("Deleting Storage files:%s\n", rg)
 				sa.DeleteFiles(cfg.SoakClusterName)
 				cfg.Name = ""
@@ -250,7 +254,7 @@ func teardown() {
 	if cfg.CleanUpOnExit {
 		for _, rg := range rgs {
 			log.Printf("Deleting Group:%s\n", rg)
-			acct.DeleteGroup(rg, false)
+			acct.DeleteGroupWithRetry(rg, false, 3*time.Second, cfg.Timeout)
 		}
 	}
 }

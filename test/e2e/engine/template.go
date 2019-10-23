@@ -51,6 +51,7 @@ type Config struct {
 	ImageName                      string `envconfig:"IMAGE_NAME"`
 	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
+	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -218,6 +219,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				break
 			}
 		}
+	}
+
+	if config.CustomHyperKubeImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = config.CustomHyperKubeImage
 	}
 
 	return &Engine{

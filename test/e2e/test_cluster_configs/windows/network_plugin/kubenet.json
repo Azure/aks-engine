@@ -5,7 +5,6 @@
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.14",
 				"kubernetesConfig": {
 					"networkPlugin": "kubenet"
 				}
@@ -13,13 +12,13 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v2"
+				"vmSize": "Standard_D2_v3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "agentwin",
 					"count": 3,
-					"vmSize": "Standard_D2_v2",
+					"vmSize": "Standard_D2_v3",
 					"osType": "Windows"
 				}
 			],

@@ -753,6 +753,7 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 		},
 	}
 
+	// Windows profile
 	profile := &api.AgentPoolProfile{
 		OSType: "Windows",
 		PreprovisionExtension: &api.Extension{
@@ -764,6 +765,32 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 
 	expected := `New-Item -ItemType Directory -Force -Path "$env:SystemDrive:/AzureData/extensions/fooExtension" ; Invoke-WebRequest -Uri "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" -OutFile "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script" ; powershell "$env:SystemDrive:/AzureData/extensions/fooExtension/fooBar Script $preprovisionExtensionParams"
 `
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+
+	// Linux profile
+	profile.OSType = "Linux"
+
+	actual = makeAgentExtensionScriptCommands(cs, profile)
+
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs  "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
+- sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
+
+	if actual != expected {
+		t.Errorf("expected to get %s, but got %s instead", expected, actual)
+	}
+
+	// Azure Stack Linux profile
+	cs.Properties.CustomCloudProfile = &api.CustomCloudProfile{}
+
+	actual = makeAgentExtensionScriptCommands(cs, profile)
+
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs --cacert /var/lib/waagent/Certificates.pem "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
+- sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
 
 	if actual != expected {
 		t.Errorf("expected to get %s, but got %s instead", expected, actual)

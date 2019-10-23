@@ -275,6 +275,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string            `json:"kubernetesImageBase,omitempty"`
+	MCRKubernetesImageBase            string            `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string            `json:"clusterSubnet,omitempty"`
 	DNSServiceIP                      string            `json:"dnsServiceIP,omitempty"`
 	ServiceCidr                       string            `json:"serviceCidr,omitempty"`
@@ -314,6 +315,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        float64           `json:"cloudProviderBackoffJitter,omitempty"`
@@ -390,6 +392,7 @@ type MasterProfile struct {
 	AgentSubnet              string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
+	PlatformFaultDomainCount *int              `json:"platformFaultDomainCount,omitEmpty"`
 	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
 
@@ -469,6 +472,7 @@ type AgentPoolProfile struct {
 	PreProvisionExtension             *Extension        `json:"preProvisionExtension"`
 	Extensions                        []Extension       `json:"extensions"`
 	SinglePlacementGroup              *bool             `json:"singlePlacementGroup,omitempty"`
+	PlatformFaultDomainCount          *int              `json:"platformFaultDomainCount,omitEmpty"`
 	AvailabilityZones                 []string          `json:"availabilityZones,omitempty"`
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`

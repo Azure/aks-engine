@@ -17,23 +17,41 @@ function DownloadFileOverHttp
         [Parameter(Mandatory=$true)][string]
         $DestinationPath
     )
-    $secureProtocols = @()
-    $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
 
-    foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+    # First check to see if a file with the same name is already cached on the VHD
+    $fileName = [IO.Path]::GetFileName($Url)
+    
+    $search = @()
+    if (Test-Path $global:CacheDir)
     {
-        if ($insecureProtocols -notcontains $protocol)
-        {
-            $secureProtocols += $protocol
-        }
+        $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
-    [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
 
-    $oldProgressPreference = $ProgressPreference
-    $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
-    $ProgressPreference = $oldProgressPreference
-    Write-Log "Downloaded file to $DestinationPath"
+    if ($search.Count -ne 0)
+    {
+        Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
+        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+    }
+    else 
+    {
+        $secureProtocols = @()
+        $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
+    
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
+        {
+            if ($insecureProtocols -notcontains $protocol)
+            {
+                $secureProtocols += $protocol
+            }
+        }
+        [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
+    
+        $oldProgressPreference = $ProgressPreference
+        $ProgressPreference = 'SilentlyContinue'
+        Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $ProgressPreference = $oldProgressPreference
+        Write-Log "Downloaded file to $DestinationPath"
+    }
 }
 
 # https://stackoverflow.com/a/34559554/697126
@@ -76,4 +94,15 @@ function Retry-Command
             Start-Sleep $RetryDelaySeconds
         }
     }
+}
+
+function Get-NetworkLogCollectionScripts {
+    Write-Log "Getting CollectLogs.ps1 and depencencies"
+    mkdir 'c:\k\debug'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/collectlogs.ps1' -DestinationPath 'c:\k\debug\collectlogs.ps1'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/dumpVfpPolicies.ps1' -DestinationPath 'c:\k\debug\dumpVfpPolicies.ps1'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/starthnstrace.cmd' -DestinationPath 'c:\k\debug\starthnstrace.cmd'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd' -DestinationPath 'c:\k\debug\startpacketcapture.cmd'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
 }

@@ -25,8 +25,6 @@ import (
 
 const (
 	testDir                    string = "testdirectory"
-	commandTimeout                    = 1 * time.Minute
-	deleteTimeout                     = 5 * time.Minute
 	validatePodNotExistRetries        = 3
 )
 
@@ -395,6 +393,37 @@ func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	}
 }
 
+// GetAllByPrefixWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllByPrefixWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByPrefixWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllByPrefixWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentGetAllByPrefixWithRetryError)
+		}
+	}
+}
+
 // GetAllByPrefix will return all pods in a given namespace that match a prefix
 func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	pl, err := GetAll(namespace)
@@ -413,6 +442,68 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 		}
 	}
 	return pods, nil
+}
+
+// GetAllRunningByPrefixAsync wraps GetAllRunningByPrefix with a struct response for goroutine + channel usage
+func GetAllRunningByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllRunningByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
+// GetAllRunningByPrefix will return all Running pods in a given namespace that match a prefix
+func GetAllRunningByPrefix(prefix, namespace string) ([]Pod, error) {
+	pl, err := GetAll(namespace)
+	if err != nil {
+		return nil, err
+	}
+	pods := []Pod{}
+	for _, p := range pl.Pods {
+		matched, err := regexp.MatchString(prefix+"-.*", p.Metadata.Name)
+		if err != nil {
+			log.Printf("Error trying to match pod name:%s\n", err)
+			return nil, err
+		}
+		if matched {
+			if p.Status.Phase == "Running" {
+				pods = append(pods, p)
+			}
+		}
+	}
+	return pods, nil
+}
+
+// GetAllRunningByPrefixWithRetry will return all Running pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllRunningByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllRunningByPrefixWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllRunningByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllRunningByPrefixWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllRunningByPrefixWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllRunningByPrefixWithRetry timed out: %s\n", mostRecentGetAllRunningByPrefixWithRetryError)
+		}
+	}
 }
 
 // AreAllPodsRunningResult is a return struct for AreAllPodsRunningAsync
@@ -538,15 +629,16 @@ func GetPodAsync(name, namespace string, timeout time.Duration) GetPodResult {
 	}
 }
 
-// WaitOnReady returns true if all pods matching a prefix substring are in a succeeded state within a period of time
+// WaitOnSuccesses returns true if all pods matching a prefix substring are in a succeeded state within a period of time
 // successesNeeded is used to make sure we return the correct value even if the pod is in a CrashLoop
-func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
+func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan AreAllPodsRunningResult)
-	var mostRecentWaitOnReadyErr error
+	var mostRecentWaitOnSuccessesErr error
 	successCount := 0
-	failureCount := 0
+	flapCount := 0
+	var lastResult bool
 	go func() {
 		for {
 			select {
@@ -560,24 +652,28 @@ func WaitOnReady(podPrefix, namespace string, successesNeeded int, sleep, timeou
 	for {
 		select {
 		case result := <-ch:
-			mostRecentWaitOnReadyErr = result.err
-			if result.ready {
-				successCount++
-				if successCount >= successesNeeded {
-					return true, nil
-				}
-			} else {
-				if successCount > 1 {
-					failureCount++
-					if failureCount >= successesNeeded {
-						PrintPodsLogs(podPrefix, namespace)
-						return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but NotReady %d times. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, failureCount)
+			mostRecentWaitOnSuccessesErr = result.err
+			if mostRecentWaitOnSuccessesErr == nil {
+				if result.ready {
+					lastResult = true
+					successCount++
+					if successCount >= successesNeeded {
+						return true, nil
+					}
+				} else {
+					if lastResult {
+						flapCount++
+						if flapCount >= (successesNeeded - 1) {
+							PrintPodsLogs(podPrefix, namespace)
+							return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but included %d transitions away from a Ready state. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, flapCount)
+						}
+						lastResult = false
 					}
 				}
 			}
 		case <-ctx.Done():
 			PrintPodsLogs(podPrefix, namespace)
-			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnReadyErr)
+			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnSuccessesErr)
 		}
 	}
 }
@@ -684,7 +780,7 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
 func (p *Pod) WaitOnReady(sleep, timeout time.Duration) (bool, error) {
-	return WaitOnReady(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
+	return WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, timeout)
 }
 
 // WaitOnSucceeded will call the static method WaitOnSucceeded passing in p.Metadata.Name and p.Metadata.Namespace
@@ -790,11 +886,12 @@ func (p *Pod) Exec(c ...string) ([]byte, error) {
 
 // Delete will delete a Pod in a given namespace
 func (p *Pod) Delete(retries int) error {
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "po", "-n", p.Metadata.Namespace, p.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, deleteTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete Pod %s in namespace %s:%s\n", p.Metadata.Namespace, p.Metadata.Name, string(kubectlOutput))
 			continue
@@ -1112,6 +1209,7 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool
 
 // ValidateHostPort will attempt to run curl against the POD's hostIP and hostPort
 func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, master, sshKeyPath string) bool {
+	var commandTimeout time.Duration
 	hostIP := p.Status.HostIP
 	if len(p.Spec.Containers) == 0 || len(p.Spec.Containers[0].Ports) == 0 {
 		log.Printf("Unexpected POD container spec: %v. Should have hostPort.\n", p.Spec)
@@ -1138,6 +1236,7 @@ func (p *Pod) ValidateHostPort(check string, attempts int, sleep time.Duration, 
 
 // Logs will get logs from all containers in a pod
 func (p *Pod) Logs() error {
+	var commandTimeout time.Duration
 	for _, container := range p.Spec.Containers {
 		cmd := exec.Command("k", "logs", p.Metadata.Name, "-c", container.Name, "-n", p.Metadata.Namespace)
 		out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -1151,6 +1250,7 @@ func (p *Pod) Logs() error {
 
 // Describe will describe a pod resource
 func (p *Pod) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "pod", p.Metadata.Name, "-n", p.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))

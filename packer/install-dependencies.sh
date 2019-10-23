@@ -14,6 +14,7 @@ copyPackerFiles
 echo ""
 echo "Components downloaded in this VHD build (some of the below components might get deleted during cluster provisioning if they are not needed):" >> ${VHD_LOGS_FILEPATH}
 
+AUDITD_ENABLED=true
 installDeps
 cat << EOF >> ${VHD_LOGS_FILEPATH}
   - apache2-utils
@@ -41,6 +42,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - mount
   - nfs-common
   - pigz socat
+  - traceroute
   - util-linux
   - xz-utils
   - zip
@@ -55,15 +57,15 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.6"
+MOBY_VERSION="3.0.7"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.28
 1.0.27
-1.0.25
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -134,7 +136,11 @@ for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-METRICS_SERVER_VERSIONS="0.3.4 0.2.1"
+METRICS_SERVER_VERSIONS="
+0.3.5
+0.3.4
+0.2.1
+"
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
@@ -182,8 +188,16 @@ for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-PAUSE_VERSIONS="3.1"
-for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
+MCR_PAUSE_VERSIONS="1.2.0"
+for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
+    # Pull the arch independent MCR pause image which is built for Linux and Windows
+    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/pause:${PAUSE_VERSION}"
+    pullContainerImage "docker" "${CONTAINER_IMAGE}"
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+GCR_PAUSE_VERSIONS="3.1"
+for PAUSE_VERSION in ${GCR_PAUSE_VERSIONS}; do
     # Image 'mcr.microsoft.com/k8s/azurestack/core/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
     # At the time, re-tagging and pushing to mcr hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
     for IMAGE_BASE in k8s.gcr.io mcr.microsoft.com/k8s/azurestack/core; do
@@ -194,6 +208,7 @@ for PAUSE_VERSION in ${PAUSE_VERSIONS}; do
 done
 
 TILLER_VERSIONS="
+2.13.1
 2.11.0
 2.8.1
 "
@@ -204,16 +219,24 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.16.2
+1.16.1
 1.16.0
+1.15.3
+1.15.2
 1.15.1
 1.15.0
+1.14.6
+1.14.5
 1.14.4
 1.14.2
 1.14.0
+1.13.7
 1.13.6
 1.13.4
 1.13.2
 1.13.1
+1.12.8
 1.12.7
 1.12.5
 1.12.3
@@ -373,40 +396,38 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 # TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
-1.15.3
-1.15.3-azs
-1.15.2
-1.15.2-azs
-1.14.6
-1.14.6-azs
-1.14.5
-1.14.5-azs
-1.13.10
-1.13.10-azs
-1.13.9
-1.13.9-azs
+1.16.2
+1.16.1
+1.16.1-azs
+1.15.5
+1.15.4
+1.15.4-azs
+1.14.8
+1.14.7
+1.14.7-azs
+1.13.12
+1.13.11
+1.13.11-azs
 1.12.8
-1.12.8-azs
 1.12.7
-1.12.7-azs
 1.11.10
-1.11.10-azs
 1.11.9
-1.11.9-azs
 1.10.13
 1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+    HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  else
+    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
       CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     fi
-    extractHyperkube "docker"
-    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
+  fi
+  extractHyperkube "docker"
+  echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
 done
 
 # TODO: remove once ACR is available on Azure Stack

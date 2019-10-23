@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	commandTimeout                    = 1 * time.Minute
 	validateDeploymentNotExistRetries = 3
 	deploymentGetAfterCreateTimeout   = 1 * time.Minute
 )
@@ -73,6 +72,7 @@ type Container struct {
 // CreateLinuxDeploy will create a deployment for a given image with a name in a namespace
 // --overrides='{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, error) {
+	var commandTimeout time.Duration
 	var cmd *exec.Cmd
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
 	if miscOpts != "" {
@@ -118,6 +118,7 @@ func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts s
 // RunLinuxDeploy will create a deployment that runs a bash command in a pod
 // --overrides=' "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Deployment, error) {
+	var commandTimeout time.Duration
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--replicas", strconv.Itoa(replicas), "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -148,6 +149,7 @@ func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command strin
 
 // CreateWindowsDeploy will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
 func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
+	var commandTimeout time.Duration
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
 	var args []string
 	args = append(args, "run", name)
@@ -173,6 +175,7 @@ func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Dep
 
 // CreateWindowsDeployWithHostport will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
 func CreateWindowsDeployWithHostport(image, name, namespace string, port int, hostport int) (*Deployment, error) {
+	var commandTimeout time.Duration
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -287,6 +290,7 @@ func GetAllByPrefix(prefix, namespace string) ([]Deployment, error) {
 
 // Describe will describe a deployment resource
 func (d *Deployment) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "deployment", d.Metadata.Name, "-n", d.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
@@ -295,11 +299,12 @@ func (d *Deployment) Describe() error {
 
 // Delete will delete a deployment in a given namespace
 func (d *Deployment) Delete(retries int) error {
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "deploy", "-n", d.Metadata.Namespace, d.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete deployment %s in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
 			continue
@@ -314,7 +319,7 @@ func (d *Deployment) Delete(retries int) error {
 	if d.Metadata.HasHPA {
 		for i := 0; i < retries; i++ {
 			cmd := exec.Command("k", "delete", "hpa", "-n", d.Metadata.Namespace, d.Metadata.Name)
-			kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+			kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 			if kubectlError != nil {
 				log.Printf("Deployment %s has associated HPA but unable to delete in namespace %s:%s\n", d.Metadata.Namespace, d.Metadata.Name, string(kubectlOutput))
 				continue
@@ -328,6 +333,7 @@ func (d *Deployment) Delete(retries int) error {
 
 // Expose will create a load balancer and expose the deployment on a given port
 func (d *Deployment) Expose(svcType string, targetPort, exposedPort int) error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "expose", "deployment", d.Metadata.Name, "--type", svcType, "-n", d.Metadata.Namespace, "--target-port", strconv.Itoa(targetPort), "--port", strconv.Itoa(exposedPort))
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
@@ -361,6 +367,7 @@ func (d *Deployment) ExposeDeleteIfExist(pattern, namespace, svcType string, tar
 
 // ScaleDeployment scales a deployment to n instancees
 func (d *Deployment) ScaleDeployment(n int) error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "scale", fmt.Sprintf("--replicas=%d", n), "deployment", d.Metadata.Name)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
@@ -372,6 +379,7 @@ func (d *Deployment) ScaleDeployment(n int) error {
 
 // CreateDeploymentHPA applies autoscale characteristics to deployment
 func (d *Deployment) CreateDeploymentHPA(cpuPercent, min, max int) error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "autoscale", "deployment", d.Metadata.Name, fmt.Sprintf("--cpu-percent=%d", cpuPercent),
 		fmt.Sprintf("--min=%d", min), fmt.Sprintf("--max=%d", max))
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
@@ -401,7 +409,12 @@ func (d *Deployment) CreateDeploymentHPADeleteIfExist(cpuPercent, min, max int) 
 
 // Pods will return all pods related to a deployment
 func (d *Deployment) Pods() ([]pod.Pod, error) {
-	return pod.GetAllByPrefix(d.Metadata.Name, d.Metadata.Namespace)
+	return pod.GetAllByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
+}
+
+// PodsRunning will return all pods in a Running state related to a deployment
+func (d *Deployment) PodsRunning() ([]pod.Pod, error) {
+	return pod.GetAllRunningByPrefixWithRetry(d.Metadata.Name, d.Metadata.Namespace, 3*time.Second, 20*time.Minute)
 }
 
 // GetWithRetry gets a deployment, allowing for retries
@@ -464,7 +477,7 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- pod.GetAllByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
+			case ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
 				time.Sleep(sleep)
 			}
 		}

@@ -1,12 +1,14 @@
 {
 	"env": {
 	},
+	"options": {
+		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15"]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.12",
 				"kubernetesConfig": {
 					"networkPolicy": "cilium",
 					"networkPlugin": "cilium"
@@ -15,14 +17,15 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_DS2_v2"
+				"vmSize": "Standard_D2_v3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "agent1",
 					"count": 3,
-					"vmSize": "Standard_D2_v2",
-					"availabilityProfile": "AvailabilitySet"
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low"
 				}
 			],
 			"linuxProfile": {

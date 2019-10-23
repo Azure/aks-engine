@@ -678,6 +678,7 @@ func convertVLabsDcosConfig(vlabs *vlabs.DcosConfig, api *DcosConfig) {
 
 func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *KubernetesConfig) {
 	api.KubernetesImageBase = vlabs.KubernetesImageBase
+	api.MCRKubernetesImageBase = vlabs.MCRKubernetesImageBase
 	api.ClusterSubnet = vlabs.ClusterSubnet
 	api.DNSServiceIP = vlabs.DNSServiceIP
 	api.ServiceCIDR = vlabs.ServiceCidr
@@ -688,6 +689,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.MobyVersion = vlabs.MobyVersion
 	api.ContainerdVersion = vlabs.ContainerdVersion
 	api.CloudProviderBackoff = vlabs.CloudProviderBackoff
+	api.CloudProviderBackoffMode = vlabs.CloudProviderBackoffMode
 	api.CloudProviderBackoffDuration = vlabs.CloudProviderBackoffDuration
 	api.CloudProviderBackoffExponent = vlabs.CloudProviderBackoffExponent
 	api.CloudProviderBackoffJitter = vlabs.CloudProviderBackoffJitter
@@ -963,6 +965,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
 	api.AgentSubnet = vlabs.AgentSubnet
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
@@ -1053,6 +1056,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AcceleratedNetworkingEnabledWindows = vlabs.AcceleratedNetworkingEnabledWindows
 	api.VMSSOverProvisioningEnabled = vlabs.VMSSOverProvisioningEnabled
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
@@ -1312,6 +1316,7 @@ func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig
 		ResourceManagerVMDNSSuffix: vlabses.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	api.KubernetesSpecConfig = KubernetesSpecConfig{
+		AzureTelemetryPID:                vlabses.KubernetesSpecConfig.AzureTelemetryPID,
 		KubernetesImageBase:              vlabses.KubernetesSpecConfig.KubernetesImageBase,
 		TillerImageBase:                  vlabses.KubernetesSpecConfig.TillerImageBase,
 		ACIConnectorImageBase:            vlabses.KubernetesSpecConfig.ACIConnectorImageBase,

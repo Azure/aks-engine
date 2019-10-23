@@ -8,10 +8,19 @@
 
 $ErrorActionPreference = "Stop"
 
+$releaseNotesFilePath = "c:\release-notes.txt"
+
 function Log($Message) {
     # Write-Output $Message
-    $Message | Tee-Object -FilePath "c:\release-notes.txt" -Append
+    $Message | Tee-Object -FilePath $releaseNotesFilePath -Append
 }
+
+Log "Build Number: $env:BUILD_NUMBER"
+Log "Build Id:     $env:BUILD_ID"
+Log "Build Repo:   $env:BUILD_REPO"
+Log "Build Branch: $env:BUILD_BRANCH"
+Log "Commit:       $env:BUILD_COMMIT"
+Log ""
 
 Log "System Info"
 $systemInfo = Get-ItemProperty -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion'
@@ -19,6 +28,11 @@ Log ("`t{0,-14} : {1}" -f "OS Name", $systemInfo.ProductName)
 LOG ("`t{0,-14} : {1}" -f "OS Version", "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)")
 LOG ("`t{0,-14} : {1}" -f "OS InstallType", $systemInfo.InstallationType)
 Log ""
+
+$allowedSecurityProtocols = [System.Net.ServicePointManager]::SecurityProtocol
+Log "Allowed security protocols: $allowedSecurityProtocols"
+Log ""
+
 Log "Installed Features"
 if ($systemInfo.InstallationType -ne 'client') {
     Log (Get-WindowsFeature | Where-Object Installed)
@@ -27,6 +41,7 @@ else {
     LOG "`t<Cannot enumerate installed features on client skus>"
 }
 Log ""
+
 
 Log "Installed Packages"
 $packages = Get-WindowsCapability -Online | Where-Object { $_.State -eq 'Installed' }
@@ -77,3 +92,22 @@ if (Test-Path 'C:\Program Files\Docker\') {
     Log "Images:"
     LOG (docker images --format='{{json .}}' | ConvertFrom-Json | Format-Table Repository, Tag, ID)
 }
+Log ""
+
+Log "Cached Files:"
+$displayObjects = @()
+foreach ($file in [IO.Directory]::GetFiles('c:\akse-cache', '*', [IO.SearchOption]::AllDirectories))
+{
+    $attributes = Get-Item $file
+    $hash = Get-FileHash $file -Algorithm SHA256
+    $displayObjects += New-Object psobject -property @{
+        File = $file;
+        SizeBytes = $attributes.Length;
+        Sha256 = $hash.Hash
+    }
+}
+
+Log ($displayObjects | Format-Table -Property File, Sha256, SizeBytes | Out-String -Width 4096)
+
+# Ensure proper encoding is set for release notes file
+[IO.File]::ReadAllText($releaseNotesFilePath) | Out-File -Encoding utf8 $releaseNotesFilePath

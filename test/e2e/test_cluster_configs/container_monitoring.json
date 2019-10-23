@@ -1,5 +1,8 @@
 {
 	"env": {},
+	"options": {
+		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15"]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -27,7 +30,8 @@
 					"name": "agentpool",
 					"count": 3,
 					"vmSize": "Standard_DS2_v2",
-					"availabilityProfile": "VirtualMachineScaleSets"
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low"
 				}
 			],
 			"linuxProfile": {

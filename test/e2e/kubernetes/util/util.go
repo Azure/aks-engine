@@ -23,6 +23,7 @@ func PrintCommand(cmd *exec.Cmd) {
 
 // RunAndLogCommand logs the command with a timestamp when it's run, and the duration at end
 func RunAndLogCommand(cmd *exec.Cmd, timeout time.Duration) ([]byte, error) {
+	var zeroValueDuration time.Duration
 	var err error
 	var out []byte
 	cmdLine := fmt.Sprintf("$ %s", strings.Join(cmd.Args, " "))
@@ -32,8 +33,10 @@ func RunAndLogCommand(cmd *exec.Cmd, timeout time.Duration) ([]byte, error) {
 	end := time.Now()
 	total := time.Since(start)
 	log.Printf("#### %s completed in %s", cmdLine, end.Sub(start).String())
-	if total.Seconds() > timeout.Seconds() {
-		err = errors.Errorf("%s took too long!", cmdLine)
+	if zeroValueDuration != timeout {
+		if total.Seconds() > timeout.Seconds() {
+			err = errors.Errorf("%s took too long!", cmdLine)
+		}
 	}
 	return out, err
 }

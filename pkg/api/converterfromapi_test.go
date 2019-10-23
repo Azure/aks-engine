@@ -157,6 +157,7 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: KubernetesSpecConfig{
+						AzureTelemetryPID:                "AzureTelemetryPID",
 						KubernetesImageBase:              "KubernetesImageBase",
 						TillerImageBase:                  "TillerImageBase",
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
@@ -213,6 +214,9 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 
 	//KubernetesSpecConfig
+	if vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID != csSpec.KubernetesSpecConfig.AzureTelemetryPID {
+		t.Errorf("incorrect AzureTelemetryPID, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.AzureTelemetryPID, vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID)
+	}
 	if vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase != csSpec.KubernetesSpecConfig.KubernetesImageBase {
 		t.Errorf("incorrect KubernetesImageBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.KubernetesImageBase, vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase)
 	}
@@ -568,7 +572,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.27",
+					AzureCNIVersion:                 "1.0.28",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -701,6 +705,23 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 		t.Errorf("expected the EnableTelemetry feature flag to be false")
 	}
 }
+
+func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.PlatformFaultDomainCount = to.IntPtr(3)
+	cs.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount = to.IntPtr(5)
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
+		t.Errorf("expected the master profile platform FD to be 3")
+	}
+	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
+		t.Errorf("expected the agent pool profile platform FD to be 5")
+	}
+}
+
 func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	falseVar := false
 

@@ -112,6 +112,20 @@ const exampleUserMSIModel = `{
 }
 `
 
+func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
+	o := OrchestratorProfile{
+		KubernetesConfig: &KubernetesConfig{
+			MCRKubernetesImageBase: "foo/",
+		},
+		OrchestratorVersion: "1.16.0",
+	}
+	expected := "foo/pause:1.2.0"
+	actual := o.GetPodInfraContainerSpec()
+	if actual != expected {
+		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
+	}
+}
+
 func TestOSType(t *testing.T) {
 	p := Properties{
 		MasterProfile: &MasterProfile{
@@ -260,6 +274,82 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 			t.Parallel()
 			if c.expected != c.ap.IsVHDDistro() {
 				t.Fatalf("Got unexpected AgentPoolProfile.IsVHDDistro() result. Expected: %t. Got: %t.", c.expected, c.ap.IsVHDDistro())
+			}
+		})
+	}
+}
+
+func TestAgentPoolProfileIsAuditDEnabled(t *testing.T) {
+	cases := []struct {
+		name     string
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			name:     "default",
+			ap:       AgentPoolProfile{},
+			expected: false,
+		},
+		{
+			name: "true",
+			ap: AgentPoolProfile{
+				AuditDEnabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			name: "false",
+			ap: AgentPoolProfile{
+				AuditDEnabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.IsAuditDEnabled() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsAuditDEnabled() result. Expected: %t. Got: %t.", c.expected, c.ap.IsAuditDEnabled())
+			}
+		})
+	}
+}
+
+func TestMasterProfileIsAuditDEnabled(t *testing.T) {
+	cases := []struct {
+		name     string
+		mp       MasterProfile
+		expected bool
+	}{
+		{
+			name:     "default",
+			mp:       MasterProfile{},
+			expected: false,
+		},
+		{
+			name: "true",
+			mp: MasterProfile{
+				AuditDEnabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+		{
+			name: "false",
+			mp: MasterProfile{
+				AuditDEnabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.mp.IsAuditDEnabled() {
+				t.Fatalf("Got unexpected AgentPoolProfile.IsAuditDEnabled() result. Expected: %t. Got: %t.", c.expected, c.mp.IsAuditDEnabled())
 			}
 		})
 	}
@@ -4326,6 +4416,40 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
+	// Test cloudprovider defaults for backoff mode v2
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffMode: CloudProviderBackoffModeV2,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig cloudprovider backoff v2 configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
 }
 
 func getMockAddon(name string) KubernetesAddon {
@@ -6445,5 +6569,29 @@ func TestGetSecondaryNonMasqueradeCIDR(t *testing.T) {
 				t.Errorf("expected %s, instead got : %s", test.expected, ret)
 			}
 		})
+	}
+}
+
+func TestPropertiesHasDCSeriesSKU(t *testing.T) {
+	cases := common.GetDCSeriesVMCasesForTesting()
+
+	for _, c := range cases {
+		p := Properties{
+			AgentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:   "agentpool",
+					VMSize: c.VMSKU,
+					Count:  1,
+				},
+			},
+			OrchestratorProfile: &OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.16.0",
+			},
+		}
+		ret := p.HasDCSeriesSKU()
+		if ret != c.Expected {
+			t.Fatalf("expected HasDCSeriesSKU(%s) to return %t, but instead got %t", c.VMSKU, c.Expected, ret)
+		}
 	}
 }

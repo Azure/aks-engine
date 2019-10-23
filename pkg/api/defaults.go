@@ -39,7 +39,10 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
 	if cs.Properties.CustomCloudProfile != nil {
-		err := cs.setCustomCloudProfileDefaults()
+		err := cs.setCustomCloudProfileDefaults(CustomCloudProfileDefaultsParams{
+			IsUpgrade: params.IsUpgrade,
+			IsScale:   params.IsScale,
+		})
 		if err != nil {
 			return false, err
 		}
@@ -129,6 +132,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		}
+
+		if o.KubernetesConfig.MCRKubernetesImageBase == "" {
+			o.KubernetesConfig.MCRKubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
+		}
+
 		if o.KubernetesConfig.EtcdVersion == "" {
 			o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 		} else if isUpgrade {
@@ -227,9 +235,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
-		if o.KubernetesConfig.CloudProviderBackoff == nil {
-			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(true)
+			}
+		} else {
+			o.KubernetesConfig.CloudProviderBackoffMode = "v1"
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
+			}
 		}
+
 		// Enforce sane cloudprovider backoff defaults.
 		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 
@@ -290,6 +307,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		if a.OrchestratorProfile.KubernetesConfig.EnableRbac == nil {
 			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(DefaultRBACEnabled)
+		}
+
+		// Upgrade scenario:
+		// We need to force set EnableRbac to true for upgrades to 1.15.0 and greater if it was previously set to false (AKS Engine only)
+		if !a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && isUpgrade && !cs.Properties.IsHostedMasterProfile() {
+			log.Warnf("RBAC will be enabled during upgrade to version %s\n", o.OrchestratorVersion)
+			a.OrchestratorProfile.KubernetesConfig.EnableRbac = to.BoolPtr(true)
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
@@ -397,8 +421,8 @@ func (p *Properties) setExtensionDefaults() {
 }
 
 func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName string) {
-	if p.MasterProfile.Distro == "" {
-		if p.OrchestratorProfile.IsKubernetes() {
+	if p.MasterProfile.Distro == "" && p.MasterProfile.ImageRef == nil {
+		if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
@@ -619,8 +643,8 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 		}
 
 		if profile.OSType != Windows {
-			if profile.Distro == "" {
-				if p.OrchestratorProfile.IsKubernetes() {
+			if profile.Distro == "" && profile.ImageRef == nil {
+				if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {
@@ -695,28 +719,23 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
 		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = DefaultWindowsPublisher
+			windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+		}
+		if windowsProfile.WindowsOffer == "" {
+			windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+		}
+		if windowsProfile.WindowsSku == "" {
+			windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
 		}
 
-		if p.IsAzureStackCloud() {
-			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultAzureStackWindowsOffer
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultAzureStackWindowsSku
-			}
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultAzureStackImageVersion
-			}
-		} else {
-			if windowsProfile.WindowsOffer == "" {
-				windowsProfile.WindowsOffer = DefaultWindowsOffer
-			}
-			if windowsProfile.WindowsSku == "" {
-				windowsProfile.WindowsSku = DefaultWindowsSku
-			}
-			if windowsProfile.ImageVersion == "" {
-				windowsProfile.ImageVersion = DefaultImageVersion
+		if windowsProfile.ImageVersion == "" {
+			// default versions are specific to a publisher/offer/sku
+			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+			} else {
+				windowsProfile.ImageVersion = "latest"
 			}
 		}
 	}
@@ -835,7 +854,17 @@ func (cs *ContainerService) SetDefaultCerts(params DefaultCertParams) (bool, []n
 		p.CertificateProfile.CaPrivateKey = caPair.PrivateKeyPem
 	}
 
-	cidrFirstIP, err := common.CidrStringFirstIP(p.OrchestratorProfile.KubernetesConfig.ServiceCIDR)
+	serviceCIDR := p.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+
+	// all validation for dual stack done with primary service cidr as that is considered
+	// the default ip family for cluster.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		// split service cidrs
+		serviceCIDRs := strings.Split(serviceCIDR, ",")
+		serviceCIDR = serviceCIDRs[0]
+	}
+
+	cidrFirstIP, err := common.CidrStringFirstIP(serviceCIDR)
 	if err != nil {
 		return false, ips, err
 	}

@@ -1139,11 +1139,6 @@ func TestCreateAgentVMASNICWithIPv6DualStackFeature(t *testing.T) {
 				Subnet: &network.Subnet{
 					ID: to.StringPtr(fmt.Sprintf("[variables('%sVnetSubnetID')]", profile.Name)),
 				},
-				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
-					{
-						ID: to.StringPtr("[concat(resourceId('Microsoft.Network/loadBalancers',parameters('masterEndpointDNSNamePrefix')), '/backendAddressPools/', parameters('masterEndpointDNSNamePrefix'), '-ipv6')]"),
-					},
-				},
 			},
 		},
 	}

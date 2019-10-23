@@ -288,7 +288,8 @@
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
-        "cloudProviderBackoff": true,
+        "cloudProviderBackoff": false,
+        "cloudProviderBackoffMode": "v1",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,
@@ -322,7 +323,7 @@
     },
 {{end}}
     "mobyVersion": {
-      "defaultValue": "3.0.6",
+      "defaultValue": "3.0.7",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -332,7 +333,8 @@
          "3.0.3",
          "3.0.4",
          "3.0.5",
-         "3.0.6"
+         "3.0.6",
+         "3.0.7"
        ],
       "type": "string"
     },

@@ -10,13 +10,14 @@ import (
 
 	"github.com/blang/semver"
 
+	"github.com/Azure/go-autorest/autorest/azure"
+
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
 	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
 	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	v20170930 "github.com/Azure/aks-engine/pkg/api/v20170930"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
-	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 ///////////////////////////////////////////////////////////
@@ -711,6 +712,7 @@ func convertDcosConfigToVLabs(api *DcosConfig, vl *vlabs.DcosConfig) {
 
 func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.KubernetesConfig) {
 	vlabsCfg.KubernetesImageBase = apiCfg.KubernetesImageBase
+	vlabsCfg.MCRKubernetesImageBase = apiCfg.MCRKubernetesImageBase
 	vlabsCfg.ClusterSubnet = apiCfg.ClusterSubnet
 	vlabsCfg.DNSServiceIP = apiCfg.DNSServiceIP
 	vlabsCfg.ServiceCidr = apiCfg.ServiceCIDR
@@ -722,6 +724,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.MobyVersion = apiCfg.MobyVersion
 	vlabsCfg.ContainerdVersion = apiCfg.ContainerdVersion
 	vlabsCfg.CloudProviderBackoff = apiCfg.CloudProviderBackoff
+	vlabsCfg.CloudProviderBackoffMode = apiCfg.CloudProviderBackoffMode
 	vlabsCfg.CloudProviderBackoffDuration = apiCfg.CloudProviderBackoffDuration
 	vlabsCfg.CloudProviderBackoffExponent = apiCfg.CloudProviderBackoffExponent
 	vlabsCfg.CloudProviderBackoffJitter = apiCfg.CloudProviderBackoffJitter
@@ -948,6 +951,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.AvailabilityProfile = api.AvailabilityProfile
 	vlabsProfile.AgentSubnet = api.AgentSubnet
 	vlabsProfile.AvailabilityZones = api.AvailabilityZones
+	vlabsProfile.PlatformFaultDomainCount = api.PlatformFaultDomainCount
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
@@ -1035,6 +1039,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.VMSSOverProvisioningEnabled = api.VMSSOverProvisioningEnabled
 	p.AvailabilityZones = api.AvailabilityZones
 	p.SinglePlacementGroup = api.SinglePlacementGroup
+	p.PlatformFaultDomainCount = api.PlatformFaultDomainCount
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
 	p.AuditDEnabled = api.AuditDEnabled
@@ -1261,7 +1266,9 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		ResourceManagerVMDNSSuffix: api.EndpointConfig.ResourceManagerVMDNSSuffix,
 	}
 	vlabses.KubernetesSpecConfig = vlabs.KubernetesSpecConfig{
+		AzureTelemetryPID:                api.KubernetesSpecConfig.AzureTelemetryPID,
 		KubernetesImageBase:              api.KubernetesSpecConfig.KubernetesImageBase,
+		MCRKubernetesImageBase:           api.KubernetesSpecConfig.MCRKubernetesImageBase,
 		TillerImageBase:                  api.KubernetesSpecConfig.TillerImageBase,
 		ACIConnectorImageBase:            api.KubernetesSpecConfig.ACIConnectorImageBase,
 		NVIDIAImageBase:                  api.KubernetesSpecConfig.NVIDIAImageBase,

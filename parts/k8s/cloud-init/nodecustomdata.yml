@@ -38,6 +38,17 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
+{{if not .IsVHDDistro}}
+  {{if .IsAuditDEnabled}}
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
@@ -174,6 +185,58 @@ write_files:
     {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
 
+{{if NeedsContainerd}}
+- path: /etc/containerd/config.toml
+  permissions: "0644"
+  owner: root
+  content: |
+    subreaper = false
+    oom_score = 0
+    [plugins.cri]
+    sandbox_image = "{{GetPodInfraContainerSpec}}"
+    [plugins.cri.containerd.untrusted_workload_runtime]
+    runtime_type = "io.containerd.runtime.v1.linux"
+    {{if IsKataContainerRuntime }}
+    runtime_engine = "/usr/bin/kata-runtime"
+    {{else}}
+    runtime_engine = "/usr/local/sbin/runc"
+    {{end}}
+    [plugins.cri.containerd.default_runtime]
+    runtime_type = "io.containerd.runtime.v1.linux"
+    {{if IsKataContainerRuntime }}
+    runtime_engine = "/usr/bin/kata-runtime"
+    {{else}}
+    runtime_engine = "/usr/local/sbin/runc"
+    {{end}}
+    {{if IsKubenet }}
+    [plugins.cri.cni]
+    conf_template = "/etc/containerd/kubenet_template.conf"
+
+- path: /etc/containerd/kubenet_template.conf
+  permissions: "0644"
+  owner: root
+  content: |
+      {
+          "cniVersion": "0.3.1",
+          "name": "kubenet",
+          "plugins": [{
+            "type": "bridge",
+            "bridge": "cbr0",
+            "mtu": 1500,
+            "addIf": "eth0",
+            "isGateway": true,
+            "ipMasq": false,
+            "hairpinMode": false,
+            "ipam": {
+                "type": "host-local",
+                "subnet": "{{`{{.PodCIDR}}`}}",
+                "routes": [{ "dst": "0.0.0.0/0" }]
+            }
+          }]
+      }
+    {{end}}
+{{end}}
+
 {{if IsNSeriesSKU .}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
@@ -205,14 +268,14 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
+{{if and HasLinuxProfile HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -250,7 +313,7 @@ write_files:
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
     KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
     KUBELET_REGISTER_SCHEDULABLE=true
-{{if IsKubernetesVersionGe "1.16.0-alpha.1"}}
+{{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}

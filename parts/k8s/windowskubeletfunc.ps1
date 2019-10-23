@@ -162,8 +162,20 @@ New-InfraContainer {
     $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
-        "1803" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
-        "1809" { docker pull $defaultPauseImage ; docker tag $defaultPauseImage $DestinationTag }
+        "1803" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                 
+            }
+            docker tag $defaultPauseImage $DestinationTag
+        }
+        "1809" { 
+            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+            if (-not $imageList) {
+                docker pull $defaultPauseImage                
+            }
+            docker tag $defaultPauseImage $DestinationTag 
+        }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
     }
@@ -405,8 +417,41 @@ if (!`$hnsNetwork)
 {
     Write-Host "Creating a new hns Network"
     ipmo `$global:HNSModule
+
+    `$na = @(Get-NetAdapter -Physical)
+    if (`$na.Count -eq 0)
+    {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    `$managementIP = (Get-NetIPAddress -ifIndex `$na[0].ifIndex -AddressFamily IPv4).IPAddress
+    `$adapterName = `$na[0].Name
+    write-host "Using adapter `$adapterName with IP address `$managementIP"
+    `$mgmtIPAfterNetworkCreate
+
+    `$stopWatch = New-Object System.Diagnostics.Stopwatch
+    `$stopWatch.Start()
     # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name `$global:ExternalNetwork -Verbose
+    New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName `$adapterName -Name `$global:ExternalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for (`$i=0;`$i -lt 60;`$i++)
+    {
+        `$mgmtIPAfterNetworkCreate = Get-NetIPAddress `$managementIP -ErrorAction SilentlyContinue
+        if (`$mgmtIPAfterNetworkCreate)
+        {
+            break
+        }
+        sleep -Milliseconds 1000
+    }
+
+    `$stopWatch.Stop()
+    if (-not `$mgmtIPAfterNetworkCreate)
+    {
+        throw "Failed to find `$managementIP after creating `$global:ExternalNetwork network"
+    }
+    write-host "It took `$(`$StopWatch.Elapsed.Seconds) seconds to create the `$global:ExternalNetwork network."
 }
 
 # Find if network created by CNI exists, if yes, remove it
@@ -449,6 +494,7 @@ if (`$hnsNetwork)
 }
 
 # Restart Kubeproxy, which would wait, until the network is created
+# This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
 Restart-Service Kubeproxy
 
 `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
@@ -575,6 +621,7 @@ try
 
     `$hnsNetwork = New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix `$podCIDR -Gateway `$masterSubnetGW -Name `$global:NetworkMode.ToLower() -Verbose
     # New network has been created, Kubeproxy service has to be restarted
+    # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
     Start-Sleep 10
@@ -610,6 +657,8 @@ while (!`$hnsNetwork)
 # cleanup the persisted policy lists
 #
 ipmo `$global:HNSModule
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
 $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config

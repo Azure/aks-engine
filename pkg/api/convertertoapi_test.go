@@ -372,7 +372,9 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: vlabs.KubernetesSpecConfig{
+						AzureTelemetryPID:                "AzureTelemetryPID",
 						KubernetesImageBase:              "KubernetesImageBase",
+						MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 						TillerImageBase:                  "TillerImageBase",
 						ACIConnectorImageBase:            "ACIConnectorImageBase",
 						NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -432,6 +434,9 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 
 	//KubernetesSpecConfig
+	if csSpec.KubernetesSpecConfig.AzureTelemetryPID != vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID {
+		t.Errorf("incorrect AzureTelemetryPID, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.AzureTelemetryPID, csSpec.KubernetesSpecConfig.AzureTelemetryPID)
+	}
 	if csSpec.KubernetesSpecConfig.KubernetesImageBase != vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase {
 		t.Errorf("incorrect KubernetesImageBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.KubernetesImageBase, csSpec.KubernetesSpecConfig.KubernetesImageBase)
 	}

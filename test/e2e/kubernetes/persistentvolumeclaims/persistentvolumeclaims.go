@@ -15,8 +15,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const commandTimeout = 1 * time.Minute
-
 type List struct {
 	PersistentVolumeClaims []PersistentVolumeClaim `json:"items"`
 }
@@ -179,6 +177,7 @@ func DescribePVCs(pvcPrefix, namespace string) {
 
 // Describe will describe a pv resource
 func (pvc *PersistentVolumeClaim) Describe() error {
+	var commandTimeout time.Duration
 	cmd := exec.Command("k", "describe", "pvc", pvc.Metadata.Name, "-n", pvc.Metadata.Namespace)
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	log.Printf("\n%s\n", string(out))
@@ -187,11 +186,12 @@ func (pvc *PersistentVolumeClaim) Describe() error {
 
 // Delete will delete a PersistentVolumeClaim in a given namespace
 func (pvc *PersistentVolumeClaim) Delete(retries int) error {
+	var zeroValueDuration time.Duration
 	var kubectlOutput []byte
 	var kubectlError error
 	for i := 0; i < retries; i++ {
 		cmd := exec.Command("k", "delete", "pvc", "-n", pvc.Metadata.Namespace, pvc.Metadata.Name)
-		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, commandTimeout)
+		kubectlOutput, kubectlError = util.RunAndLogCommand(cmd, zeroValueDuration)
 		if kubectlError != nil {
 			log.Printf("Error while trying to delete PVC %s in namespace %s:%s\n", pvc.Metadata.Name, pvc.Metadata.Namespace, string(kubectlOutput))
 			continue

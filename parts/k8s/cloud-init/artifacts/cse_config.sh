@@ -22,16 +22,6 @@ systemctlEnableAndStart() {
         return 1
     fi
 }
-systemctlDisableAndStop() {
-    if ! systemctl_stop 100 5 30 $1; then
-        echo "$1 could not be stopped"
-        return 1
-    fi
-    if ! retrycmd_if_failure 120 5 25 systemctl disable $1; then
-        echo "$1 could not be disabled by systemctl"
-        return 1
-    fi
-}
 
 configureEtcdUser(){
     useradd -U "etcd"
@@ -132,7 +122,7 @@ ensureAuditD() {
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
     if apt list --installed | grep 'auditd'; then
-      systemctlDisableAndStop auditd || exit $ERR_SYSTEMCTL_START_FAIL
+      apt_get_purge 20 30 120 auditd &
     fi
   fi
 }
@@ -190,6 +180,7 @@ configureK8s() {
     "routeTableName": "${ROUTE_TABLE}",
     "primaryAvailabilitySetName": "${PRIMARY_AVAILABILITY_SET}",
     "primaryScaleSetName": "${PRIMARY_SCALE_SET}",
+    "cloudProviderBackoffMode": "${CLOUDPROVIDER_BACKOFF_MODE}",
     "cloudProviderBackoff": ${CLOUDPROVIDER_BACKOFF},
     "cloudProviderBackoffRetries": ${CLOUDPROVIDER_BACKOFF_RETRIES},
     "cloudProviderBackoffExponent": ${CLOUDPROVIDER_BACKOFF_EXPONENT},
@@ -198,6 +189,8 @@ configureK8s() {
     "cloudProviderRatelimit": ${CLOUDPROVIDER_RATELIMIT},
     "cloudProviderRateLimitQPS": ${CLOUDPROVIDER_RATELIMIT_QPS},
     "cloudProviderRateLimitBucket": ${CLOUDPROVIDER_RATELIMIT_BUCKET},
+    "cloudProviderRatelimitQPSWrite": ${CLOUDPROVIDER_RATELIMIT_QPS_WRITE},
+    "cloudProviderRatelimitBucketWrite": ${CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE},
     "useManagedIdentityExtension": ${USE_MANAGED_IDENTITY_EXTENSION},
     "userAssignedIdentityID": "${USER_ASSIGNED_IDENTITY_ID}",
     "useInstanceMetadata": ${USE_INSTANCE_METADATA},
@@ -210,6 +203,10 @@ configureK8s() {
 }
 EOF
     set -x
+    if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
+        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+    fi
     if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
@@ -248,31 +245,8 @@ configureCNIIPTables() {
     fi
 }
 
-setupContainerd() {
-    echo "Configuring cri-containerd..."
-    mkdir -p "/etc/containerd"
-    CRI_CONTAINERD_CONFIG="/etc/containerd/config.toml"
-    {
-        echo "subreaper = false"
-        echo "oom_score = 0"
-        echo "[plugins.cri]"
-        echo "sandbox_image = \"$POD_INFRA_CONTAINER_SPEC\""
-        echo "[plugins.cri.containerd.untrusted_workload_runtime]"
-        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
-            echo "runtime_engine = '/usr/bin/kata-runtime'"
-        else
-            echo "runtime_engine = '/usr/local/sbin/runc'"
-        fi
-        echo "[plugins.cri.containerd.default_runtime]"
-        echo "runtime_type = 'io.containerd.runtime.v1.linux'"
-        echo "runtime_engine = '/usr/local/sbin/runc'"
-    } > "$CRI_CONTAINERD_CONFIG"
-}
-
 ensureContainerd() {
-    setupContainerd
-    echo "Enabling and starting cri-containerd service..."
+    echo "Starting cri-containerd service..."
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 

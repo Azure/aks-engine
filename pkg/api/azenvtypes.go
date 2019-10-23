@@ -36,9 +36,11 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
+	AzureTelemetryPID                string `json:"azureTelemetryPID,omitempty"`
 	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
 	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
 	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
+	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`
 	CalicoImageBase                  string `json:"CalicoImageBase,omitempty"`
@@ -64,6 +66,20 @@ type AzureOSImageConfig struct {
 	ImageVersion   string `json:"imageVersion,omitempty"`
 }
 
+// AzureTelemetryPID represents the current telemetry ID
+// See more information here https://docs.microsoft.com/en-us/azure/marketplace/azure-partner-customer-usage-attribution
+// PID is maintained to keep consistent with Azure Stack Telemetry Terminologies
+type AzureTelemetryPID string
+
+const (
+	// DefaultAzureStackDeployTelemetryPID tracking ID for Deployment
+	DefaultAzureStackDeployTelemetryPID = "pid-1bda96ec-adf4-4eea-bb9a-8462de5475c0"
+	// DefaultAzureStackScaleTelemetryPID tracking ID for Scale
+	DefaultAzureStackScaleTelemetryPID = "pid-bbbafa53-d6a7-4022-84a2-86fcbaec7030"
+	// DefaultAzureStackUpgradeTelemetryPID tracking ID for Upgrade
+	DefaultAzureStackUpgradeTelemetryPID = "pid-0d9b5198-7cd7-4252-a890-5658eaf874be"
+)
+
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
@@ -73,6 +89,7 @@ var (
 		NVIDIAImageBase:                  "nvidia/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
+		MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
 		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
 		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
@@ -135,17 +152,33 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201909",
+		ImageSku:       "aks-ubuntu-1604-201910",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.09.24",
+		ImageVersion:   "2019.10.15",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-201909",
+		ImageSku:       "aks-ubuntu-1804-201910",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.09.24",
+		ImageVersion:   "2019.10.15",
+	}
+
+	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
+	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "aks-windows",
+		ImageSku:       "2019-datacenter-core-smalldisk",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "17763.805.191016",
+	}
+
+	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
+	WindowsServer2019OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "WindowsServer",
+		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
+		ImagePublisher: "MicrosoftWindowsServer",
+		ImageVersion:   "17763.805.1910061628",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -239,6 +272,7 @@ var (
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
+			MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
 			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
