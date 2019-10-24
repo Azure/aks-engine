@@ -8,12 +8,110 @@ import (
 )
 
 func TestGetK8sVersionComponents(t *testing.T) {
+	oneDotSeventeenDotZero := getK8sVersionComponents("1.17.0", nil)
+	if oneDotSeventeenDotZero == nil {
+		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+	}
+	k8sComponent := k8sComponentVersions["1.17"]
+	expected := map[string]string{
+		"hyperkube":                        "hyperkube-amd64:v1.17.0",
+		"ccm":                              "cloud-controller-manager-amd64:v1.17.0",
+		"windowszip":                       "v1.17.0-1int.zip",
+		DashboardAddonName:                 k8sComponent["dashboard"],
+		"exechealthz":                      k8sComponent["exechealthz"],
+		"addonresizer":                     k8sComponent["addon-resizer"],
+		"heapster":                         k8sComponent["heapster"],
+		MetricsServerAddonName:             k8sComponent["metrics-server"],
+		"coredns":                          k8sComponent["coredns"],
+		"kube-dns":                         k8sComponent["kube-dns"],
+		"addonmanager":                     k8sComponent["addon-manager"],
+		"dnsmasq":                          k8sComponent["dnsmasq"],
+		"pause":                            k8sComponent["pause"],
+		TillerAddonName:                    k8sComponent["tiller"],
+		ReschedulerAddonName:               k8sComponent["rescheduler"],
+		ACIConnectorAddonName:              k8sComponent["aci-connector"],
+		ContainerMonitoringAddonName:       k8sComponent[ContainerMonitoringAddonName],
+		AzureCNINetworkMonitoringAddonName: k8sComponent[AzureCNINetworkMonitoringAddonName],
+		ClusterAutoscalerAddonName:         k8sComponent["cluster-autoscaler"],
+		"k8s-dns-sidecar":                  k8sComponent["k8s-dns-sidecar"],
+		"nodestatusfreq":                   k8sComponent["nodestatusfreq"],
+		"nodegraceperiod":                  k8sComponent["nodegraceperiod"],
+		"podeviction":                      k8sComponent["podeviction"],
+		"routeperiod":                      k8sComponent["routeperiod"],
+		"backoffretries":                   k8sComponent["backoffretries"],
+		"backoffjitter":                    k8sComponent["backoffjitter"],
+		"backoffduration":                  k8sComponent["backoffduration"],
+		"backoffexponent":                  k8sComponent["backoffexponent"],
+		"ratelimitqps":                     k8sComponent["ratelimitqps"],
+		"ratelimitqpswrite":                k8sComponent["ratelimitqpswrite"],
+		"ratelimitbucket":                  k8sComponent["ratelimitbucket"],
+		"ratelimitbucketwrite":             k8sComponent["ratelimitbucketwrite"],
+		"gchighthreshold":                  k8sComponent["gchighthreshold"],
+		"gclowthreshold":                   k8sComponent["gclowthreshold"],
+		NVIDIADevicePluginAddonName:        k8sComponent[NVIDIADevicePluginAddonName],
+	}
+
+	for k, v := range oneDotSeventeenDotZero {
+		if expected[k] != v {
+			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.17.0: %s = %s", k, oneDotSeventeenDotZero[k])
+		}
+	}
+
+	oneDotSixteenDotZero := getK8sVersionComponents("1.16.0", nil)
+	if oneDotSixteenDotZero == nil {
+		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+	}
+	k8sComponent = k8sComponentVersions["1.16"]
+	expected = map[string]string{
+		"hyperkube":                        "hyperkube-amd64:v1.16.0",
+		"ccm":                              "cloud-controller-manager-amd64:v1.16.0",
+		"windowszip":                       "v1.16.0-1int.zip",
+		DashboardAddonName:                 k8sComponent["dashboard"],
+		"exechealthz":                      k8sComponent["exechealthz"],
+		"addonresizer":                     k8sComponent["addon-resizer"],
+		"heapster":                         k8sComponent["heapster"],
+		MetricsServerAddonName:             k8sComponent["metrics-server"],
+		"coredns":                          k8sComponent["coredns"],
+		"kube-dns":                         k8sComponent["kube-dns"],
+		"addonmanager":                     k8sComponent["addon-manager"],
+		"dnsmasq":                          k8sComponent["dnsmasq"],
+		"pause":                            k8sComponent["pause"],
+		TillerAddonName:                    k8sComponent["tiller"],
+		ReschedulerAddonName:               k8sComponent["rescheduler"],
+		ACIConnectorAddonName:              k8sComponent["aci-connector"],
+		ContainerMonitoringAddonName:       k8sComponent[ContainerMonitoringAddonName],
+		AzureCNINetworkMonitoringAddonName: k8sComponent[AzureCNINetworkMonitoringAddonName],
+		ClusterAutoscalerAddonName:         k8sComponent["cluster-autoscaler"],
+		"k8s-dns-sidecar":                  k8sComponent["k8s-dns-sidecar"],
+		"nodestatusfreq":                   k8sComponent["nodestatusfreq"],
+		"nodegraceperiod":                  k8sComponent["nodegraceperiod"],
+		"podeviction":                      k8sComponent["podeviction"],
+		"routeperiod":                      k8sComponent["routeperiod"],
+		"backoffretries":                   k8sComponent["backoffretries"],
+		"backoffjitter":                    k8sComponent["backoffjitter"],
+		"backoffduration":                  k8sComponent["backoffduration"],
+		"backoffexponent":                  k8sComponent["backoffexponent"],
+		"ratelimitqps":                     k8sComponent["ratelimitqps"],
+		"ratelimitqpswrite":                k8sComponent["ratelimitqpswrite"],
+		"ratelimitbucket":                  k8sComponent["ratelimitbucket"],
+		"ratelimitbucketwrite":             k8sComponent["ratelimitbucketwrite"],
+		"gchighthreshold":                  k8sComponent["gchighthreshold"],
+		"gclowthreshold":                   k8sComponent["gclowthreshold"],
+		NVIDIADevicePluginAddonName:        k8sComponent[NVIDIADevicePluginAddonName],
+	}
+
+	for k, v := range oneDotSixteenDotZero {
+		if expected[k] != v {
+			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.16.0: %s = %s", k, oneDotSixteenDotZero[k])
+		}
+	}
+
 	oneDotFifteenDotZero := getK8sVersionComponents("1.15.0", nil)
 	if oneDotFifteenDotZero == nil {
 		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
 	}
-	k8sComponent := k8sComponentVersions["1.15"]
-	expected := map[string]string{
+	k8sComponent = k8sComponentVersions["1.15"]
+	expected = map[string]string{
 		"hyperkube":                        "hyperkube-amd64:v1.15.0",
 		"ccm":                              "cloud-controller-manager-amd64:v1.15.0",
 		"windowszip":                       "v1.15.0-1int.zip",
