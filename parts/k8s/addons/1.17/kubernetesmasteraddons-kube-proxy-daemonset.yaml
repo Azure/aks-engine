@@ -64,7 +64,9 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       containers:
-      - command: ["/hyperkube", "kube-proxy", "--config=/var/lib/kube-proxy/config.yaml"]
+      - command:
+        - kube-proxy
+        - --config=/var/lib/kube-proxy/config.yaml
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy

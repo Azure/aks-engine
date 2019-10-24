@@ -10115,7 +10115,9 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       containers:
-      - command: ["/hyperkube", "kube-proxy", "--config=/var/lib/kube-proxy/config.yaml"]
+      - command:
+        - kube-proxy
+        - --config=/var/lib/kube-proxy/config.yaml
         image: <img>
         imagePullPolicy: IfNotPresent
         name: kube-proxy
@@ -17523,7 +17525,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
-    sed -i "s|\"/hyperkube\", ||g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
 {{else}}
     {{ if IsIPv6DualStackFeatureEnabled }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
