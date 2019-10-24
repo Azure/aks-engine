@@ -137,7 +137,7 @@ func TestOrchestratorVersion(t *testing.T) {
 		Properties: &vlabs.Properties{
 			OrchestratorProfile: &vlabs.OrchestratorProfile{
 				OrchestratorType:    vlabs.Kubernetes,
-				OrchestratorVersion: "1.10.13",
+				OrchestratorVersion: "1.11.10",
 			},
 		},
 	}
@@ -145,7 +145,7 @@ func TestOrchestratorVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to convert ContainerService, error: %s", err)
 	}
-	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.10.13" {
+	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.11.10" {
 		t.Fatalf("incorrect OrchestratorVersion '%s'", cs.Properties.OrchestratorProfile.OrchestratorVersion)
 	}
 }

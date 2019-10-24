@@ -124,7 +124,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -161,7 +161,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -198,7 +198,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -294,7 +294,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.10.13",
+					OrchestratorVersion: "v1.11.10",
 				},
 			},
 		},
@@ -1416,10 +1416,10 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should error on azure-policy with k8s < 1.10",
 		)
 	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.10"
+	p.OrchestratorProfile.OrchestratorRelease = "1.11"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on azure-policy with k8s >= 1.10",
+			"should not error on azure-policy with k8s >= 1.11",
 		)
 	}
 
@@ -1450,10 +1450,10 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.10"
+	p.OrchestratorProfile.OrchestratorRelease = "1.11"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on nvidia-device-plugin with k8s >= 1.10",
+			"should not error on nvidia-device-plugin with k8s >= 1.11",
 		)
 	}
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
@@ -2094,7 +2094,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.10",
+			orchestratorRelease: "1.11",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -2106,7 +2106,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and agent profiles with VMAS",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.10",
+			orchestratorRelease: "1.11",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -2670,7 +2670,7 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.10"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.11"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
