@@ -78,7 +78,7 @@ $ aks-engine get-versions
 
 `addons` is an interface to define user-configurable Kubernetes componentry. It is a child property of `kubernetesConfig`. Below is a list of currently available `addons`:
 
-| Name of addon                                                         | Enabled by default? | How many containers | Description                                                                                                                                                         |
+| Name of addon                                                         | Enabled by default? | How many pods | Description                                                                                                                                                         |
 | --------------------------------------------------------------------- | ------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | tiller                                                                | false                | 1                   | Delivers the Helm server-side component: tiller. See https://github.com/kubernetes/helm for more info                                                               |
 | kubernetes-dashboard                                                  | true                | 1                   | Delivers the Kubernetes dashboard component. See https://github.com/kubernetes/dashboard for more info                                                              |
@@ -91,6 +91,8 @@ $ aks-engine get-versions
 | [keyvault-flexvolume](../../examples/addons/keyvault-flexvolume/README.md)                        | true               | as many as linux agent nodes                   | Access secrets, keys, and certs in Azure Key Vault from pods |
 | [aad-pod-identity](../../examples/addons/aad-pod-identity/README.md)                        | false               | 1 + 1 on each linux agent nodes | Assign Azure Active Directory Identities to Kubernetes applications |
 | [scheduled-maintenance](https://github.com/awesomenix/drainsafe)                        | false               | 1 + 1 on each linux agent nodes                   | Cordon and drain node during planned/unplanned [azure maintenance](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/scheduled-events) |
+| [azuredisk-csi-driver](https://github.com/kubernetes-sigs/azuredisk-csi-driver)        | true if using a Kubernetes cluster (v1.13+) with `useCloudControllerManager` enabled | 1 + 1 on each linux agent nodes | Allows Kubernetes to use [Azure Disk](https://azure.microsoft.com/en-us/services/storage/disks/) volume |
+| [azurefile-csi-driver](https://github.com/kubernetes-sigs/azurefile-csi-driver)          | true if using a Kubernetes cluster (v1.13+) with `useCloudControllerManager` enabled | 1 + 1 on each linux agent nodes | Allows Kubernetes to use [Azure File](https://docs.microsoft.com/en-us/azure/storage/files/storage-files-introduction) volume |
 
 To give a bit more info on the `addons` property: We've tried to expose the basic bits of data that allow useful configuration of these cluster features. Here are some example usage patterns that will unpack what `addons` provide:
 

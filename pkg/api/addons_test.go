@@ -365,6 +365,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -544,6 +552,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -730,6 +746,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -913,6 +937,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1089,6 +1121,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -1269,6 +1309,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1446,6 +1494,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1571,18 +1627,18 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "6.0.0-0",
+						"dockerProviderVersion": "7.0.0-5",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           "omsagent",
-							CPURequests:    "75m",
-							MemoryRequests: "225Mi",
+							CPURequests:    "110m",
+							MemoryRequests: "250Mi",
 							CPULimits:      "150m",
 							MemoryLimits:   "600Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019",
 						},
 					},
 				},
@@ -1628,6 +1684,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -1803,6 +1867,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1952,6 +2024,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -2119,6 +2199,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -2295,6 +2383,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -2474,6 +2570,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -2683,6 +2787,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -2869,6 +2981,14 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3009,6 +3129,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -3155,6 +3283,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3289,6 +3425,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3419,6 +3563,219 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+			},
+		},
+		{
+			name: "azure disk and azure file csi driver enabled for k8s >= 1.13.0 and UseCloudControllerManager is true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.13.0",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+						},
+					},
+				},
+			},
+			isUpdate: false,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    HeapsterAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    TillerAddonName,
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
+				},
+				{
+					Name:    ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+						},
+					},
+				},
+				{
+					Name:    DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+					},
+				},
+				{
+					Name:    AzureCNINetworkMonitoringAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  AzureCNINetworkMonitoringAddonName,
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][AzureCNINetworkMonitoringAddonName],
+						},
+					},
+				},
+				{
+					Name:    AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    CalicoAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  "csi-provisioner",
+							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+						},
+						{
+							Name:  "csi-attacher",
+							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+						},
+						{
+							Name:  "csi-cluster-driver-registrar",
+							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+						},
+						{
+							Name:  "livenessprobe",
+							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+						},
+						{
+							Name:  "csi-node-driver-registrar",
+							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+						},
+						{
+							Name:  "azurefile-csi",
+							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+						},
+					},
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  "csi-provisioner",
+							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+						},
+						{
+							Name:  "csi-attacher",
+							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+						},
+						{
+							Name:  "csi-cluster-driver-registrar",
+							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+						},
+						{
+							Name:  "livenessprobe",
+							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+						},
+						{
+							Name:  "csi-node-driver-registrar",
+							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+						},
+						{
+							Name:  "azuredisk-csi",
+							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -3447,6 +3804,8 @@ func TestSetAddonsConfig(t *testing.T) {
 				DNSAutoscalerAddonName,
 				CalicoAddonName,
 				AADPodIdentityAddonName,
+				AzureFileCSIDriverAddonName,
+				AzureDiskCSIDriverAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]

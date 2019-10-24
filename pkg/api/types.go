@@ -310,6 +310,7 @@ type PrivateJumpboxProfile struct {
 
 // CloudProviderConfig contains the KubernetesConfig properties specific to the Cloud Provider
 type CloudProviderConfig struct {
+	CloudProviderBackoffMode          string `json:"cloudProviderBackoffMode,omitempty"`
 	CloudProviderBackoff              *bool  `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int    `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        string `json:"cloudProviderBackoffJitter,omitempty"`
@@ -388,6 +389,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        float64           `json:"cloudProviderBackoffJitter,omitempty"`
@@ -1962,6 +1964,10 @@ func (k *KubernetesConfig) PrivateJumpboxProvision() bool {
 
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
+	if k == nil {
+		return false
+	}
+
 	runtime := strings.ToLower(k.ContainerRuntime)
 	return runtime == Docker || runtime == ""
 }
@@ -1971,14 +1977,16 @@ func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
 	if k.CloudProviderBackoffDuration == 0 {
 		k.CloudProviderBackoffDuration = DefaultKubernetesCloudProviderBackoffDuration
 	}
-	if k.CloudProviderBackoffExponent == 0 {
-		k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
-	}
-	if k.CloudProviderBackoffJitter == 0 {
-		k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
-	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
+	}
+	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
+		if k.CloudProviderBackoffExponent == 0 {
+			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
+		}
+		if k.CloudProviderBackoffJitter == 0 {
+			k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
+		}
 	}
 }
 

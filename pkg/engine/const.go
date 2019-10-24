@@ -76,6 +76,12 @@ const (
 	ACIConnectorAddonName = "aci-connector"
 	// AppGwIngressAddonName appgw addon
 	AppGwIngressAddonName = "appgw-ingress"
+	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
+	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
 	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
@@ -152,6 +158,7 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsNodeCleanupPS1       = "k8s/windowsnodecleanup.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 )
 

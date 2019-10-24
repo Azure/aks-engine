@@ -235,9 +235,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
-		if o.KubernetesConfig.CloudProviderBackoff == nil {
-			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(true)
+			}
+		} else {
+			o.KubernetesConfig.CloudProviderBackoffMode = "v1"
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
+			}
 		}
+
 		// Enforce sane cloudprovider backoff defaults.
 		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 
@@ -413,7 +422,7 @@ func (p *Properties) setExtensionDefaults() {
 
 func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	if p.MasterProfile.Distro == "" && p.MasterProfile.ImageRef == nil {
-		if p.OrchestratorProfile.IsKubernetes() {
+		if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
@@ -635,7 +644,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 
 		if profile.OSType != Windows {
 			if profile.Distro == "" && profile.ImageRef == nil {
-				if p.OrchestratorProfile.IsKubernetes() {
+				if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {

@@ -65,8 +65,6 @@ Azure Monitor for containers for AKS Engine cluster(s) can be configured through
 1. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
 2. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
 
-> Note: If more than one AKS Engine cluster planned to configure to the same Azure Log Analytics Workspace then recommend option is to use Helm chart (i.e. option #1 above)
-
 Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
 
 For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
