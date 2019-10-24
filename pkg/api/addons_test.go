@@ -996,6 +996,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1246,6 +1254,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -1560,6 +1576,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1824,6 +1848,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    AzureFileCSIDriverAddonName,
