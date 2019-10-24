@@ -89,6 +89,8 @@ var _ = BeforeSuite(func() {
 		ClusterDefinition:  csInput,
 		ExpandedDefinition: csGenerated,
 	}
+	longRunningApacheDeploymentName = "php-apache-long-running"
+
 	if !cfg.BlockSSHPort {
 		masterNodes, err := node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
@@ -99,7 +101,6 @@ var _ = BeforeSuite(func() {
 			masterSSHPort = "22"
 		}
 		masterSSHPrivateKeyFilepath = cfg.GetSSHKeyPath()
-		longRunningApacheDeploymentName = "php-apache-long-running"
 		kubeConfig, err = GetConfigWithRetry(3*time.Second, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		sshConn, err = remote.NewConnectionWithRetry(kubeConfig.GetServerName(), masterSSHPort, eng.ExpandedDefinition.Properties.LinuxProfile.AdminUsername, masterSSHPrivateKeyFilepath, 3*time.Second, cfg.Timeout)
@@ -937,42 +938,46 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to access the dashboard", func() {
-			if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
-				By("Ensuring that the kubernetes-dashboard service is Running")
-				s, err := service.Get("kubernetes-dashboard", "kube-system")
-				Expect(err).NotTo(HaveOccurred())
-				By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
-				dashboardPort := 443
-				port := s.GetNodePort(dashboardPort)
-				nodeList, err := node.GetReady()
-				Expect(err).NotTo(HaveOccurred())
-				var success bool
-				for _, node := range nodeList.Nodes {
-					if success {
-						break
-					}
-					if node.IsLinux() {
-						// Allow 3 retries for each node
-						for i := 0; i < 3; i++ {
-							address := node.Status.GetAddressByType("InternalIP")
-							if address == nil {
-								log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else {
+				if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
+					By("Ensuring that the kubernetes-dashboard service is Running")
+					s, err := service.Get("kubernetes-dashboard", "kube-system")
+					Expect(err).NotTo(HaveOccurred())
+					By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
+					dashboardPort := 443
+					port := s.GetNodePort(dashboardPort)
+					nodeList, err := node.GetReady()
+					Expect(err).NotTo(HaveOccurred())
+					var success bool
+					for _, node := range nodeList.Nodes {
+						if success {
+							break
+						}
+						if node.IsLinux() {
+							// Allow 3 retries for each node
+							for i := 0; i < 3; i++ {
+								address := node.Status.GetAddressByType("InternalIP")
+								if address == nil {
+									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
+								}
+								Expect(address).NotTo(BeNil())
+								dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
+								curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
+								err := sshConn.Execute(curlCMD, false)
+								if err == nil {
+									success = true
+									break
+								}
+								time.Sleep(1 * time.Second)
 							}
-							Expect(address).NotTo(BeNil())
-							dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
-							curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-							err := sshConn.Execute(curlCMD, false)
-							if err == nil {
-								success = true
-								break
-							}
-							time.Sleep(1 * time.Second)
 						}
 					}
+					Expect(success).To(BeTrue())
+				} else {
+					Skip("kubernetes-dashboard disabled for this cluster, will not test")
 				}
-				Expect(success).To(BeTrue())
-			} else {
-				Skip("kubernetes-dashboard disabled for this cluster, will not test")
 			}
 		})
 	})

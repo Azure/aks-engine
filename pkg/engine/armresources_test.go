@@ -661,8 +661,17 @@ func TestTemplateGenerator_GetKubernetesLinuxNodeCustomDataJSONObject(t *testing
 						AvailabilityProfile: api.VirtualMachineScaleSets,
 						VnetCidrs:           []string{"10.0.0.0/8"},
 					},
+				}
+				return *cs
+			},
+		},
+		{
+			Name: "VMSSWithNoLinuxProfile",
+			CSFactory: func() api.ContainerService {
+				cs := api.CreateMockContainerService("VMSSWithNoLinuxProfile", "1.10.13", 3, 0, false)
+				cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
 					{
-						Name:                "pool2",
+						Name:                "pool1",
 						Count:               1,
 						OSType:              api.Linux,
 						VMSize:              "Standard_D2_v2",
@@ -670,6 +679,7 @@ func TestTemplateGenerator_GetKubernetesLinuxNodeCustomDataJSONObject(t *testing
 						VnetCidrs:           []string{"10.0.0.0/8"},
 					},
 				}
+				cs.Properties.LinuxProfile = nil
 				return *cs
 			},
 		},
