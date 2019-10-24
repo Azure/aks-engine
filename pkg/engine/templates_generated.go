@@ -17293,14 +17293,14 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if and HasLinuxProfile HasCustomSearchDomain}}
+{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}
+{{end}}{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -17935,14 +17935,14 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if and HasLinuxProfile HasCustomSearchDomain}}
+{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}
+{{end}}{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
