@@ -358,19 +358,11 @@ func autofillApimodel(dc *deployCmd) error {
 
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
-		var workspaceDomain string
-		cloudspecConfig := dc.containerService.GetCloudSpecConfig()
-		switch cloudspecConfig.CloudName {
-		case "AzurePublicCloud":
-			workspaceDomain = "opinsights.azure.com"
-		case "AzureChinaCloud":
-			workspaceDomain = "opinsights.azure.cn"
-		case "AzureUSGovernmentCloud":
-			workspaceDomain = "opinsights.azure.us"
-		default:
-			return errors.Wrapf(err, "apimodel: container monitoring addon not supported in this cloud: %s", cloudspecConfig.CloudName)
+		cloudOrDependenciesLocation := dc.containerService.GetCloudSpecConfig().CloudName
+		if dc.containerService.Properties.IsAzureStackCloud() {
+			cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
 		}
-
+		workspaceDomain := helpers.GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation)
 		err := dc.configureContainerMonitoringAddon(ctx, k8sConfig, workspaceDomain)
 		if err != nil {
 			return errors.Wrap(err, "Failed to configure container monitoring addon")
@@ -472,6 +464,9 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 	var err error
 	addon := k8sConfig.GetAddonByName("container-monitoring")
 	if addon.Config == nil || len(addon.Config) == 0 || addon.Config["logAnalyticsWorkspaceResourceId"] != "" {
+		if dc.containerService.Properties.IsAzureStackCloud() {
+			return errors.New("This is not supported option for AzureStackCloud. Please provide config with workspaceGuid and workspaceKey")
+		}
 		workspaceResourceID = strings.TrimSpace(addon.Config["logAnalyticsWorkspaceResourceId"])
 		if workspaceResourceID != "" {
 			log.Infoln("using provided log analytics workspace resource id:", workspaceResourceID)

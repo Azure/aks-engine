@@ -43,6 +43,10 @@ func InitializeTemplateGenerator(ctx Context) (*TemplateGenerator, error) {
 		Translator: ctx.Translator,
 	}
 
+	if t.Translator == nil {
+		t.Translator = &i18n.Translator{}
+	}
+
 	if err := t.verifyFiles(); err != nil {
 		return nil, err
 	}
@@ -475,6 +479,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
+				kubernetesWindowsNodeCleanupPS1,
 				kubernetesWindowsOpenSSHFunctionPS1}
 
 			// Create a buffer, new zip

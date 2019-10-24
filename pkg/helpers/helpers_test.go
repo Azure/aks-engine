@@ -536,3 +536,54 @@ func TestEnsureString(t *testing.T) {
 	}
 
 }
+
+func TestGetLogAnalyticsWorkspaceDomain(t *testing.T) {
+	testcases := []struct {
+		cloudOrDependenciesLocation string
+		expected                    string
+	}{
+		{
+			"AzurePublicCloud",
+			"opinsights.azure.com",
+		},
+		{
+			"public",
+			"opinsights.azure.com",
+		},
+		{
+			"AzureChinaCloud",
+			"opinsights.azure.cn",
+		},
+		{
+			"china",
+			"opinsights.azure.cn",
+		},
+		{
+			"AzureUSGovernmentCloud",
+			"opinsights.azure.us",
+		},
+		{
+			"usgovernment",
+			"opinsights.azure.us",
+		},
+		{
+			"AzureGermanCloud",
+			"opinsights.azure.de",
+		},
+		{
+			"german",
+			"opinsights.azure.de",
+		},
+		{
+			"",
+			"opinsights.azure.com",
+		},
+	}
+
+	for _, testcase := range testcases {
+		actual := GetLogAnalyticsWorkspaceDomain(testcase.cloudOrDependenciesLocation)
+		if testcase.expected != actual {
+			t.Errorf("expected GetCloudTargetEnv to return %s, but got %s", testcase.expected, actual)
+		}
+	}
+}

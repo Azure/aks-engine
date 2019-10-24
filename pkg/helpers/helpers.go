@@ -223,3 +223,21 @@ func EnsureString(val, defaultVal string) string {
 	}
 	return defaultVal
 }
+
+//get domain of azure log analytics workspace based on the cloud or azure stack dependenciesLocation
+func GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation string) string {
+	var workspaceDomain string
+	switch strings.ToLower(strings.TrimSpace(cloudOrDependenciesLocation)) {
+	case "azurepubliccloud", "public":
+		workspaceDomain = "opinsights.azure.com"
+	case "azurechinacloud", "china":
+		workspaceDomain = "opinsights.azure.cn"
+	case "azureusgovernmentcloud", "usgovernment":
+		workspaceDomain = "opinsights.azure.us"
+	case "azuregermancloud", "german":
+		workspaceDomain = "opinsights.azure.de"
+	default:
+		workspaceDomain = "opinsights.azure.com"
+	}
+	return workspaceDomain
+}

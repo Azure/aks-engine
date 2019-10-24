@@ -10,6 +10,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
@@ -21,13 +22,21 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod07092019"
-	if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-		omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod07092019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019"
+	var workspaceDomain string
+	if cs.Properties.IsAzureStackCloud() {
+		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
+		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
+		if strings.EqualFold(dependenciesLocation, "china") {
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
+		}
+	} else {
+		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
+		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod10182019"
+		}
 	}
-	workspaceDomain := getLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
-
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    HeapsterAddonName,
 		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
@@ -217,7 +226,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "6.0.0-0",
+			"dockerProviderVersion": "7.0.0-5",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -225,8 +234,8 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "75m",
-				MemoryRequests: "225Mi",
+				CPURequests:    "110m",
+				MemoryRequests: "250Mi",
 				CPULimits:      "150m",
 				MemoryLimits:   "600Mi",
 				Image:          omsagentImage,
@@ -589,21 +598,4 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
 	}
-}
-
-func getLogAnalyticsWorkspaceDomain(cloudName string) string {
-	var workspaceDomain string
-	switch cloudName {
-	case "AzurePublicCloud":
-		workspaceDomain = "opinsights.azure.com"
-	case "AzureChinaCloud":
-		workspaceDomain = "opinsights.azure.cn"
-	case "AzureUSGovernmentCloud":
-		workspaceDomain = "opinsights.azure.us"
-	case "AzureGermanCloud":
-		workspaceDomain = "opinsights.azure.de"
-	default:
-		workspaceDomain = "opinsights.azure.com"
-	}
-	return workspaceDomain
 }
