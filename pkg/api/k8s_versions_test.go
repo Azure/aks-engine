@@ -5,9 +5,13 @@ package api
 
 import (
 	"testing"
+
+	. "github.com/onsi/gomega"
 )
 
 func TestGetK8sVersionComponents(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	oneDotSeventeenDotZero := getK8sVersionComponents("1.17.0", nil)
 	if oneDotSeventeenDotZero == nil {
 		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
@@ -50,12 +54,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 		NVIDIADevicePluginAddonName:        k8sComponent[NVIDIADevicePluginAddonName],
 	}
-
-	for k, v := range oneDotSeventeenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.17.0: %s = %s", k, oneDotSeventeenDotZero[k])
-		}
-	}
+	g.Expect(oneDotSeventeenDotZero).To(Equal(expected))
 
 	oneDotSixteenDotZero := getK8sVersionComponents("1.16.0", nil)
 	if oneDotSixteenDotZero == nil {
@@ -99,12 +98,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 		NVIDIADevicePluginAddonName:        k8sComponent[NVIDIADevicePluginAddonName],
 	}
-
-	for k, v := range oneDotSixteenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.16.0: %s = %s", k, oneDotSixteenDotZero[k])
-		}
-	}
+	g.Expect(oneDotSixteenDotZero).To(Equal(expected))
 
 	oneDotFifteenDotZero := getK8sVersionComponents("1.15.0", nil)
 	if oneDotFifteenDotZero == nil {
@@ -148,12 +142,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotFifteenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.15.0: %s = %s", k, oneDotFifteenDotZero[k])
-		}
-	}
+	g.Expect(oneDotFifteenDotZero).To(Equal(expected))
 
 	oneDotFourteenDotZero := getK8sVersionComponents("1.14.0", nil)
 	if oneDotFourteenDotZero == nil {
@@ -197,12 +186,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotFourteenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.14.0: %s = %s", k, oneDotFourteenDotZero[k])
-		}
-	}
+	g.Expect(oneDotFourteenDotZero).To(Equal(expected))
 
 	oneDotThirteenDotZero := getK8sVersionComponents("1.13.0", nil)
 	if oneDotThirteenDotZero == nil {
@@ -246,12 +230,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotThirteenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.13.0: %s = %s", k, oneDotThirteenDotZero[k])
-		}
-	}
+	g.Expect(oneDotThirteenDotZero).To(Equal(expected))
 
 	oneDotTwelveDotZero := getK8sVersionComponents("1.12.0", nil)
 	if oneDotTwelveDotZero == nil {
@@ -295,12 +274,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotTwelveDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.12.0: %s = %s", k, oneDotTwelveDotZero[k])
-		}
-	}
+	g.Expect(oneDotTwelveDotZero).To(Equal(expected))
 
 	oneDotElevenDotZero := getK8sVersionComponents("1.11.0-alpha.1", nil)
 	if oneDotElevenDotZero == nil {
@@ -343,12 +317,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotElevenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.11.0-alpha.1: %s = %s", k, oneDotElevenDotZero[k])
-		}
-	}
+	g.Expect(oneDotElevenDotZero).To(Equal(expected))
 
 	oneDotTenDotZero := getK8sVersionComponents("1.10.0", nil)
 	if oneDotTenDotZero == nil {
@@ -391,12 +360,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotTenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.10.0: %s = %s", k, oneDotTenDotZero[k])
-		}
-	}
+	g.Expect(oneDotTenDotZero).To(Equal(expected))
 
 	oneDotNineDotThree := getK8sVersionComponents("1.9.3", nil)
 	if oneDotNineDotThree == nil {
@@ -438,12 +402,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-
-	for k, v := range oneDotNineDotThree {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.9.3: %s = %s", k, oneDotNineDotThree[k])
-		}
-	}
+	g.Expect(oneDotNineDotThree).To(Equal(expected))
 
 	oneDotEightDotEight := getK8sVersionComponents("1.8.8", nil)
 	if oneDotEightDotEight == nil {
@@ -483,11 +442,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-	for k, v := range oneDotEightDotEight {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.8.8: %s = %s", k, oneDotNineDotThree[k])
-		}
-	}
+	g.Expect(oneDotEightDotEight).To(Equal(expected))
 
 	oneDotSevenDotZero := getK8sVersionComponents("1.7.13", nil)
 	if oneDotSevenDotZero == nil {
@@ -525,11 +480,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-	for k, v := range oneDotSevenDotZero {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.7.0: %s = %s", k, oneDotSevenDotZero[k])
-		}
-	}
+	g.Expect(oneDotSevenDotZero).To(Equal(expected))
 
 	override := getK8sVersionComponents("1.9.3", map[string]string{"windowszip": "v1.9.3-2int.zip"})
 	if override == nil {
@@ -571,11 +522,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                  k8sComponent["gchighthreshold"],
 		"gclowthreshold":                   k8sComponent["gclowthreshold"],
 	}
-	for k, v := range override {
-		if expected[k] != v {
-			t.Fatalf("getK8sVersionComponents() returned an unexpected map[string]string value for k8s 1.9.3 w/ overrides: %s = %s", k, override[k])
-		}
-	}
+	g.Expect(override).To(Equal(expected))
 
 	unknown := getK8sVersionComponents("1.0.0", nil)
 	if unknown != nil {
