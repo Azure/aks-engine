@@ -14,7 +14,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -307,7 +307,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 	}
 
 	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
-	TestClientIDInCmd, err := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+	TestClientIDInCmd, err := uuid.Parse("DEC923E3-1EF1-4745-9516-37906D56DEC4")
 	if err != nil {
 		t.Fatalf("Invalid ClientID in Test: %s", err)
 	}
@@ -360,7 +360,7 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndClientIdAndSecretInCmd(t *te
 	}
 
 	apimodel := getAPIModel(ExampleAPIModelWithDNSPrefix, false, "", "")
-	TestClientIDInCmd, err := uuid.FromString("DEC923E3-1EF1-4745-9516-37906D56DEC4")
+	TestClientIDInCmd, err := uuid.Parse("DEC923E3-1EF1-4745-9516-37906D56DEC4")
 	if err != nil {
 		t.Fatalf("Invalid ClientID in Test: %s", err)
 	}
@@ -598,7 +598,7 @@ func TestDeployCmdRun(t *testing.T) {
 	addAuthFlags(d.getAuthArgs(), f)
 
 	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeSubscriptionID, err := uuid.Parse(fakeRawSubscriptionID)
 	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
 	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
 	if err != nil {

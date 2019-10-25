@@ -18,7 +18,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	validator "gopkg.in/go-playground/validator.v9"
@@ -864,19 +864,19 @@ func (a *Properties) validateAADProfile() error {
 		if a.OrchestratorProfile.OrchestratorType != Kubernetes {
 			return errors.Errorf("'aadProfile' is only supported by orchestrator '%v'", Kubernetes)
 		}
-		if _, err := uuid.FromString(profile.ClientAppID); err != nil {
+		if _, err := uuid.Parse(profile.ClientAppID); err != nil {
 			return errors.Errorf("clientAppID '%v' is invalid", profile.ClientAppID)
 		}
-		if _, err := uuid.FromString(profile.ServerAppID); err != nil {
+		if _, err := uuid.Parse(profile.ServerAppID); err != nil {
 			return errors.Errorf("serverAppID '%v' is invalid", profile.ServerAppID)
 		}
 		if len(profile.TenantID) > 0 {
-			if _, err := uuid.FromString(profile.TenantID); err != nil {
+			if _, err := uuid.Parse(profile.TenantID); err != nil {
 				return errors.Errorf("tenantID '%v' is invalid", profile.TenantID)
 			}
 		}
 		if len(profile.AdminGroupID) > 0 {
-			if _, err := uuid.FromString(profile.AdminGroupID); err != nil {
+			if _, err := uuid.Parse(profile.AdminGroupID); err != nil {
 				return errors.Errorf("adminGroupID '%v' is invalid", profile.AdminGroupID)
 			}
 		}

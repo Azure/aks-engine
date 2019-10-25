@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -141,7 +141,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd
 	}
 	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
 
-	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientID, _ := uuid.Parse("e810b868-afab-412d-98cc-ce7db5cc840b")
 	clientSecret := "Test Client secret"
 	generateCmd := &generateCmd{
 		apimodelPath:     "./this/is/unused.json",
@@ -225,7 +225,7 @@ func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAnd
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
-	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientID, _ := uuid.Parse("e810b868-afab-412d-98cc-ce7db5cc840b")
 	clientSecret := "Test Client secret"
 	generateCmd := &generateCmd{
 		apimodelPath:     "./this/is/unused.json",
