@@ -253,13 +253,6 @@
       "type": "bool"
     },
 {{end}}
-    "kubernetesAzurePolicyEnabled": {
-      "defaultValue": false,
-      "metadata": {
-        "description": "Azure Policy Addon status"
-      },
-      "type": "bool"
-    },
     "kubernetesACIConnectorEnabled": {
       "metadata": {
         "description": "ACI Connector Status"

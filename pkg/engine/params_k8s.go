@@ -83,13 +83,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
 			}
-			if kubernetesConfig.IsAzurePolicyEnabled() {
-				azurePolicyAddon := kubernetesConfig.GetAddonByName(AzurePolicyAddonName)
-				azurePolicyIndex := azurePolicyAddon.GetAddonContainersIndexByName(AzurePolicyAddonName)
-				if azurePolicyIndex > -1 {
-					addValue(parametersMap, "kubernetesAzurePolicyEnabled", to.Bool(azurePolicyAddon.Enabled))
-				}
-			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
 			} else {

@@ -322,7 +322,7 @@ ensureK8sControlPlane() {
 }
 
 ensureLabelExclusionForAzurePolicyAddon() {
-    if [[ "${AZURE_POLICY_ADDON}" = True ]]; then
+    if [[ "${azurePolicyAddonEnabled}" = True ]]; then
         retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
     fi
 }
@@ -425,7 +425,7 @@ configAddons() {
         configACIConnectorAddon
     fi
 
-    if [[ "${AZURE_POLICY_ADDON}" = True ]]; then
+    if [[ "${azurePolicyAddonEnabled}" = True ]]; then
         configAzurePolicyAddon
     fi
 }
