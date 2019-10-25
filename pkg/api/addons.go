@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
