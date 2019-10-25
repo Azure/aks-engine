@@ -521,6 +521,39 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Back-compat for older addon specs of cluster-autoscaler
+	if isUpdate {
+		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
+		if i > -1 && to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
+			if o.KubernetesConfig.Addons[i].Pools == nil {
+				var pools []AddonNodePoolsConfig
+				for i, p := range cs.Properties.AgentPoolProfiles {
+					pool := AddonNodePoolsConfig{
+						Name: p.Name,
+						Config: map[string]string{
+							"min-nodes": strconv.Itoa(p.Count),
+							"max-nodes": strconv.Itoa(p.Count),
+						},
+					}
+					if i == 0 {
+						originalMinNodes := o.KubernetesConfig.Addons[i].Config["min-nodes"]
+						originalMaxNodes := o.KubernetesConfig.Addons[i].Config["max-nodes"]
+						if originalMinNodes != "" {
+							pool.Config["min-nodes"] = originalMinNodes
+							delete(o.KubernetesConfig.Addons[i].Config, "min-nodes")
+						}
+						if originalMaxNodes != "" {
+							pool.Config["max-nodes"] = originalMaxNodes
+							delete(o.KubernetesConfig.Addons[i].Config, "max-nodes")
+						}
+					}
+					pools = append(pools, pool)
+				}
+				o.KubernetesConfig.Addons[i].Pools = pools
+			}
+		}
+	}
+
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}
