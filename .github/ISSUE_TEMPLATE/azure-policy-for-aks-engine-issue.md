@@ -10,6 +10,12 @@ assignees: ''
 **Describe the issue**
 A clear and concise description of the issue
 
+**AKS Engine Version***
+
+**Kubernetes Version**
+
+**Gatekeeper Version**
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
