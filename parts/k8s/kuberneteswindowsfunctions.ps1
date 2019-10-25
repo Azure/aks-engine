@@ -6,7 +6,7 @@ function
 Write-Log($message)
 {
     $msg = $message | Timestamp
-    Write-Host $msg
+    Write-Output $msg
 }
 
 function DownloadFileOverHttp
@@ -105,19 +105,4 @@ function Get-NetworkLogCollectionScripts {
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd' -DestinationPath 'c:\k\debug\startpacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
-}
-
-function Register-NodeCleanupScriptTask {
-    Write-Log "Creating a startup task to run on-restart.ps1"
-
-    (Get-Content 'c:\AzureData\k8s\windowsnodecleanup.ps1') |
-    Foreach-Object {$_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
-    Foreach-Object {$_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
-    Out-File 'c:\k\windowsnodecleanup.ps1'
-
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowsnodecleanup.ps1`""
-    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
-    $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
-    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
-    Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }

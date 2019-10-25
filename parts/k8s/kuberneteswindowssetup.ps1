@@ -241,10 +241,6 @@ try
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
-        Write-Log "Disable firewall to enable pods to talk to service endpoints"
-        #TODO: Kubelet should eventually do this
-        netsh advfirewall set allprofiles state off
-
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
             Write-Log "Installing Azure VNet plugins"
@@ -271,54 +267,11 @@ try
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
+
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
-
-            Write-Log "Creating WinCNI network config file"
-            Write-WinCNIConfig `
-                -cniConfigPath "c:\k\cni\config\$($NetworkMode).conf" `
-                -networkMode $global:NetworkMode `
-                -kubeDnsServiceIp $KubeDnsServiceIp `
-                -kubeDnsSearchPath "svc.cluster.local" `
-                -kubeClusterCIDR $KubeClusterCIDR `
-                -masterSubnet $global:MasterSubnet `
-                -kubeServiceCIDR $global:KubeServiceCIDR
-        }
-
-        Write-Log "Creating ext HNS network"
-        # This is done so network connectivity to the node is not lost when other networks are added/removed
-        Get-HnsPsm1 -HNSModule $global:HNSModule
-        Import-Module $global:HNSModule
-
-        $netAdapters = @(Get-NetAdapter -Physical)
-        if ($netAdapters.Count -eq 0) {
-            throw "Failed to find any physical network adapters"
-        }
-
-        $managementIP = (Get-NetIPAddress -ifIndex $netAdapters[0].ifIndex -AddressFamily IPv4).IPAddress
-        $adapterName = $netAdapters[0].Name
-
-        Write-Log "Using adapter $adapterName with IP address $managementIP"
-
-        # Fixme : use a smallest range possible, that will not collide with any pod space
-        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name "ext" -Verbose
-
-        # Wait for switch to be created and ip address to be assigned
-        for ($i = 0; $i -lt 60; $i++) {
-            $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
-            if ($mgmtIPAfterNetworkCreate) {
-                break
-            }
-            Write-Log "Waiting for IP address to be assigned..."
-            Start-Sleep -Milliseconds 1000
-        }
-
-        if (-not $mgmtIPAfterNetworkCreate) {
-            throw "Failed to find $managementIP after creating $($global:ExternalNetwork) network"
-        }
-        else {
-            Write-Log "IP address has been assigned"
+            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
@@ -360,8 +313,6 @@ try
             Write-Log "Removing aks-engine bits cache directory"
             Remove-Item $CacheDir -Recurse -Force
         }
-
-        Register-NodeCleanupScriptTask
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer

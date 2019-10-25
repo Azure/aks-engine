@@ -158,7 +158,6 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
-	kubernetesWindowsNodeCleanupPS1       = "k8s/windowsnodecleanup.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 )
 
