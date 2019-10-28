@@ -13,10 +13,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -635,24 +634,11 @@ func (a *Properties) validateAddons() error {
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
-					version := common.RationalizeReleaseAndVersion(
-						a.OrchestratorProfile.OrchestratorType,
-						a.OrchestratorProfile.OrchestratorRelease,
-						a.OrchestratorProfile.OrchestratorVersion,
-						false,
-						false)
-					if version == "" {
-						return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
-					}
-					sv, err := semver.Make(version)
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
-						return errors.Errorf("could not validate version %s", version)
+						return err
 					}
-					minVersion, err := semver.Make("1.10.0")
-					if err != nil {
-						return errors.New("could not validate version")
-					}
-					if IsNSeriesSKU && sv.LT(minVersion) {
+					if IsNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
 					if a.HasCoreOS() {
@@ -693,6 +679,19 @@ func (a *Properties) validateAddons() error {
 					}
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true.", addon.Name))
+					}
+				}
+			case "azure-policy":
+				if to.Bool(addon.Enabled) {
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					if err != nil {
+						return err
+					}
+					if !isValidVersion {
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
+					}
+					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+						return errors.New("Azure Policy add-on requires service principal profile to be specified")
 					}
 				}
 			}

@@ -321,6 +321,12 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
+ensureLabelExclusionForAzurePolicyAddon() {
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    fi
+}
+
 ensureEtcd() {
     retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
 }
@@ -405,6 +411,11 @@ configACIConnectorAddon() {
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
+configAzurePolicyAddon() {
+    AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+    sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+}
+
 configAddons() {
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
         configClusterAutoscalerAddon
@@ -412,6 +423,10 @@ configAddons() {
 
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
+    fi
+
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+        configAzurePolicyAddon
     fi
 }
 

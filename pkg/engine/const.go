@@ -108,6 +108,8 @@ const (
 	ContainerMonitoringAddonName = "container-monitoring"
 	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
+	// AzurePolicyAddonName is the name of the kubernetes Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon

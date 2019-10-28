@@ -8,10 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 )
@@ -1387,6 +1386,47 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err == nil {
 		t.Errorf(
 			"should error on cluster-autoscaler with availability sets",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azure-policy",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy when ServicePrincipalProfile is empty",
+		)
+	}
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{
+		ClientID: "123",
+	}
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error on azure-policy when ServicePrincipalProfile is not empty",
+		)
+	}
+	p.OrchestratorProfile.OrchestratorRelease = "1.9"
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with k8s < 1.10",
+		)
+	}
+	p.OrchestratorProfile.OrchestratorRelease = "1.10"
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error on azure-policy with k8s >= 1.10",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with managed identity",
 		)
 	}
 

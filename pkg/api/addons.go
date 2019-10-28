@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
@@ -356,6 +355,33 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		},
 	}
 
+	defaultsAzurePolicyAddonsConfig := KubernetesAddon{
+		Name:    AzurePolicyAddonName,
+		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Config: map[string]string{
+			"auditInterval":             "30",
+			"constraintViolationsLimit": "20",
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "azure-policy",
+				Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+				CPURequests:    "30m",
+				MemoryRequests: "50Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           "gatekeeper",
+				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
+				CPURequests:    "100m",
+				MemoryRequests: "256Mi",
+				CPULimits:      "100m",
+				MemoryLimits:   "512Mi",
+			},
+		},
+	}
+
 	defaultAppGwAddonsConfig := KubernetesAddon{
 		Name:    AppGwIngressAddonName,
 		Enabled: to.BoolPtr(DefaultAppGwIngressAddonEnabled),
@@ -450,6 +476,7 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 		defaultAppGwAddonsConfig,
 		defaultAzureDiskCSIDriverAddonsConfig,
 		defaultAzureFileCSIDriverAddonsConfig,
+		defaultsAzurePolicyAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
