@@ -1008,6 +1008,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -1250,6 +1254,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -1511,6 +1519,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -1776,6 +1788,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -2098,6 +2114,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -2419,6 +2439,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
 			},
 		},
 		{
@@ -2696,6 +2720,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
@@ -2978,6 +3006,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
 			},
 		},
