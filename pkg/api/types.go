@@ -1733,6 +1733,11 @@ func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
 	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
 }
 
+// IsAzurePolicyEnabled checks if the azure policy addon is enabled
+func (k *KubernetesConfig) IsAzurePolicyEnabled() bool {
+	return k.IsAddonEnabled(AzurePolicyAddonName)
+}
+
 // IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
 func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
 	return k.IsAddonEnabled(AppGwIngressAddonName)

@@ -131,6 +131,8 @@ const (
 	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
 	DefaultAADPodIdentityAddonEnabled = false
+	// DefaultAzurePolicyAddonEnabled determines the aks-engine provided default for enabling azure policy addon
+	DefaultAzurePolicyAddonEnabled = false
 	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
 	DefaultACIConnectorAddonEnabled = false
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
@@ -215,6 +217,8 @@ const (
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
 	PodSecurityPolicyAddonName = "pod-security-policy"
+	// AzurePolicyAddonName is the name of the Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager

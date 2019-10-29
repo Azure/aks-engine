@@ -158,6 +158,7 @@
 // ../../parts/k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/azure-cni-networkmonitor.yaml
+// ../../parts/k8s/containeraddons/azure-policy-deployment.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -193,7 +194,6 @@
 // ../../parts/k8s/windowsconfigfunc.ps1
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
-// ../../parts/k8s/windowsnodecleanup.ps1
 // ../../parts/masteroutputs.t
 // ../../parts/masterparams.t
 // ../../parts/swarm/Install-ContainerHost-And-Join-Swarm.ps1
@@ -14513,6 +14513,12 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
+ensureLabelExclusionForAzurePolicyAddon() {
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    fi
+}
+
 ensureEtcd() {
     retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
 }
@@ -14597,6 +14603,11 @@ configACIConnectorAddon() {
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
+configAzurePolicyAddon() {
+    AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+    sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+}
+
 configAddons() {
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
         configClusterAutoscalerAddon
@@ -14604,6 +14615,10 @@ configAddons() {
 
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
+    fi
+
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+        configAzurePolicyAddon
     fi
 }
 
@@ -15644,6 +15659,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
+    ensureLabelExclusionForAzurePolicyAddon
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -26288,6 +26304,618 @@ func k8sContaineraddonsAzureCniNetworkmonitorYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: configs.config.gatekeeper.sh
+spec:
+  group: config.gatekeeper.sh
+  names:
+    kind: Config
+    plural: configs
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            sync:
+              description: Configuration for syncing k8s objects
+              properties:
+                syncOnly:
+                  description: If non-empty, only entries on this list will be replicated
+                    into OPA
+                  items:
+                    properties:
+                      group:
+                        type: string
+                      kind:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  type: array
+              type: object
+            validation:
+              description: Configuration for validation
+              properties:
+                traces:
+                  description: List of requests to trace. Both "user" and "kinds"
+                    must be specified
+                  items:
+                    properties:
+                      dump:
+                        description: Also dump the state of OPA with the trace. Set
+                          to ` + "`" + `All` + "`" + ` to dump everything.
+                        type: string
+                      kind:
+                        description: Only trace requests of the following GroupVersionKind
+                        properties:
+                          group:
+                            type: string
+                          kind:
+                            type: string
+                          version:
+                            type: string
+                        type: object
+                      user:
+                        description: Only trace requests from the specified user
+                        type: string
+                    type: object
+                  type: array
+              type: object
+          type: object
+        status:
+          properties:
+            byPod:
+              description: List of statuses as seen by individual pods
+              items:
+                properties:
+                  allFinalizers:
+                    description: List of Group/Version/Kinds with finalizers
+                    items:
+                      properties:
+                        group:
+                          type: string
+                        kind:
+                          type: string
+                        version:
+                          type: string
+                      type: object
+                    type: array
+                  id:
+                    description: a unique identifier for the pod that wrote the status
+                    type: string
+                type: object
+              type: array
+          type: object
+  version: v1alpha1
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: gatekeeper-manager-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - config.gatekeeper.sh
+  resources:
+  - configs
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - config.gatekeeper.sh
+  resources:
+  - configs/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - constraints.gatekeeper.sh
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - templates.gatekeeper.sh
+  resources:
+  - constrainttemplates
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - templates.gatekeeper.sh
+  resources:
+  - constrainttemplates/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - constraints.gatekeeper.sh
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  creationTimestamp: null
+  name: gatekeeper-manager-rolebinding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gatekeeper-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gatekeeper-webhook-server-secret
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-controller-manager-service
+  namespace: kube-system
+spec:
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    control-plane: controller-manager
+    controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-controller-manager
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+      controller-tools.k8s.io: "1.0"
+  serviceName: gatekeeper-controller-manager-service
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      containers:
+      - args:
+        - --auditInterval={{ContainerConfig "auditInterval"}}
+        - --constraintViolationsLimit={{ContainerConfig "constraintViolationsLimit"}}
+        - --port=8443
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: SECRET_NAME
+          value: gatekeeper-webhook-server-secret
+        image: {{ContainerImage "gatekeeper"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "gatekeeper"}}
+            memory: {{ContainerMemReqs "gatekeeper"}}
+          limits:
+            cpu: {{ContainerCPULimits "gatekeeper"}}
+            memory: {{ContainerMemLimits "gatekeeper"}}
+        imagePullPolicy: Always
+        name: manager
+        ports:
+        - containerPort: 8443
+          name: webhook-server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /certs
+          name: cert
+          readOnly: true
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: gatekeeper-webhook-server-secret
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  labels:
+    controller-tools.k8s.io: "1.0"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: constrainttemplates.templates.gatekeeper.sh
+spec:
+  group: templates.gatekeeper.sh
+  names:
+    kind: ConstraintTemplate
+    plural: constrainttemplates
+  scope: Cluster
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            crd:
+              properties:
+                spec:
+                  properties:
+                    names:
+                      properties:
+                        kind:
+                          type: string
+                      type: object
+                    validation:
+                      type: object
+                  type: object
+              type: object
+            targets:
+              items:
+                properties:
+                  rego:
+                    type: string
+                  target:
+                    type: string
+                type: object
+              type: array
+          type: object
+        status:
+          properties:
+            byPod:
+              items:
+                properties:
+                  errors:
+                    items:
+                      properties:
+                        code:
+                          type: string
+                        location:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                      - code
+                      - message
+                      type: object
+                    type: array
+                  id:
+                    description: a unique identifier for the pod that wrote the status
+                    type: string
+                type: object
+              type: array
+            created:
+              type: boolean
+          type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+  - name: v1alpha1
+    served: true
+    storage: false
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+apiVersion: config.gatekeeper.sh/v1alpha1
+kind: Config
+metadata:
+  name: config
+  namespace: "kube-system"
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  sync:
+    syncOnly:
+      - group: ""
+        version: "v1"
+        kind: "Namespace"
+      - group: ""
+        version: "v1"
+        kind: "Pod"
+      - group: ""
+        version: "v1"
+        kind: "Service"
+      - group: "extensions"
+        version: "v1beta1"
+        kind: "Ingress"
+      - group: "networking.k8s.io"
+        version: "v1beta1"
+        kind: "Ingress"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-policy
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ["constraints.gatekeeper.sh"]
+  resources: ["*"]
+  verbs: ["create", "delete", "update", "list", "get"]
+- apiGroups: ["templates.gatekeeper.sh"]
+  resources: ["constrainttemplates"]
+  verbs: ["create", "delete", "update", "list", "get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-agent
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+- kind: ServiceAccount
+  name: azure-policy
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: policy-agent
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: azure-policy
+    aadpodidbinding: policy-identity
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: azure-policy
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-policy
+  template:
+    metadata:
+      labels:
+        app: azure-policy
+      name: azure-policy
+    spec:
+      serviceAccountName: azure-policy
+      containers:
+      - name: azure-policy
+        image: {{ContainerImage "azure-policy"}}
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "azure-policy"}}
+            memory: {{ContainerMemReqs "azure-policy"}}
+          limits:
+            cpu: {{ContainerCPULimits "azure-policy"}}
+            memory: {{ContainerMemLimits "azure-policy"}}
+        imagePullPolicy: Always
+        env:
+        - name: K8S_POLICY_PREFIX
+          value: azurepolicy
+        - name: RESOURCE_ID
+          value: <resourceId>
+        - name: RESOURCE_TYPE
+          value: AKS Engine
+        - name: DATAPLANE_ENDPOINT
+          value: https://gov-prod-policy-data.trafficmanager.net
+        - name: ACS_CREDENTIAL_LOCATION
+          value: /etc/acs/azure.json
+        - name: REFRESH_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: AUDIT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: TELEMETRY_HEARTBEAT_INTERVAL
+          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+        - name: CURRENT_IMAGE
+          value: {{ContainerImage "azure-policy"}}
+        volumeMounts:
+        - name: acs-credential
+          mountPath: "/etc/acs/azure.json"
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/azure.json
+          type: File
+        name: acs-credential
+`)
+
+func k8sContaineraddonsAzurePolicyDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsAzurePolicyDeploymentYaml, nil
+}
+
+func k8sContaineraddonsAzurePolicyDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsAzurePolicyDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/azure-policy-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsDnsAutoscalerYaml = []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31209,7 +31837,7 @@ function
 Write-Log($message)
 {
     $msg = $message | Timestamp
-    Write-Host $msg
+    Write-Output $msg
 }
 
 function DownloadFileOverHttp
@@ -31308,21 +31936,6 @@ function Get-NetworkLogCollectionScripts {
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd' -DestinationPath 'c:\k\debug\startpacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
-}
-
-function Register-NodeCleanupScriptTask {
-    Write-Log "Creating a startup task to run on-restart.ps1"
-
-    (Get-Content 'c:\AzureData\k8s\windowsnodecleanup.ps1') |
-    Foreach-Object {$_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
-    Foreach-Object {$_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
-    Out-File 'c:\k\windowsnodecleanup.ps1'
-
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowsnodecleanup.ps1` + "`" + `""
-    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
-    $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
-    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
-    Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
 `)
 
@@ -31584,10 +32197,6 @@ try
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
-        Write-Log "Disable firewall to enable pods to talk to service endpoints"
-        #TODO: Kubelet should eventually do this
-        netsh advfirewall set allprofiles state off
-
         # Configure network policy.
         if ($global:NetworkPlugin -eq "azure") {
             Write-Log "Installing Azure VNet plugins"
@@ -31614,54 +32223,11 @@ try
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) ` + "`" + `
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
+
         } elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
-
-            Write-Log "Creating WinCNI network config file"
-            Write-WinCNIConfig ` + "`" + `
-                -cniConfigPath "c:\k\cni\config\$($NetworkMode).conf" ` + "`" + `
-                -networkMode $global:NetworkMode ` + "`" + `
-                -kubeDnsServiceIp $KubeDnsServiceIp ` + "`" + `
-                -kubeDnsSearchPath "svc.cluster.local" ` + "`" + `
-                -kubeClusterCIDR $KubeClusterCIDR ` + "`" + `
-                -masterSubnet $global:MasterSubnet ` + "`" + `
-                -kubeServiceCIDR $global:KubeServiceCIDR
-        }
-
-        Write-Log "Creating ext HNS network"
-        # This is done so network connectivity to the node is not lost when other networks are added/removed
-        Get-HnsPsm1 -HNSModule $global:HNSModule
-        Import-Module $global:HNSModule
-
-        $netAdapters = @(Get-NetAdapter -Physical)
-        if ($netAdapters.Count -eq 0) {
-            throw "Failed to find any physical network adapters"
-        }
-
-        $managementIP = (Get-NetIPAddress -ifIndex $netAdapters[0].ifIndex -AddressFamily IPv4).IPAddress
-        $adapterName = $netAdapters[0].Name
-
-        Write-Log "Using adapter $adapterName with IP address $managementIP"
-
-        # Fixme : use a smallest range possible, that will not collide with any pod space
-        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name "ext" -Verbose
-
-        # Wait for switch to be created and ip address to be assigned
-        for ($i = 0; $i -lt 60; $i++) {
-            $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
-            if ($mgmtIPAfterNetworkCreate) {
-                break
-            }
-            Write-Log "Waiting for IP address to be assigned..."
-            Start-Sleep -Milliseconds 1000
-        }
-
-        if (-not $mgmtIPAfterNetworkCreate) {
-            throw "Failed to find $managementIP after creating $($global:ExternalNetwork) network"
-        }
-        else {
-            Write-Log "IP address has been assigned"
+            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
@@ -31703,8 +32269,6 @@ try
             Write-Log "Removing aks-engine bits cache directory"
             Remove-Item $CacheDir -Recurse -Force
         }
-
-        Register-NodeCleanupScriptTask
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -32396,105 +32960,8 @@ function Update-WinCNI
     $wincniFile = [Io.path]::Combine($CNIPath, $wincni)
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
-function Get-DefaultGateway($CIDR) {
-    return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
-}
 
-function Get-PodCIDR() {
-    $podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
-    return $podCIDR
-}
-
-function Test-PodCIDR($podCIDR) {
-    return $podCIDR.length -gt 0
-}
-
-function Write-WinCNIConfig {
-    param(
-        [string] $cniConfigPath,
-        [string] $networkMode,
-        [string] $kubeDnsServiceIp,
-        [string] $kubeDnsSearchPath,
-        [string] $kubeClusterCIDR,
-        [string] $masterSubnet,
-        [string] $kubeServiceCIDR
-    )
-
-    Write-Log "Writing CNI config for kubenet"
-
-    $jsonSampleConfig =
-    "{
-    ""cniVersion"": ""0.2.0"",
-    ""name"": ""<NetworkMode>"",
-    ""type"": ""win-bridge"",
-    ""master"": ""Ethernet"",
-    ""dns"" : {
-        ""Nameservers"" : [ ""<NameServers>"" ],
-        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
-    },
-    ""policies"": [
-    {
-        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
-    },
-    {
-        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""ROUTE"", ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }
-    }
-    ]
-}"
-
-    $configJson = ConvertFrom-Json $jsonSampleConfig
-    $configJson.name = $networkMode.ToLower()
-    $configJson.dns.Nameservers[0] = $kubeDnsServiceIp
-    $configJson.dns.Search[0] = $kubeDnsSearchPath
-
-    $configJson.policies[0].Value.ExceptionList[0] = $kubeClusterCIDR
-    $configJson.policies[0].Value.ExceptionList[1] = $masterSubnet
-    $configJson.policies[1].Value.DestinationPrefix = $kubeServiceCIDR
-
-    if (Test-Path $cniConfigPath) {
-        Clear-Content -Path $cniConfigPath
-    }
-
-    Write-Log "Generated CNI Config [$configJson]"
-
-    Add-Content -Path $cniConfigPath -Value (ConvertTo-Json $configJson -Depth 20)
-}
-
-function Get-PodCIDRForNode {
-    param(
-        [string[]] $kubeletArgList
-    )
-
-    Write-Log "Attempting to get pod CIDR"
-    $podCIDR = Get-PodCIDR
-    $podCidrDiscovered = Test-PodCIDR($podCIDR)
-
-    Write-Log "Staring kubelet with args: $kubeletArgList"
-
-    # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
-    if (-not $podCidrDiscovered) {
-        Write-Log "Staring kubelet with args: $kubeletArgList"
-
-        $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $kubeletArgList
-
-        # run kubelet until podCidr is discovered
-        Write-Log "waiting to discover pod CIDR"
-        while (-not $podCidrDiscovered) {
-            Write-Log "Sleeping for 10s, and then waiting to discover pod CIDR"
-            Start-Sleep 10
-
-            $podCIDR = Get-PodCIDR
-            $podCidrDiscovered = Test-PodCIDR($podCIDR)
-        }
-
-        # stop the kubelet process now that we have our CIDR, discard the process output
-        $process | Stop-Process | Out-Null
-    }
-
-    Write-Log "Pod CIDR: $podCIDR"
-    return $podCIDR
-}
-`)
+# TODO: Move the code that creates the wincni configuration file out of windowskubeletfunc.ps1 and put it here`)
 
 func k8sWindowscnifuncPs1Bytes() ([]byte, error) {
 	return _k8sWindowscnifuncPs1, nil
@@ -33057,9 +33524,9 @@ Install-KubernetesServices {
 
     mkdir $VolumePluginDir
     $KubeletArgList = $KubeletConfigArgs # This is the initial list passed in from aks-engine
-    $KubeletArgList += "--node-labels=$($KubeletNodeLabels)"
+    $KubeletArgList += "--node-labels=` + "`" + `$global:KubeletNodeLabels"
     # $KubeletArgList += "--hostname-override=` + "`" + `$global:AzureHostname" TODO: remove - dead code?
-    $KubeletArgList += "--volume-plugin-dir=$($VolumePluginDir)"
+    $KubeletArgList += "--volume-plugin-dir=` + "`" + `$global:VolumePluginDir"
     # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
     # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
 
@@ -33083,11 +33550,6 @@ Install-KubernetesServices {
     }
     else {
         throw "Unknown network type $NetworkPlugin, can't configure kubelet"
-    }
-
-    if ($NetworkPlugin -eq "kubenet") {
-        Write-Log "Running kubelet until podCIDR is set for node"
-        Get-PodCIDRForNode -kubeletArgList $KubeletArgList
     }
 
     # Used in WinCNI version of kubeletstart.ps1
@@ -33122,12 +33584,98 @@ Install-KubernetesServices {
 ` + "`" + `$global:KubeletNodeLabels="$KubeletNodeLabels"
 
 "@
+
     if ($NetworkPlugin -eq "azure") {
         $KubeNetwork = "azure"
         $kubeStartStr += @"
 Write-Host "NetworkPlugin azure, starting kubelet."
 
+# Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+netsh advfirewall set allprofiles state off
 # startup the service
+
+# Find if the primary external switch network exists. If not create one.
+# This is done only once in the lifetime of the node
+` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ ` + "`" + `$global:ExternalNetwork
+if (!` + "`" + `$hnsNetwork)
+{
+    Write-Host "Creating a new hns Network"
+    ipmo ` + "`" + `$global:HNSModule
+
+    ` + "`" + `$na = @(Get-NetAdapter -Physical)
+    if (` + "`" + `$na.Count -eq 0)
+    {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    ` + "`" + `$managementIP = (Get-NetIPAddress -ifIndex ` + "`" + `$na[0].ifIndex -AddressFamily IPv4).IPAddress
+    ` + "`" + `$adapterName = ` + "`" + `$na[0].Name
+    write-host "Using adapter ` + "`" + `$adapterName with IP address ` + "`" + `$managementIP"
+    ` + "`" + `$mgmtIPAfterNetworkCreate
+
+    ` + "`" + `$stopWatch = New-Object System.Diagnostics.Stopwatch
+    ` + "`" + `$stopWatch.Start()
+    # Fixme : use a smallest range possible, that will not collide with any pod space
+    New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName ` + "`" + `$adapterName -Name ` + "`" + `$global:ExternalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for (` + "`" + `$i=0;` + "`" + `$i -lt 60;` + "`" + `$i++)
+    {
+        ` + "`" + `$mgmtIPAfterNetworkCreate = Get-NetIPAddress ` + "`" + `$managementIP -ErrorAction SilentlyContinue
+        if (` + "`" + `$mgmtIPAfterNetworkCreate)
+        {
+            break
+        }
+        sleep -Milliseconds 1000
+    }
+
+    ` + "`" + `$stopWatch.Stop()
+    if (-not ` + "`" + `$mgmtIPAfterNetworkCreate)
+    {
+        throw "Failed to find ` + "`" + `$managementIP after creating ` + "`" + `$global:ExternalNetwork network"
+    }
+    write-host "It took ` + "`" + `$(` + "`" + `$StopWatch.Elapsed.Seconds) seconds to create the ` + "`" + `$global:ExternalNetwork network."
+}
+
+# Find if network created by CNI exists, if yes, remove it
+# This is required to keep the network non-persistent behavior
+# Going forward, this would be done by HNS automatically during restart of the node
+
+` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+if (` + "`" + `$hnsNetwork)
+{
+    # Cleanup all containers
+    docker ps -q | foreach {docker rm ` + "`" + `$_ -f}
+
+    Write-Host "Cleaning up old HNS network found"
+    Remove-HnsNetwork ` + "`" + `$hnsNetwork
+    # Kill all cni instances & stale data left by cni
+    # Cleanup all files related to cni
+    taskkill /IM azure-vnet.exe /f
+    taskkill /IM azure-vnet-ipam.exe /f
+    ` + "`" + `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
+    if ((Test-Path ` + "`" + `$cnijson))
+    {
+        Remove-Item ` + "`" + `$cnijson
+    }
+    ` + "`" + `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
+    if ((Test-Path ` + "`" + `$cnilock))
+    {
+        Remove-Item ` + "`" + `$cnilock
+    }
+
+    ` + "`" + `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
+    if ((Test-Path ` + "`" + `$cnijson))
+    {
+        Remove-Item ` + "`" + `$cnijson
+    }
+    ` + "`" + `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
+    if ((Test-Path ` + "`" + `$cnilock))
+    {
+        Remove-Item ` + "`" + `$cnilock
+    }
+}
 
 # Restart Kubeproxy, which would wait, until the network is created
 # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
@@ -33144,9 +33692,125 @@ $KubeletCommandLine
         $KubeNetwork = "l2bridge"
         $kubeStartStr += @"
 
+function
+Get-DefaultGateway(` + "`" + `$CIDR)
+{
+    return ` + "`" + `$CIDR.substring(0,` + "`" + `$CIDR.lastIndexOf(".")) + ".1"
+}
+
+function
+Get-PodCIDR()
+{
+    ` + "`" + `$podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/` + "`" + `$(` + "`" + `$env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    return ` + "`" + `$podCIDR
+}
+
+function
+Test-PodCIDR(` + "`" + `$podCIDR)
+{
+    return ` + "`" + `$podCIDR.length -gt 0
+}
+
+function
+Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
+{
+    ` + "`" + `$jsonSampleConfig =
+"{
+    ""cniVersion"": ""0.2.0"",
+    ""name"": ""<NetworkMode>"",
+    ""type"": ""win-bridge"",
+    ""master"": ""Ethernet"",
+    ""dns"" : {
+        ""Nameservers"" : [ ""<NameServers>"" ],
+        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+    },
+    ""policies"": [
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
+    },
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""ROUTE"", ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }
+    }
+    ]
+}"
+
+    ` + "`" + `$configJson = ConvertFrom-Json ` + "`" + `$jsonSampleConfig
+    ` + "`" + `$configJson.name = ` + "`" + `$global:NetworkMode.ToLower()
+    ` + "`" + `$configJson.dns.Nameservers[0] = ` + "`" + `$global:KubeDnsServiceIp
+    ` + "`" + `$configJson.dns.Search[0] = ` + "`" + `$global:KubeDnsSearchPath
+
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
+    ` + "`" + `$configJson.policies[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$configJson.policies[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
+
+    if (Test-Path ` + "`" + `$global:CNIConfig)
+    {
+        Clear-Content -Path ` + "`" + `$global:CNIConfig
+    }
+
+    Write-Host "Generated CNI Config [` + "`" + `$configJson]"
+
+    Add-Content -Path ` + "`" + `$global:CNIConfig -Value (ConvertTo-Json ` + "`" + `$configJson -Depth 20)
+}
+
 try
 {
     ` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+
+    ` + "`" + `$masterSubnetGW = Get-DefaultGateway ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$podCIDR=Get-PodCIDR
+    ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
+
+    # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
+    if (-not ` + "`" + `$podCidrDiscovered)
+    {
+        ` + "`" + `$argList = $KubeletArgListStr
+
+        ` + "`" + `$process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList ` + "`" + `$argList
+
+        # run kubelet until podCidr is discovered
+        Write-Host "waiting to discover pod CIDR"
+        while (-not ` + "`" + `$podCidrDiscovered)
+        {
+            Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
+            Start-Sleep 10
+
+            ` + "`" + `$podCIDR=Get-PodCIDR
+            ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
+        }
+
+        # stop the kubelet process now that we have our CIDR, discard the process output
+        ` + "`" + `$process | Stop-Process | Out-Null
+    }
+
+    # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+    netsh advfirewall set allprofiles state off
+
+    # startup the service
+    ` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ ` + "`" + `$global:NetworkMode.ToLower()
+
+    if (` + "`" + `$hnsNetwork)
+    {
+        # Kubelet has been restarted with existing network.
+        # Cleanup all containers
+        docker ps -q | foreach {docker rm ` + "`" + `$_ -f}
+        # cleanup network
+        Write-Host "Cleaning up old HNS network found"
+        Remove-HnsNetwork ` + "`" + `$hnsNetwork
+        Start-Sleep 10
+    }
+
+    Write-Host "Creating a new hns Network"
+    ipmo ` + "`" + `$global:HNSModule
+
+    ` + "`" + `$hnsNetwork = New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix ` + "`" + `$podCIDR -Gateway ` + "`" + `$masterSubnetGW -Name ` + "`" + `$global:NetworkMode.ToLower() -Verbose
+    # New network has been created, Kubeproxy service has to be restarted
+    # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
+    Restart-Service Kubeproxy
+
+    Start-Sleep 10
+    # Add route to all other POD networks
+    Update-CNIConfig ` + "`" + `$podCIDR ` + "`" + `$masterSubnetGW
 
     $KubeletCommandLine
 }
@@ -33173,6 +33837,14 @@ while (!` + "`" + `$hnsNetwork)
     ` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 }
 
+#
+# cleanup the persisted policy lists
+#
+ipmo ` + "`" + `$global:HNSModule
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
+Get-HnsPolicyList | Remove-HnsPolicyList
+
 $KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
 "@
 
@@ -33195,139 +33867,6 @@ func k8sWindowskubeletfuncPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/windowskubeletfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sWindowsnodecleanupPs1 = []byte(`<#
-.DESCRIPTION
-    This script is intended to be run each time a windows nodes is restarted and performs
-    cleanup actions to help ensure the node comes up cleanly.
-#>
-
-$global:LogPath = "c:\k\windowsnodecleanup.log"
-$global:HNSModule = "c:\k\hns.psm1"
-
-# Node the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeCleanupScriptTask() not during template generation
-$global:MasterSubnet = "{{MasterSubnet}}"
-$global:NetworkMode = "L2Bridge"
-$global:NetworkPlugin = "{{NetworkPlugin}}"
-
-filter Timestamp { "$(Get-Date -Format o): $_" }
-
-function Write-Log ($message) {
-    $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
-}
-
-function Get-DefaultGateway($CIDR) {
-    return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
-}
-
-# Note: this is needed for creating the l2bridge network for kubenet.
-# This requires that the kubelet has been started at least once to get data from the control plane.
-# This is currently done as part of the initial set up CSE.
-function Get-PodCIDR() {
-    $podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
-    return $podCIDR
-}
-
-Write-Log "Entering windowsnodecleanup.ps1"
-
-Import-Module $global:HNSModule
-
-#
-# Stop services
-#
-Write-Log "Stopping kubeproxy service"
-Stop-Service kubeproxy
-
-Write-Log "Stopping kubelet service"
-Stop-Service kubelet
-
-#
-# Perform cleanup
-#
-
-$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
-if ($hnsNetwork) {
-    Write-Log "Cleaning up HNS network 'azure'..."
-
-    Write-Log "Cleaning up containers"
-    docker ps -q | ForEach-Object { docker rm $_ -f }
-
-    Write-Log "Removing old HNS network"
-    Remove-HnsNetwork $hnsNetwork
-
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-
-    $filesToRemove = @(
-        "c:\k\azure-vnet.json",
-        "c:\k\azure-vnet.json.lock",
-        "c:\k\azure-vnet-ipam.json",
-        "c:\k\azure-vnet-ipam.json.lock"
-    )
-
-    foreach ($file in $filesToRemove) {
-        if (Test-Path $file) {
-            Write-Log "Deleting stale file at $file"
-            Remove-Item $file
-        }
-    }
-}
-
-$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ l2bridge
-if ($hnsNetwork) {
-    Write-Log "cleaning up HNS network 'l2bridge'"
-
-    Write-Log "cleaning up containers"
-    docker ps -q | ForEach-Object { docker rm $_ -f }
-
-    Write-Log "removing old HNS network"
-    Remove-HnsNetwork $hnsNetwork
-
-    Start-Sleep 10
-}
-
-#
-# Create required networks
-#
-
-Write-Log "Cleaning up persisted HNS policy lists"
-# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
-# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
-Get-HnsPolicyList | Remove-HnsPolicyList
-
-if ($global:NetworkPlugin -eq 'kubenet') {
-    Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
-    $podCIDR = Get-PodCIDR
-    $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
-    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
-    Start-sleep 10
-}
-
-#
-# Start Services
-#
-Write-Log "Starting kubelet service"
-Start-Service kubelet
-
-Write-Log "Starting kubeproxy service"
-Start-Service kubeproxy
-
-Write-Log "Exiting windowsnodecleanup.ps1"`)
-
-func k8sWindowsnodecleanupPs1Bytes() ([]byte, error) {
-	return _k8sWindowsnodecleanupPs1, nil
-}
-
-func k8sWindowsnodecleanupPs1() (*asset, error) {
-	bytes, err := k8sWindowsnodecleanupPs1Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/windowsnodecleanup.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -36893,6 +37432,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                    k8sContaineraddonsAzureCniNetworkmonitorYaml,
+	"k8s/containeraddons/azure-policy-deployment.yaml":                                     k8sContaineraddonsAzurePolicyDeploymentYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -36928,7 +37468,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/windowsconfigfunc.ps1":                                          k8sWindowsconfigfuncPs1,
 	"k8s/windowsinstallopensshfunc.ps1":                                  k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                         k8sWindowskubeletfuncPs1,
-	"k8s/windowsnodecleanup.ps1":                                         k8sWindowsnodecleanupPs1,
 	"masteroutputs.t":                                                    masteroutputsT,
 	"masterparams.t":                                                     masterparamsT,
 	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                     swarmInstallContainerhostAndJoinSwarmPs1,
@@ -37198,6 +37737,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"azure-cni-networkmonitor.yaml":                               {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
+			"azure-policy-deployment.yaml":                                {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"dns-autoscaler.yaml":                                         {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                                          {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -37236,7 +37776,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"windowsconfigfunc.ps1":         {k8sWindowsconfigfuncPs1, map[string]*bintree{}},
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
-		"windowsnodecleanup.ps1":        {k8sWindowsnodecleanupPs1, map[string]*bintree{}},
 	}},
 	"masteroutputs.t": {masteroutputsT, map[string]*bintree{}},
 	"masterparams.t":  {masterparamsT, map[string]*bintree{}},

@@ -108,6 +108,8 @@ const (
 	ContainerMonitoringAddonName = "container-monitoring"
 	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
+	// AzurePolicyAddonName is the name of the kubernetes Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
@@ -158,7 +160,6 @@ const (
 	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
-	kubernetesWindowsNodeCleanupPS1       = "k8s/windowsnodecleanup.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 )
 

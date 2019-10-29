@@ -182,6 +182,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
+    ensureLabelExclusionForAzurePolicyAddon
 fi
 
 if $FULL_INSTALL_REQUIRED; then

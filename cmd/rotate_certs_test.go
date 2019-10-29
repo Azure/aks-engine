@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -70,7 +70,7 @@ func TestRotateCertsCmdRun(t *testing.T) {
 	defer os.Remove(rcc.outputDirectory)
 
 	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeSubscriptionID, err := uuid.Parse(fakeRawSubscriptionID)
 	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
 	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
 	if err != nil {

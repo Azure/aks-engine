@@ -119,7 +119,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz aksrepos.azurecr.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=true /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=true /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 									},
 								},
 							},
@@ -238,7 +238,7 @@ func TestCreateMasterVMSS(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz aksrepos.azurecr.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=true /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+						"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=true /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 					},
 				},
 			},
@@ -362,7 +362,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz aksrepos.azurecr.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 								Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 								VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 									Publisher:               to.StringPtr("Microsoft.AKS"),
@@ -703,6 +703,40 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Test with AzureChinaCloud location
+	cs.Location = "chinaeast"
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	expected.VirtualMachineProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{
+		Extensions: &[]compute.VirtualMachineScaleSetExtension{
+			{
+				Name: to.StringPtr("vmssCSE"),
+				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+					Publisher:               to.StringPtr("Microsoft.Azure.Extensions"),
+					Type:                    to.StringPtr("CustomScript"),
+					TypeHandlerVersion:      to.StringPtr("2.0"),
+					AutoUpgradeMinorVersion: to.BoolPtr(true),
+					Settings:                map[string]interface{}{},
+					ProtectedSettings: map[string]interface{}{
+						"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz gcr.azk8s.cn 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+				Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-AKSLinuxBilling')]"),
+				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
+					Publisher:               to.StringPtr("Microsoft.AKS"),
+					Type:                    to.StringPtr("Compute.AKS.Linux.Billing"),
+					TypeHandlerVersion:      to.StringPtr("1.0"),
+					AutoUpgradeMinorVersion: to.BoolPtr(true),
+					Settings:                map[string]interface{}{},
+				},
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Now Test AgentVMSS with windows
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
@@ -1001,7 +1035,7 @@ func TestCreateCustomOSVMSS(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz aksrepos.azurecr.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,variables('provisionScriptParametersMaster'), ' IS_VHD=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`,
 									},
 								},
 							},
@@ -1112,7 +1146,7 @@ func TestCreateCustomOSVMSS(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname); retrycmd_if_failure() { r=$1; w=$2; t=$3; shift && shift && shift; for i in $(seq 1 $r); do timeout $t ${@}; [ $? -eq 0  ] && break || if [ $i -eq $r ]; then return 1; else sleep $w; fi; done }; ERR_OUTBOUND_CONN_FAIL=50; retrycmd_if_failure 50 1 3 nc -vz aksrepos.azurecr.io 443 || exit $ERR_OUTBOUND_CONN_FAIL; for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=false GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=false GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 								Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 								VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 									Publisher:               to.StringPtr("Microsoft.AKS"),

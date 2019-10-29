@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,7 +66,7 @@ func (az *AzureClient) CreateApp(ctx context.Context, appName, appURL string, re
 	startDate := date.Time{Time: notBefore}
 	endDate := date.Time{Time: notAfter}
 
-	servicePrincipalClientSecret = uuid.Must(uuid.NewV4()).String()
+	servicePrincipalClientSecret = uuid.Must(uuid.NewRandom()).String()
 
 	log.Debugf("ad: creating application with name=%q identifierURL=%q", appName, appURL)
 	applicationReq := graphrbac.ApplicationCreateParameters{
@@ -77,7 +77,7 @@ func (az *AzureClient) CreateApp(ctx context.Context, appName, appURL string, re
 		ReplyUrls:               replyURLs,
 		PasswordCredentials: &[]graphrbac.PasswordCredential{
 			{
-				KeyID:     to.StringPtr(uuid.Must(uuid.NewV4()).String()),
+				KeyID:     to.StringPtr(uuid.Must(uuid.NewRandom()).String()),
 				StartDate: &startDate,
 				EndDate:   &endDate,
 				Value:     to.StringPtr(servicePrincipalClientSecret),
@@ -115,7 +115,7 @@ func (az *AzureClient) DeleteApp(ctx context.Context, applicationName, applicati
 
 // CreateRoleAssignmentSimple is a wrapper around RoleAssignmentsClient.Create
 func (az *AzureClient) CreateRoleAssignmentSimple(ctx context.Context, resourceGroup, servicePrincipalObjectID string) error {
-	roleAssignmentName := uuid.Must(uuid.NewV4()).String()
+	roleAssignmentName := uuid.Must(uuid.NewRandom()).String()
 
 	roleDefinitionID := fmt.Sprintf(AADRoleReferenceTemplate, az.subscriptionID, AADContributorRoleID)
 	scope := fmt.Sprintf(AADRoleResourceGroupScopeTemplate, az.subscriptionID, resourceGroup)

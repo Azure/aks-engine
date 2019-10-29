@@ -507,7 +507,7 @@ func (sa *StorageAccount) SetConnectionString() error {
 	} else {
 		cmd = exec.Command("az", "storage", "account", "show-connection-string", "-g", sa.ResourceGroup.Name, "-n", sa.Name)
 	}
-	util.PrintCommand(cmd)
+	log.Printf("Getting connection string for storage account %s...\n", sa.Name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying to get connection-string:%s\n", out)
@@ -530,7 +530,7 @@ func (sa *StorageAccount) CreateFileShare(name string) error {
 	} else {
 		cmd = exec.Command("az", "storage", "share", "create", "--name", name, "--account-name", sa.Name, "--connection-string", sa.ConnectionString)
 	}
-	util.PrintCommand(cmd)
+	log.Printf("Creating file share %s in storage account %s...\n", name, sa.Name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying to create file share: %s", out)
@@ -542,7 +542,7 @@ func (sa *StorageAccount) CreateFileShare(name string) error {
 // UploadFiles will upload the output directory to storage
 func (sa *StorageAccount) UploadFiles(source, destination string) error {
 	cmd := exec.Command("az", "storage", "file", "upload-batch", "--destination", destination, "--source", source, "--account-name", sa.Name, "--connection-string", sa.ConnectionString)
-	util.PrintCommand(cmd)
+	log.Printf("Uploading files to %s in storage account %s...\n", destination, sa.Name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying upload files to file share:%s\n", out)
@@ -557,7 +557,7 @@ func (sa *StorageAccount) DownloadFiles(source, destination string) error {
 		os.Mkdir(destination, os.ModeDir)
 	}
 	cmd := exec.Command("az", "storage", "file", "download-batch", "--destination", destination, "--source", source, "--account-name", sa.Name, "--connection-string", sa.ConnectionString)
-	util.PrintCommand(cmd)
+	log.Printf("Downloading files from %s in storage account %s...\n", source, sa.Name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying download files from %s in storage account %s: %s\n", source, sa.Name, out)
@@ -569,7 +569,7 @@ func (sa *StorageAccount) DownloadFiles(source, destination string) error {
 // DeleteFiles deletes files from an Azure storage file share
 func (sa *StorageAccount) DeleteFiles(source string) error {
 	cmd := exec.Command("az", "storage", "file", "delete-batch", "--source", source, "--account-name", sa.Name, "--connection-string", sa.ConnectionString)
-	util.PrintCommand(cmd)
+	log.Printf("Deleting files in %s in storage account %s...\n", source, sa.Name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying to delete files from %s: %s", source, out)
