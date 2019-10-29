@@ -198,14 +198,14 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	defaultAddonImages := map[string]string{
 		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.13.1",
 		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
-		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.5",
+		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.3.9",
 		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
+		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.4.0",
 		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
-		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.10",
+		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.11",
 		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
@@ -252,7 +252,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.10.8")
+			mockCS := getMockBaseContainerService("1.11.10")
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
@@ -1140,7 +1140,7 @@ func TestStorageProfile(t *testing.T) {
 			properties.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet)
 	}
 
-	mockCS = getMockBaseContainerService("1.10.2")
+	mockCS = getMockBaseContainerService("1.11.10")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
