@@ -83,8 +83,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | ------------------------------- | -------- | ------------------------------------ |
 | addons                          | no       | A few addons are not supported on Azure Stack. See the [complete list](#unsupported-addons) down below.|
 | kubernetesImageBase             | yes      | Specifies the default image base URL to be used for all Kubernetes-related containers such as hyperkube, cloud-controller-manager, pause, addon-manager, etc. This property should be set to `"mcr.microsoft.com/k8s/azurestack/core/"`. |
-| networkPlugin                   | yes      | Specifies the network plugin implementation for the cluster. Valid values are `"kubenet"` for Kubernetes software networking implementation, and `"flannel"` to use CoreOS Flannel. |
-| networkPolicy                   | no       | Network policies can be enforced using [Canal](https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel). |
+| networkPlugin                   | yes      | Specifies the network plugin implementation for the cluster. Valid values are `"kubenet"` for Kubernetes software networking implementation. |
 | useInstanceMetadata             | no      | Use the Azure cloud provider instance metadata service for appropriate resource discovery operations. This property should be always set to `"false"`. |
 
 ### customCloudProfile
@@ -130,7 +129,7 @@ By default, the AKS Engine provisioning process relies on an internet connection
 
 If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-With these challenges in mind, you can choose to set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
+To overcome these issues, you can choose to set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
 
 The `AKS Base Image` marketplace item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
@@ -138,8 +137,7 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 
 ## Azure Monitor for containers
 
-Azure Monitor for containers supports the monitoring of AKS-Engine clusters hosted in Azure Stack Cloud Environment(s).
-Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details how to onboard and monitor the cluster, nodes, pods and containers inventory, performance metrics, health and logs etc.
+Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
 
 ## Unsupported Addons
 
@@ -155,22 +153,6 @@ The list below includes the addons currently unsupported on Azure Stack:
 * NVIDIA Device Plugin
 * Rescheduler
 * SMB Flex Volume
-
-## Known Issues and Limitations
-
-This section lists all known issues you may find when you use the public preview version.
-
-### Agent Nodes Internet Connectivity
-
-Your agent nodes may lose internet connectivity after all Kubernetes services of type `LoadBalancer` are deleted. You are not expected to experience this problem if no services of type `LoadBalancer` are ever created.
-
-To work around this issue, do not delete `LoadBalancer` services as part of your release pipeline or always keep a dummy service.
-
-### Limited Number of Frontend Public IPs
-
-The `Basic` load balancer SKU available on Azure Stack limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
-
-If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an Ingress controller.
 
 ## Frequently Asked Questions
 
@@ -194,10 +176,7 @@ _Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
 | v0.39.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.09)](https://github.com/Azure/aks-engine/blob/v0.39.1/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.09.txt) | 1.15.2 - 1.14.5 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
 | v0.40.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, August 2019 (2019.08.21)](https://github.com/Azure/aks-engine/blob/v0.40.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.08.21.txt) | 1.15.3 - 1.15.2 - 1.14.6 - 1.14.5 - 1.13.10 - 1.13.9 - 1.12.8 - 1.12.7 - 1.11.10 - 1.11.9 |  |
 | v0.41.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2019 (2019.09.19)](https://github.com/Azure/aks-engine/blob/v0.41.2/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.09.19.txt) | 1.15.4 - 1.15.3 - 1.14.7 - 1.14.6 - 1.13.11 -  1.13.10 |  |
-
-### Network Policies
-
-To enforce network policies, you are required to manually deploy the [Canal](https://docs.projectcalico.org/v3.7/getting-started/kubernetes/installation/flannel) daemonset.
+| v0.43.0   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.16.1 - 1.15.5 - 1.15.4 - 1.14.8 - 1.14.7 |  |
 
 ### Sample extensions are not working
 
