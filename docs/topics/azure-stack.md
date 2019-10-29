@@ -162,8 +162,6 @@ These are the Kubernetes versions that you can deploy to Azure Stack using AKS E
 
 - 1.15.4
 - 1.14.7
-- 1.13.11
-- 1.13.10
 
 If the Azure Stack instance is air-gapped, then the syndicated [AKS Base Image](#disconnected-azure-stack-instances) will determine the Kubernetes version that you can deploy or the target upgrade version. The table below lists the pre-pulled versions on each AKS Base Image version.
 
