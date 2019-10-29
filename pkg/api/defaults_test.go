@@ -254,7 +254,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.11.10")
+			mockCS := getMockBaseContainerService("1.12.8")
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
@@ -1145,7 +1145,7 @@ func TestStorageProfile(t *testing.T) {
 			properties.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet)
 	}
 
-	mockCS = getMockBaseContainerService("1.11.10")
+	mockCS = getMockBaseContainerService("1.12.8")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1163,7 +1163,7 @@ func TestStorageProfile(t *testing.T) {
 // TestMasterProfileDefaults covers tests for setMasterProfileDefaults
 func TestMasterProfileDefaults(t *testing.T) {
 	// this validates default masterProfile configuration
-	mockCS := getMockBaseContainerService("1.10.3")
+	mockCS := getMockBaseContainerService("1.12.8")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
@@ -1198,7 +1198,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default VMSS masterProfile configuration
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService("1.12.8")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
@@ -1231,7 +1231,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default masterProfile configuration and kubenet
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService("1.12.8")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
@@ -1310,7 +1310,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for LoadBalancerSku and ExcludeMasterFromStandardLB
-	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS = getMockBaseContainerService("1.12.8")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
@@ -1326,7 +1326,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for MaximumLoadBalancerRuleCount.
-	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS = getMockBaseContainerService("1.12.8")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
