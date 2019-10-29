@@ -22,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -304,7 +305,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		sc.containerService.SetPlatformFaultDomainCount(fdCount)
+		sc.agentPool.PlatformFaultDomainCount = to.IntPtr(fdCount)
 
 		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {

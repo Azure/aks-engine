@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/Azure/aks-engine/pkg/test"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -618,6 +619,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+			cs.Properties.MasterProfile.AvailabilityProfile = "AvailabilitySet"
 			uc := UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -640,6 +642,59 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				Expect(*pool.PlatformFaultDomainCount).To(Equal(3))
 			}
 		})
+	})
+
+	It("Should leave platform fault domain count nil for VMSS", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs.Properties.MasterProfile.AvailabilityProfile = api.AvailabilitySet
+		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
+		cs.Properties.AgentPoolProfiles[0].StorageProfile = "ManagedDisks"
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+			scalesetName := "agentpool1"
+			sku := compute.Sku{
+				Capacity: to.Int64Ptr(2),
+			}
+			location := "eastus"
+			return []compute.VirtualMachineScaleSet{
+				{
+					Name:                             &scalesetName,
+					Sku:                              &sku,
+					Location:                         &location,
+					VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{},
+				},
+			}
+		}
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+			}
+		}
+		uc.Client = &mockClient
+
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolScaleSetsToUpgrade = []AgentPoolScaleSet{
+			{Name: "agentpool1"},
+		}
+
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).To(BeNil())
+		Expect(*cs.Properties.MasterProfile.PlatformFaultDomainCount).To(Equal(3))
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			Expect(pool.PlatformFaultDomainCount).To(BeNil())
+		}
 	})
 
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {

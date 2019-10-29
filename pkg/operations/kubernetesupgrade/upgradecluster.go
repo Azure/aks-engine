@@ -294,7 +294,8 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 	if err != nil {
 		return err
 	}
-	uc.DataModel.SetPlatformFaultDomainCount(fdCount)
+	//TODO: set the appropriate FDCount per AS as it can be configured individually per agent pool
+	uc.DataModel.SetVMASPlatformFaultDomainCount(fdCount)
 
 	return nil
 }

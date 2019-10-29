@@ -557,7 +557,7 @@ type AgentPoolProfile struct {
 	MinCount                            *int                 `json:"minCount,omitempty"`
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
-	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount,omitempty"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
@@ -2049,14 +2049,26 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
 }
 
-// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
-func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
+// SetAllPlatformFaultDomainCount sets the fault domain count value for all agent pool and masters in a cluster.
+func (cs *ContainerService) SetAllPlatformFaultDomainCount(count int) {
 	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
 	if cs.Properties.MasterProfile != nil {
 		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
 	}
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		pool.PlatformFaultDomainCount = &count
+	}
+}
+
+// SetVMASPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
+func (cs *ContainerService) SetVMASPlatformFaultDomainCount(count int) {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.AvailabilityProfile == AvailabilitySet {
+		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
+	}
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.IsAvailabilitySets() {
+			pool.PlatformFaultDomainCount = &count
+		}
 	}
 }
 
