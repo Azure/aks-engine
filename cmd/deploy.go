@@ -220,16 +220,18 @@ func (dc *deployCmd) loadAPIModel() error {
 		return errors.New("--location does not match api model location")
 	}
 
-	if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" {
-		dc.containerService.Properties.CustomCloudProfile.IdentitySystem = dc.authProvider.getAuthArgs().IdentitySystem
-	}
-
 	if dc.containerService.Properties.IsAzureStackCloud() {
 		err = dc.containerService.SetCustomCloudProfileEnvironment()
 		if err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 		writeCustomCloudProfile(dc.containerService)
+
+		if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" {
+			if dc.authProvider != nil {
+				dc.containerService.Properties.CustomCloudProfile.IdentitySystem = dc.authProvider.getAuthArgs().IdentitySystem
+			}
+		}
 	}
 
 	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
