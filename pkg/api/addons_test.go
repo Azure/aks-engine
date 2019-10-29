@@ -6032,6 +6032,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Config: map[string]string{
 						"non-masquerade-cidr": DefaultVNETCIDR,
 						"non-masq-cni-cidr":   DefaultCNICIDR,
+						"enable-ipv6":         "false",
 					},
 				},
 				{
