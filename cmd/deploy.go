@@ -227,7 +227,7 @@ func (dc *deployCmd) loadAPIModel() error {
 		}
 		writeCustomCloudProfile(dc.containerService)
 
-		if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" {
+		if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" || dc.containerService.Properties.CustomCloudProfile.IdentitySystem != dc.authProvider.getAuthArgs().IdentitySystem {
 			if dc.authProvider != nil {
 				dc.containerService.Properties.CustomCloudProfile.IdentitySystem = dc.authProvider.getAuthArgs().IdentitySystem
 			}

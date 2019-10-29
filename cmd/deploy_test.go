@@ -651,6 +651,7 @@ func TestLoadApiModelOnAzureStack(t *testing.T) {
 		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
 	}
 
+	d.getAuthArgs().IdentitySystem = "adfs"
 	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
 	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
 	d.getAuthArgs().rawClientID = fakeClientID
@@ -662,6 +663,10 @@ func TestLoadApiModelOnAzureStack(t *testing.T) {
 	err = d.loadAPIModel()
 	if err != nil {
 		t.Fatalf("Failed to call LoadAPIModel: %s", err)
+	}
+
+	if d.getAuthArgs().IdentitySystem != d.containerService.Properties.CustomCloudProfile.IdentitySystem {
+		t.Fatal("Failed to set cli Identity system as default ")
 	}
 }
 
