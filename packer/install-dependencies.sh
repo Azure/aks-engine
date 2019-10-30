@@ -413,8 +413,6 @@ K8S_VERSIONS="
 1.12.7
 1.11.10
 1.11.9
-1.10.13
-1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
