@@ -18,6 +18,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+	addonProfiles := cs.Properties.AddonProfiles
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 	if kubernetesConfig != nil {
@@ -88,6 +89,21 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 			identity.Type = compute.ResourceIdentityTypeSystemAssigned
 		}
 		virtualMachine.Identity = identity
+	}
+
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			if virtualMachine.Identity == nil {
+				virtualMachine.Identity = &compute.VirtualMachineIdentity{}
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineIdentityUserAssignedIdentitiesValue{}
+		}
 	}
 
 	vmProperties := &compute.VirtualMachineProperties{}
@@ -321,6 +337,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	isStorageAccount := profile.IsStorageAccount()
 	hasDisks := profile.HasDisks()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+	addonProfiles := cs.Properties.AddonProfiles
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 
@@ -402,6 +419,21 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 			virtualMachine.Identity = &compute.VirtualMachineIdentity{
 				Type: compute.ResourceIdentityTypeSystemAssigned,
 			}
+		}
+	}
+
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			if virtualMachine.Identity == nil {
+				virtualMachine.Identity = &compute.VirtualMachineIdentity{}
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineIdentityUserAssignedIdentitiesValue{}
 		}
 	}
 

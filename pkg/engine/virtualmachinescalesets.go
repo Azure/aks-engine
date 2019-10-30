@@ -20,6 +20,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
+	addonProfiles := cs.Properties.AddonProfiles
 
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
@@ -96,6 +97,21 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			"[variables('userAssignedIDReference')]": {},
 		}
 		virtualMachine.Identity = identity
+	}
+
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			if virtualMachine.Identity == nil {
+				virtualMachine.Identity = &compute.VirtualMachineScaleSetIdentity{}
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{}
+		}
 	}
 
 	virtualMachine.Sku = &compute.Sku{
@@ -384,6 +400,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
+	addonProfiles := cs.Properties.AddonProfiles
 
 	armResource.DependsOn = dependencies
 
@@ -437,6 +454,21 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeSystemAssigned,
 			}
+		}
+	}
+
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			if virtualMachineScaleSet.Identity == nil {
+				virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{}
+				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachineScaleSet.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{}
 		}
 	}
 
