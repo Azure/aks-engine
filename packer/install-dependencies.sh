@@ -421,8 +421,6 @@ K8S_VERSIONS="
 1.13.11
 1.12.8
 1.12.7
-1.11.10
-1.11.9
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
