@@ -318,6 +318,7 @@
           "--cluster-cidr": "10.240.0.0/12",
           "--cluster-name": "kubernetes-southcentralus-7764",
           "--configure-cloud-routes": "false",
+          "--controllers": "*,-cloud-node",
           "--kubeconfig": "/var/lib/kubelet/kubeconfig",
           "--leader-elect": "true",
           "--route-reconciliation-period": "10s",
