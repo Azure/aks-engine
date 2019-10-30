@@ -133,7 +133,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.13", "", false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"
@@ -705,8 +705,8 @@ func TestKubeletRotateCertificates(t *testing.T) {
 			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	// Test 1.12
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	// Test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--rotate-certificates"] != "true" {
@@ -714,8 +714,8 @@ func TestKubeletRotateCertificates(t *testing.T) {
 			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	// Test 1.14
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	// Test 1.16
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--rotate-certificates"] != "true" {
@@ -753,8 +753,8 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.12
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	// test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
@@ -762,8 +762,8 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.14
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	// test 1.16
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {

@@ -3,12 +3,12 @@
     "properties": {
       "orchestratorProfile": {
         "orchestratorType": "Kubernetes",
-        "orchestratorRelease": "1.12",
+        "orchestratorRelease": "1.13",
         "kubernetesConfig": {
           "apiServerConfig": {
             "--admission-control": "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,DenyEscalatingExec,AlwaysPullImages"
           }
-        } 
+        }
       },
       "masterProfile": {
         "count": 1,
@@ -39,4 +39,3 @@
       }
     }
   }
-  
