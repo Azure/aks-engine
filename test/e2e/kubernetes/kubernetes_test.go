@@ -192,7 +192,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should validate cloudprovider config", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				nodeList, err := node.GetReady()
 				Expect(err).NotTo(HaveOccurred())
 				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
