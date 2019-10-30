@@ -87,7 +87,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
 		"' MOBY_VERSION=',parameters('mobyVersion')," +
 		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s'," +
+		"' KUBERNETES_VERSION=%s'" +
 		"' HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
 		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
 		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
@@ -130,8 +130,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
 		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t'," +
-		"' IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t'," +
+		"' IS_HOSTED_MASTER=%t'" +
+		"' IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t'" +
 		"' PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
