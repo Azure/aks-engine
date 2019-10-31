@@ -20,7 +20,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
-	addonProfiles := cs.Properties.AddonProfiles
 
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
@@ -99,20 +98,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		virtualMachine.Identity = identity
 	}
 
-	for _, addonProfile := range addonProfiles {
-		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
-			if virtualMachine.Identity == nil {
-				virtualMachine.Identity = &compute.VirtualMachineScaleSetIdentity{}
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
-			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
-			}
-
-			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{}
-		}
-	}
+	associateAddonIdentitiesToVMSS(cs.Properties.AddonProfiles, &virtualMachine)
 
 	virtualMachine.Sku = &compute.Sku{
 		Tier:     to.StringPtr("Standard"),
@@ -400,7 +386,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	orchProfile := cs.Properties.OrchestratorProfile
 	k8sConfig := orchProfile.KubernetesConfig
 	linuxProfile := cs.Properties.LinuxProfile
-	addonProfiles := cs.Properties.AddonProfiles
 
 	armResource.DependsOn = dependencies
 
@@ -457,20 +442,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
-	for _, addonProfile := range addonProfiles {
-		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
-			if virtualMachineScaleSet.Identity == nil {
-				virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{}
-				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeUserAssigned
-				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
-			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
-				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
-				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
-			}
-
-			virtualMachineScaleSet.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{}
-		}
-	}
+	associateAddonIdentitiesToVMSS(cs.Properties.AddonProfiles, &virtualMachineScaleSet)
 
 	vmssProperties := compute.VirtualMachineScaleSetProperties{
 		SinglePlacementGroup: profile.SinglePlacementGroup,
@@ -857,6 +829,36 @@ func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachi
 		_, found := vm.Tags[key]
 		if !found {
 			vm.Tags[key] = to.StringPtr(value)
+		}
+	}
+}
+
+func associateAddonIdentitiesToVMSS(addonProfiles map[string]api.AddonProfile, virtualMachineScaleSet *compute.VirtualMachineScaleSet) {
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			// We need to associate addon's identity to VMSS, there're 3 cases:
+			// 1. virtualMachineScaleSet.Identity is nil. In this case, we need to initialize "virtualMachineScaleSet.Identity" and set its type to UserAssigned.
+			// 2. virtualMachineScaleSet.Identity is not nil, and its type is SystemAssigned. This case will happen in an MSI cluster and the VMSS uses system
+			// assigned identity. In this case, we need to set current `virtualMachineScaleSet.Identity.Type` to `ResourceIdentityTypeSystemAssignedUserAssigned`.
+			// 3. virtualMachineScaleSet.Identity is not nil, and its type is UserAssigned. This case will happen in an MSI cluster and the VMSS uses user assigned
+			// identity. In this case, no additional step is needed. Just keep `virtualMachineScaleSet.Identity.Type` unchanged and fill in addon's identity later.
+			// Note: virtualMachineScaleSet.Identity is not nil and its type is None will NEVER happen in current AKS-Engine's implementation.
+			if virtualMachineScaleSet.Identity == nil {
+				virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
+					Type:                   compute.ResourceIdentityTypeUserAssigned,
+					UserAssignedIdentities: make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue),
+				}
+			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeNone {
+				// Note: in current AKS-Engine's implementation, we will never enter into this branch. Just handle it here in case implementation
+				// changes later.
+				virtualMachineScaleSet.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachineScaleSet.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachineScaleSet.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{}
 		}
 	}
 }

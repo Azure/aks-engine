@@ -18,7 +18,6 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	hasAvailabilityZones := cs.Properties.MasterProfile.HasAvailabilityZones()
 	isStorageAccount := cs.Properties.MasterProfile.IsStorageAccount()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
-	addonProfiles := cs.Properties.AddonProfiles
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 	if kubernetesConfig != nil {
@@ -91,20 +90,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		virtualMachine.Identity = identity
 	}
 
-	for _, addonProfile := range addonProfiles {
-		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
-			if virtualMachine.Identity == nil {
-				virtualMachine.Identity = &compute.VirtualMachineIdentity{}
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
-			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
-			}
-
-			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineIdentityUserAssignedIdentitiesValue{}
-		}
-	}
+	associateAddonIdentitiesToVM(cs.Properties.AddonProfiles, &virtualMachine)
 
 	vmProperties := &compute.VirtualMachineProperties{}
 
@@ -337,7 +323,6 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	isStorageAccount := profile.IsStorageAccount()
 	hasDisks := profile.HasDisks()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
-	addonProfiles := cs.Properties.AddonProfiles
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 
@@ -422,20 +407,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 	}
 
-	for _, addonProfile := range addonProfiles {
-		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
-			if virtualMachine.Identity == nil {
-				virtualMachine.Identity = &compute.VirtualMachineIdentity{}
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
-			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
-				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
-				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
-			}
-
-			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineIdentityUserAssignedIdentitiesValue{}
-		}
-	}
+	associateAddonIdentitiesToVM(cs.Properties.AddonProfiles, &virtualMachine)
 
 	virtualMachine.AvailabilitySet = &compute.SubResource{
 		ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Compute/availabilitySets',variables('%sAvailabilitySet'))]", profile.Name)),
@@ -630,6 +602,36 @@ func addCustomTagsToVM(tags map[string]string, vm *compute.VirtualMachine) {
 		_, found := vm.Tags[key]
 		if !found {
 			vm.Tags[key] = to.StringPtr(value)
+		}
+	}
+}
+
+func associateAddonIdentitiesToVM(addonProfiles map[string]api.AddonProfile, virtualMachine *compute.VirtualMachine) {
+	for _, addonProfile := range addonProfiles {
+		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
+			// We need to associate addon's identity to VM, there're 3 cases:
+			// 1. virtualMachine.Identity is nil. In this case, we need to initialize "virtualMachine.Identity" and set its type to UserAssigned.
+			// 2. virtualMachine.Identity is not nil, and its type is SystemAssigned. This case will happen in an MSI cluster and the VM uses system
+			// assigned identity. In this case, we need to set current `virtualMachine.Identity.Type` to `ResourceIdentityTypeSystemAssignedUserAssigned`.
+			// 3. virtualMachine.Identity is not nil, and its type is UserAssigned. This case will happen in an MSI cluster and the VM uses user assigned
+			// identity. In this case, no additional step is needed. Just keep `virtualMachine.Identity.Type` unchanged and fill in addon's identity later.
+			// Note: virtualMachine.Identity is not nil and its type is None will NEVER happen in current AKS-Engine's implementation.
+			if virtualMachine.Identity == nil {
+				virtualMachine.Identity = &compute.VirtualMachineIdentity{
+					Type:                   compute.ResourceIdentityTypeUserAssigned,
+					UserAssignedIdentities: make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue),
+				}
+			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeSystemAssignedUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			} else if virtualMachine.Identity.Type == compute.ResourceIdentityTypeNone {
+				// Note: in current AKS-Engine's implementation, we will never enter into this branch. Just handle it here in case implementation
+				// changes later.
+				virtualMachine.Identity.Type = compute.ResourceIdentityTypeUserAssigned
+				virtualMachine.Identity.UserAssignedIdentities = make(map[string]*compute.VirtualMachineIdentityUserAssignedIdentitiesValue)
+			}
+
+			virtualMachine.Identity.UserAssignedIdentities[addonProfile.Identity.ResourceID] = &compute.VirtualMachineIdentityUserAssignedIdentitiesValue{}
 		}
 	}
 }
