@@ -645,7 +645,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should leave platform fault domain count nil for VMSS", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
 		cs.Properties.MasterProfile.AvailabilityProfile = api.AvailabilitySet
 		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
 		cs.Properties.AgentPoolProfiles[0].StorageProfile = "ManagedDisks"
@@ -672,10 +672,19 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				},
 			}
 		}
+		//masters
+		mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+			return []compute.VirtualMachine{
+				mockClient.MakeFakeVirtualMachine("one", "Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachine("two", "Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachine("three", "Kubernetes:1.15.1"),
+			}
+		}
+		//agents
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{
-				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
-				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
 			}
 		}
 		uc.Client = &mockClient
