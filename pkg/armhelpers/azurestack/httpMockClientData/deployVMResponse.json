@@ -256,7 +256,7 @@
             },
             "mobyVersion": {
                 "type": "String",
-                "value": "3.0.7"
+                "value": "3.0.8"
             },
             "nameSuffix": {
                 "type": "String",
