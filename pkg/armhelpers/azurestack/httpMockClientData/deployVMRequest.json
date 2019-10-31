@@ -912,9 +912,10 @@
                         "3.0.4",
                         "3.0.5",
                         "3.0.6",
-                        "3.0.7"
+                        "3.0.7",
+                        "3.0.8"
                     ],
-                    "defaultValue": "3.0.7",
+                    "defaultValue": "3.0.8",
                     "metadata": {
                         "description": "The Azure Moby build version"
                     },
@@ -1840,7 +1841,7 @@
                 "value": "Standard_D2_v2"
             },
             "mobyVersion": {
-                "value": "3.0.7"
+                "value": "3.0.8"
             },
             "networkPlugin": {
                 "value": "flannel"
