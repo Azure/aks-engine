@@ -273,23 +273,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	var extensions []compute.VirtualMachineScaleSetExtension
 
-	if useManagedIdentity {
-		managedIdentityExtension := compute.VirtualMachineScaleSetExtension{
-			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-ManagedIdentityExtension')]"),
-			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
-				Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
-				Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
-				TypeHandlerVersion:      to.StringPtr("1.0"),
-				AutoUpgradeMinorVersion: to.BoolPtr(true),
-				Settings: map[string]interface{}{
-					"port": 50343,
-				},
-				ProtectedSettings: map[string]interface{}{},
-			},
-		}
-		extensions = append(extensions, managedIdentityExtension)
-	}
-
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
