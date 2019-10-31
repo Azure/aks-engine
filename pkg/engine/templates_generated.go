@@ -14432,6 +14432,8 @@ configureCNIIPTables() {
         chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
         if [[ "${NETWORK_POLICY}" == "calico" ]]; then
           sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+        elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
+          sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist #TODO: check networkMode somewhere
         fi
         /sbin/ebtables -t nat --list
     fi
@@ -31564,6 +31566,18 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "azure",
         "flannel",
         "cilium"
+      ],
+      "type": "string"
+    },
+    "networkMode": {
+      "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkMode}}",
+      "metadata": {
+        "description": "The network mode to use for CNI (transparent|bridge)"
+      },
+      "allowedValues": [
+        "",
+        "transparent",
+        "bridge"
       ],
       "type": "string"
     },
