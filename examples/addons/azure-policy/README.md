@@ -1,17 +1,17 @@
 # Azure Policy Add-on
 
-This is the Azure Policy add-on. Add this add-on to your json file as shown below to automatically enable Azure Policy with OPA Gatekeeper in your new Kubernetes cluster.
+Azure Policy integrates with the AKS Engine to apply at-scale enforcements and safeguards on your clusters in a centralized, consistent manner. By extending use of [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) [Gatekeeper](https://github.com/open-policy-agent/gatekeeper) v3 (beta), an _admission controller webhook_ for Kubernetes, Azure Policy makes it possible to manage and report on the compliance state of your Azure resources and AKS Engine clusters from one place.
 
-This add-on works with a service principal only at this time. Make sure to create a role assignment for service principal using:
 
-```
-CLIENT_ID=<your service principal id>
-SCOPE=<fully qualified resource id for the cluster. for example, "/subscriptions/<subscriptionId>/resourceGroups/<clusterResourceGroup>">
+> [!NOTE]
+> Azure Policy for AKS Engine is in Public Preview. The service only supports built-in policy definitions 
+> and a single AKS Engine cluster for each resource group configured with a Service Principal.
+> Gatekeeper v3 is in Beta and is supported by the open source community.
 
-az role assignment create --assignee $CLIENT_ID --scope $SCOPE --role "Policy Insights Data Writer (Preview)"`
-```
 
-> 🚨 Please note that this add-on is in alpha stage and is not production ready.
+For detailed instructions to enable and use Azure policy add-on for AKS Engine, please refer [Install Azure Policy Add-on on AKS Engine](https://aka.ms/kubepolicydoc).
+
+The following is a sample API definition with azure-policy addon.
 
 ```json
 {
@@ -62,16 +62,13 @@ az role assignment create --assignee $CLIENT_ID --scope $SCOPE --role "Policy In
   }
 }
 ```
+> 🚨 Please note that this add-on is in alpha stage and is not production ready.
 
-You can validate that the add-on is running as expected with the following commands:
-
-You should see gatekeeper and azure-policy pods:
+You can validate that the add-on is running as expected with the following command. You should see gatekeeper and azure-policy pods running.
 
 ```bash
 kubectl get pods -n kube-system
 ```
-
-Plese follow the README here for further information: https://github.com/open-policy-agent/gatekeeper
 
 ## Configuration
 
