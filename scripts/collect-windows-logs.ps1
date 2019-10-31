@@ -3,7 +3,8 @@ $lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err
 $timeStamp = get-date -format 'yyyyMMdd-hhmmss'
 $zipName = "$env:computername-$($timeStamp)_logs.zip"
 
-$paths = , (get-childitem c:\k\*.log -Exclude $lockedFiles) # leading , forces array output
+# The leading , forces array output. However, if there are no logs in c:\k\*.log, there's a null entry. That needs to be filtered later
+$paths = , (get-childitem c:\k\*.log -Exclude $lockedFiles)
 $paths += $lockedFiles | Foreach-Object { $src = "c:\k\$_" ; if (Test-Path $src) {Copy-Item $src . -Passthru -ErrorAction Ignore } }
 $scm = Get-WinEvent -FilterHashtable @{logname='System';ProviderName='Service Control Manager'} | Where-Object { $_.Message -Like "*docker*" -or $_.Message -Like "*kub*" } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
 # 2004 = resource exhaustion, other 5 events related to reboots
@@ -23,7 +24,7 @@ Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Microsoft/S
 & 'c:\k\debug\collectlogs.ps1' | write-Host
 $netLogs = Get-ChildItem (Get-ChildItem -Path c:\k\debug -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName | Select-Object -ExpandProperty FullName
 $paths += $netLogs
-Compress-Archive -Path $paths -DestinationPath $zipName
-
+$pathsFiltered = $paths | Where-Object { $_ -ne $null }
 Write-Host Compressing all logs to $zipName
-Get-ChildItem $zipName
+Compress-Archive -LiteralPath $pathsFiltered -DestinationPath $zipName
+Get-ChildItem $zipName # this puts a FileInfo on the pipeline so that another script can get it on the pipeline
