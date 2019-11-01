@@ -125,7 +125,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"scale-down-candidates-pool-min-count":  "50",
 			"scale-down-candidates-pool-ratio":      "0.1",
 			"scale-down-delay-after-add":            "10m0s",
-			"scale-down-delay-after-delete":         "10s",
+			"scale-down-delay-after-delete":         "1m",
 			"scale-down-delay-after-failure":        "3m0s",
 			"scale-down-enabled":                    "true",
 			"scale-down-non-empty-candidates-count": "30",
