@@ -204,6 +204,12 @@
                 "sudo /bin/bash -eux /home/packer/cleanup-vhd.sh",
                 "sudo /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
             ]
+        },
+        {
+            "type": "file",
+            "direction": "download",
+            "source": "/opt/azure/vhd-install.complete",
+            "destination": "release-notes.txt"
         }
     ]
 }
