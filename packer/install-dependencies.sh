@@ -448,10 +448,3 @@ df -h
   echo "Commit: ${COMMIT}"
   echo "Feature flags: ${FEATURE_FLAGS}"
 } >> ${VHD_LOGS_FILEPATH}
-
-# The below statements are used to extract release notes from the packer output
-set +x
-echo "START_OF_NOTES"
-cat ${VHD_LOGS_FILEPATH}
-echo "END_OF_NOTES"
-set -x
