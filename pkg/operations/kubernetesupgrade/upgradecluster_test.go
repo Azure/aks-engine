@@ -615,7 +615,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(*uc.MasterVMs).To(HaveLen(1))
 			Expect(*uc.UpgradedMasterVMs).To(HaveLen(0))
 		})
-		It("Should set platform fault domain count based on availability sets", func() {
+		It("Should leave platform fault domain count nil", func() {
 			cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
@@ -637,9 +637,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).To(BeNil())
-			Expect(*cs.Properties.MasterProfile.PlatformFaultDomainCount).To(Equal(3))
+			Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
 			for _, pool := range cs.Properties.AgentPoolProfiles {
-				Expect(*pool.PlatformFaultDomainCount).To(Equal(3))
+				Expect(pool.PlatformFaultDomainCount).To(BeNil())
 			}
 		})
 	})
@@ -700,7 +700,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 		Expect(err).To(BeNil())
-		Expect(*cs.Properties.MasterProfile.PlatformFaultDomainCount).To(Equal(3))
+		Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
 		for _, pool := range cs.Properties.AgentPoolProfiles {
 			Expect(pool.PlatformFaultDomainCount).To(BeNil())
 		}
