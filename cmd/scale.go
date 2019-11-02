@@ -22,7 +22,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
-	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -257,8 +256,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if sc.agentPool.IsAvailabilitySets() {
-		availabilitySetIDs := []string{}
-
 		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 			if err != nil {
 				return errors.Wrap(err, "failed to get VMs in the resource group")
@@ -269,10 +266,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				vmName := *vm.Name
 				if !sc.vmInAgentPool(vmName, vm.Tags) {
 					continue
-				}
-
-				if vm.AvailabilitySet != nil {
-					availabilitySetIDs = append(availabilitySetIDs, *vm.AvailabilitySet.ID)
 				}
 
 				osPublisher := vm.StorageProfile.ImageReference.Publisher
@@ -291,7 +284,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		sortedIndexes := sort.IntSlice(indexes)
 		sortedIndexes.Sort()
-		indexes = []int(sortedIndexes)
+		indexes = sortedIndexes
 		currentNodeCount = len(indexes)
 
 		if currentNodeCount == sc.newDesiredAgentCount {
@@ -299,13 +292,6 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 		highestUsedIndex = indexes[len(indexes)-1]
-
-		// set the VMAS platformFaultDomainCount to match the existing value
-		fdCount, err := sc.client.GetAvailabilitySetFaultDomainCount(ctx, sc.resourceGroupName, availabilitySetIDs)
-		if err != nil {
-			return err
-		}
-		sc.agentPool.PlatformFaultDomainCount = to.IntPtr(fdCount)
 
 		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
