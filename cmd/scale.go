@@ -484,6 +484,9 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return errors.Wrapf(err, "error transforming the template for scaling template %s", sc.apiModelPath)
 		}
+
+		transformer.RemoveImmutableResourceProperties(sc.logger, templateJSON)
+
 		if sc.agentPool.IsAvailabilitySets() {
 			addValue(parametersJSON, fmt.Sprintf("%sOffset", sc.agentPool.Name), highestUsedIndex+1)
 		}
