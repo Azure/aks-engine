@@ -3,7 +3,6 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.11",
       "kubernetesConfig": {
         "useManagedIdentity": true,
         "addons": [
@@ -20,7 +19,7 @@
               }
             ],
             "config": {
-              "scan-interval": "10s"
+              "scan-interval": "1m"
             }
           }
         ]
