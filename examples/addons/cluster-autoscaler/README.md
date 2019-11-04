@@ -5,7 +5,11 @@
 - there are pods that failed to run in the cluster due to insufficient resources,
 - there are nodes in the cluster that have been underutilized for an extended period of time and their pods can be placed on other existing nodes.
 
-More information on the Azure cloudprovider implementation of cluster-autoscaler can be found [here](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md).
+More information on the [Azure cloudprovider implementation of cluster-autoscaler can be found here](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md).
+
+The AKS Engine addon integration w/ cluster-autoscaler assumes VMSS node pools. If you're using availability set VMs, it is possible to manually integrate w/ cluster-autoscaler, following the guidance in the [Azure cloudprovider documentation](https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/azure/README.md).
+
+The remaining documentation below will assume all node pools are VMSS.
 
 # Example
 
