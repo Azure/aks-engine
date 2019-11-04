@@ -24,10 +24,9 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-REPO_PATH := github.com/Azure/$(PROJECT)
 DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.23.6
-DEV_ENV_WORK_DIR := /go/src/$(REPO_PATH)
-DEV_ENV_OPTS := --rm -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
+DEV_ENV_WORK_DIR := /aks-engine
+DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
 DEV_ENV_CMD_IT := docker run -it $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
 DEV_CMD_RUN := docker run $(DEV_ENV_OPTS)
@@ -72,15 +71,26 @@ validate-shell:
 
 .PHONY: generate
 generate: bootstrap
-	go generate $(GOFLAGS) -v ./...
+	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
 	python pkg/helpers/generate_azure_constants.py
 
 .PHONY: build
-build: validate-dependencies generate
-	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+build: generate go-build
+
+.PHONY: go-build
+go-build:
+	$(GO) build -mod=vendor $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+
+.PHONY: tidy
+tidy:
+	$(GO) mod tidy
+
+.PHONY: vendor
+vendor: tidy
+	$(GO) mod vendor
 
 build-binary: generate
 	go build $(GOFLAGS) -v -ldflags "$(LDFLAGS)" -o $(BINARY_DEST_DIR)/aks-engine .
@@ -155,7 +165,6 @@ ensure-generated:
 test-e2e:
 	@test/e2e.sh
 
-HAS_DEP := $(shell $(CHECK) dep)
 HAS_GOX := $(shell $(CHECK) gox)
 HAS_GIT := $(shell $(CHECK) git)
 HAS_GOLANGCI ?= $(shell $(CHECK) golangci-lint)
@@ -163,13 +172,10 @@ HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
 bootstrap:
-ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
-endif
 ifndef HAS_GOX
 	go get -u github.com/mitchellh/gox
 endif
-	go install ./vendor/github.com/go-bindata/go-bindata/...
+	go get github.com/go-bindata/go-bindata/...@v3.1.2
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
@@ -179,10 +185,6 @@ endif
 ifndef HAS_GINKGO
 	go get -u github.com/onsi/ginkgo/ginkgo
 endif
-
-build-vendor:
-	$(DEV_ENV_CMD) dep ensure
-	rm -rf vendor/github.com/docker/distribution/contrib/docker-integration/generated_certs.d
 
 ci: bootstrap test-style build test lint
 	./scripts/coverage.sh --coveralls

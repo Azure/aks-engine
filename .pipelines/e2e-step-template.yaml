@@ -5,15 +5,12 @@ steps:
   - script: |
       mkdir -p '$(GOBIN)'
       mkdir -p '$(GOPATH)/pkg'
-      mkdir -p '$(modulePath)'
       shopt -s extglob
-      mv !(gopath) '$(modulePath)'
       echo '##vso[task.prependpath]$(GOBIN)'
       echo '##vso[task.prependpath]$(GOROOT)/bin'
     displayName: 'Set up the Go workspace'
   - script: make build-binary
     displayName: compile
-    workingDirectory: $(modulePath)
   - script: |
       DATE=$(date +%s)
       echo "##vso[task.setvariable variable=timestamp]$DATE"
@@ -22,9 +19,8 @@ steps:
       export CLIENT_OBJECTID=$(SERVICE_PRINCIPAL_OBJECT_ID_E2E_KUBERNETES)
       make test-kubernetes
     displayName: ginkgo k8s e2e tests
-    workingDirectory: $(modulePath)
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: '${{ parameters.job }}-$(timestamp)_logs'
-      targetPath: '$(modulePath)/_logs'
+      targetPath: './_logs'
     condition: always()
