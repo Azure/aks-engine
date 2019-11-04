@@ -607,6 +607,9 @@ func addCustomTagsToVM(tags map[string]string, vm *compute.VirtualMachine) {
 }
 
 func associateAddonIdentitiesToVM(addonProfiles map[string]api.AddonProfile, virtualMachine *compute.VirtualMachine) {
+	if virtualMachine == nil {
+		return
+	}
 	for _, addonProfile := range addonProfiles {
 		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
 			// We need to associate addon's identity to VM, there're 3 cases:

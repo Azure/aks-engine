@@ -817,6 +817,9 @@ func addCustomTagsToVMScaleSets(tags map[string]string, vm *compute.VirtualMachi
 }
 
 func associateAddonIdentitiesToVMSS(addonProfiles map[string]api.AddonProfile, virtualMachineScaleSet *compute.VirtualMachineScaleSet) {
+	if virtualMachineScaleSet == nil {
+		return
+	}
 	for _, addonProfile := range addonProfiles {
 		if addonProfile.Enabled && addonProfile.Identity != nil && addonProfile.Identity.ResourceID != "" {
 			// We need to associate addon's identity to VMSS, there're 3 cases:
