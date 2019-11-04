@@ -6,9 +6,9 @@ DIST_DIRS         = find * -type d -exec
 .PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci
 
 ifdef DEBUG
-GOFLAGS   := -gcflags="-N -l"
+GOFLAGS   := -gcflags="-N -l" -mod=vendor
 else
-GOFLAGS   :=
+GOFLAGS   := -mod=vendor
 endif
 
 # go option
@@ -85,7 +85,7 @@ build: generate go-build
 
 .PHONY: go-build
 go-build:
-	$(GO) build -mod=vendor $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
 
 .PHONY: tidy
 tidy:
