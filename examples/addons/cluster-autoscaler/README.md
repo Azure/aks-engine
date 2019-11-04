@@ -163,7 +163,6 @@ Here is the complete set of cluster configuration:
 
 | Name           | Required | Description                                    | Default Value                                              |
 | -------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------- |
-| namespace      | no       | Which namespace to run the cluster-autoscaler in?                             | "kube-system" |
 | scan-interval      | no       | How often cluster is reevaluated for scale up or down                             | "1m" |
 | expendable-pods-priority-cutoff      | no       | Pods with priority below cutoff will be expendable. They can be killed without any consideration during scale down and they don't cause scale up. Pods with null priority (PodPriority disabled) are non expendable.                             | "-10" |
 | ignore-daemonsets-utilization (>= k8s 1.13.0)     | no       | Should CA ignore DaemonSet pods when calculating resource utilization for scaling down                             | "false" |
@@ -220,6 +219,6 @@ You may set the desired `addonmanager.kubernetes.io/mode` value for the cluster-
         ]
         ...
 ```
-By default we set the mode to `"EnsureExists"` so that you are able to continously manage the cluster-autoscaler configuration (`kubectl edit deployment cluster-autoscaler -n <namespace>`) without the `kube-addon-manager` component overwriting any applied changes after cluster creation time (this is the practical effect of the `"Reconcile"` mode). For more information about how addon-manager reconciles addon configuration, see references to `addonmanager.kubernetes.io/mode` here:
+By default we set the mode to `"EnsureExists"` so that you are able to continously manage the cluster-autoscaler configuration (`kubectl edit deployment cluster-autoscaler -n kube-system`) without the `kube-addon-manager` component overwriting any applied changes after cluster creation time (this is the practical effect of the `"Reconcile"` mode). For more information about how addon-manager reconciles addon configuration, see references to `addonmanager.kubernetes.io/mode` here:
 
 - https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/addon-manager

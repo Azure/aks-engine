@@ -118,7 +118,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"max-total-unready-percentage":          "45",
 			"memory-total":                          "0:6400000",
 			"min-replica-count":                     "0",
-			"namespace":                             "kube-system",
 			"new-pod-scale-up-delay":                "0s",
 			"node-autoprovisioning-enabled":         "false",
 			"ok-total-unready-count":                "3",

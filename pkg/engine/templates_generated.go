@@ -18415,14 +18415,6 @@ func k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 
 var _k8sContaineraddons112KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ContainerConfig "namespace"}}
-  labels:
-    name: {{ContainerConfig "namespace"}}
-    addonmanager.kubernetes.io/mode: {{GetMode}}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -18431,7 +18423,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -18490,7 +18482,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -18523,13 +18515,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -18542,7 +18534,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: v1
 data:
@@ -18555,7 +18547,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
@@ -18568,7 +18560,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -18617,7 +18609,7 @@ spec:
         - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
         - --memory-total={{ContainerConfig "memory-total"}}
         - --min-replica-count={{ContainerConfig "min-replica-count"}}
-        - --namespace={{ContainerConfig "namespace"}}
+        - --namespace=kube-system
         - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
         - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
         - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
@@ -20890,14 +20882,6 @@ func k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 
 var _k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ContainerConfig "namespace"}}
-  labels:
-    name: {{ContainerConfig "namespace"}}
-    addonmanager.kubernetes.io/mode: {{GetMode}}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -20906,7 +20890,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -20965,7 +20949,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -20998,13 +20982,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -21017,7 +21001,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: v1
 data:
@@ -21030,7 +21014,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
@@ -21043,7 +21027,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -21094,7 +21078,7 @@ spec:
         - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
         - --memory-total={{ContainerConfig "memory-total"}}
         - --min-replica-count={{ContainerConfig "min-replica-count"}}
-        - --namespace={{ContainerConfig "namespace"}}
+        - --namespace=kube-system
         - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
         - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
         - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
@@ -24172,14 +24156,6 @@ func k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 
 var _k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ContainerConfig "namespace"}}
-  labels:
-    name: {{ContainerConfig "namespace"}}
-    addonmanager.kubernetes.io/mode: {{GetMode}}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -24188,7 +24164,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -24247,7 +24223,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -24280,13 +24256,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -24299,7 +24275,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: v1
 data:
@@ -24312,7 +24288,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
@@ -24325,7 +24301,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -24376,7 +24352,7 @@ spec:
         - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
         - --memory-total={{ContainerConfig "memory-total"}}
         - --min-replica-count={{ContainerConfig "min-replica-count"}}
-        - --namespace={{ContainerConfig "namespace"}}
+        - --namespace=kube-system
         - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
         - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
         - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
@@ -29768,14 +29744,6 @@ func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, erro
 
 var _k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: {{ContainerConfig "namespace"}}
-  labels:
-    name: {{ContainerConfig "namespace"}}
-    addonmanager.kubernetes.io/mode: {{GetMode}}
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -29784,7 +29752,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -29843,7 +29811,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -29876,13 +29844,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -29895,7 +29863,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cluster-autoscaler
-    namespace: {{ContainerConfig "namespace"}}
+    namespace: kube-system
 ---
 apiVersion: v1
 data:
@@ -29908,7 +29876,7 @@ data:
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
@@ -29921,7 +29889,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
   name: cluster-autoscaler
-  namespace: {{ContainerConfig "namespace"}}
+  namespace: kube-system
 spec:
   replicas: 1
   selector:
@@ -29972,7 +29940,7 @@ spec:
         - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
         - --memory-total={{ContainerConfig "memory-total"}}
         - --min-replica-count={{ContainerConfig "min-replica-count"}}
-        - --namespace={{ContainerConfig "namespace"}}
+        - --namespace=kube-system
         - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
         - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
         - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}

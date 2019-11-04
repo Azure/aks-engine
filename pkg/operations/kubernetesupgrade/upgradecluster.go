@@ -143,12 +143,7 @@ func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers
 	}
 	var count int32
 	var err error
-	const name = "cluster-autoscaler"
-	namespace := uc.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(name).Config["namespace"]
-	if namespace == "" {
-		namespace = "kube-system"
-	}
-	const retries = 10
+	const namespace, name, retries = "kube-system", "cluster-autoscaler", 10
 	for attempt := 0; attempt < retries; attempt++ {
 		deployment, getErr := kubeClient.GetDeployment(namespace, name)
 		err = getErr
@@ -160,7 +155,7 @@ func (uc *UpgradeCluster) SetClusterAutoscalerReplicaCount(kubeClient armhelpers
 			}
 		}
 		sleepTime := time.Duration(rand.Intn(5))
-		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment in namespace %s: %v", namespace, err)
+		uc.Logger.Warnf("Failed to update cluster-autoscaler deployment: %v", err)
 		uc.Logger.Infof("Retry updating cluster-autoscaler after %d seconds", sleepTime)
 		time.Sleep(sleepTime * time.Second)
 	}

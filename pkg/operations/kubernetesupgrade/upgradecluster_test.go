@@ -861,21 +861,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Tests SetClusterAutoscalerReplicaCount", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.15.5", 1, 1, false)
-		enabled := true
-		cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
-			{
-				Name:    "cluster-autoscaler",
-				Enabled: &enabled,
-				Config:  map[string]string{},
-			},
-		}
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
-			ClusterTopology: ClusterTopology{
-				DataModel: cs,
-			},
 		}
 
 		// test with nil KubernetesClient
@@ -885,12 +873,6 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		// test happy path
 		mockClient := armhelpers.MockKubernetesClient{}
-		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
-		Expect(count).To(Equal(int32(1)))
-		Expect(err).NotTo(HaveOccurred())
-
-		// test w/ custom namespace
-		uc.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.Addons[0].Config["namespace"] = "custom-ns"
 		count, err = uc.SetClusterAutoscalerReplicaCount(&mockClient, 10)
 		Expect(count).To(Equal(int32(1)))
 		Expect(err).NotTo(HaveOccurred())
