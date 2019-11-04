@@ -5,7 +5,7 @@ set -x
 TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
 TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
-WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
+WORK_DIR="/aks-engine"
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
