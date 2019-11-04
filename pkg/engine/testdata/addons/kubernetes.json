@@ -5,7 +5,7 @@
     "provisioningState": "",
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
+      "orchestratorRelease": "1.11",
       "kubernetesConfig": {
         "addons": [
           {

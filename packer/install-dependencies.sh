@@ -57,7 +57,7 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.7"
+MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
@@ -413,8 +413,6 @@ K8S_VERSIONS="
 1.12.7
 1.11.10
 1.11.9
-1.10.13
-1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
@@ -450,10 +448,3 @@ df -h
   echo "Commit: ${COMMIT}"
   echo "Feature flags: ${FEATURE_FLAGS}"
 } >> ${VHD_LOGS_FILEPATH}
-
-# The below statements are used to extract release notes from the packer output
-set +x
-echo "START_OF_NOTES"
-cat ${VHD_LOGS_FILEPATH}
-echo "END_OF_NOTES"
-set -x

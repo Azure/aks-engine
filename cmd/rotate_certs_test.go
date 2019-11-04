@@ -247,7 +247,7 @@ func TestDeleteServiceAccounts(t *testing.T) {
 
 func TestWriteArtifacts(t *testing.T) {
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "1.11.10", 3, 2, false)
 	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,

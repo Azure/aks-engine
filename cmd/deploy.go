@@ -226,6 +226,12 @@ func (dc *deployCmd) loadAPIModel() error {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 		writeCustomCloudProfile(dc.containerService)
+
+		if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" || dc.containerService.Properties.CustomCloudProfile.IdentitySystem != dc.authProvider.getAuthArgs().IdentitySystem {
+			if dc.authProvider != nil {
+				dc.containerService.Properties.CustomCloudProfile.IdentitySystem = dc.authProvider.getAuthArgs().IdentitySystem
+			}
+		}
 	}
 
 	if err = dc.getAuthArgs().validateAuthArgs(); err != nil {
