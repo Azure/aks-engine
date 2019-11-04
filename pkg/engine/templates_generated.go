@@ -18415,6 +18415,14 @@ func k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 
 var _k8sContaineraddons112KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ContainerConfig "namespace"}}
+  labels:
+    name: {{ContainerConfig "namespace"}}
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
@@ -20881,6 +20889,14 @@ func k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 }
 
 var _k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ContainerConfig "namespace"}}
+  labels:
+    name: {{ContainerConfig "namespace"}}
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -24155,6 +24171,14 @@ func k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 }
 
 var _k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ContainerConfig "namespace"}}
+  labels:
+    name: {{ContainerConfig "namespace"}}
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -29743,6 +29767,14 @@ func k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, erro
 }
 
 var _k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ContainerConfig "namespace"}}
+  labels:
+    name: {{ContainerConfig "namespace"}}
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:

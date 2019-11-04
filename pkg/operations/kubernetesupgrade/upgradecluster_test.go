@@ -864,7 +864,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		cs := api.CreateMockContainerService("testcluster", "1.15.5", 1, 1, false)
 		enabled := true
 		cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
-			api.KubernetesAddon{
+			{
 				Name:    "cluster-autoscaler",
 				Enabled: &enabled,
 				Config:  map[string]string{},
