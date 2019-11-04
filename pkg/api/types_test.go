@@ -5055,16 +5055,16 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 	}
 }
 
-func TestGetAddonPoolsIndexByName(t *testing.T) {
+func TestGetAddonPoolIndexByName(t *testing.T) {
 	addonName := "testaddon"
 	addon := getMockAddon(addonName)
-	i := addon.GetAddonPoolsIndexByName("pool1")
+	i := addon.GetAddonPoolIndexByName("pool1")
 	if i != 0 {
-		t.Fatalf("GetAddonPoolsIndexByName() did not return the expected index value 0, instead returned: %d", i)
+		t.Fatalf("GetAddonPoolIndexByName() did not return the expected index value 0, instead returned: %d", i)
 	}
-	i = addon.GetAddonPoolsIndexByName("nonExistentContainerName")
+	i = addon.GetAddonPoolIndexByName("nonExistentContainerName")
 	if i != -1 {
-		t.Fatalf("GetAddonPoolsIndexByName() did not return the expected index value -1, instead returned: %d", i)
+		t.Fatalf("GetAddonPoolIndexByName() did not return the expected index value -1, instead returned: %d", i)
 	}
 }
 

@@ -695,6 +695,16 @@ func (p *Properties) IsClusterAllVirtualMachineScaleSets() bool {
 	return isAll
 }
 
+// GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
+func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
+	for _, profile := range p.AgentPoolProfiles {
+		if profile.Name == name {
+			return profile
+		}
+	}
+	return nil
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0
@@ -799,16 +809,6 @@ func (a *AgentPoolProfile) IsUbuntu1804() bool {
 // IsUbuntu returns true if the master profile distro is any ubuntu distro
 func (a *AgentPoolProfile) IsUbuntu() bool {
 	return a.IsUbuntu1604() || a.IsUbuntu1804()
-}
-
-// GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
-func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
-	for _, profile := range p.AgentPoolProfiles {
-		if profile.Name == name {
-			return profile
-		}
-	}
-	return nil
 }
 
 // HasSearchDomain returns true if the customer specified secrets to install

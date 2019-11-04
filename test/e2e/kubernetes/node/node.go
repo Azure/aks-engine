@@ -221,7 +221,7 @@ func AreNNodesReady(nodeCount int) bool {
 	return false
 }
 
-// AreMinNodesReady returns a bool depending on cluster state
+// AreMinNodesReady returns if the minimum nodes ready count is met
 func AreMinNodesReady(nodeCount int) bool {
 	if nodeCount == -1 {
 		return AreAllReady()
@@ -243,7 +243,7 @@ func AreMinNodesReady(nodeCount int) bool {
 	return false
 }
 
-// AreMaxNodesReady returns a bool depending on cluster state
+// AreMaxNodesReady returns if nodes ready count is <= a maximum number
 func AreMaxNodesReady(nodeCount int) bool {
 	list, _ := Get()
 	var ready int
@@ -290,7 +290,7 @@ func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
 	}
 }
 
-// WaitOnReadyMin will block until all nodes are in ready state
+// WaitOnReadyMin will block until the minimum nodes ready count is met
 func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -318,7 +318,7 @@ func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
 	}
 }
 
-// WaitOnReadyMax will block until all nodes are in ready state
+// WaitOnReadyMax will block until nodes ready count is <= a maximum number
 func WaitOnReadyMax(nodeCount int, sleep, timeout time.Duration) bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

@@ -300,8 +300,8 @@ func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int
 	return -1
 }
 
-// GetAddonPoolsIndexByName returns the KubernetesAddon pools index with the name `poolName`
-func (a KubernetesAddon) GetAddonPoolsIndexByName(poolName string) int {
+// GetAddonPoolIndexByName returns the KubernetesAddon pools index with the name `poolName`
+func (a KubernetesAddon) GetAddonPoolIndexByName(poolName string) int {
 	for i := range a.Pools {
 		if a.Pools[i].Name == poolName {
 			return i
