@@ -117,10 +117,6 @@ func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, te
 			resource.RemoveProperty(logger, platformFaultDomainCountFieldName)
 			resource.RemoveProperty(logger, singlePlacementGroupFieldName)
 		}
-
-		if resource.Type() == vmasResourceType {
-			resource.RemoveProperty(logger, platformFaultDomainCountFieldName)
-		}
 	}
 }
 
@@ -380,6 +376,9 @@ func (t *Transformer) removeImageReference(logger *logrus.Entry, resourcePropert
 // NormalizeResourcesForK8sMasterUpgrade takes a template and removes elements that are unwanted in any scale up/down case
 func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
+	resourceTypeToProcess := map[string]bool{vmResourceType: true, vmExtensionType: true,
+		nicResourceType: true, vnetResourceType: true, nsgResourceType: true,
+		lbResourceType: true, vmssResourceType: true, vmasResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
@@ -398,7 +397,14 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType || resourceType == vnetResourceType || resourceType == nsgResourceType || resourceType == lbResourceType || resourceType == vmssResourceType) {
+		_, process := resourceTypeToProcess[resourceType]
+		if !process {
+			continue
+		}
+
+		// never include vmas resource in upgrade arm template
+		if strings.EqualFold(resourceType, vmasResourceType) {
+			filteredResources = filteredResources[:len(filteredResources)-1]
 			continue
 		}
 
