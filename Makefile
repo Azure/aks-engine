@@ -47,6 +47,9 @@ else
 	CHECK     = which
 endif
 
+# Active module mode, as we use go modules to manage dependencies
+export GO111MODULE=on
+
 all: build
 
 .PHONY: dev
