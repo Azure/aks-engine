@@ -332,10 +332,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
-		Name: CloudNodeManagerAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") &&
-			o.KubernetesConfig.UseCloudControllerManager != nil &&
-			*o.KubernetesConfig.UseCloudControllerManager),
+		Name:    CloudNodeManagerAddonName,
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  CloudNodeManagerAddonName,
