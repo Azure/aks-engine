@@ -6343,5 +6343,205 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
+	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	cases := []struct {
+		name                string
+		addon               KubernetesAddon
+		cs                  *ContainerService
+		expectedNodesConfig string
+	}{
+		{
+			name: "1 pool",
+			addon: KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+				},
+			},
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedNodesConfig: "        - --nodes=1:10:k8s-pool1-49584119-vmss",
+		},
+		{
+			name: "multiple pools",
+			addon: KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+				},
+			},
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedNodesConfig: "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:10:k8s-pool2-49584119-vmss",
+		},
+		{
+			name: "no pools",
+			addon: KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+					},
+				},
+			},
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedNodesConfig: "",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			result := GetClusterAutoscalerNodesConfig(c.addon, c.cs)
+			if c.expectedNodesConfig != result {
+				t.Errorf("expected GetClusterAutoscalerNodesConfig to return %s, instead got %s", c.expectedNodesConfig, result)
+			}
+		})
+	}
 }

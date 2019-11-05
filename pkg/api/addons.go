@@ -5,6 +5,8 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 
@@ -525,6 +527,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
 		if i > -1 && to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
 			if o.KubernetesConfig.Addons[i].Pools == nil {
+				log.Warnf("This cluster upgrade operation will enable the per-pool cluster-autoscaler addon.\n")
 				var pools []AddonNodePoolsConfig
 				for i, p := range cs.Properties.AgentPoolProfiles {
 					pool := AddonNodePoolsConfig{
@@ -546,9 +549,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 							delete(o.KubernetesConfig.Addons[i].Config, "max-nodes")
 						}
 					}
+					log.Warnf("cluster-autoscaler will configure pool %s with min-nodes=%s, and max-nodes=%s:\n", pool.Name, pool.Config["min-nodes"], pool.Config["max-nodes"])
 					pools = append(pools, pool)
 				}
 				o.KubernetesConfig.Addons[i].Pools = pools
+				log.Warnf("You may modify the pool configurations via `kubectl edit deployment cluster-autoscaler -n kube-system`.\n")
+				log.Warnf("Look for `--nodes=` configuration flags below:\n")
+				log.Warnf(GetClusterAutoscalerNodesConfig(o.KubernetesConfig.Addons[i], cs))
 			}
 		}
 	}
@@ -685,6 +692,19 @@ func makeDefaultClusterAutoscalerAddonPoolsConfig(cs *ContainerService) []AddonN
 				"max-nodes": strconv.Itoa(pool.Count),
 			},
 		})
+	}
+	return ret
+}
+
+// GetClusterAutoscalerNodesConfig returns the cluster-autoscaler runtime configuration flag for a nodepool
+func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService) string {
+	var ret string
+	for _, pool := range addon.Pools {
+		nodepoolName := cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name))
+		ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.Config["min-nodes"], pool.Config["max-nodes"], nodepoolName)
+	}
+	if ret != "" {
+		ret = strings.TrimRight(ret, "\n")
 	}
 	return ret
 }
