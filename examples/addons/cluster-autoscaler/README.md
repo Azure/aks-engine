@@ -234,3 +234,5 @@ The above logic essentially engages cluster-autoscaler against these node pools,
 - `- --nodes=1:10:k8s-pool1-49584119-vmss`
 
 Where `1` is the minimum number of nodes to scale down to, and `10` is the maximum number of nodes to scale up to.
+
+_Importantly_: the new `kube-addon-manager` spec that we deliver via `aks-engine upgrade` will include a change from `Reconcile` to `EnsureExists` for the deployment resource (so that the `cluster-autoscaler` deployment configuration can be dynamically maintained by cluster admins going forward), which means that `kube-addon-manager` will prefer the older (`addonmanager.kubernetes.io/mode: Reconcile`) over the newer (`addonmanager.kubernetes.io/mode: EnsureExists`) spec. In order to force `kube-addon-manager` to load the new spec, you must manually delete the deployment resource _after_ the `aks-engine upgrade` successfully completes: `kubectl delete deployment cluster-autoscaler -n kube-system`.
