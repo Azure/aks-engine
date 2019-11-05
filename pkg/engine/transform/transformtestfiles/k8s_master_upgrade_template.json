@@ -1750,8 +1750,7 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpool2AvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
@@ -2070,8 +2069,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",

@@ -106,8 +106,29 @@ func (r resource) RemoveProperty(logger *logrus.Entry, key string) {
 	_, ok := properties[key]
 	if ok {
 		logger.Infof("Removing %s property from %s", key, r.Name())
-		delete(r.Properties(), key)
+		delete(properties, key)
 	}
+}
+
+func (r resource) removeDependencyType(logger *logrus.Entry, depType string) []string {
+	deps := r.DependsOn()
+	var newDependsOn []string
+	for _, dep := range deps {
+		depVal := dep.(string)
+		if !strings.Contains(depVal, depType) {
+			logger.Infof("Removing %s dependency from %s", depType, r.Name())
+			newDependsOn = append(newDependsOn, depVal)
+		}
+	}
+	return newDependsOn
+}
+
+func (r resource) DependsOn() []interface{} {
+	deps, ok := r[dependsOnFieldName].([]interface{})
+	if !ok {
+		return []interface{}{}
+	}
+	return deps
 }
 
 func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, templateMap map[string]interface{}) {
@@ -402,11 +423,7 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		// never include vmas resource in upgrade arm template
-		if strings.EqualFold(resourceType, vmasResourceType) {
-			filteredResources = filteredResources[:len(filteredResources)-1]
-			continue
-		}
+		filteredResources = removeVMAS(logger, filteredResources, resourceMap)
 
 		resourceName, ok := resourceMap[nameFieldName].(string)
 		if !ok {
@@ -533,6 +550,18 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 	logger.Infoln(fmt.Sprintf("Resource count after running NormalizeResourcesForK8sMasterUpgrade: %d",
 		len(templateMap[resourcesFieldName].([]interface{}))))
 	return nil
+}
+
+func removeVMAS(logger *logrus.Entry, resources []interface{}, resource resource) []interface{} {
+	// remove vmas
+	if strings.EqualFold(resource.Type(), vmasResourceType) {
+		return resources[:len(resources)-1]
+	}
+	// remove dependencies on vmas
+	if strings.EqualFold(resource.Type(), vmResourceType) {
+		resource[dependsOnFieldName] = resource.removeDependencyType(logger, vmasResourceType)
+	}
+	return resources
 }
 
 //RemoveNsgDependency Removes the nsg dependency from the resource
