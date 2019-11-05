@@ -549,13 +549,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 							delete(o.KubernetesConfig.Addons[i].Config, "max-nodes")
 						}
 					}
-					log.Warnf("cluster-autoscaler will configure pool %s with min-nodes=%s, and max-nodes=%s:\n", pool.Name, pool.Config["min-nodes"], pool.Config["max-nodes"])
+					log.Warnf("cluster-autoscaler will configure pool \"%s\" with min-nodes=%s, and max-nodes=%s.\n", pool.Name, pool.Config["min-nodes"], pool.Config["max-nodes"])
 					pools = append(pools, pool)
 				}
 				o.KubernetesConfig.Addons[i].Pools = pools
 				log.Warnf("You may modify the pool configurations via `kubectl edit deployment cluster-autoscaler -n kube-system`.\n")
-				log.Warnf("Look for `--nodes=` configuration flags below:\n")
-				log.Warnf(GetClusterAutoscalerNodesConfig(o.KubernetesConfig.Addons[i], cs))
+				log.Warnf("Look for the `--nodes=` configuration flags (see below) in the deployment spec:\n")
+				log.Warnf("\n%s", GetClusterAutoscalerNodesConfig(o.KubernetesConfig.Addons[i], cs))
 			}
 		}
 	}
