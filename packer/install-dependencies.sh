@@ -101,14 +101,14 @@ echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 DASHBOARD_VERSIONS="1.10.1"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kubernetes-dashboard-amd64:v${DASHBOARD_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetes-dashboard:v${DASHBOARD_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 EXECHEALTHZ_VERSIONS="1.2"
 for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/exechealthz-amd64:${EXECHEALTHZ_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/exechealthz:${EXECHEALTHZ_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -120,7 +120,7 @@ ADDON_RESIZER_VERSIONS="
 1.7
 "
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/addon-resizer:${ADDON_RESIZER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/addon-resizer:${ADDON_RESIZER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -131,7 +131,7 @@ HEAPSTER_VERSIONS="
 1.5.1
 "
 for HEAPSTER_VERSION in ${HEAPSTER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/heapster-amd64:v${HEAPSTER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/heapster:v${HEAPSTER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -142,7 +142,7 @@ METRICS_SERVER_VERSIONS="
 0.2.1
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-server:v${METRICS_SERVER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -154,7 +154,7 @@ KUBE_DNS_VERSIONS="
 1.14.5
 "
 for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-kube-dns:${KUBE_DNS_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -170,7 +170,7 @@ KUBE_ADDON_MANAGER_VERSIONS="
 8.6
 "
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kube-addon-manager:v${KUBE_ADDON_MANAGER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -183,7 +183,7 @@ KUBE_DNS_MASQ_VERSIONS="
 1.14.5
 "
 for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:${KUBE_DNS_MASQ_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-dnsmasq-nanny:${KUBE_DNS_MASQ_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -198,7 +198,7 @@ done
 
 GCR_PAUSE_VERSIONS="3.1"
 for PAUSE_VERSION in ${GCR_PAUSE_VERSIONS}; do
-    # Image 'mcr.microsoft.com/k8s/azurestack/core/pause-amd64' is the same as 'k8s.gcr.io/pause-amd64'
+    # Image 'mcr.microsoft.com/k8s/azurestack/core/pause-amd64' is the same as 'mcr.microsoft.com/pause-amd64'
     # At the time, re-tagging and pushing to mcr hub seemed simpler than changing how `defaults-kubelet.go` sets `--pod-infra-container-image`
     for IMAGE_BASE in k8s.gcr.io mcr.microsoft.com/k8s/azurestack/core; do
       CONTAINER_IMAGE="${IMAGE_BASE}/pause-amd64:${PAUSE_VERSION}"
@@ -213,7 +213,7 @@ TILLER_VERSIONS="
 2.8.1
 "
 for TILLER_VERSION in ${TILLER_VERSIONS}; do
-    CONTAINER_IMAGE="gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/tiller:v${TILLER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -250,7 +250,7 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.2.2
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -260,7 +260,7 @@ K8S_DNS_SIDECAR_VERSIONS="
 1.14.8
 "
 for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/k8s-dns-sidecar:${K8S_DNS_SIDECAR_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -273,7 +273,7 @@ CORE_DNS_VERSIONS="
 1.2.2
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/coredns:${CORE_DNS_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -283,7 +283,7 @@ RESCHEDULER_VERSIONS="
 0.3.1
 "
 for RESCHEDULER_VERSION in ${RESCHEDULER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/rescheduler:v${RESCHEDULER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/rescheduler:v${RESCHEDULER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -318,7 +318,7 @@ NVIDIA_DEVICE_PLUGIN_VERSIONS="
 1.10
 "
 for NVIDIA_DEVICE_PLUGIN_VERSION in ${NVIDIA_DEVICE_PLUGIN_VERSIONS}; do
-    CONTAINER_IMAGE="nvidia/k8s-device-plugin:${NVIDIA_DEVICE_PLUGIN_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/nvidia/k8s-device-plugin:${NVIDIA_DEVICE_PLUGIN_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -362,7 +362,7 @@ for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     pullContainerImage "docker" ${DEPRECATED_CONTAINER_IMAGE}
     echo "  - ${DEPRECATED_CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 
-    CONTAINER_IMAGE="k8s.gcr.io/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/ip-masq-agent-amd64:v${IP_MASQ_AGENT_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -418,9 +418,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
     HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
   else
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    HYPERKUBE_URL="mcr.microsoft.com/hyperkube-amd64:v${KUBERNETES_VERSION}"
     if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="mcr.microsoft.com/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     fi
