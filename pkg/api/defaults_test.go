@@ -1983,6 +1983,22 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 	}
 }
 
+func TestCloudControllerManagerEnabled(t *testing.T) {
+	// test that 1.16 defaults to false
+	cs := CreateMockContainerService("testcluster", "1.16.2", 3, 2, false)
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
+		t.Fatal("expected UseCloudControllerManager to default to false")
+	}
+
+	// test that 1.17 defaults to true
+	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(false) {
+		t.Fatal("expected UseCloudControllerManager to default to true")
+	}
+}
+
 func TestDefaultCloudProvider(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
