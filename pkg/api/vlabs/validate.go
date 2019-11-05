@@ -662,7 +662,7 @@ func (a *Properties) validateAddons() error {
 								}
 							}
 							if min > max {
-								return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid config, 'max-nodes' %d must be greater than 'min-nodes' %d", pool.Name, max, min)
+								return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid config, 'max-nodes' %d must be greater than or equal to 'min-nodes' %d", pool.Name, max, min)
 							}
 						}
 					}

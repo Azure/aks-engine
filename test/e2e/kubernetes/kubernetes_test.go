@@ -132,6 +132,7 @@ var _ = BeforeSuite(func() {
 					maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
 					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
 						clusterAutoscalerEngaged = true
+						break
 					}
 				}
 			}
