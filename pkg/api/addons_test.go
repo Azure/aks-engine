@@ -331,7 +331,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -524,7 +524,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -720,7 +720,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -915,7 +915,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -1105,7 +1105,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -1295,7 +1295,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -1484,7 +1484,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -1680,7 +1680,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -1855,7 +1855,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2022,7 +2022,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2201,7 +2201,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2387,7 +2387,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2570,7 +2570,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2789,7 +2789,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -2985,7 +2985,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -3183,7 +3183,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -3515,7 +3515,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -3661,7 +3661,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "KubernetesImageBase" + "ip-masq-agent-amd64:v2.5.0",
+							Image:          "KubernetesImageBase" + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -3803,7 +3803,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
@@ -3960,7 +3960,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+							Image:          specConfig.KubernetesImageBase + "oss/kubernetes/ip-masq-agent:v2.5.0",
 						},
 					},
 					Config: map[string]string{
