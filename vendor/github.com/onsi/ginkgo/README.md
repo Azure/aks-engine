@@ -39,7 +39,7 @@ If you have a question, comment, bug report, feature request, etc. please open a
 
 - Built-in support for testing [asynchronicity](http://onsi.github.io/ginkgo/#asynchronous-tests)
 
-- Built-in support for [benchmarking](http://onsi.github.io/ginkgo/#benchmark-tests) your code.  Control the number of benchmark samples as you gather runtimes and other, arbitrary, bits of numerical information about your code.
+- Built-in support for [benchmarking](http://onsi.github.io/ginkgo/#benchmark-tests) your code.  Control the number of benchmark samples as you gather runtimes and other, arbitrary, bits of numerical information about your code. 
 
 - [Completions for Sublime Text](https://github.com/onsi/ginkgo-sublime-completions): just use [Package Control](https://sublime.wbond.net/) to install `Ginkgo Completions`.
 
@@ -103,7 +103,7 @@ You can also use Ginkgo's matcher library [Gomega](https://github.com/onsi/gomeg
 There are a handful of BDD-style testing frameworks written for Go.  Here are a few:
 
 - [Ginkgo](https://github.com/onsi/ginkgo) ;)
-- [GoConvey](https://github.com/smartystreets/goconvey)
+- [GoConvey](https://github.com/smartystreets/goconvey) 
 - [Goblin](https://github.com/franela/goblin)
 - [Mao](https://github.com/azer/mao)
 - [Zen](https://github.com/pranavraja/zen)

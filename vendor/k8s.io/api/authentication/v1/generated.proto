@@ -176,3 +176,4 @@ message UserInfo {
   // +optional
   map<string, ExtraValue> extra = 4;
 }
+

@@ -124,3 +124,4 @@ message Unknown {
   // Unspecified means ContentTypeJSON.
   optional string contentType = 4;
 }
+

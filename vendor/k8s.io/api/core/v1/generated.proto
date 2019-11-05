@@ -4787,3 +4787,4 @@ message WeightedPodAffinityTerm {
   // Required. A pod affinity term, associated with the corresponding weight.
   optional PodAffinityTerm podAffinityTerm = 2;
 }
+

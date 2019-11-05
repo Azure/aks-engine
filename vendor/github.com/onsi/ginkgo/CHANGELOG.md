@@ -1,20 +1,34 @@
+## 1.10.3
+
+### Fixes
+- Set go_import_path in travis.yml to allow internal packages in forks (#607) [3b721db]
+- Add integration test [d90e0dc]
+- Fix coverage files combining [e5dde8c]
+- A new CLI option: -ginkgo.reportFile <file path> (#601) [034fd25]
+
+## 1.10.2
+
+### Fixes
+- speed up table entry generateIt() (#609) [5049dc5]
+- Fix. Write errors to stderr instead of stdout (#610) [7bb3091]
+
 ## 1.10.1
 
-## Fixes
+### Fixes
 - stack backtrace: fix skipping (#600) [2a4c0bd]
 
 ## 1.10.0
 
-## Fixes
+### Fixes
 - stack backtrace: fix alignment and skipping [66915d6]
 - fix typo in documentation [8f97b93]
 
 ## 1.9.0
 
-## Features
+### Features
 - Option to print output into report, when tests have passed [0545415]
 
-## Fixes
+### Fixes
 - Fixed typos in comments [0ecbc58]
 - gofmt code [a7f8bfb]
 - Simplify code [7454d00]
@@ -181,7 +195,7 @@ New Features:
 - `ginkgo -tags=TAG_LIST` passes a list of tags down to the `go build` command.
 - `ginkgo --failFast` aborts the test suite after the first failure.
 - `ginkgo generate file_1 file_2` can take multiple file arguments.
-- Ginkgo now summarizes any spec failures that occured at the end of the test run.
+- Ginkgo now summarizes any spec failures that occured at the end of the test run. 
 - `ginkgo --randomizeSuites` will run tests *suites* in random order using the generated/passed-in seed.
 
 Improvements:
@@ -215,7 +229,7 @@ Bug Fixes:
 Breaking changes:
 
 - `thirdparty/gomocktestreporter` is gone.  Use `GinkgoT()` instead
-- Modified the Reporter interface
+- Modified the Reporter interface 
 - `watch` is now a subcommand, not a flag.
 
 DSL changes:
