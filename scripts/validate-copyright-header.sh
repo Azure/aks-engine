@@ -7,7 +7,7 @@ set -euo pipefail
 
 echo "==> Checking copyright headers <=="
 
-files=$(find . -type f -iname '*.go' ! -path './vendor/*')
+files=$(find . -type f -iname '*.go' ! -path './vendor/*' ! -path './hack/tools/*')
 licRes=$(for file in $files; do
            awk 'NR<=3' "$file" | grep -Eq "(Copyright|generated|GENERATED)" || echo "$file";
          done)

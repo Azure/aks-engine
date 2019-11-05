@@ -6,9 +6,9 @@ DIST_DIRS         = find * -type d -exec
 .PHONY: bootstrap build test test_fmt validate-copyright-headers fmt lint ci
 
 ifdef DEBUG
-GOFLAGS   := -gcflags="-N -l"
+GOFLAGS   := -gcflags="-N -l" -mod=vendor
 else
-GOFLAGS   :=
+GOFLAGS   := -mod=vendor
 endif
 
 # go option
@@ -20,6 +20,7 @@ PROJECT         := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
+GOBIN			?= $(shell $(GO) env GOPATH)/bin
 ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
@@ -74,6 +75,7 @@ validate-shell:
 
 .PHONY: generate
 generate: bootstrap
+	echo $(GOBIN)
 	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
@@ -85,7 +87,7 @@ build: generate go-build
 
 .PHONY: go-build
 go-build:
-	$(GO) build -mod=vendor $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
+	$(GO) build $(GOFLAGS) -ldflags '$(LDFLAGS)' -o $(BINDIR)/$(PROJECT)$(EXTENSION) $(REPO_PATH)
 
 .PHONY: tidy
 tidy:
@@ -168,26 +170,17 @@ ensure-generated:
 test-e2e:
 	@test/e2e.sh
 
-HAS_GOX := $(shell $(CHECK) gox)
 HAS_GIT := $(shell $(CHECK) git)
-HAS_GOLANGCI ?= $(shell $(CHECK) golangci-lint)
-HAS_GINKGO := $(shell $(CHECK) ginkgo)
 
 .PHONY: bootstrap
-bootstrap:
-ifndef HAS_GOX
-	go get -u github.com/mitchellh/gox
-endif
-	go get github.com/go-bindata/go-bindata/...@v3.1.2
+bootstrap: tools-install
 ifndef HAS_GIT
 	$(error You must install Git)
 endif
-ifndef HAS_GOLANGCI
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
-endif
-ifndef HAS_GINKGO
-	go get -u github.com/onsi/ginkgo/ginkgo
-endif
+
+.PHONY: tools-install
+tools-install:
+	make -C hack/tools/
 
 ci: bootstrap test-style build test lint
 	./scripts/coverage.sh --coveralls
