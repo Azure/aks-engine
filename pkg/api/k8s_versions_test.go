@@ -18,7 +18,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent := k8sComponentVersions["1.17"]
 	expected := map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.17.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.17.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.17.0",
 		"windowszip":                       "v1.17.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -62,7 +62,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.16"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.16.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.16.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.16.0",
 		"windowszip":                       "v1.16.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -106,7 +106,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.15"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.15.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.15.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.15.0",
 		"windowszip":                       "v1.15.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -150,7 +150,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.14"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.14.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.14.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.14.0",
 		"windowszip":                       "v1.14.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -194,7 +194,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.13"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.13.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.13.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.13.0",
 		"windowszip":                       "v1.13.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -238,7 +238,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.12"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.12.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.12.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.12.0",
 		"windowszip":                       "v1.12.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -282,7 +282,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.11"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.11.0-alpha.1",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.11.0-alpha.1",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.11.0-alpha.1",
 		"windowszip":                       "v1.11.0-alpha.1-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -325,7 +325,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.10"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.10.0",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.10.0",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.10.0",
 		"windowszip":                       "v1.10.0-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -368,7 +368,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.9.3",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.9.3",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                       "v1.9.3-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -410,7 +410,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.8"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.8.8",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.8.8",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.8.8",
 		"windowszip":                       "v1.8.8-1int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
@@ -450,7 +450,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.7"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.7.13",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.7.13",
 		DashboardAddonName:                 k8sComponent["dashboard"],
 		"exechealthz":                      k8sComponent["exechealthz"],
 		"addonresizer":                     k8sComponent["addon-resizer"],
@@ -488,7 +488,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":                        "oss/kubernetes/hyperkube:vv1.9.3",
+		"hyperkube":                        "oss/kubernetes/hyperkube:v1.9.3",
 		"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                       "v1.9.3-2int.zip",
 		DashboardAddonName:                 k8sComponent["dashboard"],
