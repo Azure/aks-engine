@@ -563,6 +563,9 @@ func (p *Properties) setVMSSDefaultsForMasters() {
 	if p.MasterProfile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
 		p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
+		if p.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes == 0 {
+			p.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
+		}
 	}
 }
 
@@ -579,6 +582,9 @@ func (p *Properties) setVMSSDefaultsForAgents() {
 			if profile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
 				p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 				p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
+				if p.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes == 0 {
+					p.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
+				}
 			}
 		}
 
