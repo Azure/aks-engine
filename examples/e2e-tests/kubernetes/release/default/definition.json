@@ -20,7 +20,19 @@
           },
           {
             "name": "cluster-autoscaler",
-            "enabled": true
+            "enabled": true,
+            "pools": [
+              {
+                "name": "pool1",
+                "config": {
+                  "min-nodes": "3",
+                  "max-nodes": "5"
+                }
+              }
+            ],
+            "config": {
+              "scan-interval": "1m"
+            }
           },
           {
             "name": "aad-pod-identity",
