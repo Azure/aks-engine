@@ -418,9 +418,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
     HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
   else
-    HYPERKUBE_URL="mcr.microsoft.com/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube-amd64:v${KUBERNETES_VERSION}"
     if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-      CONTAINER_IMAGE="mcr.microsoft.com/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     fi

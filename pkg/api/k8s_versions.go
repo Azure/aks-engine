@@ -483,8 +483,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 	switch majorMinor {
 	case "1.17":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -521,8 +521,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.16":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -559,8 +559,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.15":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -597,8 +597,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.14":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -635,8 +635,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.13":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -673,8 +673,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.12":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -711,8 +711,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.11":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -748,8 +748,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.10":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -785,8 +785,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.9":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -821,8 +821,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.8":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
-			"ccm":                              "cloud-controller-manager-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
+			"ccm":                              "oss/kubernetes/cloud-controller-manager-amd64:v" + version,
 			"windowszip":                       "v" + version + "-1int.zip",
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
@@ -855,7 +855,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.7":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
 			"addonresizer":                     k8sComponent["addon-resizer"],
@@ -887,7 +887,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.6":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
+			"hyperkube":                        "oss/kubernetes/hyperkube-amd64:v" + version,
 			DashboardAddonName:                 k8sComponent["dashboard"],
 			"exechealthz":                      k8sComponent["exechealthz"],
 			"addonresizer":                     k8sComponent["addon-resizer"],
