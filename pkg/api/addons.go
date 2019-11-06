@@ -6,13 +6,13 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
+	log "github.com/sirupsen/logrus"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
