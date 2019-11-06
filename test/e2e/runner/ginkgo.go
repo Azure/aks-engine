@@ -1,3 +1,4 @@
+//+build test
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -36,8 +37,9 @@ func BuildGinkgoRunner(cfg *config.Config, pt *metrics.Point) (*Ginkgo, error) {
 // Run will execute an orchestrator suite of tests
 func (g *Ginkgo) Run() error {
 	g.Point.SetTestStart()
-	testDir := fmt.Sprintf("test/e2e/%s", g.Config.Orchestrator)
-	var cmd = exec.Command("ginkgo", "-slowSpecThreshold", "180", "-failFast", "-r", "-v", "--focus", g.Config.GinkgoFocus, "--skip", g.Config.GinkgoSkip, testDir)
+	// use the test bin rather than compile the directory b/c the compile will happen in a sub dir which is another module
+	testFile := fmt.Sprintf("test/e2e/%s/%s.test", g.Config.Orchestrator, g.Config.Orchestrator)
+	var cmd = exec.Command("ginkgo", "-slowSpecThreshold", "180", "-failFast", "-r", "-v", "--focus", g.Config.GinkgoFocus, "--skip", g.Config.GinkgoSkip, testFile)
 	util.PrintCommand(cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
