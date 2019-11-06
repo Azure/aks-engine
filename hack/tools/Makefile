@@ -16,4 +16,4 @@ $(GOBIN)/ginkgo:
 	$(GO) get github.com/onsi/ginkgo/ginkgo/...@v1.10.1
 
 $(GOBIN)/golangci-lint:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin v1.21.0
