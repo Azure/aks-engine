@@ -15,7 +15,8 @@
           "masterProfile": {
             "count": 1,
             "vmSize": "Standard_D2s_v3",
-            "dnsPrefix": ""
+            "dnsPrefix": "",
+            "distro": "ubuntu"
           },
           "agentPoolProfiles": [
             {
