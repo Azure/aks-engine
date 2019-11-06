@@ -120,7 +120,7 @@ ADDON_RESIZER_VERSIONS="
 1.7
 "
 for ADDON_RESIZER_VERSION in ${ADDON_RESIZER_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/addon-resizer:${ADDON_RESIZER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/addon-resizer:${ADDON_RESIZER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done

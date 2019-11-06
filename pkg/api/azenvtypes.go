@@ -83,10 +83,10 @@ const (
 var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
-		KubernetesImageBase:              "mcr.microsoft.com/",
-		TillerImageBase:                  "mcr.microsoft.com/",
+		KubernetesImageBase:              "upstream.azurecr.io/",
+		TillerImageBase:                  "upstream.azurecr.io/",
 		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "mcr.microsoft.com/",
+		NVIDIAImageBase:                  "upstream.azurecr.io/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
 		MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
