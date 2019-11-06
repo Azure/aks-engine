@@ -1102,7 +1102,7 @@ func TestEtcdVersion(t *testing.T) {
 
 func TestStorageProfile(t *testing.T) {
 	// Test ManagedDisks default configuration
-	mockCS := getMockBaseContainerService("1.8.10")
+	mockCS := getMockBaseContainerService("1.13.12")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.MasterProfile.Count = 1
@@ -1135,7 +1135,7 @@ func TestStorageProfile(t *testing.T) {
 		t.Fatalf("MasterProfile.StorageProfile did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile, ManagedDisks)
 	}
-	if !properties.AgentPoolProfiles[0].IsAvailabilitySets() {
+	if !properties.AgentPoolProfiles[0].IsVirtualMachineScaleSets() {
 		t.Fatalf("AgentPoolProfile[0].AvailabilityProfile did not have the expected configuration, got %s, expected %s",
 			properties.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet)
 	}
@@ -1487,7 +1487,7 @@ func TestDistroDefaults(t *testing.T) {
 			AzurePublicCloud,
 		},
 		{
-			"default_kubernetes_usgov",
+			"default_kubernetes_germancloud",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
 				KubernetesConfig: &KubernetesConfig{},
@@ -1532,7 +1532,6 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
-				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1546,7 +1545,6 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
-				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1560,7 +1558,6 @@ func TestDistroDefaults(t *testing.T) {
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
-				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1579,14 +1576,32 @@ func TestDistroDefaults(t *testing.T) {
 		for _, agent := range mockAPI.AgentPoolProfiles {
 			agent.Distro = test.agentPoolProfileDistro
 		}
-		mockAPI.setMasterProfileDefaults(test.isUpgrade, test.isScale, test.cloudName)
-		mockAPI.setAgentProfileDefaults(test.isUpgrade, test.isScale, test.cloudName)
-		if mockAPI.MasterProfile.Distro != test.expectedMasterDistro {
-			t.Fatalf("setMasterProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, mockAPI.MasterProfile.Distro, test.expectedMasterDistro)
+		cs := &ContainerService{
+			Properties: &mockAPI,
 		}
-		for _, agent := range mockAPI.AgentPoolProfiles {
+		switch test.cloudName {
+		case AzurePublicCloud:
+			cs.Location = "westus2"
+		case AzureChinaCloud:
+			cs.Location = "chinaeast"
+		case AzureGermanCloud:
+			cs.Location = "germanynortheast"
+		case AzureUSGovernmentCloud:
+			cs.Location = "usgovnorth"
+		default:
+			cs.Location = "westus2"
+		}
+		cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+			IsScale:    test.isScale,
+			IsUpgrade:  test.isUpgrade,
+			PkiKeySize: helpers.DefaultPkiKeySize,
+		})
+		if cs.Properties.MasterProfile.Distro != test.expectedMasterDistro {
+			t.Fatalf("SetPropertiesDefaults() test case %v did not return right masterProfile Distro configurations %v != %v", test.name, cs.Properties.MasterProfile.Distro, test.expectedMasterDistro)
+		}
+		for _, agent := range cs.Properties.AgentPoolProfiles {
 			if agent.Distro != test.expectedAgentDistro {
-				t.Fatalf("setAgentProfileDefaults() test case %v did not return right Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
+				t.Fatalf("SetPropertiesDefaults() test case %v did not return right pool Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
 			}
 		}
 	}

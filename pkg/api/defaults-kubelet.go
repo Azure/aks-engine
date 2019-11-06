@@ -186,6 +186,22 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 				}
 			}
 		}
+		// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+		if cs.Properties.MasterProfile.IsVHDDistro() {
+			if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+				cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
+			}
+		}
+		// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
+		if cs.Properties.MasterProfile.IsUbuntu1804() {
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
+		}
+
+		// Allocate IP addresses for pods if VNET integration is enabled.
+		if cs.Properties.OrchestratorProfile.IsAzureCNI() {
+			masterMaxPods, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
+			cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
+		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
@@ -229,6 +245,23 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 					profile.KubernetesConfig.KubeletConfig["--pod-max-pids"] = strconv.Itoa(-1)
 				}
 			}
+		}
+
+		// "--protect-kernel-defaults" is only true for VHD based VMs since the base Ubuntu distros don't have a /etc/sysctl.d/60-CIS.conf file.
+		if profile.IsVHDDistro() {
+			if _, ok := profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"]; !ok {
+				profile.KubernetesConfig.KubeletConfig["--protect-kernel-defaults"] = "true"
+			}
+		}
+		// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
+		if profile.IsUbuntu1804() {
+			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
+		}
+
+		// Allocate IP addresses for pods if VNET integration is enabled.
+		if cs.Properties.OrchestratorProfile.IsAzureCNI() {
+			agentPoolMaxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+			profile.IPAddressCount += agentPoolMaxPods
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
