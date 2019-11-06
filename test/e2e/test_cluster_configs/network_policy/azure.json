@@ -16,7 +16,8 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3"
+				"vmSize": "Standard_D2_v3",
+				"distro": "ubuntu"
 			},
 			"agentPoolProfiles": [
 				{
@@ -25,7 +26,8 @@
 					"vmSize": "Standard_D2_v3",
 					"osType": "Linux",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Low",
+					"distro": "ubuntu"
 				}
 			],
 			"linuxProfile": {

@@ -22,7 +22,7 @@
               "name": "agentpool",
               "count": 1,
               "availabilityProfile": "VirtualMachineScaleSets",
-              "distro": "aks-ubuntu-18.04",
+              "distro": "ubuntu-18.04",
               "vmSize": "Standard_DC2s",
               "storageProfile": "ManagedDisks"
             }

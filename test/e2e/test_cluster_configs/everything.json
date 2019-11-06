@@ -50,7 +50,8 @@
 				"availabilityZones": [
 					"1"
 				],
-				"auditDEnabled": true
+				"auditDEnabled": true,
+				"distro": "ubuntu"
 			},
 			"agentPoolProfiles": [
 				{
@@ -69,7 +70,8 @@
 						"2"
 					],
 					"scaleSetPriority": "Low",
-					"auditDEnabled": true
+					"auditDEnabled": true,
+					"distro": "ubuntu"
 				}
 			],
 			"linuxProfile": {

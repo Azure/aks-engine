@@ -44,7 +44,8 @@
 				"OSDiskSizeGB": 200,
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
-				"vnetCidr": "10.239.0.0/16"
+				"vnetCidr": "10.239.0.0/16",
+				"distro": "ubuntu"
 			},
 			"agentPoolProfiles": [
 				{
@@ -61,7 +62,8 @@
 					],
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Low",
+					"distro": "ubuntu"
 				}
 			],
 			"linuxProfile": {

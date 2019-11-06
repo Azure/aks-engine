@@ -10,7 +10,8 @@
 				"count": 3,
 				"dnsPrefix": "",
 				"vmSize": "Standard_D2_v3",
-				"availabilityProfile": "VirtualMachineScaleSets"
+				"availabilityProfile": "VirtualMachineScaleSets",
+				"distro": "ubuntu"
 			},
 			"agentPoolProfiles": [
 				{
@@ -18,7 +19,8 @@
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Low",
+					"distro": "ubuntu"
 				}
 			],
 			"linuxProfile": {
