@@ -26,11 +26,11 @@ any help would be **greatly appreciated!!!!** please see [issue](https://github.
 Installation
 -----------
 
-Use go get
+Use go get 
 
 ```shell
 go get github.com/go-playground/locales
-```
+```  
 
 NOTES
 --------
@@ -157,7 +157,7 @@ func main() {
 NOTES:
 -------
 These rules were generated from the [Unicode CLDR Project](http://cldr.unicode.org/), if you encounter any issues
-I strongly encourage contributing to the CLDR project to get the locale information corrected and the next time
+I strongly encourage contributing to the CLDR project to get the locale information corrected and the next time 
 these locales are regenerated the fix will come with.
 
 I do however realize that time constraints are often important and so there are two options:

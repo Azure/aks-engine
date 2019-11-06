@@ -50,8 +50,6 @@ github.com/dimchansky/utfbom
 github.com/fatih/structs
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/go-bindata/go-bindata v3.1.2+incompatible
-github.com/go-bindata/go-bindata
 # github.com/go-playground/locales v0.12.1
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
@@ -94,19 +92,10 @@ github.com/hpcloud/tail/winfile
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/influxdata/influxdb v1.7.2
-github.com/influxdata/influxdb/client/v2
-github.com/influxdata/influxdb/models
-github.com/influxdata/influxdb/pkg/escape
-# github.com/influxdata/platform v0.0.0-20190117200541-d500d3cf5589
-github.com/influxdata/platform/models
-github.com/influxdata/platform/pkg/escape
 # github.com/jarcoal/httpmock v1.0.1
 github.com/jarcoal/httpmock
 # github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
-# github.com/kelseyhightower/envconfig v1.3.0
-github.com/kelseyhightower/envconfig
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/leodido/go-urn v1.1.0
@@ -126,7 +115,7 @@ github.com/mitchellh/go-homedir
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
-# github.com/onsi/ginkgo v1.10.1
+# github.com/onsi/ginkgo v1.10.3
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/internal/codelocation
@@ -181,7 +170,6 @@ golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
-golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/terminal
 # golang.org/x/net v0.0.0-20190311183353-d8887717615a
 golang.org/x/net/context
@@ -198,7 +186,7 @@ golang.org/x/oauth2
 golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20191008105621-543471e840be
+# golang.org/x/sys v0.0.0-20191104094858-e8c54fb511f6
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows

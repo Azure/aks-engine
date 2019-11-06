@@ -266,3 +266,4 @@ message WebhookClientConfig {
   // +optional
   optional bytes caBundle = 2;
 }
+

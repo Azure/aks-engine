@@ -75,7 +75,6 @@ validate-shell:
 
 .PHONY: generate
 generate: bootstrap
-	echo $(GOBIN)
 	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
@@ -153,10 +152,10 @@ ifneq ($(GIT_BASEDIR),)
 endif
 
 ginkgoBuild: generate
-	ginkgo build test/e2e/kubernetes
+	make -C ./test/e2e ginkgo-build
 
 test: generate ginkgoBuild
-	ginkgo -skipPackage test/e2e/kubernetes -failFast -r .
+	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v .
 
 .PHONY: test-style
 test-style: validate-go validate-shell validate-copyright-headers

@@ -104,3 +104,4 @@ message Rule {
   // Required.
   repeated string resources = 3;
 }
+
