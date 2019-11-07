@@ -1936,17 +1936,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				loadTestPrefix := fmt.Sprintf("load-test-%s", cfg.Name)
 				loadTestName := fmt.Sprintf("%s-%v", loadTestPrefix, r.Intn(99999))
 				numLoadTestPods := 3
+				if clusterAutoscalerEngaged {
+					numLoadTestPods = (totalMaxPods / 2)
+				}
 				loadTestDeploy, err := deployment.RunLinuxDeployDeleteIfExists(loadTestPrefix, "busybox", loadTestName, "default", commandString, numLoadTestPods)
 				Expect(err).NotTo(HaveOccurred())
-
-				By("Ensuring there are 3 load test pods")
-				running, err = pod.WaitOnSuccesses(loadTestName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				// We should have three load tester pods running
-				loadTestPods, err := pod.GetAllRunningByPrefixWithRetry(loadTestPrefix, "default", 5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(loadTestPods)).To(Equal(numLoadTestPods))
 
 				By("Ensuring we have more than 1 apache-php pods due to hpa enforcement")
 				_, err = phpApacheDeploy.WaitForReplicas(2, -1, 5*time.Second, cfg.Timeout)
