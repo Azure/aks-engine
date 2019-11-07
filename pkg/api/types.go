@@ -534,7 +534,6 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
-	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -558,6 +557,7 @@ type AgentPoolProfile struct {
 	MinCount                            *int                 `json:"minCount,omitempty"`
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
@@ -2047,17 +2047,6 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
-}
-
-// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
-func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
-	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
-	if cs.Properties.MasterProfile != nil {
-		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
-	}
-	for _, pool := range cs.Properties.AgentPoolProfiles {
-		pool.PlatformFaultDomainCount = &count
-	}
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn

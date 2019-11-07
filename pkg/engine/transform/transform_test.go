@@ -148,6 +148,75 @@ func TestNormalizeForK8sSLBScalingOrUpgradeVMSS(t *testing.T) {
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sSLBScalingOrUpgradeVMSS")
 }
 
+func TestNormalizeForK8sVMASScalingUp_ShouldRemoveVMAS(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "TestNormalizeForK8sVMASScalingUp")
+	vmasMap := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionStorageManagedDisks')]",
+		"location":   "[variables('location')]",
+		"name":       "[variables('masterAvailabilitySet')]",
+		"properties": map[string]interface{}{
+			"managed":                   "true",
+			"platformFaultDomainCount":  2,
+			"platformUpdateDomainCount": 3,
+		},
+		"type": "Microsoft.Compute/availabilitySets",
+	}
+	resources := map[string]interface{}{
+		"resources": []interface{}{
+			vmasMap,
+		},
+	}
+	transformer := Transformer{}
+	e := transformer.NormalizeForK8sVMASScalingUp(logger, resources)
+	Expect(e).To(BeNil())
+	transformedResources := resources["resources"].([]interface{})
+	Expect(transformedResources).To(BeEmpty())
+}
+
+func TestRemoveImmutableFields(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "TestNormalizeForK8sVMASScalingUp")
+	vmasMap := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionStorageManagedDisks')]",
+		"location":   "[variables('location')]",
+		"name":       "[variables('masterAvailabilitySet')]",
+		"properties": map[string]interface{}{
+			"managed":                   "true",
+			"platformFaultDomainCount":  2,
+			"platformUpdateDomainCount": 3,
+		},
+		"type": "Microsoft.Compute/availabilitySets",
+	}
+	vmssMap := map[string]interface{}{
+		"apiVersion": "[variables('apiVersionCompute')]",
+		"location":   "[variables('location')]",
+		"name":       "[variables('agentpool1VMNamePrefix')]",
+		"properties": map[string]interface{}{
+			"overprovision":            false,
+			"platformFaultDomainCount": 3,
+			"singlePlacementGroup":     true,
+		},
+		"type": "Microsoft.Compute/virtualMachineScaleSets",
+	}
+	resources := map[string]interface{}{
+		"resources": []interface{}{
+			vmssMap,
+			vmasMap,
+			1, //test that we don't crash on malformed resources
+		},
+	}
+	transformer := Transformer{}
+	transformer.RemoveImmutableResourceProperties(logger, resources)
+	transformedResources := resources["resources"].([]interface{})
+	Expect(transformedResources).ToNot(BeEmpty())
+	transformedVmss := transformedResources[0].(map[string]interface{})
+	transformedVmas := transformedResources[1].(map[string]interface{})
+	Expect(transformedVmss["properties"]).ToNot(HaveKey("platformFaultDomainCount"))
+	Expect(transformedVmss["properties"]).ToNot(HaveKey("singlePlacementGroup"))
+	Expect(transformedVmas["properties"]).ToNot(HaveKey("singlePlacementGroup"))
+}
+
 func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents []byte, testFileName string) {
 	output, e := helpers.JSONMarshal(templateMap, false)
 	Expect(e).To(BeNil())

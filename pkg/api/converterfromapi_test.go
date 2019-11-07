@@ -705,6 +705,23 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 		t.Errorf("expected the EnableTelemetry feature flag to be false")
 	}
 }
+
+func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.PlatformFaultDomainCount = to.IntPtr(3)
+	cs.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount = to.IntPtr(5)
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *vlabsCS.Properties.MasterProfile.PlatformFaultDomainCount != 3 {
+		t.Errorf("expected the master profile platform FD to be 3")
+	}
+	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
+		t.Errorf("expected the agent pool profile platform FD to be 5")
+	}
+}
+
 func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	falseVar := false
 

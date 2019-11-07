@@ -78,6 +78,7 @@ func (ku *Upgrader) RunUpgrade() error {
 		return err
 	}
 
+	//This is handling VMAS VMs only, not VMSS
 	return ku.upgradeAgentPools(ctx)
 }
 
@@ -108,10 +109,13 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 		}
 	}
+	//TODO: rename this as it's not only touching master resources
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err
 	}
+
+	transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 	upgradeMasterNode := UpgradeMasterNode{
 		Translator: ku.Translator,
@@ -249,6 +253,8 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			ku.logger.Errorf(err.Error())
 			return ku.Translator.Errorf("Error generating upgrade template: %s", err.Error())
 		}
+
+		transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 		var agentCount int
 		var agentPoolProfile *api.AgentPoolProfile
@@ -465,6 +471,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			Translator: ku.Translator,
 		}
 
+		// TODO: rename this!
+		// This is not called in scaling scenarios. only in this upgrade scenario!
 		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
 			return err
 		}
@@ -476,6 +484,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 			}
 		}
+
+		transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()
