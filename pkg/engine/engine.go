@@ -839,7 +839,7 @@ write_files:
     content: !!binary |
         %s
     path: /opt/azure/containers/%s
-    permissions: "0744"
+    permissions: 744
 `
 
 	filelines := ""

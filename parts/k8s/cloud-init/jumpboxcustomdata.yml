@@ -3,14 +3,14 @@
 write_files:
 
 - path: "/opt/azure/containers/provision_source.sh"
-  permissions: "0744"
+  permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
 
 - path: "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube/config"
-  permissions: "0644"
+  permissions: 644
   owner: {{WrapAsParameter "jumpboxUsername"}}
   content: |
 {{WrapAsVariable "kubeconfig"}}

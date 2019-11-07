@@ -57,7 +57,7 @@ func substituteConfigStringCustomFiles(input string, customFiles []CustomFileRea
 func buildConfigStringCustomFiles(source io.Reader, destinationFile string) string {
 	contents := []string{
 		fmt.Sprintf("- path: %s", destinationFile),
-		"  permissions: \\\"0644\\\"",
+		"  permissions: 644",
 		"  encoding: gz",
 		"  owner: root",
 		"  content: !!binary |",

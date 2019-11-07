@@ -369,7 +369,7 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 func buildConfigString(configString, destinationFile, destinationPath string) string {
 	contents := []string{
 		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
-		"  permissions: \\\"0644\\\"",
+		"  permissions: 644",
 		"  encoding: gz",
 		"  owner: root",
 		"  content: !!binary |",
