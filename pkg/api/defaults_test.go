@@ -638,7 +638,7 @@ func TestAuditDEnabled(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.12.7")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	isUpgrade := true
-	mockCS.Properties.setAgentProfileDefaults(isUpgrade, false, AzurePublicCloud)
+	mockCS.Properties.setAgentProfileDefaults(isUpgrade, false)
 
 	// In upgrade scenario, nil AuditDEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
@@ -648,7 +648,7 @@ func TestAuditDEnabled(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.12.7")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	isScale := true
-	mockCS.Properties.setAgentProfileDefaults(false, isScale, AzurePublicCloud)
+	mockCS.Properties.setAgentProfileDefaults(false, isScale)
 
 	// In scale scenario, nil AuditDEnabled should always render as false (i.e., we never turn on this feature on an existing agent pool / vms that didn't have it before)
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
@@ -657,7 +657,7 @@ func TestAuditDEnabled(t *testing.T) {
 
 	mockCS = getMockBaseContainerService("1.12.7")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	mockCS.Properties.setAgentProfileDefaults(false, false, AzurePublicCloud)
+	mockCS.Properties.setAgentProfileDefaults(false, false)
 
 	// In create scenario, nil AuditDEnabled should be the defaults
 	auditDEnabledEnabled := DefaultAuditDEnabled
@@ -668,7 +668,7 @@ func TestAuditDEnabled(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
-	mockCS.Properties.setAgentProfileDefaults(false, false, AzurePublicCloud)
+	mockCS.Properties.setAgentProfileDefaults(false, false)
 
 	// In create scenario with explicit true, AuditDEnabled should be true
 	if !to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
@@ -678,7 +678,7 @@ func TestAuditDEnabled(t *testing.T) {
 	mockCS = getMockBaseContainerService("1.10.8")
 	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled = to.BoolPtr(false)
-	mockCS.Properties.setAgentProfileDefaults(false, false, AzurePublicCloud)
+	mockCS.Properties.setAgentProfileDefaults(false, false)
 
 	// In create scenario with explicit false, AuditDEnabled should be false
 	if to.Bool(mockCS.Properties.AgentPoolProfiles[0].AuditDEnabled) {
@@ -2172,7 +2172,7 @@ func TestSetCertDefaults(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false, false)
-	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
+	cs.Properties.setMasterProfileDefaults(false, AzurePublicCloud)
 	result, ips, err := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
@@ -2240,7 +2240,7 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 
 	cs.setOrchestratorDefaults(false, false)
-	cs.Properties.setMasterProfileDefaults(false, false, AzurePublicCloud)
+	cs.Properties.setMasterProfileDefaults(false, AzurePublicCloud)
 	result, ips, err := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
