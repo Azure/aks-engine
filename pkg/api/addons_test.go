@@ -61,7 +61,7 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.8.0")
 	o := mockCS.Properties.OrchestratorProfile
 
-	isUpdate := true
+	isUpgrade := true
 	base64DataPSP := "cHNwQ3VzdG9tRGF0YQ=="
 	o.OrchestratorType = Kubernetes
 	o.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
@@ -69,7 +69,7 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 		"data": base64DataPSP,
 	}
 
-	mockCS.setAddonsConfig(isUpdate)
+	mockCS.setAddonsConfig(isUpgrade)
 
 	i := getAddonsIndexByName(o.KubernetesConfig.Addons, PodSecurityPolicyAddonName)
 	if i < 0 {
@@ -108,7 +108,7 @@ func TestDisabledAddons(t *testing.T) {
 	cases := []struct {
 		name                string
 		myAddon             KubernetesAddon
-		isUpdate            bool
+		isUpgrade           bool
 		expectedResultAddon KubernetesAddon
 	}{
 		{
@@ -117,7 +117,7 @@ func TestDisabledAddons(t *testing.T) {
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(true),
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedResultAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(true),
@@ -138,23 +138,23 @@ func TestDisabledAddons(t *testing.T) {
 			},
 		},
 		{
-			name: "addon disabled, isUpdate=false",
+			name: "addon disabled, isUpgrade=false",
 			myAddon: KubernetesAddon{
 				Name: "mockAddon",
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedResultAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(false),
 			},
 		},
 		{
-			name: "addon disabled, isUpdate=true",
+			name: "addon disabled, isUpgrade=true",
 			myAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(false),
 			},
-			isUpdate: true,
+			isUpgrade: true,
 			expectedResultAddon: KubernetesAddon{
 				Name:    "mockAddon",
 				Enabled: to.BoolPtr(false),
@@ -166,7 +166,7 @@ func TestDisabledAddons(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			result := assignDefaultAddonVals(c.myAddon, defaultAddon, c.isUpdate)
+			result := assignDefaultAddonVals(c.myAddon, defaultAddon, c.isUpgrade)
 			if !reflect.DeepEqual(result, c.expectedResultAddon) {
 				t.Fatalf("expected result addon %v to be equal to %v", result, c.expectedResultAddon)
 			}
@@ -202,7 +202,7 @@ func TestSetAddonsConfig(t *testing.T) {
 	tests := []struct {
 		name           string
 		cs             *ContainerService
-		isUpdate       bool
+		isUpgrade      bool
 		expectedAddons []KubernetesAddon
 	}{
 		{
@@ -217,7 +217,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -397,7 +397,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -590,7 +590,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -786,7 +786,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -981,7 +981,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1171,7 +1171,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1360,7 +1360,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1550,7 +1550,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1741,7 +1741,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1926,7 +1926,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2105,7 +2105,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: true,
+			isUpgrade: true,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2273,7 +2273,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2456,7 +2456,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2675,7 +2675,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: true,
+			isUpgrade: true,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -2871,7 +2871,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3069,7 +3069,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3265,7 +3265,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3419,7 +3419,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3585,7 +3585,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3727,7 +3727,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -3864,7 +3864,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -4066,7 +4066,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			test.cs.setAddonsConfig(test.isUpdate)
+			test.cs.setAddonsConfig(test.isUpgrade)
 			for _, addonName := range []string{
 				HeapsterAddonName,
 				TillerAddonName,
