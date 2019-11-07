@@ -605,25 +605,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName
 	}
 }
 
-// setVMSSDefaultsForAgents
-func (p *Properties) setVMSSDefaultsForAgents() {
-	for _, profile := range p.AgentPoolProfiles {
-		if profile.AvailabilityProfile == VirtualMachineScaleSets {
-			if profile.Count > 100 {
-				profile.SinglePlacementGroup = to.BoolPtr(false)
-			}
-			if profile.SinglePlacementGroup == nil {
-				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
-			}
-			if profile.HasAvailabilityZones() && (p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "") {
-				p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-				p.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
-			}
-		}
-
-	}
-}
-
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	for _, profile := range p.AgentPoolProfiles {
 		if profile.AvailabilityProfile == "" {
