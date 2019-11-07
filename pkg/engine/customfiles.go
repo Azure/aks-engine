@@ -59,7 +59,7 @@ func buildConfigStringCustomFiles(source io.Reader, destinationFile string) stri
 		fmt.Sprintf("- path: %s", destinationFile),
 		"  permissions: \\\"0644\\\"",
 		"  encoding: gz",
-		"  owner: \\\"root\\\"",
+		"  owner: root",
 		"  content: !!binary |",
 		fmt.Sprintf("    %s\\n\\n", getBase64CustomFile(source)),
 	}

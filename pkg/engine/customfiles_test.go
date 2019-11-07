@@ -31,7 +31,7 @@ var testFullStringSlice = []string{
 	fmt.Sprintf("- path: %s", "/tmp/test"),
 	"  permissions: \\\"0644\\\"",
 	"  encoding: gz",
-	"  owner: \\\"root\\\"",
+	"  owner: root",
 	"  content: !!binary |",
 	fmt.Sprintf("    %s\\n\\n", "H4sIAAAAAAAA/ypJLS4BBAAA//8Mfn/YBAAAAA=="),
 }
@@ -41,7 +41,7 @@ var fileContentFullStringSlice = []string{
 	fmt.Sprintf("- path: %s", "/tmp/test"),
 	"  permissions: \\\"0644\\\"",
 	"  encoding: gz",
-	"  owner: \\\"root\\\"",
+	"  owner: root",
 	"  content: !!binary |",
 	fmt.Sprintf("    %s\\n\\n", "H4sIAAAAAAAA/0rLzElNzs8rSc0rAQQAAP//lfHhvwsAAAA="),
 }

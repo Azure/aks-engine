@@ -371,7 +371,7 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 		fmt.Sprintf("- path: %s/%s", destinationPath, destinationFile),
 		"  permissions: \\\"0644\\\"",
 		"  encoding: gz",
-		"  owner: \\\"root\\\"",
+		"  owner: root",
 		"  content: !!binary |",
 		fmt.Sprintf("    %s\\n\\n", configString),
 	}

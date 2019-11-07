@@ -254,7 +254,7 @@ write_files:
 - path: /etc/kubernetes/certs/client.crt
   permissions: "0644"
   encoding: b64
-  owner: "root"
+  owner: root
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
@@ -529,7 +529,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
-  owner: "root"
+  owner: root
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}

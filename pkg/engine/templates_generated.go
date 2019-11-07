@@ -17004,13 +17004,13 @@ write_files:
 - path: "/opt/azure/containers/provision_source.sh"
   permissions: "0744"
   encoding: gz
-  owner: "root"
+  owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
 
 - path: "/home/{{WrapAsParameter "jumpboxUsername"}}/.kube/config"
   permissions: "0644"
-  owner: "{{WrapAsParameter "jumpboxUsername"}}"
+  owner: {{WrapAsParameter "jumpboxUsername"}}
   content: |
 {{WrapAsVariable "kubeconfig"}}
 
@@ -17296,7 +17296,7 @@ write_files:
 - path: /etc/kubernetes/certs/client.crt
   permissions: "0644"
   encoding: b64
-  owner: "root"
+  owner: root
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
@@ -17571,7 +17571,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
-  owner: "root"
+  owner: root
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
@@ -17814,7 +17814,7 @@ write_files:
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gz
-  owner: "root"
+  owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
         {{end}}
@@ -18022,7 +18022,7 @@ write_files:
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
-  owner: "root"
+  owner: root
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
