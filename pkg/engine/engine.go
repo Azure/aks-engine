@@ -835,7 +835,7 @@ func buildYamlFileWithWriteFiles(files []string) string {
 write_files:
 %s
 `
-	writeFileBlock := ` -  encoding: gzip
+	writeFileBlock := ` -  encoding: gz
     content: !!binary |
         %s
     path: /opt/azure/containers/%s

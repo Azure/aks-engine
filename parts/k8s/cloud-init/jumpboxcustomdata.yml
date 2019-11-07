@@ -4,7 +4,7 @@ write_files:
 
 - path: "/opt/azure/containers/provision_source.sh"
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: "root"
   content: !!binary |
     {{CloudInitData "provisionSource"}}

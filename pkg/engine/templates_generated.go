@@ -17003,7 +17003,7 @@ write_files:
 
 - path: "/opt/azure/containers/provision_source.sh"
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: "root"
   content: !!binary |
     {{CloudInitData "provisionSource"}}
@@ -17045,28 +17045,28 @@ var _k8sCloudInitMasternodecustomdataYml = []byte(`#cloud-config
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
@@ -17074,7 +17074,7 @@ write_files:
 {{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
@@ -17084,7 +17084,7 @@ write_files:
   {{if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
@@ -17094,7 +17094,7 @@ write_files:
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
@@ -17107,63 +17107,63 @@ write_files:
 - path: /usr/local/bin/health-monitor.sh
     {{end}}
   permissions: "0544"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdTimer"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "labelNodesScript"}}
 
 - path: /etc/systemd/system/label-nodes.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "labelNodesSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kmsSystemdService"}}
 
 - path: /etc/apt/preferences
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
@@ -17172,14 +17172,14 @@ write_files:
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: "0544"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
@@ -17190,7 +17190,7 @@ write_files:
         {{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
@@ -17228,7 +17228,7 @@ write_files:
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
@@ -17295,7 +17295,7 @@ write_files:
 
 - path: /etc/kubernetes/certs/client.crt
   permissions: "0644"
-  encoding: "base64"
+  encoding: b64
   owner: "root"
   content: |
     {{WrapAsParameter "clientCertificate"}}
@@ -17303,7 +17303,7 @@ write_files:
 {{if EnableAggregatedAPIs}}
 - path: /etc/kubernetes/generate-proxy-certs.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "generateProxyCertsScript"}}
@@ -17312,7 +17312,7 @@ write_files:
 {{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
@@ -17500,14 +17500,14 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 
 - path: /opt/azure/containers/mountetcd.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "mountEtcdScript"}}
 {{ if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "etcdSystemdService"}}
@@ -17682,28 +17682,28 @@ var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
 
 - path: /opt/azure/containers/provision.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
 - path: /opt/azure/containers/provision_installs.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
 - path: /opt/azure/containers/provision_configs.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
@@ -17711,7 +17711,7 @@ write_files:
 {{if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
@@ -17721,7 +17721,7 @@ write_files:
   {{if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
@@ -17731,7 +17731,7 @@ write_files:
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
@@ -17744,49 +17744,49 @@ write_files:
 - path: /usr/local/bin/health-monitor.sh
     {{end}}
   permissions: "0544"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
 
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
 
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdTimer"}}
 
 - path: /etc/systemd/system/docker-monitor.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
 
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kmsSystemdService"}}
 
 - path: /etc/apt/preferences
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
@@ -17795,14 +17795,14 @@ write_files:
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: "0544"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
@@ -17813,7 +17813,7 @@ write_files:
         {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
@@ -17858,7 +17858,7 @@ write_files:
 {{if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
@@ -17950,7 +17950,7 @@ write_files:
 {{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
-  encoding: gzip
+  encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
