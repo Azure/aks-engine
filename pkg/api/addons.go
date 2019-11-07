@@ -108,8 +108,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Config: map[string]string{
 			"scan-interval":                         "1m",
 			"expendable-pods-priority-cutoff":       "-10",
-			"ignore-daemonsets-utilization":         "false",
-			"ignore-mirror-pods-utilization":        "false",
 			"max-autoprovisioned-node-group-count":  "15",
 			"max-empty-bulk-delete":                 "10",
 			"max-failing-time":                      "15m0s",
@@ -120,7 +118,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"max-total-unready-percentage":          "45",
 			"memory-total":                          "0:6400000",
 			"min-replica-count":                     "0",
-			"new-pod-scale-up-delay":                "0s",
 			"node-autoprovisioning-enabled":         "false",
 			"ok-total-unready-count":                "3",
 			"scale-down-candidates-pool-min-count":  "50",
@@ -152,6 +149,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 		},
 		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") {
+		defaultClusterAutoscalerAddonsConfig.Config["new-pod-scale-up-delay"] = "0s"
+		defaultClusterAutoscalerAddonsConfig.Config["ignore-daemonsets-utilization"] = "false"
+		defaultClusterAutoscalerAddonsConfig.Config["ignore-mirror-pods-utilization"] = "false"
 	}
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
