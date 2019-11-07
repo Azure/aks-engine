@@ -192,7 +192,7 @@ Here is the complete set of cluster configuration:
 | scale-down-utilization-threshold      | no       | Sum of cpu or memory of all pods running on the node divided by node's corresponding allocatable resource, below which a node can be considered for scale down                             | "0.5" |
 | skip-nodes-with-local-storage      | no       | If true cluster autoscaler will never delete nodes with pods with local storage, e.g. EmptyDir or HostPath                             | "false" |
 | skip-nodes-with-system-pods      | no       | If true cluster autoscaler will never delete nodes with pods from kube-system (except for DaemonSet or mirror pods)                            | "true" |
-| unremovable-node-recheck-timeout      | no       | The timeout before we check again a node that couldn't be removed before                            | "5m0s" |
+| unremovable-node-recheck-timeout (>= k8s 1.12.0)      | no       | The timeout before we check again a node that couldn't be removed before                            | "5m0s" |
 | v      | no       | log verbosity                            | "3" |
 | write-status-configmap      | no       | Should CA write status information to a configmap                            | "true" |
 | balance-similar-node-groups      | no       | Detect similar node groups and balance the number of nodes between them                            | "true" |

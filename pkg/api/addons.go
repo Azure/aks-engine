@@ -133,7 +133,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"skip-nodes-with-local-storage":         "false",
 			"skip-nodes-with-system-pods":           "true",
 			"stderrthreshold":                       "2",
-			"unremovable-node-recheck-timeout":      "5m0s",
 			"v":                                     "3",
 			"write-status-configmap":                "true",
 			"balance-similar-node-groups":           "true",
@@ -149,6 +148,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 		},
 		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") {
+		defaultClusterAutoscalerAddonsConfig.Config["unremovable-node-recheck-timeout"] = "5m0s"
 	}
 
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") {

@@ -1235,6 +1235,244 @@ func TestSetAddonsConfig(t *testing.T) {
 			},
 		},
 		{
+			name: "cluster-autoscaler addon enabled - 1.11",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.11.10",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:  "pool1",
+							Count: 1,
+						},
+					},
+				},
+			},
+			isUpdate: false,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    HeapsterAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           HeapsterAddonName,
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["heapster"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+						{
+							Name:           "heapster-nanny",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["addonresizer"],
+							CPURequests:    "88m",
+							MemoryRequests: "204Mi",
+							CPULimits:      "88m",
+							MemoryLimits:   "204Mi",
+						},
+					},
+				},
+				{
+					Name:    TillerAddonName,
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
+				},
+				{
+					Name:    ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"scan-interval":                         "1m",
+						"expendable-pods-priority-cutoff":       "-10",
+						"max-autoprovisioned-node-group-count":  "15",
+						"max-empty-bulk-delete":                 "10",
+						"max-failing-time":                      "15m0s",
+						"max-graceful-termination-sec":          "600",
+						"max-inactivity":                        "10m0s",
+						"max-node-provision-time":               "15m0s",
+						"max-nodes-total":                       "0",
+						"max-total-unready-percentage":          "45",
+						"memory-total":                          "0:6400000",
+						"min-replica-count":                     "0",
+						"node-autoprovisioning-enabled":         "false",
+						"ok-total-unready-count":                "3",
+						"scale-down-candidates-pool-min-count":  "50",
+						"scale-down-candidates-pool-ratio":      "0.1",
+						"scale-down-delay-after-add":            "10m0s",
+						"scale-down-delay-after-delete":         "1m",
+						"scale-down-delay-after-failure":        "3m0s",
+						"scale-down-enabled":                    "true",
+						"scale-down-non-empty-candidates-count": "30",
+						"scale-down-unneeded-time":              "10m0s",
+						"scale-down-unready-time":               "20m0s",
+						"scale-down-utilization-threshold":      "0.5",
+						"skip-nodes-with-local-storage":         "false",
+						"skip-nodes-with-system-pods":           "true",
+						"stderrthreshold":                       "2",
+						"v":                                     "3",
+						"write-status-configmap":                "true",
+						"balance-similar-node-groups":           "true",
+					},
+					Pools: []AddonNodePoolsConfig{
+						{
+							Name: "pool1",
+							Config: map[string]string{
+								"min-nodes": "1",
+								"max-nodes": "1",
+							},
+						},
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           ClusterAutoscalerAddonName,
+							CPURequests:    "100m",
+							MemoryRequests: "300Mi",
+							CPULimits:      "100m",
+							MemoryLimits:   "300Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][ClusterAutoscalerAddonName],
+						},
+					},
+				},
+				{
+					Name:    BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+						},
+					},
+				},
+				{
+					Name:    DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+						"enable-ipv6":         "false",
+					},
+				},
+				{
+					Name:    AzureCNINetworkMonitoringAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  AzureCNINetworkMonitoringAddonName,
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.11.10"][AzureCNINetworkMonitoringAddonName],
+						},
+					},
+				},
+				{
+					Name:    AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    CalicoAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+			},
+		},
+		{
 			name: "cluster-autoscaler addon enabled - update",
 			cs: &ContainerService{
 				Properties: &Properties{
