@@ -1911,7 +1911,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Apply autoscale characteristics to deployment
 				var cpuTarget, totalMaxPods int
 				if clusterAutoscalerEngaged {
-					cpuTarget = 25
+					cpuTarget = 50
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
 						var n []node.Node
