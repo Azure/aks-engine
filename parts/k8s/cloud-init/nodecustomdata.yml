@@ -1,5 +1,4 @@
 #cloud-config
-
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: 744
@@ -7,28 +6,24 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
-
 - path: /opt/azure/containers/provision.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionScript"}}
-
 - path: /opt/azure/containers/provision_installs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
-
 - path: /opt/azure/containers/provision_configs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
-
 {{if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: 744
@@ -37,7 +32,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
 {{end}}
-
 {{if not .IsVHDDistro}}
   {{if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
@@ -48,7 +42,6 @@ write_files:
     {{CloudInitData "auditdRules"}}
   {{end}}
 {{end}}
-
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: 744
@@ -57,7 +50,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
-
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -69,42 +61,36 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
-
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/docker-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
 - path: /etc/systemd/system/kubelet.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
-
 - path: /etc/systemd/system/kms.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: 644
   encoding: gz
@@ -112,7 +98,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
-
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: 644
@@ -120,7 +105,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
-
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: 544
   encoding: gz
@@ -128,7 +112,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
-
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
         {{if not .IsVHDDistro}}
@@ -140,7 +123,6 @@ write_files:
     {{CloudInitData "dockerClearMountPropagationFlags"}}
         {{end}}
     {{end}}
-
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: 644
   owner: root
@@ -154,7 +136,6 @@ write_files:
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
-
 - path: /etc/docker/daemon.json
   permissions: 644
   owner: root
@@ -175,7 +156,6 @@ write_files:
       }{{end}}
     }
 {{end}}
-
 {{if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: 644
@@ -184,7 +164,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
-
 {{if NeedsContainerd}}
 - path: /etc/containerd/config.toml
   permissions: 644
@@ -211,7 +190,6 @@ write_files:
     {{if IsKubenet }}
     [plugins.cri.cni]
     conf_template = "/etc/containerd/kubenet_template.conf"
-
 - path: /etc/containerd/kubenet_template.conf
   permissions: 644
   owner: root
@@ -236,7 +214,6 @@ write_files:
       }
     {{end}}
 {{end}}
-
 {{if IsNSeriesSKU .}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: 644
@@ -253,21 +230,18 @@ write_files:
     [Install]
     WantedBy=multi-user.target
 {{end}}
-
 - path: /etc/kubernetes/certs/ca.crt
   permissions: 644
   encoding: base64
   owner: root
   content: |
     {{WrapAsParameter "caCertificate"}}
-
 - path: /etc/kubernetes/certs/client.crt
   permissions: 644
   encoding: base64
   owner: root
   content: |
     {{WrapAsParameter "clientCertificate"}}
-
 {{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: 744
@@ -276,7 +250,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
 {{end}}{{end}}
-
 - path: /var/lib/kubelet/kubeconfig
   permissions: 644
   owner: root
@@ -300,7 +273,6 @@ write_files:
       name: localclustercontext
     current-context: localclustercontext
     #EOF
-
 - path: /etc/default/kubelet
   permissions: 644
   owner: root
@@ -322,7 +294,6 @@ write_files:
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
-
 - path: /opt/azure/containers/kubelet.sh
   permissions: 755
   owner: root
@@ -339,7 +310,6 @@ write_files:
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
     #EOF
-
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: 600
@@ -347,15 +317,12 @@ write_files:
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
-
 {{if .IsCoreOS}}
 - path: "/etc/kubernetes/manifests/.keep"
-
 {{if .KubernetesConfig.RequiresDocker}}
 groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
 {{end}}
-
 coreos:
   units:
     - name: kubelet.service

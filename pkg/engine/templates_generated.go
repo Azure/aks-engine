@@ -17041,7 +17041,6 @@ func k8sCloudInitJumpboxcustomdataYml() (*asset, error) {
 }
 
 var _k8sCloudInitMasternodecustomdataYml = []byte(`#cloud-config
-
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: 744
@@ -17049,28 +17048,24 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
-
 - path: /opt/azure/containers/provision.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionScript"}}
-
 - path: /opt/azure/containers/provision_installs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
-
 - path: /opt/azure/containers/provision_configs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
-
 {{if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: 744
@@ -17079,7 +17074,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
 {{end}}
-
 {{if not .MasterProfile.IsVHDDistro}}
   {{if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
@@ -17090,7 +17084,6 @@ write_files:
     {{CloudInitData "auditdRules"}}
   {{end}}
 {{end}}
-
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: 744
@@ -17099,7 +17092,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
-
 {{if not .MasterProfile.IsVHDDistro}}
     {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -17111,56 +17103,48 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
-
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/docker-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
 - path: /etc/systemd/system/kubelet.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
-
 - path: /opt/azure/containers/label-nodes.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "labelNodesScript"}}
-
 - path: /etc/systemd/system/label-nodes.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "labelNodesSystemdService"}}
-
 - path: /etc/systemd/system/kms.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: 644
   encoding: gz
@@ -17168,7 +17152,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
-
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: 644
@@ -17176,7 +17159,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
-
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: 544
   encoding: gz
@@ -17184,7 +17166,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
-
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
     {{if not .MasterProfile.IsCoreOS}}
         {{if not .MasterProfile.IsVHDDistro}}
@@ -17196,7 +17177,6 @@ write_files:
     {{CloudInitData "dockerClearMountPropagationFlags"}}
          {{end}}
     {{end}}
-
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: 644
   owner: root
@@ -17210,7 +17190,6 @@ write_files:
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
-
 - path: /etc/docker/daemon.json
   permissions: 644
   owner: root
@@ -17224,7 +17203,6 @@ write_files:
       }
     }
 {{end}}
-
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: 644
@@ -17233,7 +17211,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
-
 {{if NeedsContainerd}}
 - path: /etc/containerd/config.toml
   permissions: 644
@@ -17260,7 +17237,6 @@ write_files:
     {{if IsKubenet }}
     [plugins.cri.cni]
     conf_template = "/etc/containerd/kubenet_template.conf"
-
 - path: /etc/containerd/kubenet_template.conf
   permissions: 644
   owner: root
@@ -17285,21 +17261,18 @@ write_files:
       }
     {{end}}
 {{end}}
-
 - path: /etc/kubernetes/certs/ca.crt
   permissions: 644
   encoding: base64
   owner: root
   content: |
     {{WrapAsParameter "caCertificate"}}
-
 - path: /etc/kubernetes/certs/client.crt
   permissions: 644
   encoding: b64
   owner: root
   content: |
     {{WrapAsParameter "clientCertificate"}}
-
 {{if EnableAggregatedAPIs}}
 - path: /etc/kubernetes/generate-proxy-certs.sh
   permissions: 744
@@ -17308,7 +17281,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
-
 {{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: 744
@@ -17317,7 +17289,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
 {{end}}{{end}}
-
 - path: /var/lib/kubelet/kubeconfig
   permissions: 644
   owner: root
@@ -17345,7 +17316,6 @@ write_files:
       name: localclustercontext
     current-context: localclustercontext
     #EOF
-
 {{if EnableDataEncryptionAtRest}}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: 600
@@ -17363,7 +17333,6 @@ write_files:
                   secret: <etcdEncryptionSecret>
           - identity: {}
 {{end}}
-
 {{if EnableEncryptionWithExternalKms}}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: 444
@@ -17381,15 +17350,10 @@ write_files:
             cachesize: 0
         - identity: {}
 {{end}}
-
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
-
 MASTER_ADDONS_CONFIG_PLACEHOLDER
-
 MASTER_CUSTOM_FILES_PLACEHOLDER
-
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
-
 - path: /etc/default/kubelet
   permissions: 644
   owner: root
@@ -17418,7 +17382,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
 {{end}}
     #EOF
-
 - path: /opt/azure/containers/kubelet.sh
   permissions: 755
   owner: root
@@ -17437,7 +17400,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-
     sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
     for a in "/etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-scheduler.yaml"; do
       sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g" $a
@@ -17465,15 +17427,15 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{else}}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
 {{end}}
-
 {{if AdminGroupID }}
     sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
 {{end}}
-
+{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
+    sed -i "s|<cloud>|{{WrapAsParameter "kubernetesClusterAutoscalerAzureCloud"}}|g; s|<useManagedIdentity>|{{WrapAsParameter "kubernetesClusterAutoscalerUseManagedIdentity"}}|g" /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
+{{end}}
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
-
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
@@ -17497,7 +17459,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
 {{end}}{{end}}
     #EOF
-
 - path: /opt/azure/containers/mountetcd.sh
   permissions: 744
   encoding: gz
@@ -17511,7 +17472,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: !!binary |
     {{CloudInitData "etcdSystemdService"}}
-
 - path: /opt/azure/containers/setup-etcd.sh
   permissions: 744
   owner: root
@@ -17567,7 +17527,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   {{end}}
 {{end}}
     #EOF
-
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: 600
@@ -17575,7 +17534,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
-
 {{if .MasterProfile.IsCoreOS}}
 - path: /opt/azure/containers/provision-setup.sh
   permissions: 755
@@ -17585,20 +17543,15 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     source /opt/azure/containers/provision_source.sh
     /opt/azure/containers/mountetcd.sh
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
-
     {{if EnableAggregatedAPIs}}
     sudo bash /etc/kubernetes/generate-proxy-certs.sh
     {{end}}
-
     touch /opt/azure/containers/runcmd.complete
-
 - path: "/etc/kubernetes/manifests/.keep"
-
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
 groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
 {{end}}
-
 coreos:
   units:
     - name: start-provision-setup.service
@@ -17606,7 +17559,6 @@ coreos:
       content: |
         [Unit]
         Description=Start provision setup service
-
         [Service]
         ExecStart=/opt/azure/containers/provision-setup.sh
     - name: kubelet.service
@@ -17678,7 +17630,6 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 }
 
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
-
 write_files:
 - path: /opt/azure/containers/provision_source.sh
   permissions: 744
@@ -17686,28 +17637,24 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "provisionSource"}}
-
 - path: /opt/azure/containers/provision.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionScript"}}
-
 - path: /opt/azure/containers/provision_installs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
-
 - path: /opt/azure/containers/provision_configs.sh
   permissions: 744
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
-
 {{if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: 744
@@ -17716,7 +17663,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionCIS"}}
 {{end}}
-
 {{if not .IsVHDDistro}}
   {{if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
@@ -17727,7 +17673,6 @@ write_files:
     {{CloudInitData "auditdRules"}}
   {{end}}
 {{end}}
-
 {{if IsAzureStackCloud}}
 - path: /opt/azure/containers/provision_configs_custom_cloud.sh
   permissions: 744
@@ -17736,7 +17681,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
-
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -17748,42 +17692,36 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "healthMonitorScript"}}
-
 - path: /etc/systemd/system/kubelet-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletMonitorSystemdService"}}
-
 - path: /etc/systemd/system/docker-monitor.timer
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdTimer"}}
-
 - path: /etc/systemd/system/docker-monitor.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
 - path: /etc/systemd/system/kubelet.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
-
 - path: /etc/systemd/system/kms.service
   permissions: 644
   encoding: gz
   owner: root
   content: !!binary |
     {{CloudInitData "kmsSystemdService"}}
-
 - path: /etc/apt/preferences
   permissions: 644
   encoding: gz
@@ -17791,7 +17729,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
-
 {{if IsIPv6DualStackFeatureEnabled}}
 - path: /etc/systemd/system/dhcpv6.service
   permissions: 644
@@ -17799,7 +17736,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
-
 - path: /opt/azure/containers/enable-dhcpv6.sh
   permissions: 544
   encoding: gz
@@ -17807,7 +17743,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
-
 {{if .KubernetesConfig.RequiresDocker}}
     {{if not .IsCoreOS}}
         {{if not .IsVHDDistro}}
@@ -17819,7 +17754,6 @@ write_files:
     {{CloudInitData "dockerClearMountPropagationFlags"}}
         {{end}}
     {{end}}
-
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: 644
   owner: root
@@ -17833,7 +17767,6 @@ write_files:
     {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
-
 - path: /etc/docker/daemon.json
   permissions: 644
   owner: root
@@ -17854,7 +17787,6 @@ write_files:
       }{{end}}
     }
 {{end}}
-
 {{if HasCiliumNetworkPlugin }}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: 644
@@ -17863,7 +17795,6 @@ write_files:
   content: !!binary |
     {{WrapAsVariable "systemdBPFMount"}}
 {{end}}
-
 {{if NeedsContainerd}}
 - path: /etc/containerd/config.toml
   permissions: 644
@@ -17890,7 +17821,6 @@ write_files:
     {{if IsKubenet }}
     [plugins.cri.cni]
     conf_template = "/etc/containerd/kubenet_template.conf"
-
 - path: /etc/containerd/kubenet_template.conf
   permissions: 644
   owner: root
@@ -17915,7 +17845,6 @@ write_files:
       }
     {{end}}
 {{end}}
-
 {{if IsNSeriesSKU .}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: 644
@@ -17932,21 +17861,18 @@ write_files:
     [Install]
     WantedBy=multi-user.target
 {{end}}
-
 - path: /etc/kubernetes/certs/ca.crt
   permissions: 644
   encoding: base64
   owner: root
   content: |
     {{WrapAsParameter "caCertificate"}}
-
 - path: /etc/kubernetes/certs/client.crt
   permissions: 644
   encoding: base64
   owner: root
   content: |
     {{WrapAsParameter "clientCertificate"}}
-
 {{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: 744
@@ -17955,7 +17881,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
 {{end}}{{end}}
-
 - path: /var/lib/kubelet/kubeconfig
   permissions: 644
   owner: root
@@ -17979,7 +17904,6 @@ write_files:
       name: localclustercontext
     current-context: localclustercontext
     #EOF
-
 - path: /etc/default/kubelet
   permissions: 644
   owner: root
@@ -18001,7 +17925,6 @@ write_files:
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
-
 - path: /opt/azure/containers/kubelet.sh
   permissions: 755
   owner: root
@@ -18018,7 +17941,6 @@ write_files:
     sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
 {{end}}{{end}}
     #EOF
-
 {{if IsAzureStackCloud}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: 600
@@ -18026,15 +17948,12 @@ write_files:
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
-
 {{if .IsCoreOS}}
 - path: "/etc/kubernetes/manifests/.keep"
-
 {{if .KubernetesConfig.RequiresDocker}}
 groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
 {{end}}
-
 coreos:
   units:
     - name: kubelet.service
