@@ -117,8 +117,11 @@
 // ../../parts/k8s/containeraddons/1.11/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.12/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.12/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.13/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/1.16/ip-masq-agent.yaml
@@ -18858,6 +18861,289 @@ func k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 	return a, nil
 }
 
+var _k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["events", "endpoints"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch", "list", "get", "update"]
+- apiGroups: [""]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets","replicasets","daemonsets"]
+  verbs: ["watch","list","get"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["watch","list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["csinodes", "storageclasses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: v1
+data:
+  ClientID: <clientID>
+  ClientSecret: <clientSec>
+  ResourceGroup: <rg>
+  SubscriptionID: <subID>
+  TenantID: <tenantID>
+  VMType: {{GetVMType}}
+kind: Secret
+metadata:
+  name: cluster-autoscaler-azure
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      priorityClassName: system-node-critical{{GetHostNetwork}}
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      - effect: NoSchedule
+        operator: "Equal"
+        value: "true"
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        kubernetes.io/role: master
+        beta.kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "cluster-autoscaler"}}
+        imagePullPolicy: IfNotPresent
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "cluster-autoscaler"}}
+            memory: {{ContainerMemLimits "cluster-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "cluster-autoscaler"}}
+            memory: {{ContainerMemReqs "cluster-autoscaler"}}
+        command:
+        - ./cluster-autoscaler
+        - --logtostderr=true
+        - --cloud-provider=azure
+        - --skip-nodes-with-local-storage=false
+        - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace=kube-system
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
+{{GetClusterAutoscalerNodesConfig}}
+        env:
+        - name: ARM_CLOUD
+          value: "{{GetCloud}}"
+        - name: ARM_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: SubscriptionID
+              name: cluster-autoscaler-azure
+        - name: ARM_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: ResourceGroup
+              name: cluster-autoscaler-azure
+        - name: ARM_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: TenantID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: ClientID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: ClientSecret
+              name: cluster-autoscaler-azure
+        - name: ARM_VM_TYPE
+          valueFrom:
+            secretKeyRef:
+              key: VMType
+              name: cluster-autoscaler-azure
+        - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
+          value: "{{UseManagedIdentity}}"
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: ssl-certs
+          readOnly: true{{GetVolumeMounts}}
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: ""
+        name: ssl-certs{{GetVolumes}}
+#EOF
+`)
+
+func k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, nil
+}
+
+func k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.13/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19023,6 +19309,289 @@ func k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 	return a, nil
 }
 
+var _k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["events", "endpoints"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch", "list", "get", "update"]
+- apiGroups: [""]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets","replicasets","daemonsets"]
+  verbs: ["watch","list","get"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["watch","list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["csinodes", "storageclasses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: v1
+data:
+  ClientID: <clientID>
+  ClientSecret: <clientSec>
+  ResourceGroup: <rg>
+  SubscriptionID: <subID>
+  TenantID: <tenantID>
+  VMType: {{GetVMType}}
+kind: Secret
+metadata:
+  name: cluster-autoscaler-azure
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      priorityClassName: system-node-critical{{GetHostNetwork}}
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      - effect: NoSchedule
+        operator: "Equal"
+        value: "true"
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        kubernetes.io/role: master
+        beta.kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "cluster-autoscaler"}}
+        imagePullPolicy: IfNotPresent
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "cluster-autoscaler"}}
+            memory: {{ContainerMemLimits "cluster-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "cluster-autoscaler"}}
+            memory: {{ContainerMemReqs "cluster-autoscaler"}}
+        command:
+        - ./cluster-autoscaler
+        - --logtostderr=true
+        - --cloud-provider=azure
+        - --skip-nodes-with-local-storage=false
+        - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace=kube-system
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
+{{GetClusterAutoscalerNodesConfig}}
+        env:
+        - name: ARM_CLOUD
+          value: "{{GetCloud}}"
+        - name: ARM_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: SubscriptionID
+              name: cluster-autoscaler-azure
+        - name: ARM_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: ResourceGroup
+              name: cluster-autoscaler-azure
+        - name: ARM_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: TenantID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: ClientID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: ClientSecret
+              name: cluster-autoscaler-azure
+        - name: ARM_VM_TYPE
+          valueFrom:
+            secretKeyRef:
+              key: VMType
+              name: cluster-autoscaler-azure
+        - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
+          value: "{{UseManagedIdentity}}"
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: ssl-certs
+          readOnly: true{{GetVolumeMounts}}
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: ""
+        name: ssl-certs{{GetVolumes}}
+#EOF
+`)
+
+func k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, nil
+}
+
+func k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.14/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -19184,6 +19753,289 @@ func k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["events", "endpoints"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch", "list", "get", "update"]
+- apiGroups: [""]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets","replicasets","daemonsets"]
+  verbs: ["watch","list","get"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["watch","list"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["csinodes", "storageclasses"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: v1
+data:
+  ClientID: <clientID>
+  ClientSecret: <clientSec>
+  ResourceGroup: <rg>
+  SubscriptionID: <subID>
+  TenantID: <tenantID>
+  VMType: {{GetVMType}}
+kind: Secret
+metadata:
+  name: cluster-autoscaler-azure
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      priorityClassName: system-node-critical{{GetHostNetwork}}
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      - effect: NoSchedule
+        operator: "Equal"
+        value: "true"
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        kubernetes.io/role: master
+        beta.kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "cluster-autoscaler"}}
+        imagePullPolicy: IfNotPresent
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "cluster-autoscaler"}}
+            memory: {{ContainerMemLimits "cluster-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "cluster-autoscaler"}}
+            memory: {{ContainerMemReqs "cluster-autoscaler"}}
+        command:
+        - ./cluster-autoscaler
+        - --logtostderr=true
+        - --cloud-provider=azure
+        - --skip-nodes-with-local-storage=false
+        - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace=kube-system
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
+{{GetClusterAutoscalerNodesConfig}}
+        env:
+        - name: ARM_CLOUD
+          value: "{{GetCloud}}"
+        - name: ARM_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: SubscriptionID
+              name: cluster-autoscaler-azure
+        - name: ARM_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: ResourceGroup
+              name: cluster-autoscaler-azure
+        - name: ARM_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: TenantID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: ClientID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: ClientSecret
+              name: cluster-autoscaler-azure
+        - name: ARM_VM_TYPE
+          valueFrom:
+            secretKeyRef:
+              key: VMType
+              name: cluster-autoscaler-azure
+        - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
+          value: "{{UseManagedIdentity}}"
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: ssl-certs
+          readOnly: true{{GetVolumeMounts}}
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: ""
+        name: ssl-certs{{GetVolumes}}
+#EOF
+`)
+
+func k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, nil
+}
+
+func k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -29928,8 +30780,6 @@ spec:
         - --skip-nodes-with-local-storage=false
         - --scan-interval={{ContainerConfig "scan-interval"}}
         - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
-        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
-        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
         - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
         - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
         - --max-failing-time={{ContainerConfig "max-failing-time"}}
@@ -29941,7 +30791,6 @@ spec:
         - --memory-total={{ContainerConfig "memory-total"}}
         - --min-replica-count={{ContainerConfig "min-replica-count"}}
         - --namespace=kube-system
-        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
         - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
         - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
         - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
@@ -37725,8 +38574,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.11/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons111KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.12/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons112KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.12/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.13/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.14/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                               k8sContaineraddons116AzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                          k8sContaineraddons116IpMasqAgentYaml,
@@ -38014,13 +38866,16 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons112KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.13": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": {k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.14": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": {k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.15": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
 				"azure-cni-networkmonitor.yaml":                               {k8sContaineraddons116AzureCniNetworkmonitorYaml, map[string]*bintree{}},
