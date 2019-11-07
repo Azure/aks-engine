@@ -25,13 +25,15 @@
               {
                 "name": "pool1",
                 "config": {
-                  "min-nodes": "3",
-                  "max-nodes": "5"
+                  "min-nodes": "1",
+                  "max-nodes": "3"
                 }
               }
             ],
             "config": {
-              "scan-interval": "1m"
+              "scan-interval": "1m",
+              "scale-down-delay-after-add": "1m0s",
+              "scale-down-unneeded-time": "2m0s"
             }
           },
           {
@@ -53,7 +55,7 @@
     "agentPoolProfiles": [
       {
         "name": "pool1",
-        "count": 3,
+        "count": 1,
         "vmSize": "Standard_D2_v3",
         "OSDiskSizeGB": 200,
         "storageProfile": "ManagedDisks",
