@@ -616,14 +616,22 @@ func escapeSingleLine(escapedStr string) string {
 }
 
 // getBase64EncodedGzippedCustomScript will return a base64 of the CSE
-func getBase64EncodedGzippedCustomScript(csFilename string) string {
+func getBase64EncodedGzippedCustomScript(csFilename string, cs *api.ContainerService) string {
 	b, err := Asset(csFilename)
 	if err != nil {
 		// this should never happen and this is a bug
 		panic(fmt.Sprintf("BUG: %s", err.Error()))
 	}
 	// translate the parameters
-	csStr := string(b)
+	templ := template.New("ContainerService template").Funcs(getContainerServiceFuncMap(cs))
+	_, err = templ.Parse(string(b))
+	if err != nil {
+		// this should never happen and this is a bug
+		panic(fmt.Sprintf("BUG: %s", err.Error()))
+	}
+	var buffer bytes.Buffer
+	templ.Execute(&buffer, cs)
+	csStr := buffer.String()
 	csStr = strings.Replace(csStr, "\r\n", "\n", -1)
 	return getBase64EncodedGzippedCustomScriptFromStr(csStr)
 }
@@ -829,7 +837,7 @@ touch /etc/mesosphere/roles/azure_master`
 	return strings.Replace(strings.Replace(b.String(), "\r\n", "\n", -1), "\n", "\n\n    ", -1)
 }
 
-func buildYamlFileWithWriteFiles(files []string) string {
+func buildYamlFileWithWriteFiles(files []string, cs *api.ContainerService) string {
 	clusterYamlFile := `#cloud-config
 
 write_files:
@@ -844,7 +852,7 @@ write_files:
 
 	filelines := ""
 	for _, file := range files {
-		b64GzipString := getBase64EncodedGzippedCustomScript(file)
+		b64GzipString := getBase64EncodedGzippedCustomScript(file, cs)
 		fileNoPath := strings.TrimPrefix(file, "swarm/")
 		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
 	}
