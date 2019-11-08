@@ -795,7 +795,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,
@@ -1258,7 +1258,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpdate: false,
+			isUpgrade: false,
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    HeapsterAddonName,

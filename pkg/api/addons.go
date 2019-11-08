@@ -529,7 +529,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	// Back-compat for older addon specs of cluster-autoscaler
-	if isUpdate {
+	if isUpgrade {
 		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
 		if i > -1 && to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
 			if o.KubernetesConfig.Addons[i].Pools == nil {
