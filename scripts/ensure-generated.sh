@@ -28,7 +28,7 @@ for file in ${GENERATED_FILES[*]}; do
 	cp -a "${file}" "${T}/"
 done
 
-(go generate ../...)
+make generate
 
 for file in ${GENERATED_FILES[*]}; do
 	basefile=$(basename "${file}")
