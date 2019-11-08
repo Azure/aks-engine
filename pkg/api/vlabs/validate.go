@@ -1454,7 +1454,6 @@ func (k *KubernetesConfig) validateNetworkPluginPlusPolicy() error {
 }
 
 func (k *KubernetesConfig) validateNetworkMode() error {
-
 	networkPlugin := k.NetworkPlugin
 	networkPolicy := k.NetworkPolicy
 	networkMode := k.NetworkMode
