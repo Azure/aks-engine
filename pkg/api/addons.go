@@ -5,12 +5,14 @@ package api
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
+	log "github.com/sirupsen/logrus"
 )
 
 func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
@@ -102,10 +104,38 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultClusterAutoscalerAddonsConfig := KubernetesAddon{
 		Name:    ClusterAutoscalerAddonName,
 		Enabled: to.BoolPtr(DefaultClusterAutoscalerAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Mode:    AddonModeEnsureExists,
 		Config: map[string]string{
-			"min-nodes":     "1",
-			"max-nodes":     "5",
-			"scan-interval": "10s",
+			"scan-interval":                         "1m",
+			"expendable-pods-priority-cutoff":       "-10",
+			"max-autoprovisioned-node-group-count":  "15",
+			"max-empty-bulk-delete":                 "10",
+			"max-failing-time":                      "15m0s",
+			"max-graceful-termination-sec":          "600",
+			"max-inactivity":                        "10m0s",
+			"max-node-provision-time":               "15m0s",
+			"max-nodes-total":                       "0",
+			"max-total-unready-percentage":          "45",
+			"memory-total":                          "0:6400000",
+			"min-replica-count":                     "0",
+			"node-autoprovisioning-enabled":         "false",
+			"ok-total-unready-count":                "3",
+			"scale-down-candidates-pool-min-count":  "50",
+			"scale-down-candidates-pool-ratio":      "0.1",
+			"scale-down-delay-after-add":            "10m0s",
+			"scale-down-delay-after-delete":         "1m",
+			"scale-down-delay-after-failure":        "3m0s",
+			"scale-down-enabled":                    "true",
+			"scale-down-non-empty-candidates-count": "30",
+			"scale-down-unneeded-time":              "10m0s",
+			"scale-down-unready-time":               "20m0s",
+			"scale-down-utilization-threshold":      "0.5",
+			"skip-nodes-with-local-storage":         "false",
+			"skip-nodes-with-system-pods":           "true",
+			"stderrthreshold":                       "2",
+			"v":                                     "3",
+			"write-status-configmap":                "true",
+			"balance-similar-node-groups":           "true",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -117,6 +147,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          specConfig.KubernetesImageBase + k8sComponents[ClusterAutoscalerAddonName],
 			},
 		},
+		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") {
+		defaultClusterAutoscalerAddonsConfig.Config["unremovable-node-recheck-timeout"] = "5m0s"
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") {
+		defaultClusterAutoscalerAddonsConfig.Config["new-pod-scale-up-delay"] = "0s"
+		defaultClusterAutoscalerAddonsConfig.Config["ignore-daemonsets-utilization"] = "false"
+		defaultClusterAutoscalerAddonsConfig.Config["ignore-mirror-pods-utilization"] = "false"
 	}
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
@@ -487,6 +528,44 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Back-compat for older addon specs of cluster-autoscaler
+	if isUpgrade {
+		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
+		if i > -1 && to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
+			if o.KubernetesConfig.Addons[i].Pools == nil {
+				log.Warnf("This cluster upgrade operation will enable the per-pool cluster-autoscaler addon.\n")
+				var pools []AddonNodePoolsConfig
+				for i, p := range cs.Properties.AgentPoolProfiles {
+					pool := AddonNodePoolsConfig{
+						Name: p.Name,
+						Config: map[string]string{
+							"min-nodes": strconv.Itoa(p.Count),
+							"max-nodes": strconv.Itoa(p.Count),
+						},
+					}
+					if i == 0 {
+						originalMinNodes := o.KubernetesConfig.Addons[i].Config["min-nodes"]
+						originalMaxNodes := o.KubernetesConfig.Addons[i].Config["max-nodes"]
+						if originalMinNodes != "" {
+							pool.Config["min-nodes"] = originalMinNodes
+							delete(o.KubernetesConfig.Addons[i].Config, "min-nodes")
+						}
+						if originalMaxNodes != "" {
+							pool.Config["max-nodes"] = originalMaxNodes
+							delete(o.KubernetesConfig.Addons[i].Config, "max-nodes")
+						}
+					}
+					log.Warnf("cluster-autoscaler will configure pool \"%s\" with min-nodes=%s, and max-nodes=%s.\n", pool.Name, pool.Config["min-nodes"], pool.Config["max-nodes"])
+					pools = append(pools, pool)
+				}
+				o.KubernetesConfig.Addons[i].Pools = pools
+				log.Warnf("You may modify the pool configurations via `kubectl edit deployment cluster-autoscaler -n kube-system`.\n")
+				log.Warnf("Look for the `--nodes=` configuration flags (see below) in the deployment spec:\n")
+				log.Warnf("\n%s", GetClusterAutoscalerNodesConfig(o.KubernetesConfig.Addons[i], cs))
+			}
+		}
+	}
+
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}
@@ -560,6 +639,9 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 			Enabled: addon.Enabled,
 		}
 	}
+	if addon.Mode == "" {
+		addon.Mode = defaults.Mode
+	}
 	for i := range defaults.Containers {
 		c := addon.GetAddonContainersIndexByName(defaults.Containers[i].Name)
 		if c < 0 {
@@ -582,6 +664,12 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 			}
 		}
 	}
+	// For pools-specific configuration, we only take the defaults if we have zero user-provided pools configuration
+	if len(addon.Pools) == 0 {
+		for i := range defaults.Pools {
+			addon.Pools = append(addon.Pools, defaults.Pools[i])
+		}
+	}
 	for key, val := range defaults.Config {
 		if addon.Config == nil {
 			addon.Config = make(map[string]string)
@@ -598,4 +686,31 @@ func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isU
 	if i >= 0 {
 		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpgrade)
 	}
+}
+
+func makeDefaultClusterAutoscalerAddonPoolsConfig(cs *ContainerService) []AddonNodePoolsConfig {
+	var ret []AddonNodePoolsConfig
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		ret = append(ret, AddonNodePoolsConfig{
+			Name: pool.Name,
+			Config: map[string]string{
+				"min-nodes": strconv.Itoa(pool.Count),
+				"max-nodes": strconv.Itoa(pool.Count),
+			},
+		})
+	}
+	return ret
+}
+
+// GetClusterAutoscalerNodesConfig returns the cluster-autoscaler runtime configuration flag for a nodepool
+func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService) string {
+	var ret string
+	for _, pool := range addon.Pools {
+		nodepoolName := cs.Properties.GetAgentVMPrefix(cs.Properties.GetAgentPoolByName(pool.Name), cs.Properties.GetAgentPoolIndexByName(pool.Name))
+		ret += fmt.Sprintf("        - --nodes=%s:%s:%s\n", pool.Config["min-nodes"], pool.Config["max-nodes"], nodepoolName)
+	}
+	if ret != "" {
+		ret = strings.TrimRight(ret, "\n")
+	}
+	return ret
 }

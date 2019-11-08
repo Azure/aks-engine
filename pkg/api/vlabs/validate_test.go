@@ -1430,6 +1430,174 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pools configuration must have a 'name' property that correlates with a pool name in the agentPoolProfiles array",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+				Mode: "foo",
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"addon cluster-autoscaler has a mode configuration 'foo', must be either EnsureExists or Reconcile",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "baz",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid 'min-nodes' config, must be a string int, got baz",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "baz",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid 'max-nodes' config, must be a string int, got baz",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "5",
+							"max-nodes": "1",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid config, 'max-nodes' 1 must be greater than 'min-nodes' 5",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "bar",
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo does not match any agentPoolProfiles nodepool name",
+		)
+	}
+
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			VMSize: "Standard_NC6",

@@ -259,26 +259,6 @@
       },
       "type": "bool"
     },
-    "kubernetesClusterAutoscalerEnabled": {
-      "metadata": {
-        "description": "Cluster autoscaler status"
-      },
-      "type": "bool"
-    },
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
-    "kubernetesClusterAutoscalerAzureCloud": {
-      "metadata": {
-        "description": "Name of the Azure cloud for the cluster autoscaler."
-      },
-      "type": "string"
-    },
-    "kubernetesClusterAutoscalerUseManagedIdentity": {
-      "metadata": {
-        "description": "Managed identity for the cluster autoscaler addon"
-      },
-      "type": "string"
-    },
-{{end}}
     "kubernetesPodInfraContainerSpec": {
       "metadata": {
         "description": "The container spec for pod infra."

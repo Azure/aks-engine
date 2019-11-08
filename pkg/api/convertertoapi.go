@@ -773,6 +773,7 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 		a.Addons = append(a.Addons, KubernetesAddon{
 			Name:    v.Addons[i].Name,
 			Enabled: v.Addons[i].Enabled,
+			Mode:    v.Addons[i].Mode,
 			Config:  map[string]string{},
 			Data:    v.Addons[i].Data,
 		})
@@ -786,7 +787,17 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 				MemoryLimits:   v.Addons[i].Containers[j].MemoryLimits,
 			})
 		}
-
+		for k := range v.Addons[i].Pools {
+			a.Addons[i].Pools = append(a.Addons[i].Pools, AddonNodePoolsConfig{
+				Name:   v.Addons[i].Pools[k].Name,
+				Config: map[string]string{},
+			})
+			if v.Addons[i].Pools[k].Config != nil {
+				for key, val := range v.Addons[i].Pools[k].Config {
+					a.Addons[i].Pools[k].Config[key] = val
+				}
+			}
+		}
 		if v.Addons[i].Config != nil {
 			for key, val := range v.Addons[i].Config {
 				a.Addons[i].Config[key] = val

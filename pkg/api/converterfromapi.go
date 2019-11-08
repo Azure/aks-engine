@@ -854,6 +854,7 @@ func convertAddonsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
 		v.Addons = append(v.Addons, vlabs.KubernetesAddon{
 			Name:    a.Addons[i].Name,
 			Enabled: a.Addons[i].Enabled,
+			Mode:    a.Addons[i].Mode,
 			Config:  map[string]string{},
 			Data:    a.Addons[i].Data,
 		})
@@ -867,7 +868,17 @@ func convertAddonsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
 				MemoryLimits:   a.Addons[i].Containers[j].MemoryLimits,
 			})
 		}
-
+		for k := range a.Addons[i].Pools {
+			v.Addons[i].Pools = append(v.Addons[i].Pools, vlabs.AddonNodePoolsConfig{
+				Name:   a.Addons[i].Pools[k].Name,
+				Config: map[string]string{},
+			})
+			if a.Addons[i].Pools[k].Config != nil {
+				for key, val := range a.Addons[i].Pools[k].Config {
+					v.Addons[i].Pools[k].Config[key] = val
+				}
+			}
+		}
 		if a.Addons[i].Config != nil {
 			for key, val := range a.Addons[i].Config {
 				v.Addons[i].Config[key] = val
