@@ -50,13 +50,14 @@ spec:
     image: <IMAGE>
     command: <COMMAND>
     imagePullPolicy: IfNotPresent
-    volumeDevices:
-    - devicePath: /dev/sgx
-      name: dev-sgx
+    volumeMounts:
+    - name: dev-sgx
+      mountPath: /dev/sgx
     securityContext:
       privileged: true
   volumes:
   - name: dev-sgx
     hostPath:
       path: /dev/sgx
+      type: CharDevice
 ```
