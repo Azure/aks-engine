@@ -155,9 +155,9 @@ write_files:
     {
       "live-restore": true,
       "log-driver": "json-file",
-      "log-opts":  {
-         "max-size": "50m",
-         "max-file": "5"
+      "log-opts": {
+        "max-size": "50m",
+        "max-file": "5"
       }
     }
 {{end}}
@@ -200,22 +200,22 @@ write_files:
   owner: root
   content: |
       {
-          "cniVersion": "0.3.1",
-          "name": "kubenet",
-          "plugins": [{
-            "type": "bridge",
-            "bridge": "cbr0",
-            "mtu": 1500,
-            "addIf": "eth0",
-            "isGateway": true,
-            "ipMasq": false,
-            "hairpinMode": false,
-            "ipam": {
-                "type": "host-local",
-                "subnet": "{{`{{.PodCIDR}}`}}",
-                "routes": [{ "dst": "0.0.0.0/0" }]
-            }
-          }]
+        "cniVersion": "0.3.1",
+        "name": "kubenet",
+        "plugins": [{
+          "type": "bridge",
+          "bridge": "cbr0",
+          "mtu": 1500,
+          "addIf": "eth0",
+          "isGateway": true,
+          "ipMasq": false,
+          "hairpinMode": false,
+          "ipam": {
+            "type": "host-local",
+            "subnet": "{{`{{.PodCIDR}}`}}",
+            "routes": [{"dst": "0.0.0.0/0"}]
+          }
+        }]
       }
     {{end}}
 {{end}}
@@ -458,14 +458,14 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     echo $d
     while [ $index -lt $MASTER_COUNT ]
     do
-        echo $index
-        x=`expr $d + $IPADDRESS_COUNT \\* $index`
-        echo $x
-        s=""
-        for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
-        s=$(echo $s | tail -c +2)
-        MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
-        index=`expr $index + 1`
+      echo $index
+      x=`expr $d + $IPADDRESS_COUNT \\* $index`
+      echo $x
+      s=""
+      for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
+      s=$(echo $s | tail -c +2)
+      MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
+      index=`expr $index + 1`
     done
     MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
     echo $MASTER_URLS
