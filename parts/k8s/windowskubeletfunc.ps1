@@ -436,7 +436,7 @@ if (!`$hnsNetwork)
     New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName `$adapterName -Name `$global:ExternalNetwork -Verbose
 
     # Wait for the switch to be created and the ip address to be assigned.
-    for (`$i=0;`$i -lt 60;`$i++)
+    for (`$i=0;`$i -lt 180;`$i++)
     {
         `$mgmtIPAfterNetworkCreate = Get-NetIPAddress `$managementIP -ErrorAction SilentlyContinue
         if (`$mgmtIPAfterNetworkCreate)
