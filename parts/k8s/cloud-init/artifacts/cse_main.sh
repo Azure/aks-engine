@@ -90,13 +90,17 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
 
+{{if HasCoreOS}}
 if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
+{{end}}
 installNetworkPlugin
+{{if NeedsContainerd}}
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
 fi
+{{end}}
 {{if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
@@ -110,9 +114,11 @@ if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
 createKubeManifestDir
+{{if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
 fi
+{{end}}
 
 # create etcd user if we are configured for etcd
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -124,6 +130,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
   # both configs etcd/cosmos
   configureSecrets
 fi
+
 # configure etcd if we are configured for etcd
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
@@ -162,14 +169,19 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
+{{if NeedsContainerd}}
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     ensureContainerd
 fi
+{{end}}
 
+{{if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
+{{end}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
 # configure and enable dhcpv6 for dual stack feature
 if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
     dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
@@ -180,6 +192,7 @@ if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
 
     retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 fi
+{{end}}
 
 ensureKubelet
 ensureJournal
@@ -193,7 +206,11 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
-    ensureLabelExclusionForAzurePolicyAddon
+    {{if IsAzurePolicyAddonEnabled}}
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+      ensureLabelExclusionForAzurePolicyAddon
+    fi
+    {{end}}
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -204,9 +221,8 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-{{if IsAzureStackCloud}}
+{{if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
-    # TODO: remove once ACR is available on Azure Stack
     apt_get_purge 20 30 120 apache2-utils &
 fi
 {{end}}

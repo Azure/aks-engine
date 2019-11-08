@@ -668,6 +668,24 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasNSeriesSKU": func() bool {
 			return cs.Properties.HasNSeriesSKU()
 		},
+		"HasDCSeriesSKU": func() bool {
+			return cs.Properties.HasDCSeriesSKU()
+		},
+		"HasCoreOS": func() bool {
+			return cs.Properties.HasCoreOS()
+		},
+		"RequiresDocker": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
+		},
+		"IsAzurePolicyAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.AzurePolicyAddonName)
+		},
+		"IsACIConnectorAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ACIConnectorAddonName)
+		},
+		"IsClusterAutoscalerAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName)
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},
