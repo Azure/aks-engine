@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
+func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	o := cs.Properties.OrchestratorProfile
 	clusterDNSPrefix := "aks-engine-cluster"
 	if cs != nil && cs.Properties != nil && cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
@@ -488,10 +488,10 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	}
 
 	for _, addon := range defaultAddons {
-		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpdate)
+		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}
 
-	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpdate {
+	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpgrade {
 		if base64Data, ok := o.KubernetesConfig.PodSecurityPolicyConfig["data"]; ok {
 			pspAddonsConfig := KubernetesAddon{
 				Name: PodSecurityPolicyAddonName,
@@ -504,16 +504,16 @@ func (cs *ContainerService) setAddonsConfig(isUpdate bool) {
 	// Specific back-compat business logic for calico addon
 	// Ensure addon is set to Enabled w/ proper containers config no matter what if NetworkPolicy == calico
 	i := getAddonsIndexByName(o.KubernetesConfig.Addons, CalicoAddonName)
-	if isUpdate && o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico && i > -1 && o.KubernetesConfig.Addons[i].Enabled != to.BoolPtr(true) {
+	if isUpgrade && o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico && i > -1 && o.KubernetesConfig.Addons[i].Enabled != to.BoolPtr(true) {
 		j := getAddonsIndexByName(defaultAddons, CalicoAddonName)
 		// Ensure calico is statically set to enabled
 		o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		// Assume addon configuration was pruned due to an inherited enabled=false, so re-apply default values
-		o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpdate)
+		o.KubernetesConfig.Addons[i] = assignDefaultAddonVals(o.KubernetesConfig.Addons[i], defaultAddons[j], isUpgrade)
 	}
 
 	// Support back-compat configuration for Azure NetworkPolicy, which no longer ships with a "telemetry" container starting w/ 1.16.0
-	if isUpdate && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+	if isUpgrade && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
 		i = getAddonsIndexByName(o.KubernetesConfig.Addons, AzureNetworkPolicyAddonName)
 		var hasTelemetryContainerConfig bool
 		var prunedContainersConfig []KubernetesContainerSpec
@@ -550,7 +550,7 @@ func getAddonsIndexByName(addons []KubernetesAddon, name string) int {
 }
 
 // assignDefaultAddonVals will assign default values to addon from defaults, for each property in addon that has a zero value
-func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) KubernetesAddon {
+func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) KubernetesAddon {
 	if addon.Enabled == nil {
 		addon.Enabled = defaults.Enabled
 	}
@@ -565,7 +565,7 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 		if c < 0 {
 			addon.Containers = append(addon.Containers, defaults.Containers[i])
 		} else {
-			if addon.Containers[c].Image == "" || isUpdate {
+			if addon.Containers[c].Image == "" || isUpgrade {
 				addon.Containers[c].Image = defaults.Containers[i].Image
 			}
 			if addon.Containers[c].CPURequests == "" {
@@ -593,9 +593,9 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpdate bool) Kube
 	return addon
 }
 
-func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isUpdate bool) {
+func synthesizeAddonsConfig(addons []KubernetesAddon, addon KubernetesAddon, isUpgrade bool) {
 	i := getAddonsIndexByName(addons, addon.Name)
 	if i >= 0 {
-		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpdate)
+		addons[i] = assignDefaultAddonVals(addons[i], addon, isUpgrade)
 	}
 }

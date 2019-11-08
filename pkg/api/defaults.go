@@ -377,7 +377,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// First, Configure addons
-		cs.setAddonsConfig(isUpdate)
+		cs.setAddonsConfig(isUpgrade)
 		// Defaults enforcement flows below inherit from addons configuration,
 		// so it's critical to enforce default addons configuration first
 
