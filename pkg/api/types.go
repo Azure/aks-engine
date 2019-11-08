@@ -87,6 +87,7 @@ type Properties struct {
 	AddonProfiles           map[string]AddonProfile  `json:"addonProfiles,omitempty"`
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
+	TelemetryProfile        *TelemetryProfile        `json:"telemetryProfile,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -766,6 +767,12 @@ type CustomCloudProfile struct {
 	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
 	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
 	PortalURL                  string                      `json:"portalURL,omitempty"`
+}
+
+// TelemetryProfile contains settings for collecting telemtry.
+// Note telemtry is currently enabled/disabled with the 'EnableTelemetry' feature flag.
+type TelemetryProfile struct {
+	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
 }
 
 // HasCoreOS returns true if the cluster contains coreos nodes

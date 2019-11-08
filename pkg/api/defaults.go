@@ -68,6 +68,8 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
+	properties.setTelemetryProfileDefaults()
+
 	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: params.PkiKeySize,
 	})
@@ -741,6 +743,16 @@ func (p *Properties) setStorageDefaults() {
 
 func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
+}
+
+func (p *Properties) setTelemetryProfileDefaults() {
+	if p.TelemetryProfile == nil {
+		p.TelemetryProfile = &TelemetryProfile{}
+	}
+
+	if len(p.TelemetryProfile.ApplicationInsightsKey) == 0 {
+		p.TelemetryProfile.ApplicationInsightsKey = DefaultApplicationInsightsKey
+	}
 }
 
 // DefaultCertParams is the params when we set the default certs.
