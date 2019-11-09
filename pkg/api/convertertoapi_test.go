@@ -1061,3 +1061,26 @@ func TestSetVlabsKubernetesDefaults(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertVLabsTelemetryProfile(t *testing.T) {
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			TelemetryProfile: &vlabs.TelemetryProfile{
+				ApplicationInsightsKey: "app_insights_key",
+			},
+		},
+	}
+
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Errorf("Error converting ContainerService: %s", err)
+	}
+
+	if cs.Properties.TelemetryProfile == nil {
+		t.Error("Expected TelemetryProfile to be populated")
+	}
+
+	if cs.Properties.TelemetryProfile.ApplicationInsightsKey != "app_insights_key" {
+		t.Error("Expected TelemetryProfile.ApplicationInsightsKey to be set")
+	}
+}
