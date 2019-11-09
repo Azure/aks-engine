@@ -16,10 +16,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 )
 
-func init() {
-
-}
-
 func TestGetNodes_ShouldReturnAResultSetWithNodes(t *testing.T) {
 	t.Parallel()
 	mockClient := armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
@@ -100,7 +96,6 @@ func TestGetNodes_ShouldReturnNodes(t *testing.T) {
 	g.Expect(nodes[1].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[1].Status.NodeInfo.KubeletVersion).To(Equal("1.9.9"))
 }
-
 
 func TestGetNodes_ShouldReturnNodesInAPoolWhenAPoolStringIsSpecified(t *testing.T) {
 	t.Parallel()

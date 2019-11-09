@@ -48,7 +48,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
-			name: "NoResourceGroup",
+			name:        "NoResourceGroup",
 		},
 		{
 			sc: &scaleCmd{
@@ -61,7 +61,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--location must be specified"),
-			name: "NoLocation",
+			name:        "NoLocation",
 		},
 		{
 			sc: &scaleCmd{
@@ -73,7 +73,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:          "test",
 			},
 			expectedErr: errors.New("--new-node-count must be specified"),
-			name: "NoNewNodeCount",
+			name:        "NoNewNodeCount",
 		},
 		{
 			sc: &scaleCmd{
@@ -86,7 +86,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--api-model must be specified"),
-			name: "NoAPIModel",
+			name:        "NoAPIModel",
 		},
 		{
 			sc: &scaleCmd{
@@ -99,7 +99,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
-			name: "Ambiguous",
+			name:        "Ambiguous",
 		},
 		{
 			sc: &scaleCmd{
@@ -112,7 +112,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: nil,
-			name: "IsValid",
+			name:        "IsValid",
 		},
 	}
 

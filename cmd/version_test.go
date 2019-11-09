@@ -57,4 +57,3 @@ func TestVersionCommand_ShouldErrorWhenAskedForYamlVersion(t *testing.T) {
 	g.Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
 	g.Expect(output).To(BeEmpty())
 }
-

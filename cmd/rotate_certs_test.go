@@ -48,10 +48,10 @@ func TestNewRotateCertsCmd(t *testing.T) {
 func TestRotateCertsCmdRun(t *testing.T) {
 	t.Parallel()
 
-	tmpSshFile, del := makeTmpFile(t, "_test_ssh")
+	tmpSSHFile, del := makeTmpFile(t, "_test_ssh")
 	defer del()
 
-	tmpOutputDir, del := makeTmpDir(t, "_test_output")
+	tmpOutputDir, del := makeTmpDir(t)
 	defer del()
 
 	rcc := &rotateCertsCmd{
@@ -63,7 +63,7 @@ func TestRotateCertsCmdRun(t *testing.T) {
 		apiModelPath:       "../pkg/engine/testdata/key-vault-certs/kubernetes.json",
 		outputDirectory:    tmpOutputDir,
 		location:           "westus",
-		sshFilepath:        tmpSshFile,
+		sshFilepath:        tmpSSHFile,
 		sshCommandExecuter: mockExecuteCmd,
 		masterFQDN:         "valid",
 	}
@@ -262,7 +262,7 @@ func TestWriteArtifacts(t *testing.T) {
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	g.Expect(err).NotTo(HaveOccurred())
-	outdir, del := makeTmpDir(t, "_test_output")
+	outdir, del := makeTmpDir(t)
 	defer del()
 
 	rcc := rotateCertsCmd{
@@ -402,8 +402,8 @@ func makeTmpFile(t *testing.T, name string) (string, func()) {
 	}
 }
 
-func makeTmpDir(t *testing.T, name string) (string, func()) {
-	tmpDir, err := ioutil.TempDir(os.TempDir(), name)
+func makeTmpDir(t *testing.T) (string, func()) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "_tmp_dir")
 	if err != nil {
 		t.Fatalf("unable to create dir: %s", err.Error())
 	}

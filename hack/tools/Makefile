@@ -17,3 +17,11 @@ $(GOBIN)/ginkgo:
 
 $(GOBIN)/golangci-lint:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(GOPATH)/bin v1.21.0
+
+
+.PHONY: reload
+reload: clean install
+
+.PHONY: clean
+clean:
+	rm -f $(GOBIN)/go-bindata $(GOBIN)/gox $(GOBIN)/ginkgo $(GOBIN)/golangci-lint

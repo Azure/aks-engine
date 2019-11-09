@@ -47,7 +47,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
-			name: "NeedsResourceGroup",
+			name:        "NeedsResourceGroup",
 		},
 		{
 			uc: &upgradeCmd{
@@ -60,7 +60,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--location must be specified"),
-			name: "NeedsLocation",
+			name:        "NeedsLocation",
 		},
 		{
 			uc: &upgradeCmd{
@@ -73,7 +73,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--upgrade-version must be specified"),
-			name: "NeedsUpgradeVersion",
+			name:        "NeedsUpgradeVersion",
 		},
 		{
 			uc: &upgradeCmd{
@@ -86,7 +86,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--api-model must be specified"),
-			name: "NeedsAPIModel",
+			name:        "NeedsAPIModel",
 		},
 		{
 			uc: &upgradeCmd{
@@ -99,7 +99,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
-			name: "NeedsNonAmbiguous",
+			name:        "NeedsNonAmbiguous",
 		},
 		{
 			uc: &upgradeCmd{
@@ -110,7 +110,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				location:            "southcentralus",
 			},
 			expectedErr: nil,
-			name: "IsValid",
+			name:        "IsValid",
 		},
 	}
 

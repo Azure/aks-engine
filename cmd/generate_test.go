@@ -857,7 +857,7 @@ func TestExampleAPIModels(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			dir, del := makeTmpDir(t, "_test_output")
+			dir, del := makeTmpDir(t)
 			defer del()
 			g := &generateCmd{
 				apimodelPath:    test.apiModelPath,

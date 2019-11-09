@@ -297,7 +297,7 @@ func TestAutoSufixWithDnsPrefixInApiModel(t *testing.T) {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -346,7 +346,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -403,7 +403,7 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndClientIdAndSecretInCmd(t *te
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -453,7 +453,7 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInCmd(
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -494,7 +494,7 @@ func TestAPIModelWithEmptyServicePrincipalProfileAndWithoutClientIdAndSecretInCm
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -542,7 +542,7 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	// deserialization happens in validate(), but we are testing just the default
@@ -625,7 +625,7 @@ func TestDeployCmdMergeAPIModel(t *testing.T) {
 func TestDeployCmdRun(t *testing.T) {
 	t.Parallel()
 
-	outdir, del := makeTmpDir(t,"_test_output")
+	outdir, del := makeTmpDir(t)
 	defer del()
 
 	d := &deployCmd{
@@ -672,7 +672,7 @@ func TestDeployCmdRun(t *testing.T) {
 func TestLoadApiModelOnAzureStack(t *testing.T) {
 	t.Parallel()
 
-	outdir, del := makeTmpDir(t,"_test_output")
+	outdir, del := makeTmpDir(t)
 	defer del()
 
 	d := &deployCmd{
@@ -768,7 +768,7 @@ func TestAPIModelWithContainerMonitoringAddonWithNoConfigInCmd(t *testing.T) {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -860,7 +860,7 @@ func TestAPIModelWithContainerMonitoringAddonWithConfigInCmd(t *testing.T) {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 
-	outDir, del := makeTmpDir(t, "_test_output")
+	outDir, del := makeTmpDir(t)
 	defer del()
 
 	deployCmd := &deployCmd{
@@ -1049,7 +1049,7 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 		t.Run(c.location, func(t *testing.T) {
 			t.Parallel()
 
-			dir, del := makeTmpDir(t, "_test_output")
+			dir, del := makeTmpDir(t)
 			defer del()
 
 			apiloader := &api.Apiloader{
@@ -1061,7 +1061,6 @@ func TestAPIModelWithContainerMonitoringAddonWithWorkspaceGuidAndKeyConfigInCmd(
 			if err != nil {
 				t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 			}
-
 
 			dc := c.dcFactory(dir, cs, ver)
 			dc.containerService.Location = c.location
