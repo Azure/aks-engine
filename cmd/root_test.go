@@ -39,6 +39,8 @@ func (provider *mockAuthProvider) getAuthArgs() *authArgs {
 }
 
 func TestNewRootCmd(t *testing.T) {
+	t.Parallel()
+
 	command := NewRootCmd()
 	if command.Use != rootName || command.Short != rootShortDescription || command.Long != rootLongDescription {
 		t.Fatalf("root command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, rootName, command.Short, rootShortDescription, command.Long, rootLongDescription)
@@ -59,6 +61,8 @@ func TestNewRootCmd(t *testing.T) {
 }
 
 func TestShowDefaultModelArg(t *testing.T) {
+	t.Parallel()
+
 	command := NewRootCmd()
 	command.SetArgs([]string{"--show-default-model"})
 	err := command.Execute()
@@ -69,6 +73,8 @@ func TestShowDefaultModelArg(t *testing.T) {
 }
 
 func TestDebugArg(t *testing.T) {
+	t.Parallel()
+
 	command := NewRootCmd()
 	command.SetArgs([]string{"--show-default-model"})
 	err := command.Execute()
@@ -79,6 +85,8 @@ func TestDebugArg(t *testing.T) {
 }
 
 func TestCompletionCommand(t *testing.T) {
+	t.Parallel()
+
 	command := getCompletionCmd(NewRootCmd())
 	command.SetArgs([]string{})
 	err := command.Execute()
@@ -115,6 +123,8 @@ func TestGetSelectedCloudFromAzConfig(t *testing.T) {
 		`), "myCloud"},
 	} {
 		t.Run(test.desc, func(t *testing.T) {
+			t.Parallel()
+
 			f, err := ini.Load(test.data)
 			if err != nil {
 				t.Fatal(err)
@@ -159,21 +169,24 @@ func TestGetCloudSubFromAzConfig(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			uuid, err := getCloudSubFromAzConfig("AzureCloud", f)
+			id, err := getCloudSubFromAzConfig("AzureCloud", f)
+
 			if test.err != (err != nil) {
 				t.Fatalf("expected err=%v, got: %v", test.err, err)
 			}
 			if test.err {
 				return
 			}
-			if uuid.String() != test.expect.String() {
-				t.Fatalf("expected %s, got %s", test.expect, uuid)
+			if id.String() != test.expect.String() {
+				t.Fatalf("expected %s, got %s", test.expect, id)
 			}
 		})
 	}
 }
 
 func TestWriteCustomCloudProfile(t *testing.T) {
+	t.Parallel()
+
 	cs := prepareCustomCloudProfile()
 
 	if err := writeCustomCloudProfile(cs); err != nil {
@@ -202,6 +215,8 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 }
 
 func TestGetAzureStackClientWithClientSecret(t *testing.T) {
+	t.Parallel()
+
 	cs := prepareCustomCloudProfile()
 	subscriptionID, _ := uuid.Parse("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
 

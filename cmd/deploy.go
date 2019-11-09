@@ -128,7 +128,11 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 
 	if dc.apimodelPath != "" {
 		if _, err := os.Stat(dc.apimodelPath); os.IsNotExist(err) {
-			return errors.Errorf("specified api model does not exist (%s)", dc.apimodelPath)
+			errPath := dc.apimodelPath
+			if fullPath, err := filepath.Abs(dc.apimodelPath); err != nil {
+				errPath = fullPath
+			}
+			return errors.Errorf("specified api model does not exist (%s)", errPath)
 		}
 	}
 
