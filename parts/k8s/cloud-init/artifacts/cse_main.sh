@@ -90,7 +90,7 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
 
-{{if HasCoreOS}}
+{{if not HasCoreOS}}
 if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
