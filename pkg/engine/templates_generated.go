@@ -15426,16 +15426,19 @@ extractHyperkube() {
     fi
 }
 
+extractKubeBinaries() {
+    K8S_TGZ_TMP=$(echo ${KUBE_BINARY_URL} | cut -d "/" -f 5)
+    mkdir -p "${K8S_DOWNLOADS_DIR}"
+    retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
+    tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+        --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
+    rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
+}
+
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
         if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
-            K8S_DOWNLOAD_URL="https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"
-            K8S_TGZ_TMP=$(echo ${K8S_DOWNLOAD_URL} | cut -d "/" -f 5)
-            mkdir -p "${K8S_DOWNLOADS_DIR}"
-            retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${K8S_DOWNLOAD_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
-            tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
-                --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
-            rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
+            extractKubeBinaries
         else
             if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
                 extractHyperkube "docker"
