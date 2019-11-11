@@ -33399,6 +33399,37 @@ function Retry-Command
     }
 }
 
+function Invoke-Executable
+{
+    Param(
+        [string]
+        $Executable,
+        [string[]]
+        $ArgList,
+        [int[]]
+        $AllowedExitCodes = @(0),
+        [int]
+        $Retries = 1,
+        [int]
+        $RetryDelaySeconds = 1
+    )
+
+    for ($i = 0; $i -lt $Retries; $i++) {
+        Write-Log "Running $Executable $ArgList ..."
+        & $Executable $ArgList
+        if ($LASTEXITCODE -notin $AllowedExitCodes) {
+            Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
+            Start-Sleep -Seconds $RetryDelaySeconds
+            continue
+        } else {
+            Write-Log "$Executable returned successfully"
+            return
+        }
+    }
+
+    throw "Exhausted retries for $Executable $ArgList"
+}
+
 function Get-NetworkLogCollectionScripts {
     Write-Log "Getting CollectLogs.ps1 and depencencies"
     mkdir 'c:\k\debug'
@@ -33666,6 +33697,13 @@ try
 
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
+
+        if (-not (Test-ContainerImageExists -Image "kubletwin/pause")) {
+            Write-Log "Could not find container with name kubletwin/pause"
+            $o = docker image list
+            Write-Log $o
+            throw "kubletwin/pause container does not exist!"
+        }
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
@@ -34799,7 +34837,7 @@ Build-PauseContainer {
     # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
     "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    docker build -t $DestinationTag .
+    Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
 }
 
 function
@@ -34821,20 +34859,39 @@ New-InfraContainer {
         "1803" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage                 
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
-            docker tag $defaultPauseImage $DestinationTag
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         "1809" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage                
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
-            docker tag $defaultPauseImage $DestinationTag 
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
     }
+}
+
+function
+Test-ContainerImageExists {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $Image,
+        [Parameter(Mandatory = $false)][string]
+        $Tag
+    )
+
+    $target = $Image
+    if ($Tag) {
+        $target += ":$Tag"
+    }
+
+    $images = docker image list $target --format "{{json .}}"
+
+    return $images.Count -gt 0
 }
 
 

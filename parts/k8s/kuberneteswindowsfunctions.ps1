@@ -96,6 +96,37 @@ function Retry-Command
     }
 }
 
+function Invoke-Executable
+{
+    Param(
+        [string]
+        $Executable,
+        [string[]]
+        $ArgList,
+        [int[]]
+        $AllowedExitCodes = @(0),
+        [int]
+        $Retries = 1,
+        [int]
+        $RetryDelaySeconds = 1
+    )
+
+    for ($i = 0; $i -lt $Retries; $i++) {
+        Write-Log "Running $Executable $ArgList ..."
+        & $Executable $ArgList
+        if ($LASTEXITCODE -notin $AllowedExitCodes) {
+            Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
+            Start-Sleep -Seconds $RetryDelaySeconds
+            continue
+        } else {
+            Write-Log "$Executable returned successfully"
+            return
+        }
+    }
+
+    throw "Exhausted retries for $Executable $ArgList"
+}
+
 function Get-NetworkLogCollectionScripts {
     Write-Log "Getting CollectLogs.ps1 and depencencies"
     mkdir 'c:\k\debug'
