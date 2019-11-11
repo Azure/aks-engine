@@ -33419,6 +33419,7 @@ function Invoke-Executable
         & $Executable $ArgList
         if ($LASTEXITCODE -notin $AllowedExitCodes) {
             Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
+            Start-Sleep -Seconds $RetryDelaySeconds
             continue
         } else {
             Write-Log "$Executable returned successfully"
@@ -33426,7 +33427,7 @@ function Invoke-Executable
         }
     }
 
-    throw "Exhasted retries for $Executable $ArgList"
+    throw "Exhausted retries for $Executable $ArgList"
 }
 
 function Get-NetworkLogCollectionScripts {
@@ -33701,7 +33702,7 @@ try
             Write-Log "Could not find container with name kubletwin/pause"
             $o = docker image list
             Write-Log $o
-            throw "Kubeletwin/pause container does not exist!"
+            throw "kubletwin/pause container does not exist!"
         }
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"

@@ -243,7 +243,7 @@ try
             Write-Log "Could not find container with name kubletwin/pause"
             $o = docker image list
             Write-Log $o
-            throw "Kubeletwin/pause container does not exist!"
+            throw "kubletwin/pause container does not exist!"
         }
 
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
