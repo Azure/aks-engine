@@ -226,12 +226,13 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
-
+{{if IsAzureStackCloud}}
     if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         # set environment to mas when using Azure CNI on Azure Stack
         # shellcheck disable=SC2002,SC2005
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
     fi
+{{end}}
 }
 
 configureCNIIPTables() {
@@ -245,10 +246,12 @@ configureCNIIPTables() {
     fi
 }
 
+{{if NeedsContainerd}}
 ensureContainerd() {
     echo "Starting cri-containerd service..."
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
@@ -278,13 +281,17 @@ ensureDocker() {
     systemctlEnableAndStart docker-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+{{if EnableEncryptionWithExternalKms}}
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
 ensureKubelet() {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
@@ -321,11 +328,11 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
+{{if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-        retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
-    fi
+    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
 }
+{{end}}
 
 ensureEtcd() {
     retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
@@ -400,20 +407,27 @@ configAzurePolicyAddon() {
     sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
 }
 
+{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
+    {{if IsClusterAutoscalerAddonEnabled}}
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
         configClusterAutoscalerAddon
     fi
-
+    {{end}}
+    {{if IsACIConnectorAddonEnabled}}
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
     fi
-
+    {{end}}
+    {{if IsAzurePolicyAddonEnabled}}
     if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
         configAzurePolicyAddon
     fi
+    {{end}}
 }
+{{end}}
 
+{{if HasNSeriesSKU}}
 configGPUDrivers() {
     # only install the runtime since nvidia-docker2 has a hard dep on docker CE packages.
     # we will manually install nvidia-docker2
@@ -442,9 +456,9 @@ configGPUDrivers() {
     retrycmd_if_failure 120 5 25 $GPU_DEST/bin/nvidia-smi || exit $ERR_GPU_DRIVERS_START_FAIL
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
 }
-
 ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+{{end}}
 #EOF

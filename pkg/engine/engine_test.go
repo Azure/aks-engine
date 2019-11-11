@@ -1679,6 +1679,90 @@ func TestGetWindowsMasterSubnetARMParam(t *testing.T) {
 	}
 }
 
+func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
+	cases := []struct {
+		name string
+		cs   *api.ContainerService
+	}{
+		{
+			name: "zero value cs",
+			cs:   &api.ContainerService{},
+		},
+		{
+			name: "cs with stuff in it",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			for _, file := range []string{kubernetesCSEHelpersScript,
+				kubernetesCustomSearchDomainsScript,
+				kubernetesMasterGenerateProxyCertsScript,
+				kubernetesMountEtcd,
+				etcdSystemdService,
+				dhcpv6SystemdService,
+				dhcpv6ConfigurationScript,
+				kubernetesCISScript,
+				kmsSystemdService,
+				labelNodesScript,
+				labelNodesSystemdService,
+				aptPreferences,
+				kubernetesHealthMonitorScript,
+				kubernetesKubeletMonitorSystemdService,
+				kubernetesDockerMonitorSystemdService,
+				kubernetesDockerMonitorSystemdTimer,
+				kubernetesDockerMonitorSystemdTimer,
+				kubeletSystemdService,
+				dockerClearMountPropagationFlags,
+				auditdRules,
+				kubernetesCSECustomCloud,
+				systemdBPFMount,
+			} {
+				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
+				b, err := Asset(file)
+				if err != nil {
+					t.Fatalf("unable to load file")
+				}
+				if getBase64EncodedGzippedCustomScriptFromStr(string(b)) != ret {
+					t.Fatalf("getBase64EncodedGzippedCustomScript returned an unexpected result for file %s, perhaps it was interpreted by golang templates unexpectedly", file)
+				}
+			}
+		})
+	}
+}
+
 func TestWrapAsVariableObject(t *testing.T) {
 	tests := []struct {
 		name     string
