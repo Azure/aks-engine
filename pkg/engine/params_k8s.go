@@ -5,7 +5,6 @@ package engine
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -71,17 +70,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", true)
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
-			}
-			if kubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName) {
-				clusterAutoscalerAddon := kubernetesConfig.GetAddonByName(ClusterAutoscalerAddonName)
-				clusterAutoScalerIndex := clusterAutoscalerAddon.GetAddonContainersIndexByName(ClusterAutoscalerAddonName)
-				if clusterAutoScalerIndex > -1 {
-					addValue(parametersMap, "kubernetesClusterAutoscalerAzureCloud", cloudSpecConfig.CloudName)
-					addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", true)
-					addValue(parametersMap, "kubernetesClusterAutoscalerUseManagedIdentity", strings.ToLower(strconv.FormatBool(kubernetesConfig.UseManagedIdentity)))
-				}
-			} else {
-				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
 			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])

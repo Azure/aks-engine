@@ -337,7 +337,7 @@ func getAddonString(input, destinationPath, destinationFile string) string {
 	return buildConfigString(addonString, destinationFile, destinationPath)
 }
 
-func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesComponentFileSpec, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string) string {
+func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesComponentFileSpec, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string, cs *api.ContainerService) string {
 	var config string
 
 	versions := strings.Split(orchestratorVersion, ".")
@@ -354,7 +354,7 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 			} else {
 				cscript = getCustomScriptFromFile(setting.sourceFile,
 					sourcePath,
-					versions[0]+"."+versions[1])
+					versions[0]+"."+versions[1], cs)
 				config += buildConfigString(
 					cscript,
 					setting.destinationFile,
@@ -379,9 +379,9 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 	return strings.Join(contents, "\\n")
 }
 
-func getCustomScriptFromFile(sourceFile, sourcePath, version string) string {
+func getCustomScriptFromFile(sourceFile, sourcePath, version string, cs *api.ContainerService) string {
 	customDataFilePath := getCustomDataFilePath(sourceFile, sourcePath, version)
-	return getBase64EncodedGzippedCustomScript(customDataFilePath)
+	return getBase64EncodedGzippedCustomScript(customDataFilePath, cs)
 }
 
 func getCustomDataFilePath(sourceFile, sourcePath, version string) string {

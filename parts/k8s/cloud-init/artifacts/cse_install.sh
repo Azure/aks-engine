@@ -271,13 +271,13 @@ pullContainerImage() {
 
 cleanUpContainerImages() {
     # TODO remove all unused container images at runtime
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'kube-svc-redirect') &
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
     fi
 
     # TODO: remove once ACR is available on Azure Stack

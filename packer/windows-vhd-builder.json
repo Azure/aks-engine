@@ -70,6 +70,12 @@
             "type": "windows-restart"
         },
         {
+            "type": "file",
+            "direction": "upload",
+            "source": "scripts/collect-windows-logs.ps1",
+            "destination": "c:\\akse-cache\\collect-windows-logs.ps1"
+        },
+        {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars" : [

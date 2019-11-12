@@ -36,7 +36,7 @@ type Config struct {
 	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
-	Timeout             time.Duration `envconfig:"TIMEOUT" default:"10m"`
+	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`

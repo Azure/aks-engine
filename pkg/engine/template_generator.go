@@ -185,7 +185,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		"k8s/manifests",
 		"/etc/kubernetes/manifests",
 		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion)
+		profile.OrchestratorProfile.OrchestratorVersion, cs)
 
 	// add addons
 	str = substituteConfigString(str,
@@ -193,7 +193,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		"k8s/addons",
 		"/etc/kubernetes/addons",
 		"MASTER_ADDONS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion)
+		profile.OrchestratorProfile.OrchestratorVersion, cs)
 
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
@@ -204,7 +204,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		customFilesReader,
 		"MASTER_CUSTOM_FILES_PLACEHOLDER")
 
-	addonStr := getContainerAddonsString(cs.Properties, "k8s/containeraddons")
+	addonStr := getContainerAddonsString(cs, "k8s/containeraddons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
 
@@ -244,10 +244,15 @@ func (t *TemplateGenerator) GetKubernetesWindowsNodeCustomDataJSONObject(cs *api
 	return fmt.Sprintf("{\"customData\": \"[base64(concat('%s'))]\"}", str)
 }
 
-// getTemplateFuncMap returns all functions used in template generation
+// getTemplateFuncMap returns the general purpose template func map from getContainerServiceFuncMap
+func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
+	return getContainerServiceFuncMap(cs)
+}
+
+// getContainerServiceFuncMap returns all functions used in template generation
 // These funcs are a thin wrapper for template generation operations,
 // all business logic is implemented in the underlying func
-func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) template.FuncMap {
+func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
@@ -438,7 +443,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetMasterSwarmCustomData": func() string {
 			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files)
+			str := buildYamlFileWithWriteFiles(files, cs)
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
 				extensionStr := makeMasterExtensionScriptCommands(cs)
 				str += "'runcmd:\n" + extensionStr + "\n\n'"
@@ -448,7 +453,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetAgentSwarmCustomData": func(profile *api.AgentPoolProfile) string {
 			files := []string{swarmProvision}
-			str := buildYamlFileWithWriteFiles(files)
+			str := buildYamlFileWithWriteFiles(files, cs)
 			str = escapeSingleLine(str)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
 		},
@@ -464,11 +469,11 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 			return cs.Location
 		},
 		"GetWinAgentSwarmCustomData": func() string {
-			str := getBase64EncodedGzippedCustomScript(swarmWindowsProvision)
+			str := getBase64EncodedGzippedCustomScript(swarmWindowsProvision, cs)
 			return fmt.Sprintf("\"customData\": \"%s\"", str)
 		},
 		"GetWinAgentSwarmModeCustomData": func() string {
-			str := getBase64EncodedGzippedCustomScript(swarmModeWindowsProvision)
+			str := getBase64EncodedGzippedCustomScript(swarmModeWindowsProvision, cs)
 			return fmt.Sprintf("\"customData\": \"%s\"", str)
 		},
 		"GetKubernetesWindowsAgentFunctions": func() string {
@@ -507,7 +512,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetMasterSwarmModeCustomData": func() string {
 			files := []string{swarmModeProvision}
-			str := buildYamlFileWithWriteFiles(files)
+			str := buildYamlFileWithWriteFiles(files, cs)
 			if cs.Properties.MasterProfile.PreprovisionExtension != nil {
 				extensionStr := makeMasterExtensionScriptCommands(cs)
 				str += "runcmd:\n" + extensionStr + "\n\n"
@@ -517,7 +522,7 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"GetAgentSwarmModeCustomData": func(profile *api.AgentPoolProfile) string {
 			files := []string{swarmModeProvision}
-			str := buildYamlFileWithWriteFiles(files)
+			str := buildYamlFileWithWriteFiles(files, cs)
 			str = escapeSingleLine(str)
 			return fmt.Sprintf("\"customData\": \"[base64(concat('%s',variables('%sRunCmdFile'),variables('%sRunCmd')))]\",", str, profile.Name, profile.Name)
 		},
@@ -659,6 +664,33 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 		},
 		"IsKataContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
+		},
+		"HasNSeriesSKU": func() bool {
+			return cs.Properties.HasNSeriesSKU()
+		},
+		"HasDCSeriesSKU": func() bool {
+			return cs.Properties.HasDCSeriesSKU()
+		},
+		"HasCoreOS": func() bool {
+			return cs.Properties.HasCoreOS()
+		},
+		"RequiresDocker": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
+		},
+		"IsAzurePolicyAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.AzurePolicyAddonName)
+		},
+		"IsACIConnectorAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ACIConnectorAddonName)
+		},
+		"IsClusterAutoscalerAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName)
+		},
+		"OpenBraces": func() string {
+			return "{{"
+		},
+		"CloseBraces": func() string {
+			return "}}"
 		},
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -1678,6 +1679,90 @@ func TestGetWindowsMasterSubnetARMParam(t *testing.T) {
 	}
 }
 
+func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
+	cases := []struct {
+		name string
+		cs   *api.ContainerService
+	}{
+		{
+			name: "zero value cs",
+			cs:   &api.ContainerService{},
+		},
+		{
+			name: "cs with stuff in it",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			for _, file := range []string{kubernetesCSEHelpersScript,
+				kubernetesCustomSearchDomainsScript,
+				kubernetesMasterGenerateProxyCertsScript,
+				kubernetesMountEtcd,
+				etcdSystemdService,
+				dhcpv6SystemdService,
+				dhcpv6ConfigurationScript,
+				kubernetesCISScript,
+				kmsSystemdService,
+				labelNodesScript,
+				labelNodesSystemdService,
+				aptPreferences,
+				kubernetesHealthMonitorScript,
+				kubernetesKubeletMonitorSystemdService,
+				kubernetesDockerMonitorSystemdService,
+				kubernetesDockerMonitorSystemdTimer,
+				kubernetesDockerMonitorSystemdTimer,
+				kubeletSystemdService,
+				dockerClearMountPropagationFlags,
+				auditdRules,
+				kubernetesCSECustomCloud,
+				systemdBPFMount,
+			} {
+				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
+				b, err := Asset(file)
+				if err != nil {
+					t.Fatalf("unable to load file")
+				}
+				if getBase64EncodedGzippedCustomScriptFromStr(string(b)) != ret {
+					t.Fatalf("getBase64EncodedGzippedCustomScript returned an unexpected result for file %s, perhaps it was interpreted by golang templates unexpectedly", file)
+				}
+			}
+		})
+	}
+}
+
 func TestWrapAsVariableObject(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -1706,6 +1791,671 @@ func TestWrapAsVariableObject(t *testing.T) {
 			ret := wrapAsVariableObject(test.o, test.s)
 			if test.expected != ret {
 				t.Errorf("expected %s, instead got : %s", test.expected, ret)
+			}
+		})
+	}
+}
+
+func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
+	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	cases := []struct {
+		name                       string
+		addon                      api.KubernetesAddon
+		cs                         *api.ContainerService
+		expectedImage              string
+		expectedCPUReqs            string
+		expectedCPULimits          string
+		expectedMemReqs            string
+		expectedMemLimits          string
+		expectedScanInterval       string
+		expectedVersion            string
+		expectedMode               string
+		expectedNodesConfig        string
+		expectedVMType             string
+		expectedVolumeMounts       string
+		expectedVolumes            string
+		expectedHostNetwork        string
+		expectedCloud              string
+		expectedUseManagedIdentity string
+	}{
+		{
+			name: "single pool",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
+			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
+			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedCloud:              "AzurePublicCloud",
+			expectedUseManagedIdentity: "true",
+		},
+		{
+			name: "multiple pools",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:10:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
+			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
+			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedCloud:              "AzurePublicCloud",
+			expectedUseManagedIdentity: "true",
+		},
+		{
+			name: "no pools",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+							UseManagedIdentity: true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
+			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
+			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedCloud:              "AzurePublicCloud",
+			expectedUseManagedIdentity: "true",
+		},
+		{
+			name: "non-MSI scenario",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "3",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       "",
+			expectedVolumes:            "",
+			expectedHostNetwork:        "",
+			expectedCloud:              "AzurePublicCloud",
+			expectedUseManagedIdentity: "false",
+		},
+		{
+			name: "china scenario",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "3",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+				Location: "chinanorth",
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       "",
+			expectedVolumes:            "",
+			expectedHostNetwork:        "",
+			expectedCloud:              "AzureChinaCloud",
+			expectedUseManagedIdentity: "false",
+		},
+		{
+			name: "german cloud scenario",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "3",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+				Location: "germanynortheast",
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       "",
+			expectedVolumes:            "",
+			expectedHostNetwork:        "",
+			expectedCloud:              "AzureGermanCloud",
+			expectedUseManagedIdentity: "false",
+		},
+		{
+			name: "usgov cloud scenario",
+			addon: api.KubernetesAddon{
+				Name:    ClusterAutoscalerAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"scan-interval": "1m",
+					"v":             "3",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           api.ClusterAutoscalerAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+					},
+				},
+				Pools: []api.AddonNodePoolsConfig{
+					{
+						Name: "pool1",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "10",
+						},
+					},
+					{
+						Name: "pool2",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "3",
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.5",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    api.ClusterAutoscalerAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+				Location: "usgovnorth",
+			},
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedCPUReqs:            "100m",
+			expectedCPULimits:          "100m",
+			expectedMemReqs:            "300Mi",
+			expectedMemLimits:          "300Mi",
+			expectedScanInterval:       "1m",
+			expectedVersion:            "3",
+			expectedMode:               api.AddonModeEnsureExists,
+			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:3:k8s-pool2-49584119-vmss",
+			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
+			expectedVolumeMounts:       "",
+			expectedVolumes:            "",
+			expectedHostNetwork:        "",
+			expectedCloud:              "AzureUSGovernmentCloud",
+			expectedUseManagedIdentity: "false",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			funcMap := getClusterAutoscalerAddonFuncMap(c.addon, c.cs)
+			v := reflect.ValueOf(funcMap["ContainerImage"])
+			ret := v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			if ret[0].Interface() != c.expectedImage {
+				t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedImage, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerCPUReqs"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			if ret[0].Interface() != c.expectedCPUReqs {
+				t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedCPUReqs, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerCPULimits"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			if ret[0].Interface() != c.expectedCPULimits {
+				t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedCPULimits, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerMemReqs"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			if ret[0].Interface() != c.expectedMemReqs {
+				t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedMemReqs, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerMemLimits"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			if ret[0].Interface() != c.expectedMemLimits {
+				t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedMemLimits, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerConfig"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("scan-interval")})
+			if ret[0].Interface() != c.expectedScanInterval {
+				t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "scan-interval", c.expectedScanInterval, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerConfig"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("v")})
+			if ret[0].Interface() != c.expectedVersion {
+				t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "v", c.expectedVersion, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerConfig"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("non-existent")})
+			if ret[0].Interface() != "" {
+				t.Errorf("expected funcMap invocation of ContainerConfig %s to return \"\", instead got %s", "non-existent", ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetMode"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedMode {
+				t.Errorf("expected funcMap invocation of GetMode to return %s, instead got %s", c.expectedMode, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetClusterAutoscalerNodesConfig"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedNodesConfig {
+				t.Errorf("expected funcMap invocation of GetClusterAutoscalerNodesConfig to return %s, instead got %s", c.expectedNodesConfig, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetVMType"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedVMType {
+				t.Errorf("expected funcMap invocation of GetVMType to return %s, instead got %s", c.expectedVMType, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetVolumeMounts"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedVolumeMounts {
+				t.Errorf("expected funcMap invocation of GetVolumeMounts to return %s, instead got %s", c.expectedVolumeMounts, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetVolumes"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedVolumes {
+				t.Errorf("expected funcMap invocation of GetVolumes to return %s, instead got %s", c.expectedVolumes, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetHostNetwork"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHostNetwork {
+				t.Errorf("expected funcMap invocation of GetHostNetwork to return %s, instead got %s", c.expectedHostNetwork, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCloud"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedCloud {
+				t.Errorf("expected funcMap invocation of GetCloud to return %s, instead got %s", c.expectedCloud, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["UseManagedIdentity"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedUseManagedIdentity {
+				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %s, instead got %s", c.expectedUseManagedIdentity, ret[0].Interface())
 			}
 		})
 	}

@@ -2,7 +2,9 @@
 ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
+{{if IsAzureStackCloud}}
 AZURE_STACK_ENV="azurestackcloud"
+{{end}}
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
@@ -26,13 +28,17 @@ config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
 
+{{if IsAzureStackCloud}}
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
 fi
+{{end}}
 
+{{if HasCustomSearchDomain}}
 CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
+{{end}}
 
 set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX}+1)))
@@ -84,27 +90,35 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
 
+{{if not HasCoreOS}}
 if [[ $OS != $COREOS_OS_NAME ]]; then
     installContainerRuntime
 fi
+{{end}}
 installNetworkPlugin
+{{if NeedsContainerd}}
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     installContainerd
 fi
+{{end}}
+{{if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
     fi
     ensureGPUDrivers
 fi
+{{end}}
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
 createKubeManifestDir
+{{if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
 fi
+{{end}}
 
 # create etcd user if we are configured for etcd
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -116,6 +130,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
   # both configs etcd/cosmos
   configureSecrets
 fi
+
 # configure etcd if we are configured for etcd
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
@@ -123,10 +138,11 @@ else
     removeEtcd
 fi
 
-
+{{if HasCustomSearchDomain}}
 if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
     $CUSTOM_SEARCH_DOMAIN_SCRIPT > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
 fi
+{{end}}
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
     ensureDocker
@@ -138,12 +154,14 @@ fi
 
 configureK8s
 
+{{if IsAzureStackCloud}}
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
     configureK8sCustomCloud
     if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
         configureAzureStackInterfaces
     fi
 fi
+{{end}}
 
 configureCNI
 
@@ -151,14 +169,19 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
+{{if NeedsContainerd}}
 if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
     ensureContainerd
 fi
+{{end}}
 
+{{if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
+{{end}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
 # configure and enable dhcpv6 for dual stack feature
 if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
     dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
@@ -169,6 +192,7 @@ if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
 
     retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 fi
+{{end}}
 
 ensureKubelet
 ensureJournal
@@ -182,7 +206,11 @@ if [[ -n "${MASTER_NODE}" ]]; then
       ensureEtcd
     fi
     ensureK8sControlPlane
-    ensureLabelExclusionForAzurePolicyAddon
+    {{if IsAzurePolicyAddonEnabled}}
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+      ensureLabelExclusionForAzurePolicyAddon
+    fi
+    {{end}}
 fi
 
 if $FULL_INSTALL_REQUIRED; then
@@ -193,10 +221,11 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
+{{if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
-    # TODO: remove once ACR is available on Azure Stack
     apt_get_purge 20 30 120 apache2-utils &
 fi
+{{end}}
 
 if $REBOOTREQUIRED; then
   echo 'reboot required, rebooting node in 1 minute'

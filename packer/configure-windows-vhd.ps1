@@ -61,6 +61,7 @@ function Get-FilesToCacheOnVHD
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/starthnstrace.cmd",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd",
+            "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/debug/VFP.psm1",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1"
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
         );
