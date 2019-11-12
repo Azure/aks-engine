@@ -15,6 +15,7 @@ fi
 files=$(find . -type f -name "*.sh" -not -path './vendor/*' -not -path './hack/tools/*' -not -path './test/e2e/vendor/*' -not -path "*dcos*" -not -path "*swarm*")
 
 IGNORED="
+SC1127
 SC1009
 SC1054
 SC1056
