@@ -12,7 +12,7 @@ func TestCloudControllerManagerConfig(t *testing.T) {
 	cs := CreateMockContainerService("testcluster", k8sVersion, 3, 2, false)
 	cs.setCloudControllerManagerConfig()
 	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig
-	if cm["--controllers"] != "*,-cloud-node" {
+	if cm["--controllers"] != "*" {
 		t.Fatalf("got unexpected '--controllers' Cloud Controller Manager config value for Kubernetes %s: %s",
 			k8sVersion, cm["--controllers"])
 	}

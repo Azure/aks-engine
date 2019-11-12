@@ -25,7 +25,7 @@ func (cs *ContainerService) setCloudControllerManagerConfig() {
 
 	// Add new arguments for Azure cloud-controller-manager component.
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		staticCloudControllerManagerConfig["--controllers"] = "*,-cloud-node"
+		staticCloudControllerManagerConfig["--controllers"] = "*"
 	}
 
 	// Set --cluster-name based on appropriate DNS prefix
