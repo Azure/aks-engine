@@ -71,8 +71,8 @@ func TestK8sVars(t *testing.T) {
 		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
 		"' MOBY_VERSION=',parameters('mobyVersion')," +
 		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s'" +
-		"' HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
+		"' KUBERNETES_VERSION=%s" +
+		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
 		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
 		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
 		"' RESOURCE_GROUP=',variables('resourceGroup')," +
@@ -104,7 +104,7 @@ func TestK8sVars(t *testing.T) {
 		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',parameters('cloudproviderConfig').loadBalancerDisableOutboundSNAT," +
+		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
 		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
 		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
 		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
@@ -114,9 +114,9 @@ func TestK8sVars(t *testing.T) {
 		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
 		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t'" +
-		"' IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t'" +
-		"' PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
+		"' IS_HOSTED_MASTER=%t" +
+		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
+		" PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')" +
@@ -827,8 +827,8 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
 		"' MOBY_VERSION=',parameters('mobyVersion')," +
 		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s'" +
-		"' HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
+		"' KUBERNETES_VERSION=%s" +
+		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
 		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
 		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
 		"' RESOURCE_GROUP=',variables('resourceGroup')," +
@@ -860,7 +860,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
 		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',parameters('cloudproviderConfig').loadBalancerDisableOutboundSNAT," +
+		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
 		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
 		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
 		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
@@ -870,9 +870,9 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
 		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t'" +
-		"' IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t'" +
-		"' PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
+		"' IS_HOSTED_MASTER=%t" +
+		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
+		" PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')" +

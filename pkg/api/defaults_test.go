@@ -3522,7 +3522,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  BasicLoadBalancerSku,
-							CloudProviderDisableOutboundSNAT: true,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -3539,7 +3539,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  BasicLoadBalancerSku,
-							CloudProviderDisableOutboundSNAT: false,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -3556,7 +3556,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  StandardLoadBalancerSku,
-							CloudProviderDisableOutboundSNAT: true,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -3573,7 +3573,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  StandardLoadBalancerSku,
-							CloudProviderDisableOutboundSNAT: false,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -3588,8 +3588,8 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			c.cs.setOrchestratorDefaults(false, false)
-			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT != c.expected {
-				t.Errorf("expected %t, but got %t", c.expected, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT)
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) != c.expected {
+				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT))
 			}
 		})
 	}
