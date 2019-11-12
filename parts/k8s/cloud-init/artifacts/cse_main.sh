@@ -1,5 +1,5 @@
 #!/bin/bash
-ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
+ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
 {{if IsAzureStackCloud}}
@@ -120,18 +120,18 @@ if [[ "${SGX_NODE}" = true ]]; then
 fi
 {{end}}
 
-# create etcd user if we are configured for etcd
+{{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
   configureEtcdUser
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
-  # this step configures all certs
-  # both configs etcd/cosmos
+  {{/* this step configures all certs */}}
+  {{/* both configs etcd/cosmos */}}
   configureSecrets
 fi
 
-# configure etcd if we are configured for etcd
+{{/* configure etcd if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
 else
@@ -182,7 +182,7 @@ fi
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-# configure and enable dhcpv6 for dual stack feature
+{{/* configure and enable dhcpv6 for dual stack feature */}}
 if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
     dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
     dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
@@ -215,7 +215,7 @@ fi
 
 if $FULL_INSTALL_REQUIRED; then
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
-        # mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635
+        {{/* mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635 */}}
         echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
         sed -i "13i\echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind\n" /etc/rc.local
     fi

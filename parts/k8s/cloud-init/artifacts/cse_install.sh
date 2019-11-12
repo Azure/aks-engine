@@ -134,7 +134,7 @@ installMoby() {
 }
 
 installKataContainersRuntime() {
-    # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
+    {{/* TODO incorporate this into packer CI so that it is pre-baked into the VHD image */}}
     echo "Adding Kata Containers repository key..."
     ARCH=$(arch)
     BRANCH=stable-1.7
@@ -277,7 +277,7 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    # TODO remove all unused container images at runtime
+    {{/* TODO remove all unused container images at runtime */}}
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
@@ -287,7 +287,7 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
     fi
 
-    # TODO: remove once ACR is available on Azure Stack
+    {{/* TODO: remove once ACR is available on Azure Stack */}}
     docker rmi registry:2.7.1 &
 }
 
