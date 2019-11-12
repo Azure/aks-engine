@@ -109,6 +109,16 @@ type ClusterMetadata struct {
 type AddonProfile struct {
 	Enabled bool              `json:"enabled"`
 	Config  map[string]string `json:"config"`
+	// Identity contains information of the identity associated with this addon.
+	// This property will only appear in an MSI-enabled cluster.
+	Identity *UserAssignedIdentity `json:"identity,omitempty"`
+}
+
+// UserAssignedIdentity contains information that uniquely identifies an identity
+type UserAssignedIdentity struct {
+	ResourceID string `json:"resourceId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ObjectID   string `json:"objectId,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
