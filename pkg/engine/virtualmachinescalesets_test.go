@@ -6,6 +6,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -216,19 +217,6 @@ func TestCreateMasterVMSS(t *testing.T) {
 
 	expected.VirtualMachineProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{
 		Extensions: &[]compute.VirtualMachineScaleSetExtension{
-			{
-				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-ManagedIdentityExtension')]"),
-				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
-					Publisher:               to.StringPtr("Microsoft.ManagedIdentity"),
-					Type:                    to.StringPtr("ManagedIdentityExtensionForLinux"),
-					TypeHandlerVersion:      to.StringPtr("1.0"),
-					AutoUpgradeMinorVersion: to.BoolPtr(true),
-					Settings: map[string]interface{}{
-						"port": 50343,
-					},
-					ProtectedSettings: map[string]interface{}{},
-				},
-			},
 			{
 				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmssCSE')]"),
 				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
@@ -1167,5 +1155,68 @@ func TestCreateCustomOSVMSS(t *testing.T) {
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal agent VMSS structs: %s", diff)
+	}
+}
+
+func TestAssociateAddonIdentitiesToVMSS(t *testing.T) {
+	mockKubeletIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/kubeletIdentity"
+	mockOMSAgentIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/omsagentIdentity"
+	mockAzurePolicyIdentityResourceID := "/subscriptions/c4528d9e-c99a-48bb-b12d-fde2176a43b8/resourcegroups/fooRG/providers/Microsoft.ManagedIdentity/userAssignedIdentities/azurePolicyIdentity"
+	mockAddonProfiles := map[string]api.AddonProfile{
+		"omsagent": {
+			Enabled: true,
+			Config: map[string]string{
+				"foo": "bar",
+			},
+			Identity: &api.UserAssignedIdentity{
+				ResourceID: mockOMSAgentIdentityResourceID,
+			},
+		},
+		"azurepolicy": {
+			Enabled: true,
+			Config: map[string]string{
+				"foo": "bar",
+			},
+			Identity: &api.UserAssignedIdentity{
+				ResourceID: mockAzurePolicyIdentityResourceID,
+			},
+		},
+	}
+
+	mockVMSS := compute.VirtualMachineScaleSet{
+		Identity: &compute.VirtualMachineScaleSetIdentity{
+			Type: compute.ResourceIdentityTypeUserAssigned,
+			UserAssignedIdentities: map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
+				mockKubeletIdentityResourceID: {},
+			},
+		},
+	}
+
+	// Test with nil VMSS, there should be no panic
+	associateAddonIdentitiesToVMSS(mockAddonProfiles, nil)
+	// Test with nil addonProfiles, vmss.Identity should keep unchanged.
+	associateAddonIdentitiesToVMSS(nil, &mockVMSS)
+	expectedVMSSIdentity := compute.VirtualMachineScaleSetIdentity{
+		Type: compute.ResourceIdentityTypeUserAssigned,
+		UserAssignedIdentities: map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
+			mockKubeletIdentityResourceID: {},
+		},
+	}
+	if !reflect.DeepEqual(*mockVMSS.Identity, expectedVMSSIdentity) {
+		t.Errorf("unexpected error while associate nil addonProfiles to VMSS. Expected vmss.Identity: %+v, found: %+v", expectedVMSSIdentity, *mockVMSS.Identity)
+	}
+
+	// Test with normal case
+	associateAddonIdentitiesToVMSS(mockAddonProfiles, &mockVMSS)
+	expectedVMSSIdentity = compute.VirtualMachineScaleSetIdentity{
+		Type: compute.ResourceIdentityTypeUserAssigned,
+		UserAssignedIdentities: map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
+			mockKubeletIdentityResourceID:     {},
+			mockOMSAgentIdentityResourceID:    {},
+			mockAzurePolicyIdentityResourceID: {},
+		},
+	}
+	if !reflect.DeepEqual(*mockVMSS.Identity, expectedVMSSIdentity) {
+		t.Errorf("unexpected error while associate addonProfiles to VMSS. Expected vmss.Identity: %+v, found: %+v", expectedVMSSIdentity, *mockVMSS.Identity)
 	}
 }
