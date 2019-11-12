@@ -529,6 +529,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.DcosConfig.BootstrapProfile.VMSize = "Standard_D2s_v3"
 			}
 		}
+		if !cs.Properties.MasterProfile.IsCustomVNET() {
+			if cs.Properties.OrchestratorProfile.DcosConfig != nil && cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
+				if !isUpgrade || len(cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP) == 0 {
+					cs.Properties.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP = DefaultDCOSBootstrapStaticIP
+				}
+			}
+		}
 	}
 }
 
@@ -569,11 +576,6 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool, cloudName string) 
 				// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 				if !isUpgrade || len(p.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 					p.MasterProfile.FirstConsecutiveStaticIP = DefaultDCOSFirstConsecutiveStaticIP
-				}
-				if p.OrchestratorProfile.DcosConfig != nil && p.OrchestratorProfile.DcosConfig.BootstrapProfile != nil {
-					if !isUpgrade || len(p.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP) == 0 {
-						p.OrchestratorProfile.DcosConfig.BootstrapProfile.StaticIP = DefaultDCOSBootstrapStaticIP
-					}
 				}
 			} else if p.HasWindows() {
 				p.MasterProfile.Subnet = DefaultSwarmWindowsMasterSubnet
