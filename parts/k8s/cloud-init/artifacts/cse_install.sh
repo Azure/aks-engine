@@ -134,7 +134,6 @@ installMoby() {
 }
 
 installKataContainersRuntime() {
-    # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
     ARCH=$(arch)
     BRANCH=stable-1.7
