@@ -8,9 +8,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
+)
+
+const (
+	defaultTestPKISize int = 512
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
@@ -531,7 +535,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: defaultTestPKISize,
 	})
 	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
@@ -554,7 +558,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: helpers.DefaultPkiKeySize,
+				PkiKeySize: defaultTestPKISize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "true" {
@@ -575,7 +579,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: helpers.DefaultPkiKeySize,
+				PkiKeySize: defaultTestPKISize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
@@ -597,7 +601,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: defaultTestPKISize,
 	})
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
@@ -625,7 +629,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: helpers.DefaultPkiKeySize,
+				PkiKeySize: defaultTestPKISize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "false" {

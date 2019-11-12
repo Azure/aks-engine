@@ -5566,7 +5566,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 	mockCSDefaultSpec.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: defaultTestPKISize,
 	})
 	var actualResult []string
 	for _, location := range mockCSDefaultSpec.GetLocations() {
