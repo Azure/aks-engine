@@ -11,14 +11,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"gopkg.in/ini.v1"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
 )
 
 //mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
@@ -188,7 +188,6 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 	t.Parallel()
 
 	cs := prepareCustomCloudProfile()
-
 	if err := writeCustomCloudProfile(cs); err != nil {
 		t.Fatalf("failed to write custom cloud profile: %v", err)
 	}
@@ -220,7 +219,7 @@ func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 	cs := prepareCustomCloudProfile()
 	subscriptionID, _ := uuid.Parse("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
 
-	for _, test := range []struct {
+	for _, tc := range []struct {
 		desc     string
 		authArgs authArgs
 	}{
@@ -255,7 +254,9 @@ func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 			},
 		},
 	} {
+		test := tc
 		t.Run(test.desc, func(t *testing.T) {
+
 			mux := getMuxForIdentitySystem(&test.authArgs)
 
 			server, err := testserver.CreateAndStart(0, mux)
@@ -265,7 +266,6 @@ func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 			defer server.Stop()
 
 			mockURI := fmt.Sprintf("http://localhost:%d/", server.Port)
-
 			cs.Properties.CustomCloudProfile.Environment.ResourceManagerEndpoint = mockURI
 			cs.Properties.CustomCloudProfile.Environment.ActiveDirectoryEndpoint = mockURI
 
@@ -450,7 +450,7 @@ func prepareCustomCloudProfile() *api.ContainerService {
 	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: 512,
 	})
 
 	return cs

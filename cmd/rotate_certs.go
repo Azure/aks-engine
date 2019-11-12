@@ -14,18 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/engine"
-	"github.com/Azure/aks-engine/pkg/engine/transform"
-	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 )
 
 const (
@@ -55,6 +56,7 @@ type rotateCertsCmd struct {
 	agentNodes         []v1.Node
 	sshConfig          *ssh.ClientConfig
 	sshCommandExecuter func(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error)
+	pkiSize            *int
 }
 
 func newRotateCertsCmd() *cobra.Command {
@@ -148,8 +150,13 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
+	var pkiSize = helpers.DefaultPkiKeySize
+	if rcc.pkiSize != nil {
+		pkiSize = *rcc.pkiSize
+	}
+
 	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: pkiSize,
 	})
 	if !certsGenerated || err != nil {
 		return errors.Wrap(err, "generating new certificates")

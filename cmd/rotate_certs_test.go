@@ -9,10 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -20,6 +18,9 @@ import (
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 )
 
 func mockExecuteCmd(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error) {
@@ -66,6 +67,7 @@ func TestRotateCertsCmdRun(t *testing.T) {
 		sshFilepath:        tmpSSHFile,
 		sshCommandExecuter: mockExecuteCmd,
 		masterFQDN:         "valid",
+		pkiSize:            to.IntPtr(512),
 	}
 
 	r := &cobra.Command{}
@@ -259,7 +261,7 @@ func TestWriteArtifacts(t *testing.T) {
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: 512,
 	})
 	g.Expect(err).NotTo(HaveOccurred())
 	outdir, del := makeTmpDir(t)
@@ -270,6 +272,7 @@ func TestWriteArtifacts(t *testing.T) {
 		containerService: cs,
 		apiVersion:       "vlabs",
 		outputDirectory:  outdir,
+		pkiSize:          to.IntPtr(512),
 	}
 
 	err = rcc.writeArtifacts()
@@ -284,7 +287,7 @@ func TestUpdateKubeconfig(t *testing.T) {
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: 512,
 	})
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -306,6 +309,7 @@ func TestUpdateKubeconfig(t *testing.T) {
 				},
 			},
 		},
+		pkiSize:          to.IntPtr(512),
 	}
 	err = rcc.updateKubeconfig()
 	g.Expect(err).NotTo(HaveOccurred())
@@ -324,7 +328,7 @@ func TestRotateCerts(t *testing.T) {
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: helpers.DefaultPkiKeySize,
+		PkiKeySize: 512,
 	})
 	g.Expect(err).NotTo(HaveOccurred())
 
@@ -369,6 +373,7 @@ func TestRotateCerts(t *testing.T) {
 				},
 			},
 		},
+		pkiSize:          to.IntPtr(512),
 	}
 
 	err = rcc.rotateEtcd(ctx)
