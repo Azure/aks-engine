@@ -710,6 +710,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
 				coreComponents = append(coreComponents, "heapster")
 			}
+			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+				coreComponents = append(coreComponents, "cloud-controller-manager", "cloud-node-manager", "csi-azuredisk-controller", "csi-azurefile-controller")
+			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
