@@ -14,18 +14,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/engine"
-	"github.com/Azure/aks-engine/pkg/engine/transform"
-	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/engine"
+	"github.com/Azure/aks-engine/pkg/engine/transform"
+	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/i18n"
 )
 
 const (

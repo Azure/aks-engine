@@ -6,94 +6,112 @@ package armhelpers
 import (
 	"testing"
 
-	. "github.com/Azure/aks-engine/pkg/test"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
-	. "github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
-func TestUpgradeCluster(t *testing.T) {
-	RunSpecsWithReporters(t, "templatedeployment", "Server Suite")
+func TestDeployTemplateSync_Errors(t *testing.T) {
+	cases := []struct {
+		name                     string
+		mockClientFactory        func() *MockAKSEngineClient
+		topErrorMatcher          types.GomegaMatcher
+		provisioningStateMatcher types.GomegaMatcher
+		statusCodeMatcher        types.GomegaMatcher
+		responseMatcher          types.GomegaMatcher
+		opsListLenMatcher        types.GomegaMatcher
+	}{
+		{
+			name: "InternalOperationError",
+			mockClientFactory: func() *MockAKSEngineClient {
+				return &MockAKSEngineClient{
+					FailDeployTemplate: true,
+				}
+			},
+			topErrorMatcher:          Equal("DeployTemplate failed"),
+			provisioningStateMatcher: Equal(""),
+			statusCodeMatcher:        Equal(0),
+			responseMatcher:          BeEmpty(),
+			opsListLenMatcher:        Equal(0),
+		},
+		{
+			name: "QuotaExceeded",
+			mockClientFactory: func() *MockAKSEngineClient {
+				return &MockAKSEngineClient{
+					FailDeployTemplateQuota: true,
+				}
+			},
+			topErrorMatcher:          ContainSubstring("resources.DeploymentsClient#CreateOrUpdate: Failure responding"),
+			provisioningStateMatcher: Equal(""),
+			statusCodeMatcher:        Equal(400),
+			responseMatcher:          ContainSubstring("\"code\":\"QuotaExceeded\""),
+			opsListLenMatcher:        Equal(0),
+		},
+		{
+			name: "Conflict",
+			mockClientFactory: func() *MockAKSEngineClient {
+				return &MockAKSEngineClient{
+					FailDeployTemplateConflict: true,
+				}
+			},
+			topErrorMatcher:          ContainSubstring("At least one resource deployment operation failed."),
+			provisioningStateMatcher: Equal(""),
+			statusCodeMatcher:        Equal(200),
+			responseMatcher:          ContainSubstring("\"code\":\"Conflict\""),
+			opsListLenMatcher:        Equal(0),
+		},
+		{
+			name: "DeployErrorWithOperationsLists",
+			mockClientFactory: func() *MockAKSEngineClient {
+				return &MockAKSEngineClient{
+					FailDeployTemplateWithProperties: true,
+				}
+			},
+			topErrorMatcher:          ContainSubstring("At least one resource deployment operation failed."),
+			provisioningStateMatcher: Equal("Failed"),
+			statusCodeMatcher:        Equal(200),
+			responseMatcher:          ContainSubstring("\"code\":\"Conflict\""),
+			opsListLenMatcher:        Equal(2),
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := c.mockClientFactory()
+			logger := log.NewEntry(log.New())
+			err := DeployTemplateSync(client, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
+			g := NewGomegaWithT(t)
+			g.Expect(err).NotTo(BeNil())
+			deplErr, ok := err.(*DeploymentError)
+			g.Expect(ok).To(BeTrue())
+			g.Expect(deplErr.TopError.Error()).To(c.topErrorMatcher)
+			g.Expect(deplErr.ProvisioningState).To(c.provisioningStateMatcher)
+			g.Expect(deplErr.StatusCode).To(c.statusCodeMatcher)
+			g.Expect(string(deplErr.Response)).To(c.responseMatcher)
+			g.Expect(len(deplErr.OperationsLists)).To(c.opsListLenMatcher)
+		})
+	}
 }
 
-var _ = Describe("Template deployment tests", func() {
+func TestDeployTemplateSync_Success(t *testing.T) {
+	t.Parallel()
 
-	It("Should return InternalOperationError error code", func() {
-		mockClient := &MockAKSEngineClient{}
-		mockClient.FailDeployTemplate = true
-		logger := log.NewEntry(log.New())
-
-		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
-		Expect(err).NotTo(BeNil())
-		deplErr, ok := err.(*DeploymentError)
-		Expect(ok).To(BeTrue())
-		Expect(deplErr.TopError).NotTo(BeNil())
-		Expect(deplErr.TopError.Error()).To(Equal("DeployTemplate failed"))
-		Expect(deplErr.ProvisioningState).To(Equal(""))
-		Expect(deplErr.StatusCode).To(Equal(0))
-		Expect(len(deplErr.OperationsLists)).To(Equal(0))
-	})
-
-	It("Should return QuotaExceeded error code, specified in details", func() {
-		mockClient := &MockAKSEngineClient{}
-		mockClient.FailDeployTemplateQuota = true
-		logger := log.NewEntry(log.New())
-
-		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
-		Expect(err).NotTo(BeNil())
-		deplErr, ok := err.(*DeploymentError)
-		Expect(ok).To(BeTrue())
-		Expect(deplErr.TopError).NotTo(BeNil())
-		Expect(deplErr.ProvisioningState).To(Equal(""))
-		Expect(deplErr.StatusCode).To(Equal(400))
-		Expect(string(deplErr.Response)).To(ContainSubstring("\"code\":\"QuotaExceeded\""))
-		Expect(len(deplErr.OperationsLists)).To(Equal(0))
-	})
-
-	It("Should return Conflict error code, specified in details", func() {
-		mockClient := &MockAKSEngineClient{}
-		mockClient.FailDeployTemplateConflict = true
-		logger := log.NewEntry(log.New())
-
-		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
-		Expect(err).NotTo(BeNil())
-		deplErr, ok := err.(*DeploymentError)
-		Expect(ok).To(BeTrue())
-		Expect(deplErr.TopError).NotTo(BeNil())
-		Expect(deplErr.ProvisioningState).To(Equal(""))
-		Expect(deplErr.StatusCode).To(Equal(200))
-		Expect(string(deplErr.Response)).To(ContainSubstring("\"code\":\"Conflict\""))
-		Expect(len(deplErr.OperationsLists)).To(Equal(0))
-	})
-
-	It("Should return deployment error with Operations Lists", func() {
-		mockClient := &MockAKSEngineClient{}
-		mockClient.FailDeployTemplateWithProperties = true
-		logger := log.NewEntry(log.New())
-
-		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
-		Expect(err).NotTo(BeNil())
-		deplErr, ok := err.(*DeploymentError)
-		Expect(ok).To(BeTrue())
-		Expect(deplErr.TopError).NotTo(BeNil())
-		Expect(deplErr.ProvisioningState).To(Equal("Failed"))
-		Expect(deplErr.StatusCode).To(Equal(200))
-		Expect(string(deplErr.Response)).To(ContainSubstring("\"code\":\"Conflict\""))
-		Expect(len(deplErr.OperationsLists)).To(Equal(2))
-	})
-
-	It("Should return nil on success", func() {
-		mockClient := &MockAKSEngineClient{}
-		logger := log.NewEntry(log.New())
-		err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
-		Expect(err).To(BeNil())
-	})
-})
+	mockClient := &MockAKSEngineClient{}
+	logger := log.NewEntry(log.New())
+	err := DeployTemplateSync(mockClient, logger, "rg1", "agentvm", map[string]interface{}{}, map[string]interface{}{})
+	g := NewGomegaWithT(t)
+	g.Expect(err).To(BeNil())
+}
 
 func TestDeploymentError_Error(t *testing.T) {
+	t.Parallel()
+
 	operationsLists := make([]resources.DeploymentOperationsListResult, 0)
 	operationsList := resources.DeploymentOperationsListResult{}
 	operations := make([]resources.DeploymentOperation, 0)

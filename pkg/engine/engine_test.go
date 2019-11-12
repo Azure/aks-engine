@@ -16,6 +16,9 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/leonelquinteros/gotext"
+	"github.com/pkg/errors"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
@@ -23,8 +26,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/leonelquinteros/gotext"
-	"github.com/pkg/errors"
 )
 
 const (

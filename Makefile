@@ -155,7 +155,7 @@ ginkgoBuild: generate
 	make -C ./test/e2e ginkgo-build
 
 test: generate ginkgoBuild
-	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v .
+	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast .
 
 .PHONY: test-style
 test-style: validate-go validate-shell validate-copyright-headers

@@ -564,7 +564,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
-		PkiKeySize: 4096,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 
 	// In upgrade scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
