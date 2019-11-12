@@ -15399,7 +15399,14 @@ extractHyperkube() {
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
-        docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
+        if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
+            mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+            mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+            return
+        else
+            docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        fi
     else
         img unpack -o "$path" ${HYPERKUBE_URL}
     fi
