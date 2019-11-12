@@ -11,12 +11,12 @@ import (
 )
 
 func TestAzureStorageClient_CreateContainer(t *testing.T) {
-	cases := []struct{
-		name string
+	cases := []struct {
+		name                 string
 		storageClientFactory func() *MockStorageClient
-		errMatcher types.GomegaMatcher
-		resMatcher types.GomegaMatcher
-	} {
+		errMatcher           types.GomegaMatcher
+		resMatcher           types.GomegaMatcher
+	}{
 		{
 			name: "ShouldPassIfCreated",
 			storageClientFactory: func() *MockStorageClient {
@@ -54,11 +54,11 @@ func TestAzureStorageClient_CreateContainer(t *testing.T) {
 }
 
 func TestAzureStorageClient_SaveBlockBlob(t *testing.T) {
-	cases := []struct{
-		name string
+	cases := []struct {
+		name                 string
 		storageClientFactory func() *MockStorageClient
-		errMatcher types.GomegaMatcher
-	} {
+		errMatcher           types.GomegaMatcher
+	}{
 		{
 			name: "ShouldPassIfCreated",
 			storageClientFactory: func() *MockStorageClient {

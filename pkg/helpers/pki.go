@@ -26,11 +26,6 @@ const (
 	ValidityDuration = time.Hour * 24 * 365 * 30
 )
 
-const (
-	// DefaultPkiKeySize is the default size in bytes of the PKI key
-	DefaultPkiKeySize = 4096
-)
-
 // PkiParams is used when we create Pki
 type PkiParams struct {
 	ExtraFQDNs    []string

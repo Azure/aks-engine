@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 //mockAuthProvider implements AuthProvider and allows in particular to stub out getClient()
@@ -450,7 +451,7 @@ func prepareCustomCloudProfile() *api.ContainerService {
 	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: 512,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 
 	return cs

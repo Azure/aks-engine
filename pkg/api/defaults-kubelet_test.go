@@ -11,10 +11,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
-)
-
-const (
-	defaultTestPKISize int = 512
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
@@ -535,7 +532,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: defaultTestPKISize,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
@@ -558,7 +555,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: defaultTestPKISize,
+				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "true" {
@@ -579,7 +576,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: defaultTestPKISize,
+				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
@@ -601,7 +598,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
-		PkiKeySize: defaultTestPKISize,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
@@ -629,7 +626,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
-				PkiKeySize: defaultTestPKISize,
+				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "false" {

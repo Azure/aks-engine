@@ -296,9 +296,6 @@ func TestAutoSufixWithDnsPrefixInApiModel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
-	_, _, _ = cs.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: 512,
-	})
 
 	outDir, del := makeTmpDir(t)
 	defer del()
@@ -348,9 +345,6 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInCmd(t *test
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
-	_, _, _ = cs.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: 512,
-	})
 
 	outDir, del := makeTmpDir(t)
 	defer del()
@@ -547,10 +541,6 @@ func testAutodeployCredentialHandling(t *testing.T, useManagedIdentity bool, cli
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
-
-	_, _, _ = cs.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: 512,
-	})
 
 	outDir, del := makeTmpDir(t)
 	defer del()

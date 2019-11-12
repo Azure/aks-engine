@@ -56,7 +56,6 @@ type rotateCertsCmd struct {
 	agentNodes         []v1.Node
 	sshConfig          *ssh.ClientConfig
 	sshCommandExecuter func(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error)
-	pkiSize            *int
 }
 
 func newRotateCertsCmd() *cobra.Command {
@@ -150,13 +149,8 @@ func (rcc *rotateCertsCmd) run(cmd *cobra.Command, args []string) error {
 
 	// reset the certificateProfile and use the exisiting certificate generation code to generate new certificates.
 	rcc.containerService.Properties.CertificateProfile = &api.CertificateProfile{}
-	var pkiSize = helpers.DefaultPkiKeySize
-	if rcc.pkiSize != nil {
-		pkiSize = *rcc.pkiSize
-	}
-
 	certsGenerated, _, err := rcc.containerService.SetDefaultCerts(api.DefaultCertParams{
-		PkiKeySize: pkiSize,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	if !certsGenerated || err != nil {
 		return errors.Wrap(err, "generating new certificates")
