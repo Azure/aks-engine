@@ -11351,7 +11351,9 @@ data:
         loop
         reload
         loadbalance
+        import custom/*.override
     }
+    import custom/*.server
 ---
 apiVersion: v1
 kind: ConfigMap
