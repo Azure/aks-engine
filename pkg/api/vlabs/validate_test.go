@@ -1952,6 +1952,75 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azurefile-csi-driver",
 		)
 	}
+
+	// Basic tests for cloud-node-manager
+	p.OrchestratorProfile.OrchestratorVersion = "1.15.5"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.16.0 for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.2"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(false),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is enabled and cloud-node-manager isn't",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.16 for cloud-node-manager",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {
