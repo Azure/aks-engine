@@ -3100,14 +3100,6 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(false),
 				},
 				{
-					Name:    AzureFileCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    AzureDiskCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
 					Name:    CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
