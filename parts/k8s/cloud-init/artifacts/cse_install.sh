@@ -253,6 +253,7 @@ extractHyperkube() {
 }
 
 extractKubeBinaries() {
+    KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
     K8S_TGZ_TMP=$(echo ${KUBE_BINARY_URL} | cut -d "/" -f 5)
     mkdir -p "${K8S_DOWNLOADS_DIR}"
     retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
