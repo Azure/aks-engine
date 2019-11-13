@@ -686,6 +686,14 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName)
 		},
+		"GetComponentImageReference": func(name string) string {
+			kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			if cs.Properties.IsAzureStackCloud() {
+				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
+			}
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			return kubernetesImageBase + k8sComponents[name]
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},

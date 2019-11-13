@@ -241,12 +241,6 @@
       },
       "type": "string"
     },
-    "kubernetesAddonManagerSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "enableAggregatedAPIs": {
       "metadata": {
         "description": "Enable aggregated API on master nodes"

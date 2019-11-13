@@ -17505,7 +17505,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
 
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
 {{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
     sed -i "s|<img>|{{WrapAsParameter "kubeAPIServerSpec"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
     sed -i "s|<img>|{{WrapAsParameter "kubeControllerManagerSpec"}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
@@ -33106,12 +33105,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubernetesAddonManagerSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "enableAggregatedAPIs": {
       "metadata": {
         "description": "Enable aggregated API on master nodes"
@@ -34262,7 +34255,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-addon-manager
-    image: <img>
+    image: {{GetComponentImageReference "addonmanager"}}
     imagePullPolicy: IfNotPresent
     resources:
       requests:
