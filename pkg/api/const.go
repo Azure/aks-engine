@@ -435,6 +435,8 @@ const (
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
 	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CloudNodeManagerAddonName is the name of the cloud node manager addon
+	CloudNodeManagerAddonName = "cloud-node-manager"
 	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
 	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes

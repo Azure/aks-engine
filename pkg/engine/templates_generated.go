@@ -148,6 +148,7 @@
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -11351,7 +11352,9 @@ data:
         loop
         reload
         loadbalance
+        import custom/*.override
     }
+    import custom/*.server
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -14368,7 +14371,7 @@ configureK8s() {
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
-    # Perform the required JSON escaping for special characters \ and "
+    {{/* Perform the required JSON escaping */}}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
@@ -14403,6 +14406,7 @@ configureK8s() {
     "userAssignedIdentityID": "${USER_ASSIGNED_IDENTITY_ID}",
     "useInstanceMetadata": ${USE_INSTANCE_METADATA},
     "loadBalancerSku": "${LOAD_BALANCER_SKU}",
+    "disableOutboundSNAT": ${LOAD_BALANCER_DISABLE_OUTBOUND_SNAT},
     "excludeMasterFromStandardLB": ${EXCLUDE_MASTER_FROM_STANDARD_LB},
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
@@ -14425,7 +14429,7 @@ EOF
 }
 
 configureCNI() {
-    # needed for the iptables rules to work on bridges
+    {{/* needed for the iptables rules to work on bridges */}}
     retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
     echo -n "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
     configureCNIIPTables
@@ -14436,8 +14440,8 @@ configureCNI() {
     fi
 {{if IsAzureStackCloud}}
     if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
-        # set environment to mas when using Azure CNI on Azure Stack
-        # shellcheck disable=SC2002,SC2005
+        {{/* set environment to mas when using Azure CNI on Azure Stack */}}
+        {{/* shellcheck disable=SC2002,SC2005 */}}
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
     fi
 {{end}}
@@ -14483,7 +14487,7 @@ ensureDocker() {
         fi
     done
     systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
-    # Delay start of docker-monitor for 30 mins after booting
+    {{/* Delay start of docker-monitor for 30 mins after booting */}}
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     DOCKER_MONITOR_SYSTEMD_FILE=/etc/systemd/system/docker-monitor.service
@@ -14639,8 +14643,8 @@ configAddons() {
 
 {{if HasNSeriesSKU}}
 configGPUDrivers() {
-    # only install the runtime since nvidia-docker2 has a hard dep on docker CE packages.
-    # we will manually install nvidia-docker2
+    {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
+    {{/* we will manually install nvidia-docker2 */}}
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
@@ -14884,68 +14888,67 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
+{{/* ERR_SYSTEMCTL_ENABLE_FAIL=3 Service could not be enabled by systemctl -- DEPRECATED */}}
+ERR_SYSTEMCTL_START_FAIL=4 {{/* Service could not be started or enabled by systemctl */}}
+ERR_CLOUD_INIT_TIMEOUT=5 {{/* Timeout waiting for cloud-init runcmd to complete */}}
+ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
+ERR_HOLD_WALINUXAGENT=7 {{/* Unable to place walinuxagent apt package on hold during install */}}
+ERR_RELEASE_HOLD_WALINUXAGENT=8 {{/* Unable to release hold on walinuxagent apt package after install */}}
+ERR_APT_INSTALL_TIMEOUT=9 {{/* Timeout installing required apt packages */}}
+ERR_ETCD_DATA_DIR_NOT_FOUND=10 {{/* Etcd data dir not found */}}
+ERR_ETCD_RUNNING_TIMEOUT=11 {{/* Timeout waiting for etcd to be accessible */}}
+ERR_ETCD_DOWNLOAD_TIMEOUT=12 {{/* Timeout waiting for etcd to download */}}
+ERR_ETCD_VOL_MOUNT_FAIL=13 {{/* Unable to mount etcd disk volume */}}
+ERR_ETCD_START_TIMEOUT=14 {{/* Unable to start etcd runtime */}}
+ERR_ETCD_CONFIG_FAIL=15 {{/* Unable to configure etcd cluster */}}
+ERR_DOCKER_INSTALL_TIMEOUT=20 {{/* Timeout waiting for docker install */}}
+ERR_DOCKER_DOWNLOAD_TIMEOUT=21 {{/* Timout waiting for docker downloads */}}
+ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT=22 {{/* Timeout waiting to download docker repo key */}}
+ERR_DOCKER_APT_KEY_TIMEOUT=23 {{/* Timeout waiting for docker apt-key */}}
+ERR_DOCKER_START_FAIL=24 {{/* Docker could not be started by systemctl */}}
+ERR_MOBY_APT_LIST_TIMEOUT=25 {{/* Timeout waiting for moby apt sources */}}
+ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT=26 {{/* Timeout waiting for MS GPG key download */}}
+ERR_MOBY_INSTALL_TIMEOUT=27 {{/* Timeout waiting for moby install */}}
+ERR_K8S_RUNNING_TIMEOUT=30 {{/* Timeout waiting for k8s cluster to be healthy */}}
+ERR_K8S_DOWNLOAD_TIMEOUT=31 {{/* Timeout waiting for Kubernetes downloads */}}
+ERR_KUBECTL_NOT_FOUND=32 {{/* kubectl client binary not found on local disk */}}
+ERR_IMG_DOWNLOAD_TIMEOUT=33 {{/* Timeout waiting for img download */}}
+ERR_KUBELET_START_FAIL=34 {{/* kubelet could not be started by systemctl */}}
+ERR_CONTAINER_IMG_PULL_TIMEOUT=35 {{/* Timeout trying to pull a container image */}}
+ERR_CNI_DOWNLOAD_TIMEOUT=41 {{/* Timeout waiting for CNI downloads */}}
+ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT=42 {{/* Timeout waiting for https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb */}}
+ERR_MS_PROD_DEB_PKG_ADD_FAIL=43 {{/* Failed to add repo pkg file */}}
+{{/* ERR_FLEXVOLUME_DOWNLOAD_TIMEOUT=44 Failed to add repo pkg file -- DEPRECATED */}}
+ERR_SYSTEMD_INSTALL_FAIL=48 {{/* Unable to install required systemd version */}}
+ERR_MODPROBE_FAIL=49 {{/* Unable to load a kernel module using modprobe */}}
+ERR_OUTBOUND_CONN_FAIL=50 {{/* Unable to establish outbound connection */}}
+ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60 {{/* Timeout waiting to download kata repo key */}}
+ERR_KATA_APT_KEY_TIMEOUT=61 {{/* Timeout waiting for kata apt-key */}}
+ERR_KATA_INSTALL_TIMEOUT=62 {{/* Timeout waiting for kata install */}}
+ERR_CONTAINERD_DOWNLOAD_TIMEOUT=70 {{/* Timeout waiting for containerd downloads */}}
+ERR_CUSTOM_SEARCH_DOMAINS_FAIL=80 {{/* Unable to configure custom search domains */}}
+ERR_GPU_DRIVERS_START_FAIL=84 {{/* nvidia-modprobe could not be started by systemctl */}}
+ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85 {{/* Timeout waiting for GPU drivers install */}}
+ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90 {{/* Timeout waiting for SGX prereqs to download */}}
+ERR_SGX_DRIVERS_START_FAIL=91 {{/* Failed to execute SGX driver binary */}}
+ERR_APT_DAILY_TIMEOUT=98 {{/* Timeout waiting for apt daily updates */}}
+ERR_APT_UPDATE_TIMEOUT=99 {{/* Timeout waiting for apt-get update to complete */}}
+ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 {{/* Timeout waiting for cloud-init to place this script on the vm */}}
+ERR_APT_DIST_UPGRADE_TIMEOUT=101 {{/* Timeout waiting for apt-get dist-upgrade to complete */}}
+ERR_APT_PURGE_FAIL=102 {{/* Error purging distro packages */}}
+ERR_SYSCTL_RELOAD=103 {{/* Error reloading sysctl config */}}
+ERR_CIS_ASSIGN_ROOT_PW=111 {{/* Error assigning root password in CIS enforcement */}}
+ERR_CIS_ASSIGN_FILE_PERMISSION=112 {{/* Error assigning permission to a file in CIS enforcement */}}
+ERR_PACKER_COPY_FILE=113 {{/* Error writing a file to disk during VHD CI */}}
+ERR_CIS_APPLY_PASSWORD_CONFIG=115 {{/* Error applying CIS-recommended passwd configuration */}}
 
-#ERR_SYSTEMCTL_ENABLE_FAIL=3 # Service could not be enabled by systemctl -- DEPRECATED
-ERR_SYSTEMCTL_START_FAIL=4 # Service could not be started or enabled by systemctl
-ERR_CLOUD_INIT_TIMEOUT=5 # Timeout waiting for cloud-init runcmd to complete
-ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
-ERR_HOLD_WALINUXAGENT=7 # Unable to place walinuxagent apt package on hold during install
-ERR_RELEASE_HOLD_WALINUXAGENT=8 # Unable to release hold on walinuxagent apt package after install
-ERR_APT_INSTALL_TIMEOUT=9 # Timeout installing required apt packages
-ERR_ETCD_DATA_DIR_NOT_FOUND=10 # Etcd data dir not found
-ERR_ETCD_RUNNING_TIMEOUT=11 # Timeout waiting for etcd to be accessible
-ERR_ETCD_DOWNLOAD_TIMEOUT=12 # Timeout waiting for etcd to download
-ERR_ETCD_VOL_MOUNT_FAIL=13 # Unable to mount etcd disk volume
-ERR_ETCD_START_TIMEOUT=14 # Unable to start etcd runtime
-ERR_ETCD_CONFIG_FAIL=15 # Unable to configure etcd cluster
-ERR_DOCKER_INSTALL_TIMEOUT=20 # Timeout waiting for docker install
-ERR_DOCKER_DOWNLOAD_TIMEOUT=21 # Timout waiting for docker download(s)
-ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT=22 # Timeout waiting to download docker repo key
-ERR_DOCKER_APT_KEY_TIMEOUT=23 # Timeout waiting for docker apt-key
-ERR_DOCKER_START_FAIL=24 # Docker could not be started by systemctl
-ERR_MOBY_APT_LIST_TIMEOUT=25 # Timeout waiting for moby apt sources
-ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT=26 # Timeout waiting for MS GPG key download
-ERR_MOBY_INSTALL_TIMEOUT=27 # Timeout waiting for moby install
-ERR_K8S_RUNNING_TIMEOUT=30 # Timeout waiting for k8s cluster to be healthy
-ERR_K8S_DOWNLOAD_TIMEOUT=31 # Timeout waiting for Kubernetes download(s)
-ERR_KUBECTL_NOT_FOUND=32 # kubectl client binary not found on local disk
-ERR_IMG_DOWNLOAD_TIMEOUT=33 # Timeout waiting for img download
-ERR_KUBELET_START_FAIL=34 # kubelet could not be started by systemctl
-ERR_CONTAINER_IMG_PULL_TIMEOUT=35 # Timeout trying to pull a container image
-ERR_CNI_DOWNLOAD_TIMEOUT=41 # Timeout waiting for CNI download(s)
-ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT=42 # Timeout waiting for https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb
-ERR_MS_PROD_DEB_PKG_ADD_FAIL=43 # Failed to add repo pkg file
-#ERR_FLEXVOLUME_DOWNLOAD_TIMEOUT=44 # Failed to add repo pkg file -- DEPRECATED
-ERR_SYSTEMD_INSTALL_FAIL=48 # Unable to install required systemd version
-ERR_MODPROBE_FAIL=49 # Unable to load a kernel module using modprobe
-ERR_OUTBOUND_CONN_FAIL=50 # Unable to establish outbound connection
-ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60 # Timeout waiting to download kata repo key
-ERR_KATA_APT_KEY_TIMEOUT=61 # Timeout waiting for kata apt-key
-ERR_KATA_INSTALL_TIMEOUT=62 # Timeout waiting for kata install
-ERR_CONTAINERD_DOWNLOAD_TIMEOUT=70 # Timeout waiting for containerd download(s)
-ERR_CUSTOM_SEARCH_DOMAINS_FAIL=80 # Unable to configure custom search domains
-ERR_GPU_DRIVERS_START_FAIL=84 # nvidia-modprobe could not be started by systemctl
-ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85 # Timeout waiting for GPU drivers install
-ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90 # Timeout waiting for SGX prereqs to download
-ERR_SGX_DRIVERS_START_FAIL=91 # Failed to execute SGX driver binary
-ERR_APT_DAILY_TIMEOUT=98 # Timeout waiting for apt daily updates
-ERR_APT_UPDATE_TIMEOUT=99 # Timeout waiting for apt-get update to complete
-ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 # Timeout waiting for cloud-init to place this (!) script on the vm
-ERR_APT_DIST_UPGRADE_TIMEOUT=101 # Timeout waiting for apt-get dist-upgrade to complete
-ERR_APT_PURGE_FAIL=102 # Error purging distro packages
-ERR_SYSCTL_RELOAD=103 # Error reloading sysctl config
-ERR_CIS_ASSIGN_ROOT_PW=111 # Error assigning root password in CIS enforcement
-ERR_CIS_ASSIGN_FILE_PERMISSION=112 # Error assigning permission to a file in CIS enforcement
-ERR_PACKER_COPY_FILE=113 # Error writing a file to disk during VHD CI
-ERR_CIS_APPLY_PASSWORD_CONFIG=115 # Error applying CIS-recommended passwd configuration
+ERR_VHD_FILE_NOT_FOUND=124 {{/* VHD log file not found on VM built from VHD distro */}}
+ERR_VHD_BUILD_ERROR=125 {{/* Reserved for VHD CI exit conditions */}}
 
-ERR_VHD_FILE_NOT_FOUND=124 # VHD log file not found on VM built from VHD distro
-ERR_VHD_BUILD_ERROR=125 # Reserved for VHD CI exit conditions
-
-# Azure Stack specific errors
-ERR_AZURE_STACK_GET_ARM_TOKEN=120 # Error generating a token to use with Azure Resource Manager
-ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 # Error fetching the network configuration for the node
-ERR_AZURE_STACK_GET_SUBNET_PREFIX=122 # Error fetching the subnet address prefix for a subnet ID
+{{/* Azure Stack specific errors */}}
+ERR_AZURE_STACK_GET_ARM_TOKEN=120 {{/* Error generating a token to use with Azure Resource Manager */}}
+ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 {{/* Error fetching the network configuration for the node */}}
+ERR_AZURE_STACK_GET_SUBNET_PREFIX=122 {{/* Error fetching the subnet address prefix for a subnet ID */}}
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
@@ -15305,7 +15308,6 @@ installMoby() {
 }
 
 installKataContainersRuntime() {
-    # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
     ARCH=$(arch)
     BRANCH=stable-1.7
@@ -15401,7 +15403,14 @@ extractHyperkube() {
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
-        docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
+        if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
+            mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+            mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+            return
+        else
+            docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        fi
     else
         img unpack -o "$path" ${HYPERKUBE_URL}
     fi
@@ -15441,7 +15450,6 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    # TODO remove all unused container images at runtime
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
@@ -15451,7 +15459,6 @@ cleanUpContainerImages() {
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
     fi
 
-    # TODO: remove once ACR is available on Azure Stack
     docker rmi registry:2.7.1 &
 }
 
@@ -15492,7 +15499,7 @@ func k8sCloudInitArtifactsCse_installSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
-ERR_FILE_WATCH_TIMEOUT=6 # Timeout waiting for a file
+ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
 {{if IsAzureStackCloud}}
@@ -15613,18 +15620,18 @@ if [[ "${SGX_NODE}" = true ]]; then
 fi
 {{end}}
 
-# create etcd user if we are configured for etcd
+{{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
   configureEtcdUser
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
-  # this step configures all certs
-  # both configs etcd/cosmos
+  {{/* this step configures all certs */}}
+  {{/* both configs etcd/cosmos */}}
   configureSecrets
 fi
 
-# configure etcd if we are configured for etcd
+{{/* configure etcd if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     configureEtcd
 else
@@ -15675,7 +15682,7 @@ fi
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-# configure and enable dhcpv6 for dual stack feature
+{{/* configure and enable dhcpv6 for dual stack feature */}}
 if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
     dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
     dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
@@ -15708,7 +15715,7 @@ fi
 
 if $FULL_INSTALL_REQUIRED; then
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
-        # mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635
+        {{/* mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635 */}}
         echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
         sed -i "13i\echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind\n" /etc/rc.local
     fi
@@ -25340,6 +25347,109 @@ func k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, e
 	return a, nil
 }
 
+var _k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: cloud-node-manager
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch","list","get","update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cloud-node-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-node-manager
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      hostNetwork: true   # required to fetch correct hostname
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command: ["cloud-node-manager"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+`)
+
+func k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
 kind: ServiceAccount
@@ -33004,7 +33114,8 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "cloudProviderRateLimitQPS": "0",
         "cloudProviderRateLimitQPSWrite": "0",
         "cloudProviderRateLimitBucket": 0,
-        "cloudProviderRateLimitBucketWrite": 0
+        "cloudProviderRateLimitBucketWrite": 0,
+        "cloudProviderDisableOutboundSNAT": false
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}
@@ -33885,17 +33996,24 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["cloud-controller-manager"]
       args: [<config>]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 4
+          memory: 2Gi
       volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: etc-ssl
-          mountPath: /etc/ssl
-          readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
+      - name: etc-kubernetes
+        mountPath: /etc/kubernetes
+      - name: etc-ssl
+        mountPath: /etc/ssl
+        readOnly: true
+      - name: var-lib-kubelet
+        mountPath: /var/lib/kubelet
+      - name: msi
+        mountPath: /var/lib/waagent/ManagedIdentity-Settings
+        readOnly: true
   volumes:
     - name: etc-kubernetes
       hostPath:
@@ -39008,6 +39126,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml":             k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":                k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml":              k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -39309,6 +39428,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cloud-node-manager.yaml":              {k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},

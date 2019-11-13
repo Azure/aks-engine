@@ -235,6 +235,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
+		// K8s 1.17 and later require Azure cloud-controller-manager components
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0-alpha.1") {
+			o.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
+		}
+
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
 			if o.KubernetesConfig.CloudProviderBackoff == nil {
@@ -374,6 +379,15 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku &&
 			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes == 0 {
 			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
+		}
+
+		if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+			if o.KubernetesConfig.CloudProviderDisableOutboundSNAT == nil {
+				o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+			}
+		} else {
+			// CloudProviderDisableOutboundSNAT is only valid in the context of Standard LB, statically set to false if not Standard LB
+			o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
 		}
 
 		// First, Configure addons

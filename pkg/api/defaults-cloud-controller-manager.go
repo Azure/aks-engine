@@ -5,19 +5,27 @@ package api
 
 import (
 	"strconv"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 func (cs *ContainerService) setCloudControllerManagerConfig() {
 	o := cs.Properties.OrchestratorProfile
 	staticCloudControllerManagerConfig := map[string]string{
-		"--allocate-node-cidrs":    strconv.FormatBool(!o.IsAzureCNI()),
-		"--configure-cloud-routes": strconv.FormatBool(o.RequireRouteTable()),
-		"--cloud-provider":         "azure",
-		"--cloud-config":           "/etc/kubernetes/azure.json",
-		"--cluster-cidr":           o.KubernetesConfig.ClusterSubnet,
-		"--kubeconfig":             "/var/lib/kubelet/kubeconfig",
-		"--leader-elect":           "true",
-		"--v":                      "2",
+		"--allocate-node-cidrs":         strconv.FormatBool(!o.IsAzureCNI()),
+		"--configure-cloud-routes":      strconv.FormatBool(o.RequireRouteTable()),
+		"--cloud-provider":              "azure",
+		"--cloud-config":                "/etc/kubernetes/azure.json",
+		"--cluster-cidr":                o.KubernetesConfig.ClusterSubnet,
+		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
+		"--leader-elect":                "true",
+		"--route-reconciliation-period": "10s",
+		"--v":                           "2",
+	}
+
+	// Add new arguments for Azure cloud-controller-manager component.
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		staticCloudControllerManagerConfig["--controllers"] = "*"
 	}
 
 	// Set --cluster-name based on appropriate DNS prefix

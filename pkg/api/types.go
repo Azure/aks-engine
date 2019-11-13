@@ -109,6 +109,16 @@ type ClusterMetadata struct {
 type AddonProfile struct {
 	Enabled bool              `json:"enabled"`
 	Config  map[string]string `json:"config"`
+	// Identity contains information of the identity associated with this addon.
+	// This property will only appear in an MSI-enabled cluster.
+	Identity *UserAssignedIdentity `json:"identity,omitempty"`
+}
+
+// UserAssignedIdentity contains information that uniquely identifies an identity
+type UserAssignedIdentity struct {
+	ResourceID string `json:"resourceId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ObjectID   string `json:"objectId,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -339,6 +349,7 @@ type CloudProviderConfig struct {
 	CloudProviderRateLimitQPSWrite    string `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int    `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int    `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  *bool  `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 }
 
 // KubernetesConfigDeprecated are properties that are no longer operable and will be ignored
@@ -419,6 +430,7 @@ type KubernetesConfig struct {
 	CloudProviderRateLimitQPSWrite    float64           `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int               `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int               `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  *bool             `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 	NonMasqueradeCidr                 string            `json:"nonMasqueradeCidr,omitempty"`
 	NodeStatusUpdateFrequency         string            `json:"nodeStatusUpdateFrequency,omitempty"`
 	HardEvictionThreshold             string            `json:"hardEvictionThreshold,omitempty"`
