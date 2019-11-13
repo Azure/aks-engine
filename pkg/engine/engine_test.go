@@ -1749,6 +1749,12 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				auditdRules,
 				kubernetesCSECustomCloud,
 				systemdBPFMount,
+				"k8s/manifests/" + kubeSchedulerManifestFilename,
+				"k8s/manifests/" + kubeControllerManagerManifestFilename,
+				"k8s/manifests/" + kubeControllerManagerCustomManifestFilename,
+				"k8s/manifests/" + ccmManifestFilename,
+				"k8s/manifests/" + kubeAPIServerManifestFilename,
+				"k8s/manifests/" + kubeAddonManagerManifestFilename,
 			} {
 				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
 				b, err := Asset(file)
