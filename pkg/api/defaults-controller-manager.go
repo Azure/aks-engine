@@ -36,6 +36,8 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
 		staticControllerManagerConfig["--cloud-provider"] = "azure"
 		staticControllerManagerConfig["--cloud-config"] = "/etc/kubernetes/azure.json"
+	} else {
+		staticControllerManagerConfig["--cloud-provider"] = "external"
 	}
 
 	// Default controller-manager config

@@ -710,6 +710,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
 				coreComponents = append(coreComponents, "heapster")
 			}
+			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+				coreComponents = append(coreComponents, "cloud-controller-manager", "cloud-node-manager", "csi-azuredisk-controller", "csi-azurefile-controller")
+			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
@@ -1786,10 +1789,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			})*/
 		It("should be able to attach azure file", func() {
 			if eng.HasWindowsAgents() {
-				if eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion == "1.11.0" {
+				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
+				if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
+					Skip("Azure disk and file CSI drivers are not yet supported on Windows")
+				}
+				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
 					Skip("Kubernetes 1.11.0 has a known issue creating Azure PersistentVolumeClaim")
-				} else if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.8.0") {
+				} else if common.IsKubernetesVersionGe(orchestratorVersion, "1.8.0") {
 					windowsImages, err := eng.GetWindowsTestImages()
 					Expect(err).NotTo(HaveOccurred())
 
@@ -1799,7 +1806,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 					By("Creating an AzureFile storage class")
 					storageclassName := "azurefile" // should be the same as in storageclass-azurefile.yaml
-					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, "storageclass-azurefile.yaml"), storageclassName)
+					scFilename := "storageclass-azurefile.yaml"
+					if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
+						scFilename = "storageclass-azurefile-external.yaml"
+					}
+					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, scFilename), storageclassName)
 					Expect(err).NotTo(HaveOccurred())
 					ready, err := sc.WaitOnReady(5*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
