@@ -183,3 +183,47 @@ func (page DiskListPageClient) Values() []azcompute.Disk {
 	}
 	return l
 }
+
+// ImageListResultPageClient contains a page of Image values.
+type ImageListResultPageClient struct {
+	dlp compute.ImageListResultPage
+	err error
+}
+
+// NextWithContext advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+func (page *ImageListResultPageClient) NextWithContext(ctx context.Context) (err error) {
+	return page.dlp.NextWithContext(ctx)
+}
+
+// Next advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+// Deprecated: Use NextWithContext() instead.
+func (page *ImageListResultPageClient) Next() error {
+	return page.dlp.Next()
+}
+
+// NotDone returns true if the page enumeration should be started or is not yet complete.
+func (page ImageListResultPageClient) NotDone() bool {
+	return !page.dlp.NotDone()
+}
+
+// Response returns the raw server response from the last page request.
+func (page ImageListResultPageClient) Response() azcompute.ImageListResultPage {
+	l := azcompute.ImageListResultPage{}
+	err := DeepCopy(&l, page.dlp.Response())
+	if err != nil {
+		page.err = fmt.Errorf("fail to get disk list result, %s", err)
+	}
+	return l
+}
+
+// Values returns the slice of values for the current page or nil if there are no values.
+func (page ImageListResultPageClient) Values() []azcompute.Image {
+	l := []azcompute.Image{}
+	err := DeepCopy(&l, page.dlp.Values())
+	if err != nil {
+		page.err = fmt.Errorf("fail to get disk list, %s", err)
+	}
+	return l
+}

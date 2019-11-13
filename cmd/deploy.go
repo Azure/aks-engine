@@ -404,6 +404,16 @@ func (dc *deployCmd) run() error {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
+	//Validate image
+	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
+	defer cancel()
+
+	images, err := dc.client.GetImagesList(cx)
+
+	if err != nil {
+		return errors.Wrapf(err, "getting images %s", dc.apimodelPath)
+	}
+
 	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "generating template %s", dc.apimodelPath)
@@ -438,8 +448,6 @@ func (dc *deployCmd) run() error {
 	}
 
 	deploymentSuffix := dc.random.Int31()
-	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
-	defer cancel()
 
 	if res, err := dc.client.DeployTemplate(
 		cx,
