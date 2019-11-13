@@ -716,6 +716,15 @@ func (a *Properties) validateAddons() error {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true.", addon.Name))
 					}
 				}
+			case "cloud-node-manager":
+				if to.Bool(addon.Enabled) {
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.16 or above", addon.Name))
+					}
+					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true.", addon.Name))
+					}
+				}
 			case "azure-policy":
 				if to.Bool(addon.Enabled) {
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
