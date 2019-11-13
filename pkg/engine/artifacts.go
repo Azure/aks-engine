@@ -298,15 +298,15 @@ func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFile
 	if k.APIServerConfig == nil {
 		k.APIServerConfig = map[string]string{}
 	}
-	kubeControllerManagerYaml := "kubernetesmaster-kube-controller-manager.yaml"
+	kubeControllerManagerYaml := kubeControllerManagerManifestFilename
 
 	if p.IsAzureStackCloud() {
-		kubeControllerManagerYaml = "kubernetesmaster-kube-controller-manager-custom.yaml"
+		kubeControllerManagerYaml = kubeControllerManagerCustomManifestFilename
 	}
 
 	return []kubernetesComponentFileSpec{
 		{
-			sourceFile:      "kubernetesmaster-kube-scheduler.yaml",
+			sourceFile:      kubeSchedulerManifestFilename,
 			base64Data:      k.SchedulerConfig["data"],
 			destinationFile: "kube-scheduler.yaml",
 			isEnabled:       true,
@@ -318,19 +318,19 @@ func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFile
 			isEnabled:       true,
 		},
 		{
-			sourceFile:      "kubernetesmaster-cloud-controller-manager.yaml",
+			sourceFile:      ccmManifestFilename,
 			base64Data:      k.CloudControllerManagerConfig["data"],
 			destinationFile: "cloud-controller-manager.yaml",
 			isEnabled:       to.Bool(k.UseCloudControllerManager),
 		},
 		{
-			sourceFile:      "kubernetesmaster-kube-apiserver.yaml",
+			sourceFile:      kubeAPIServerManifestFilename,
 			base64Data:      k.APIServerConfig["data"],
 			destinationFile: "kube-apiserver.yaml",
 			isEnabled:       true,
 		},
 		{
-			sourceFile:      "kubernetesmaster-kube-addon-manager.yaml",
+			sourceFile:      kubeAddonManagerManifestFilename,
 			base64Data:      "", // arbitrary user-provided data not enabled for kube-addon-manager spec
 			destinationFile: "kube-addon-manager.yaml",
 			isEnabled:       true,
