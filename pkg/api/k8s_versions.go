@@ -483,7 +483,10 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 	switch majorMinor {
 	case "1.17":
 		ret = map[string]string{
-			"hyperkube":                        "hyperkube-amd64:v" + version,
+			"kube-apiserver":                   "kube-apiserver:v" + version,
+			"kube-controller-manager":          "kube-controller-manager:v" + version,
+			"kube-proxy":                       "kube-proxy:v" + version,
+			"kube-scheduler":                   "kube-scheduler:v" + version,
 			"ccm":                              "azure-cloud-controller-manager:v0.3.0",
 			CloudNodeManagerAddonName:          "azure-cloud-node-manager:v0.3.0",
 			"windowszip":                       "v" + version + "-1int.zip",

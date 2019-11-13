@@ -394,7 +394,6 @@ done
 pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
-# TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
 1.16.2
 1.16.1
@@ -415,18 +414,28 @@ K8S_VERSIONS="
 1.11.9
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-  if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-    HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    else
+      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    fi
+    extractHyperkube "docker"
+    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
+      CONTAINER_IMAGE="k8s.gcr.io/${component}:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    fi
+    done
+    KUBE_BINARY_URL="https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"
+    extractKubeBinaries
   fi
-  extractHyperkube "docker"
-  echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
+  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
+    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+  fi
 done
 
 CLOUD_MANAGER_VERSIONS="
