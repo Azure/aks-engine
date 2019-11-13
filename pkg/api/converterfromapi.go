@@ -764,6 +764,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.ProxyMode = vlabs.KubeProxyMode(apiCfg.ProxyMode)
 	vlabsCfg.PrivateAzureRegistryServer = apiCfg.PrivateAzureRegistryServer
 	vlabsCfg.OutboundRuleIdleTimeoutInMinutes = apiCfg.OutboundRuleIdleTimeoutInMinutes
+	vlabsCfg.CloudProviderDisableOutboundSNAT = apiCfg.CloudProviderDisableOutboundSNAT
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
 	convertControllerManagerConfigToVlabs(apiCfg, vlabsCfg)

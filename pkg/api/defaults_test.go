@@ -3494,6 +3494,123 @@ func TestDefaultTelemetry(t *testing.T) {
 	}
 }
 
+func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
+	cases := []struct {
+		name     string
+		cs       ContainerService
+		expected bool
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: BasicLoadBalancerSku,
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB w/ true",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  BasicLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB w/ false",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  BasicLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "standard LB w/ true",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  StandardLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "standard LB w/ false",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  StandardLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(false, false)
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) != c.expected {
+				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT))
+			}
+		})
+	}
+}
+
 func TestImageReference(t *testing.T) {
 	cases := []struct {
 		name                      string

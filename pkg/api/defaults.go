@@ -381,6 +381,15 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
 		}
 
+		if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+			if o.KubernetesConfig.CloudProviderDisableOutboundSNAT == nil {
+				o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+			}
+		} else {
+			// CloudProviderDisableOutboundSNAT is only valid in the context of Standard LB, statically set to false if not Standard LB
+			o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+		}
+
 		// First, Configure addons
 		cs.setAddonsConfig(isUpgrade)
 		// Defaults enforcement flows below inherit from addons configuration,
