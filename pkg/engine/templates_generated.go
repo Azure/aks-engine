@@ -21494,7 +21494,7 @@ rules:
   resources: ["pods", "events", "nodes", "namespaces", "services"]
   verbs: ["list", "get", "watch"]
 - apiGroups: ["extensions"]
-  resources: ["deployments"]
+  resources: ["replicasets"]
   verbs: ["list"]
 - apiGroups: ["azmon.container.insights"]
   resources: ["healthstates"]
@@ -21756,7 +21756,7 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
-     
+
     <match kubehealth.Signals**>
      type out_oms
      log_level debug
@@ -24738,7 +24738,7 @@ rules:
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions"]
-    resources: ["deployments"]
+    resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
@@ -24941,7 +24941,7 @@ data:
      max_retry_wait 9m
     </match>
 
-    <match oms.api.KubePerf**>	
+    <match oms.api.KubePerf**>
      type out_oms
      log_level debug
      num_threads 5
@@ -28702,7 +28702,7 @@ rules:
     resources: ["pods", "events", "nodes", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions"]
-    resources: ["deployments"]
+    resources: ["replicasets"]
     verbs: ["list"]
   - apiGroups: ["azmon.container.insights"]
     resources: ["healthstates"]
