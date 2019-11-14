@@ -147,6 +147,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 	cases := []struct {
 		name                                 string
 		cs                                   *api.ContainerService
+		expectedHasCustomSearchDomain        bool
 		expectedGetSearchDomainName          string
 		expectedGetSearchDomainRealmUser     string
 		expectedGetSearchDomainRealmPassword string
@@ -173,6 +174,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
+			expectedHasCustomSearchDomain:        false,
 			expectedGetSearchDomainName:          "",
 			expectedGetSearchDomainRealmUser:     "",
 			expectedGetSearchDomainRealmPassword: "",
@@ -204,6 +206,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
+			expectedHasCustomSearchDomain:        false,
 			expectedGetSearchDomainName:          "",
 			expectedGetSearchDomainRealmUser:     "",
 			expectedGetSearchDomainRealmPassword: "",
@@ -235,6 +238,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
+			expectedHasCustomSearchDomain:        false,
 			expectedGetSearchDomainName:          "",
 			expectedGetSearchDomainRealmUser:     "",
 			expectedGetSearchDomainRealmPassword: "",
@@ -273,6 +277,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
+			expectedHasCustomSearchDomain:        true,
 			expectedGetSearchDomainName:          "foo",
 			expectedGetSearchDomainRealmUser:     "bar",
 			expectedGetSearchDomainRealmPassword: "baz",
@@ -309,6 +314,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					},
 				},
 			},
+			expectedHasCustomSearchDomain:        false,
 			expectedGetSearchDomainName:          "",
 			expectedGetSearchDomainRealmUser:     "",
 			expectedGetSearchDomainRealmPassword: "",
