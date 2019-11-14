@@ -34335,7 +34335,7 @@ spec:
       image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
