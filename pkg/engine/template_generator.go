@@ -694,6 +694,18 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 			return kubernetesImageBase + k8sComponents[name]
 		},
+		"GetHyperkubeImageReference": func() string {
+			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+			if cs.Properties.IsAzureStackCloud() {
+				hyperkubeImage = hyperkubeImage + AzureStackSuffix
+			}
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+				hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			}
+			return hyperkubeImage
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},

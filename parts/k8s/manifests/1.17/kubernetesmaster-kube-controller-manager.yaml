@@ -11,7 +11,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetComponentImageReference "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
       args: [<args>]

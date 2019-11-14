@@ -11,7 +11,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-apiserver"]
       args: [<args>]

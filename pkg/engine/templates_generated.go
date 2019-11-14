@@ -17467,7 +17467,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     KUBELET_OPTS=
 {{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+    KUBELET_IMAGE={{GetHyperkubeImageReference}}
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
 {{else}}
@@ -17503,16 +17503,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if gt .MasterProfile.Count 1}}
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
-{{end}}
-
-{{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubeAPIServerSpec"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-    sed -i "s|<img>|{{WrapAsParameter "kubeControllerManagerSpec"}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
-    sed -i "s|<img>|{{WrapAsParameter "kubeSchedulerSpec"}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
-{{else}}
-    for a in "/etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-scheduler.yaml"; do
-      sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g" $a
-    done
 {{end}}
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
     sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
@@ -33061,27 +33051,9 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubeAPIServerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-apiserver."
-      },
-      "type": "string"
-    },
-    "kubeControllerManagerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-controller-manager."
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
-    "kubeSchedulerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-scheduler."
       },
       "type": "string"
     },
@@ -34026,7 +33998,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetComponentImageReference "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-apiserver"]
       args: [<args>]
@@ -34088,7 +34060,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetComponentImageReference "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
       args: [<args>]
@@ -34140,7 +34112,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: <img>
+      image: {{GetComponentImageReference "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-scheduler"]
       args: [<args>]
@@ -34305,7 +34277,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-apiserver"]
       args: [<args>]
@@ -34424,7 +34396,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
@@ -34476,7 +34448,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-scheduler"]
       args: [<args>]

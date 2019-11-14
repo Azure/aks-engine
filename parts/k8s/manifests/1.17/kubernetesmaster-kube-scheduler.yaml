@@ -11,7 +11,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: <img>
+      image: {{GetComponentImageReference "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-scheduler"]
       args: [<args>]

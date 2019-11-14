@@ -11,7 +11,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetComponentImageReference "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-apiserver"]
       args: [<args>]
