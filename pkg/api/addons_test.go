@@ -4079,7 +4079,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "7.0.0-5",
+						"dockerProviderVersion": "7.0.0-6",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 						"workspaceDomain":       "b3BpbnNpZ2h0cy5henVyZS5jb20=",
