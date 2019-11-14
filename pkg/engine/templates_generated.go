@@ -17504,13 +17504,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-    a=/etc/kubernetes/manifests/kube-apiserver.yaml
-{{ if HasCosmosEtcd  }}
-    sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
-{{ else }}
-    sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
-{{ end }}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
+    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
     {{ if IsIPv6DualStackFeatureEnabled }}
     sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
