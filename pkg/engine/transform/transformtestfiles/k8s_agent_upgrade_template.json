@@ -1941,7 +1941,8 @@
         "availabilitySet": {
           "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('masterAvailabilitySet'))]"
         },
-        "hardwareProfile": {},
+        "hardwareProfile": {
+        },
         "networkProfile": {
           "networkInterfaces": [
             {

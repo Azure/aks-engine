@@ -80,6 +80,64 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		kubernetesVersion = orchProfile.OrchestratorVersion + AzureStackSuffix
 	}
 
+	provisionScriptParametersCommonString := "[concat(" +
+		"'ADMINUSER=',parameters('linuxAdminUsername')," +
+		"' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase')," +
+		"' ETCD_VERSION=',parameters('etcdVersion')," +
+		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
+		"' MOBY_VERSION=',parameters('mobyVersion')," +
+		"' TENANT_ID=',variables('tenantID')," +
+		"' KUBERNETES_VERSION=%s" +
+		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
+		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
+		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
+		"' RESOURCE_GROUP=',variables('resourceGroup')," +
+		"' LOCATION=',variables('location')," +
+		"' VM_TYPE=',variables('vmType')," +
+		"' SUBNET=',variables('subnetName')," +
+		"' NETWORK_SECURITY_GROUP=',variables('nsgName')," +
+		"' VIRTUAL_NETWORK=',variables('virtualNetworkName')," +
+		"' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName')," +
+		"' ROUTE_TABLE=',variables('routeTableName')," +
+		"' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName')," +
+		"' PRIMARY_SCALE_SET=',variables('primaryScaleSetName')," +
+		"' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId')," +
+		"' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote')," +
+		"' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey')," +
+		"' TARGET_ENVIRONMENT=',parameters('targetEnvironment')," +
+		"' NETWORK_PLUGIN=',parameters('networkPlugin')," +
+		"' NETWORK_POLICY=',parameters('networkPolicy')," +
+		"' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL')," +
+		"' CNI_PLUGINS_URL=',parameters('cniPluginsURL')," +
+		"' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff))," +
+		"' CLOUDPROVIDER_BACKOFF_MODE=',parameters('cloudproviderConfig').cloudProviderBackoffMode," +
+		"' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries," +
+		"' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent," +
+		"' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration," +
+		"' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter," +
+		"' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit))," +
+		"' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS," +
+		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
+		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
+		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
+		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
+		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
+		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
+		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
+		"' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB')," +
+		"' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount')," +
+		"' CONTAINER_RUNTIME=',parameters('containerRuntime')," +
+		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
+		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
+		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
+		"' IS_HOSTED_MASTER=%t" +
+		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
+		" PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
+		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
+		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
+		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')" +
+		")]"
+
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":               100,
 		"useManagedIdentityExtension": strconv.FormatBool(useManagedIdentity),
@@ -102,16 +160,15 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			"[resourceGroup().location]",
 			"[parameters('location')]",
 		},
-		"location":               "[variables('locations')[mod(add(2,length(parameters('location'))),add(1,length(parameters('location'))))]]",
-		"masterAvailabilitySet":  "[concat('master-availabilityset-', parameters('nameSuffix'))]",
-		"resourceGroup":          "[resourceGroup().name]",
-		"truncatedResourceGroup": "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
-		"labelResourceGroup":     "[if(or(or(endsWith(variables('truncatedResourceGroup'), '-'), endsWith(variables('truncatedResourceGroup'), '_')), endsWith(variables('truncatedResourceGroup'), '.')), concat(take(variables('truncatedResourceGroup'), 62), 'z'), variables('truncatedResourceGroup'))]",
-		"routeTableID":           "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
-		"sshNatPorts":            []int{22, 2201, 2202, 2203, 2204},
-		"sshKeyPath":             "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
-		"provisionScriptParametersCommon": fmt.Sprintf("[concat('ADMINUSER=',parameters('linuxAdminUsername'),' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase'),' ETCD_VERSION=',parameters('etcdVersion'),' CONTAINERD_VERSION=',parameters('containerdVersion'),' MOBY_VERSION=',parameters('mobyVersion'),' TENANT_ID=',variables('tenantID'),' KUBERNETES_VERSION=%s HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec'),' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' SUBSCRIPTION_ID=',variables('subscriptionId'),' RESOURCE_GROUP=',variables('resourceGroup'),' LOCATION=',variables('location'),' VM_TYPE=',variables('vmType'),' SUBNET=',variables('subnetName'),' NETWORK_SECURITY_GROUP=',variables('nsgName'),' VIRTUAL_NETWORK=',variables('virtualNetworkName'),' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName'),' ROUTE_TABLE=',variables('routeTableName'),' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName'),' PRIMARY_SCALE_SET=',variables('primaryScaleSetName'),' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' TARGET_ENVIRONMENT=',parameters('targetEnvironment'),' NETWORK_PLUGIN=',parameters('networkPlugin'),' NETWORK_POLICY=',parameters('networkPolicy'),' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL'),' CNI_PLUGINS_URL=',parameters('cniPluginsURL'),' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff)),' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries,' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent,' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration,' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter,' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit)),' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS,' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite,' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket,' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite,' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension'),' USE_INSTANCE_METADATA=',variables('useInstanceMetadata'),' LOAD_BALANCER_SKU=',variables('loadBalancerSku'),' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB'),' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount'),' CONTAINER_RUNTIME=',parameters('containerRuntime'),' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase'),' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec'),' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName'),' IS_HOSTED_MASTER=%t',' IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t',' PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer'),' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod'),' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem'),' NETWORK_API_VERSION=',variables('apiVersionNetwork'))]",
-			kubernetesVersion, isHostedMaster, isIPv6DualStackFeatureEnabled),
+		"location":                                  "[variables('locations')[mod(add(2,length(parameters('location'))),add(1,length(parameters('location'))))]]",
+		"masterAvailabilitySet":                     "[concat('master-availabilityset-', parameters('nameSuffix'))]",
+		"resourceGroup":                             "[resourceGroup().name]",
+		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
+		"labelResourceGroup":                        "[if(or(or(endsWith(variables('truncatedResourceGroup'), '-'), endsWith(variables('truncatedResourceGroup'), '_')), endsWith(variables('truncatedResourceGroup'), '.')), concat(take(variables('truncatedResourceGroup'), 62), 'z'), variables('truncatedResourceGroup'))]",
+		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
+		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
+		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
+		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, kubernetesVersion, isHostedMaster, isIPv6DualStackFeatureEnabled),
 		"orchestratorNameVersionTag":                fmt.Sprintf("%s:%s", orchProfile.OrchestratorType, orchProfile.OrchestratorVersion),
 		"subnetNameResourceSegmentIndex":            10,
 		"vnetNameResourceSegmentIndex":              8,
@@ -119,31 +176,31 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	cloudInitFiles := map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript),
-		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd),
-		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService),
-		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService),
-		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript),
+		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
+		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {
-		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript)
-		cloudInitFiles["kmsSystemdService"] = getBase64EncodedGzippedCustomScript(kmsSystemdService)
-		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript)
-		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService)
-		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences)
-		cloudInitFiles["healthMonitorScript"] = getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript)
-		cloudInitFiles["kubeletMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService)
-		cloudInitFiles["dockerMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService)
-		cloudInitFiles["dockerMonitorSystemdTimer"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer)
-		cloudInitFiles["kubeletSystemdService"] = getBase64EncodedGzippedCustomScript(kubeletSystemdService)
-		cloudInitFiles["dockerClearMountPropagationFlags"] = getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags)
-		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules)
+		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs)
+		cloudInitFiles["kmsSystemdService"] = getBase64EncodedGzippedCustomScript(kmsSystemdService, cs)
+		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript, cs)
+		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs)
+		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences, cs)
+		cloudInitFiles["healthMonitorScript"] = getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs)
+		cloudInitFiles["kubeletMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs)
+		cloudInitFiles["dockerMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs)
+		cloudInitFiles["dockerMonitorSystemdTimer"] = getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs)
+		cloudInitFiles["kubeletSystemdService"] = getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs)
+		cloudInitFiles["dockerClearMountPropagationFlags"] = getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs)
+		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules, cs)
 	}
 
 	masterVars["cloudInitFiles"] = cloudInitFiles
@@ -170,12 +227,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			return masterVars, err
 		}
 		masterVars["environmentJSON"] = environmentJSON
-		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud)
+		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs)
 	}
 
 	if kubernetesConfig != nil {
 		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
-			masterVars["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount)
+			masterVars["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount, cs)
 		}
 	}
 
@@ -183,14 +240,21 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars["customCloudIdentifySystem"] = cs.Properties.GetCustomCloudIdentitySystem()
 
 	auditDEnabled := "false"
+	clusterAutoscalerEnabled := "false"
+	azurePolicyAddonEnabled := "false"
+
 	if masterProfile != nil {
 		auditDEnabled = strconv.FormatBool(to.Bool(masterProfile.AuditDEnabled))
+		if kubernetesConfig != nil {
+			azurePolicyAddonEnabled = strconv.FormatBool(kubernetesConfig.IsAddonEnabled(api.AzurePolicyAddonName))
+			clusterAutoscalerEnabled = strconv.FormatBool(kubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName))
+		}
 	}
 	if !isHostedMaster {
 		if isMasterVMSS {
-			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled)
+			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' AZURE_POLICY_ADDON=%s APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled, azurePolicyAddonEnabled)
 		} else {
-			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=',parameters('kubernetesClusterAutoscalerEnabled'),' ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled)
+			masterVars["provisionScriptParametersMaster"] = fmt.Sprintf("[concat('COSMOS_URI=%s MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=%t AUDITD_ENABLED=%s CLUSTER_AUTOSCALER_ADDON=%s ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' AZURE_POLICY_ADDON=%s APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]", cosmosEndPointURI, blockOutboundInternet, auditDEnabled, clusterAutoscalerEnabled, azurePolicyAddonEnabled)
 		}
 	}
 

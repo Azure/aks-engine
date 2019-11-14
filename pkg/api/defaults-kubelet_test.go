@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/to"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {

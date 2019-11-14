@@ -235,9 +235,23 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
-		if o.KubernetesConfig.CloudProviderBackoff == nil {
-			o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(DefaultKubernetesCloudProviderBackoff)
+		// K8s 1.17 and later require Azure cloud-controller-manager components
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0-alpha.1") {
+			o.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
 		}
+
+		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
+			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(true)
+			}
+		} else {
+			o.KubernetesConfig.CloudProviderBackoffMode = "v1"
+			if o.KubernetesConfig.CloudProviderBackoff == nil {
+				o.KubernetesConfig.CloudProviderBackoff = to.BoolPtr(false)
+			}
+		}
+
 		// Enforce sane cloudprovider backoff defaults.
 		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
 
@@ -367,8 +381,17 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes = DefaultOutboundRuleIdleTimeoutInMinutes
 		}
 
+		if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+			if o.KubernetesConfig.CloudProviderDisableOutboundSNAT == nil {
+				o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+			}
+		} else {
+			// CloudProviderDisableOutboundSNAT is only valid in the context of Standard LB, statically set to false if not Standard LB
+			o.KubernetesConfig.CloudProviderDisableOutboundSNAT = to.BoolPtr(false)
+		}
+
 		// First, Configure addons
-		cs.setAddonsConfig(isUpdate)
+		cs.setAddonsConfig(isUpgrade)
 		// Defaults enforcement flows below inherit from addons configuration,
 		// so it's critical to enforce default addons configuration first
 
@@ -413,7 +436,7 @@ func (p *Properties) setExtensionDefaults() {
 
 func (p *Properties) setMasterProfileDefaults(isUpgrade, isScale bool, cloudName string) {
 	if p.MasterProfile.Distro == "" && p.MasterProfile.ImageRef == nil {
-		if p.OrchestratorProfile.IsKubernetes() {
+		if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 			p.MasterProfile.Distro = AKSUbuntu1604
 		} else {
 			p.MasterProfile.Distro = Ubuntu
@@ -635,7 +658,7 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool, cloudName 
 
 		if profile.OSType != Windows {
 			if profile.Distro == "" && profile.ImageRef == nil {
-				if p.OrchestratorProfile.IsKubernetes() {
+				if p.OrchestratorProfile.IsKubernetes() && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 					if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 						profile.Distro = Ubuntu
 					} else {

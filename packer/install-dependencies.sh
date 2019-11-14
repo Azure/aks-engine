@@ -57,7 +57,7 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.7"
+MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
@@ -219,11 +219,14 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.16.2
 1.16.1
 1.16.0
+1.15.3
 1.15.2
 1.15.1
 1.15.0
+1.14.6
 1.14.5
 1.14.4
 1.14.2
@@ -391,7 +394,6 @@ done
 pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
-# TODO: fetch supported k8s versions from an aks-engine command instead of hardcoding them here
 K8S_VERSIONS="
 1.16.2
 1.16.1
@@ -404,27 +406,45 @@ K8S_VERSIONS="
 1.14.7-azs
 1.13.12
 1.13.11
-1.13.11-azs
 1.12.8
 1.12.7
 1.11.10
 1.11.9
-1.10.13
-1.10.12
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
-  if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-    HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
+    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
+      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    else
+      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
+    fi
+    extractHyperkube "docker"
+    echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
-    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )); then
-      CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
+      CONTAINER_IMAGE="k8s.gcr.io/${component}:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    fi
+    done
+    KUBE_BINARY_URL="https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"
+    extractKubeBinaries
   fi
-  extractHyperkube "docker"
-  echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
+  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
+    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+  fi
+done
+
+CLOUD_MANAGER_VERSIONS="
+0.3.0
+"
+for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
+  for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
+    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/${COMPONENT}:v${CLOUD_MANAGER_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+  done
 done
 
 # TODO: remove once ACR is available on Azure Stack
@@ -446,10 +466,3 @@ df -h
   echo "Commit: ${COMMIT}"
   echo "Feature flags: ${FEATURE_FLAGS}"
 } >> ${VHD_LOGS_FILEPATH}
-
-# The below statements are used to extract release notes from the packer output
-set +x
-echo "START_OF_NOTES"
-cat ${VHD_LOGS_FILEPATH}
-echo "END_OF_NOTES"
-set -x

@@ -1700,13 +1700,6 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentppol1AvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "loop"
@@ -1751,21 +1744,13 @@
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('agentpool2AvailabilitySet')]",
-      "properties": {},
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
       "copy": {
         "count": "[sub(variables('agentpool2Count'), variables('agentpool2Offset'))]",
         "name": "vmLoopNode"
       },
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/',variables('storageAccountPrefixes')[mod(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('storageAccountPrefixes')[div(add(div(copyIndex(variables('agentpool2Offset')),variables('maxVMsPerStorageAccount')),variables('agentpool2StorageAccountOffset')),variables('storageAccountPrefixesCount'))],variables('agentpool2AccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('agentpool2AvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('agentpool2VMNamePrefix'), 'nic-', copyIndex(variables('agentpool2Offset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('agentpool2VMNamePrefix'), copyIndex(variables('agentpool2Offset')))]",
@@ -1848,20 +1833,8 @@
       "type": "Microsoft.Compute/virtualMachines/extensions"
     },
     {
-      "apiVersion": "[variables('apiVersionStorageManagedDisks')]",
-      "location": "[variables('location')]",
-      "name": "[variables('masterAvailabilitySet')]",
-      "properties": {
-        "managed": "true",
-        "platformFaultDomainCount": 2,
-        "platformUpdateDomainCount": 3
-      },
-      "type": "Microsoft.Compute/availabilitySets"
-    },
-    {
       "apiVersion": "[variables('apiVersionDefault')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
         "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]"
       ],
       "location": "[variables('location')]",
@@ -1888,44 +1861,6 @@
         ]
       },
       "type": "Microsoft.Network/virtualNetworks"
-    },
-    {
-      "apiVersion": "[variables('apiVersionDefault')]",
-      "location": "[variables('location')]",
-      "name": "[variables('nsgName')]",
-      "properties": {
-        "securityRules": [
-          {
-            "name": "allow_ssh",
-            "properties": {
-              "access": "Allow",
-              "description": "Allow SSH traffic to master",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "22-22",
-              "direction": "Inbound",
-              "priority": 101,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*"
-            }
-          },
-          {
-            "name": "allow_kube_tls",
-            "properties": {
-              "access": "Allow",
-              "description": "Allow kube-apiserver (tls) traffic to master",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "443-443",
-              "direction": "Inbound",
-              "priority": 100,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*"
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/networkSecurityGroups"
     },
     {
       "apiVersion": "[variables('apiVersionDefault')]",
@@ -2134,8 +2069,7 @@
         "name": "vmLoopNode"
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]",
-        "[concat('Microsoft.Compute/availabilitySets/',variables('masterAvailabilitySet'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"
       ],
       "location": "[variables('location')]",
       "name": "[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')))]",

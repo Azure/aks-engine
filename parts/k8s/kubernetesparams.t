@@ -197,6 +197,30 @@
       },
       "type": "string"
     },
+    "kubeAPIServerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-apiserver."
+      },
+      "type": "string"
+    },
+    "kubeControllerManagerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-controller-manager."
+      },
+      "type": "string"
+    },
+    "kubeProxySpec": {
+      "metadata": {
+        "description": "The container spec for kube-proxy."
+      },
+      "type": "string"
+    },
+    "kubeSchedulerSpec": {
+      "metadata": {
+        "description": "The container spec for kube-scheduler."
+      },
+      "type": "string"
+    },
     "kubernetesHyperkubeSpec": {
       "metadata": {
         "description": "The container spec for hyperkube."
@@ -259,26 +283,6 @@
       },
       "type": "bool"
     },
-    "kubernetesClusterAutoscalerEnabled": {
-      "metadata": {
-        "description": "Cluster autoscaler status"
-      },
-      "type": "bool"
-    },
-{{if .OrchestratorProfile.KubernetesConfig.IsClusterAutoscalerEnabled}}
-    "kubernetesClusterAutoscalerAzureCloud": {
-      "metadata": {
-        "description": "Name of the Azure cloud for the cluster autoscaler."
-      },
-      "type": "string"
-    },
-    "kubernetesClusterAutoscalerUseManagedIdentity": {
-      "metadata": {
-        "description": "Managed identity for the cluster autoscaler addon"
-      },
-      "type": "string"
-    },
-{{end}}
     "kubernetesPodInfraContainerSpec": {
       "metadata": {
         "description": "The container spec for pod infra."
@@ -288,7 +292,8 @@
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
-        "cloudProviderBackoff": true,
+        "cloudProviderBackoff": false,
+        "cloudProviderBackoffMode": "v1",
         "cloudProviderBackoffRetries": 10,
         "cloudProviderBackoffJitter": "0",
         "cloudProviderBackoffDuration": 0,
@@ -297,7 +302,8 @@
         "cloudProviderRateLimitQPS": "0",
         "cloudProviderRateLimitQPSWrite": "0",
         "cloudProviderRateLimitBucket": 0,
-        "cloudProviderRateLimitBucketWrite": 0
+        "cloudProviderRateLimitBucketWrite": 0,
+        "cloudProviderDisableOutboundSNAT": false
       }
     },
 {{if IsKubernetesVersionGe "1.12.0"}}
@@ -322,7 +328,7 @@
     },
 {{end}}
     "mobyVersion": {
-      "defaultValue": "3.0.7",
+      "defaultValue": "3.0.8",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -333,7 +339,8 @@
          "3.0.4",
          "3.0.5",
          "3.0.6",
-         "3.0.7"
+         "3.0.7",
+         "3.0.8"
        ],
       "type": "string"
     },

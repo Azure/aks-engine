@@ -158,10 +158,6 @@
                 "type": "String",
                 "value": ""
             },
-            "kubernetesClusterAutoscalerEnabled": {
-                "type": "Bool",
-                "value": false
-            },
             "kubernetesDNSMasqSpec": {
                 "type": "String",
                 "value": "k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.15.0"
@@ -256,7 +252,7 @@
             },
             "mobyVersion": {
                 "type": "String",
-                "value": "3.0.7"
+                "value": "3.0.8"
             },
             "nameSuffix": {
                 "type": "String",

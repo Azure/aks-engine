@@ -109,6 +109,16 @@ type ClusterMetadata struct {
 type AddonProfile struct {
 	Enabled bool              `json:"enabled"`
 	Config  map[string]string `json:"config"`
+	// Identity contains information of the identity associated with this addon.
+	// This property will only appear in an MSI-enabled cluster.
+	Identity *UserAssignedIdentity `json:"identity,omitempty"`
+}
+
+// UserAssignedIdentity contains information that uniquely identifies an identity
+type UserAssignedIdentity struct {
+	ResourceID string `json:"resourceId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ObjectID   string `json:"objectId,omitempty"`
 }
 
 // FeatureFlags defines feature-flag restricted functionality
@@ -265,12 +275,20 @@ type KubernetesContainerSpec struct {
 	MemoryLimits   string `json:"memoryLimits,omitempty"`
 }
 
+// AddonNodePoolsConfig defines configuration for pool-specific cluster-autoscaler configuration
+type AddonNodePoolsConfig struct {
+	Name   string            `json:"name,omitempty"`
+	Config map[string]string `json:"config,omitempty"`
+}
+
 // KubernetesAddon defines a list of addons w/ configuration to include with the cluster deployment
 type KubernetesAddon struct {
 	Name       string                    `json:"name,omitempty"`
 	Enabled    *bool                     `json:"enabled,omitempty"`
+	Mode       string                    `json:"mode,omitempty"`
 	Containers []KubernetesContainerSpec `json:"containers,omitempty"`
 	Config     map[string]string         `json:"config,omitempty"`
+	Pools      []AddonNodePoolsConfig    `json:"pools,omitempty"`
 	Data       string                    `json:"data,omitempty"`
 }
 
@@ -286,6 +304,16 @@ func (a *KubernetesAddon) IsEnabled() bool {
 func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int {
 	for i := range a.Containers {
 		if a.Containers[i].Name == containerName {
+			return i
+		}
+	}
+	return -1
+}
+
+// GetAddonPoolIndexByName returns the KubernetesAddon pools index with the name `poolName`
+func (a KubernetesAddon) GetAddonPoolIndexByName(poolName string) int {
+	for i := range a.Pools {
+		if a.Pools[i].Name == poolName {
 			return i
 		}
 	}
@@ -310,6 +338,7 @@ type PrivateJumpboxProfile struct {
 
 // CloudProviderConfig contains the KubernetesConfig properties specific to the Cloud Provider
 type CloudProviderConfig struct {
+	CloudProviderBackoffMode          string `json:"cloudProviderBackoffMode,omitempty"`
 	CloudProviderBackoff              *bool  `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int    `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        string `json:"cloudProviderBackoffJitter,omitempty"`
@@ -320,6 +349,7 @@ type CloudProviderConfig struct {
 	CloudProviderRateLimitQPSWrite    string `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int    `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int    `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  *bool  `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 }
 
 // KubernetesConfigDeprecated are properties that are no longer operable and will be ignored
@@ -388,6 +418,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
 	CloudProviderBackoffJitter        float64           `json:"cloudProviderBackoffJitter,omitempty"`
@@ -398,6 +429,7 @@ type KubernetesConfig struct {
 	CloudProviderRateLimitQPSWrite    float64           `json:"cloudProviderRateLimitQPSWrite,omitempty"`
 	CloudProviderRateLimitBucket      int               `json:"cloudProviderRateLimitBucket,omitempty"`
 	CloudProviderRateLimitBucketWrite int               `json:"cloudProviderRateLimitBucketWrite,omitempty"`
+	CloudProviderDisableOutboundSNAT  *bool             `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 	NonMasqueradeCidr                 string            `json:"nonMasqueradeCidr,omitempty"`
 	NodeStatusUpdateFrequency         string            `json:"nodeStatusUpdateFrequency,omitempty"`
 	HardEvictionThreshold             string            `json:"hardEvictionThreshold,omitempty"`
@@ -532,7 +564,6 @@ type AgentPoolProfile struct {
 	Ports                               []int                `json:"ports,omitempty"`
 	ProvisioningState                   ProvisioningState    `json:"provisioningState,omitempty"`
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
-	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
@@ -556,6 +587,7 @@ type AgentPoolProfile struct {
 	MinCount                            *int                 `json:"minCount,omitempty"`
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
+	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`
@@ -859,6 +891,16 @@ func (p *Properties) K8sOrchestratorName() string {
 		return DefaultOrchestratorName
 	}
 	return ""
+}
+
+// GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
+func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
+	for _, profile := range p.AgentPoolProfiles {
+		if profile.Name == name {
+			return profile
+		}
+	}
+	return nil
 }
 
 // GetAgentPoolIndexByName returns the index of the provided agentpool.
@@ -1731,6 +1773,11 @@ func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
 	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
 }
 
+// IsAzurePolicyEnabled checks if the azure policy addon is enabled
+func (k *KubernetesConfig) IsAzurePolicyEnabled() bool {
+	return k.IsAddonEnabled(AzurePolicyAddonName)
+}
+
 // IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
 func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
 	return k.IsAddonEnabled(AppGwIngressAddonName)
@@ -1962,6 +2009,10 @@ func (k *KubernetesConfig) PrivateJumpboxProvision() bool {
 
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.
 func (k *KubernetesConfig) RequiresDocker() bool {
+	if k == nil {
+		return false
+	}
+
 	runtime := strings.ToLower(k.ContainerRuntime)
 	return runtime == Docker || runtime == ""
 }
@@ -1971,14 +2022,16 @@ func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
 	if k.CloudProviderBackoffDuration == 0 {
 		k.CloudProviderBackoffDuration = DefaultKubernetesCloudProviderBackoffDuration
 	}
-	if k.CloudProviderBackoffExponent == 0 {
-		k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
-	}
-	if k.CloudProviderBackoffJitter == 0 {
-		k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
-	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
+	}
+	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
+		if k.CloudProviderBackoffExponent == 0 {
+			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
+		}
+		if k.CloudProviderBackoffJitter == 0 {
+			k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
+		}
 	}
 }
 
@@ -2034,17 +2087,6 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
-}
-
-// SetPlatformFaultDomainCount sets the fault domain count value for all VMASes in a cluster.
-func (cs *ContainerService) SetPlatformFaultDomainCount(count int) {
-	// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
-	if cs.Properties.MasterProfile != nil {
-		cs.Properties.MasterProfile.PlatformFaultDomainCount = &count
-	}
-	for _, pool := range cs.Properties.AgentPoolProfiles {
-		pool.PlatformFaultDomainCount = &count
-	}
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn

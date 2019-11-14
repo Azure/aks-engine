@@ -21,9 +21,8 @@ jobs:
   variables:
     GOBIN:  '$(GOPATH)/bin' # Go binaries path
     GOROOT: '/usr/local/go' # Go installation path
-    GOPATH: '$(system.defaultWorkingDirectory)/gopath' # Go workspace path
-    modulePath: '$(GOPATH)/src/github.com/$(build.repository.name)' # Path to the module's code
-    TIMEOUT: 20m
+    GOPATH: '$(Agent.TempDirectory)/go' # Go workspace path
+    TIMEOUT: 30m
     CLUSTER_DEFINITION: ${{ parameters.apimodel }}
     ORCHESTRATOR_RELEASE: ${{ parameters.k8sRelease }}
     CREATE_VNET: ${{ parameters.createVNET }}

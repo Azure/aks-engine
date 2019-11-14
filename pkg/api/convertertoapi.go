@@ -689,6 +689,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.MobyVersion = vlabs.MobyVersion
 	api.ContainerdVersion = vlabs.ContainerdVersion
 	api.CloudProviderBackoff = vlabs.CloudProviderBackoff
+	api.CloudProviderBackoffMode = vlabs.CloudProviderBackoffMode
 	api.CloudProviderBackoffDuration = vlabs.CloudProviderBackoffDuration
 	api.CloudProviderBackoffExponent = vlabs.CloudProviderBackoffExponent
 	api.CloudProviderBackoffJitter = vlabs.CloudProviderBackoffJitter
@@ -728,6 +729,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.ProxyMode = KubeProxyMode(vlabs.ProxyMode)
 	api.PrivateAzureRegistryServer = vlabs.PrivateAzureRegistryServer
 	api.OutboundRuleIdleTimeoutInMinutes = vlabs.OutboundRuleIdleTimeoutInMinutes
+	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
@@ -772,6 +774,7 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 		a.Addons = append(a.Addons, KubernetesAddon{
 			Name:    v.Addons[i].Name,
 			Enabled: v.Addons[i].Enabled,
+			Mode:    v.Addons[i].Mode,
 			Config:  map[string]string{},
 			Data:    v.Addons[i].Data,
 		})
@@ -785,7 +788,17 @@ func convertAddonsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 				MemoryLimits:   v.Addons[i].Containers[j].MemoryLimits,
 			})
 		}
-
+		for k := range v.Addons[i].Pools {
+			a.Addons[i].Pools = append(a.Addons[i].Pools, AddonNodePoolsConfig{
+				Name:   v.Addons[i].Pools[k].Name,
+				Config: map[string]string{},
+			})
+			if v.Addons[i].Pools[k].Config != nil {
+				for key, val := range v.Addons[i].Pools[k].Config {
+					a.Addons[i].Pools[k].Config[key] = val
+				}
+			}
+		}
 		if v.Addons[i].Config != nil {
 			for key, val := range v.Addons[i].Config {
 				a.Addons[i].Config[key] = val
@@ -964,6 +977,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
 	api.AgentSubnet = vlabs.AgentSubnet
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
@@ -1054,6 +1068,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AcceleratedNetworkingEnabledWindows = vlabs.AcceleratedNetworkingEnabledWindows
 	api.VMSSOverProvisioningEnabled = vlabs.VMSSOverProvisioningEnabled
 	api.AvailabilityZones = vlabs.AvailabilityZones
+	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs

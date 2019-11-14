@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	validator "gopkg.in/go-playground/validator.v9"
@@ -628,31 +627,53 @@ func (a *Properties) validateAddons() error {
 				}
 			}
 
+			if addon.Mode != "" {
+				if addon.Mode != AddonModeEnsureExists && addon.Mode != AddonModeReconcile {
+					return errors.Errorf("addon %s has a mode configuration '%s', must be either %s or %s", addon.Name, addon.Mode, AddonModeEnsureExists, AddonModeReconcile)
+				}
+			}
+
 			switch addon.Name {
 			case "cluster-autoscaler":
-				if to.Bool(addon.Enabled) && isAvailabilitySets {
-					return errors.Errorf("Cluster Autoscaler add-on can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
+				if to.Bool(addon.Enabled) {
+					if isAvailabilitySets {
+						return errors.Errorf("cluster-autoscaler addon can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
+					}
+					for _, pool := range addon.Pools {
+						if pool.Name == "" {
+							return errors.Errorf("cluster-autoscaler addon pools configuration must have a 'name' property that correlates with a pool name in the agentPoolProfiles array")
+						}
+						if a.GetAgentPoolByName(pool.Name) == nil {
+							return errors.Errorf("cluster-autoscaler addon pool 'name' %s does not match any agentPoolProfiles nodepool name", pool.Name)
+						}
+						if pool.Config != nil {
+							var min, max int
+							var err error
+							if pool.Config["min-nodes"] != "" {
+								min, err = strconv.Atoi(pool.Config["min-nodes"])
+								if err != nil {
+									return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid 'min-nodes' config, must be a string int, got %s", pool.Name, pool.Config["min-nodes"])
+								}
+							}
+							if pool.Config["max-nodes"] != "" {
+								max, err = strconv.Atoi(pool.Config["max-nodes"])
+								if err != nil {
+									return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid 'max-nodes' config, must be a string int, got %s", pool.Name, pool.Config["max-nodes"])
+								}
+							}
+							if min > max {
+								return errors.Errorf("cluster-autoscaler addon pool 'name' %s has invalid config, 'max-nodes' %d must be greater than or equal to 'min-nodes' %d", pool.Name, max, min)
+							}
+						}
+					}
 				}
 			case "nvidia-device-plugin":
 				if to.Bool(addon.Enabled) {
-					version := common.RationalizeReleaseAndVersion(
-						a.OrchestratorProfile.OrchestratorType,
-						a.OrchestratorProfile.OrchestratorRelease,
-						a.OrchestratorProfile.OrchestratorVersion,
-						false,
-						false)
-					if version == "" {
-						return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
-					}
-					sv, err := semver.Make(version)
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
-						return errors.Errorf("could not validate version %s", version)
+						return err
 					}
-					minVersion, err := semver.Make("1.10.0")
-					if err != nil {
-						return errors.New("could not validate version")
-					}
-					if IsNSeriesSKU && sv.LT(minVersion) {
+					if IsNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
 					if a.HasCoreOS() {
@@ -684,6 +705,42 @@ func (a *Properties) validateAddons() error {
 
 					if len(addon.Config["appgw-subnet"]) == 0 {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
+					}
+				}
+			case "azuredisk-csi-driver", "azurefile-csi-driver":
+				if to.Bool(addon.Enabled) {
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.13 or above", addon.Name))
+					}
+					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
+					}
+				}
+			case "cloud-node-manager":
+				if to.Bool(addon.Enabled) {
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.16 or above", addon.Name))
+					}
+					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
+					}
+				} else {
+					if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
+						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
+					}
+				}
+			case "azure-policy":
+				if to.Bool(addon.Enabled) {
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					if err != nil {
+						return err
+					}
+					if !isValidVersion {
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
+					}
+					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
+						return errors.New("Azure Policy add-on requires service principal profile to be specified")
 					}
 				}
 			}
@@ -855,19 +912,19 @@ func (a *Properties) validateAADProfile() error {
 		if a.OrchestratorProfile.OrchestratorType != Kubernetes {
 			return errors.Errorf("'aadProfile' is only supported by orchestrator '%v'", Kubernetes)
 		}
-		if _, err := uuid.FromString(profile.ClientAppID); err != nil {
+		if _, err := uuid.Parse(profile.ClientAppID); err != nil {
 			return errors.Errorf("clientAppID '%v' is invalid", profile.ClientAppID)
 		}
-		if _, err := uuid.FromString(profile.ServerAppID); err != nil {
+		if _, err := uuid.Parse(profile.ServerAppID); err != nil {
 			return errors.Errorf("serverAppID '%v' is invalid", profile.ServerAppID)
 		}
 		if len(profile.TenantID) > 0 {
-			if _, err := uuid.FromString(profile.TenantID); err != nil {
+			if _, err := uuid.Parse(profile.TenantID); err != nil {
 				return errors.Errorf("tenantID '%v' is invalid", profile.TenantID)
 			}
 		}
 		if len(profile.AdminGroupID) > 0 {
-			if _, err := uuid.FromString(profile.AdminGroupID); err != nil {
+			if _, err := uuid.Parse(profile.AdminGroupID); err != nil {
 				return errors.Errorf("adminGroupID '%v' is invalid", profile.AdminGroupID)
 			}
 		}

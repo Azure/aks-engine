@@ -18,8 +18,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
+	"github.com/jarcoal/httpmock"
 	"github.com/pkg/errors"
-	"gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -198,14 +198,14 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	defaultAddonImages := map[string]string{
 		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.13.1",
 		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
-		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.2.5",
+		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.3.9",
 		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.3.1",
+		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.4.0",
 		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
-		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.10",
+		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.11",
 		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
@@ -214,6 +214,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		CalicoAddonName:                    "calico/typha:v3.8.0",
 		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.28",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+		AzurePolicyAddonName:               "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 	}
 
 	customAddonImages := make(map[string]string)
@@ -251,7 +252,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.10.8")
+			mockCS := getMockBaseContainerService("1.11.10")
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
@@ -563,7 +564,7 @@ func TestVMSSOverProvisioning(t *testing.T) {
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  true,
-		PkiKeySize: 4096,
+		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 
 	// In upgrade scenario, nil AcceleratedNetworkingEnabled should always render as false (i.e., we never turn on this feature on an existing vm that didn't have it before)
@@ -854,7 +855,7 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
@@ -1139,7 +1140,7 @@ func TestStorageProfile(t *testing.T) {
 			properties.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet)
 	}
 
-	mockCS = getMockBaseContainerService("1.10.2")
+	mockCS = getMockBaseContainerService("1.11.10")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1447,6 +1448,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1460,6 +1462,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1473,6 +1476,7 @@ func TestDistroDefaults(t *testing.T) {
 			"1804_upgrade_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKSUbuntu1804,
 			AKSUbuntu1804,
@@ -1486,6 +1490,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_kubernetes_usgov",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1499,6 +1504,7 @@ func TestDistroDefaults(t *testing.T) {
 			"deprecated_distro_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
@@ -1512,6 +1518,7 @@ func TestDistroDefaults(t *testing.T) {
 			"docker_engine_kubernetes",
 			OrchestratorProfile{
 				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			AKS1604Deprecated,
 			AKSDockerEngine,
@@ -1525,6 +1532,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarm",
 			OrchestratorProfile{
 				OrchestratorType: Swarm,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1538,6 +1546,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_swarmmode",
 			OrchestratorProfile{
 				OrchestratorType: SwarmMode,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1551,6 +1560,7 @@ func TestDistroDefaults(t *testing.T) {
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,
+				KubernetesConfig: &KubernetesConfig{},
 			},
 			"",
 			"",
@@ -1973,14 +1983,30 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 	}
 }
 
+func TestCloudControllerManagerEnabled(t *testing.T) {
+	// test that 1.16 defaults to false
+	cs := CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
+		t.Fatal("expected UseCloudControllerManager to default to false")
+	}
+
+	// test that 1.17 defaults to true
+	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(false) {
+		t.Fatal("expected UseCloudControllerManager to default to true")
+	}
+}
+
 func TestDefaultCloudProvider(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.10.3")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.setOrchestratorDefaults(true, true)
 
-	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
-		t.Fatalf("got unexpected CloudProviderBackoff expected true, got %t",
+	if to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) {
+		t.Fatalf("got unexpected CloudProviderBackoff expected false, got %t",
 			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 
@@ -2006,6 +2032,108 @@ func TestDefaultCloudProvider(t *testing.T) {
 			to.Bool(properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
 	}
 }
+
+func TestCloudProviderBackoff(t *testing.T) {
+	cases := []struct {
+		name      string
+		cs        ContainerService
+		isUpgrade bool
+		isScale   bool
+		expected  KubernetesConfig
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: KubernetesConfig{
+				CloudProviderBackoffMode:          "v1",
+				CloudProviderBackoff:              to.BoolPtr(false),
+				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        DefaultKubernetesCloudProviderBackoffJitter,
+				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      DefaultKubernetesCloudProviderBackoffExponent,
+				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
+				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			},
+		},
+		{
+			name: "Kubernetes 1.14.0",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: KubernetesConfig{
+				CloudProviderBackoffMode:          "v2",
+				CloudProviderBackoff:              to.BoolPtr(true),
+				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        0,
+				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      0,
+				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
+				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(c.isUpgrade, c.isScale)
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffMode != c.expected.CloudProviderBackoffMode {
+				t.Errorf("expected %s, but got %s", c.expected.CloudProviderBackoffMode, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffMode)
+			}
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff) != to.Bool(c.expected.CloudProviderBackoff) {
+				t.Errorf("expected %t, but got %t", to.Bool(c.expected.CloudProviderBackoff), to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoff))
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffRetries != c.expected.CloudProviderBackoffRetries {
+				t.Errorf("expected %d, but got %d", c.expected.CloudProviderBackoffRetries, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffRetries)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffJitter != c.expected.CloudProviderBackoffJitter {
+				t.Errorf("expected %f, but got %f", c.expected.CloudProviderBackoffJitter, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffJitter)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffDuration != c.expected.CloudProviderBackoffDuration {
+				t.Errorf("expected %d, but got %d", c.expected.CloudProviderBackoffDuration, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffDuration)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffExponent != c.expected.CloudProviderBackoffExponent {
+				t.Errorf("expected %f, but got %f", c.expected.CloudProviderBackoffExponent, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderBackoffExponent)
+			}
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit) != to.Bool(c.expected.CloudProviderRateLimit) {
+				t.Errorf("expected %t, but got %t", to.Bool(c.expected.CloudProviderRateLimit), to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimit))
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS != c.expected.CloudProviderRateLimitQPS {
+				t.Errorf("expected %f, but got %f", c.expected.CloudProviderRateLimitQPS, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite != c.expected.CloudProviderRateLimitQPSWrite {
+				t.Errorf("expected %f, but got %f", c.expected.CloudProviderRateLimitQPSWrite, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket != c.expected.CloudProviderRateLimitBucket {
+				t.Errorf("expected %d, but got %d", c.expected.CloudProviderRateLimitBucket, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)
+			}
+			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite != c.expected.CloudProviderRateLimitBucketWrite {
+				t.Errorf("expected %d, but got %d", c.expected.CloudProviderRateLimitBucketWrite, c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite)
+			}
+		})
+	}
+}
+
 func TestSetCertDefaults(t *testing.T) {
 	cs := &ContainerService{
 		Properties: &Properties{
@@ -3366,6 +3494,123 @@ func TestDefaultTelemetry(t *testing.T) {
 	}
 }
 
+func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
+	cases := []struct {
+		name     string
+		cs       ContainerService
+		expected bool
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: BasicLoadBalancerSku,
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB w/ true",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  BasicLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "basic LB w/ false",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  BasicLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "standard LB w/ true",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  StandardLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "standard LB w/ false",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku:                  StandardLoadBalancerSku,
+							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
+						},
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.setOrchestratorDefaults(false, false)
+			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) != c.expected {
+				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT))
+			}
+		})
+	}
+}
+
 func TestImageReference(t *testing.T) {
 	cases := []struct {
 		name                      string
@@ -3559,6 +3804,150 @@ func TestImageReference(t *testing.T) {
 					if profile.ImageRef.Version != c.expectedAgentPoolProfiles[i].ImageRef.Version {
 						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Version, profile.ImageRef.Version)
 					}
+				}
+			}
+		})
+	}
+}
+
+func TestCustomHyperkubeDistro(t *testing.T) {
+	cases := []struct {
+		name                      string
+		cs                        ContainerService
+		isUpgrade                 bool
+		isScale                   bool
+		expectedMasterProfile     MasterProfile
+		expectedAgentPoolProfiles []AgentPoolProfile
+	}{
+		{
+			name: "default",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1604,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ distro",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{
+						Distro: Ubuntu1804,
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Distro: Ubuntu1804,
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu1804,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ mixed distro config",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "myimage",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:   "pool1",
+							Distro: Ubuntu1804,
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro: Ubuntu,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro: Ubuntu1804,
+				},
+				{
+					Distro: Ubuntu,
+				},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+				IsUpgrade:  c.isUpgrade,
+				IsScale:    c.isScale,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			})
+			if c.cs.Properties.MasterProfile.Distro != c.expectedMasterProfile.Distro {
+				t.Errorf("expected %s, but got %s", c.expectedMasterProfile.Distro, c.cs.Properties.MasterProfile.Distro)
+			}
+			for i, profile := range c.cs.Properties.AgentPoolProfiles {
+				if profile.Distro != c.expectedAgentPoolProfiles[i].Distro {
+					t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].Distro, profile.Distro)
 				}
 			}
 		})

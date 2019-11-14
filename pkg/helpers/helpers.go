@@ -19,11 +19,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const (
-	// SSHKeySize is the size (in bytes) of SSH key to create
-	SSHKeySize = 4096
-)
-
 // NormalizeAzureRegion returns a normalized Azure region with white spaces removed and converted to lower case
 func NormalizeAzureRegion(name string) string {
 	return strings.ToLower(strings.Replace(name, " ", "", -1))

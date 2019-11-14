@@ -5,7 +5,6 @@ package engine
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 
@@ -34,13 +33,29 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if kubernetesConfig != nil {
 			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
-				kubernetesCcmSpec := kubernetesImageBase + k8sComponents["ccm"]
+				controllerManagerBase := kubernetesImageBase
+				if common.IsKubernetesVersionGe(k8sVersion, "1.16.0") {
+					controllerManagerBase = mcrKubernetesImageBase
+				}
+				kubernetesCcmSpec := controllerManagerBase + k8sComponents["ccm"]
 				if kubernetesConfig.CustomCcmImage != "" {
 					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
 				}
 
 				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
 			}
+
+			kubeAPIServerSpec := kubernetesImageBase + k8sComponents["kube-apiserver"]
+			addValue(parametersMap, "kubeAPIServerSpec", kubeAPIServerSpec)
+
+			kubeControllerManagerSpec := kubernetesImageBase + k8sComponents["kube-controller-manager"]
+			addValue(parametersMap, "kubeControllerManagerSpec", kubeControllerManagerSpec)
+
+			kubeSchedulerSpec := kubernetesImageBase + k8sComponents["kube-scheduler"]
+			addValue(parametersMap, "kubeSchedulerSpec", kubeSchedulerSpec)
+
+			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
+			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
 
 			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
 			if properties.IsAzureStackCloud() {
@@ -72,17 +87,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
 			}
-			if kubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName) {
-				clusterAutoscalerAddon := kubernetesConfig.GetAddonByName(ClusterAutoscalerAddonName)
-				clusterAutoScalerIndex := clusterAutoscalerAddon.GetAddonContainersIndexByName(ClusterAutoscalerAddonName)
-				if clusterAutoScalerIndex > -1 {
-					addValue(parametersMap, "kubernetesClusterAutoscalerAzureCloud", cloudSpecConfig.CloudName)
-					addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", true)
-					addValue(parametersMap, "kubernetesClusterAutoscalerUseManagedIdentity", strings.ToLower(strconv.FormatBool(kubernetesConfig.UseManagedIdentity)))
-				}
-			} else {
-				addValue(parametersMap, "kubernetesClusterAutoscalerEnabled", false)
-			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
 			} else {
@@ -91,6 +95,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
+				CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
 				CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,
 				CloudProviderBackoffRetries:       kubernetesConfig.CloudProviderBackoffRetries,
 				CloudProviderBackoffJitter:        strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64),
@@ -101,6 +106,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderRateLimitQPSWrite:    strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPSWrite, 'f', -1, 64),
 				CloudProviderRateLimitBucket:      kubernetesConfig.CloudProviderRateLimitBucket,
 				CloudProviderRateLimitBucketWrite: kubernetesConfig.CloudProviderRateLimitBucketWrite,
+				CloudProviderDisableOutboundSNAT:  kubernetesConfig.CloudProviderDisableOutboundSNAT,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
 			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])

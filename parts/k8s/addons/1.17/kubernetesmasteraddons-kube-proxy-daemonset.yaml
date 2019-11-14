@@ -65,7 +65,6 @@ spec:
         operator: Exists
       containers:
       - command:
-        - /hyperkube
         - kube-proxy
         - --config=/var/lib/kube-proxy/config.yaml
         image: <img>

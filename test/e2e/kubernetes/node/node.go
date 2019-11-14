@@ -1,3 +1,4 @@
+//+build test
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -205,7 +206,7 @@ func AreNNodesReady(nodeCount int) bool {
 	}
 	list, _ := Get()
 	var ready int
-	if list != nil && len(list.Nodes) == nodeCount {
+	if list != nil {
 		for _, node := range list.Nodes {
 			nodeReady := node.IsReady()
 			if !nodeReady {
@@ -215,6 +216,47 @@ func AreNNodesReady(nodeCount int) bool {
 		}
 	}
 	if ready == nodeCount {
+		return true
+	}
+	return false
+}
+
+// AreMinNodesReady returns if the minimum nodes ready count is met
+func AreMinNodesReady(nodeCount int) bool {
+	if nodeCount == -1 {
+		return AreAllReady()
+	}
+	list, _ := Get()
+	var ready int
+	if list != nil {
+		for _, node := range list.Nodes {
+			nodeReady := node.IsReady()
+			if !nodeReady {
+				return false
+			}
+			ready++
+		}
+	}
+	if ready >= nodeCount {
+		return true
+	}
+	return false
+}
+
+// AreMaxNodesReady returns if nodes ready count is <= a maximum number
+func AreMaxNodesReady(nodeCount int) bool {
+	list, _ := Get()
+	var ready int
+	if list != nil {
+		for _, node := range list.Nodes {
+			nodeReady := node.IsReady()
+			if !nodeReady {
+				return false
+			}
+			ready++
+		}
+	}
+	if ready <= nodeCount {
 		return true
 	}
 	return false
@@ -231,6 +273,62 @@ func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
 			case <-ctx.Done():
 				return
 			case ch <- AreNNodesReady(nodeCount):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case ready := <-ch:
+			if ready {
+				return ready
+			}
+		case <-ctx.Done():
+			DescribeNodes()
+			return false
+		}
+	}
+}
+
+// WaitOnReadyMin will block until the minimum nodes ready count is met
+func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- AreMinNodesReady(nodeCount):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case ready := <-ch:
+			if ready {
+				return ready
+			}
+		case <-ctx.Done():
+			DescribeNodes()
+			return false
+		}
+	}
+}
+
+// WaitOnReadyMax will block until nodes ready count is <= a maximum number
+func WaitOnReadyMax(nodeCount int, sleep, timeout time.Duration) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan bool)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- AreMaxNodesReady(nodeCount):
 				time.Sleep(sleep)
 			}
 		}

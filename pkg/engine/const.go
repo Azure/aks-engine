@@ -52,6 +52,8 @@ const (
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CloudNodeManagerAddonName is the name of the cloud node manager addon
+	CloudNodeManagerAddonName = "cloud-node-manager"
 	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
 	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// CalicoAddonName is the name of calico daemonset addon
@@ -76,6 +78,12 @@ const (
 	ACIConnectorAddonName = "aci-connector"
 	// AppGwIngressAddonName appgw addon
 	AppGwIngressAddonName = "appgw-ingress"
+	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
+	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
 	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
@@ -102,6 +110,8 @@ const (
 	ContainerMonitoringAddonName = "container-monitoring"
 	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
+	// AzurePolicyAddonName is the name of the kubernetes Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
 	// IPMASQAgentAddonName is the name of the ip masq agent addon
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
@@ -186,6 +196,16 @@ const (
 	// scripts and service for enabling ipv6 dual stack
 	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
 	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"
+)
+
+// Kubernetes manifests file references
+const (
+	kubeSchedulerManifestFilename               = "kubernetesmaster-kube-scheduler.yaml"
+	kubeControllerManagerManifestFilename       = "kubernetesmaster-kube-controller-manager.yaml"
+	kubeControllerManagerCustomManifestFilename = "kubernetesmaster-kube-controller-manager-custom.yaml"
+	ccmManifestFilename                         = "kubernetesmaster-cloud-controller-manager.yaml"
+	kubeAPIServerManifestFilename               = "kubernetesmaster-kube-apiserver.yaml"
+	kubeAddonManagerManifestFilename            = "kubernetesmaster-kube-addon-manager.yaml"
 )
 
 const (

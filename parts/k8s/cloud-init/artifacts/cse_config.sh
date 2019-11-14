@@ -160,7 +160,7 @@ configureK8s() {
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
-    # Perform the required JSON escaping for special characters \ and "
+    {{/* Perform the required JSON escaping */}}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
@@ -180,6 +180,7 @@ configureK8s() {
     "routeTableName": "${ROUTE_TABLE}",
     "primaryAvailabilitySetName": "${PRIMARY_AVAILABILITY_SET}",
     "primaryScaleSetName": "${PRIMARY_SCALE_SET}",
+    "cloudProviderBackoffMode": "${CLOUDPROVIDER_BACKOFF_MODE}",
     "cloudProviderBackoff": ${CLOUDPROVIDER_BACKOFF},
     "cloudProviderBackoffRetries": ${CLOUDPROVIDER_BACKOFF_RETRIES},
     "cloudProviderBackoffExponent": ${CLOUDPROVIDER_BACKOFF_EXPONENT},
@@ -188,10 +189,13 @@ configureK8s() {
     "cloudProviderRatelimit": ${CLOUDPROVIDER_RATELIMIT},
     "cloudProviderRateLimitQPS": ${CLOUDPROVIDER_RATELIMIT_QPS},
     "cloudProviderRateLimitBucket": ${CLOUDPROVIDER_RATELIMIT_BUCKET},
+    "cloudProviderRatelimitQPSWrite": ${CLOUDPROVIDER_RATELIMIT_QPS_WRITE},
+    "cloudProviderRatelimitBucketWrite": ${CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE},
     "useManagedIdentityExtension": ${USE_MANAGED_IDENTITY_EXTENSION},
     "userAssignedIdentityID": "${USER_ASSIGNED_IDENTITY_ID}",
     "useInstanceMetadata": ${USE_INSTANCE_METADATA},
     "loadBalancerSku": "${LOAD_BALANCER_SKU}",
+    "disableOutboundSNAT": ${LOAD_BALANCER_DISABLE_OUTBOUND_SNAT},
     "excludeMasterFromStandardLB": ${EXCLUDE_MASTER_FROM_STANDARD_LB},
     "providerVaultName": "${KMS_PROVIDER_VAULT_NAME}",
     "maximumLoadBalancerRuleCount": ${MAXIMUM_LOADBALANCER_RULE_COUNT},
@@ -200,6 +204,10 @@ configureK8s() {
 }
 EOF
     set -x
+    if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
+        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+    fi
     if [[ -n "${MASTER_NODE}" ]]; then
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
@@ -210,7 +218,7 @@ EOF
 }
 
 configureCNI() {
-    # needed for the iptables rules to work on bridges
+    {{/* needed for the iptables rules to work on bridges */}}
     retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
     echo -n "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
     configureCNIIPTables
@@ -219,12 +227,13 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
-
+{{if IsAzureStackCloud}}
     if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
-        # set environment to mas when using Azure CNI on Azure Stack
-        # shellcheck disable=SC2002,SC2005
+        {{/* set environment to mas when using Azure CNI on Azure Stack */}}
+        {{/* shellcheck disable=SC2002,SC2005 */}}
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
     fi
+{{end}}
 }
 
 configureCNIIPTables() {
@@ -238,10 +247,12 @@ configureCNIIPTables() {
     fi
 }
 
+{{if NeedsContainerd}}
 ensureContainerd() {
     echo "Starting cri-containerd service..."
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
@@ -263,7 +274,7 @@ ensureDocker() {
         fi
     done
     systemctlEnableAndStart docker || exit $ERR_DOCKER_START_FAIL
-    # Delay start of docker-monitor for 30 mins after booting
+    {{/* Delay start of docker-monitor for 30 mins after booting */}}
     DOCKER_MONITOR_SYSTEMD_TIMER_FILE=/etc/systemd/system/docker-monitor.timer
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_TIMER_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     DOCKER_MONITOR_SYSTEMD_FILE=/etc/systemd/system/docker-monitor.service
@@ -271,13 +282,17 @@ ensureDocker() {
     systemctlEnableAndStart docker-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
 
+{{if EnableEncryptionWithExternalKms}}
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
+{{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
 ensureKubelet() {
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
@@ -313,6 +328,12 @@ ensureK8sControlPlane() {
     fi
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
+
+{{if IsAzurePolicyAddonEnabled}}
+ensureLabelExclusionForAzurePolicyAddon() {
+    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+}
+{{end}}
 
 ensureEtcd() {
     retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
@@ -360,27 +381,11 @@ users:
 configClusterAutoscalerAddon() {
     CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
     wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    if [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == true ]]; then
-        CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT="- mountPath: /var/lib/waagent/\n\          name: waagent\n\          readOnly: true"
-        CLUSTER_AUTOSCALER_MSI_VOLUME="- hostPath:\n\          path: /var/lib/waagent/\n\        name: waagent"
-        CLUSTER_AUTOSCALER_MSI_HOST_NETWORK="hostNetwork: true"
-
-        sed -i "s|<volMounts>|${CLUSTER_AUTOSCALER_MSI_VOLUME_MOUNT}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|${CLUSTER_AUTOSCALER_MSI_VOLUME}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|${CLUSTER_AUTOSCALER_MSI_HOST_NETWORK}|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    elif [[ "${USE_MANAGED_IDENTITY_EXTENSION}" == false ]]; then
-        sed -i "s|<volMounts>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<vols>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-        sed -i "s|<hostNet>|""|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    fi
-
     sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<subID>|$(echo $SUBSCRIPTION_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmType>|$(echo $VM_TYPE | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
-    sed -i "s|<vmssName>|$PRIMARY_SCALE_SET|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
 
 configACIConnectorAddon() {
@@ -398,19 +403,35 @@ configACIConnectorAddon() {
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
 
+configAzurePolicyAddon() {
+    AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+    sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
+}
+
+{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
-    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = True ]]; then
+    {{if IsClusterAutoscalerAddonEnabled}}
+    if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
         configClusterAutoscalerAddon
     fi
-
+    {{end}}
+    {{if IsACIConnectorAddonEnabled}}
     if [[ "${ACI_CONNECTOR_ADDON}" = True ]]; then
         configACIConnectorAddon
     fi
+    {{end}}
+    {{if IsAzurePolicyAddonEnabled}}
+    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
+        configAzurePolicyAddon
+    fi
+    {{end}}
 }
+{{end}}
 
+{{if HasNSeriesSKU}}
 configGPUDrivers() {
-    # only install the runtime since nvidia-docker2 has a hard dep on docker CE packages.
-    # we will manually install nvidia-docker2
+    {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
+    {{/* we will manually install nvidia-docker2 */}}
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
@@ -436,9 +457,9 @@ configGPUDrivers() {
     retrycmd_if_failure 120 5 25 $GPU_DEST/bin/nvidia-smi || exit $ERR_GPU_DRIVERS_START_FAIL
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
 }
-
 ensureGPUDrivers() {
     configGPUDrivers
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
+{{end}}
 #EOF

@@ -1,3 +1,4 @@
+//+build test
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license.
 
@@ -35,7 +36,7 @@ type Config struct {
 	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
-	Timeout             time.Duration `envconfig:"TIMEOUT" default:"10m"`
+	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`
@@ -43,6 +44,7 @@ type Config struct {
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
+	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom clould

@@ -143,7 +143,7 @@ Build-PauseContainer {
     # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
     "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    docker build -t $DestinationTag .
+    Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
 }
 
 function
@@ -165,20 +165,39 @@ New-InfraContainer {
         "1803" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage                 
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
-            docker tag $defaultPauseImage $DestinationTag
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         "1809" { 
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
-                docker pull $defaultPauseImage                
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
-            docker tag $defaultPauseImage $DestinationTag 
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
         "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
         default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
     }
+}
+
+function
+Test-ContainerImageExists {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $Image,
+        [Parameter(Mandatory = $false)][string]
+        $Tag
+    )
+
+    $target = $Image
+    if ($Tag) {
+        $target += ":$Tag"
+    }
+
+    $images = docker image list $target --format "{{json .}}"
+
+    return $images.Count -gt 0
 }
 
 
@@ -417,8 +436,41 @@ if (!`$hnsNetwork)
 {
     Write-Host "Creating a new hns Network"
     ipmo `$global:HNSModule
+
+    `$na = @(Get-NetAdapter -Physical)
+    if (`$na.Count -eq 0)
+    {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    `$managementIP = (Get-NetIPAddress -ifIndex `$na[0].ifIndex -AddressFamily IPv4).IPAddress
+    `$adapterName = `$na[0].Name
+    write-host "Using adapter `$adapterName with IP address `$managementIP"
+    `$mgmtIPAfterNetworkCreate
+
+    `$stopWatch = New-Object System.Diagnostics.Stopwatch
+    `$stopWatch.Start()
     # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -Name `$global:ExternalNetwork -Verbose
+    New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName `$adapterName -Name `$global:ExternalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for (`$i=0;`$i -lt 180;`$i++)
+    {
+        `$mgmtIPAfterNetworkCreate = Get-NetIPAddress `$managementIP -ErrorAction SilentlyContinue
+        if (`$mgmtIPAfterNetworkCreate)
+        {
+            break
+        }
+        sleep -Milliseconds 1000
+    }
+
+    `$stopWatch.Stop()
+    if (-not `$mgmtIPAfterNetworkCreate)
+    {
+        throw "Failed to find `$managementIP after creating `$global:ExternalNetwork network"
+    }
+    write-host "It took `$(`$StopWatch.Elapsed.Seconds) seconds to create the `$global:ExternalNetwork network."
 }
 
 # Find if network created by CNI exists, if yes, remove it

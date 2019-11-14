@@ -8,10 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 )
@@ -125,7 +124,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -162,7 +161,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -199,7 +198,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.10.13",
+					OrchestratorVersion: "1.11.10",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -295,7 +294,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.10.13",
+					OrchestratorVersion: "v1.11.10",
 				},
 			},
 		},
@@ -1390,6 +1389,215 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azure-policy",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy when ServicePrincipalProfile is empty",
+		)
+	}
+	p.ServicePrincipalProfile = &ServicePrincipalProfile{
+		ClientID: "123",
+	}
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error on azure-policy when ServicePrincipalProfile is not empty",
+		)
+	}
+	p.OrchestratorProfile.OrchestratorRelease = "1.9"
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with k8s < 1.10",
+		)
+	}
+	p.OrchestratorProfile.OrchestratorRelease = "1.11"
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error on azure-policy with k8s >= 1.11",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with managed identity",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pools configuration must have a 'name' property that correlates with a pool name in the agentPoolProfiles array",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+				Mode: "foo",
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"addon cluster-autoscaler has a mode configuration 'foo', must be either EnsureExists or Reconcile",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "baz",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid 'min-nodes' config, must be a string int, got baz",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "baz",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid 'max-nodes' config, must be a string int, got baz",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "5",
+							"max-nodes": "1",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo has invalid config, 'max-nodes' 1 must be greater than 'min-nodes' 5",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cluster-autoscaler",
+				Enabled: to.BoolPtr(true),
+				Pools: []AddonNodePoolsConfig{
+					{
+						Name: "foo",
+						Config: map[string]string{
+							"min-nodes": "1",
+							"max-nodes": "5",
+						},
+					},
+				},
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "bar",
+			AvailabilityProfile: VirtualMachineScaleSets,
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"cluster-autoscaler addon pool 'name' foo does not match any agentPoolProfiles nodepool name",
+		)
+	}
+
 	p.AgentPoolProfiles = []*AgentPoolProfile{
 		{
 			VMSize: "Standard_NC6",
@@ -1410,10 +1618,10 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.10"
+	p.OrchestratorProfile.OrchestratorRelease = "1.11"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on nvidia-device-plugin with k8s >= 1.10",
+			"should not error on nvidia-device-plugin with k8s >= 1.11",
 		)
 	}
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
@@ -1638,6 +1846,179 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err == nil {
 		t.Errorf(
 			"should error when missing the subnet for Application Gateway",
+		)
+	}
+
+	// Basic tests for azuredisk-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azuredisk-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azuredisk-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azuredisk-csi-driver",
+		)
+	}
+
+	// Basic tests for azurefile-csi-driver
+	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.13.0 for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for azurefile-csi-driver",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "azurefile-csi-driver",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azurefile-csi-driver",
+		)
+	}
+
+	// Basic tests for cloud-node-manager
+	p.OrchestratorProfile.OrchestratorVersion = "1.15.4"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when the orchestrator version is less than 1.16.0 for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.1"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(false),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is disabled for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(false),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when useCloudControllerManager is enabled and cloud-node-manager isn't",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err != nil {
+		t.Errorf(
+			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.16 for cloud-node-manager",
 		)
 	}
 }
@@ -1950,7 +2331,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.10",
+			orchestratorRelease: "1.11",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -1962,7 +2343,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and agent profiles with VMAS",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.10",
+			orchestratorRelease: "1.11",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -2526,7 +2907,7 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.10"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.11"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)

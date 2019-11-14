@@ -42,7 +42,7 @@ const exampleAKSAPIModel = `{
 	"properties": {
 		"dnsPrefix": "agents006",
 		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.10.12",
+		"kubernetesVersion": "1.11.10",
 		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
 		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
 	},
@@ -3599,6 +3599,54 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	}
 }
 
+func TestIsAzurePolicyEnabled(t *testing.T) {
+	// Default case
+	c := KubernetesConfig{
+		Addons: []KubernetesAddon{
+			getMockAddon("addon"),
+		},
+	}
+	enabled := c.IsAzurePolicyEnabled()
+	enabledDefault := DefaultAzurePolicyAddonEnabled
+	if enabled != enabledDefault {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return %t when no azure policy addon has been specified, instead returned %t", enabledDefault, enabled)
+	}
+	// Addon present, but enabled not specified
+	c.Addons = append(c.Addons, getMockAddon(AzurePolicyAddonName))
+	enabled = c.IsAzurePolicyEnabled()
+	if enabled != enabledDefault {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return default when azure policy addon addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
+	}
+	// Addon present and enabled
+	b := true
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    AzurePolicyAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsAzurePolicyEnabled()
+	if !enabled {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return true when azure policy addon has been specified as enabled, instead returned %t", enabled)
+	}
+	// Addon present and disabled
+	b = false
+	c = KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    AzurePolicyAddonName,
+				Enabled: &b,
+			},
+		},
+	}
+	enabled = c.IsAzurePolicyEnabled()
+	if enabled {
+		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return false when azure policy addon has been specified as disabled, instead returned %t", enabled)
+	}
+}
+
 func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	cases := common.GetNSeriesVMCasesForTesting()
 
@@ -4416,6 +4464,40 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
+	// Test cloudprovider defaults for backoff mode v2
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig: &KubernetesConfig{
+				CloudProviderBackoffMode: CloudProviderBackoffModeV2,
+			},
+		},
+	}
+	o = p.OrchestratorProfile
+	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+
+	floatCasesMixed = []struct {
+		expectedVal float64
+		computedVal float64
+	}{
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			expectedVal: 0,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+	}
+
+	for _, c := range floatCasesMixed {
+		if c.computedVal != c.expectedVal {
+			t.Fatalf("KubernetesConfig cloudprovider backoff v2 configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
+		}
+	}
+
 }
 
 func getMockAddon(name string) KubernetesAddon {
@@ -4428,6 +4510,15 @@ func getMockAddon(name string) KubernetesAddon {
 				MemoryRequests: "150Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "150Mi",
+			},
+		},
+		Pools: []AddonNodePoolsConfig{
+			{
+				Name: "pool1",
+				Config: map[string]string{
+					"min-nodes": "3",
+					"max-nodes": "3",
+				},
 			},
 		},
 	}
@@ -4964,6 +5055,19 @@ func TestProperties_GetClusterMetadata(t *testing.T) {
 	}
 }
 
+func TestGetAddonPoolIndexByName(t *testing.T) {
+	addonName := "testaddon"
+	addon := getMockAddon(addonName)
+	i := addon.GetAddonPoolIndexByName("pool1")
+	if i != 0 {
+		t.Fatalf("GetAddonPoolIndexByName() did not return the expected index value 0, instead returned: %d", i)
+	}
+	i = addon.GetAddonPoolIndexByName("nonExistentContainerName")
+	if i != -1 {
+		t.Fatalf("GetAddonPoolIndexByName() did not return the expected index value -1, instead returned: %d", i)
+	}
+}
+
 func TestGetAddonContainersIndexByName(t *testing.T) {
 	addonName := "testaddon"
 	addon := getMockAddon(addonName)
@@ -4973,7 +5077,7 @@ func TestGetAddonContainersIndexByName(t *testing.T) {
 	}
 	i = addon.GetAddonContainersIndexByName("nonExistentContainerName")
 	if i != -1 {
-		t.Fatalf("getAddonContainersIndexByName() did not return the expected index value 0, instead returned: %d", i)
+		t.Fatalf("getAddonContainersIndexByName() did not return the expected index value -1, instead returned: %d", i)
 	}
 }
 
@@ -5072,6 +5176,95 @@ func TestGetAgentPoolIndexByName(t *testing.T) {
 
 			if actual != test.expectedIndex {
 				t.Errorf("expected agent pool index %d, but got %d", test.expectedIndex, actual)
+			}
+		})
+	}
+}
+
+func TestGetAgentPoolByName(t *testing.T) {
+	cases := []struct {
+		name          string
+		profileName   string
+		properties    *Properties
+		expectedIndex int
+	}{
+		{
+			name:        "1 pool",
+			profileName: "myagentpool",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: 0,
+		},
+		{
+			name:        "3 pool",
+			profileName: "myagentpool2",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool2",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool3",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: 1,
+		},
+		{
+			name:        "non-existent pool name",
+			profileName: "bogon",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "myagentpool1",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool2",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+					{
+						Name:   "myagentpool3",
+						VMSize: "Standard_D2_v2",
+						Count:  3,
+					},
+				},
+			},
+			expectedIndex: -1,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.properties.GetAgentPoolByName(c.profileName)
+			if c.expectedIndex != -1 {
+				if actual != c.properties.AgentPoolProfiles[c.expectedIndex] {
+					t.Errorf("expected agent pool %#v, but got %#v", c.properties.AgentPoolProfiles[c.expectedIndex], actual)
+				}
+			} else {
+				if actual != nil {
+					t.Errorf("expected nil response, got %#v", actual)
+				}
 			}
 		})
 	}
@@ -6039,56 +6232,6 @@ func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 	for _, c := range cases {
 		if c.k.IsAddonEnabled(c.addonName) != c.expected {
 			t.Fatalf("expected KubernetesConfig.IsAddonEnabled(%s) to return %t but instead returned %t", c.addonName, c.expected, c.k.IsAddonEnabled(c.addonName))
-		}
-	}
-}
-
-func TestSetPlatformFaultDomainCount(t *testing.T) {
-	// check that the default value is nil
-	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
-	if cs.Properties.MasterProfile.PlatformFaultDomainCount != nil {
-		t.Errorf("expected master platformFaultDomainCount to be nil, not %v", cs.Properties.MasterProfile.PlatformFaultDomainCount)
-	}
-	for _, pool := range cs.Properties.AgentPoolProfiles {
-		if pool.PlatformFaultDomainCount != nil {
-			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
-		}
-	}
-
-	// check that pfdc can be set to legal values
-	for i := 1; i <= 3; i++ {
-		cs.SetPlatformFaultDomainCount(i)
-		if *cs.Properties.MasterProfile.PlatformFaultDomainCount != i {
-			t.Errorf("expected master platformFaultDomainCount to be %d, not %v", i, cs.Properties.MasterProfile.PlatformFaultDomainCount)
-		}
-		for _, pool := range cs.Properties.AgentPoolProfiles {
-			if *pool.PlatformFaultDomainCount != i {
-				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
-			}
-		}
-	}
-}
-
-func TestSetPlatformFaultDomainCountNoMasters(t *testing.T) {
-	// check that the default value is nil
-	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
-	cs.Properties.MasterProfile = nil
-	for _, pool := range cs.Properties.AgentPoolProfiles {
-		if pool.PlatformFaultDomainCount != nil {
-			t.Errorf("expected agent platformFaultDomainCount to be nil, not %v", pool.PlatformFaultDomainCount)
-		}
-	}
-
-	// check that pfdc can be set to legal values
-	for i := 1; i <= 3; i++ {
-		cs.SetPlatformFaultDomainCount(i)
-		if cs.Properties.MasterProfile != nil {
-			t.Error("expected MasterProfile to stay nil")
-		}
-		for _, pool := range cs.Properties.AgentPoolProfiles {
-			if *pool.PlatformFaultDomainCount != i {
-				t.Errorf("expected agent platformFaultDomainCount to be %d, not %v", i, pool.PlatformFaultDomainCount)
-			}
 		}
 	}
 }

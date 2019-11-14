@@ -35,6 +35,7 @@ func TestScaleCmdValidate(t *testing.T) {
 	cases := []struct {
 		sc          *scaleCmd
 		expectedErr error
+		name        string
 	}{
 		{
 			sc: &scaleCmd{
@@ -47,6 +48,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
+			name:        "NoResourceGroup",
 		},
 		{
 			sc: &scaleCmd{
@@ -59,6 +61,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--location must be specified"),
+			name:        "NoLocation",
 		},
 		{
 			sc: &scaleCmd{
@@ -70,6 +73,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:          "test",
 			},
 			expectedErr: errors.New("--new-node-count must be specified"),
+			name:        "NoNewNodeCount",
 		},
 		{
 			sc: &scaleCmd{
@@ -82,6 +86,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("--api-model must be specified"),
+			name:        "NoAPIModel",
 		},
 		{
 			sc: &scaleCmd{
@@ -94,6 +99,7 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
+			name:        "Ambiguous",
 		},
 		{
 			sc: &scaleCmd{
@@ -106,21 +112,26 @@ func TestScaleCmdValidate(t *testing.T) {
 				masterFQDN:           "test",
 			},
 			expectedErr: nil,
+			name:        "IsValid",
 		},
 	}
 
-	for _, c := range cases {
-		err := c.sc.validate(r)
-		if err != nil && c.expectedErr != nil {
-			if err.Error() != c.expectedErr.Error() {
-				t.Fatalf("expected validate scale command to return error %s, but instead got %s", c.expectedErr.Error(), err.Error())
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			err := c.sc.validate(r)
+			if err != nil && c.expectedErr != nil {
+				if err.Error() != c.expectedErr.Error() {
+					t.Fatalf("expected validate scale command to return error %s, but instead got %s", c.expectedErr.Error(), err.Error())
+				}
+			} else {
+				if c.expectedErr != nil {
+					t.Fatalf("expected validate scale command to return error %s, but instead got no error", c.expectedErr.Error())
+				} else if err != nil {
+					t.Fatalf("expected validate scale command to return no error, but instead got %s", err.Error())
+				}
 			}
-		} else {
-			if c.expectedErr != nil {
-				t.Fatalf("expected validate scale command to return error %s, but instead got no error", c.expectedErr.Error())
-			} else if err != nil {
-				t.Fatalf("expected validate scale command to return no error, but instead got %s", err.Error())
-			}
-		}
+		})
 	}
 }

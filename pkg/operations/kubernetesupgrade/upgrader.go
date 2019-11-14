@@ -78,6 +78,7 @@ func (ku *Upgrader) RunUpgrade() error {
 		return err
 	}
 
+	//This is handling VMAS VMs only, not VMSS
 	return ku.upgradeAgentPools(ctx)
 }
 
@@ -108,10 +109,13 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 		}
 	}
+	//TODO: rename this as it's not only touching master resources
 	if err = transformer.NormalizeResourcesForK8sMasterUpgrade(ku.logger, templateMap, ku.DataModel.Properties.MasterProfile.IsManagedDisks(), nil); err != nil {
 		ku.logger.Error(err.Error())
 		return err
 	}
+
+	transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 	upgradeMasterNode := UpgradeMasterNode{
 		Translator: ku.Translator,
@@ -146,7 +150,42 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		return ku.Translator.Errorf("Total count of master VMs: %d exceeded expected count: %d", masterNodesInCluster, expectedMasterCount)
 	}
 
+	// This condition is possible if the previous upgrade operation failed during master
+	// VM upgrade when a master VM was deleted but creation of upgraded master did not run.
+	if masterNodesInCluster < expectedMasterCount {
+		ku.logger.Infof(
+			"Found missing master VMs in the cluster. Reconstructing names of missing master VMs for recreation during upgrade...")
+	}
+
 	upgradedMastersIndex := make(map[int]bool)
+	mastersToCreate := expectedMasterCount - masterNodesInCluster
+	ku.logger.Infof("Expected master count: %d, Creating %d more master VMs", expectedMasterCount, mastersToCreate)
+
+	// NOTE: this is NOT completely idempotent because it assumes that
+	// the OS disk has been deleted
+	for i := 0; i < mastersToCreate; i++ {
+		masterIndexToCreate := 0
+		for upgradedMastersIndex[masterIndexToCreate] {
+			masterIndexToCreate++
+		}
+
+		ku.logger.Infof("Creating upgraded master VM with index: %d", masterIndexToCreate)
+
+		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndexToCreate)
+		if err != nil {
+			ku.logger.Infof("Error creating upgraded master VM with index: %d", masterIndexToCreate)
+			return err
+		}
+
+		tempVMName := ""
+		err = upgradeMasterNode.Validate(&tempVMName)
+		if err != nil {
+			ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
+			return err
+		}
+
+		upgradedMastersIndex[masterIndexToCreate] = true
+	}
 
 	for _, vm := range *ku.ClusterTopology.UpgradedMasterVMs {
 		ku.logger.Infof("Master VM: %s is upgraded to expected orchestrator version", *vm.Name)
@@ -178,42 +217,6 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 		}
 
 		upgradedMastersIndex[masterIndex] = true
-	}
-
-	// This condition is possible if the previous upgrade operation failed during master
-	// VM upgrade when a master VM was deleted but creation of upgraded master did not run.
-	if masterNodesInCluster < expectedMasterCount {
-		ku.logger.Infof(
-			"Found missing master VMs in the cluster. Reconstructing names of missing master VMs for recreation during upgrade...")
-	}
-
-	mastersToCreate := expectedMasterCount - masterNodesInCluster
-	ku.logger.Infof("Expected master count: %d, Creating %d more master VMs", expectedMasterCount, mastersToCreate)
-
-	// NOTE: this is NOT completely idempotent because it assumes that
-	// the OS disk has been deleted
-	for i := 0; i < mastersToCreate; i++ {
-		masterIndexToCreate := 0
-		for upgradedMastersIndex[masterIndexToCreate] {
-			masterIndexToCreate++
-		}
-
-		ku.logger.Infof("Creating upgraded master VM with index: %d", masterIndexToCreate)
-
-		err = upgradeMasterNode.CreateNode(ctx, "master", masterIndexToCreate)
-		if err != nil {
-			ku.logger.Infof("Error creating upgraded master VM with index: %d", masterIndexToCreate)
-			return err
-		}
-
-		tempVMName := ""
-		err = upgradeMasterNode.Validate(&tempVMName)
-		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
-			return err
-		}
-
-		upgradedMastersIndex[masterIndexToCreate] = true
 	}
 
 	return nil
@@ -249,6 +252,8 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 			ku.logger.Errorf(err.Error())
 			return ku.Translator.Errorf("Error generating upgrade template: %s", err.Error())
 		}
+
+		transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 		var agentCount int
 		var agentPoolProfile *api.AgentPoolProfile
@@ -465,6 +470,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 			Translator: ku.Translator,
 		}
 
+		// TODO: rename this!
+		// This is not called in scaling scenarios. only in this upgrade scenario!
 		if err = transformer.NormalizeMasterResourcesForScaling(ku.logger, templateMap); err != nil {
 			return err
 		}
@@ -476,6 +483,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				return ku.Translator.Errorf("error normalizing upgrade template for SLB: %s", err.Error())
 			}
 		}
+
+		transformer.RemoveImmutableResourceProperties(ku.logger, templateMap)
 
 		random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		deploymentSuffix := random.Int31()

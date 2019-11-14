@@ -20,6 +20,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedTiller                 bool
 		expectedAADPodIdentity         bool
 		expectedACIConnector           bool
+		expectedAzureDiskCSIDriver     bool
+		expectedAzureFileCSIDriver     bool
 		expectedClusterAutoscaler      bool
 		expectedBlobfuseFlexvolume     bool
 		expectedSMBFlexvolume          bool
@@ -33,6 +35,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedDNSAutoscaler          bool
 		expectedCalico                 bool
 		expectedAzureNetworkPolicy     bool
+		expectedAzurePolicy            bool
 	}{
 		// addons disabled scenario
 		{
@@ -64,6 +67,14 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Enabled: to.BoolPtr(false),
 							},
 							{
+								Name:    AzureDiskCSIDriverAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
+								Name:    AzureFileCSIDriverAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+							{
 								Name:    ClusterAutoscalerAddonName,
 								Enabled: to.BoolPtr(false),
 							},
@@ -115,6 +126,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(false),
 							},
+							{
+								Name:    AzurePolicyAddonName,
+								Enabled: to.BoolPtr(false),
+							},
 						},
 					},
 				},
@@ -123,6 +138,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedMetricsServer:          false,
 			expectedTiller:                 false,
 			expectedAADPodIdentity:         false,
+			expectedAzureDiskCSIDriver:     false,
+			expectedAzureFileCSIDriver:     false,
 			expectedACIConnector:           false,
 			expectedClusterAutoscaler:      false,
 			expectedBlobfuseFlexvolume:     false,
@@ -137,6 +154,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          false,
 			expectedCalico:                 false,
 			expectedAzureNetworkPolicy:     false,
+			expectedAzurePolicy:            false,
 		},
 		// addons enabled scenario
 		{
@@ -168,6 +186,14 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Enabled: to.BoolPtr(true),
 							},
 							{
+								Name:    AzureDiskCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    AzureFileCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
 								Name:    ClusterAutoscalerAddonName,
 								Enabled: to.BoolPtr(true),
 							},
@@ -219,6 +245,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name:    AzureNetworkPolicyAddonName,
 								Enabled: to.BoolPtr(true),
 							},
+							{
+								Name:    AzurePolicyAddonName,
+								Enabled: to.BoolPtr(true),
+							},
 						},
 					},
 				},
@@ -228,6 +258,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedTiller:                 true,
 			expectedAADPodIdentity:         true,
 			expectedACIConnector:           true,
+			expectedAzureDiskCSIDriver:     true,
+			expectedAzureFileCSIDriver:     true,
 			expectedClusterAutoscaler:      true,
 			expectedBlobfuseFlexvolume:     true,
 			expectedSMBFlexvolume:          true,
@@ -241,6 +273,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			expectedDNSAutoscaler:          true,
 			expectedCalico:                 true,
 			expectedAzureNetworkPolicy:     true,
+			expectedAzurePolicy:            true,
 		},
 	}
 
@@ -260,6 +293,12 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		}
 		if c.expectedACIConnector != componentFileSpec[ACIConnectorAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", ACIConnectorAddonName, c.expectedACIConnector)
+		}
+		if c.expectedAzureDiskCSIDriver != componentFileSpec[AzureDiskCSIDriverAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureDiskCSIDriverAddonName, c.expectedAzureDiskCSIDriver)
+		}
+		if c.expectedAzureFileCSIDriver != componentFileSpec[AzureFileCSIDriverAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureFileCSIDriverAddonName, c.expectedAzureFileCSIDriver)
 		}
 		if c.expectedClusterAutoscaler != componentFileSpec[ClusterAutoscalerAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", ClusterAutoscalerAddonName, c.expectedClusterAutoscaler)
@@ -300,25 +339,29 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		if c.expectedAzureNetworkPolicy != componentFileSpec[AzureNetworkPolicyAddonName].isEnabled {
 			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzureNetworkPolicyAddonName, c.expectedAzureNetworkPolicy)
 		}
+		if c.expectedAzurePolicy != componentFileSpec[AzurePolicyAddonName].isEnabled {
+			t.Fatalf("Expected componentFileSpec[%s] to be %t", AzurePolicyAddonName, c.expectedAzurePolicy)
+		}
 	}
 }
 
 func TestKubernetesAddonSettingsInit(t *testing.T) {
 	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
-		p                             *api.Properties
-		expectedKubeDNS               bool
-		expectedCoreDNS               bool
-		expectedKubeProxy             bool
-		expectedCilium                bool
-		expectedFlannel               bool
-		expectedAADAdminGroup         bool
-		expectedAzureCloudProvider    bool
-		expectedAuditPolicy           bool
-		expectedPodSecurityPolicy     bool
-		expectedManagedStorageClass   bool
-		expectedUnmanagedStorageClass bool
-		expectedScheduledMaintenance  bool
+		p                              *api.Properties
+		expectedKubeDNS                bool
+		expectedCoreDNS                bool
+		expectedKubeProxy              bool
+		expectedCilium                 bool
+		expectedFlannel                bool
+		expectedAADAdminGroup          bool
+		expectedAzureCloudProvider     bool
+		expectedAuditPolicy            bool
+		expectedPodSecurityPolicy      bool
+		expectedManagedStorageClass    bool
+		expectedUnmanagedStorageClass  bool
+		expectedScheduledMaintenance   bool
+		expectedAzureCSIStorageClasses bool
 	}{
 		// Legacy default scenario
 		{
@@ -336,18 +379,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               true,
-			expectedCoreDNS:               false,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           false,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                true,
+			expectedCoreDNS:                false,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            false,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// 1.14 default scenario
 		{
@@ -360,18 +404,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// Cilium scenario
 		{
@@ -384,18 +429,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                true,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 true,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// Flannel scenario
 		{
@@ -408,18 +454,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               true,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                true,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// AAD Admin Group scenario
 		{
@@ -435,18 +482,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					AdminGroupID: "1234-5",
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         true,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          true,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// ELB service scenario
 		{
@@ -460,18 +508,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// Scheduled Maintenance Scenario
 		{
@@ -491,18 +540,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  true,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   true,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// PodSecurityPolicy scenario
 		{
@@ -515,18 +565,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     true,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      true,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// non-Managed Disk scenario
 		{
@@ -544,18 +595,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               true,
-			expectedCoreDNS:               false,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           false,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   false,
-			expectedUnmanagedStorageClass: true,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                true,
+			expectedCoreDNS:                false,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            false,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    false,
+			expectedUnmanagedStorageClass:  true,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// Azure Stack Managed Disk scenario
 		{
@@ -574,18 +626,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// Azure Stack non-Managed Disk scenario
 		{
@@ -604,18 +657,19 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     false,
-			expectedManagedStorageClass:   false,
-			expectedUnmanagedStorageClass: true,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    false,
+			expectedUnmanagedStorageClass:  true,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
 		},
 		// 1.15.0-beta.1 scenario
 		{
@@ -628,18 +682,50 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedKubeDNS:               false,
-			expectedCoreDNS:               true,
-			expectedKubeProxy:             true,
-			expectedCilium:                false,
-			expectedFlannel:               false,
-			expectedAADAdminGroup:         false,
-			expectedAzureCloudProvider:    true,
-			expectedAuditPolicy:           true,
-			expectedPodSecurityPolicy:     true,
-			expectedManagedStorageClass:   true,
-			expectedUnmanagedStorageClass: false,
-			expectedScheduledMaintenance:  false,
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      true,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
+		},
+		// CSI storage classes scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.13.0",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin:             NetworkPluginAzure,
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+				AgentPoolProfiles: []*api.AgentPoolProfile{
+					{
+						StorageProfile: api.StorageAccount,
+					},
+				},
+			},
+			expectedKubeDNS:                false,
+			expectedCoreDNS:                true,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    false,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: true,
 		},
 	}
 
@@ -714,6 +800,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "scheduled-maintenance-deployment.yaml":
 				if c.expectedScheduledMaintenance != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", ScheduledMaintenanceAddonName, c.expectedScheduledMaintenance)
+				}
+			case "azure-csi-storage-classes.yaml":
+				if c.expectedAzureCSIStorageClasses != componentFileSpec.isEnabled {
+					t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedAzureCSIStorageClasses)
 				}
 			}
 		}

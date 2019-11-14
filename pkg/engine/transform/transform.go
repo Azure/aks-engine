@@ -15,22 +15,24 @@ import (
 
 const (
 	//Field names
-	customDataFieldName           = "customData"
-	dependsOnFieldName            = "dependsOn"
-	hardwareProfileFieldName      = "hardwareProfile"
-	imageReferenceFieldName       = "imageReference"
-	nameFieldName                 = "name"
-	osProfileFieldName            = "osProfile"
-	propertiesFieldName           = "properties"
-	resourcesFieldName            = "resources"
-	storageProfileFieldName       = "storageProfile"
-	typeFieldName                 = "type"
-	vmSizeFieldName               = "vmSize"
-	dataDisksFieldName            = "dataDisks"
-	createOptionFieldName         = "createOption"
-	tagsFieldName                 = "tags"
-	managedDiskFieldName          = "managedDisk"
-	windowsConfigurationFieldName = "windowsConfiguration"
+	customDataFieldName               = "customData"
+	dependsOnFieldName                = "dependsOn"
+	hardwareProfileFieldName          = "hardwareProfile"
+	imageReferenceFieldName           = "imageReference"
+	nameFieldName                     = "name"
+	osProfileFieldName                = "osProfile"
+	propertiesFieldName               = "properties"
+	resourcesFieldName                = "resources"
+	storageProfileFieldName           = "storageProfile"
+	typeFieldName                     = "type"
+	vmSizeFieldName                   = "vmSize"
+	dataDisksFieldName                = "dataDisks"
+	createOptionFieldName             = "createOption"
+	tagsFieldName                     = "tags"
+	managedDiskFieldName              = "managedDisk"
+	windowsConfigurationFieldName     = "windowsConfiguration"
+	platformFaultDomainCountFieldName = "platformFaultDomainCount"
+	singlePlacementGroupFieldName     = "singlePlacementGroup"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -40,6 +42,7 @@ const (
 	nicResourceType  = "Microsoft.Network/networkInterfaces"
 	vnetResourceType = "Microsoft.Network/virtualNetworks"
 	vmasResourceType = "Microsoft.Compute/availabilitySets"
+	vmssResourceType = "Microsoft.Compute/virtualMachineScaleSets"
 	lbResourceType   = "Microsoft.Network/loadBalancers"
 
 	// resource ids
@@ -64,6 +67,78 @@ type Translator interface {
 // Transformer represents the object that transforms template
 type Transformer struct {
 	Translator Translator
+}
+
+type tMap map[string]interface{}
+type resource map[string]interface{}
+
+func (t tMap) Resources(logger *logrus.Entry) []resource {
+	resourcesInterfaces := t[resourcesFieldName].([]interface{})
+	resources := make([]resource, 0)
+	for index, ri := range resourcesInterfaces {
+		if r, ok := ri.(map[string]interface{}); ok {
+			resources = append(resources, r)
+		} else {
+			logger.Warnf("Template improperly formatted for resource at index %d", index)
+		}
+	}
+	return resources
+}
+
+func (r resource) Type() string {
+	return r[typeFieldName].(string)
+}
+
+func (r resource) Name() string {
+	return r[nameFieldName].(string)
+}
+
+func (r resource) Properties() map[string]interface{} {
+	prop, ok := r[propertiesFieldName].(map[string]interface{})
+	if !ok {
+		return map[string]interface{}{}
+	}
+	return prop
+}
+
+func (r resource) RemoveProperty(logger *logrus.Entry, key string) {
+	properties := r.Properties()
+	_, ok := properties[key]
+	if ok {
+		logger.Infof("Removing %s property from %s", key, r.Name())
+		delete(properties, key)
+	}
+}
+
+func (r resource) removeDependencyType(logger *logrus.Entry, depType string) []string {
+	deps := r.DependsOn()
+	var newDependsOn []string
+	for _, dep := range deps {
+		depVal := dep.(string)
+		if !strings.Contains(depVal, depType) {
+			logger.Infof("Removing %s dependency from %s", depType, r.Name())
+			newDependsOn = append(newDependsOn, depVal)
+		}
+	}
+	return newDependsOn
+}
+
+func (r resource) DependsOn() []interface{} {
+	deps, ok := r[dependsOnFieldName].([]interface{})
+	if !ok {
+		return []interface{}{}
+	}
+	return deps
+}
+
+func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, templateMap map[string]interface{}) {
+	tm := tMap(templateMap)
+	for _, resource := range tm.Resources(logger) {
+		if resource.Type() == vmssResourceType {
+			resource.RemoveProperty(logger, platformFaultDomainCountFieldName)
+			resource.RemoveProperty(logger, singlePlacementGroupFieldName)
+		}
+	}
 }
 
 // NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
@@ -187,11 +262,6 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	}
 
 	indexesToRemove := []int{}
-	if nsgIndex == -1 {
-		err := t.Translator.Errorf("Found no resources with type %s in the template. There should have been 1", nsgResourceType)
-		logger.Errorf(err.Error())
-		return err
-	}
 
 	if rtIndex == -1 {
 		logger.Debugf("Found no resources with type %s in the template.", rtResourceType)
@@ -206,8 +276,10 @@ func (t *Transformer) NormalizeForK8sVMASScalingUp(logger *logrus.Entry, templat
 	if len(vmasIndexes) != 0 {
 		indexesToRemove = append(indexesToRemove, vmasIndexes...)
 	}
+	if nsgIndex > 0 {
+		indexesToRemove = append(indexesToRemove, nsgIndex)
+	}
 
-	indexesToRemove = append(indexesToRemove, nsgIndex)
 	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
 
 	return nil
@@ -325,6 +397,9 @@ func (t *Transformer) removeImageReference(logger *logrus.Entry, resourcePropert
 // NormalizeResourcesForK8sMasterUpgrade takes a template and removes elements that are unwanted in any scale up/down case
 func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	resources := templateMap[resourcesFieldName].([]interface{})
+	resourceTypeToProcess := map[string]bool{vmResourceType: true, vmExtensionType: true,
+		nicResourceType: true, vnetResourceType: true, nsgResourceType: true,
+		lbResourceType: true, vmssResourceType: true, vmasResourceType: true}
 	logger.Infoln(fmt.Sprintf("Resource count before running NormalizeResourcesForK8sMasterUpgrade: %d", len(resources)))
 
 	filteredResources := resources[:0]
@@ -343,9 +418,12 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
-		if !(resourceType == vmResourceType || resourceType == vmExtensionType || resourceType == nicResourceType) {
+		_, process := resourceTypeToProcess[resourceType]
+		if !process {
 			continue
 		}
+
+		filteredResources = removeVMAS(logger, filteredResources, resourceMap)
 
 		resourceName, ok := resourceMap[nameFieldName].(string)
 		if !ok {
@@ -353,7 +431,20 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 			continue
 		}
 
+		if resourceType == vmssResourceType || resourceType == vnetResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
+			continue
+		}
+
+		if resourceType == lbResourceType {
+			if strings.Contains(resourceName, "variables('masterInternalLbName')") {
+				RemoveNsgDependency(logger, resourceName, resourceMap)
+				continue
+			}
+		}
+
 		if resourceType == nicResourceType {
+			RemoveNsgDependency(logger, resourceName, resourceMap)
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
 				continue
 			} else {
@@ -444,6 +535,13 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
 			}
+		} else if resourceType == nsgResourceType {
+			logger.Infoln(fmt.Sprintf("Removing nsg resource: %s from template", resourceName))
+			{
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			}
 		}
 	}
 
@@ -454,7 +552,46 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 	return nil
 }
 
-// NormalizeResourcesForK8sAgentUpgrade takes a template and removes elements that are unwanted in any scale up/down case
+func removeVMAS(logger *logrus.Entry, resources []interface{}, resource resource) []interface{} {
+	// remove vmas
+	if strings.EqualFold(resource.Type(), vmasResourceType) {
+		return resources[:len(resources)-1]
+	}
+	// remove dependencies on vmas
+	if strings.EqualFold(resource.Type(), vmResourceType) {
+		resource[dependsOnFieldName] = resource.removeDependencyType(logger, vmasResourceType)
+	}
+	return resources
+}
+
+//RemoveNsgDependency Removes the nsg dependency from the resource
+func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap map[string]interface{}) {
+
+	if resourceName != "" && resourceMap != nil {
+		dependencies, ok := resourceMap[dependsOnFieldName].([]interface{})
+		if !ok {
+			logger.Warnf("Could not find dependencies for resourceName: %s", resourceName)
+			return
+		}
+
+		for dIndex := len(dependencies) - 1; dIndex >= 0; dIndex-- {
+			dependency := dependencies[dIndex].(string)
+			if strings.Contains(dependency, nsgResourceType) || strings.Contains(dependency, nsgID) {
+				dependencies = append(dependencies[:dIndex], dependencies[dIndex+1:]...)
+			}
+		}
+
+		if len(dependencies) > 0 {
+			resourceMap[dependsOnFieldName] = dependencies
+		} else {
+			delete(resourceMap, dependsOnFieldName)
+		}
+
+		return
+	}
+}
+
+// NormalizeResourcesForK8sAgentUpgrade takes a template and removes elements that are unwanted in any scale/upgrade case
 func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
 	logger.Infoln(fmt.Sprintf("Running NormalizeResourcesForK8sMasterUpgrade...."))
 	if err := t.NormalizeResourcesForK8sMasterUpgrade(logger, templateMap, isMasterManagedDisk, agentPoolsToPreserve); err != nil {

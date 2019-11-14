@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/Azure/aks-engine/pkg/test"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
@@ -54,7 +55,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should succeed when cluster VMs are missing expected tags during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -80,7 +81,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to list VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -106,7 +107,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete VMs during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -129,7 +130,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to deploy template during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 1, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 1, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -152,7 +153,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get a virtual machine during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 1, 6, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 1, 6, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -175,7 +176,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to get storage client during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 5, 1, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 5, 1, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -198,7 +199,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete network interface during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -221,7 +222,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should return error message when failing to delete role assignment during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		uc := UpgradeCluster{
@@ -255,7 +256,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
-			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
+			cs = api.CreateMockContainerService("testcluster", "1.12.8", 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -284,10 +285,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should skip VMs that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.9"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.7"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.12.8"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.12.5"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.12.7"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.12.8"),
 				}
 			}
 			uc.Force = false
@@ -355,17 +356,17 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should use kubernetes api to get node versions for VMSS when latest model is not applied", func() {
 			trueVar := true
 			falseVar := false
-			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "vmWithoutLatestModelApplied!")
+			vmWithoutLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.8", "vmWithoutLatestModelApplied!")
 			vmWithoutLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &falseVar
-			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", "vmWithLatestModelApplied")
+			vmWithLatestModelApplied := mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.12.8", "vmWithLatestModelApplied")
 			vmWithLatestModelApplied.VirtualMachineScaleSetVMProperties.LatestModelApplied = &trueVar
 
 			mockClient.MockKubernetesClient.GetNodeFunc = func(name string) (*v1.Node, error) {
 				node := &v1.Node{}
-				node.Status.NodeInfo.KubeletVersion = "v1.9.7"
+				node.Status.NodeInfo.KubeletVersion = "v1.12.7"
 				node.Status = v1.NodeStatus{}
 				node.Status.NodeInfo = v1.NodeSystemInfo{
-					KubeletVersion: "v1.9.7",
+					KubeletVersion: "v1.12.7",
 				}
 
 				return node, nil
@@ -436,7 +437,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		BeforeEach(func() {
 			mockClient = armhelpers.MockAKSEngineClient{}
-			cs = api.CreateMockContainerService("testcluster", "1.9.10", 3, 3, false)
+			cs = api.CreateMockContainerService("testcluster", "1.11.10", 3, 3, false)
 			uc = UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -478,10 +479,10 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should mark scale sets as windows correctly.", func() {
 			mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 				return []compute.VirtualMachineScaleSetVM{
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.9"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.7"),
-					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.11.10"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.11.9"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.11.7"),
+					mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.11.10"),
 				}
 			}
 			uc.Force = false
@@ -614,10 +615,11 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(*uc.MasterVMs).To(HaveLen(1))
 			Expect(*uc.UpgradedMasterVMs).To(HaveLen(0))
 		})
-		It("Should set platform fault domain count based on availability sets", func() {
-			cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		It("Should leave platform fault domain count nil", func() {
+			cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 			cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 			cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+			cs.Properties.MasterProfile.AvailabilityProfile = "AvailabilitySet"
 			uc := UpgradeCluster{
 				Translator: &i18n.Translator{},
 				Logger:     log.NewEntry(log.New()),
@@ -635,15 +637,77 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 			err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
 			Expect(err).To(BeNil())
-			Expect(*cs.Properties.MasterProfile.PlatformFaultDomainCount).To(Equal(3))
+			Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
 			for _, pool := range cs.Properties.AgentPoolProfiles {
-				Expect(*pool.PlatformFaultDomainCount).To(Equal(3))
+				Expect(pool.PlatformFaultDomainCount).To(BeNil())
 			}
 		})
 	})
 
+	It("Should leave platform fault domain count nil for VMSS", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
+		cs.Properties.MasterProfile.AvailabilityProfile = api.AvailabilitySet
+		cs.Properties.AgentPoolProfiles[0].AvailabilityProfile = api.VirtualMachineScaleSets
+		cs.Properties.AgentPoolProfiles[0].StorageProfile = "ManagedDisks"
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		mockClient.FakeListVirtualMachineScaleSetsResult = func() []compute.VirtualMachineScaleSet {
+			scalesetName := "agentpool1"
+			sku := compute.Sku{
+				Capacity: to.Int64Ptr(2),
+			}
+			location := "eastus"
+			return []compute.VirtualMachineScaleSet{
+				{
+					Name:                             &scalesetName,
+					Sku:                              &sku,
+					Location:                         &location,
+					VirtualMachineScaleSetProperties: &compute.VirtualMachineScaleSetProperties{},
+				},
+			}
+		}
+		//masters
+		mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
+			return []compute.VirtualMachine{
+				mockClient.MakeFakeVirtualMachine("one", "Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachine("two", "Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachine("three", "Kubernetes:1.15.1"),
+			}
+		}
+		//agents
+		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
+			return []compute.VirtualMachineScaleSetVM{
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
+				mockClient.MakeFakeVirtualMachineScaleSetVM("Kubernetes:1.15.1"),
+			}
+		}
+		uc.Client = &mockClient
+
+		uc.ClusterTopology = ClusterTopology{}
+		uc.SubscriptionID = "DEC923E3-1EF1-4745-9516-37906D56DEC4"
+		uc.ResourceGroup = "TestRg"
+		uc.DataModel = cs
+		uc.NameSuffix = "12345678"
+		uc.AgentPoolScaleSetsToUpgrade = []AgentPoolScaleSet{
+			{Name: "agentpool1"},
+		}
+
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).To(BeNil())
+		Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
+		for _, pool := range cs.Properties.AgentPoolProfiles {
+			Expect(pool.PlatformFaultDomainCount).To(BeNil())
+		}
+	})
+
 	It("Should not fail if no managed identity is returned by azure during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 		cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 		uc := UpgradeCluster{
@@ -666,7 +730,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should not fail if a Kubernetes client cannot be created", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
 			Logger:     log.NewEntry(log.New()),
@@ -700,7 +764,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should fail if cluster-autoscaler cannot be paused unless --force is specified", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.12.8", 3, 2, false)
 		enabled := true
 		addon := api.KubernetesAddon{
 			Name:    "cluster-autoscaler",
@@ -752,7 +816,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 	})
 
 	It("Should pause cluster-autoscaler during upgrade operation", func() {
-		cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+		cs := api.CreateMockContainerService("testcluster", "1.11.10", 3, 2, false)
 		enabled := true
 		addon := api.KubernetesAddon{
 			Name:    "cluster-autoscaler",

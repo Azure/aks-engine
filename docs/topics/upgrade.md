@@ -100,10 +100,6 @@ For example,
 
 The upgrade operation is a long-running, successive set of ARM deployments, and for large clusters, more susceptible to one of those deployments failing. This is based on the design principle of upgrade enumerating, one-at-a-time, through each node in the cluster. A transient Azure resource allocation error could thus interrupt the successful progression of the overall transaction. At present, the upgrade operation is implemented to "fail fast"; and so, if a well formed upgrade operation fails before completing, it can be manually retried by invoking the exact same command line arguments as were sent originally. The upgrade operation will enumerate through the cluster nodes, skipping any nodes that have already been upgraded to the desired Kubernetes version. Those nodes that match the *original* Kubernetes version will then, one-at-a-time, be cordon and drained, and upgraded to the desired version. Put another way, an upgrade command is designed to be idempotent across retry scenarios.
 
-### Cluster-autoscaler + VMSS
-
-There are known limitations with VMSS cluster-autoscaler scenarios and upgrade. Our current guidance is not to use `aks-engine upgrade` on clusters with `cluster-autoscaler` functionality. See [here](https://github.com/Azure/aks-engine/issues/400) to get more information and to track progress of the issues related to these limitations.
-
 ### Cluster-autoscaler + Availability Set
 
 We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.

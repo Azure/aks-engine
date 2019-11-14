@@ -5,20 +5,22 @@ package cmd
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/ssh"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func mockExecuteCmd(command, masterFQDN, hostname string, port string, config *ssh.ClientConfig) (string, error) {
@@ -29,6 +31,8 @@ func mockExecuteCmd(command, masterFQDN, hostname string, port string, config *s
 }
 
 func TestNewRotateCertsCmd(t *testing.T) {
+	t.Parallel()
+
 	output := newRotateCertsCmd()
 	if output.Use != rotateCertsName || output.Short != rotateCertsShortDescription || output.Long != rotateCertsLongDescription {
 		t.Fatalf("rotate-certs command should have use %s equal %s, short %s equal %s and long %s equal to %s", output.Use, rotateCertsName, output.Short, rotateCertsShortDescription, output.Long, rotateCertsLongDescription)
@@ -43,6 +47,14 @@ func TestNewRotateCertsCmd(t *testing.T) {
 }
 
 func TestRotateCertsCmdRun(t *testing.T) {
+	t.Parallel()
+
+	tmpSSHFile, del := makeTmpFile(t, "_test_ssh")
+	defer del()
+
+	tmpOutputDir, del := makeTmpDir(t)
+	defer del()
+
 	rcc := &rotateCertsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
@@ -50,27 +62,18 @@ func TestRotateCertsCmdRun(t *testing.T) {
 			getClientMock: &armhelpers.MockAKSEngineClient{},
 		},
 		apiModelPath:       "../pkg/engine/testdata/key-vault-certs/kubernetes.json",
-		outputDirectory:    "_test_output",
+		outputDirectory:    tmpOutputDir,
 		location:           "westus",
-		sshFilepath:        "_test_ssh",
+		sshFilepath:        tmpSSHFile,
 		sshCommandExecuter: mockExecuteCmd,
 		masterFQDN:         "valid",
 	}
 
 	r := &cobra.Command{}
 	f := r.Flags()
-
 	addAuthFlags(rcc.getAuthArgs(), f)
-
-	_, err := os.Create(rcc.sshFilepath)
-	if err != nil {
-		t.Fatalf("unable to create test sshFilepath: %s", err.Error())
-	}
-	defer os.Remove(rcc.sshFilepath)
-	defer os.Remove(rcc.outputDirectory)
-
 	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
-	fakeSubscriptionID, err := uuid.FromString(fakeRawSubscriptionID)
+	fakeSubscriptionID, err := uuid.Parse(fakeRawSubscriptionID)
 	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
 	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
 	if err != nil {
@@ -81,10 +84,6 @@ func TestRotateCertsCmdRun(t *testing.T) {
 	rcc.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
 	rcc.getAuthArgs().rawClientID = fakeClientID
 	rcc.getAuthArgs().ClientSecret = fakeClientSecret
-	if err != nil {
-		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
-	}
-
 	err = rcc.run(r, []string{})
 	if err != nil {
 		t.Fatalf("Failed to run rotate-certs command: %s", err)
@@ -92,6 +91,8 @@ func TestRotateCertsCmdRun(t *testing.T) {
 }
 
 func TestGetClusterNodes(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 	mockClient.MockKubernetesClient.FailListNodes = true
@@ -112,6 +113,8 @@ func TestGetClusterNodes(t *testing.T) {
 }
 
 func TestDeleteAllPods(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 	mockClient.MockKubernetesClient.FailListPods = true
@@ -152,6 +155,8 @@ func TestDeleteAllPods(t *testing.T) {
 }
 
 func TestRebootAllNodes(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	g := NewGomegaWithT(t)
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
@@ -206,6 +211,8 @@ func TestRebootAllNodes(t *testing.T) {
 }
 
 func TestDeleteServiceAccounts(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 	mockClient.MockKubernetesClient.FailListServiceAccounts = true
@@ -246,32 +253,42 @@ func TestDeleteServiceAccounts(t *testing.T) {
 }
 
 func TestWriteArtifacts(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	cs := api.CreateMockContainerService("testcluster", "1.11.10", 3, 2, false)
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	g.Expect(err).NotTo(HaveOccurred())
+	outdir, del := makeTmpDir(t)
+	defer del()
+
 	rcc := rotateCertsCmd{
 		authProvider:     &authArgs{},
 		containerService: cs,
 		apiVersion:       "vlabs",
-		outputDirectory:  "_test_output",
+		outputDirectory:  outdir,
 	}
-	defer os.RemoveAll(rcc.outputDirectory)
-	err := rcc.writeArtifacts()
+
+	err = rcc.writeArtifacts()
 	g.Expect(err).NotTo(HaveOccurred())
 }
 
 func TestUpdateKubeconfig(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	g.Expect(err).NotTo(HaveOccurred())
+
 	rcc := rotateCertsCmd{
 		authProvider:       &authArgs{},
 		containerService:   cs,
@@ -291,7 +308,7 @@ func TestUpdateKubeconfig(t *testing.T) {
 			},
 		},
 	}
-	err := rcc.updateKubeconfig()
+	err = rcc.updateKubeconfig()
 	g.Expect(err).NotTo(HaveOccurred())
 
 	rcc.masterFQDN = "invalid"
@@ -300,14 +317,18 @@ func TestUpdateKubeconfig(t *testing.T) {
 }
 
 func TestRotateCerts(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	g := NewGomegaWithT(t)
 	cs := api.CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	g.Expect(err).NotTo(HaveOccurred())
+
 	mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 	rcc := rotateCertsCmd{
 		authProvider:       &authArgs{},
@@ -350,7 +371,8 @@ func TestRotateCerts(t *testing.T) {
 			},
 		},
 	}
-	err := rcc.rotateEtcd(ctx)
+
+	err = rcc.rotateEtcd(ctx)
 	g.Expect(err).NotTo(HaveOccurred())
 
 	err = rcc.rotateApiserver()
@@ -368,4 +390,25 @@ func TestRotateCerts(t *testing.T) {
 
 	err = rcc.rotateKubelet()
 	g.Expect(err).To(HaveOccurred())
+}
+
+func makeTmpFile(t *testing.T, name string) (string, func()) {
+	tmpF, err := ioutil.TempFile(os.TempDir(), name)
+	if err != nil {
+		t.Fatalf("unable to create file: %s", err.Error())
+	}
+
+	return tmpF.Name(), func() {
+		defer os.Remove(tmpF.Name())
+	}
+}
+
+func makeTmpDir(t *testing.T) (string, func()) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "_tmp_dir")
+	if err != nil {
+		t.Fatalf("unable to create dir: %s", err.Error())
+	}
+	return tmpDir, func() {
+		defer os.RemoveAll(tmpDir)
+	}
 }

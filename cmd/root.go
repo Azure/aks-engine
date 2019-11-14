@@ -18,7 +18,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -135,8 +135,8 @@ func (authArgs *authArgs) isAzureStackCloud() bool {
 }
 
 func (authArgs *authArgs) validateAuthArgs() error {
-	authArgs.ClientID, _ = uuid.FromString(authArgs.rawClientID)
-	authArgs.SubscriptionID, _ = uuid.FromString(authArgs.rawSubscriptionID)
+	authArgs.ClientID, _ = uuid.Parse(authArgs.rawClientID)
+	authArgs.SubscriptionID, _ = uuid.Parse(authArgs.rawSubscriptionID)
 
 	if authArgs.AuthMethod == "client_secret" {
 		if authArgs.ClientID.String() == "00000000-0000-0000-0000-000000000000" || authArgs.ClientSecret == "" {
@@ -201,7 +201,7 @@ func getCloudSubFromAzConfig(cloud string, f *ini.File) (uuid.UUID, error) {
 	if err != nil {
 		return uuid.UUID{}, errors.Wrap(err, "error reading subscription id from cloud config")
 	}
-	return uuid.FromString(sub.String())
+	return uuid.Parse(sub.String())
 }
 
 func (authArgs *authArgs) getClient() (armhelpers.AKSEngineClient, error) {

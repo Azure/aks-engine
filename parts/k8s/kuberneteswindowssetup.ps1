@@ -239,6 +239,13 @@ try
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
 
+        if (-not (Test-ContainerImageExists -Image "kubletwin/pause")) {
+            Write-Log "Could not find container with name kubletwin/pause"
+            $o = docker image list
+            Write-Log $o
+            throw "kubletwin/pause container does not exist!"
+        }
+
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
         # Configure network policy.
@@ -293,6 +300,8 @@ try
             -KubeServiceCIDR $global:KubeServiceCIDR `
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
+
+        Get-NetworkLogCollectionScripts
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer

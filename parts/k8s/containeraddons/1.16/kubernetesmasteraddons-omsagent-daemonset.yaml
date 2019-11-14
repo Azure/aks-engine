@@ -295,7 +295,6 @@ data:
       max_retry_wait 9m
       retry_mdm_post_wait_minutes 60
      </match>
-
     <match kubehealth.Signals**>
      type out_oms
      log_level debug

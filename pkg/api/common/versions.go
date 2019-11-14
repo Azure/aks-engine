@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/blang/semver"
+	"github.com/pkg/errors"
 )
 
 // AllKubernetesSupportedVersions is a whitelist map of all supported Kubernetes version strings
@@ -71,8 +72,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.10.7":         false,
 	"1.10.8":         false,
 	"1.10.9":         false,
-	"1.10.12":        true,
-	"1.10.13":        true,
+	"1.10.12":        false,
+	"1.10.13":        false,
 	"1.11.0-alpha.1": false,
 	"1.11.0-alpha.2": false,
 	"1.11.0-beta.1":  false,
@@ -118,7 +119,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.13.9":         false,
 	"1.13.10":        false,
 	"1.13.11":        true,
-	"1.13.12":        true,
+	"1.13.12":        false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.14.0-alpha.1": false,
 	"1.14.0-alpha.2": false,
 	"1.14.0-beta.1":  false,
@@ -132,7 +133,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.14.5":         false,
 	"1.14.6":         false,
 	"1.14.7":         true,
-	"1.14.8":         true,
+	"1.14.8":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.15.0-alpha.1": false,
 	"1.15.0-alpha.2": false,
 	"1.15.0-alpha.3": false,
@@ -144,7 +145,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.2":         false,
 	"1.15.3":         false,
 	"1.15.4":         true,
-	"1.15.5":         true,
+	"1.15.5":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -153,8 +154,11 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.0-rc.1":    false,
 	"1.16.0":         false,
 	"1.16.1":         true,
-	"1.16.2":         true,
+	"1.16.2":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.17.0-alpha.1": true,
+	"1.17.0-alpha.2": true,
+	"1.17.0-alpha.3": true,
+	"1.17.0-beta.1":  true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release
@@ -408,6 +412,33 @@ func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, h
 		}
 	}
 	return version
+}
+
+func IsValidMinVersion(orchType, orchRelease, orchVersion, minVersion string) (bool, error) {
+	version := RationalizeReleaseAndVersion(
+		orchType,
+		orchRelease,
+		orchVersion,
+		false,
+		false)
+	if version == "" {
+		return false, errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine",
+			orchType,
+			orchRelease,
+			orchVersion)
+	}
+	sv, err := semver.Make(version)
+	if err != nil {
+		return false, errors.Errorf("could not validate version %s", version)
+	}
+	m, err := semver.Make(minVersion)
+	if err != nil {
+		return false, errors.New("could not validate version")
+	}
+	if sv.LT(m) {
+		return false, nil
+	}
+	return true, nil
 }
 
 // IsKubernetesVersionGe returns true if actualVersion is greater than or equal to version

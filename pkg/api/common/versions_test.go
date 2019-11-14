@@ -582,3 +582,58 @@ func Test_IsSupportedKubernetesVersion(t *testing.T) {
 		}
 	}
 }
+
+func Test_IsValidMinVersion(t *testing.T) {
+	orchestratorRelease := "1.15"
+	orchestratorVersion := ""
+
+	t.Run("Minimum version is valid", func(t *testing.T) {
+		minVersion := "1.15.0"
+		_, err := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
+		if err != nil {
+			t.Errorf("version should be valid: %v", err)
+		}
+	})
+
+	t.Run("Minimum version is invalid", func(t *testing.T) {
+		minVersion := "v1.15.0"
+		_, err := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
+		if err == nil {
+			t.Errorf("version should be invalid: %v", err)
+		}
+	})
+
+	t.Run("Kubernetes release is higher than required version", func(t *testing.T) {
+		minVersion := "1.13.0"
+		isValidVersion, _ := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
+		if !isValidVersion {
+			t.Errorf("minimum version should be valid")
+		}
+	})
+
+	t.Run("Kubernetes release is lower than minimum required version", func(t *testing.T) {
+		minVersion := "1.16.0"
+		isValidVersion, _ := IsValidMinVersion(Kubernetes, orchestratorRelease, orchestratorVersion, minVersion)
+		if isValidVersion {
+			t.Errorf("version should be not valid")
+		}
+	})
+
+	t.Run("Kubernetes version is higher than required version", func(t *testing.T) {
+		orchestratorVersion = "1.15.4"
+		minVersion := "1.13.0"
+		isValidVersion, _ := IsValidMinVersion(Kubernetes, "", orchestratorVersion, minVersion)
+		if !isValidVersion {
+			t.Errorf("minimum version should be valid")
+		}
+	})
+
+	t.Run("Kubernetes version is lower than minimum required version", func(t *testing.T) {
+		orchestratorVersion = "1.15.2"
+		minVersion := "1.15.4"
+		isValidVersion, _ := IsValidMinVersion(Kubernetes, "", orchestratorVersion, minVersion)
+		if isValidVersion {
+			t.Errorf("version should be not valid")
+		}
+	})
+}

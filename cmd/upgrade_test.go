@@ -34,6 +34,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 	cases := []struct {
 		uc          *upgradeCmd
 		expectedErr error
+		name        string
 	}{
 		{
 			uc: &upgradeCmd{
@@ -46,6 +47,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--resource-group must be specified"),
+			name:        "NeedsResourceGroup",
 		},
 		{
 			uc: &upgradeCmd{
@@ -58,6 +60,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--location must be specified"),
+			name:        "NeedsLocation",
 		},
 		{
 			uc: &upgradeCmd{
@@ -70,6 +73,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--upgrade-version must be specified"),
+			name:        "NeedsUpgradeVersion",
 		},
 		{
 			uc: &upgradeCmd{
@@ -82,6 +86,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("--api-model must be specified"),
+			name:        "NeedsAPIModel",
 		},
 		{
 			uc: &upgradeCmd{
@@ -94,6 +99,7 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				cordonDrainTimeoutInMinutes: 60,
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
+			name:        "NeedsNonAmbiguous",
 		},
 		{
 			uc: &upgradeCmd{
@@ -104,21 +110,28 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 				location:            "southcentralus",
 			},
 			expectedErr: nil,
+			name:        "IsValid",
 		},
 	}
 
-	for _, c := range cases {
-		err := c.uc.validate(r)
-		if c.expectedErr != nil && err != nil {
-			g.Expect(err.Error()).To(Equal(c.expectedErr.Error()))
-		} else {
-			g.Expect(err).To(BeNil())
-			g.Expect(c.expectedErr).To(BeNil())
-		}
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			err := c.uc.validate(r)
+			if c.expectedErr != nil && err != nil {
+				g.Expect(err.Error()).To(Equal(c.expectedErr.Error()))
+			} else {
+				g.Expect(err).To(BeNil())
+				g.Expect(c.expectedErr).To(BeNil())
+			}
+		})
 	}
 }
 
 func TestCreateUpgradeCommand(t *testing.T) {
+	t.Parallel()
+
 	g := NewGomegaWithT(t)
 	command := newUpgradeCmd()
 

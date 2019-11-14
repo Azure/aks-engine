@@ -5,7 +5,7 @@ set -x
 TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
 TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
-WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
+WORK_DIR="/aks-engine"
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -78,6 +78,7 @@ docker run --rm \
 -e WINDOWS_NODE_IMAGE_VERSION="${WINDOWS_NODE_IMAGE_VERSION}" \
 -e WINDOWS_NODE_VHD_URL="${WINDOWS_NODE_VHD_URL}" \
 -e LOG_ANALYTICS_WORKSPACE_KEY="${LOG_ANALYTICS_WORKSPACE_KEY}" \
+-e CUSTOM_HYPERKUBE_IMAGE="${CUSTOM_HYPERKUBE_IMAGE}" \
 -e IS_JENKINS="${IS_JENKINS}" \
 -e SKIP_TEST="${SKIP_TESTS}" \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \

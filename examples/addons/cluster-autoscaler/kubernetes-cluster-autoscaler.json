@@ -3,17 +3,23 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.10",
       "kubernetesConfig": {
         "useManagedIdentity": true,
         "addons": [
           {
             "name": "cluster-autoscaler",
             "enabled": true,
+            "pools": [
+              {
+                "name": "agentpool",
+                "config": {
+                  "min-nodes": "1",
+                  "max-nodes": "5"
+                }
+              }
+            ],
             "config": {
-              "min-nodes": "1",
-              "max-nodes": "5",
-              "scan-interval": "10s"
+              "scan-interval": "1m"
             }
           }
         ]

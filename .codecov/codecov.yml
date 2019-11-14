@@ -37,4 +37,6 @@ ignore:
   - "pkg/armhelpers/mockclients.go"
   - "pkg/engine/testutils.go"
   - "pkg/test/*.go"
-  - pkg/engine/engine_dcos.go
+  - "pkg/engine/engine_dcos.go"
+  - "pkg/engine/templates_generated.go"
+  - "pkg/i18n/translations_generated.go"

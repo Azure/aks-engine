@@ -131,10 +131,16 @@ const (
 	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
 	DefaultAADPodIdentityAddonEnabled = false
+	// DefaultAzurePolicyAddonEnabled determines the aks-engine provided default for enabling azure policy addon
+	DefaultAzurePolicyAddonEnabled = false
 	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
 	DefaultACIConnectorAddonEnabled = false
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
 	DefaultAppGwIngressAddonEnabled = false
+	// DefaultAzureDiskCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure Disk CSI Driver
+	DefaultAzureDiskCSIDriverAddonEnabled = true
+	// DefaultAzureFileCSIDriverAddonEnabled determines the aks-engine provided default for enabling Azure File CSI Driver
+	DefaultAzureFileCSIDriverAddonEnabled = true
 	// DefaultClusterAutoscalerAddonEnabled determines the aks-engine provided default for enabling cluster autoscaler addon
 	DefaultClusterAutoscalerAddonEnabled = false
 	// DefaultBlobfuseFlexVolumeAddonEnabled determines the aks-engine provided default for enabling blobfuse flexvolume addon
@@ -183,6 +189,10 @@ const (
 	ACIConnectorAddonName = "aci-connector"
 	// AppGwIngressAddonName appgw addon
 	AppGwIngressAddonName = "appgw-ingress"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
 	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
 	ClusterAutoscalerAddonName = "cluster-autoscaler"
 	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
@@ -207,6 +217,8 @@ const (
 	IPMASQAgentAddonName = "ip-masq-agent"
 	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
 	PodSecurityPolicyAddonName = "pod-security-policy"
+	// AzurePolicyAddonName is the name of the Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
@@ -250,6 +262,10 @@ const (
 	// DefaultOutboundRuleIdleTimeoutInMinutes determines the aks-engine provided default for IdleTimeoutInMinutes of the OutboundRule of the agent loadbalancer
 	// This value is set greater than the default Linux idle timeout (15.4 min): https://pracucci.com/linux-tcp-rto-min-max-and-tcp-retries2.html
 	DefaultOutboundRuleIdleTimeoutInMinutes = 30
+	// AddonModeEnsureExists
+	AddonModeEnsureExists = "EnsureExists"
+	// AddonModeReconcile
+	AddonModeReconcile = "Reconcile"
 )
 
 // AzureStackCloud Specific Defaults
@@ -285,6 +301,7 @@ const (
 )
 
 const (
+	CloudProviderBackoffModeV2 = "v2"
 	// DefaultKubernetesCloudProviderBackoffRetries is 6, takes effect if DefaultKubernetesCloudProviderBackoff is true
 	DefaultKubernetesCloudProviderBackoffRetries = 6
 	// DefaultKubernetesCloudProviderBackoffJitter is 1, takes effect if DefaultKubernetesCloudProviderBackoff is true
@@ -396,8 +413,6 @@ const (
 	DefaultKubernetesCtrlMgrTerminatedPodGcThreshold = "5000"
 	// DefaultKubernetesCtrlMgrUseSvcAccountCreds is "true", see --use-service-account-credentials at https://kubernetes.io/docs/admin/kube-controller-manager/
 	DefaultKubernetesCtrlMgrUseSvcAccountCreds = "false"
-	// DefaultKubernetesCloudProviderBackoff is false to disable cloudprovider backoff implementation for API calls
-	DefaultKubernetesCloudProviderBackoff = true
 	// DefaultKubernetesCloudProviderRateLimit is false to disable cloudprovider rate limiting implementation for API calls
 	DefaultKubernetesCloudProviderRateLimit = true
 	// DefaultTillerMaxHistory limits the maximum number of revisions saved per release. Use 0 for no limit.
@@ -420,6 +435,8 @@ const (
 	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
 	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// CloudNodeManagerAddonName is the name of the cloud node manager addon
+	CloudNodeManagerAddonName = "cloud-node-manager"
 	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
 	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
@@ -445,7 +462,7 @@ const (
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.7"
+	DefaultMobyVersion = "3.0.8"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

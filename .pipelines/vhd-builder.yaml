@@ -7,7 +7,7 @@ trigger: none
 # - POST a new SKU to azure marketplace
 
 variables:
-  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.23.3'
+  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.23.6'
 
 phases:
 - phase: build_vhd
@@ -32,12 +32,6 @@ phases:
       -e UBUNTU_SKU=${UBUNTU_SKU} \
       ${CONTAINER_IMAGE} make run-packer
     displayName: Building VHD
-  - script: |
-      docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
-      ${CONTAINER_IMAGE} make vhd-notes
-    displayName: Generate VHD release notes
   - task: PublishPipelineArtifact@0
     inputs:
       artifactName: 'vhd-release-notes'

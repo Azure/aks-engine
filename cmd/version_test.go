@@ -5,49 +5,55 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
+
+	. "github.com/onsi/gomega"
 
 	"github.com/Azure/aks-engine/pkg/helpers"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("the version command", func() {
-	It("should create a version command", func() {
-		command := newVersionCmd()
-		Expect(command.Use).Should(Equal(versionName))
-		Expect(command.Short).Should(Equal(versionShortDescription))
-		Expect(command.Long).Should(Equal(versionLongDescription))
-		Expect(command.Flags().Lookup("output")).NotTo(BeNil())
+func TestVersionCommand_ShouldCreateCommand(t *testing.T) {
+	t.Parallel()
 
-		command.SetArgs([]string{})
-		err := command.Execute()
-		Expect(err).NotTo(HaveOccurred())
-	})
+	command := newVersionCmd()
+	g := NewGomegaWithT(t)
+	g.Expect(command.Use).Should(Equal(versionName))
+	g.Expect(command.Short).Should(Equal(versionShortDescription))
+	g.Expect(command.Long).Should(Equal(versionLongDescription))
+	g.Expect(command.Flags().Lookup("output")).NotTo(BeNil())
 
-	It("should print a json version of AKS Engine", func() {
-		output, _ := getVersion("json")
+	command.SetArgs([]string{})
+	err := command.Execute()
+	g.Expect(err).NotTo(HaveOccurred())
+}
 
-		expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)
+func TestVersionCommand_ShouldPrintJsonVersionOfAKSEngine(t *testing.T) {
+	t.Parallel()
 
-		Expect(output).Should(Equal(string(expectedOutput)))
-	})
+	output, _ := getVersion("json")
+	expectedOutput, _ := helpers.JSONMarshalIndent(version, "", "  ", false)
+	g := NewGomegaWithT(t)
+	g.Expect(output).Should(Equal(string(expectedOutput)))
+}
 
-	It("should print a humanized version of AKS Engine", func() {
-		output, _ := getVersion("human")
+func TestVersionCommand_ShouldPrintHumanizedVersionOfAKSEngine(t *testing.T) {
+	t.Parallel()
 
-		expectedOutput := fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
-			BuildTag,
-			BuildSHA,
-			GitTreeState)
+	output, _ := getVersion("human")
+	expectedOutput := fmt.Sprintf("Version: %s\nGitCommit: %s\nGitTreeState: %s",
+		BuildTag,
+		BuildSHA,
+		GitTreeState)
+	g := NewGomegaWithT(t)
+	g.Expect(output).Should(Equal(expectedOutput))
+}
 
-		Expect(output).Should(Equal(expectedOutput))
-	})
+func TestVersionCommand_ShouldErrorWhenAskedForYamlVersion(t *testing.T) {
+	t.Parallel()
 
-	It("should error when asked for a yaml version of AKS Engine", func() {
-		output, err := getVersion("yaml")
-
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
-		Expect(output).To(BeEmpty())
-	})
-})
+	output, err := getVersion("yaml")
+	g := NewGomegaWithT(t)
+	g.Expect(err).To(HaveOccurred())
+	g.Expect(err.Error()).To(Equal("output format \"yaml\" is not supported"))
+	g.Expect(output).To(BeEmpty())
+}

@@ -29,8 +29,30 @@ func TestControllerManagerConfigEnableRbac(t *testing.T) {
 		t.Fatalf("got unexpected '--use-service-account-credentials' Controller Manager config value for EnableRbac=false: %s",
 			cm["--use-service-account-credentials"])
 	}
-
 }
+
+func TestControllerManagerConfigCloudProvider(t *testing.T) {
+	// Test UseCloudControllerManager = true
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
+	cs.setControllerManagerConfig()
+	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--cloud-provider"] != "external" {
+		t.Fatalf("got unexpected '--cloud-provider' Controller Manager config value for UseCloudControllerManager=true: %s",
+			cm["--cloud-provider"])
+	}
+
+	// Test UseCloudControllerManager = false
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(false)
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--cloud-provider"] != "azure" {
+		t.Fatalf("got unexpected '--cloud-provider' Controller Manager config value for UseCloudControllerManager=false: %s",
+			cm["--cloud-provider"])
+	}
+}
+
 func TestControllerManagerConfigEnableProfiling(t *testing.T) {
 	// Test
 	// "controllerManagerConfig": {

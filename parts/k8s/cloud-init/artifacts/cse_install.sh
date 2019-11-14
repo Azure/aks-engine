@@ -6,6 +6,7 @@ CNI_CONFIG_DIR="/etc/cni/net.d"
 CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
+K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
@@ -134,7 +135,6 @@ installMoby() {
 }
 
 installKataContainersRuntime() {
-    # TODO incorporate this into packer CI so that it is pre-baked into the VHD image
     echo "Adding Kata Containers repository key..."
     ARCH=$(arch)
     BRANCH=stable-1.7
@@ -230,7 +230,14 @@ extractHyperkube() {
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
-        docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
+        if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
+            mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+            mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+            return
+        else
+            docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+        fi
     else
         img unpack -o "$path" ${HYPERKUBE_URL}
     fi
@@ -245,13 +252,27 @@ extractHyperkube() {
     fi
 }
 
+extractKubeBinaries() {
+    KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
+    K8S_TGZ_TMP=$(echo ${KUBE_BINARY_URL} | cut -d "/" -f 5)
+    mkdir -p "${K8S_DOWNLOADS_DIR}"
+    retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
+    tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
+        --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
+    rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
+}
+
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-            extractHyperkube "docker"
+        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
+            extractKubeBinaries
         else
-            installImg
-            extractHyperkube "img"
+            if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+                extractHyperkube "docker"
+            else
+                installImg
+                extractHyperkube "img"
+            fi
         fi
     fi
     mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
@@ -270,17 +291,15 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    # TODO remove all unused container images at runtime
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'hcp-tunnel-front') &
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'kube-svc-redirect') &
-        docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'nginx') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
+        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
     fi
 
-    # TODO: remove once ACR is available on Azure Stack
     docker rmi registry:2.7.1 &
 }
 

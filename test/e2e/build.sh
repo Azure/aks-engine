@@ -3,7 +3,7 @@
 set -x
 
 GOPATH="/go"
-WORK_DIR="${GOPATH}/src/github.com/Azure/aks-engine"
+WORK_DIR="/aks-engine"
 
 # Assumes we're running from the git root of aks-engine
 docker run --rm \

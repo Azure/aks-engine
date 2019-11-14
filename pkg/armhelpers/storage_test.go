@@ -6,49 +6,88 @@ package armhelpers
 import (
 	"testing"
 
-	. "github.com/Azure/aks-engine/pkg/test"
-	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
-func TestAzureStorageClient(t *testing.T) {
-	RunSpecsWithReporters(t, "AzureStorageClient", "Server Suite")
+func TestAzureStorageClient_CreateContainer(t *testing.T) {
+	cases := []struct {
+		name                 string
+		storageClientFactory func() *MockStorageClient
+		errMatcher           types.GomegaMatcher
+		resMatcher           types.GomegaMatcher
+	}{
+		{
+			name: "ShouldPassIfCreated",
+			storageClientFactory: func() *MockStorageClient {
+				return &MockStorageClient{
+					FailCreateContainer: false,
+				}
+			},
+			errMatcher: BeNil(),
+			resMatcher: BeTrue(),
+		},
+		{
+			name: "ShouldReturnErrorWhenCreationFails",
+			storageClientFactory: func() *MockStorageClient {
+				return &MockStorageClient{
+					FailCreateContainer: true,
+				}
+			},
+			errMatcher: Not(BeNil()),
+			resMatcher: BeFalse(),
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			client := c.storageClientFactory()
+			res, err := client.CreateContainer("fakeContainerName", nil)
+			g := NewGomegaWithT(t)
+			g.Expect(err).To(c.errMatcher)
+			g.Expect(res).To(c.resMatcher)
+		})
+	}
 }
 
-var _ = Describe("CreateContainer Test", func() {
-	It("Should pass if container created", func() {
-		client := MockStorageClient{
-			FailCreateContainer: false,
-		}
-		created, err := client.CreateContainer("fakeContainerName", nil)
-		Expect(err).To(BeNil())
-		Expect(created).To(BeTrue())
-	})
+func TestAzureStorageClient_SaveBlockBlob(t *testing.T) {
+	cases := []struct {
+		name                 string
+		storageClientFactory func() *MockStorageClient
+		errMatcher           types.GomegaMatcher
+	}{
+		{
+			name: "ShouldPassIfCreated",
+			storageClientFactory: func() *MockStorageClient {
+				return &MockStorageClient{
+					FailSaveBlockBlob: false,
+				}
+			},
+			errMatcher: BeNil(),
+		},
+		{
+			name: "ShouldReturnErrorWhenCreationFails",
+			storageClientFactory: func() *MockStorageClient {
+				return &MockStorageClient{
+					FailSaveBlockBlob: true,
+				}
+			},
+			errMatcher: Not(BeNil()),
+		},
+	}
 
-	It("Should return error when container creation failed", func() {
-		client := MockStorageClient{
-			FailCreateContainer: true,
-		}
-		created, err := client.CreateContainer("fakeContainerName", nil)
-		Expect(err).NotTo(BeNil())
-		Expect(created).To(BeFalse())
-	})
-})
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-var _ = Describe("SaveBlockBlob Test", func() {
-	It("Should pass if container created", func() {
-		client := MockStorageClient{
-			FailSaveBlockBlob: false,
-		}
-		err := client.SaveBlockBlob("fakeContainerName", "fakeBlobName", []byte("entity"), nil)
-		Expect(err).To(BeNil())
-	})
-
-	It("Should return error when container creation failed", func() {
-		client := MockStorageClient{
-			FailSaveBlockBlob: true,
-		}
-		err := client.SaveBlockBlob("fakeContainerName", "fakeBlobName", []byte("entity"), nil)
-		Expect(err).NotTo(BeNil())
-	})
-})
+			client := c.storageClientFactory()
+			err := client.SaveBlockBlob("fakeContainerName", "fakeBlobName", []byte("entity"), nil)
+			g := NewGomegaWithT(t)
+			g.Expect(err).To(c.errMatcher)
+		})
+	}
+}

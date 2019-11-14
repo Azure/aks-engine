@@ -4,16 +4,18 @@
 package cmd
 
 import (
-	"os"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/Azure/aks-engine/pkg/api"
 )
 
 func TestNewGenerateCmd(t *testing.T) {
+	t.Parallel()
+
 	command := newGenerateCmd()
 	if command.Use != generateName || command.Short != generateShortDescription || command.Long != generateLongDescription {
 		t.Fatalf("generate command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, generateName, command.Short, generateShortDescription, command.Long, generateLongDescription)
@@ -33,6 +35,8 @@ func TestNewGenerateCmd(t *testing.T) {
 }
 
 func TestGenerateCmdValidate(t *testing.T) {
+	t.Parallel()
+
 	g := &generateCmd{}
 	r := &cobra.Command{}
 
@@ -46,7 +50,6 @@ func TestGenerateCmdValidate(t *testing.T) {
 
 	// validate cmd with 0 args
 	err = g.validate(r, []string{})
-	t.Logf(err.Error())
 	if err == nil {
 		t.Fatalf("expected error validating 0 args")
 	}
@@ -55,7 +58,6 @@ func TestGenerateCmdValidate(t *testing.T) {
 
 	// validate cmd with more than 1 arg
 	err = g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json", "arg1"})
-	t.Logf(err.Error())
 	if err == nil {
 		t.Fatalf("expected error validating multiple args")
 	}
@@ -63,53 +65,90 @@ func TestGenerateCmdValidate(t *testing.T) {
 }
 
 func TestGenerateCmdMergeAPIModel(t *testing.T) {
-	g := &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	err := g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with no --set flag defined: %s", err.Error())
+
+	cases := []struct {
+		test func(*testing.T)
+		name string
+	}{
+		{
+			name: "NoSetFlagDefined",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with no --set flag defined: %s", err.Error())
+				}
+			},
+		},
+		{
+			name: "OneFlagSet",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				g.set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with one --set flag: %s", err.Error())
+				}
+			},
+		},
+		{
+			name: "TwoFlagsSet",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				g.set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with one --set flag: %s", err.Error())
+				}
+			},
+		},
+		{
+			name: "OverrideArrayFlagSet",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				g.set = []string{"agentPoolProfiles[0].count=1"}
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
+				}
+			},
+		},
+		{
+			name: "SshKeyContains==FlagSet",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				g.set = []string{"linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""}
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
+				}
+			},
+		},
+		{
+			name: "SimpleQuoteContainingFlagSet",
+			test: func(t *testing.T) {
+				g := new(generateCmd)
+				g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
+				g.set = []string{"servicePrincipalProfile.secret='=MsR0ck5!t='"}
+				err := g.mergeAPIModel()
+				if err != nil {
+					t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
+				}
+			},
+		},
 	}
 
-	g = &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	g.set = []string{"masterProfile.count=3,linuxProfile.adminUsername=testuser"}
-	err = g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag: %s", err.Error())
-	}
-
-	g = &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	g.set = []string{"masterProfile.count=3", "linuxProfile.adminUsername=testuser"}
-	err = g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with multiple --set flags: %s", err.Error())
-	}
-
-	g = &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	g.set = []string{"agentPoolProfiles[0].count=1"}
-	err = g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
-	}
-
-	// test with an ssh key that contains == sign
-	g = &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	g.set = []string{"linuxProfile.ssh.publicKeys[0].keyData=\"ssh-rsa AAAAB3NO8b9== azureuser@cluster.local\",servicePrincipalProfile.clientId=\"123a4321-c6eb-4b61-9d6f-7db123e14a7a\",servicePrincipalProfile.secret=\"=#msRock5!t=\""}
-	err = g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
-	}
-
-	// test with simple quote
-	g = &generateCmd{}
-	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
-	g.set = []string{"servicePrincipalProfile.secret='=MsR0ck5!t='"}
-	err = g.mergeAPIModel()
-	if err != nil {
-		t.Fatalf("unexpected error calling mergeAPIModel with one --set flag to override an array property: %s", err.Error())
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			c.test(t)
+		})
 	}
 }
 
@@ -129,6 +168,8 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 }
 
 func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
+	t.Parallel()
+
 	apiloader := &api.Apiloader{
 		Translator: nil,
 	}
@@ -140,12 +181,14 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
+	outfile, del := makeTmpFile(t, "_test_output")
+	defer del()
 
-	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientID, _ := uuid.Parse("e810b868-afab-412d-98cc-ce7db5cc840b")
 	clientSecret := "Test Client secret"
 	generateCmd := &generateCmd{
 		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
+		outputDirectory:  outfile,
 		ClientID:         clientID,
 		ClientSecret:     clientSecret,
 		containerService: cs,
@@ -155,8 +198,6 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
-
-	defer os.RemoveAll(generateCmd.outputDirectory)
 
 	if generateCmd.containerService.Properties.ServicePrincipalProfile == nil || generateCmd.containerService.Properties.ServicePrincipalProfile.ClientID == "" || generateCmd.containerService.Properties.ServicePrincipalProfile.Secret == "" {
 		t.Fatalf("expected service principal profile to be populated from deployment command arguments")
@@ -177,20 +218,24 @@ func TestAPIModelWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd
 }
 
 func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGenerateCmd(t *testing.T) {
+	t.Parallel()
+
 	apiloader := &api.Apiloader{
 		Translator: nil,
 	}
 
 	apimodel := getAPIModelWithoutServicePrincipalProfile(false)
-
 	cs, ver, err := apiloader.DeserializeContainerService([]byte(apimodel), false, false, nil)
 	if err != nil {
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
+	outfile, del := makeTmpFile(t, "_test_output")
+	defer del()
+
 	generateCmd := &generateCmd{
 		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
+		outputDirectory:  outfile,
 		containerService: cs,
 		apiVersion:       ver,
 	}
@@ -199,8 +244,6 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGene
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
 
-	defer os.RemoveAll(generateCmd.outputDirectory)
-
 	if generateCmd.containerService.Properties.ServicePrincipalProfile != nil {
 		t.Fatalf("expected service principal profile to be nil for unmanaged identity, where client id and secret are not supplied in api model and deployment command")
 	}
@@ -208,12 +251,14 @@ func TestAPIModelWithoutServicePrincipalProfileAndWithoutClientIdAndSecretInGene
 	err = generateCmd.validateAPIModelAsVLabs()
 	expectedErr := errors.New("ServicePrincipalProfile must be specified with Orchestrator Kubernetes")
 
-	if err.Error() != expectedErr.Error() {
+	if err != nil && err.Error() != expectedErr.Error() {
 		t.Fatalf("expected validate generate command to return error %s, but instead got %s", expectedErr.Error(), err.Error())
 	}
 }
 
 func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAndSecretInGenerateCmd(t *testing.T) {
+	t.Parallel()
+
 	apiloader := &api.Apiloader{
 		Translator: nil,
 	}
@@ -225,11 +270,14 @@ func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAnd
 		t.Fatalf("unexpected error deserializing the example apimodel: %s", err)
 	}
 	cs.Properties.LinuxProfile.SSH.PublicKeys[0].KeyData = "ssh test"
-	clientID, _ := uuid.FromString("e810b868-afab-412d-98cc-ce7db5cc840b")
+	clientID, _ := uuid.Parse("e810b868-afab-412d-98cc-ce7db5cc840b")
 	clientSecret := "Test Client secret"
+	outfile, del := makeTmpFile(t, "_test_output")
+	defer del()
+
 	generateCmd := &generateCmd{
 		apimodelPath:     "./this/is/unused.json",
-		outputDirectory:  "_test_output",
+		outputDirectory:  outfile,
 		ClientID:         clientID,
 		ClientSecret:     clientSecret,
 		containerService: cs,
@@ -239,8 +287,6 @@ func TestAPIModelWithManagedIdentityWithoutServicePrincipalProfileAndClientIdAnd
 	if err != nil {
 		t.Fatalf("unexpected error autofilling the example apimodel: %s", err)
 	}
-
-	defer os.RemoveAll(generateCmd.outputDirectory)
 
 	if generateCmd.containerService.Properties.ServicePrincipalProfile != nil {
 		t.Fatalf("expected service principal profile to be nil for managed identity")
@@ -302,6 +348,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "nvidia",
 			apiModelPath: "../examples/addons/nvidia-device-plugin/nvidia-device-plugin.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "azure-policy",
+			apiModelPath: "../examples/addons/azure-policy/azure-policy.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -492,11 +543,6 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "msi user-assigned vmss",
 			apiModelPath: "../examples/kubernetes-msi-userassigned/kube-vmss.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "1.10 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.10.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -810,9 +856,12 @@ func TestExampleAPIModels(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
+
+			dir, del := makeTmpDir(t)
+			defer del()
 			g := &generateCmd{
 				apimodelPath:    test.apiModelPath,
-				outputDirectory: "_test_output",
+				outputDirectory: dir,
 			}
 			g.set = test.setArgs
 			r := &cobra.Command{}
@@ -823,8 +872,6 @@ func TestExampleAPIModels(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error loading api model: %s", err.Error())
 			}
-
-			defer os.RemoveAll(g.outputDirectory)
 
 			err = g.validateAPIModelAsVLabs()
 			if err != nil {
