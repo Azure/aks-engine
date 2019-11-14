@@ -183,7 +183,7 @@ func TestGetMasterKubernetesLabelsDeprecated(t *testing.T) {
 }
 
 func TestGetOrderedEscapedKeyValsString(t *testing.T) {
-	alphabetizedString := `\"foo=bar\", \"yes=please\"`
+	alphabetizedString := `"foo=bar", "yes=please"`
 	cases := []struct {
 		name     string
 		input    map[string]string

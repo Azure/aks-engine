@@ -14,7 +14,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-scheduler"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

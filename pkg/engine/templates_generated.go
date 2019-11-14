@@ -17505,15 +17505,12 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     a=/etc/kubernetes/manifests/kube-apiserver.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
 {{ if HasCosmosEtcd  }}
     sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
 {{ else }}
     sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
 {{ end }}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
 {{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
     {{ if IsIPv6DualStackFeatureEnabled }}
     sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
@@ -17555,10 +17552,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
-{{end}}
-{{if UseCloudControllerManager }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-    sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
 {{end}}
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
@@ -34001,7 +33994,7 @@ spec:
       image: {{GetComponentImageReference "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-apiserver"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34063,7 +34056,7 @@ spec:
       image: {{GetComponentImageReference "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34115,7 +34108,7 @@ spec:
       image: {{GetComponentImageReference "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-scheduler"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34164,10 +34157,10 @@ spec:
   hostNetwork: true
   containers:
     - name: cloud-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["cloud-controller-manager"]
-      args: [<config>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}]
       resources:
         requests:
           cpu: 100m
@@ -34280,7 +34273,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-apiserver"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34339,7 +34332,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
@@ -34399,7 +34392,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34451,7 +34444,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-scheduler"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

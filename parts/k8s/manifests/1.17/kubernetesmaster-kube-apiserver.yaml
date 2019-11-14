@@ -14,7 +14,7 @@ spec:
       image: {{GetComponentImageReference "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-apiserver"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

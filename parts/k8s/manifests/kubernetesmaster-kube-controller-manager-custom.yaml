@@ -11,7 +11,7 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [<args>]
