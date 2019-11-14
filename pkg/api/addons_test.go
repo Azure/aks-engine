@@ -788,7 +788,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -876,7 +876,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -922,7 +922,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -936,7 +936,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -973,7 +973,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1501,7 +1501,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -1593,7 +1593,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1639,7 +1639,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -1653,7 +1653,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1690,7 +1690,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1733,7 +1733,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -1843,7 +1843,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1889,7 +1889,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -1903,7 +1903,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -1940,7 +1940,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -1983,7 +1983,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2097,7 +2097,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2143,7 +2143,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -2157,7 +2157,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2194,7 +2194,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -2237,7 +2237,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2406,7 +2406,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2452,7 +2452,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -2466,7 +2466,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2503,7 +2503,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -2546,7 +2546,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2715,7 +2715,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2761,7 +2761,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -2775,7 +2775,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -2812,7 +2812,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -2855,7 +2855,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2974,7 +2974,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -3020,7 +3020,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -3034,7 +3034,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -3071,7 +3071,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -3114,7 +3114,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -3233,7 +3233,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -3279,7 +3279,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][DashboardAddonName],
 						},
 					},
 				},
@@ -3293,7 +3293,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.12"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -3330,7 +3330,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.12"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -6559,7 +6559,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.16.2",
+						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
@@ -6627,7 +6627,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.2"][DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][DashboardAddonName],
 						},
 					},
 				},
@@ -6641,7 +6641,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.2"][MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][MetricsServerAddonName],
 						},
 					},
 				},
@@ -6678,7 +6678,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  AzureCNINetworkMonitoringAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.2"][AzureCNINetworkMonitoringAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.1"][AzureCNINetworkMonitoringAddonName],
 						},
 					},
 				},
@@ -7236,7 +7236,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -7253,7 +7253,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -7293,7 +7293,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -7317,7 +7317,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -7362,7 +7362,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.5"][ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -7370,7 +7370,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{

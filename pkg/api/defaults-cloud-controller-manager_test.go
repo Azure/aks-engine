@@ -8,7 +8,7 @@ import (
 )
 
 func TestCloudControllerManagerConfig(t *testing.T) {
-	k8sVersion := "1.16.2"
+	k8sVersion := "1.16.1"
 	cs := CreateMockContainerService("testcluster", k8sVersion, 3, 2, false)
 	cs.setCloudControllerManagerConfig()
 	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig
@@ -17,7 +17,7 @@ func TestCloudControllerManagerConfig(t *testing.T) {
 			k8sVersion, cm["--controllers"])
 	}
 
-	k8sVersion = "1.15.5"
+	k8sVersion = "1.15.4"
 	cs = CreateMockContainerService("testcluster", k8sVersion, 3, 2, false)
 	cs.setCloudControllerManagerConfig()
 	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig

@@ -1985,7 +1985,7 @@ func TestEnableAggregatedAPIs(t *testing.T) {
 
 func TestCloudControllerManagerEnabled(t *testing.T) {
 	// test that 1.16 defaults to false
-	cs := CreateMockContainerService("testcluster", "1.16.2", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.16.1", 3, 2, false)
 	cs.setOrchestratorDefaults(false, false)
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
 		t.Fatal("expected UseCloudControllerManager to default to false")

@@ -630,7 +630,7 @@ func Test_IsValidMinVersion(t *testing.T) {
 
 	t.Run("Kubernetes version is lower than minimum required version", func(t *testing.T) {
 		orchestratorVersion = "1.15.2"
-		minVersion := "1.15.5"
+		minVersion := "1.15.4"
 		isValidVersion, _ := IsValidMinVersion(Kubernetes, "", orchestratorVersion, minVersion)
 		if isValidVersion {
 			t.Errorf("version should be not valid")

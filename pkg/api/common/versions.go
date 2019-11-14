@@ -119,7 +119,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.13.9":         false,
 	"1.13.10":        false,
 	"1.13.11":        true,
-	"1.13.12":        true,
+	"1.13.12":        false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.14.0-alpha.1": false,
 	"1.14.0-alpha.2": false,
 	"1.14.0-beta.1":  false,
@@ -133,7 +133,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.14.5":         false,
 	"1.14.6":         false,
 	"1.14.7":         true,
-	"1.14.8":         true,
+	"1.14.8":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.15.0-alpha.1": false,
 	"1.15.0-alpha.2": false,
 	"1.15.0-alpha.3": false,
@@ -145,7 +145,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.2":         false,
 	"1.15.3":         false,
 	"1.15.4":         true,
-	"1.15.5":         true,
+	"1.15.5":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -154,7 +154,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.0-rc.1":    false,
 	"1.16.0":         false,
 	"1.16.1":         true,
-	"1.16.2":         true,
+	"1.16.2":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.17.0-alpha.1": true,
 	"1.17.0-alpha.2": true,
 	"1.17.0-alpha.3": true,
