@@ -33063,13 +33063,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubernetesCcmImageSpec": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The container spec for cloud-controller-manager."
-      },
-      "type": "string"
-    },
     "enableAggregatedAPIs": {
       "metadata": {
         "description": "Enable aggregated API on master nodes"
