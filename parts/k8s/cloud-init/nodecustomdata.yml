@@ -268,14 +268,14 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -333,11 +333,6 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-{{end}}{{end}}
     #EOF
 
 {{if IsAzureStackCloud}}

@@ -267,14 +267,14 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -441,9 +441,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
-{{end}}{{end}}
     #EOF
 
 - path: /opt/azure/containers/mountetcd.sh

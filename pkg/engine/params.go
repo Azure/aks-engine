@@ -42,11 +42,6 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	linuxProfile := properties.LinuxProfile
 	if linuxProfile != nil {
 		addValue(parametersMap, "linuxAdminUsername", linuxProfile.AdminUsername)
-		if linuxProfile.CustomSearchDomain != nil {
-			addValue(parametersMap, "searchDomainName", linuxProfile.CustomSearchDomain.Name)
-			addValue(parametersMap, "searchDomainRealmUser", linuxProfile.CustomSearchDomain.RealmUser)
-			addValue(parametersMap, "searchDomainRealmPassword", linuxProfile.CustomSearchDomain.RealmPassword)
-		}
 		if linuxProfile.CustomNodesDNS != nil {
 			addValue(parametersMap, "dnsServer", linuxProfile.CustomNodesDNS.DNSServer)
 		}

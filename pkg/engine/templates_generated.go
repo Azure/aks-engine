@@ -16753,12 +16753,12 @@ var _k8sCloudInitArtifactsSetupCustomSearchDomainsSh = []byte(`#!/bin/bash
 set -x
 source /opt/azure/containers/provision_source.sh
 
-echo "  dns-search <searchDomainName>" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
+echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 restart networking
 wait_for_apt_locks
 retrycmd_if_failure 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
 wait_for_apt_locks
-echo "<searchDomainRealmPassword>" | realm join -U <searchDomainRealmUser>@$(echo "<searchDomainName>" | tr /a-z/ /A-Z/) $(echo "<searchDomainName>" | tr /a-z/ /A-Z/)
+echo "{{GetSearchDomainRealmPassword}}" | realm join -U {{GetSearchDomainRealmUser}}@$(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/) $(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/)
 `)
 
 func k8sCloudInitArtifactsSetupCustomSearchDomainsShBytes() ([]byte, error) {
@@ -17376,14 +17376,14 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -17550,9 +17550,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
-{{end}}{{end}}
     #EOF
 
 - path: /opt/azure/containers/mountetcd.sh
@@ -18004,14 +18001,14 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -18069,11 +18066,6 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-{{end}}{{end}}
     #EOF
 
 {{if IsAzureStackCloud}}
@@ -33360,30 +33352,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "string"
     }
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    ,"searchDomainName": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Custom Search Domain name."
-      },
-      "type": "string"
-    },
-    "searchDomainRealmUser": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Windows server AD user name to join the Linux Machines with active directory and be able to change dns registries."
-      },
-      "type": "string"
-    },
-    "searchDomainRealmPassword": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Windows server AD user password to join the Linux Machines with active directory and be able to change dns registries."
-      },
-      "type": "securestring"
-    }
-{{end}}{{end}}
-{{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
+{{if HasCustomNodesDNS}}
     ,"dnsServer": {
       "defaultValue": "",
       "metadata": {
@@ -33391,7 +33360,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     }
-{{end}}{{end}}
+{{end}}
 
 {{if EnableEncryptionWithExternalKms}}
    ,

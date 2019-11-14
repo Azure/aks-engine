@@ -550,20 +550,35 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasAvailabilityZones": func(profile *api.AgentPoolProfile) bool {
 			return profile.HasAvailabilityZones()
 		},
-		"HasLinuxProfile": func() bool {
-			return cs.Properties.LinuxProfile != nil
-		},
 		"HasLinuxSecrets": func() bool {
 			return cs.Properties.LinuxProfile.HasSecrets()
 		},
 		"HasCustomSearchDomain": func() bool {
-			return cs.Properties.LinuxProfile.HasSearchDomain()
+			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain()
+		},
+		"GetSearchDomainName": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.Name
+			}
+			return ""
+		},
+		"GetSearchDomainRealmUser": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.RealmUser
+			}
+			return ""
+		},
+		"GetSearchDomainRealmPassword": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.RealmPassword
+			}
+			return ""
 		},
 		"HasCiliumNetworkPlugin": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginCilium
 		},
 		"HasCustomNodesDNS": func() bool {
-			return cs.Properties.LinuxProfile.HasCustomNodesDNS()
+			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()
 		},
 		"HasWindowsSecrets": func() bool {
 			return cs.Properties.WindowsProfile.HasSecrets()
