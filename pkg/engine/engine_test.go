@@ -1695,7 +1695,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -1841,7 +1841,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1858,7 +1858,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -1879,7 +1879,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1912,7 +1912,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1936,7 +1936,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -1962,7 +1962,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1995,7 +1995,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -2003,7 +2003,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -2029,7 +2029,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2062,7 +2062,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2086,7 +2086,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -2111,7 +2111,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2144,7 +2144,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2168,7 +2168,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -2194,7 +2194,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "chinanorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2227,7 +2227,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2251,7 +2251,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -2277,7 +2277,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "germanynortheast",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2310,7 +2310,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2334,7 +2334,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.5",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -2360,7 +2360,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "usgovnorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.5"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",

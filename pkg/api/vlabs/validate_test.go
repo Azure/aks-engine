@@ -1954,7 +1954,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	}
 
 	// Basic tests for cloud-node-manager
-	p.OrchestratorProfile.OrchestratorVersion = "1.15.5"
+	p.OrchestratorProfile.OrchestratorVersion = "1.15.4"
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		UseCloudControllerManager: to.BoolPtr(true),
 		Addons: []KubernetesAddon{
@@ -1971,7 +1971,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorVersion = "1.16.2"
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.1"
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		UseCloudControllerManager: to.BoolPtr(false),
 		Addons: []KubernetesAddon{
