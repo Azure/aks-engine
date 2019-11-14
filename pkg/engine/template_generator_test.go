@@ -143,6 +143,239 @@ func TestGetTemplateFuncMap(t *testing.T) {
 	}
 }
 
+func TestGetContainerServiceFuncMap(t *testing.T) {
+	cases := []struct {
+		name                                 string
+		cs                                   *api.ContainerService
+		expectedHasCustomSearchDomain        bool
+		expectedGetSearchDomainName          string
+		expectedGetSearchDomainRealmUser     string
+		expectedGetSearchDomainRealmPassword string
+		expectedHasCustomNodesDNS            bool
+		expectedGetComponentImageReference   map[string]string
+		expectedGetHyperkubeImageReference   string
+		expectedGetCCMImageReference         string
+	}{
+		{
+			name: "1.15 release",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+		},
+		{
+			name: "1.16 release",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.16.1",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.16.1",
+			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+		},
+		{
+			name: "1.17 release",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "kube-apiserver:v1.17.0-beta.1",
+				"kube-controller-manager": "kube-controller-manager:v1.17.0-beta.1",
+				"kube-scheduler":          "kube-scheduler:v1.17.0-beta.1",
+			},
+			expectedGetHyperkubeImageReference: "",
+			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+		},
+		{
+			name: "custom search domain",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+					LinuxProfile: &api.LinuxProfile{
+						CustomSearchDomain: &api.CustomSearchDomain{
+							Name:          "foo",
+							RealmUser:     "bar",
+							RealmPassword: "baz",
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        true,
+			expectedGetSearchDomainName:          "foo",
+			expectedGetSearchDomainRealmUser:     "bar",
+			expectedGetSearchDomainRealmPassword: "baz",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+		},
+		{
+			name: "custom nodes DNS",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+					LinuxProfile: &api.LinuxProfile{
+						CustomNodesDNS: &api.CustomNodesDNS{
+							DNSServer: "foo",
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            true,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			funcMap := getContainerServiceFuncMap(c.cs)
+			v := reflect.ValueOf(funcMap["GetSearchDomainName"])
+			ret := v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetSearchDomainName {
+				t.Errorf("expected funcMap invocation of GetSearchDomainName to return %s, instead got %s", c.expectedGetSearchDomainName, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetSearchDomainRealmUser"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetSearchDomainRealmUser {
+				t.Errorf("expected funcMap invocation of GetSearchDomainRealmUser to return %s, instead got %s", c.expectedGetSearchDomainRealmUser, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetSearchDomainRealmPassword"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetSearchDomainRealmPassword {
+				t.Errorf("expected funcMap invocation of GetSearchDomainRealmPassword to return %s, instead got %s", c.expectedGetSearchDomainRealmPassword, ret[0].Interface())
+			}
+			for key, val := range c.expectedGetComponentImageReference {
+				v := reflect.ValueOf(funcMap["GetComponentImageReference"])
+				ret := v.Call([]reflect.Value{reflect.ValueOf(key)})
+				if ret[0].Interface() != val {
+					t.Errorf("expected funcMap invocation of GetComponentImageReference %s to return %s, instead got %s", key, val, ret[0].Interface())
+				}
+			}
+			v = reflect.ValueOf(funcMap["GetHyperkubeImageReference"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetHyperkubeImageReference {
+				t.Errorf("expected funcMap invocation of GetHyperkubeImageReference to return %s, instead got %s", c.expectedGetHyperkubeImageReference, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCCMImageReference"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetCCMImageReference {
+				t.Errorf("expected funcMap invocation of GetCCMImageReference to return %s, instead got %s", c.expectedGetCCMImageReference, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasCustomNodesDNS"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasCustomNodesDNS {
+				t.Errorf("expected funcMap invocation of HasCustomNodesDNS to return %t, instead got %t", c.expectedHasCustomNodesDNS, ret[0].Interface())
+			}
+		})
+	}
+}
+
 func TestTemplateGenerator_FunctionMap(t *testing.T) {
 	testCases := []struct {
 		Name           string

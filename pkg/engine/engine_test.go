@@ -1728,8 +1728,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			for _, file := range []string{kubernetesCustomSearchDomainsScript,
-				kubernetesMasterGenerateProxyCertsScript,
+			for _, file := range []string{kubernetesMasterGenerateProxyCertsScript,
 				kubernetesMountEtcd,
 				etcdSystemdService,
 				dhcpv6SystemdService,
@@ -1749,12 +1748,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				auditdRules,
 				kubernetesCSECustomCloud,
 				systemdBPFMount,
-				"k8s/manifests/" + kubeSchedulerManifestFilename,
-				"k8s/manifests/" + kubeControllerManagerManifestFilename,
-				"k8s/manifests/" + kubeControllerManagerCustomManifestFilename,
-				"k8s/manifests/" + ccmManifestFilename,
-				"k8s/manifests/" + kubeAPIServerManifestFilename,
-				"k8s/manifests/" + kubeAddonManagerManifestFilename,
 			} {
 				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
 				b, err := Asset(file)

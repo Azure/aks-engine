@@ -4,6 +4,8 @@
 package api
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -468,5 +470,31 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 			t.Fatalf("got unexpected default value for '--tls-cipher-suites' API server config for Kubernetes version %s: %s",
 				version, a["--tls-cipher-suites"])
 		}
+	}
+}
+
+func TestAPIServerCosmosEtcd(t *testing.T) {
+	// Test default
+	cs := CreateMockContainerService("testcluster", "1.15.4", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--etcd-cafile"] != "/etc/kubernetes/certs/ca.crt" {
+		t.Fatalf("got unexpected default value for '--etcd-cafile' API server config: %s",
+			a["--etcd-cafile"])
+	}
+	if a["--etcd-servers"] != fmt.Sprintf("https://127.0.0.1:%s", strconv.Itoa(DefaultMasterEtcdClientPort)) {
+		t.Fatalf("got unexpected default value for '--etcd-servers' API server config: %s",
+			a["--etcd-servers"])
+	}
+
+	// Validate that 1.14.0 doesn't include --repair-malformed-updates at all
+	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
+	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
+	cs.Properties.MasterProfile.DNSPrefix = "my-cosmos"
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--etcd-servers"] != fmt.Sprintf("https://%s:%s", cs.Properties.MasterProfile.GetCosmosEndPointURI(), strconv.Itoa(DefaultMasterEtcdClientPort)) {
+		t.Fatalf("got unexpected default value for '--etcd-servers' API server config: %s",
+			a["--etcd-servers"])
 	}
 }

@@ -11,10 +11,10 @@ spec:
   hostNetwork: true
   containers:
     - name: cloud-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["cloud-controller-manager"]
-      args: [<config>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}]
       resources:
         requests:
           cpu: 100m

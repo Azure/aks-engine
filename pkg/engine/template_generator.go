@@ -550,20 +550,35 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasAvailabilityZones": func(profile *api.AgentPoolProfile) bool {
 			return profile.HasAvailabilityZones()
 		},
-		"HasLinuxProfile": func() bool {
-			return cs.Properties.LinuxProfile != nil
-		},
 		"HasLinuxSecrets": func() bool {
 			return cs.Properties.LinuxProfile.HasSecrets()
 		},
 		"HasCustomSearchDomain": func() bool {
-			return cs.Properties.LinuxProfile.HasSearchDomain()
+			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain()
+		},
+		"GetSearchDomainName": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.Name
+			}
+			return ""
+		},
+		"GetSearchDomainRealmUser": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.RealmUser
+			}
+			return ""
+		},
+		"GetSearchDomainRealmPassword": func() string {
+			if cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasSearchDomain() {
+				return cs.Properties.LinuxProfile.CustomSearchDomain.RealmPassword
+			}
+			return ""
 		},
 		"HasCiliumNetworkPlugin": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginCilium
 		},
 		"HasCustomNodesDNS": func() bool {
-			return cs.Properties.LinuxProfile.HasCustomNodesDNS()
+			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()
 		},
 		"HasWindowsSecrets": func() bool {
 			return cs.Properties.WindowsProfile.HasSecrets()
@@ -685,6 +700,42 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName)
+		},
+		"GetComponentImageReference": func(name string) string {
+			kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			if cs.Properties.IsAzureStackCloud() {
+				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
+			}
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			return kubernetesImageBase + k8sComponents[name]
+		},
+		"GetHyperkubeImageReference": func() string {
+			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+			if cs.Properties.IsAzureStackCloud() {
+				hyperkubeImage = hyperkubeImage + AzureStackSuffix
+			}
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+				hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			}
+			return hyperkubeImage
+		},
+		"GetCCMImageReference": func() string {
+			kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			if cs.Properties.IsAzureStackCloud() {
+				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
+			}
+			controllerManagerBase := kubernetesImageBase
+			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+				controllerManagerBase = cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase
+			}
+			ccmImage := controllerManagerBase + k8sComponents["ccm"]
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage != "" {
+				ccmImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage
+			}
+			return ccmImage
 		},
 		"OpenBraces": func() string {
 			return "{{"

@@ -32,28 +32,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig != nil {
-			if to.Bool(kubernetesConfig.UseCloudControllerManager) {
-				controllerManagerBase := kubernetesImageBase
-				if common.IsKubernetesVersionGe(k8sVersion, "1.16.0") {
-					controllerManagerBase = mcrKubernetesImageBase
-				}
-				kubernetesCcmSpec := controllerManagerBase + k8sComponents["ccm"]
-				if kubernetesConfig.CustomCcmImage != "" {
-					kubernetesCcmSpec = kubernetesConfig.CustomCcmImage
-				}
-
-				addValue(parametersMap, "kubernetesCcmImageSpec", kubernetesCcmSpec)
-			}
-
-			kubeAPIServerSpec := kubernetesImageBase + k8sComponents["kube-apiserver"]
-			addValue(parametersMap, "kubeAPIServerSpec", kubeAPIServerSpec)
-
-			kubeControllerManagerSpec := kubernetesImageBase + k8sComponents["kube-controller-manager"]
-			addValue(parametersMap, "kubeControllerManagerSpec", kubeControllerManagerSpec)
-
-			kubeSchedulerSpec := kubernetesImageBase + k8sComponents["kube-scheduler"]
-			addValue(parametersMap, "kubeSchedulerSpec", kubeSchedulerSpec)
-
 			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
 			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
 
@@ -70,7 +48,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			if kubernetesConfig.PrivateAzureRegistryServer != "" {
 				addValue(parametersMap, "privateAzureRegistryServer", kubernetesConfig.PrivateAzureRegistryServer)
 			}
-			addValue(parametersMap, "kubernetesAddonManagerSpec", kubernetesImageBase+k8sComponents["addonmanager"])
 			if orchestratorProfile.NeedsExecHealthz() {
 				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
 			}

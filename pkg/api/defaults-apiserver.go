@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -25,7 +26,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--service-account-lookup":      "true",
 		"--etcd-certfile":               "/etc/kubernetes/certs/etcdclient.crt",
 		"--etcd-keyfile":                "/etc/kubernetes/certs/etcdclient.key",
-		"--etcd-servers":                "https://<etcdEndPointUri>:" + strconv.Itoa(DefaultMasterEtcdClientPort),
 		"--tls-cert-file":               "/etc/kubernetes/certs/apiserver.crt",
 		"--tls-private-key-file":        "/etc/kubernetes/certs/apiserver.key",
 		"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
@@ -38,9 +38,16 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--enable-bootstrap-token-auth": "true",
 		"--v":                           "4",
 	}
-	// if using local etcd server then we need the ca file
-	if !(cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd()) {
-		staticAPIServerConfig["--etcd-cafile"] = "/etc/kubernetes/certs/ca.crt"
+
+	if cs.Properties.MasterProfile != nil {
+		if cs.Properties.MasterProfile.HasCosmosEtcd() {
+			// Configuration for cosmos etcd
+			staticAPIServerConfig["--etcd-servers"] = fmt.Sprintf("https://%s:%s", cs.Properties.MasterProfile.GetCosmosEndPointURI(), strconv.Itoa(DefaultMasterEtcdClientPort))
+		} else {
+			// Configuration for local etcd
+			staticAPIServerConfig["--etcd-cafile"] = "/etc/kubernetes/certs/ca.crt"
+			staticAPIServerConfig["--etcd-servers"] = fmt.Sprintf("https://127.0.0.1:%s", strconv.Itoa(DefaultMasterEtcdClientPort))
+		}
 	}
 
 	// Default apiserver config

@@ -16753,12 +16753,12 @@ var _k8sCloudInitArtifactsSetupCustomSearchDomainsSh = []byte(`#!/bin/bash
 set -x
 source /opt/azure/containers/provision_source.sh
 
-echo "  dns-search <searchDomainName>" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
+echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 restart networking
 wait_for_apt_locks
 retrycmd_if_failure 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
 wait_for_apt_locks
-echo "<searchDomainRealmPassword>" | realm join -U <searchDomainRealmUser>@$(echo "<searchDomainName>" | tr /a-z/ /A-Z/) $(echo "<searchDomainName>" | tr /a-z/ /A-Z/)
+echo "{{GetSearchDomainRealmPassword}}" | realm join -U {{GetSearchDomainRealmUser}}@$(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/) $(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/)
 `)
 
 func k8sCloudInitArtifactsSetupCustomSearchDomainsShBytes() ([]byte, error) {
@@ -17376,14 +17376,14 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -17467,7 +17467,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     KUBELET_OPTS=
 {{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+    KUBELET_IMAGE={{GetHyperkubeImageReference}}
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
 {{else}}
@@ -17504,27 +17504,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesAddonManagerSpec"}}|g" /etc/kubernetes/manifests/kube-addon-manager.yaml
-{{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubeAPIServerSpec"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-    sed -i "s|<img>|{{WrapAsParameter "kubeControllerManagerSpec"}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
-    sed -i "s|<img>|{{WrapAsParameter "kubeSchedulerSpec"}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
-{{else}}
-    for a in "/etc/kubernetes/manifests/kube-apiserver.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-scheduler.yaml"; do
-      sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g" $a
-    done
-{{end}}
-    a=/etc/kubernetes/manifests/kube-apiserver.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.APIServerConfig}}|g" $a
-{{ if HasCosmosEtcd  }}
-    sed -i "s|<etcdEndPointUri>|{{ GetCosmosEndPointUri }}|g" $a
-{{ else }}
-    sed -i "s|<etcdEndPointUri>|127.0.0.1|g" $a
-{{ end }}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" $a
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}|g" /etc/kubernetes/manifests/kube-controller-manager.yaml
-    sed -i "s|<args>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.SchedulerConfig}}|g" /etc/kubernetes/manifests/kube-scheduler.yaml
+    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
     {{ if IsIPv6DualStackFeatureEnabled }}
     sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
@@ -17567,16 +17547,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
 {{end}}
-{{if UseCloudControllerManager }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCcmImageSpec"}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-    sed -i "s|<config>|{{GetK8sRuntimeConfigKeyVals .OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}|g" /etc/kubernetes/manifests/cloud-controller-manager.yaml
-{{end}}
 {{if EnableEncryptionWithExternalKms}}
     sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g; s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g; s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" /opt/azure/containers/setup-custom-search-domains.sh
-{{end}}{{end}}
     #EOF
 
 - path: /opt/azure/containers/mountetcd.sh
@@ -18028,14 +18001,14 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasLinuxProfile }}{{if HasCustomSearchDomain}}
+{{if HasCustomSearchDomain}}
 - path: /opt/azure/containers/setup-custom-search-domains.sh
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "customSearchDomainsScript"}}
-{{end}}{{end}}
+{{end}}
 
 - path: /var/lib/kubelet/kubeconfig
   permissions: "0644"
@@ -18093,11 +18066,6 @@ write_files:
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    sed -i "s|<searchDomainName>|{{WrapAsParameter "searchDomainName"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmUser>|{{WrapAsParameter "searchDomainRealmUser"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-    sed -i "s|<searchDomainRealmPassword>|{{WrapAsParameter "searchDomainRealmPassword"}}|g" "/opt/azure/containers/setup-custom-search-domains.sh"
-{{end}}{{end}}
     #EOF
 
 {{if IsAzureStackCloud}}
@@ -33062,27 +33030,9 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubeAPIServerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-apiserver."
-      },
-      "type": "string"
-    },
-    "kubeControllerManagerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-controller-manager."
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
-    "kubeSchedulerSpec": {
-      "metadata": {
-        "description": "The container spec for kube-scheduler."
       },
       "type": "string"
     },
@@ -33096,19 +33046,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "defaultValue": "",
       "metadata": {
         "description": "The private Azure registry server for hyperkube."
-      },
-      "type": "string"
-    },
-    "kubernetesCcmImageSpec": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The container spec for cloud-controller-manager."
-      },
-      "type": "string"
-    },
-    "kubernetesAddonManagerSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
       },
       "type": "string"
     },
@@ -33415,30 +33352,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "string"
     }
 {{end}}
-{{if HasLinuxProfile}}{{if HasCustomSearchDomain}}
-    ,"searchDomainName": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Custom Search Domain name."
-      },
-      "type": "string"
-    },
-    "searchDomainRealmUser": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Windows server AD user name to join the Linux Machines with active directory and be able to change dns registries."
-      },
-      "type": "string"
-    },
-    "searchDomainRealmPassword": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Windows server AD user password to join the Linux Machines with active directory and be able to change dns registries."
-      },
-      "type": "securestring"
-    }
-{{end}}{{end}}
-{{if HasLinuxProfile}}{{if HasCustomNodesDNS}}
+{{if HasCustomNodesDNS}}
     ,"dnsServer": {
       "defaultValue": "",
       "metadata": {
@@ -33446,7 +33360,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     }
-{{end}}{{end}}
+{{end}}
 
 {{if EnableEncryptionWithExternalKms}}
    ,
@@ -34033,10 +33947,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetComponentImageReference "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-apiserver"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34095,10 +34009,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetComponentImageReference "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34147,10 +34061,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: <img>
+      image: {{GetComponentImageReference "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
       command: ["kube-scheduler"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34199,10 +34113,10 @@ spec:
   hostNetwork: true
   containers:
     - name: cloud-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["cloud-controller-manager"]
-      args: [<config>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}]
       resources:
         requests:
           cpu: 100m
@@ -34262,7 +34176,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-addon-manager
-    image: <img>
+    image: {{GetComponentImageReference "addonmanager"}}
     imagePullPolicy: IfNotPresent
     resources:
       requests:
@@ -34312,10 +34226,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-apiserver"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34374,10 +34288,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetCCMImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
@@ -34431,10 +34345,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -34483,10 +34397,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: <img>
+      image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-scheduler"]
-      args: [<args>]
+      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
