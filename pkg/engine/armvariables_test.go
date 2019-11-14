@@ -119,7 +119,7 @@ func TestK8sVars(t *testing.T) {
 		" PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
-		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')" +
+		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
 		"' NETWORK_MODE=',parameters('networkMode')" +
 		")]"
 
