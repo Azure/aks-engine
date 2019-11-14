@@ -4091,7 +4091,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "150m",
 							MemoryLimits:   "600Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
 						},
 					},
 				},
