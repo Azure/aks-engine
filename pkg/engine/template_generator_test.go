@@ -328,6 +328,35 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 		},
+		{
+			name: "1.17 release with custom kube images",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-alpha.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							CustomKubeAPIServierServerImage:  "custom-kube-apiserver:v1.1.1",
+							CustomKubeControllerManagerImage: "custom-kube-controller-manager:v2.2.2",
+							CustomKubeSchedulerImage:         "custom-kube-scheduler:v3.3.3",
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "custom-kube-apiserver:v1.1.1",
+				"kube-controller-manager": "custom-kube-controller-manager:v2.2.2",
+				"kube-scheduler":          "custom-kube-scheduler:v3.3.3",
+			},
+			expectedGetHyperkubeImageReference: "",
+			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+		},
 	}
 
 	for _, c := range cases {

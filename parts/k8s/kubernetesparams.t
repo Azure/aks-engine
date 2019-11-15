@@ -209,6 +209,12 @@
       },
       "type": "string"
     },
+    "kubeBinaryURL": {
+      "metadata": {
+        "description": "The URL to obtain kubelet and kubectl binaries from."
+      },
+      "type": "string"
+    },
     "privateAzureRegistryServer": {
       "defaultValue": "",
       "metadata": {

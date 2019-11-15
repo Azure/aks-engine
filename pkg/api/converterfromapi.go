@@ -739,6 +739,11 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.UserAssignedID = apiCfg.UserAssignedID
 	vlabsCfg.UserAssignedClientID = apiCfg.UserAssignedClientID
 	vlabsCfg.CustomHyperkubeImage = apiCfg.CustomHyperkubeImage
+	vlabsCfg.CustomKubeAPIServierServerImage = apiCfg.CustomKubeAPIServierServerImage
+	vlabsCfg.CustomKubeControllerManagerImage = apiCfg.CustomKubeControllerManagerImage
+	vlabsCfg.CustomKubeProxyImage = apiCfg.CustomKubeProxyImage
+	vlabsCfg.CustomKubeSchedulerImage = apiCfg.CustomKubeSchedulerImage
+	vlabsCfg.CustomKubeBinaryURL = apiCfg.CustomKubeBinaryURL
 	vlabsCfg.CustomCcmImage = apiCfg.CustomCcmImage
 	vlabsCfg.UseCloudControllerManager = apiCfg.UseCloudControllerManager
 	vlabsCfg.CustomWindowsPackageURL = apiCfg.CustomWindowsPackageURL

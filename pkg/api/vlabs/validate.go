@@ -153,6 +153,11 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateFeatureFlags(); e != nil {
 		return e
 	}
+
+	if e := a.validatePrivateAzureRegistryServer(); e != nil {
+		return e
+	}
+
 	return nil
 }
 
@@ -336,6 +341,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 							return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
 						}
 					}
+				}
+
+				if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && a.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+					return errors.Errorf("customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above")
 				}
 			}
 		default:
@@ -1418,25 +1427,6 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	if e := k.validateNetworkMode(); e != nil {
 		return e
 	}
-	return k.validatePrivateAzureRegistryServer()
-}
-
-func (k *KubernetesConfig) validatePrivateAzureRegistryServer() error {
-
-	// Check PrivateAzureRegistryServer has a valid value.
-	valid := false
-	if k.PrivateAzureRegistryServer != "" {
-		if k.CustomHyperkubeImage != "" {
-			valid = true
-		}
-	} else {
-		valid = true
-	}
-
-	if !valid {
-		return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
-	}
-
 	return nil
 }
 
@@ -1559,6 +1549,23 @@ func (a *Properties) validateContainerRuntime() error {
 	// Make sure we don't use unsupported container runtimes on windows.
 	if (containerRuntime == KataContainers || containerRuntime == Containerd) && a.HasWindows() {
 		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
+	}
+
+	return nil
+}
+
+func (a *Properties) validatePrivateAzureRegistryServer() error {
+	k := a.OrchestratorProfile.KubernetesConfig
+	if k.PrivateAzureRegistryServer == "" {
+		return nil
+	}
+
+	// Check PrivateAzureRegistryServer has a valid value.
+	if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && k.CustomHyperkubeImage == "" {
+		return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
+	}
+	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && (k.CustomKubeAPIServierServerImage == "" || k.CustomKubeControllerManagerImage == "" || k.CustomKubeProxyImage == "" || k.CustomKubeSchedulerImage == "") {
+		return errors.Errorf("customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage and customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
 	}
 
 	return nil

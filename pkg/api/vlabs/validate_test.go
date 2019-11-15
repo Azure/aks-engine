@@ -322,6 +322,18 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120",
 		},
+		"should error when customHyperkubeImage is used for k8s version v1.17.0-alpha.1 or above": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: "1.17.0-alpha.1",
+					KubernetesConfig: &KubernetesConfig{
+						CustomHyperkubeImage: "custom-hyperkube-amd64:v7.7.7",
+					},
+				},
+			},
+			expectedError: "customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above",
+		},
 	}
 
 	for testName, test := range tests {
@@ -678,16 +690,34 @@ func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
 	p.OrchestratorProfile.OrchestratorType = Kubernetes
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
-	err := p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	err := p.validatePrivateAzureRegistryServer()
 	expectedMsg := "customHyperkubeImage must be provided when privateAzureRegistryServer is provided"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
+
 	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
-	err = p.OrchestratorProfile.KubernetesConfig.validatePrivateAzureRegistryServer()
+	err = p.validatePrivateAzureRegistryServer()
 	if err != nil {
 		t.Errorf("should not error because CustomHyperkubeImage is provided, got error : %s", err.Error())
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0-alpha.1"
+	err = p.validatePrivateAzureRegistryServer()
+	expectedMsg = "customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage and customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServierServerImage = "custom-kube-apiserver:v1.1.1"
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = "custom-kube-controller-manager:v2.2.2"
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = "custom-kube-proxy:v3.3.3"
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = "custom-kube-scheduler:v3.3.3"
+	err = p.validatePrivateAzureRegistryServer()
+	if err != nil {
+		t.Errorf("should not error because CustomKubeAPIServierServerImage, CustomKubeControllerManagerImage, CustomKubeProxyImage, and CustomKubeSchedulerImage are provided, got error : %s", err.Error())
 	}
 }
 
