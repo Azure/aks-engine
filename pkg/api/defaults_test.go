@@ -212,7 +212,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
 		HeapsterAddonName:                  "k8s.gcr.io/heapster-amd64:v1.5.4",
 		CalicoAddonName:                    "calico/typha:v3.8.0",
-		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.28",
+		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 		AzurePolicyAddonName:               "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 	}
