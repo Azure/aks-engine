@@ -352,9 +352,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			}
 			for key, val := range c.expectedGetComponentImageReference {
 				vOf := reflect.ValueOf(funcMap["GetComponentImageReference"])
-				ret := vOf.Call([]reflect.Value{reflect.ValueOf(key)})
-				if ret[0].Interface() != val {
-					t.Errorf("expected funcMap invocation of GetComponentImageReference %s to return %s, instead got %s", key, val, ret[0].Interface())
+				r := vOf.Call([]reflect.Value{reflect.ValueOf(key)})
+				if r[0].Interface() != val {
+					t.Errorf("expected funcMap invocation of GetComponentImageReference %s to return %s, instead got %s", key, val, r[0].Interface())
 				}
 			}
 			v = reflect.ValueOf(funcMap["GetHyperkubeImageReference"])
