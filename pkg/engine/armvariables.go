@@ -135,7 +135,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		" PRIVATE_AZURE_REGISTRY_SERVER=',parameters('privateAzureRegistryServer')," +
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
-		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')" +
+		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
+		"' NETWORK_MODE=',parameters('networkMode')" +
 		")]"
 
 	masterVars := map[string]interface{}{

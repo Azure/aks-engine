@@ -1415,6 +1415,9 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	if e := k.validateNetworkPluginPlusPolicy(); e != nil {
 		return e
 	}
+	if e := k.validateNetworkMode(); e != nil {
+		return e
+	}
 	return k.validatePrivateAzureRegistryServer()
 }
 
@@ -1497,6 +1500,36 @@ func (k *KubernetesConfig) validateNetworkPluginPlusPolicy() error {
 		}
 	}
 	return errors.Errorf("networkPolicy '%s' is not supported with networkPlugin '%s'", config.networkPolicy, config.networkPlugin)
+}
+
+func (k *KubernetesConfig) validateNetworkMode() error {
+	networkPlugin := k.NetworkPlugin
+	networkPolicy := k.NetworkPolicy
+	networkMode := k.NetworkMode
+
+	// Check NetworkMode has a valid value.
+	valid := false
+	for _, mode := range NetworkModeValues {
+		if networkMode == mode {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return errors.Errorf("unknown networkMode '%s' specified", networkMode)
+	}
+
+	if networkMode != "" {
+		if networkPlugin != "azure" {
+			return errors.New("networkMode requires network plugin to be 'azure'")
+		}
+
+		if networkPolicy == "calico" && networkMode != NetworkModeTransparent {
+			return errors.Errorf("networkMode '%s' is not supported by calico", networkMode)
+		}
+	}
+
+	return nil
 }
 
 func (a *Properties) validateContainerRuntime() error {
