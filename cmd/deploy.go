@@ -409,6 +409,7 @@ func (dc *deployCmd) run() error {
 	defer cancel()
 
 	images, err := dc.client.GetImagesList(cx)
+	log.Infof("Available images: %+v", images)
 
 	if err != nil {
 		return errors.Wrapf(err, "getting images %s", dc.apimodelPath)
