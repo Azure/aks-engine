@@ -213,7 +213,7 @@ func (page ImageListResultPageClient) Response() azcompute.ImageListResultPage {
 	l := azcompute.ImageListResultPage{}
 	err := DeepCopy(&l, page.dlp.Response())
 	if err != nil {
-		page.err = fmt.Errorf("fail to get disk list result, %s", err)
+		page.err = fmt.Errorf("fail to get image list result, %s", err)
 	}
 	return l
 }
@@ -223,7 +223,7 @@ func (page ImageListResultPageClient) Values() []azcompute.Image {
 	l := []azcompute.Image{}
 	err := DeepCopy(&l, page.dlp.Values())
 	if err != nil {
-		page.err = fmt.Errorf("fail to get disk list, %s", err)
+		page.err = fmt.Errorf("fail to get image list, %s", err)
 	}
 	return l
 }

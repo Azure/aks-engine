@@ -79,7 +79,7 @@ type DiskListPage interface {
 	Values() []compute.Disk
 }
 
-// ImageListResultPage is an interface for compute.DiskListPage to aid in mocking
+// ImageListResultPage is an interface for compute.ImageListResultPage to aid in mocking
 type ImageListResultPage interface {
 	Next() error
 	NextWithContext(ctx context.Context) (err error)
