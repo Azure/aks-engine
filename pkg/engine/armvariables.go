@@ -186,6 +186,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {
