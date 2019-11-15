@@ -16336,11 +16336,8 @@ ExecStartPre=-/sbin/iptables -t nat --numeric --list
 ExecStart=/usr/local/bin/kubelet \
         --enable-server \
         --node-labels="${KUBELET_NODE_LABELS}" \
-        --v=2 \
+        --v=2 {{if NeedsContainerd}}--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock{{end}} \
         --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-{{if NeedsContainerd}}
-        --container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock \
-{{end}}
         $KUBELET_CONFIG \
         $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
 
