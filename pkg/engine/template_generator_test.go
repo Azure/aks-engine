@@ -351,8 +351,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				t.Errorf("expected funcMap invocation of GetSearchDomainRealmPassword to return %s, instead got %s", c.expectedGetSearchDomainRealmPassword, ret[0].Interface())
 			}
 			for key, val := range c.expectedGetComponentImageReference {
-				v := reflect.ValueOf(funcMap["GetComponentImageReference"])
-				ret := v.Call([]reflect.Value{reflect.ValueOf(key)})
+				vOf := reflect.ValueOf(funcMap["GetComponentImageReference"])
+				ret := vOf.Call([]reflect.Value{reflect.ValueOf(key)})
 				if ret[0].Interface() != val {
 					t.Errorf("expected funcMap invocation of GetComponentImageReference %s to return %s, instead got %s", key, val, ret[0].Interface())
 				}
