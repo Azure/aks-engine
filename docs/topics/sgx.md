@@ -101,7 +101,7 @@ spec:
         effect: NoSchedule
       containers:
       - name: oe-sgx-device-plugin
-        image: "dmitsh/oe-sgx-device-plugin:0.16"
+        image: "mcr.microsoft.com/aks/acc/sgx-device-plugin:0.1"
         command: ["/usr/local/bin/oe-sgx-device-plugin"]
         imagePullPolicy: IfNotPresent
         volumeMounts:
