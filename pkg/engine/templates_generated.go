@@ -35057,7 +35057,7 @@ Write-AzureConfig {
     "primaryAvailabilitySetName": "$PrimaryAvailabilitySetName",
     "primaryScaleSetName": "$PrimaryScaleSetName",
     "useManagedIdentityExtension": $UseManagedIdentityExtension,
-    "userAssignedIdentityID": $UserAssignedClientID,
+    "userAssignedIdentityID": "$UserAssignedClientID",
     "useInstanceMetadata": $UseInstanceMetadata,
     "loadBalancerSku": "$LoadBalancerSku",
     "excludeMasterFromStandardLB": $ExcludeMasterFromStandardLB
