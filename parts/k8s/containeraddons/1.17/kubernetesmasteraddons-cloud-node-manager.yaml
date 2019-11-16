@@ -58,7 +58,7 @@ spec:
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: cloud-node-manager
-      hostNetwork: true   # required to fetch correct hostname
+      hostNetwork: true {{/* required to fetch correct hostname */}}
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:

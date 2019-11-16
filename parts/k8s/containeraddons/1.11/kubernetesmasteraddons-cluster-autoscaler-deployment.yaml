@@ -259,4 +259,3 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
-#EOF
