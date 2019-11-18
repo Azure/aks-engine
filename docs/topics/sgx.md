@@ -1,9 +1,21 @@
 # Using SGX with Kubernetes
 
+<!-- TOC -->
+- [Deploy a Kubernetes Cluster](#deploy-a-kubernetes-cluster)
+- [Running a SGX-enabled container](#running-a-sgx-enabled-container)
+- [OPTIONAL: Using oe-sgx device plugin (alpha)](#optional-using-oe-sgx-device-plugin-alpha)
+   - [Device plugin installation](#device-plugin-installation)
+   - [Scheduling Pods to TEE enabled Hardware](#scheduling-pods-to-tee-enabled-hardware)
+<!-- /TOC -->
+
 [Intel&reg; Secure Guard Extension](https://software.intel.com/en-us/sgx) (Intel&reg; SGX) is an architecture extension designed to increase the security of application code and data.
 Developers may choose [Intel&reg; SGX SDK](https://software.intel.com/en-us/sgx-sdk) or [Open Enclave SDK](https://github.com/Microsoft/openenclave/) to create applications that leverage this technology.
 
 Azure supports provisioning of SGX-enabled VMs under the umbrella of Azure Confidential Compute (ACC). You can create a Kubernetes cluster with one or multiple agent pool(s) running ACC VMs by specifying a [DC-series](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dc-series) VM size with a supported distro from the table below.
+
+## Deploy a Kubernetes Cluster
+Refer to the [Quickstart Guide](../tutorials/quickstart.md) for details on how to provision a cluster using AKS-Engine. In order to use SGX enabled hardware we suggest updating the cluster model to include an additional agentpool with the supported operating system and virtual machine size. See below for further detail.
+
 
 | OS           | distro      | Notes |
 | ------------ | ----------- |-------|
@@ -62,9 +74,9 @@ spec:
       type: CharDevice
 ```
 
-## OPTIONAL: Using experimental device plugin (alpha)
+## OPTIONAL: Using oe-sgx device plugin (alpha)
 
-Alternatively, you can opt into using a Kubernetes device plugin (alpha) which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the Open Enclave SDK onto hardware which supports Trusted Execution Environments.
+Alternatively, you can install the oe-sgx device plugin (alpha) which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the Open Enclave SDK onto hardware which supports Trusted Execution Environments.
 
 ### Device plugin installation
 
