@@ -8054,7 +8054,6 @@ spec:
 ---
 {{/* This file was pulled from: */}}
 {{/* https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
----
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -8539,13 +8538,13 @@ spec:
   supplementalGroups:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   fsGroup:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
@@ -9653,8 +9652,8 @@ func k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`# This file was pulled from:
-# https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378)
+var _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{/* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -9765,9 +9764,8 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-# This file was pulled from:
-# https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378)
----
+{{/* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -9826,22 +9824,22 @@ func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`# Copyright 2016 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+var _k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{/* Copyright 2016 The Kubernetes Authors.
 
-# Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-# in sync with this file.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
+in sync with this file. */}}
 
 apiVersion: v1
 kind: Service
@@ -9892,10 +9890,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
+  {{/* replicas: not specified here: */}}
+  {{/* 1. In order to make Addon Manager do not reconcile this replicas parameter. */}}
+  {{/* 2. Default is 1. */}}
+  {{/* 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     rollingUpdate:
       maxSurge: 10%
@@ -9922,10 +9920,10 @@ spec:
         image: <img>
         imagePullPolicy: IfNotPresent
         resources:
-          # TODO: Set memory limits when we've profiled the container for large
-          # clusters, then set request = limit to keep this container in
-          # guaranteed class. Currently, this container falls into the
-          # "burstable" category so the kubelet doesn't backoff from restarting it.
+          {{/* TODO: Set memory limits when we've profiled the container for large */}}
+          {{/* clusters, then set request = limit to keep this container in */}}
+          {{/* guaranteed class. Currently, this container falls into the */}}
+          {{/* "burstable" category so the kubelet doesn't backoff from restarting it. */}}
           limits:
             memory: 170Mi
           requests:
@@ -10251,13 +10249,13 @@ spec:
   supplementalGroups:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   fsGroup:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
@@ -11051,22 +11049,22 @@ func k8sAddons18KubernetesmasteraddonsKubernetesDashboardDeploymentYaml() (*asse
 	return a, nil
 }
 
-var _k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`# Copyright 2016 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+var _k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{/* Copyright 2016 The Kubernetes Authors.
 
-# Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-# in sync with this file.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
+in sync with this file. */}}
 
 apiVersion: v1
 kind: Service
@@ -11117,10 +11115,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
+  {{/* replicas: not specified here: */}}
+  {{/* 1. In order to make Addon Manager do not reconcile this replicas parameter. */}}
+  {{/* 2. Default is 1. */}}
+  {{/* 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     rollingUpdate:
       maxSurge: 10%
@@ -11262,7 +11260,8 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux`)
+        beta.kubernetes.io/os: linux
+`)
 
 func k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
 	return _k8sAddons19KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
@@ -11369,9 +11368,9 @@ metadata:
 data:
   Corefile: |
     # Add custom CoreDNS configuration here.
-    #
-    # See https://github.com/coredns/coredns/tree/master/plugin/azure for information
-    # about the Azure DNS plugin.
+    {{/*
+    See https://github.com/coredns/coredns/tree/master/plugin/azure for information
+    about the Azure DNS plugin. */}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -11384,10 +11383,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
+  {{/* replicas: not specified here: */}}
+  {{/* 1. In order to make Addon Manager do not reconcile this replicas parameter. */}}
+  {{/* 2. Default is 1. */}}
+  {{/* 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -12702,8 +12701,8 @@ func k8sAddonsKubernetesmasteraddonsElbSvcYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`# This file was pulled from:
-# https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378)
+var _k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{/* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -12812,9 +12811,8 @@ spec:
           configMap:
             name: kube-flannel-cfg
 ---
-# This file was pulled from:
-# https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378)
----
+{{/* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -12873,22 +12871,22 @@ func k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`# Copyright 2016 The Kubernetes Authors.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+var _k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{/* Copyright 2016 The Kubernetes Authors.
 
-# Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-# in sync with this file.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
+in sync with this file. */}}
 
 apiVersion: v1
 kind: Service
@@ -12939,10 +12937,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
+  {{/* replicas: not specified here: */}}
+  {{/* 1. In order to make Addon Manager do not reconcile this replicas parameter. */}}
+  {{/* 2. Default is 1. */}}
+  {{/* 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     rollingUpdate:
       maxSurge: 10%
@@ -12972,10 +12970,10 @@ spec:
         image: <img>
         imagePullPolicy: IfNotPresent
         resources:
-          # TODO: Set memory limits when we've profiled the container for large
-          # clusters, then set request = limit to keep this container in
-          # guaranteed class. Currently, this container falls into the
-          # "burstable" category so the kubelet doesn't backoff from restarting it.
+          {{/* TODO: Set memory limits when we've profiled the container for large */}}
+          {{/* clusters, then set request = limit to keep this container in */}}
+          {{/* guaranteed class. Currently, this container falls into the */}}
+          {{/* "burstable" category so the kubelet doesn't backoff from restarting it. */}}
           limits:
             memory: 170Mi
           requests:
@@ -13085,7 +13083,8 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux`)
+        beta.kubernetes.io/os: linux
+`)
 
 func k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, nil
@@ -13395,13 +13394,13 @@ spec:
   supplementalGroups:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   fsGroup:
     rule: MustRunAs
     ranges:
-      # Forbid adding the root group.
+      {{/* Forbid adding the root group. */}}
       - min: 1
         max: 65535
   readOnlyRootFilesystem: false
@@ -13467,7 +13466,8 @@ subjects:
   apiGroup: rbac.authorization.k8s.io
 - kind: Group
   name: system:nodes
-  apiGroup: rbac.authorization.k8s.io`)
+  apiGroup: rbac.authorization.k8s.io
+`)
 
 func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
 	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
