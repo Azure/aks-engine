@@ -120,7 +120,8 @@ func TestK8sVars(t *testing.T) {
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')" +
+		"' NETWORK_MODE=',parameters('networkMode')," +
+		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
 		")]"
 
 	expectedMap := map[string]interface{}{
@@ -877,7 +878,8 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')" +
+		"' NETWORK_MODE=',parameters('networkMode')," +
+		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
 		")]"
 
 	expectedMap := map[string]interface{}{

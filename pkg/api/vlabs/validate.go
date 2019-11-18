@@ -1560,6 +1560,10 @@ func (a *Properties) validateContainerRuntime() error {
 
 func (a *Properties) validateCustomKubeComponent() error {
 	k := a.OrchestratorProfile.KubernetesConfig
+	if k == nil {
+		return nil
+	}
+
 	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
 		if k.CustomHyperkubeImage != "" {
 			return errors.New("customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above")
@@ -1575,7 +1579,7 @@ func (a *Properties) validateCustomKubeComponent() error {
 
 func (a *Properties) validatePrivateAzureRegistryServer() error {
 	k := a.OrchestratorProfile.KubernetesConfig
-	if k.PrivateAzureRegistryServer == "" {
+	if k == nil || k.PrivateAzureRegistryServer == "" {
 		return nil
 	}
 
