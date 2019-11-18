@@ -711,7 +711,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				coreComponents = append(coreComponents, "heapster")
 			}
 			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
-				eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager {
+				to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, "cloud-controller-manager", "cloud-node-manager", "csi-azuredisk-controller", "csi-azurefile-controller")
 			}
 			for _, componentName := range coreComponents {
