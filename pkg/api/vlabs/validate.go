@@ -154,6 +154,10 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
+	if e := a.validateCustomKubeComponent(); e != nil {
+		return e
+	}
+
 	if e := a.validatePrivateAzureRegistryServer(); e != nil {
 		return e
 	}
@@ -341,10 +345,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 							return errors.Errorf("EtcdDiskSizeGB max size supported on Azure Stack is %d", MaxAzureStackManagedDiskSize)
 						}
 					}
-				}
-
-				if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && a.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
-					return errors.Errorf("customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above")
 				}
 			}
 		default:
@@ -1522,6 +1522,10 @@ func (k *KubernetesConfig) validateNetworkMode() error {
 	return nil
 }
 
+func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
+	return k.CustomKubeAPIServierServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeProxyImage != "" || k.CustomKubeSchedulerImage != ""
+}
+
 func (a *Properties) validateContainerRuntime() error {
 	var containerRuntime string
 
@@ -1554,18 +1558,36 @@ func (a *Properties) validateContainerRuntime() error {
 	return nil
 }
 
+func (a *Properties) validateCustomKubeComponent() error {
+	k := a.OrchestratorProfile.KubernetesConfig
+	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+		if k.CustomHyperkubeImage != "" {
+			return errors.New("customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above")
+		}
+	} else {
+		if k.isUsingCustomKubeComponent() {
+			return errors.New("customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage have no effect in Kubernetes version 1.16 or earlier")
+		}
+	}
+
+	return nil
+}
+
 func (a *Properties) validatePrivateAzureRegistryServer() error {
 	k := a.OrchestratorProfile.KubernetesConfig
 	if k.PrivateAzureRegistryServer == "" {
 		return nil
 	}
 
-	// Check PrivateAzureRegistryServer has a valid value.
-	if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && k.CustomHyperkubeImage == "" {
-		return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
-	}
-	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") && (k.CustomKubeAPIServierServerImage == "" || k.CustomKubeControllerManagerImage == "" || k.CustomKubeProxyImage == "" || k.CustomKubeSchedulerImage == "") {
-		return errors.Errorf("customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage and customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
+	// Custom components must be provided if private azure registry server is not empty
+	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+		if !k.isUsingCustomKubeComponent() {
+			return errors.Errorf("customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage and customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
+		}
+	} else {
+		if k.CustomHyperkubeImage == "" {
+			return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
+		}
 	}
 
 	return nil
