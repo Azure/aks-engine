@@ -18574,6 +18574,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons111KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -19018,6 +19019,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons112KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -19465,6 +19467,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons113KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -19912,6 +19915,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -20359,6 +20363,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -21093,6 +21098,7 @@ spec:
       - name: credentials
         secret:
           secretName: aci-connector-secret
+#EOF
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
@@ -22331,6 +22337,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -24364,6 +24371,7 @@ spec:
       - name: credentials
         secret:
           secretName: aci-connector-secret
+#EOF
 `)
 
 func k8sContaineraddons117KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
@@ -25705,6 +25713,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
@@ -29027,6 +29036,7 @@ spec:
       - name: credentials
         secret:
           secretName: aci-connector-secret
+#EOF
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
@@ -31287,6 +31297,7 @@ spec:
           path: /etc/ssl/certs/ca-certificates.crt
           type: ""
         name: ssl-certs{{GetVolumes}}
+#EOF
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
