@@ -210,6 +210,7 @@
       "type": "string"
     },
     "kubeBinaryURL": {
+      "defaultValue": "",
       "metadata": {
         "description": "The package tarball URL to extract kubelet and kubectl binaries from."
       },

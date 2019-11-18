@@ -691,6 +691,7 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = "example.azurecr.io/kube-controller-manager-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = "example.azurecr.io/kube-proxy-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = "example.azurecr.io/kube-scheduler-amd64:tag"
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = "https://example.blob.core.windows.net/kubernetes-node-linux-amd64.tar.gz"
 	err = p.validateCustomKubeComponent()
 	if err != nil {
 		t.Errorf("should not error because in custom kube components can be used in 1.17, got error : %s", err.Error())
@@ -698,7 +699,7 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 
 	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 	err = p.validateCustomKubeComponent()
-	expectedMsg = "customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage have no effect in Kubernetes version 1.16 or earlier"
+	expectedMsg = "customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
@@ -708,6 +709,7 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = ""
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = ""
 	err = p.validateCustomKubeComponent()
 	if err != nil {
 		t.Errorf("should not error because in custom hyperkube image can be used in 1.16, got error : %s", err.Error())
@@ -737,7 +739,7 @@ func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
 	p.OrchestratorProfile.OrchestratorVersion = "1.17.0-alpha.1"
 	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
 	err = p.validatePrivateAzureRegistryServer()
-	expectedMsg = "customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage and customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided"
+	expectedMsg = "customKubeAPIServierServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}

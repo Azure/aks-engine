@@ -15626,7 +15626,7 @@ if [[ "${GPU_NODE}" = true ]]; then
 fi
 {{end}}
 if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]] && [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    $CLI_TOOL login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
+    docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
 fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
@@ -33150,6 +33150,7 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "type": "string"
     },
     "kubeBinaryURL": {
+      "defaultValue": "",
       "metadata": {
         "description": "The package tarball URL to extract kubelet and kubectl binaries from."
       },
