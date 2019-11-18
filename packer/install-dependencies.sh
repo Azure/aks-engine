@@ -451,7 +451,7 @@ AZUREDISK_CSI_VERSIONS="
 0.4.0
 "
 for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
