@@ -6,8 +6,6 @@ source /home/packer/packer_source.sh
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 
 echo "Starting build on " $(date) > ${VHD_LOGS_FILEPATH}
-echo "Using kernel:" >> ${VHD_LOGS_FILEPATH}
-tee -a ${VHD_LOGS_FILEPATH} < /proc/version
 
 copyPackerFiles
 
@@ -535,6 +533,8 @@ df -h
 # error at 90% space taken
 [ -s $(df -P | grep '/dev/sda1' | awk '0+$5 >= 90 {print}') ] || exit 1
 
+echo "Using kernel:" >> ${VHD_LOGS_FILEPATH}
+tee -a ${VHD_LOGS_FILEPATH} < /proc/version
 {
   echo "Install completed successfully on " $(date)
   echo "VSTS Build NUMBER: ${BUILD_NUMBER}"
