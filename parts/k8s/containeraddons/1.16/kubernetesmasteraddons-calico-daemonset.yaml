@@ -465,7 +465,7 @@ spec:
         {{- /* Name of the CNI config file to create. */}}
         - name: CNI_CONF_NAME
           value: "10-calico.conflist"
-        {{/* The CNI network config to install on each node. */}}
+        {{- /* The CNI network config to install on each node. */}}
         - name: CNI_NETWORK_CONFIG
           valueFrom:
             configMapKeyRef:

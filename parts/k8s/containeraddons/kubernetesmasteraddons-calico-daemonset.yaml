@@ -349,9 +349,9 @@ spec:
       labels:
         k8s-app: calico-typha
       annotations:
-        {{/* This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical */}}
-        {{/* add-on, ensuring it gets priority scheduling and that its resources are reserved */}}
-        {{/* if it ever gets evicted. */}}
+        {{- /* This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
+        add-on, ensuring it gets priority scheduling and that its resources are reserved
+        if it ever gets evicted. */}}
         scheduler.alpha.kubernetes.io/critical-pod: ''
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
@@ -440,10 +440,10 @@ spec:
       labels:
         k8s-app: calico-node
       annotations:
-        {{/* This, along with the CriticalAddonsOnly toleration below, */}}
-        {{/* marks the pod as a critical add-on, ensuring it gets */}}
-        {{/* priority scheduling and that its resources are reserved */}}
-        {{/* if it ever gets evicted. */}}
+        {{- /* This, along with the CriticalAddonsOnly toleration below,
+        marks the pod as a critical add-on, ensuring it gets
+        priority scheduling and that its resources are reserved
+        if it ever gets evicted. */}}
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       nodeSelector:
@@ -464,8 +464,8 @@ spec:
       terminationGracePeriodSeconds: 0
       priorityClassName: system-node-critical
       initContainers:
-      {{/* Start of install-cni initContainer */}}
-      {{- /* This container installs the CNI binaries
+      {{- /* Start of install-cni initContainer
+      This container installs the CNI binaries
       and CNI network config file on each node. */}}
       - name: install-cni
         image: {{ContainerImage "calico-cni"}}
@@ -474,7 +474,7 @@ spec:
         {{- /* Name of the CNI config file to create. */}}
         - name: CNI_CONF_NAME
           value: "10-calico.conflist"
-        {{/* The CNI network config to install on each node. */}}
+        {{- /* The CNI network config to install on each node. */}}
         - name: CNI_NETWORK_CONFIG
           valueFrom:
             configMapKeyRef:
@@ -493,9 +493,9 @@ spec:
           name: cni-bin-dir
         - mountPath: /host/etc/cni/net.d
           name: cni-net-dir
-      {{/* End of install-cni initContainer */}}
-      {{/* Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes */}}
-      {{/* to communicate with Felix over the Policy Sync API. */}}
+      {{- /* End of install-cni initContainer
+      Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+      to communicate with Felix over the Policy Sync API. */}}
       - name: flexvol-driver
         image: {{ContainerImage "calico-pod2daemon"}}
         volumeMounts:
@@ -613,12 +613,12 @@ spec:
       - name: cni-net-dir
         hostPath:
           path: /etc/cni/net.d
-      {{/* Used to create per-pod Unix Domain Sockets */}}
+      {{- /* Used to create per-pod Unix Domain Sockets */}}
       - name: policysync
         hostPath:
           type: DirectoryOrCreate
           path: /var/run/nodeagent
-      {{/* Used to install Flex Volume Driver */}}
+      {{- /* Used to install Flex Volume Driver */}}
       - name: flexvol-driver-host
         hostPath:
           type: DirectoryOrCreate
