@@ -1743,7 +1743,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				kubernetesDockerMonitorSystemdService,
 				kubernetesDockerMonitorSystemdTimer,
 				kubernetesDockerMonitorSystemdTimer,
-				kubeletSystemdService,
 				dockerClearMountPropagationFlags,
 				auditdRules,
 				kubernetesCSECustomCloud,

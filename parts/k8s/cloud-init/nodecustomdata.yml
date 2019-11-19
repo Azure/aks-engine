@@ -58,6 +58,13 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
+
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -90,13 +97,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
@@ -305,13 +305,8 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if NeedsContainerd}}
-    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
-{{else}}
-    KUBELET_OPTS=
-{{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+    KUBELET_IMAGE={{GetHyperkubeImageReference}}
     KUBELET_REGISTER_SCHEDULABLE=true
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}

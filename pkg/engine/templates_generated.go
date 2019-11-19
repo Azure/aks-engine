@@ -16318,7 +16318,9 @@ func k8sCloudInitArtifactsKubeletMonitorTimer() (*asset, error) {
 var _k8sCloudInitArtifactsKubeletService = []byte(`[Unit]
 Description=Kubelet
 ConditionPathExists=/usr/local/bin/kubelet
-# Required
+{{if EnableEncryptionWithExternalKms}}
+Requires=kms.service
+{{end}}
 
 [Service]
 Restart=always
@@ -16329,17 +16331,17 @@ ExecStartPre=/bin/mkdir -p /var/lib/kubelet
 ExecStartPre=/bin/mkdir -p /var/lib/cni
 ExecStartPre=/bin/bash -c "if [ $(mount | grep \"/var/lib/kubelet\" | wc -l) -le 0 ] ; then /bin/mount --bind /var/lib/kubelet /var/lib/kubelet ; fi"
 ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
-# This is a partial workaround to this upstream Kubernetes issue:
-#  https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731
+{{/* This is a partial workaround to this upstream Kubernetes issue: */}}
+{{/* https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731 */}}
 ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_retries2=8
 ExecStartPre=-/sbin/ebtables -t nat --list
 ExecStartPre=-/sbin/iptables -t nat --numeric --list
 ExecStart=/usr/local/bin/kubelet \
         --enable-server \
         --node-labels="${KUBELET_NODE_LABELS}" \
-        --v=2 \
+        --v=2 {{if NeedsContainerd}}--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock{{end}} \
         --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-        $KUBELET_CONFIG $KUBELET_OPTS \
+        $KUBELET_CONFIG \
         $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
 
 [Install]
@@ -17170,6 +17172,13 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
+
 {{if not .MasterProfile.IsVHDDistro}}
     {{if .MasterProfile.IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -17202,13 +17211,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /opt/azure/containers/label-nodes.sh
   permissions: "0744"
@@ -17464,11 +17466,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   permissions: "0644"
   owner: root
   content: |
-{{if NeedsContainerd}}
-    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
-{{else}}
-    KUBELET_OPTS=
-{{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
     KUBELET_IMAGE={{GetHyperkubeImageReference}}
 {{if IsKubernetesVersionGe "1.16.0"}}
@@ -17479,13 +17476,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsAzureStackCloud }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
-{{if IsKubernetesVersionGe "1.6.0"}}
-  {{if AnyAgentIsLinux}}
+{{if AnyAgentIsLinux}}
     KUBELET_REGISTER_NODE=--register-node=true
     KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
-  {{end}}
-{{else}}
-    KUBELET_REGISTER_SCHEDULABLE={{WrapAsVariable "registerSchedulable"}}
 {{end}}
     #EOF
 
@@ -17549,9 +17542,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
 {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
-{{end}}
-{{if EnableEncryptionWithExternalKms}}
-    sed -i "s|# Required|Requires=kms.service|g" /etc/systemd/system/kubelet.service
 {{end}}
     #EOF
 
@@ -17794,6 +17784,13 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
+
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh
@@ -17826,13 +17823,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
 
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
@@ -18041,13 +18031,8 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-{{if NeedsContainerd}}
-    KUBELET_OPTS=--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock
-{{else}}
-    KUBELET_OPTS=
-{{end}}
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-    KUBELET_IMAGE={{WrapAsParameter "kubernetesHyperkubeSpec"}}
+    KUBELET_IMAGE={{GetHyperkubeImageReference}}
     KUBELET_REGISTER_SCHEDULABLE=true
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
