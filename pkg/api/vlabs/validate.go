@@ -1570,7 +1570,7 @@ func (a *Properties) validateCustomKubeComponent() error {
 		}
 	} else {
 		if k.isUsingCustomKubeComponent() {
-			return errors.New("CustomKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
+			return errors.New("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
 		}
 	}
 
@@ -1586,7 +1586,7 @@ func (a *Properties) validatePrivateAzureRegistryServer() error {
 	// Custom components must be provided if private azure registry server is not empty
 	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
 		if !k.isUsingCustomKubeComponent() {
-			return errors.Errorf("CustomKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
+			return errors.Errorf("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
 		}
 	} else {
 		if k.CustomHyperkubeImage == "" {
