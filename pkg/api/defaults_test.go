@@ -206,7 +206,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.4.0",
 		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
 		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.11",
-		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod10182019",
+		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
 		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
 		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
 		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
