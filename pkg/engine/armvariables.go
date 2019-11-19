@@ -104,7 +104,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId')," +
 		"' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote')," +
 		"' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey')," +
-		"' TARGET_ENVIRONMENT=',parameters('targetEnvironment')," +
 		"' NETWORK_PLUGIN=',parameters('networkPlugin')," +
 		"' NETWORK_POLICY=',parameters('networkPolicy')," +
 		"' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL')," +

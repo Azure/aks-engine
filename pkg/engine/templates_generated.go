@@ -14371,7 +14371,7 @@ configureK8s() {
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
 {
-    "cloud":"${TARGET_ENVIRONMENT}",
+    "cloud":"{{GetTargetEnvironment}}",
     "tenantId": "${TENANT_ID}",
     "subscriptionId": "${SUBSCRIPTION_ID}",
     "aadClientId": "${SERVICE_PRINCIPAL_CLIENT_ID}",
@@ -14433,8 +14433,8 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
-{{if IsAzureStackCloud}}
-    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+{{- if IsAzureStackCloud}}
+    if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         {{/* set environment to mas when using Azure CNI on Azure Stack */}}
         {{/* shellcheck disable=SC2002,SC2005 */}}
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
@@ -15536,11 +15536,9 @@ config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
 {{- if IsAzureStackCloud}}
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
-    config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
-    wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
-    source $config_script_custom_cloud
-fi
+config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
+wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
+source $config_script_custom_cloud
 {{end}}
 
 set +x
@@ -15661,11 +15659,9 @@ fi
 configureK8s
 
 {{if IsAzureStackCloud}}
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
-    configureK8sCustomCloud
-    if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
-        configureAzureStackInterfaces
-    fi
+configureK8sCustomCloud
+if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
+    configureAzureStackInterfaces
 fi
 {{end}}
 
@@ -15727,8 +15723,8 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-{{if not IsAzureStackCloud}}
-if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
+{{- if not IsAzureStackCloud}}
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
     apt_get_purge 20 30 120 apache2-utils &
 fi
 {{end}}

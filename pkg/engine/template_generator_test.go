@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
@@ -144,6 +145,16 @@ func TestGetTemplateFuncMap(t *testing.T) {
 }
 
 func TestGetContainerServiceFuncMap(t *testing.T) {
+	azureStackCloudSpec := api.AzureEnvironmentSpecConfig{
+		CloudName: api.AzureStackCloud,
+		KubernetesSpecConfig: api.KubernetesSpecConfig{
+			KubernetesImageBase: "azurestack/",
+		},
+		EndpointConfig: api.AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+		},
+	}
+	api.AzureCloudSpecEnvMap[api.AzureStackCloud] = azureStackCloudSpec
 	cases := []struct {
 		name                                 string
 		cs                                   *api.ContainerService
@@ -155,6 +166,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetComponentImageReference   map[string]string
 		expectedGetHyperkubeImageReference   string
 		expectedGetCCMImageReference         string
+		expectedGetTargetEnvironment         string
 	}{
 		{
 			name: "1.15 release",
@@ -187,6 +199,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
 		},
 		{
 			name: "1.16 release",
@@ -219,6 +232,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.16.1",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
 		},
 		{
 			name: "1.17 release",
@@ -251,6 +265,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
 		},
 		{
 			name: "custom search domain",
@@ -290,6 +305,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
 		},
 		{
 			name: "custom nodes DNS",
@@ -327,6 +343,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -356,6 +373,138 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+		},
+		{
+			name: "china cloud",
+			cs: &api.ContainerService{
+				Location: "chinaeast",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureChinaCloud",
+		},
+		{
+			name: "german cloud",
+			cs: &api.ContainerService{
+				Location: "germanynortheast",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureGermanCloud",
+		},
+		{
+			name: "usgov cloud",
+			cs: &api.ContainerService{
+				Location: "usgoveast2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:         "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzureUSGovernmentCloud",
+		},
+		{
+			name: "Azure Stack",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					CustomCloudProfile: &api.CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: api.AzureStackCloud,
+						},
+					},
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig:    &api.KubernetesConfig{},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager": "azurestack/kube-addon-manager-amd64:v9.0.2",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4-azs",
+			expectedGetCCMImageReference:       "azurestack/cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureStackCloud",
 		},
 	}
 
@@ -400,6 +549,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasCustomNodesDNS {
 				t.Errorf("expected funcMap invocation of HasCustomNodesDNS to return %t, instead got %t", c.expectedHasCustomNodesDNS, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetTargetEnvironment"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetTargetEnvironment {
+				t.Errorf("expected funcMap invocation of GetTargetEnvironment to return %s, instead got %s", c.expectedGetTargetEnvironment, ret[0].Interface())
 			}
 		})
 	}

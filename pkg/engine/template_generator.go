@@ -752,6 +752,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return ccmImage
 		},
+		"GetTargetEnvironment": func() string {
+			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},
