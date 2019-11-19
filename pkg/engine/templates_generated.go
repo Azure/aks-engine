@@ -15510,9 +15510,6 @@ var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
-{{- if IsAzureStackCloud}}
-AZURE_STACK_ENV="azurestackcloud"
-{{end}}
 
 script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
