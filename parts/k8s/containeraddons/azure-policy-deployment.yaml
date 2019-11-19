@@ -578,11 +578,11 @@ spec:
         - name: ACS_CREDENTIAL_LOCATION
           value: /etc/acs/azure.json
         - name: REFRESH_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
         - name: AUDIT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
         - name: TELEMETRY_HEARTBEAT_INTERVAL
-          value: 5m   # Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h"
+          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
         - name: CURRENT_IMAGE
           value: {{ContainerImage "azure-policy"}}
         volumeMounts:

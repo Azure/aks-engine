@@ -114,7 +114,6 @@ metadata:
     addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
   typha_service_name: "calico-typha"
-
   # The CNI network configuration to install on each node.
   cni_network_config: |-
     {
@@ -356,7 +355,7 @@ spec:
 
 ---
 
-# Typha Horizontal Autoscaler Role 
+# Typha Horizontal Autoscaler Role
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

@@ -88,9 +88,9 @@ metadata:
 data:
   Corefile: |
     # Add custom CoreDNS configuration here.
-    #
-    # See https://github.com/coredns/coredns/tree/master/plugin/azure for information
-    # about the Azure DNS plugin.
+    {{- /*
+    See https://github.com/coredns/coredns/tree/master/plugin/azure for information
+    about the Azure DNS plugin. */}}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -103,10 +103,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  # replicas: not specified here:
-  # 1. In order to make Addon Manager do not reconcile this replicas parameter.
-  # 2. Default is 1.
-  # 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on.
+  {{- /* replicas: not specified here:
+  1. In order to make Addon Manager do not reconcile this replicas parameter.
+  2. Default is 1.
+  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -220,7 +220,6 @@ spec:
             - key: Corefile
               path: Corefile
             optional: true
-
 ---
 apiVersion: v1
 kind: Service
