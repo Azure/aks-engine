@@ -705,8 +705,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			k := cs.Properties.OrchestratorProfile.KubernetesConfig
 			switch name {
 			case "kube-apiserver":
-				if k.CustomKubeAPIServierServerImage != "" {
-					return k.CustomKubeAPIServierServerImage
+				if k.CustomKubeAPIServerImage != "" {
+					return k.CustomKubeAPIServerImage
 				}
 			case "kube-controller-manager":
 				if k.CustomKubeControllerManagerImage != "" {

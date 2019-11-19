@@ -336,7 +336,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.17.0-alpha.1",
 						KubernetesConfig: &api.KubernetesConfig{
-							CustomKubeAPIServierServerImage:  "example.azurecr.io/kube-apiserver-amd64:tag",
+							CustomKubeAPIServerImage:         "example.azurecr.io/kube-apiserver-amd64:tag",
 							CustomKubeControllerManagerImage: "example.azurecr.io/kube-controller-manager-amd64:tag",
 							CustomKubeSchedulerImage:         "example.azurecr.io/kube-scheduler-amd64:tag",
 						},

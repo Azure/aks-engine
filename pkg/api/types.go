@@ -392,7 +392,7 @@ type KubernetesConfig struct {
 	UserAssignedID                    string            `json:"userAssignedID,omitempty"`
 	UserAssignedClientID              string            `json:"userAssignedClientID,omitempty"` //Note: cannot be provided in config. Used *only* for transferring this to azure.json.
 	CustomHyperkubeImage              string            `json:"customHyperkubeImage,omitempty"`
-	CustomKubeAPIServierServerImage   string            `json:"customKubeAPIServierServerImage,omitempty"`
+	CustomKubeAPIServerImage          string            `json:"CustomKubeAPIServerImage,omitempty"`
 	CustomKubeControllerManagerImage  string            `json:"customKubeControllerManagerImage,omitempty"`
 	CustomKubeProxyImage              string            `json:"customKubeProxyImage,omitempty"`
 	CustomKubeSchedulerImage          string            `json:"customKubeSchedulerImage,omitempty"`
