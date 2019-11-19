@@ -136,7 +136,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')" +
+		"' NETWORK_MODE=',parameters('networkMode')," +
+		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
 		")]"
 
 	masterVars := map[string]interface{}{

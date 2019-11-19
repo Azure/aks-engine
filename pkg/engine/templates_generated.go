@@ -15423,7 +15423,8 @@ extractHyperkube() {
 
 extractKubeBinaries() {
     KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
-    K8S_TGZ_TMP=$(echo ${KUBE_BINARY_URL} | cut -d "/" -f 5)
+    # Split by "/" and get the last element
+    K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
     mkdir -p "${K8S_DOWNLOADS_DIR}"
     retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
     tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
@@ -15453,9 +15454,6 @@ installKubeletAndKubectl() {
 pullContainerImage() {
     CLI_TOOL=$1
     DOCKER_IMAGE_URL=$2
-    if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]]; then
-        $CLI_TOOL login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
-    fi
     retrycmd_if_failure 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit $ERR_CONTAINER_IMG_PULL_TIMEOUT
 }
 
@@ -15619,6 +15617,9 @@ if [[ "${GPU_NODE}" = true ]]; then
     ensureGPUDrivers
 fi
 {{end}}
+if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]] && [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+    docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
+fi
 installKubeletAndKubectl
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
@@ -33083,6 +33084,13 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
     "kubernetesHyperkubeSpec": {
       "metadata": {
         "description": "The container spec for hyperkube."
+      },
+      "type": "string"
+    },
+    "kubeBinaryURL": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "The package tarball URL to extract kubelet and kubectl binaries from."
       },
       "type": "string"
     },

@@ -33,7 +33,13 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if kubernetesConfig != nil {
 			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
+			if kubernetesConfig.CustomKubeProxyImage != "" {
+				kubeProxySpec = kubernetesConfig.CustomKubeProxyImage
+			}
 			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
+			if kubernetesConfig.CustomKubeBinaryURL != "" {
+				addValue(parametersMap, "kubeBinaryURL", kubernetesConfig.CustomKubeBinaryURL)
+			}
 
 			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
 			if properties.IsAzureStackCloud() {

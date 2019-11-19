@@ -328,6 +328,35 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 		},
+		{
+			name: "1.17 release with custom kube images",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-alpha.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							CustomKubeAPIServerImage:         "example.azurecr.io/kube-apiserver-amd64:tag",
+							CustomKubeControllerManagerImage: "example.azurecr.io/kube-controller-manager-amd64:tag",
+							CustomKubeSchedulerImage:         "example.azurecr.io/kube-scheduler-amd64:tag",
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "example.azurecr.io/kube-apiserver-amd64:tag",
+				"kube-controller-manager": "example.azurecr.io/kube-controller-manager-amd64:tag",
+				"kube-scheduler":          "example.azurecr.io/kube-scheduler-amd64:tag",
+			},
+			expectedGetHyperkubeImageReference: "",
+			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+		},
 	}
 
 	for _, c := range cases {
