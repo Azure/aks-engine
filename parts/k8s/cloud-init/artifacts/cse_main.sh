@@ -2,7 +2,7 @@
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud}}
 AZURE_STACK_ENV="azurestackcloud"
 {{end}}
 
@@ -27,17 +27,12 @@ source $install_script
 config_script=/opt/azure/containers/provision_configs.sh
 wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
 source $config_script
-
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud}}
 if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
     config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
     wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
     source $config_script_custom_cloud
 fi
-{{end}}
-
-{{if HasCustomSearchDomain}}
-CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
 {{end}}
 
 set +x
@@ -141,10 +136,10 @@ else
     removeEtcd
 fi
 
-{{if HasCustomSearchDomain}}
-if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
-    $CUSTOM_SEARCH_DOMAIN_SCRIPT > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
-fi
+{{- if HasCustomSearchDomain}}
+FILE_PATH=/opt/azure/containers/setup-custom-search-domains.sh
+wait_for_file 3600 1 $FILE_PATH || exit $ERR_FILE_WATCH_TIMEOUT
+$FILE_PATH > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
 {{end}}
 
 if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
