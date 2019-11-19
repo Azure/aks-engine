@@ -1,4 +1,4 @@
-{{/* Copyright 2016 The Kubernetes Authors.
+{{- /* Copyright 2016 The Kubernetes Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@ limitations under the License.
 
 Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
 in sync with this file. */}}
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -64,10 +63,10 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  {{/* replicas: not specified here: */}}
-  {{/* 1. In order to make Addon Manager do not reconcile this replicas parameter. */}}
-  {{/* 2. Default is 1. */}}
-  {{/* 3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
+  {{- /* replicas: not specified here:
+  1. In order to make Addon Manager do not reconcile this replicas parameter.
+  2. Default is 1.
+  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
   strategy:
     rollingUpdate:
       maxSurge: 10%
