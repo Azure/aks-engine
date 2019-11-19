@@ -19,10 +19,6 @@ import (
 	v20170831 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20170831"
 	v20180331 "github.com/Azure/aks-engine/pkg/api/agentPoolOnlyApi/v20180331"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
-	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
-	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
-	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -722,38 +718,6 @@ type CustomProfile struct {
 type VlabsARMContainerService struct {
 	TypeMeta
 	*vlabs.ContainerService
-}
-
-// V20160330ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20160330ARMContainerService struct {
-	TypeMeta
-	*v20160330.ContainerService
-}
-
-// V20160930ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20160930ARMContainerService struct {
-	TypeMeta
-	*v20160930.ContainerService
-}
-
-// V20170131ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20170131ARMContainerService struct {
-	TypeMeta
-	*v20170131.ContainerService
-}
-
-// V20170701ARMContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20170701ARMContainerService struct {
-	TypeMeta
-	*v20170701.ContainerService
 }
 
 // V20170831ARMManagedContainerService is the type we read and write from file

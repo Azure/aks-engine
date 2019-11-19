@@ -5,7 +5,6 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
-	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/i18n"
 )
@@ -16,14 +15,6 @@ import (
 type VlabsContainerService struct {
 	api.TypeMeta
 	*vlabs.ContainerService
-}
-
-// V20160330ContainerService is the type we read and write from file
-// needed because the json that is sent to ARM and aks-engine
-// is different from the json that the ACS RP Api gets from ARM
-type V20160330ContainerService struct {
-	api.TypeMeta
-	*v20160330.ContainerService
 }
 
 //DockerSpecConfig is the configurations of docker

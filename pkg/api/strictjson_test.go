@@ -8,10 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
-	v20160930 "github.com/Azure/aks-engine/pkg/api/v20160930"
-	v20170131 "github.com/Azure/aks-engine/pkg/api/v20170131"
-	v20170701 "github.com/Azure/aks-engine/pkg/api/v20170701"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 )
 
@@ -227,25 +223,7 @@ const jsonWithTypo = `
 		"secret": "myServicePrincipalClientSecret"
 	  }
 	}
-}
-`
-
-func TestStrictJSONValidationIsNotAppliedToApiVersions20170701AndEarlier(t *testing.T) {
-	// These API versions existed before we added strict JSON validation:
-	// we cannot apply it retrospectively because it could break existing
-	// customer apimodels.
-	preStrictVersions := []string{v20160330.APIVersion, v20160930.APIVersion, v20170131.APIVersion, v20170701.APIVersion /*, v20170930.APIVersion */}
-	a := &Apiloader{
-		Translator: nil,
-	}
-
-	for _, version := range preStrictVersions {
-		_, e := a.LoadContainerService([]byte(jsonWithTypo), version, true, false, nil)
-		if e != nil {
-			t.Errorf("Expected mistyped 'ventSubnetID' key to be overlooked in version '%s' but it wasn't: error was %v", version, e)
-		}
-	}
-}
+}`
 
 func TestStrictJSONValidationIsAppliedToVersionsAbove20170701(t *testing.T) {
 	strictVersions := []string{vlabs.APIVersion}

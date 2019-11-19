@@ -317,38 +317,6 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 }
 
-func TestConvertContainerServiceToV20160330(t *testing.T) {
-	cs := getDefaultContainerService()
-	v20160330cs := ConvertContainerServiceToV20160330(cs)
-	if v20160330cs == nil {
-		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-}
-
-func TestConvertContainerServiceToV20160930(t *testing.T) {
-	cs := getDefaultContainerService()
-	v20160930cs := ConvertContainerServiceToV20160930(cs)
-	if v20160930cs == nil {
-		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-}
-
-func TestConvertContainerServiceToV20170131(t *testing.T) {
-	cs := getDefaultContainerService()
-	v20170131cs := ConvertContainerServiceToV20170131(cs)
-	if v20170131cs == nil {
-		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-}
-
-func TestConvertContainerServiceToV20170701(t *testing.T) {
-	cs := getDefaultContainerService()
-	v20170701cs := ConvertContainerServiceToV20170701(cs)
-	if v20170701cs == nil {
-		t.Errorf("expected the converted containerService struct to be non-nil")
-	}
-}
-
 func TestConvertContainerServiceToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	vlabsCS := ConvertContainerServiceToVLabs(cs)

@@ -21,7 +21,6 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	v20160330 "github.com/Azure/aks-engine/pkg/api/v20160330"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -200,21 +199,19 @@ func TestExpected(t *testing.T) {
 				if err != nil {
 					t.Error(err)
 				}
-				if version != vlabs.APIVersion && version != v20160330.APIVersion {
+				if version != vlabs.APIVersion {
 					// Set CertificateProfile here to avoid a new one generated.
 					// Kubernetes template needs certificate profile to match expected template
 					// API versions other than vlabs don't expose CertificateProfile
-					// API versions after v20160330 supports Kubernetes
 					containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 					addTestCertificateProfile(containerService.Properties.CertificateProfile)
 				}
 			}
 		} else {
-			if version != vlabs.APIVersion && version != v20160330.APIVersion {
+			if version != vlabs.APIVersion {
 				// Set CertificateProfile here to avoid a new one generated.
 				// Kubernetes template needs certificate profile to match expected template
 				// API versions other than vlabs don't expose CertificateProfile
-				// API versions after v20160330 supports Kubernetes
 				containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 				addTestCertificateProfile(containerService.Properties.CertificateProfile)
 			}
@@ -240,7 +237,7 @@ func TestExpected(t *testing.T) {
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
 			if certsGenerated {
-				t.Errorf("cert generation unexpected for %s", containerService.Properties.OrchestratorProfile.OrchestratorType)
+				t.Errorf("cert generation unexpected for %s, apiversion: %s, path: %s ", containerService.Properties.OrchestratorProfile.OrchestratorType, version, tuple.APIModelFilename)
 			}
 
 			armTemplate, params, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
@@ -315,11 +312,10 @@ func TestExpected(t *testing.T) {
 				if err != nil {
 					t.Error(err)
 				}
-				if version != vlabs.APIVersion && version != v20160330.APIVersion {
+				if version != vlabs.APIVersion {
 					// Set CertificateProfile here to avoid a new one generated.
 					// Kubernetes template needs certificate profile to match expected template
 					// API versions other than vlabs don't expose CertificateProfile
-					// API versions after v20160330 supports Kubernetes
 					containerService.Properties.CertificateProfile = &api.CertificateProfile{}
 					addTestCertificateProfile(containerService.Properties.CertificateProfile)
 				}
