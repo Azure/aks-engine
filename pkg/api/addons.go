@@ -540,6 +540,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Ensure cloud-node-manager is enabled on appropriate upgrades
+	if isUpgrade {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, CloudNodeManagerAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i] = defaultCloudNodeManagerAddonsConfig
+		}
+	}
+
 	// Back-compat for older addon specs of cluster-autoscaler
 	if isUpgrade {
 		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
