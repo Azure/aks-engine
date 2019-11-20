@@ -46,6 +46,7 @@ fi
 {{- if not NeedsContainerd}}
 cleanUpContainerd
 {{end -}}
+
 if [[ "${GPU_NODE}" != "true" ]]; then
     cleanUpGPUDrivers
 fi
@@ -80,26 +81,34 @@ fi
 {{- if not HasCoreOS}}
 installContainerRuntime
 {{end -}}
+
 installNetworkPlugin
+
 {{- if NeedsContainerd}}
 installContainerd
 {{end -}}
-{{if HasNSeriesSKU}}
+
+{{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
     fi
     ensureGPUDrivers
 fi
-{{end}}
-if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]] && [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
-fi
+{{end -}}
+
+{{- if and IsDockerContainerRuntime HasPrivateAzureRegistryServer}}
+docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET {{GetPrivateAzureRegistryServer}}
+{{end -}}
+
 installKubeletAndKubectl
+
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
+
 createKubeManifestDir
+
 {{- if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
@@ -112,8 +121,8 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
-  {{/* this step configures all certs */}}
-  {{/* both configs etcd/cosmos */}}
+    {{/* this step configures all certs */}}
+    {{/* both configs etcd/cosmos */}}
     configureSecrets
 fi
 
@@ -139,12 +148,12 @@ fi
 
 configureK8s
 
-{{if IsAzureStackCloud}}
+{{- if IsAzureStackCloud}}
 configureK8sCustomCloud
-if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
+    {{- if IsAzureCNI}}
     configureAzureStackInterfaces
-fi
-{{end}}
+    {{end -}}
+{{end -}}
 
 configureCNI
 
@@ -156,41 +165,31 @@ fi
 ensureContainerd
 {{end -}}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
-{{end}}
+{{end -}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
 {{/* configure and enable dhcpv6 for dual stack feature */}}
-if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
-    dhcpv6_systemd_service={{GetDHCPv6ServiceCSEScriptFilepath}}
-    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
-    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
-    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
-    ensureDHCPv6
-
-    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
-fi
-{{end}}
+{{- if IsIPv6DualStackFeatureEnabled}}
+ensureDHCPv6
+{{end -}}
 
 ensureKubelet
 ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.16; then
-      ensureLabelNodes
+        ensureLabelNodes
     fi
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-      ensureEtcd
+        ensureEtcd
     fi
     ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-      ensureLabelExclusionForAzurePolicyAddon
-    fi
+    ensureLabelExclusionForAzurePolicyAddon
     {{end}}
 fi
 
@@ -209,16 +208,16 @@ fi
 {{end}}
 
 if $REBOOTREQUIRED; then
-  echo 'reboot required, rebooting node in 1 minute'
-  /bin/bash -c "shutdown -r 1 &"
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      aptmarkWALinuxAgent unhold &
-  fi
+    echo 'reboot required, rebooting node in 1 minute'
+    /bin/bash -c "shutdown -r 1 &"
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        aptmarkWALinuxAgent unhold &
+    fi
 else
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      /usr/lib/apt/apt.systemd.daily &
-      aptmarkWALinuxAgent unhold &
-  fi
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        /usr/lib/apt/apt.systemd.daily &
+        aptmarkWALinuxAgent unhold &
+    fi
 fi
 
 echo "Custom script finished successfully"

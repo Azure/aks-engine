@@ -776,6 +776,15 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDHCPv6ServiceCSEScriptFilepath": func() string {
 			return dhcpV6ServiceCSEScriptFilepath
 		},
+		"GetDHCPv6ConfigCSEScriptFilepath": func() string {
+			return dhcpV6ConfigCSEScriptFilepath
+		},
+		"HasPrivateAzureRegistryServer": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
+		},
+		"GetPrivateAzureRegistryServer": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},

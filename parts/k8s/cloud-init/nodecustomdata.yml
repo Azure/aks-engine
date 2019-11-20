@@ -121,7 +121,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
-- path: /opt/azure/containers/enable-dhcpv6.sh
+- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
   permissions: "0544"
   encoding: gzip
   owner: root

@@ -292,7 +292,10 @@ ensureKMS() {
 
 {{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
+    wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
+    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 }
 {{end}}
 
@@ -423,9 +426,7 @@ configAddons() {
     fi
     {{end}}
     {{if IsAzurePolicyAddonEnabled}}
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-        configAzurePolicyAddon
-    fi
+    configAzurePolicyAddon
     {{end}}
 }
 {{end}}

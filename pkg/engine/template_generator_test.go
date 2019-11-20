@@ -156,20 +156,22 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 	}
 	api.AzureCloudSpecEnvMap[api.AzureStackCloud] = azureStackCloudSpec
 	cases := []struct {
-		name                                 string
-		cs                                   *api.ContainerService
-		expectedHasCustomSearchDomain        bool
-		expectedGetSearchDomainName          string
-		expectedGetSearchDomainRealmUser     string
-		expectedGetSearchDomainRealmPassword string
-		expectedHasCustomNodesDNS            bool
-		expectedGetComponentImageReference   map[string]string
-		expectedGetHyperkubeImageReference   string
-		expectedGetCCMImageReference         string
-		expectedGetTargetEnvironment         string
-		expectedIsNSeriesSKU                 bool
-		expectedIsKataContainerRuntime       bool
-		expectedIsDockerContainerRuntime     bool
+		name                                  string
+		cs                                    *api.ContainerService
+		expectedHasCustomSearchDomain         bool
+		expectedGetSearchDomainName           string
+		expectedGetSearchDomainRealmUser      string
+		expectedGetSearchDomainRealmPassword  string
+		expectedHasCustomNodesDNS             bool
+		expectedGetComponentImageReference    map[string]string
+		expectedGetHyperkubeImageReference    string
+		expectedGetCCMImageReference          string
+		expectedGetTargetEnvironment          string
+		expectedIsNSeriesSKU                  bool
+		expectedIsKataContainerRuntime        bool
+		expectedIsDockerContainerRuntime      bool
+		expectedHasPrivateAzureRegistryServer bool
+		expectedGetPrivateAzureRegistryServer string
 	}{
 		{
 			name: "1.15 release",
@@ -623,6 +625,46 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:               false,
 			expectedIsKataContainerRuntime:     true,
 		},
+		{
+			name: "PrivateAzureRegistryServer",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:           api.Docker,
+							PrivateAzureRegistryServer: "my-server",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference:    "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:          "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:          "AzurePublicCloud",
+			expectedIsNSeriesSKU:                  false,
+			expectedIsDockerContainerRuntime:      true,
+			expectedHasPrivateAzureRegistryServer: true,
+			expectedGetPrivateAzureRegistryServer: "my-server",
+		},
 	}
 
 	for _, c := range cases {
@@ -702,6 +744,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			if ret[0].Interface() != dhcpV6ServiceCSEScriptFilepath {
 				t.Errorf("expected funcMap invocation of GetDHCPv6ServiceCSEScriptFilepath to return %s, instead got %s", dhcpV6ServiceCSEScriptFilepath, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["GetDHCPv6ConfigCSEScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != dhcpV6ConfigCSEScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetDHCPv6ConfigCSEScriptFilepath to return %s, instead got %s", dhcpV6ConfigCSEScriptFilepath, ret[0].Interface())
+			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])
 				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
@@ -718,6 +765,16 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedIsKataContainerRuntime {
 				t.Errorf("expected funcMap invocation of IsKataContainerRuntime to return %t, instead got %t", c.expectedIsKataContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasPrivateAzureRegistryServer"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasPrivateAzureRegistryServer {
+				t.Errorf("expected funcMap invocation of HasPrivateAzureRegistryServer to return %t, instead got %t", c.expectedHasPrivateAzureRegistryServer, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetPrivateAzureRegistryServer"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetPrivateAzureRegistryServer {
+				t.Errorf("expected funcMap invocation of GetPrivateAzureRegistryServer to return %s, instead got %s", c.expectedGetPrivateAzureRegistryServer, ret[0].Interface())
 			}
 		})
 	}

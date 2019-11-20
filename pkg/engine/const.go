@@ -206,6 +206,7 @@ const (
 	cseConfigScriptFilepath              = "/opt/azure/containers/provision_configs.sh"
 	customSearchDomainsCSEScriptFilepath = "/opt/azure/containers/setup-custom-search-domains.sh"
 	dhcpV6ServiceCSEScriptFilepath       = "/etc/systemd/system/dhcpv6.service"
+	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
 )
 
 // Kubernetes manifests file references
