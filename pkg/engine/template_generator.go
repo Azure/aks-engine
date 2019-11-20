@@ -680,6 +680,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsKataContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
 		},
+		"IsDockerContainerRuntime": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
+		},
 		"HasNSeriesSKU": func() bool {
 			return cs.Properties.HasNSeriesSKU()
 		},
@@ -754,6 +757,24 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetTargetEnvironment": func() string {
 			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
+		},
+		"GetCustomCloudConfigCSEScriptFilepath": func() string {
+			return customCloudConfigCSEScriptFilepath
+		},
+		"GetCSEHelpersScriptFilepath": func() string {
+			return cseHelpersScriptFilepath
+		},
+		"GetCSEInstallScriptFilepath": func() string {
+			return cseInstallScriptFilepath
+		},
+		"GetCSEConfigScriptFilepath": func() string {
+			return cseConfigScriptFilepath
+		},
+		"GetCustomSearchDomainsCSEScriptFilepath": func() string {
+			return customSearchDomainsCSEScriptFilepath
+		},
+		"GetDHCPv6ServiceCSEScriptFilepath": func() string {
+			return dhcpV6ServiceCSEScriptFilepath
 		},
 		"OpenBraces": func() string {
 			return "{{"

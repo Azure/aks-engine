@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /opt/azure/containers/provision_source.sh
+source {{GetCSEHelpersScriptFilepath}}
 
 PROXY_CA_KEY="${PROXY_CA_KEY:=/tmp/proxy-client-ca.key}"
 PROXY_CRT="${PROXY_CRT:=/tmp/proxy-client-ca.crt}"

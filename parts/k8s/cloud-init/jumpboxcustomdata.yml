@@ -2,7 +2,7 @@
 
 write_files:
 
-- path: "/opt/azure/containers/provision_source.sh"
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: "root"
@@ -16,7 +16,7 @@ write_files:
 {{WrapAsVariable "kubeconfig"}}
 
 runcmd:
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - retrycmd_if_failure 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
 - chmod +x ./kubectl
 - sudo mv ./kubectl /usr/local/bin/kubectl

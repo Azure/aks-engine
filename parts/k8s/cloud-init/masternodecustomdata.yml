@@ -1,7 +1,7 @@
 #cloud-config
 
 write_files:
-- path: /opt/azure/containers/provision_source.sh
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -15,14 +15,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
-- path: /opt/azure/containers/provision_installs.sh
+- path: {{GetCSEInstallScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
-- path: /opt/azure/containers/provision_configs.sh
+- path: {{GetCSEConfigScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -50,7 +50,7 @@ write_files:
 {{end}}
 
 {{if IsAzureStackCloud}}
-- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+- path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -128,7 +128,7 @@ write_files:
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-- path: /etc/systemd/system/dhcpv6.service
+- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
   owner: root
@@ -268,7 +268,7 @@ write_files:
 {{end}}
 
 {{if HasCustomSearchDomain}}
-- path: /opt/azure/containers/setup-custom-search-domains.sh
+- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -515,7 +515,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     #!/bin/bash
-    source /opt/azure/containers/provision_source.sh
+    source {{GetCSEHelpersScriptFilepath}}
     /opt/azure/containers/mountetcd.sh
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
 
@@ -590,6 +590,6 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 {{end}}
