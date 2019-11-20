@@ -408,11 +408,10 @@ func (dc *deployCmd) run() error {
 	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	images, err := dc.client.GetImagesList(cx)
-	log.Infof("Available images: %+v", images)
+	err = dc.ValidateDependencies(cx)
 
 	if err != nil {
-		return errors.Wrapf(err, "getting images %s", dc.apimodelPath)
+		return errors.Wrapf(err, "Validating dependencies", dc.apimodelPath)
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
@@ -539,4 +538,17 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 		log.Infoln("workspaceDomain:", workspaceDomain)
 	}
 	return nil
+}
+
+// validation layer for environment dependencies and supported features
+func (dc *deployCmd) ValidateDependencies(ctx context.Context) error {
+
+	err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client)
+
+	if err != nil {
+		return errors.Wrap(err, "Validating Images")
+	}
+
+	return nil
+
 }

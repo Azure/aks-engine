@@ -79,15 +79,6 @@ type DiskListPage interface {
 	Values() []compute.Disk
 }
 
-// ImageListResultPage is an interface for compute.ImageListResultPage to aid in mocking
-type ImageListResultPage interface {
-	Next() error
-	NextWithContext(ctx context.Context) (err error)
-	NotDone() bool
-	Response() compute.ImageListResultPage
-	Values() []compute.Image
-}
-
 // AKSEngineClient is the interface used to talk to an Azure environment.
 // This interface exposes just the subset of Azure APIs and clients needed for
 // AKS Engine.
@@ -104,8 +95,11 @@ type AKSEngineClient interface {
 	// DeployTemplate can deploy a template into Azure ARM
 	DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (resources.DeploymentExtended, error)
 
-	// GetImagesList return a list of images
-	GetImagesList(ctx context.Context) (ImageListResultPage, error)
+	// ListVirtualMachineImages return a list of images
+	ListVirtualMachineImages(ctx context.Context, top int32, location, publisherName, offer, skus, filter, orderBy string) (compute.ListVirtualMachineImageResource, error)
+
+	// GetVirtualMachineImage return a virtual machine image
+	GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (compute.VirtualMachineImage, error)
 
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)
