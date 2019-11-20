@@ -131,7 +131,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
 		"' IS_HOSTED_MASTER=%t" +
 		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
+		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
 		"' NETWORK_MODE=',parameters('networkMode')," +

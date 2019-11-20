@@ -115,7 +115,7 @@ func TestK8sVars(t *testing.T) {
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
 		"' IS_HOSTED_MASTER=%t" +
 		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
+		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
 		"' NETWORK_MODE=',parameters('networkMode')," +
@@ -873,7 +873,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
 		"' IS_HOSTED_MASTER=%t" +
 		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		"' AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
+		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
 		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
 		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
 		"' NETWORK_MODE=',parameters('networkMode')," +
