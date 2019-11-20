@@ -24,7 +24,7 @@ source {{GetCSEConfigScriptFilepath}}
 
 {{- if IsAzureStackCloud}}
 wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
-source {{GetCustomCloudConfigCSEScriptFilepath -}}
+source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
 set +x
@@ -45,7 +45,7 @@ fi
 
 {{- if not NeedsContainerd}}
 cleanUpContainerd
-{{end -}}
+{{end}}
 
 if [[ "${GPU_NODE}" != "true" ]]; then
     cleanUpGPUDrivers
@@ -80,13 +80,13 @@ fi
 
 {{- if not HasCoreOS}}
 installContainerRuntime
-{{end -}}
+{{end}}
 
 installNetworkPlugin
 
 {{- if NeedsContainerd}}
 installContainerd
-{{end -}}
+{{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
@@ -95,11 +95,11 @@ if [[ "${GPU_NODE}" = true ]]; then
     fi
     ensureGPUDrivers
 fi
-{{end -}}
+{{end}}
 
 {{- if and IsDockerContainerRuntime HasPrivateAzureRegistryServer}}
 docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET {{GetPrivateAzureRegistryServer}}
-{{end -}}
+{{end}}
 
 installKubeletAndKubectl
 
@@ -113,7 +113,7 @@ createKubeManifestDir
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
 fi
-{{end -}}
+{{end}}
 
 {{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -136,7 +136,7 @@ fi
 {{- if HasCustomSearchDomain}}
 wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 {{GetCustomSearchDomainsCSEScriptFilepath}} > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
-{{end -}}
+{{end}}
 
 {{- if IsDockerContainerRuntime}}
 ensureDocker
@@ -144,7 +144,7 @@ ensureDocker
 if grep -q vmx /proc/cpuinfo; then
     installKataContainersRuntime
 fi
-{{end -}}
+{{end}}
 
 configureK8s
 
@@ -152,8 +152,8 @@ configureK8s
 configureK8sCustomCloud
     {{- if IsAzureCNI}}
     configureAzureStackInterfaces
-    {{end -}}
-{{end -}}
+    {{end}}
+{{end}}
 
 configureCNI
 
@@ -163,18 +163,18 @@ fi
 
 {{- if NeedsContainerd}}
 ensureContainerd
-{{end -}}
+{{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
-{{end -}}
+{{end}}
 
 {{/* configure and enable dhcpv6 for dual stack feature */}}
 {{- if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6
-{{end -}}
+{{end}}
 
 ensureKubelet
 ensureJournal
