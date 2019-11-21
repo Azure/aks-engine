@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-source /opt/azure/containers/provision_source.sh
+source {{GetCSEHelpersScriptFilepath}}
 
 echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 restart networking

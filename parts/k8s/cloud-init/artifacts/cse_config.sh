@@ -165,7 +165,7 @@ configureK8s() {
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
 {
-    "cloud":"${TARGET_ENVIRONMENT}",
+    "cloud":"{{GetTargetEnvironment}}",
     "tenantId": "${TENANT_ID}",
     "subscriptionId": "${SUBSCRIPTION_ID}",
     "aadClientId": "${SERVICE_PRINCIPAL_CLIENT_ID}",
@@ -227,8 +227,8 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
-{{if IsAzureStackCloud}}
-    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+{{- if IsAzureStackCloud}}
+    if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         {{/* set environment to mas when using Azure CNI on Azure Stack */}}
         {{/* shellcheck disable=SC2002,SC2005 */}}
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
@@ -292,7 +292,10 @@ ensureKMS() {
 
 {{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
+    wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
+    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 }
 {{end}}
 
@@ -423,9 +426,7 @@ configAddons() {
     fi
     {{end}}
     {{if IsAzurePolicyAddonEnabled}}
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-        configAzurePolicyAddon
-    fi
+    configAzurePolicyAddon
     {{end}}
 }
 {{end}}

@@ -165,7 +165,7 @@ const (
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 )
 
-// cloud-init (i.e. ARM customData) file references
+// cloud-init (i.e. ARM customData) source file references
 const (
 	kubernetesMasterNodeCustomDataYaml = "k8s/cloud-init/masternodecustomdata.yml"
 	kubernetesNodeCustomDataYaml       = "k8s/cloud-init/nodecustomdata.yml"
@@ -196,6 +196,17 @@ const (
 	// scripts and service for enabling ipv6 dual stack
 	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
 	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"
+)
+
+// cloud-init destination file references
+const (
+	customCloudConfigCSEScriptFilepath   = "/opt/azure/containers/provision_configs_custom_cloud.sh"
+	cseHelpersScriptFilepath             = "/opt/azure/containers/provision_source.sh"
+	cseInstallScriptFilepath             = "/opt/azure/containers/provision_installs.sh"
+	cseConfigScriptFilepath              = "/opt/azure/containers/provision_configs.sh"
+	customSearchDomainsCSEScriptFilepath = "/opt/azure/containers/setup-custom-search-domains.sh"
+	dhcpV6ServiceCSEScriptFilepath       = "/etc/systemd/system/dhcpv6.service"
+	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
 )
 
 // Kubernetes manifests file references

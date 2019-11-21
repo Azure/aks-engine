@@ -14371,7 +14371,7 @@ configureK8s() {
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
     cat << EOF > "${AZURE_JSON_PATH}"
 {
-    "cloud":"${TARGET_ENVIRONMENT}",
+    "cloud":"{{GetTargetEnvironment}}",
     "tenantId": "${TENANT_ID}",
     "subscriptionId": "${SUBSCRIPTION_ID}",
     "aadClientId": "${SERVICE_PRINCIPAL_CLIENT_ID}",
@@ -14433,8 +14433,8 @@ configureCNI() {
         systemctl restart sys-fs-bpf.mount
         REBOOTREQUIRED=true
     fi
-{{if IsAzureStackCloud}}
-    if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]] && [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+{{- if IsAzureStackCloud}}
+    if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         {{/* set environment to mas when using Azure CNI on Azure Stack */}}
         {{/* shellcheck disable=SC2002,SC2005 */}}
         echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') > "$CNI_CONFIG_DIR/10-azure.conflist"
@@ -14498,7 +14498,10 @@ ensureKMS() {
 
 {{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
+    wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
+    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 }
 {{end}}
 
@@ -14629,9 +14632,7 @@ configAddons() {
     fi
     {{end}}
     {{if IsAzurePolicyAddonEnabled}}
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-        configAzurePolicyAddon
-    fi
+    configAzurePolicyAddon
     {{end}}
 }
 {{end}}
@@ -15510,14 +15511,10 @@ var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
-{{if IsAzureStackCloud}}
-AZURE_STACK_ENV="azurestackcloud"
-{{end}}
 
-script_lib=/opt/azure/containers/provision_source.sh
 for i in $(seq 1 3600); do
-    if [ -s $script_lib ]; then
-        grep -Fq '#HELPERSEOF' $script_lib && break
+    if [ -s {{GetCSEHelpersScriptFilepath}} ]; then
+        grep -Fq '#HELPERSEOF' {{GetCSEHelpersScriptFilepath}} && break
     fi
     if [ $i -eq 3600 ]; then
         exit $ERR_FILE_WATCH_TIMEOUT
@@ -15525,27 +15522,18 @@ for i in $(seq 1 3600); do
         sleep 1
     fi
 done
-sed -i "/#HELPERSEOF/d" $script_lib
-source $script_lib
+sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
+source {{GetCSEHelpersScriptFilepath}}
 
-install_script=/opt/azure/containers/provision_installs.sh
-wait_for_file 3600 1 $install_script || exit $ERR_FILE_WATCH_TIMEOUT
-source $install_script
+wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+source {{GetCSEInstallScriptFilepath}}
 
-config_script=/opt/azure/containers/provision_configs.sh
-wait_for_file 3600 1 $config_script || exit $ERR_FILE_WATCH_TIMEOUT
-source $config_script
+wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+source {{GetCSEConfigScriptFilepath}}
 
-{{if IsAzureStackCloud}}
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV}"  ]]; then
-    config_script_custom_cloud=/opt/azure/containers/provision_configs_custom_cloud.sh
-    wait_for_file 3600 1 $config_script_custom_cloud || exit $ERR_FILE_WATCH_TIMEOUT
-    source $config_script_custom_cloud
-fi
-{{end}}
-
-{{if HasCustomSearchDomain}}
-CUSTOM_SEARCH_DOMAIN_SCRIPT=/opt/azure/containers/setup-custom-search-domains.sh
+{{- if IsAzureStackCloud}}
+wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
 set +x
@@ -15564,11 +15552,12 @@ else
     REBOOTREQUIRED=false
 fi
 
-if [[ "$CONTAINER_RUNTIME" != "kata-containers" ]] && [[ "$CONTAINER_RUNTIME" != "containerd" ]]; then
-  cleanUpContainerd
-fi
+{{- if not NeedsContainerd}}
+cleanUpContainerd
+{{end}}
+
 if [[ "${GPU_NODE}" != "true" ]]; then
-  cleanUpGPUDrivers
+    cleanUpGPUDrivers
 fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
@@ -15598,18 +15587,17 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     installEtcd
 fi
 
-{{if not HasCoreOS}}
-if [[ $OS != $COREOS_OS_NAME ]]; then
-    installContainerRuntime
-fi
+{{- if not HasCoreOS}}
+installContainerRuntime
 {{end}}
+
 installNetworkPlugin
-{{if NeedsContainerd}}
-if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
-    installContainerd
-fi
+
+{{- if NeedsContainerd}}
+installContainerd
 {{end}}
-{{if HasNSeriesSKU}}
+
+{{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
         installGPUDrivers
@@ -15617,15 +15605,20 @@ if [[ "${GPU_NODE}" = true ]]; then
     ensureGPUDrivers
 fi
 {{end}}
-if [[ -n "${PRIVATE_AZURE_REGISTRY_SERVER:-}" ]] && [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET $PRIVATE_AZURE_REGISTRY_SERVER
-fi
+
+{{- if and IsDockerContainerRuntime HasPrivateAzureRegistryServer}}
+docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET {{GetPrivateAzureRegistryServer}}
+{{end}}
+
 installKubeletAndKubectl
+
 if [[ $OS != $COREOS_OS_NAME ]]; then
     ensureRPC
 fi
+
 createKubeManifestDir
-{{if HasDCSeriesSKU}}
+
+{{- if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
     installSGXDrivers
 fi
@@ -15633,13 +15626,13 @@ fi
 
 {{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-  configureEtcdUser
+    configureEtcdUser
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
-  {{/* this step configures all certs */}}
-  {{/* both configs etcd/cosmos */}}
-  configureSecrets
+    {{/* this step configures all certs */}}
+    {{/* both configs etcd/cosmos */}}
+    configureSecrets
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
@@ -15649,29 +15642,26 @@ else
     removeEtcd
 fi
 
-{{if HasCustomSearchDomain}}
-if [ -f $CUSTOM_SEARCH_DOMAIN_SCRIPT ]; then
-    $CUSTOM_SEARCH_DOMAIN_SCRIPT > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
+{{- if HasCustomSearchDomain}}
+wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+{{GetCustomSearchDomainsCSEScriptFilepath}} > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
+{{end}}
+
+{{- if IsDockerContainerRuntime}}
+ensureDocker
+{{else if IsKataContainerRuntime}}
+if grep -q vmx /proc/cpuinfo; then
+    installKataContainersRuntime
 fi
 {{end}}
 
-if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-    ensureDocker
-elif [[ "$CONTAINER_RUNTIME" == "kata-containers" ]]; then
-    if grep -q vmx /proc/cpuinfo; then
-        installKataContainersRuntime
-    fi
-fi
-
 configureK8s
 
-{{if IsAzureStackCloud}}
-if [[ "${TARGET_ENVIRONMENT,,}" == "${AZURE_STACK_ENV,,}"  ]]; then
-    configureK8sCustomCloud
-    if [[ "${NETWORK_PLUGIN,,}" = "azure" ]]; then
-        configureAzureStackInterfaces
-    fi
-fi
+{{- if IsAzureStackCloud}}
+configureK8sCustomCloud
+    {{- if IsAzureCNI}}
+    configureAzureStackInterfaces
+    {{end}}
 {{end}}
 
 configureCNI
@@ -15680,29 +15670,19 @@ if [[ -n "${MASTER_NODE}" ]]; then
     configAddons
 fi
 
-{{if NeedsContainerd}}
-if [[ "$CONTAINER_RUNTIME" == "kata-containers" ]] || [[ "$CONTAINER_RUNTIME" == "containerd" ]]; then
-    ensureContainerd
-fi
+{{- if NeedsContainerd}}
+ensureContainerd
 {{end}}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
     ensureKMS
 fi
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
 {{/* configure and enable dhcpv6 for dual stack feature */}}
-if [ "$IS_IPV6_DUALSTACK_FEATURE_ENABLED" = "true" ]; then
-    dhcpv6_systemd_service=/etc/systemd/system/dhcpv6.service
-    dhcpv6_configuration_script=/opt/azure/containers/enable-dhcpv6.sh
-    wait_for_file 3600 1 $dhcpv6_systemd_service || exit $ERR_FILE_WATCH_TIMEOUT
-    wait_for_file 3600 1 $dhcpv6_configuration_script || exit $ERR_FILE_WATCH_TIMEOUT
-    ensureDHCPv6
-
-    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
-fi
+{{- if IsIPv6DualStackFeatureEnabled}}
+ensureDHCPv6
 {{end}}
 
 ensureKubelet
@@ -15710,17 +15690,15 @@ ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.16; then
-      ensureLabelNodes
+        ensureLabelNodes
     fi
     writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-      ensureEtcd
+        ensureEtcd
     fi
     ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
-    if [[ "${AZURE_POLICY_ADDON}" = true ]]; then
-      ensureLabelExclusionForAzurePolicyAddon
-    fi
+    ensureLabelExclusionForAzurePolicyAddon
     {{end}}
 fi
 
@@ -15732,23 +15710,23 @@ if $FULL_INSTALL_REQUIRED; then
     fi
 fi
 
-{{if not IsAzureStackCloud}}
-if [[ $OS == $UBUNTU_OS_NAME ]] && [[ "${TARGET_ENVIRONMENT,,}" != "${AZURE_STACK_ENV}"  ]]; then
+{{- if not IsAzureStackCloud}}
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
     apt_get_purge 20 30 120 apache2-utils &
 fi
 {{end}}
 
 if $REBOOTREQUIRED; then
-  echo 'reboot required, rebooting node in 1 minute'
-  /bin/bash -c "shutdown -r 1 &"
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      aptmarkWALinuxAgent unhold &
-  fi
+    echo 'reboot required, rebooting node in 1 minute'
+    /bin/bash -c "shutdown -r 1 &"
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        aptmarkWALinuxAgent unhold &
+    fi
 else
-  if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      /usr/lib/apt/apt.systemd.daily &
-      aptmarkWALinuxAgent unhold &
-  fi
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        /usr/lib/apt/apt.systemd.daily &
+        aptmarkWALinuxAgent unhold &
+    fi
 fi
 
 echo "Custom script finished successfully"
@@ -15810,7 +15788,7 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/azure/containers/enable-dhcpv6.sh
+ExecStart={{GetDHCPv6ConfigCSEScriptFilepath}}
 
 [Install]
 WantedBy=multi-user.target
@@ -16021,7 +15999,7 @@ func k8sCloudInitArtifactsEtcdService() (*asset, error) {
 
 var _k8sCloudInitArtifactsGenerateproxycertsSh = []byte(`#!/bin/bash
 
-source /opt/azure/containers/provision_source.sh
+source {{GetCSEHelpersScriptFilepath}}
 
 PROXY_CA_KEY="${PROXY_CA_KEY:=/tmp/proxy-client-ca.key}"
 PROXY_CRT="${PROXY_CRT:=/tmp/proxy-client-ca.crt}"
@@ -16749,7 +16727,7 @@ func k8sCloudInitArtifactsRsyslogD60CisConf() (*asset, error) {
 
 var _k8sCloudInitArtifactsSetupCustomSearchDomainsSh = []byte(`#!/bin/bash
 set -x
-source /opt/azure/containers/provision_source.sh
+source {{GetCSEHelpersScriptFilepath}}
 
 echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 restart networking
@@ -17066,7 +17044,7 @@ var _k8sCloudInitJumpboxcustomdataYml = []byte(`#cloud-config
 
 write_files:
 
-- path: "/opt/azure/containers/provision_source.sh"
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: "root"
@@ -17080,7 +17058,7 @@ write_files:
 {{WrapAsVariable "kubeconfig"}}
 
 runcmd:
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - retrycmd_if_failure 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
 - chmod +x ./kubectl
 - sudo mv ./kubectl /usr/local/bin/kubectl
@@ -17108,7 +17086,7 @@ func k8sCloudInitJumpboxcustomdataYml() (*asset, error) {
 var _k8sCloudInitMasternodecustomdataYml = []byte(`#cloud-config
 
 write_files:
-- path: /opt/azure/containers/provision_source.sh
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17122,14 +17100,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
-- path: /opt/azure/containers/provision_installs.sh
+- path: {{GetCSEInstallScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
-- path: /opt/azure/containers/provision_configs.sh
+- path: {{GetCSEConfigScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17157,7 +17135,7 @@ write_files:
 {{end}}
 
 {{if IsAzureStackCloud}}
-- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+- path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17235,14 +17213,14 @@ write_files:
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-- path: /etc/systemd/system/dhcpv6.service
+- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
-- path: /opt/azure/containers/enable-dhcpv6.sh
+- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -17375,7 +17353,7 @@ write_files:
 {{end}}
 
 {{if HasCustomSearchDomain}}
-- path: /opt/azure/containers/setup-custom-search-domains.sh
+- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17622,7 +17600,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     #!/bin/bash
-    source /opt/azure/containers/provision_source.sh
+    source {{GetCSEHelpersScriptFilepath}}
     /opt/azure/containers/mountetcd.sh
     retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
 
@@ -17697,7 +17675,7 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 {{end}}
 `)
@@ -17720,7 +17698,7 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 
 write_files:
-- path: /opt/azure/containers/provision_source.sh
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17734,14 +17712,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
-- path: /opt/azure/containers/provision_installs.sh
+- path: {{GetCSEInstallScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
-- path: /opt/azure/containers/provision_configs.sh
+- path: {{GetCSEConfigScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17769,7 +17747,7 @@ write_files:
 {{end}}
 
 {{if IsAzureStackCloud}}
-- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+- path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -17833,14 +17811,14 @@ write_files:
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-- path: /etc/systemd/system/dhcpv6.service
+- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
-- path: /opt/azure/containers/enable-dhcpv6.sh
+- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -17988,7 +17966,7 @@ write_files:
     {{WrapAsParameter "clientCertificate"}}
 
 {{if HasCustomSearchDomain}}
-- path: /opt/azure/containers/setup-custom-search-domains.sh
+- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -18106,7 +18084,7 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}
 `)
@@ -33090,13 +33068,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       "defaultValue": "",
       "metadata": {
         "description": "The package tarball URL to extract kubelet and kubectl binaries from."
-      },
-      "type": "string"
-    },
-    "privateAzureRegistryServer": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The private Azure registry server for hyperkube."
       },
       "type": "string"
     },

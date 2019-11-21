@@ -1,7 +1,7 @@
 #cloud-config
 
 write_files:
-- path: /opt/azure/containers/provision_source.sh
+- path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -15,14 +15,14 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionScript"}}
 
-- path: /opt/azure/containers/provision_installs.sh
+- path: {{GetCSEInstallScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "provisionInstalls"}}
 
-- path: /opt/azure/containers/provision_configs.sh
+- path: {{GetCSEConfigScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -50,7 +50,7 @@ write_files:
 {{end}}
 
 {{if IsAzureStackCloud}}
-- path: /opt/azure/containers/provision_configs_custom_cloud.sh
+- path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -114,14 +114,14 @@ write_files:
 {{end}}
 
 {{if IsIPv6DualStackFeatureEnabled}}
-- path: /etc/systemd/system/dhcpv6.service
+- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dhcpv6SystemdService"}}
 
-- path: /opt/azure/containers/enable-dhcpv6.sh
+- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -269,7 +269,7 @@ write_files:
     {{WrapAsParameter "clientCertificate"}}
 
 {{if HasCustomSearchDomain}}
-- path: /opt/azure/containers/setup-custom-search-domains.sh
+- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
@@ -387,6 +387,6 @@ coreos:
 {{else}}
 runcmd:
 - set -x
-- . /opt/azure/containers/provision_source.sh
+- . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
 {{end}}

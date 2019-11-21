@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/azure"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
@@ -144,17 +145,33 @@ func TestGetTemplateFuncMap(t *testing.T) {
 }
 
 func TestGetContainerServiceFuncMap(t *testing.T) {
+	azureStackCloudSpec := api.AzureEnvironmentSpecConfig{
+		CloudName: api.AzureStackCloud,
+		KubernetesSpecConfig: api.KubernetesSpecConfig{
+			KubernetesImageBase: "azurestack/",
+		},
+		EndpointConfig: api.AzureEndpointConfig{
+			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+		},
+	}
+	api.AzureCloudSpecEnvMap[api.AzureStackCloud] = azureStackCloudSpec
 	cases := []struct {
-		name                                 string
-		cs                                   *api.ContainerService
-		expectedHasCustomSearchDomain        bool
-		expectedGetSearchDomainName          string
-		expectedGetSearchDomainRealmUser     string
-		expectedGetSearchDomainRealmPassword string
-		expectedHasCustomNodesDNS            bool
-		expectedGetComponentImageReference   map[string]string
-		expectedGetHyperkubeImageReference   string
-		expectedGetCCMImageReference         string
+		name                                  string
+		cs                                    *api.ContainerService
+		expectedHasCustomSearchDomain         bool
+		expectedGetSearchDomainName           string
+		expectedGetSearchDomainRealmUser      string
+		expectedGetSearchDomainRealmPassword  string
+		expectedHasCustomNodesDNS             bool
+		expectedGetComponentImageReference    map[string]string
+		expectedGetHyperkubeImageReference    string
+		expectedGetCCMImageReference          string
+		expectedGetTargetEnvironment          string
+		expectedIsNSeriesSKU                  bool
+		expectedIsKataContainerRuntime        bool
+		expectedIsDockerContainerRuntime      bool
+		expectedHasPrivateAzureRegistryServer bool
+		expectedGetPrivateAzureRegistryServer string
 	}{
 		{
 			name: "1.15 release",
@@ -163,7 +180,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
-						KubernetesConfig:    &api.KubernetesConfig{},
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
@@ -187,6 +206,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
 		},
 		{
 			name: "1.16 release",
@@ -195,7 +217,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.16.1",
-						KubernetesConfig:    &api.KubernetesConfig{},
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
@@ -219,6 +243,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.16.1",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
 		},
 		{
 			name: "1.17 release",
@@ -227,7 +254,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.17.0-beta.1",
-						KubernetesConfig:    &api.KubernetesConfig{},
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
@@ -251,6 +280,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
 		},
 		{
 			name: "custom search domain",
@@ -259,7 +291,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
-						KubernetesConfig:    &api.KubernetesConfig{},
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
@@ -290,6 +324,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
 		},
 		{
 			name: "custom nodes DNS",
@@ -298,7 +335,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
-						KubernetesConfig:    &api.KubernetesConfig{},
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
 						{
@@ -327,6 +366,9 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
 			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -336,6 +378,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.17.0-alpha.1",
 						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:                 api.Docker,
 							CustomKubeAPIServerImage:         "example.azurecr.io/kube-apiserver-amd64:tag",
 							CustomKubeControllerManagerImage: "example.azurecr.io/kube-controller-manager-amd64:tag",
 							CustomKubeSchedulerImage:         "example.azurecr.io/kube-scheduler-amd64:tag",
@@ -356,6 +399,271 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			},
 			expectedGetHyperkubeImageReference: "",
 			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
+		},
+		{
+			name: "china cloud",
+			cs: &api.ContainerService{
+				Location: "chinaeast",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureChinaCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
+		},
+		{
+			name: "german cloud",
+			cs: &api.ContainerService{
+				Location: "germanynortheast",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureGermanCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
+		},
+		{
+			name: "usgov cloud",
+			cs: &api.ContainerService{
+				Location: "usgoveast2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:         "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzureUSGovernmentCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+		},
+		{
+			name: "Azure Stack",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					CustomCloudProfile: &api.CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: api.AzureStackCloud,
+						},
+					},
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager": "azurestack/kube-addon-manager-amd64:v9.0.2",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4-azs",
+			expectedGetCCMImageReference:       "azurestack/cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzureStackCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsDockerContainerRuntime:   true,
+		},
+		{
+			name: "N series SKU",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							VMSize:              "Standard_NC6",
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               true,
+			expectedIsDockerContainerRuntime:   true,
+		},
+		{
+			name: "kata-containers",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.KataContainers,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:       "AzurePublicCloud",
+			expectedIsNSeriesSKU:               false,
+			expectedIsKataContainerRuntime:     true,
+		},
+		{
+			name: "PrivateAzureRegistryServer",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:           api.Docker,
+							PrivateAzureRegistryServer: "my-server",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetComponentImageReference: map[string]string{
+				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":          "",
+				"kube-controller-manager": "",
+				"kube-scheduler":          "",
+			},
+			expectedGetHyperkubeImageReference:    "hyperkube-amd64:v1.15.4",
+			expectedGetCCMImageReference:          "cloud-controller-manager-amd64:v1.15.4",
+			expectedGetTargetEnvironment:          "AzurePublicCloud",
+			expectedIsNSeriesSKU:                  false,
+			expectedIsDockerContainerRuntime:      true,
+			expectedHasPrivateAzureRegistryServer: true,
+			expectedGetPrivateAzureRegistryServer: "my-server",
 		},
 	}
 
@@ -400,6 +708,73 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasCustomNodesDNS {
 				t.Errorf("expected funcMap invocation of HasCustomNodesDNS to return %t, instead got %t", c.expectedHasCustomNodesDNS, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetTargetEnvironment"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetTargetEnvironment {
+				t.Errorf("expected funcMap invocation of GetTargetEnvironment to return %s, instead got %s", c.expectedGetTargetEnvironment, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCustomCloudConfigCSEScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != customCloudConfigCSEScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetCustomCloudConfigCSEScriptFilepath to return %s, instead got %s", customCloudConfigCSEScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCSEHelpersScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != cseHelpersScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetCSEHelpersScriptFilepath to return %s, instead got %s", cseHelpersScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCSEInstallScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != cseInstallScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetCSEInstallScriptFilepath to return %s, instead got %s", cseInstallScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCSEConfigScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != cseConfigScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetCSEConfigScriptFilepath to return %s, instead got %s", cseConfigScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetCustomSearchDomainsCSEScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != customSearchDomainsCSEScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetCustomSearchDomainsCSEScriptFilepath to return %s, instead got %s", customSearchDomainsCSEScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetDHCPv6ServiceCSEScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != dhcpV6ServiceCSEScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetDHCPv6ServiceCSEScriptFilepath to return %s, instead got %s", dhcpV6ServiceCSEScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetDHCPv6ConfigCSEScriptFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != dhcpV6ConfigCSEScriptFilepath {
+				t.Errorf("expected funcMap invocation of GetDHCPv6ConfigCSEScriptFilepath to return %s, instead got %s", dhcpV6ConfigCSEScriptFilepath, ret[0].Interface())
+			}
+			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
+				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
+				if ret[0].Interface() != c.expectedIsNSeriesSKU {
+					t.Errorf("expected funcMap invocation of IsNSeriesSKU to return %t, instead got %t", c.expectedIsNSeriesSKU, ret[0].Interface())
+				}
+			}
+			v = reflect.ValueOf(funcMap["IsDockerContainerRuntime"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsDockerContainerRuntime {
+				t.Errorf("expected funcMap invocation of IsDockerContainerRuntime to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsKataContainerRuntime"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsKataContainerRuntime {
+				t.Errorf("expected funcMap invocation of IsKataContainerRuntime to return %t, instead got %t", c.expectedIsKataContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasPrivateAzureRegistryServer"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasPrivateAzureRegistryServer {
+				t.Errorf("expected funcMap invocation of HasPrivateAzureRegistryServer to return %t, instead got %t", c.expectedHasPrivateAzureRegistryServer, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetPrivateAzureRegistryServer"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetPrivateAzureRegistryServer {
+				t.Errorf("expected funcMap invocation of GetPrivateAzureRegistryServer to return %s, instead got %s", c.expectedGetPrivateAzureRegistryServer, ret[0].Interface())
 			}
 		})
 	}
