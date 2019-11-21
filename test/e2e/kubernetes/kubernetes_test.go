@@ -1079,31 +1079,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
-				deploymentPrefix = fmt.Sprintf("ilb-test-curl-deployment")
-				curlDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
-				curlDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", curlDeploymentName, "default", "--replicas=2")
+				ilbCurlPod, err := pod.RunWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				running, err := pod.WaitOnSuccesses(curlDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				curlPods, err := curlDeploy.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				By("Ensuring we can connect to the ILB service from another pod")
-				var success bool
-				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(sILB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
-					if curlErr == nil && pass {
-						success = true
-						break
-					} else {
-						e := sILB.Describe()
-						if e != nil {
-							log.Printf("Unable to describe service\n: %s", e)
-						}
-					}
-
-				}
-				Expect(success).To(BeTrue())
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1114,26 +1091,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ELB service from another pod")
-				success = false
-				for _, curlPod := range curlPods {
-					pass, curlErr := curlPod.ValidateCurlConnection(sELB.Status.LoadBalancer.Ingress[0]["ip"], 30*time.Second, 3*time.Minute)
-					if curlErr == nil && pass {
-						success = true
-						break
-					} else {
-						e := sELB.Describe()
-						if e != nil {
-							log.Printf("Unable to describe service\n: %s", e)
-						}
-					}
-
-				}
-				Expect(success).To(BeTrue())
+				elbCurlPod, err := pod.RunWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
-				err = curlDeploy.Delete(util.DefaultDeleteRetries)
+				err = ilbCurlPod.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = elbCurlPod.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = deploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())

@@ -326,6 +326,50 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 	}
 }
 
+// RunWithRetry runs a command in a pod, allowing for retries
+func RunWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentRunWithRetryError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- RunAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentRunWithRetryError = result.err
+			pod = result.pod
+			if mostRecentRunWithRetryError == nil {
+				if pod != nil {
+					return pod, nil
+				}
+			} else {
+				if pod != nil {
+					err := pod.Logs()
+					if err != nil {
+						log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+					}
+					err = pod.Describe()
+					if err != nil {
+						log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+					}
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("RunWithRetry timed out: %s\n", mostRecentRunWithRetryError)
+		}
+	}
+}
+
 // GetResult is a return struct for GetAsync
 type GetResult struct {
 	pod *Pod
@@ -335,6 +379,15 @@ type GetResult struct {
 // GetAsync wraps Get with a struct response for goroutine + channel usage
 func GetAsync(podName, namespace string) GetResult {
 	pod, err := Get(podName, namespace, 1)
+	return GetResult{
+		pod: pod,
+		err: err,
+	}
+}
+
+// RunAsync wraps RunLinuxPod with a struct response for goroutine + channel usage
+func RunAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+	pod, err := RunLinuxPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
 	return GetResult{
 		pod: pod,
 		err: err,
