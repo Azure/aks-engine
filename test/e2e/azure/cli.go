@@ -7,7 +7,6 @@ package azure
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -20,6 +19,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
 )
 
 // Storage provides access to StorageAccount objects
@@ -141,6 +141,34 @@ func (a *Account) SetSubscription() error {
 	return nil
 }
 
+// CreateGroupWithRetry invokes CreateGroup, retrying up to a timeout
+func (a *Account) CreateGroupWithRetry(name, location string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentCreateGroupWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- a.CreateGroup(name, location):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case mostRecentCreateGroupWithRetryError = <-ch:
+			if mostRecentCreateGroupWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("CreateGroupWithRetry timed out: %s\n", mostRecentCreateGroupWithRetryError)
+		}
+	}
+}
+
 // CreateGroup will create a resource group in a given location
 //--tags "type=${RESOURCE_GROUP_TAG_TYPE:-}" "now=$(date +%s)" "job=${JOB_BASE_NAME:-}" "buildno=${BUILD_NUM:-}"
 func (a *Account) CreateGroup(name, location string) error {
@@ -166,6 +194,52 @@ func (a *Account) CreateGroup(name, location string) error {
 		},
 	}
 	a.ResourceGroup = r
+	return nil
+}
+
+// ShowGroupWithRetry invokes ShowGroup, retrying up to a timeout
+func (a *Account) ShowGroupWithRetry(name string, sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan error)
+	var mostRecentShowGroupWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- a.ShowGroup(name):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case mostRecentShowGroupWithRetryError = <-ch:
+			if mostRecentShowGroupWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("ShowGroupWithRetry timed out: %s\n", mostRecentShowGroupWithRetryError)
+		}
+	}
+}
+
+// ShowGroup will validate that a resource group exists
+func (a *Account) ShowGroup(name string) error {
+	var cmd *exec.Cmd
+	if a.TimeoutCommands {
+		cmd = exec.Command("timeout", "60", "az", "group", "show", "-n", name)
+	} else {
+		cmd = exec.Command("az", "group", "show", "-n", name)
+	}
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error while trying to show resource group (%s): %s", name, err)
+		log.Printf("Output:%s\n", out)
+		return err
+	}
 	return nil
 }
 

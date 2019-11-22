@@ -119,9 +119,13 @@ func (cli *CLIProvisioner) provision() error {
 
 	os.Setenv("DNS_PREFIX", cli.Config.Name)
 
-	err := cli.Account.CreateGroup(cli.Config.Name, cli.Config.Location)
+	err := cli.Account.CreateGroupWithRetry(cli.Config.Name, cli.Config.Location, 30*time.Second, cli.Config.Timeout)
 	if err != nil {
 		return errors.Wrap(err, "Error while trying to create resource group")
+	}
+	err = cli.Account.ShowGroupWithRetry(cli.Account.ResourceGroup.Name, 10*time.Second, cli.Config.Timeout)
+	if err != nil {
+		return errors.Wrap(err, "Unable to successfully get the resource group using the az CLI")
 	}
 
 	subnetID := ""
