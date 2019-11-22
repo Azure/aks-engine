@@ -498,13 +498,15 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		// Master-specific defaults that depend upon kubelet defaults
 		// Set the default number of IP addresses allocated for masters.
-		if cs.Properties.MasterProfile.IPAddressCount == 0 {
-			// Allocate one IP address for the node.
-			cs.Properties.MasterProfile.IPAddressCount = 1
-			// Allocate IP addresses for pods if VNET integration is enabled.
-			if cs.Properties.OrchestratorProfile.IsAzureCNI() {
-				masterMaxPods, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
-				cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
+		if cs.Properties.MasterProfile != nil {
+			if cs.Properties.MasterProfile.IPAddressCount == 0 {
+				// Allocate one IP address for the node.
+				cs.Properties.MasterProfile.IPAddressCount = 1
+				// Allocate IP addresses for pods if VNET integration is enabled.
+				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
+					masterMaxPods, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
+					cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
+				}
 			}
 		}
 		// Pool-specific defaults that depend upon kubelet defaults
