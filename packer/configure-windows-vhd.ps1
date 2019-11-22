@@ -20,7 +20,7 @@ function Write-Log($Message)
 
 function Disable-WindowsUpdates
 {
-    # See https://docs.microsoft.com/en-us/windows/deployment/update/waas-wu-settings 
+    # See https://docs.microsoft.com/en-us/windows/deployment/update/waas-wu-settings
     # for additional information on WU related registry settings
 
     Write-Log "Disabling automatic windows upates"
@@ -79,8 +79,7 @@ function Get-FilesToCacheOnVHD
             "https://acs-mirror.azureedge.net/wink8s/v1.16.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.28.zip",
-            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.29.zip"
+            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.28.zip"
         )
     }
 
