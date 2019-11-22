@@ -73,6 +73,7 @@
         "count": 1,
         "vmSize": "Standard_D2s_v3",
         "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osType": "Windows",
         "storageProfile": "Ephemeral"
       }
