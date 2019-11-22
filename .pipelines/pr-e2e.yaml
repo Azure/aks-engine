@@ -72,22 +72,6 @@ jobs:
 
 - template: e2e-job-template.yaml
   parameters:
-    name: 'k8s_1_11_release_e2e'
-    k8sRelease: '1.11'
-    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
-    createVNET: true
-    stabilityIterations: '3'
-
-- template: e2e-job-template.yaml
-  parameters:
-    name: 'k8s_1_12_release_e2e'
-    k8sRelease: '1.12'
-    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
-    createVNET: true
-    stabilityIterations: '3'
-
-- template: e2e-job-template.yaml
-  parameters:
     name: 'k8s_1_13_release_e2e'
     k8sRelease: '1.13'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
@@ -125,12 +109,6 @@ jobs:
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     stabilityIterations: '3'
-
-- template: e2e-job-template.yaml
-  parameters:
-    name: 'k8s_windows_1_12_release_e2e'
-    k8sRelease: '1.12'
-    apimodel: 'examples/e2e-tests/kubernetes/windows/hybrid/definition.json'
 
 - template: e2e-job-template.yaml
   parameters:
