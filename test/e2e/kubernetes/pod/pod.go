@@ -415,8 +415,8 @@ func Get(podName, namespace string, retries int) (*Pod, error) {
 }
 
 // PrintPodsLogs prints logs for all pods whose name matches a substring
-func PrintPodsLogs(podPrefix, namespace string) {
-	pods, err := GetAllByPrefix(podPrefix, namespace)
+func PrintPodsLogs(podPrefix, namespace string, sleep, timeout time.Duration) {
+	pods, err := GetAllByPrefixWithRetry(podPrefix, namespace, sleep, timeout)
 	if err != nil {
 		log.Printf("Unable to print logs for pods matching prefix %s in namespace %s: %s", podPrefix, namespace, err)
 	}
@@ -718,7 +718,7 @@ func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, ti
 					if lastResult {
 						flapCount++
 						if flapCount >= (successesNeeded - 1) {
-							PrintPodsLogs(podPrefix, namespace)
+							PrintPodsLogs(podPrefix, namespace, 5*time.Second, 1*time.Minute)
 							return false, errors.Errorf("Pods from deployment (%s) in namespace (%s) have been checked out as all Ready %d times, but included %d transitions away from a Ready state. This behavior may mean it is in a crashloop", podPrefix, namespace, successCount, flapCount)
 						}
 						lastResult = false
@@ -726,7 +726,7 @@ func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, ti
 				}
 			}
 		case <-ctx.Done():
-			PrintPodsLogs(podPrefix, namespace)
+			PrintPodsLogs(podPrefix, namespace, 5*time.Second, 1*time.Minute)
 			return false, errors.Errorf("WaitOnReady timed out: %s\n", mostRecentWaitOnSuccessesErr)
 		}
 	}

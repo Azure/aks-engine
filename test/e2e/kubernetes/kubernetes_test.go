@@ -148,11 +148,11 @@ var _ = AfterSuite(func() {
 		if err != nil {
 			log.Printf("Error: Unable to print all cluster resources\n")
 		}
-		pod.PrintPodsLogs("kube-addon-manager", "kube-system")
-		pod.PrintPodsLogs("kube-proxy", "kube-system")
-		pod.PrintPodsLogs("kube-scheduler", "kube-system")
-		pod.PrintPodsLogs("kube-apiserver", "kube-system")
-		pod.PrintPodsLogs("kube-controller-manager", "kube-system")
+		pod.PrintPodsLogs("kube-addon-manager", "kube-system", 5*time.Second, 1*time.Minute)
+		pod.PrintPodsLogs("kube-proxy", "kube-system", 5*time.Second, 1*time.Minute)
+		pod.PrintPodsLogs("kube-scheduler", "kube-system", 5*time.Second, 1*time.Minute)
+		pod.PrintPodsLogs("kube-apiserver", "kube-system", 5*time.Second, 1*time.Minute)
+		pod.PrintPodsLogs("kube-controller-manager", "kube-system", 5*time.Second, 1*time.Minute)
 	}
 })
 
@@ -924,6 +924,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			if err != nil {
+				pod.PrintPodsLogs("validate-dns-linux", "default", 5*time.Second, 1*time.Minute)
+			}
 			delErr := j.Delete(util.DefaultDeleteRetries)
 			if delErr != nil {
 				fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -939,6 +942,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages, 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err = j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				if err != nil {
+					pod.PrintPodsLogs("validate-dns-windows", "default", 5*time.Second, 1*time.Minute)
+				}
 				delErr = j.Delete(util.DefaultDeleteRetries)
 				if delErr != nil {
 					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
@@ -1125,7 +1131,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					time.Sleep(1 * time.Minute)
 				}
 				if err != nil {
-					pod.PrintPodsLogs("metrics-server", "kube-system")
+					pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
 					log.Println(string(out))
 				}
 				Expect(success).To(BeTrue())
