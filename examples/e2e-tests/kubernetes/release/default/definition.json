@@ -67,6 +67,14 @@
         ],
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      },
+      {
+        "name": "agentwfast",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "osType": "Windows",
+        "storageProfile": "Ephemeral"
       }
     ],
     "linuxProfile": {
@@ -78,6 +86,12 @@
           }
         ]
       }
+    },
+    "windowsProfile": {
+      "adminUsername": "azureuser",
+      "adminPassword": "replacepassword1234$",
+      "sshEnabled": true,
+      "enableAutomaticUpdates": false
     },
     "servicePrincipalProfile": {
       "clientId": "",
