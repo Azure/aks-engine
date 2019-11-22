@@ -124,7 +124,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.12",
+					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -161,7 +161,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.12",
+					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -198,7 +198,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.12",
+					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -294,7 +294,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.13.12",
+					OrchestratorVersion: "v1.13.11",
 				},
 			},
 		},
@@ -3602,7 +3602,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							UseInstanceMetadata: to.BoolPtr(trueVal),
 						},
@@ -3623,7 +3623,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024",
 						},
@@ -3644,7 +3644,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024GB",
 						},
@@ -3665,7 +3665,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -3691,7 +3691,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.12",
+						OrchestratorVersion: "1.13.11",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
