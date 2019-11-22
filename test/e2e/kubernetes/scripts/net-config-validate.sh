@@ -33,6 +33,4 @@ grep $IPV4_TCP_RETRIES2_VALUE /proc/sys/net/ipv4/tcp_retries2 || exit 1
 grep $KERNEL_PANIC_VALUE /proc/sys/kernel/panic || exit 1
 grep $KERNEL_PANIC_ON_OOPS_VALUE /proc/sys/kernel/panic_on_oops || exit 1
 grep $VM_OVERCOMMIT_MEMORY_VALUE /proc/sys/vm/overcommit_memory || exit 1
-
-# TODO (@junaid-ali) Re-enable this test: validate inotify max_user_watches
-#grep $INOTIFY_MAX_USER_WATCHES /proc/sys/fs/inotify/max_user_watches || exit 1
+grep $INOTIFY_MAX_USER_WATCHES /proc/sys/fs/inotify/max_user_watches || exit 1
