@@ -3978,12 +3978,15 @@ func TestDefaultIPAddressCount(t *testing.T) {
 		expectedPool1  int
 	}{
 		{
-			name: "default",
+			name: "kubenet",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginKubenet,
+						},
 					},
 					MasterProfile: &MasterProfile{},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4055,6 +4058,110 @@ func TestDefaultIPAddressCount(t *testing.T) {
 			expectedMaster: 24,
 			expectedPool0:  24,
 			expectedPool1:  24,
+		},
+		{
+			name: "kubenet + custom IPAddressCount",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginKubenet,
+						},
+					},
+					MasterProfile: &MasterProfile{
+						IPAddressCount: 24,
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:           "pool1",
+							IPAddressCount: 24,
+						},
+						{
+							Name:           "pool2",
+							IPAddressCount: 24,
+						},
+					},
+				},
+			},
+			expectedMaster: 24,
+			expectedPool0:  24,
+			expectedPool1:  24,
+		},
+		{
+			name: "Azure CNI + mixed config",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--max-pods": "24",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name: "pool1",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--max-pods": "128",
+								},
+							},
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMaster: 25,
+			expectedPool0:  129,
+			expectedPool1:  DefaultKubernetesMaxPodsVNETIntegrated + 1,
+		},
+		{
+			name: "kubenet + mixed config",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.14.0",
+						KubernetesConfig: &KubernetesConfig{
+							NetworkPlugin: NetworkPluginKubenet,
+						},
+					},
+					MasterProfile: &MasterProfile{
+						KubernetesConfig: &KubernetesConfig{
+							KubeletConfig: map[string]string{
+								"--max-pods": "24",
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name: "pool1",
+							KubernetesConfig: &KubernetesConfig{
+								KubeletConfig: map[string]string{
+									"--max-pods": "128",
+								},
+							},
+						},
+						{
+							Name: "pool2",
+						},
+					},
+				},
+			},
+			expectedMaster: 1,
+			expectedPool0:  1,
+			expectedPool1:  1,
 		},
 	}
 
