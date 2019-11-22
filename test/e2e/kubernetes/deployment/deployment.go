@@ -70,6 +70,46 @@ type Container struct {
 	Name       string `json:"name"`
 }
 
+// CreateLinuxDeployAsync wraps CreateLinuxDeploy with a struct response for goroutine + channel usage
+func CreateLinuxDeployAsync(image, name, namespace, miscOpts string) GetResult {
+	d, err := CreateLinuxDeploy(image, name, namespace, miscOpts)
+	return GetResult{
+		deployment: d,
+		err:        err,
+	}
+}
+
+// CreateLinuxDeployWithRetry will create a deployment for a given image with a name in a namespace, with retry
+func CreateLinuxDeployWithRetry(image, name, namespace, miscOpts string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateLinuxDeployWithRetryWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- CreateLinuxDeployAsync(image, name, namespace, miscOpts):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateLinuxDeployWithRetryWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateLinuxDeployWithRetryWithRetryError == nil {
+				return d, nil
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("CreateLinuxDeployWithRetry timed out: %s\n", mostRecentCreateLinuxDeployWithRetryWithRetryError)
+		}
+	}
+}
+
 // CreateLinuxDeploy will create a deployment for a given image with a name in a namespace
 // --overrides='{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, error) {
@@ -105,15 +145,15 @@ func CreateLinuxDeployIfNotExist(image, name, namespace, miscOpts string) (*Depl
 }
 
 // CreateLinuxDeployDeleteIfExists will create a deployment, deleting any pre-existing deployment with the same name
-func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
-	deployments, err := GetAllByPrefix(pattern, namespace)
+func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts string, timeout time.Duration) (*Deployment, error) {
+	deployments, err := GetAllByPrefixWithRetry(pattern, namespace, 5*time.Second, timeout)
 	if err != nil {
 		return nil, err
 	}
 	for _, d := range deployments {
 		d.Delete(util.DefaultDeleteRetries)
 	}
-	return CreateLinuxDeploy(image, name, namespace, miscOpts)
+	return CreateLinuxDeployWithRetry(image, name, namespace, miscOpts, 3*time.Minute, timeout)
 }
 
 // RunLinuxDeploy will create a deployment that runs a bash command in a pod
@@ -146,6 +186,46 @@ func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command strin
 		d.Delete(util.DefaultDeleteRetries)
 	}
 	return RunLinuxDeploy(image, name, namespace, command, replicas)
+}
+
+// CreateWindowsDeployAsync wraps CreateWindowsDeploy with a struct response for goroutine + channel usage
+func CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts string) GetResult {
+	d, err := CreateWindowsDeploy(pattern, image, name, namespace, miscOpts)
+	return GetResult{
+		deployment: d,
+		err:        err,
+	}
+}
+
+// CreateWindowsDeployWithRetry will return all deployments in a given namespace that match a prefix, retrying if error up to a timeout
+func CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts string, sleep, timeout time.Duration) (*Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentCreateWindowsDeployWithRetryError error
+	var d *Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentCreateWindowsDeployWithRetryError = result.err
+			d = result.deployment
+			if mostRecentCreateWindowsDeployWithRetryError == nil {
+				return d, nil
+			}
+		case <-ctx.Done():
+			return d, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentCreateWindowsDeployWithRetryError)
+		}
+	}
 }
 
 // CreateWindowsDeploy will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
@@ -217,15 +297,15 @@ func CreateWindowsDeployWithHostportDeleteIfExist(pattern, image, name, namespac
 
 // CreateWindowsDeployDeleteIfExist first checks if a deployment already exists according to a naming pattern
 // If a pre-existing deployment is found matching that pattern, it is deleted
-func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
-	deployments, err := GetAllByPrefix(pattern, namespace)
+func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts string, timeout time.Duration) (*Deployment, error) {
+	deployments, err := GetAllByPrefixWithRetry(pattern, namespace, 5*time.Second, timeout)
 	if err != nil {
 		return nil, err
 	}
 	for _, d := range deployments {
 		d.Delete(util.DefaultDeleteRetries)
 	}
-	return CreateWindowsDeploy(pattern, image, name, namespace, miscOpts)
+	return CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts, 3*time.Minute, timeout)
 }
 
 // Get returns a deployment from a name and namespace
@@ -267,6 +347,52 @@ func GetAll(namespace string) (*List, error) {
 		return nil, err
 	}
 	return &dl, nil
+}
+
+// GetAllByPrefixResult is the result type for GetAllByPrefixAsync
+type GetAllByPrefixResult struct {
+	Deployments []Deployment
+	Err         error
+}
+
+// GetAllByPrefixAsync wraps GetAllByPrefix with a struct response for goroutine + channel usage
+func GetAllByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
+	deployments, err := GetAllByPrefix(prefix, namespace)
+	return GetAllByPrefixResult{
+		Deployments: deployments,
+		Err:         err,
+	}
+}
+
+// GetAllByPrefixWithRetry will return all deployments in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Duration) ([]Deployment, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllByPrefixWithRetryError error
+	var deployments []Deployment
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- GetAllByPrefixAsync(prefix, namespace):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByPrefixWithRetryError = result.Err
+			deployments = result.Deployments
+			if mostRecentGetAllByPrefixWithRetryError == nil {
+				return deployments, nil
+			}
+		case <-ctx.Done():
+			return deployments, errors.Errorf("GetAllByPrefixWithRetry timed out: %s\n", mostRecentGetAllByPrefixWithRetryError)
+		}
+	}
 }
 
 // GetAllByPrefix will return all pods in a given namespace that match a prefix

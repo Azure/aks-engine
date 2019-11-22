@@ -211,13 +211,13 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 
 // RunWindowsPod will create a pod that runs a powershell command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, duration time.Duration, timeout time.Duration) (*Pod, error) {
+func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout time.Duration, podGetTimeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "powershell", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd, timeout)
+		out, err = util.RunAndLogCommand(cmd, commandTimeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -225,7 +225,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, podGetTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -326,8 +326,8 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 	}
 }
 
-// RunWithRetry runs a command in a pod, allowing for retries
-func RunWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+// RunLinuxWithRetry runs a command in a Linux pod, allowing for retries
+func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -338,7 +338,7 @@ func RunWithRetry(image, name, namespace, command string, printOutput bool, slee
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- RunAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+			case ch <- RunLinuxAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
 				time.Sleep(sleep)
 			}
 		}
@@ -365,7 +365,51 @@ func RunWithRetry(image, name, namespace, command string, printOutput bool, slee
 				}
 			}
 		case <-ctx.Done():
-			return nil, errors.Errorf("RunWithRetry timed out: %s\n", mostRecentRunWithRetryError)
+			return nil, errors.Errorf("RunLinuxWithRetry timed out: %s\n", mostRecentRunWithRetryError)
+		}
+	}
+}
+
+// RunWindowsWithRetry runs a command in a Windows pod, allowing for retries
+func RunWindowsWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentRunWithRetryError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case ch <- RunWindowsAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentRunWithRetryError = result.err
+			pod = result.pod
+			if mostRecentRunWithRetryError == nil {
+				if pod != nil {
+					return pod, nil
+				}
+			} else {
+				if pod != nil {
+					err := pod.Logs()
+					if err != nil {
+						log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+					}
+					err = pod.Describe()
+					if err != nil {
+						log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+					}
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("RunWindowsWithRetry timed out: %s\n", mostRecentRunWithRetryError)
 		}
 	}
 }
@@ -385,9 +429,18 @@ func GetAsync(podName, namespace string) GetResult {
 	}
 }
 
-// RunAsync wraps RunLinuxPod with a struct response for goroutine + channel usage
-func RunAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+// RunLinuxAsync wraps RunLinuxPod with a struct response for goroutine + channel usage
+func RunLinuxAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
 	pod, err := RunLinuxPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
+	return GetResult{
+		pod: pod,
+		err: err,
+	}
+}
+
+// RunWindowsAsync wraps RunWindowsPod with a struct response for goroutine + channel usage
+func RunWindowsAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+	pod, err := RunWindowsPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
 	return GetResult{
 		pod: pod,
 		err: err,
