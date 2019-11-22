@@ -1584,7 +1584,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(iisPods)).ToNot(BeZero())
 				for _, iisPod := range iisPods {
 					var pass bool
-					pass, err = iisPod.CheckWindowsOutboundConnection(sleepBetweenRetriesWhenWaitingForPodReady, timeoutWhenWaitingForPodOutboundAccess)
+					pass, err = iisPod.CheckWindowsOutboundConnection(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
@@ -1891,11 +1891,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if clusterAutoscalerEngaged {
 					cpuTarget = 50
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-						maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-						var n []node.Node
-						n, err = node.GetByRegexWithRetry(fmt.Sprintf("^k8s-%s", profile.Name), 3*time.Minute, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						totalMaxPods += (len(n) * maxPods)
+						// TODO enable cluster-autoscaler tests for Windows
+						if profile.IsLinux() {
+							maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+							totalMaxPods += (profile.Count * maxPods)
+						}
 					}
 					maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
 					totalMaxPods += (len(masterNodes) * maxPods)
