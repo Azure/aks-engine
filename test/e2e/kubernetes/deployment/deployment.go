@@ -71,7 +71,7 @@ type Container struct {
 }
 
 // CreateLinuxDeployAsync wraps CreateLinuxDeploy with a struct response for goroutine + channel usage
-func CreateLinuxDeployAsync(image, name, namespace, miscOpts string) GetResult {
+func CreateLinuxDeployAsync(ctx context.Context, image, name, namespace, miscOpts string) GetResult {
 	d, err := CreateLinuxDeploy(image, name, namespace, miscOpts)
 	return GetResult{
 		deployment: d,
@@ -91,7 +91,8 @@ func CreateLinuxDeployWithRetry(image, name, namespace, miscOpts string, sleep, 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- CreateLinuxDeployAsync(image, name, namespace, miscOpts):
+			default:
+				ch <- CreateLinuxDeployAsync(ctx, image, name, namespace, miscOpts)
 				time.Sleep(sleep)
 			}
 		}
@@ -209,7 +210,8 @@ func CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts stri
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts):
+			default:
+				ch <- CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts)
 				time.Sleep(sleep)
 			}
 		}
@@ -376,7 +378,8 @@ func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Durat
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllByPrefixAsync(prefix, namespace):
+			default:
+				ch <- GetAllByPrefixAsync(prefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -556,7 +559,8 @@ func GetWithRetry(name, namespace string, sleep, timeout time.Duration) (*Deploy
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAsync(name, namespace):
+			default:
+				ch <- GetAsync(name, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -604,7 +608,8 @@ func (d *Deployment) WaitForReplicas(min, max int, sleep, timeout time.Duration)
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace):
+			default:
+				ch <- pod.GetAllRunningByPrefixAsync(d.Metadata.Name, d.Metadata.Namespace)
 				time.Sleep(sleep)
 			}
 		}

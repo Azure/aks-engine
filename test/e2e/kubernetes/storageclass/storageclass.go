@@ -101,7 +101,8 @@ func (sc *StorageClass) WaitOnReady(sleep, timeout time.Duration) (bool, error) 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAsync(sc.Metadata.Name):
+			default:
+				ch <- GetAsync(sc.Metadata.Name)
 				time.Sleep(sleep)
 			}
 		}

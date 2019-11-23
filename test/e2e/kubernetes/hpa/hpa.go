@@ -168,7 +168,8 @@ func WaitOnDeleted(hpaPrefix, namespace string, sleep, timeout time.Duration) (b
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllByPrefixAsync(hpaPrefix, namespace):
+			default:
+				ch <- GetAllByPrefixAsync(hpaPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}

@@ -305,7 +305,8 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAsync(podPrefix, namespace):
+			default:
+				ch <- GetAsync(podPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -338,7 +339,8 @@ func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool,
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- RunLinuxAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+			default:
+				ch <- RunLinuxAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -382,7 +384,8 @@ func RunWindowsWithRetry(image, name, namespace, command string, printOutput boo
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- RunWindowsAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+			default:
+				ch <- RunWindowsAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -512,7 +515,8 @@ func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Durat
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllByPrefixAsync(prefix, namespace):
+			default:
+				ch <- GetAllByPrefixAsync(prefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -594,7 +598,8 @@ func GetAllRunningByPrefixWithRetry(prefix, namespace string, sleep, timeout tim
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllRunningByPrefixAsync(prefix, namespace):
+			default:
+				ch <- GetAllRunningByPrefixAsync(prefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -751,7 +756,8 @@ func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, ti
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreAllPodsRunningAsync(podPrefix, namespace):
+			default:
+				ch <- AreAllPodsRunningAsync(podPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -797,7 +803,8 @@ func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetPodAsync(name, namespace, timeout):
+			default:
+				ch <- GetPodAsync(name, namespace, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -841,7 +848,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetPodAsync(name, namespace, timeout):
+			default:
+				ch <- GetPodAsync(name, namespace, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -1172,7 +1180,8 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, timeout time.Duration) (bool, 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.attemptOutboundConn():
+			default:
+				ch <- p.attemptOutboundConn()
 				time.Sleep(sleep)
 			}
 		}
@@ -1208,7 +1217,8 @@ func (p *Pod) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.curlURL(uri):
+			default:
+				ch <- p.curlURL(uri)
 				time.Sleep(sleep)
 			}
 		}
@@ -1244,7 +1254,8 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, timeout time.Dur
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log"):
+			default:
+				ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log")
 				time.Sleep(sleep)
 			}
 		}
@@ -1285,7 +1296,8 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.ExecAsync("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)"):
+			default:
+				ch <- p.ExecAsync("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)")
 				time.Sleep(sleep)
 			}
 		}
@@ -1375,7 +1387,8 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.powershellMkdir(mountPath):
+			default:
+				ch <- p.powershellMkdir(mountPath)
 				time.Sleep(sleep)
 			}
 		}
@@ -1411,7 +1424,8 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool,
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.mkdir(mountPath):
+			default:
+				ch <- p.mkdir(mountPath)
 				time.Sleep(sleep)
 			}
 		}
