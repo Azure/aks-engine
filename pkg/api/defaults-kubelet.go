@@ -197,12 +197,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
 		}
 
-		// Allocate IP addresses for pods if VNET integration is enabled.
-		if cs.Properties.OrchestratorProfile.IsAzureCNI() {
-			masterMaxPods, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
-			cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
-		}
-
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
 	}
 
@@ -256,12 +250,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		// Override the --resolv-conf kubelet config value for Ubuntu 18.04 after the distro value is set.
 		if profile.IsUbuntu1804() {
 			profile.KubernetesConfig.KubeletConfig["--resolv-conf"] = "/run/systemd/resolve/resolv.conf"
-		}
-
-		// Allocate IP addresses for pods if VNET integration is enabled.
-		if cs.Properties.OrchestratorProfile.IsAzureCNI() {
-			agentPoolMaxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-			profile.IPAddressCount += agentPoolMaxPods
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
