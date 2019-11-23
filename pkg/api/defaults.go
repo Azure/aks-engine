@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -415,11 +416,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					}
 				}
 			}
-			// Set the default number of IP addresses allocated for masters.
-			if cs.Properties.MasterProfile.IPAddressCount == 0 {
-				// Allocate one IP address for the node.
-				cs.Properties.MasterProfile.IPAddressCount = 1
-			}
 
 			// Distro assignment for masterProfile
 			if cs.Properties.MasterProfile.Distro == "" && cs.Properties.MasterProfile.ImageRef == nil {
@@ -443,11 +439,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		// Pool-specific defaults that depend upon OrchestratorProfile defaults
 		for _, profile := range cs.Properties.AgentPoolProfiles {
-			// Set the default number of IP addresses allocated for agents.
-			if profile.IPAddressCount == 0 {
-				// Allocate one IP address for the node.
-				profile.IPAddressCount = 1
-			}
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
 				cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 			}
@@ -504,6 +495,34 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		// Configure kubelet
 		cs.setKubeletConfig(isUpgrade)
+
+		// Master-specific defaults that depend upon kubelet defaults
+		// Set the default number of IP addresses allocated for masters.
+		if cs.Properties.MasterProfile != nil {
+			if cs.Properties.MasterProfile.IPAddressCount == 0 {
+				// Allocate one IP address for the node.
+				cs.Properties.MasterProfile.IPAddressCount = 1
+				// Allocate IP addresses for pods if VNET integration is enabled.
+				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
+					masterMaxPods, _ := strconv.Atoi(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
+					cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
+				}
+			}
+		}
+		// Pool-specific defaults that depend upon kubelet defaults
+		for _, profile := range cs.Properties.AgentPoolProfiles {
+			// Set the default number of IP addresses allocated for agents.
+			if profile.IPAddressCount == 0 {
+				// Allocate one IP address for the node.
+				profile.IPAddressCount = 1
+				// Allocate IP addresses for pods if VNET integration is enabled.
+				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
+					agentPoolMaxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+					profile.IPAddressCount += agentPoolMaxPods
+				}
+			}
+		}
+
 		// Configure controller-manager
 		cs.setControllerManagerConfig()
 		// Configure cloud-controller-manager
