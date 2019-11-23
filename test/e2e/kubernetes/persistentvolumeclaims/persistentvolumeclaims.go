@@ -214,7 +214,8 @@ func (pvc *PersistentVolumeClaim) WaitOnReady(namespace string, sleep, timeout t
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAsync(pvc.Metadata.Name, namespace):
+			default:
+				ch <- GetAsync(pvc.Metadata.Name, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -255,7 +256,8 @@ func WaitOnDeleted(pvcPrefix, namespace string, sleep, timeout time.Duration) (b
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllByPrefixAsync(pvcPrefix, namespace):
+			default:
+				ch <- GetAllByPrefixAsync(pvcPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}

@@ -520,16 +520,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to kubectl port-forward to a running pod", func() {
 			deploymentNamespace := "default"
-
-			var deploy *deployment.Deployment
-			var err error
-			var pods []pod.Pod
-
 			testPortForward := func(deploymentName string) {
 				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(podWaitErr).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err = deploy.PodsRunning()
+				d, err := deployment.GetWithRetry(deploymentName, deploymentNamespace, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				pods, err := d.PodsRunning()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(pods)).To(Equal(1))
 				for _, p := range pods {
@@ -600,7 +597,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Creating a Linux nginx deployment")
 				deploymentPrefix := "portforwardlinux"
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-				deploy, err = deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "")
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				testPortForward(deploymentName)
 				err = deploy.Delete(util.DefaultDeleteRetries)
@@ -613,7 +610,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					deploymentPrefix := "portforwardwindows"
 					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-					deploy, err = deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "")
+					deploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "", cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					testPortForward(deploymentName)
 					err = deploy.Delete(util.DefaultDeleteRetries)
@@ -1075,7 +1072,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				serviceName := "ingress-nginx"
 				deploymentPrefix := fmt.Sprintf("%s-%s", serviceName, cfg.Name)
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
-				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName)
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create an ILB service attachment")
@@ -1085,7 +1082,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
-				ilbCurlPod, err := pod.RunWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
+				ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
@@ -1097,7 +1094,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				By("Ensuring we can connect to the ELB service from another pod")
-				elbCurlPod, err := pod.RunWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
+				elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
@@ -1672,7 +1669,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix = fmt.Sprintf("nginx-dns-%s", cfg.Name)
 				nginxDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a nginx deployment")
-				linuxNginxDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", nginxDeploymentName, "default", "")
+				linuxNginxDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", nginxDeploymentName, "default", "", cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")

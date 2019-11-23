@@ -211,13 +211,13 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 
 // RunWindowsPod will create a pod that runs a powershell command
 // --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
-func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, duration time.Duration, timeout time.Duration) (*Pod, error) {
+func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout time.Duration, podGetTimeout time.Duration) (*Pod, error) {
 	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "powershell", command)
 	var out []byte
 	var err error
 	if printOutput {
-		out, err = util.RunAndLogCommand(cmd, timeout)
+		out, err = util.RunAndLogCommand(cmd, commandTimeout)
 	} else {
 		out, err = cmd.CombinedOutput()
 	}
@@ -225,7 +225,7 @@ func RunWindowsPod(image, name, namespace, command string, printOutput bool, sle
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
 		return nil, err
 	}
-	p, err := GetWithRetry(name, namespace, sleep, duration)
+	p, err := GetWithRetry(name, namespace, sleep, podGetTimeout)
 	if err != nil {
 		log.Printf("Error while trying to fetch Pod %s in namespace %s:%s\n", name, namespace, err)
 		return nil, err
@@ -305,7 +305,8 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAsync(podPrefix, namespace):
+			default:
+				ch <- GetAsync(podPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -326,8 +327,8 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 	}
 }
 
-// RunWithRetry runs a command in a pod, allowing for retries
-func RunWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+// RunLinuxWithRetry runs a command in a Linux pod, allowing for retries
+func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -338,7 +339,8 @@ func RunWithRetry(image, name, namespace, command string, printOutput bool, slee
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- RunAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout):
+			default:
+				ch <- RunLinuxAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -365,7 +367,52 @@ func RunWithRetry(image, name, namespace, command string, printOutput bool, slee
 				}
 			}
 		case <-ctx.Done():
-			return nil, errors.Errorf("RunWithRetry timed out: %s\n", mostRecentRunWithRetryError)
+			return nil, errors.Errorf("RunLinuxWithRetry timed out: %s\n", mostRecentRunWithRetryError)
+		}
+	}
+}
+
+// RunWindowsWithRetry runs a command in a Windows pod, allowing for retries
+func RunWindowsWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetResult)
+	var mostRecentRunWithRetryError error
+	var pod *Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- RunWindowsAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentRunWithRetryError = result.err
+			pod = result.pod
+			if mostRecentRunWithRetryError == nil {
+				if pod != nil {
+					return pod, nil
+				}
+			} else {
+				if pod != nil {
+					err := pod.Logs()
+					if err != nil {
+						log.Printf("Unable to print pod logs for pod %s: %s", pod.Metadata.Name, err)
+					}
+					err = pod.Describe()
+					if err != nil {
+						log.Printf("Unable to describe pod %s: %s", pod.Metadata.Name, err)
+					}
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("RunWindowsWithRetry timed out: %s\n", mostRecentRunWithRetryError)
 		}
 	}
 }
@@ -385,9 +432,18 @@ func GetAsync(podName, namespace string) GetResult {
 	}
 }
 
-// RunAsync wraps RunLinuxPod with a struct response for goroutine + channel usage
-func RunAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+// RunLinuxAsync wraps RunLinuxPod with a struct response for goroutine + channel usage
+func RunLinuxAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
 	pod, err := RunLinuxPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
+	return GetResult{
+		pod: pod,
+		err: err,
+	}
+}
+
+// RunWindowsAsync wraps RunWindowsPod with a struct response for goroutine + channel usage
+func RunWindowsAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+	pod, err := RunWindowsPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
 	return GetResult{
 		pod: pod,
 		err: err,
@@ -459,7 +515,8 @@ func GetAllByPrefixWithRetry(prefix, namespace string, sleep, timeout time.Durat
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllByPrefixAsync(prefix, namespace):
+			default:
+				ch <- GetAllByPrefixAsync(prefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -541,7 +598,8 @@ func GetAllRunningByPrefixWithRetry(prefix, namespace string, sleep, timeout tim
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetAllRunningByPrefixAsync(prefix, namespace):
+			default:
+				ch <- GetAllRunningByPrefixAsync(prefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -698,7 +756,8 @@ func WaitOnSuccesses(podPrefix, namespace string, successesNeeded int, sleep, ti
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreAllPodsRunningAsync(podPrefix, namespace):
+			default:
+				ch <- AreAllPodsRunningAsync(podPrefix, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -744,7 +803,8 @@ func WaitOnSucceeded(name, namespace string, sleep, timeout time.Duration) (bool
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetPodAsync(name, namespace, timeout):
+			default:
+				ch <- GetPodAsync(name, namespace, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -788,7 +848,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetPodAsync(name, namespace, timeout):
+			default:
+				ch <- GetPodAsync(name, namespace, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -1119,7 +1180,8 @@ func (p *Pod) CheckLinuxOutboundConnection(sleep, timeout time.Duration) (bool, 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.attemptOutboundConn():
+			default:
+				ch <- p.attemptOutboundConn()
 				time.Sleep(sleep)
 			}
 		}
@@ -1155,7 +1217,8 @@ func (p *Pod) ValidateCurlConnection(uri string, sleep, timeout time.Duration) (
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.curlURL(uri):
+			default:
+				ch <- p.curlURL(uri)
 				time.Sleep(sleep)
 			}
 		}
@@ -1191,7 +1254,8 @@ func (p *Pod) ValidateOmsAgentLogs(execCmdString string, sleep, timeout time.Dur
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log"):
+			default:
+				ch <- p.ExecAsync("grep", "-i", execCmdString, "/var/opt/microsoft/omsagent/log/omsagent.log")
 				time.Sleep(sleep)
 			}
 		}
@@ -1232,7 +1296,8 @@ func (p *Pod) CheckWindowsOutboundConnection(sleep, timeout time.Duration) (bool
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.ExecAsync("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)"):
+			default:
+				ch <- p.ExecAsync("--", "powershell", "New-Object", "System.Net.Sockets.TcpClient('8.8.8.8', 443)")
 				time.Sleep(sleep)
 			}
 		}
@@ -1322,7 +1387,8 @@ func (p *Pod) ValidateAzureFile(mountPath string, sleep, timeout time.Duration) 
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.powershellMkdir(mountPath):
+			default:
+				ch <- p.powershellMkdir(mountPath)
 				time.Sleep(sleep)
 			}
 		}
@@ -1358,7 +1424,8 @@ func (p *Pod) ValidatePVC(mountPath string, sleep, timeout time.Duration) (bool,
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- p.mkdir(mountPath):
+			default:
+				ch <- p.mkdir(mountPath)
 				time.Sleep(sleep)
 			}
 		}

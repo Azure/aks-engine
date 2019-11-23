@@ -272,7 +272,8 @@ func WaitOnReady(nodeCount int, sleep, timeout time.Duration) bool {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreNNodesReady(nodeCount):
+			default:
+				ch <- AreNNodesReady(nodeCount)
 				time.Sleep(sleep)
 			}
 		}
@@ -300,7 +301,8 @@ func WaitOnReadyMin(nodeCount int, sleep, timeout time.Duration) bool {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreMinNodesReady(nodeCount):
+			default:
+				ch <- AreMinNodesReady(nodeCount)
 				time.Sleep(sleep)
 			}
 		}
@@ -328,7 +330,8 @@ func WaitOnReadyMax(nodeCount int, sleep, timeout time.Duration) bool {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- AreMaxNodesReady(nodeCount):
+			default:
+				ch <- AreMaxNodesReady(nodeCount)
 				time.Sleep(sleep)
 			}
 		}
@@ -378,7 +381,8 @@ func GetWithRetry(sleep, timeout time.Duration) ([]Node, error) {
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetNodesAsync():
+			default:
+				ch <- GetNodesAsync()
 				time.Sleep(sleep)
 			}
 		}
@@ -411,7 +415,8 @@ func GetByRegexWithRetry(regex string, sleep, timeout time.Duration) ([]Node, er
 			select {
 			case <-ctx.Done():
 				return
-			case ch <- GetByRegexAsync(regex):
+			default:
+				ch <- GetByRegexAsync(regex)
 				time.Sleep(sleep)
 			}
 		}
