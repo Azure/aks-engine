@@ -40,7 +40,9 @@
             "name": "aad-pod-identity",
             "enabled": true
           }
-        ]
+        ],
+        "loadBalancerSku": "Standard",
+        "excludeMasterFromStandardLB": true
       }
     },
     "masterProfile": {
@@ -50,7 +52,8 @@
       "OSDiskSizeGB": 200,
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
-      "vnetCidr": "10.239.0.0/16"
+      "vnetCidr": "10.239.0.0/16",
+      "availabilityZones": ["1", "2"]
     },
     "agentPoolProfiles": [
       {
@@ -60,13 +63,11 @@
         "OSDiskSizeGB": 200,
         "storageProfile": "ManagedDisks",
         "diskSizesGB": [
-          128,
-          128,
-          128,
           128
         ],
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "availabilityZones": ["1"]
       },
       {
         "name": "agentwfast",
@@ -75,7 +76,8 @@
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osType": "Windows",
-        "storageProfile": "Ephemeral"
+        "storageProfile": "Ephemeral",
+        "availabilityZones": ["1"]
       }
     ],
     "linuxProfile": {
