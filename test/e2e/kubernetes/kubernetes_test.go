@@ -1256,63 +1256,67 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should create pv with zone labels and node affinity", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-					By("Creating a persistent volume claim")
-					pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-					pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
+					if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+						By("Creating a persistent volume claim")
+						pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
+						pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
+						Expect(err).NotTo(HaveOccurred())
+						ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(ready).To(Equal(true))
 
-					pvList, err := persistentvolume.Get()
-					Expect(err).NotTo(HaveOccurred())
-					pvZone := ""
-					for _, pv := range pvList.PersistentVolumes {
-						By("Ensuring that we get zones for the pv")
-						// zone is chosen by round-robin across all zones
-						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-						fmt.Printf("pvZone: %s\n", pvZone)
-						contains := strings.Contains(pvZone, "-")
-						Expect(contains).To(Equal(true))
-						// VolumeScheduling feature gate is set to true by default starting v1.10+
-						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
-								By("Ensuring that we get nodeAffinity for each pv")
-								value := expression.Values[0]
-								fmt.Printf("NodeAffinity value: %s\n", value)
-								contains := strings.Contains(value, "-")
-								Expect(contains).To(Equal(true))
+						pvList, err := persistentvolume.Get()
+						Expect(err).NotTo(HaveOccurred())
+						pvZone := ""
+						for _, pv := range pvList.PersistentVolumes {
+							By("Ensuring that we get zones for the pv")
+							// zone is chosen by round-robin across all zones
+							pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+							fmt.Printf("pvZone: %s\n", pvZone)
+							contains := strings.Contains(pvZone, "-")
+							Expect(contains).To(Equal(true))
+							// VolumeScheduling feature gate is set to true by default starting v1.10+
+							for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
+								if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+									By("Ensuring that we get nodeAffinity for each pv")
+									value := expression.Values[0]
+									fmt.Printf("NodeAffinity value: %s\n", value)
+									contains := strings.Contains(value, "-")
+									Expect(contains).To(Equal(true))
+								}
 							}
 						}
+
+						By("Launching a pod using the volume claim")
+						podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
+						testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						ready, err = testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(ready).To(Equal(true))
+
+						By("Checking that the pod can access volume")
+						valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
+						Expect(valid).To(BeTrue())
+						Expect(err).NotTo(HaveOccurred())
+
+						By("Ensuring that attached volume pv has the same zone as the zone of the node")
+						nodeName := testPod.Spec.NodeName
+						nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						fmt.Printf("pvZone: %s\n", pvZone)
+						fmt.Printf("nodeZone: %s\n", nodeZone)
+						Expect(nodeZone == pvZone).To(Equal(true))
+
+						By("Cleaning up after ourselves")
+						err = testPod.Delete(util.DefaultDeleteRetries)
+						Expect(err).NotTo(HaveOccurred())
+						err = pvc.Delete(util.DefaultDeleteRetries)
+						Expect(err).NotTo(HaveOccurred())
+					} else {
+						Skip("Zones aren't yet supported in CSI disk driver for v1.17")
 					}
-
-					By("Launching a pod using the volume claim")
-					podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-					testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err = testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
-
-					By("Checking that the pod can access volume")
-					valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
-					Expect(valid).To(BeTrue())
-					Expect(err).NotTo(HaveOccurred())
-
-					By("Ensuring that attached volume pv has the same zone as the zone of the node")
-					nodeName := testPod.Spec.NodeName
-					nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-					fmt.Printf("pvZone: %s\n", pvZone)
-					fmt.Printf("nodeZone: %s\n", nodeZone)
-					Expect(nodeZone == pvZone).To(Equal(true))
-
-					By("Cleaning up after ourselves")
-					err = testPod.Delete(util.DefaultDeleteRetries)
-					Expect(err).NotTo(HaveOccurred())
-					err = pvc.Delete(util.DefaultDeleteRetries)
-					Expect(err).NotTo(HaveOccurred())
 				} else {
 					Skip("Availability zones was not configured for this Cluster Definition")
 				}
