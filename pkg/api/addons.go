@@ -540,6 +540,23 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Ensure cloud-node-manager and CSI components are enabled on appropriate upgrades
+	if isUpgrade && to.Bool(o.KubernetesConfig.UseCloudControllerManager) &&
+		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		componentry := map[string]KubernetesAddon{
+			AzureDiskCSIDriverAddonName: defaultAzureDiskCSIDriverAddonsConfig,
+			AzureFileCSIDriverAddonName: defaultAzureFileCSIDriverAddonsConfig,
+			CloudNodeManagerAddonName:   defaultCloudNodeManagerAddonsConfig,
+		}
+		for name, config := range componentry {
+			if i := getAddonsIndexByName(o.KubernetesConfig.Addons, name); i > -1 {
+				if !to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
+					o.KubernetesConfig.Addons[i] = config
+				}
+			}
+		}
+	}
+
 	// Back-compat for older addon specs of cluster-autoscaler
 	if isUpgrade {
 		i := getAddonsIndexByName(o.KubernetesConfig.Addons, ClusterAutoscalerAddonName)
