@@ -130,7 +130,9 @@ var _ = BeforeSuite(func() {
 				for _, pool := range addon.Pools {
 					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
 					maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
-					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+					minNodes, _ := strconv.Atoi(pool.Config["min-nodes"])
+					if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count &&
+						minNodes < eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
 						clusterAutoscalerEngaged = true
 						break
 					}
