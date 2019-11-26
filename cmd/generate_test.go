@@ -356,6 +356,11 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "node problem detector",
+			apiModelPath: "../examples/addons/node-problem-detector/node-problem-detector.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "coreos",
 			apiModelPath: "../examples/coreos/kubernetes-coreos.json",
 			setArgs:      defaultSet,

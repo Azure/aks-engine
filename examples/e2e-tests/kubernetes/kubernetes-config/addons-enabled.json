@@ -45,6 +45,10 @@
           {
             "name": "azure-policy",
             "enabled": true
+          },
+          {
+            "name": "node-problem-detector",
+            "enabled": true
           }
         ]
       }

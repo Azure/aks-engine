@@ -215,6 +215,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
 		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 		AzurePolicyAddonName:               "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+		NodeProblemDetectorAddonName:       "k8s.gcr.io/node-problem-detector:v0.8.0",
 	}
 
 	customAddonImages := make(map[string]string)
