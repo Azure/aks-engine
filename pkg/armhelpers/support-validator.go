@@ -16,74 +16,76 @@ type requiredImage struct {
 //ValidateRequiredImages checks both master ang agent profiles and ensures these images are available in the environment
 func ValidateRequiredImages(ctx context.Context, location string, p *api.Properties, client AKSEngineClient) error {
 
-	var missingVMImages map[string]requiredImage
+	missingVMImages := make(map[string]requiredImage)
 
-	imageInformaition := getDistroVMImageInformation(p.MasterProfile.Distro)
+	imageInformation := getDistroVMImageInformation(p.MasterProfile.Distro)
 
-	vmImage, err := client.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
+	if imageFetcher, ok := client.(VMImageFetcher); ok {
+		vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformation.ImagePublisher, imageInformation.ImageOffer, imageInformation.ImageSku, imageInformation.ImageVersion)
 
-	if err != nil {
-		if p.MasterProfile.Distro == "" {
-			missingVMImages[string(api.Ubuntu)] = requiredImage{
-				image:     imageInformaition,
-				errorData: err,
-			}
+		if err != nil {
+			if p.MasterProfile.Distro == "" {
+				missingVMImages[string(api.Ubuntu)] = requiredImage{
+					image:     imageInformation,
+					errorData: err,
+				}
 
-		} else {
-			missingVMImages[string(p.MasterProfile.Distro)] = requiredImage{
-				image:     imageInformaition,
-				errorData: err,
-			}
-		}
-	}
-
-	log.Infof("Image %s", *vmImage.Name)
-
-	for _, profile := range p.AgentPoolProfiles {
-
-		if profile.OSType == api.Windows {
-			imageInformaition := api.WindowsServer2019OSImageConfig
-
-			vmImage, err := client.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
-
-			if err != nil {
-				missingVMImages[string(api.Windows)] = requiredImage{
-					image:     imageInformaition,
+			} else {
+				missingVMImages[string(p.MasterProfile.Distro)] = requiredImage{
+					image:     imageInformation,
 					errorData: err,
 				}
 			}
-
-			log.Infof("Found Image %s", *vmImage.Name)
 		} else {
-			imageInformaition := getDistroVMImageInformation(profile.Distro)
+			log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
+		}
 
-			vmImage, err := client.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
+		for _, profile := range p.AgentPoolProfiles {
 
-			if err != nil {
-				if profile.Distro == "" {
-					missingVMImages[string(api.Ubuntu)] = requiredImage{
+			if profile.OSType == api.Windows {
+				imageInformaition := api.WindowsServer2019OSImageConfig
+
+				vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
+
+				if err != nil {
+					missingVMImages[string(api.Windows)] = requiredImage{
 						image:     imageInformaition,
 						errorData: err,
 					}
 				} else {
-					missingVMImages[string(profile.Distro)] = requiredImage{
-						image:     imageInformaition,
-						errorData: err,
+					log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
+				}
+			} else {
+				imageInformaition := getDistroVMImageInformation(profile.Distro)
+
+				vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
+
+				if err != nil {
+					if profile.Distro == "" {
+						missingVMImages[string(api.Ubuntu)] = requiredImage{
+							image:     imageInformaition,
+							errorData: err,
+						}
+					} else {
+						missingVMImages[string(profile.Distro)] = requiredImage{
+							image:     imageInformaition,
+							errorData: err,
+						}
 					}
+				} else {
+					log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
 				}
 			}
-
-			log.Infof("Found Image %s", *vmImage.Name)
 		}
-	}
 
-	if len(missingVMImages) > 0 {
-		for _, value := range missingVMImages {
-			imageDetails := value.image
-			log.Infof("Offer: %s, Sku: %s, Version: %s", imageDetails.ImageOffer, imageDetails.ImageSku, imageDetails.ImageVersion)
-			log.Errorf("Error: ", value.errorData)
+		if len(missingVMImages) > 0 {
+			for _, value := range missingVMImages {
+				imageDetails := value.image
+				log.Infof("Offer: %s, Sku: %s, Version: %s", imageDetails.ImageOffer, imageDetails.ImageSku, imageDetails.ImageVersion)
+				log.Errorf("Error: %+v", value.errorData)
+			}
+			return errors.New("Some VM images are missing from your environment. See above for details")
 		}
-		return errors.New("Some VM images are missing from your environment. See above for details")
 	}
 
 	return nil
