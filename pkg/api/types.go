@@ -1748,11 +1748,6 @@ func (k *KubernetesConfig) IsAzurePolicyEnabled() bool {
 	return k.IsAddonEnabled(AzurePolicyAddonName)
 }
 
-// IsNodeProblemDetectorEnabled checks if the node problem detector addon is enabled
-func (k *KubernetesConfig) IsNodeProblemDetectorEnabled() bool {
-	return k.IsAddonEnabled(NodeProblemDetectorAddonName)
-}
-
 // IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
 func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
 	return k.IsAddonEnabled(AppGwIngressAddonName)
