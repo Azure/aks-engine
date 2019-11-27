@@ -522,6 +522,15 @@ for LIVENESSPROBE_VERSION in ${LIVENESSPROBE_VERSIONS}; do
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+NODE_PROBLEM_DETECTOR_VERSIONS="
+0.8.0
+"
+for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
+  CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 # TODO: remove once ACR is available on Azure Stack
 CONTAINER_IMAGE="registry:2.7.1"
 pullContainerImage "docker" ${CONTAINER_IMAGE}
