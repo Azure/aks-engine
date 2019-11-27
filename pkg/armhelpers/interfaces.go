@@ -79,6 +79,16 @@ type DiskListPage interface {
 	Values() []compute.Disk
 }
 
+//VMImageFetcher is an extension of AKSEngine client allows us to operate on the virtual machine images in the environment
+type VMImageFetcher interface {
+
+	// ListVirtualMachineImages return a list of images
+	ListVirtualMachineImages(ctx context.Context, location, publisherName, offer, skus, filter string, top int32, orderBy string) (compute.ListVirtualMachineImageResource, error)
+
+	// GetVirtualMachineImage return a virtual machine image
+	GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (compute.VirtualMachineImage, error)
+}
+
 // AKSEngineClient is the interface used to talk to an Azure environment.
 // This interface exposes just the subset of Azure APIs and clients needed for
 // AKS Engine.
@@ -94,12 +104,6 @@ type AKSEngineClient interface {
 
 	// DeployTemplate can deploy a template into Azure ARM
 	DeployTemplate(ctx context.Context, resourceGroup, name string, template, parameters map[string]interface{}) (resources.DeploymentExtended, error)
-
-	// ListVirtualMachineImages return a list of images
-	ListVirtualMachineImages(ctx context.Context, top int32, location, publisherName, offer, skus, filter, orderBy string) (compute.ListVirtualMachineImageResource, error)
-
-	// GetVirtualMachineImage return a virtual machine image
-	GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (compute.VirtualMachineImage, error)
 
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)

@@ -404,14 +404,14 @@ func (dc *deployCmd) run() error {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
-	//Validate image
+	// Validate image
 	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 
-	err = dc.ValidateDependencies(cx)
+	err = dc.validateDependencies(cx)
 
 	if err != nil {
-		return errors.Wrapf(err, "Validating dependencies", dc.apimodelPath)
+		return errors.Wrapf(err, "Validating dependencies %s", dc.apimodelPath)
 	}
 
 	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
@@ -541,14 +541,14 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 }
 
 // validation layer for environment dependencies and supported features
-func (dc *deployCmd) ValidateDependencies(ctx context.Context) error {
+func (dc *deployCmd) validateDependencies(ctx context.Context) error {
 
-	err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client)
+	if dc.containerService.Properties.IsAzureStackCloud() {
+		err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client)
 
-	if err != nil {
-		return errors.Wrap(err, "Validating Images")
+		if err != nil {
+			return errors.Wrap(err, "Validating Images")
+		}
 	}
-
 	return nil
-
 }

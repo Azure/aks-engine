@@ -40,6 +40,10 @@ const (
 	virutalDiskName                            = "testVirtualdickName"
 	location                                   = "local"
 	operationID                                = "7184adda-13fc-4d49-b941-fbbc3b08ed64"
+	publisher                                  = "DefaultPublisher"
+	sku                                        = "DefaultSku"
+	offer                                      = "DefaultOffer"
+	version                                    = "DefaultVersion"
 	filePathTokenResponse                      = "httpMockClientData/tokenResponse.json"
 	filePathListVirtualMachineScaleSets        = "httpMockClientData/listVirtualMachineScaleSets.json"
 	filePathListVirtualMachineScaleSetVMs      = "httpMockClientData/listVirtualMachineScaleSetVMs.json"
@@ -84,6 +88,10 @@ type HTTPMockClient struct {
 	Location                                   string
 	OperationID                                string
 	TokenResponse                              string
+	Publisher                                  string
+	Sku                                        string
+	Offer                                      string
+	Version                                    string
 	ResponseListVirtualMachineScaleSets        string
 	ResponseListVirtualMachineScaleSetVMs      string
 	ResponseListVirtualMachines                string
@@ -145,6 +153,10 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		VirutalDiskName:                     virutalDiskName,
 		Location:                            location,
 		OperationID:                         operationID,
+		Publisher:                           publisher,
+		Offer:                               offer,
+		Sku:                                 sku,
+		Version:                             version,
 		mux:                                 http.NewServeMux(),
 	}
 	var err error
@@ -584,6 +596,19 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNewInMC
 	})
 
 	pattern = fmt.Sprintf("/subscriptions/%s/resourcegroups/%s/providers/Microsoft.OperationalInsights/workspaces/%s", mc.SubscriptionID, mc.LogAnalyticsDefaultResourceGroupMC, mc.LogAnalyticsDefaultWorkspaceNameMC)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateWorkspaceInMC)
+		}
+	})
+
+}
+
+// RegisterVMImageFetcherInterface registers the mock response for VMImageFetcherInterface methods.
+func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
+	pattern := fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, mc.Publisher, mc.Offer, mc.Sku, mc.Version)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
