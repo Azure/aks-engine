@@ -1766,9 +1766,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to attach azure file", func() {
 			if eng.HasWindowsAgents() {
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
-				if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
-					Skip("Azure disk and file CSI drivers are not yet supported on Windows")
-				}
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
 					Skip("Kubernetes 1.11.0 has a known issue creating Azure PersistentVolumeClaim")
