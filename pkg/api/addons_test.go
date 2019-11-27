@@ -6769,7 +6769,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "azure cloud-node-manager enabled for k8s >= 1.17.0",
+			name: "azure cloud-node-manager enabled for k8s == 1.17.0 and useCloudControllerManager is true",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
