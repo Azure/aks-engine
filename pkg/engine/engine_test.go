@@ -1696,7 +1696,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -1813,7 +1813,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "single pool",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -1822,12 +1822,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1849,7 +1849,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -1865,7 +1865,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1884,7 +1884,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "multiple pools",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -1893,12 +1893,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1927,7 +1927,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -1948,7 +1948,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1967,7 +1967,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "no pools",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -1976,12 +1976,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -1994,7 +1994,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -2015,7 +2015,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2034,7 +2034,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "non-MSI scenario",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -2043,12 +2043,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2077,7 +2077,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -2097,7 +2097,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2116,7 +2116,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "china scenario",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -2125,12 +2125,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2159,7 +2159,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -2180,7 +2180,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "chinanorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2199,7 +2199,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "german cloud scenario",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -2208,12 +2208,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2242,7 +2242,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -2263,7 +2263,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "germanynortheast",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2282,7 +2282,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		{
 			name: "usgov cloud scenario",
 			addon: api.KubernetesAddon{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: to.BoolPtr(true),
 				Mode:    api.AddonModeEnsureExists,
 				Config: map[string]string{
@@ -2291,12 +2291,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Containers: []api.KubernetesContainerSpec{
 					{
-						Name:           api.ClusterAutoscalerAddonName,
+						Name:           common.ClusterAutoscalerAddonName,
 						CPURequests:    "100m",
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2325,7 +2325,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
 								{
-									Name:    api.ClusterAutoscalerAddonName,
+									Name:    common.ClusterAutoscalerAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},
@@ -2346,7 +2346,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "usgovnorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][api.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2370,29 +2370,29 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			t.Parallel()
 			funcMap := getClusterAutoscalerAddonFuncMap(c.addon, c.cs)
 			v := reflect.ValueOf(funcMap["ContainerImage"])
-			ret := v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			ret := v.Call([]reflect.Value{reflect.ValueOf(common.ClusterAutoscalerAddonName)})
 			if ret[0].Interface() != c.expectedImage {
-				t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedImage, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", common.ClusterAutoscalerAddonName, c.expectedImage, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["ContainerCPUReqs"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.ClusterAutoscalerAddonName)})
 			if ret[0].Interface() != c.expectedCPUReqs {
-				t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedCPUReqs, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", common.ClusterAutoscalerAddonName, c.expectedCPUReqs, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["ContainerCPULimits"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.ClusterAutoscalerAddonName)})
 			if ret[0].Interface() != c.expectedCPULimits {
-				t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedCPULimits, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", common.ClusterAutoscalerAddonName, c.expectedCPULimits, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["ContainerMemReqs"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.ClusterAutoscalerAddonName)})
 			if ret[0].Interface() != c.expectedMemReqs {
-				t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedMemReqs, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", common.ClusterAutoscalerAddonName, c.expectedMemReqs, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["ContainerMemLimits"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(api.ClusterAutoscalerAddonName)})
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.ClusterAutoscalerAddonName)})
 			if ret[0].Interface() != c.expectedMemLimits {
-				t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", api.ClusterAutoscalerAddonName, c.expectedMemLimits, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", common.ClusterAutoscalerAddonName, c.expectedMemLimits, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["ContainerConfig"])
 			ret = v.Call([]reflect.Value{reflect.ValueOf("scan-interval")})

@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -246,7 +247,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	if masterProfile != nil {
 		auditDEnabled = strconv.FormatBool(to.Bool(masterProfile.AuditDEnabled))
 		if kubernetesConfig != nil {
-			clusterAutoscalerEnabled = strconv.FormatBool(kubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName))
+			clusterAutoscalerEnabled = strconv.FormatBool(kubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName))
 		}
 	}
 	if !isHostedMaster {
@@ -534,7 +535,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars["subscriptionId"] = "[subscription().subscriptionId]"
 	masterVars["contributorRoleDefinitionId"] = "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
 	masterVars["readerRoleDefinitionId"] = "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]"
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		masterVars["managedIdentityOperatorRoleDefinitionId"] = "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'f1a07417-d97a-45cb-824c-7a7467783830')]"
 	}
 	masterVars["scope"] = "[resourceGroup().id]"
@@ -551,7 +552,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["clusterKeyVaultName"] = ""
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		masterVars["appGwName"] = "[concat(parameters('orchestratorName'), '-appgw-', parameters('nameSuffix'))]"
 		masterVars["appGwSubnetName"] = "appgw-subnet"
 		masterVars["appGwPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-appgw-ip-', parameters('nameSuffix'))]"

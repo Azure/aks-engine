@@ -67,7 +67,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 
 	if k8sConfig != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
-		addon := k8sConfig.GetAddonByName(ContainerMonitoringAddonName)
+		addon := k8sConfig.GetAddonByName(common.ContainerMonitoringAddonName)
 		clusterDNSPrefix := "aks-engine-cluster"
 		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix

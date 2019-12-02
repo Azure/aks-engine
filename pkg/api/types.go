@@ -1730,32 +1730,32 @@ func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled
 func (k *KubernetesConfig) IsAADPodIdentityEnabled() bool {
-	return k.IsAddonEnabled(AADPodIdentityAddonName)
+	return k.IsAddonEnabled(common.AADPodIdentityAddonName)
 }
 
 // IsContainerMonitoringAddonEnabled checks if the container monitoring addon is enabled
 func (k *KubernetesConfig) IsContainerMonitoringAddonEnabled() bool {
-	return k.IsAddonEnabled(ContainerMonitoringAddonName)
+	return k.IsAddonEnabled(common.ContainerMonitoringAddonName)
 }
 
 // IsClusterAutoscalerEnabled checks if the cluster autoscaler addon is enabled
 func (k *KubernetesConfig) IsClusterAutoscalerEnabled() bool {
-	return k.IsAddonEnabled(ClusterAutoscalerAddonName)
+	return k.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 }
 
 // IsAzurePolicyEnabled checks if the azure policy addon is enabled
 func (k *KubernetesConfig) IsAzurePolicyEnabled() bool {
-	return k.IsAddonEnabled(AzurePolicyAddonName)
+	return k.IsAddonEnabled(common.AzurePolicyAddonName)
 }
 
 // IsAppGWIngressEnabled checks if the appgw ingress addon is enabled
 func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
-	return k.IsAddonEnabled(AppGwIngressAddonName)
+	return k.IsAddonEnabled(common.AppGwIngressAddonName)
 }
 
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
-	return k.IsAddonEnabled(IPMASQAgentAddonName)
+	return k.IsAddonEnabled(common.IPMASQAgentAddonName)
 }
 
 // IsRBACEnabled checks if RBAC is enabled
@@ -1857,7 +1857,7 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	if p.OrchestratorProfile == nil || p.OrchestratorProfile.KubernetesConfig == nil {
 		return false
 	}
-	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(NVIDIADevicePluginAddonName)
+	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack
@@ -1966,7 +1966,7 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 
 // IsReschedulerEnabled checks if the rescheduler addon is enabled
 func (k *KubernetesConfig) IsReschedulerEnabled() bool {
-	return k.IsAddonEnabled(ReschedulerAddonName)
+	return k.IsAddonEnabled(common.ReschedulerAddonName)
 }
 
 // PrivateJumpboxProvision checks if a private cluster has jumpbox auto-provisioning

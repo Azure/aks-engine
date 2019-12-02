@@ -40,84 +40,8 @@ const (
 	NetworkPluginKubenet = "kubenet"
 	// NetworkPluginFlannel is the string expression for flannel network plugin
 	NetworkPluginFlannel = "flannel"
-	// KubeDNSAddonName is the name of the kube-dns-deployment addon
-	KubeDNSAddonName = "kube-dns-deployment"
-	// CoreDNSAddonName is the name of the coredns addon
-	CoreDNSAddonName = "coredns"
-	// DNSAutoscalerAddonName is the name of the coredns addon
-	DNSAutoscalerAddonName = "dns-autoscaler"
-	// KubeProxyAddonName is the name of the kube-proxy config addon
-	KubeProxyAddonName = "kube-proxy-daemonset"
-	// AzureStorageClassesAddonName is the name of the azure storage classes addon
-	AzureStorageClassesAddonName = "azure-storage-classes"
-	// AzureNetworkPolicyAddonName is the name of the azure npm daemon set addon
-	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
-	// CloudNodeManagerAddonName is the name of the cloud node manager addon
-	CloudNodeManagerAddonName = "cloud-node-manager"
-	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
-	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
-	// CalicoAddonName is the name of calico daemonset addon
-	CalicoAddonName = "calico-daemonset"
-	// CiliumAddonName is the name of cilium daemonset addon
-	CiliumAddonName = "cilium-daemonset"
-	// FlannelAddonName is the name of flannel plugin daemonset addon
-	FlannelAddonName = "flannel-daemonset"
-	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
-	AADAdminGroupAddonName = "aad-default-admin-group-rbac"
-	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
-	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
-	// AzureCNINetworkMonitorAddonName is the name of the azure cni network monitor addon
-	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
-	// AuditPolicyAddonName is the name of the audit policy addon
-	AuditPolicyAddonName = "audit-policy"
-	// TillerAddonName is the name of the tiller addon deployment
-	TillerAddonName = "tiller"
-	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	AADPodIdentityAddonName = "aad-pod-identity"
-	// ACIConnectorAddonName is the name of the aci-connector addon deployment
-	ACIConnectorAddonName = "aci-connector"
-	// AppGwIngressAddonName appgw addon
-	AppGwIngressAddonName = "appgw-ingress"
-	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
-	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
-	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
-	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
-	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
-	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
-	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DashboardAddonName = "kubernetes-dashboard"
-	// ClusterAutoscalerAddonName is the name of the autoscaler addon deployment
-	ClusterAutoscalerAddonName = "cluster-autoscaler"
-	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	SMBFlexVolumeAddonName = "smb-flexvolume"
-	// KeyVaultFlexVolumeAddonName is the name of the keyvault flexvolume addon deployment
-	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
-	ScheduledMaintenanceAddonName = "scheduled-maintenance"
 	// DefaultGeneratorCode specifies the source generator of the cluster template.
 	DefaultGeneratorCode = "aksengine"
-	// ReschedulerAddonName is the name of the rescheduler addon deployment
-	ReschedulerAddonName = "rescheduler"
-	// HeapsterAddonName is the name of the heapster addon deployment
-	HeapsterAddonName = "heapster"
-	// MetricsServerAddonName is the name of the kubernetes Metrics server addon deployment
-	MetricsServerAddonName = "metrics-server"
-	// NVIDIADevicePluginAddonName is the name of the kubernetes NVIDIA Device Plugin daemon set
-	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
-	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
-	ContainerMonitoringAddonName = "container-monitoring"
-	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
-	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
-	// AzurePolicyAddonName is the name of the kubernetes Azure Policy addon
-	AzurePolicyAddonName = "azure-policy"
-	// NodeProblemDetectorAddonName is the name of the node problem detector addon
-	NodeProblemDetectorAddonName = "node-problem-detector"
-	// IPMASQAgentAddonName is the name of the ip masq agent addon
-	IPMASQAgentAddonName = "ip-masq-agent"
-	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
-	PodSecurityPolicyAddonName = "pod-security-policy"
 	// DefaultKubernetesKubeletMaxPods is the max pods per kubelet
 	DefaultKubernetesKubeletMaxPods = 110
 	// DefaultMasterEtcdServerPort is the default etcd server port for Kubernetes master nodes

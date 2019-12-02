@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -136,7 +137,7 @@ func TestCreateApplicationGatewayWAF(t *testing.T) {
 				KubernetesConfig: &api.KubernetesConfig{
 					Addons: []api.KubernetesAddon{
 						{
-							Name:    AppGwIngressAddonName,
+							Name:    common.AppGwIngressAddonName,
 							Enabled: to.BoolPtr(true),
 							Config: map[string]string{
 								"appgw-sku": "WAF_v2",
@@ -265,7 +266,7 @@ func TestCreateApplicationGatewayPrivateIP(t *testing.T) {
 				KubernetesConfig: &api.KubernetesConfig{
 					Addons: []api.KubernetesAddon{
 						{
-							Name:    AppGwIngressAddonName,
+							Name:    common.AppGwIngressAddonName,
 							Enabled: to.BoolPtr(true),
 							Config: map[string]string{
 								"appgw-private-ip": "10.0.0.1",

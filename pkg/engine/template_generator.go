@@ -696,13 +696,13 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
 		},
 		"IsAzurePolicyAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.AzurePolicyAddonName)
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AzurePolicyAddonName)
 		},
 		"IsACIConnectorAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ACIConnectorAddonName)
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName)
 		},
 		"IsClusterAutoscalerAddonEnabled": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(api.ClusterAutoscalerAddonName)
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
 		"GetComponentImageReference": func(name string) string {
 			k := cs.Properties.OrchestratorProfile.KubernetesConfig

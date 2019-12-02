@@ -117,3 +117,81 @@ func GetAllSupportedDockerCEVersions() []string {
 
 // MinCloudProviderQPSToBucketFactor defines the minimum ratio between QPS and Bucket size for cloudprovider rate limiting
 const MinCloudProviderQPSToBucketFactor float64 = 0.1
+
+// Addon name consts
+const (
+	// HeapsterAddonName is the name of the heapster addon
+	HeapsterAddonName = "heapster"
+	// TillerAddonName is the name of the tiller addon deployment
+	TillerAddonName = "tiller"
+	// ACIConnectorAddonName is the name of the aci-connector addon deployment
+	ACIConnectorAddonName = "aci-connector"
+	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
+	ClusterAutoscalerAddonName = "cluster-autoscaler"
+	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
+	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
+	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
+	SMBFlexVolumeAddonName = "smb-flexvolume"
+	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
+	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
+	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
+	DashboardAddonName = "kubernetes-dashboard"
+	// ReschedulerAddonName is the name of the rescheduler addon deployment
+	ReschedulerAddonName = "rescheduler"
+	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
+	MetricsServerAddonName = "metrics-server"
+	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
+	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
+	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
+	ContainerMonitoringAddonName = "container-monitoring"
+	// IPMASQAgentAddonName is the name of the ip masq agent addon
+	IPMASQAgentAddonName = "ip-masq-agent"
+	// AzureCNINetworkMonitorAddonName is the name of the Azure CNI networkmonitor addon
+	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
+	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
+	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
+	// AzureVnetTelemetryContainerName is the name of the Azure vnet telemetry container in the azure-npm-daemonset addon
+	AzureVnetTelemetryContainerName = "azure-vnet-telemetry-daemonset"
+	// CloudNodeManagerAddonName is the name of the cloud node manager addon
+	CloudNodeManagerAddonName = "cloud-node-manager"
+	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
+	DNSAutoscalerAddonName = "dns-autoscaler"
+	// CalicoAddonName is the name of calico daemonset addon
+	CalicoAddonName = "calico-daemonset"
+	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
+	AADPodIdentityAddonName = "aad-pod-identity"
+	// AzurePolicyAddonName is the name of the Azure Policy addon
+	AzurePolicyAddonName = "azure-policy"
+	// AppGwIngressAddonName appgw addon
+	AppGwIngressAddonName = "appgw-ingress"
+	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
+	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
+	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
+	// AzureStorageClassesAddonName is the name of the azure storage classes addon
+	AzureStorageClassesAddonName = "azure-storage-classes"
+	// KubeDNSAddonName is the name of the kube-dns-deployment addon
+	KubeDNSAddonName = "kube-dns-deployment"
+	// CoreDNSAddonName is the name of the coredns addon
+	CoreDNSAddonName = "coredns"
+	// KubeProxyAddonName is the name of the kube-proxy config addon
+	KubeProxyAddonName = "kube-proxy-daemonset"
+	// CiliumAddonName is the name of cilium daemonset addon
+	CiliumAddonName = "cilium-daemonset"
+	// FlannelAddonName is the name of flannel plugin daemonset addon
+	FlannelAddonName = "flannel-daemonset"
+	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
+	AADAdminGroupAddonName = "aad-default-admin-group-rbac"
+	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
+	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
+	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
+	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
+	// AuditPolicyAddonName is the name of the audit policy addon
+	AuditPolicyAddonName = "audit-policy"
+	// ScheduledMaintenanceAddonName is the name of the scheduled maintenance addon deployment
+	ScheduledMaintenanceAddonName = "scheduled-maintenance"
+	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
+	PodSecurityPolicyAddonName = "pod-security-policy"
+	// NodeProblemDetectorAddonName is the name of the node problem detector addon
+	NodeProblemDetectorAddonName = "node-problem-detector"
+)
