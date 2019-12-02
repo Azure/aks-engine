@@ -31654,6 +31654,9 @@ spec:
         - name: localtime
           mountPath: /etc/localtime
           readOnly: true
+        - name: kmsg
+          mountPath: /dev/kmsg
+          readOnly: true
       volumes:
       - name: log
         hostPath:
@@ -31662,6 +31665,10 @@ spec:
         hostPath:
           path: /etc/localtime
           type: "FileOrCreate"
+      - name: kmsg
+        hostPath:
+          path: /dev/kmsg
+          type: "CharDevice"
       serviceAccountName: node-problem-detector
       tolerations:
       - operator: "Exists"
