@@ -31633,7 +31633,7 @@ spec:
         command:
         - "/bin/sh"
         - "-c"
-        - "exec /node-problem-detector --logtostderr --config.system-log-monitor={{ContainerConfig "systemLogMonitor"}} --config.custom-plugin-monitor={{ContainerConfig "customPluginMonitor"}} --config.system-stats-monitor={{ContainerConfig "systemStatsMonitor"}} >>/var/log/node-problem-detector.log 2>&1"
+        - "exec /node-problem-detector --logtostderr --prometheus-address=0.0.0.0 --config.system-log-monitor={{ContainerConfig "systemLogMonitor"}} --config.custom-plugin-monitor={{ContainerConfig "customPluginMonitor"}} --config.system-stats-monitor={{ContainerConfig "systemStatsMonitor"}} >>/var/log/node-problem-detector.log 2>&1"
         securityContext:
           privileged: true
         resources:
@@ -31675,6 +31675,23 @@ spec:
         effect: "NoExecute"
       - key: "CriticalAddonsOnly"
         operator: "Exists"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: node-problem-detector
+  name: node-problem-detector
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+  - name: exporter
+    port: 20257
+    protocol: TCP
+  selector:
+    app: node-problem-detector
+  type: ClusterIP
 `)
 
 func k8sContaineraddonsNodeProblemDetectorYamlBytes() ([]byte, error) {
