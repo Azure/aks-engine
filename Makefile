@@ -21,6 +21,7 @@ VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
 GOBIN			?= $(shell $(GO) env GOPATH)/bin
+TOOLSBIN		:= $(CURDIR)/hack/tools/bin
 ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
@@ -51,6 +52,9 @@ endif
 # Active module mode, as we use go modules to manage dependencies
 export GO111MODULE=on
 
+# Add the tools bin to the front of the path
+export PATH := $(TOOLSBIN):$(PATH)
+
 all: build
 
 .PHONY: dev
@@ -75,6 +79,7 @@ validate-shell:
 
 .PHONY: generate
 generate: bootstrap
+	@echo "$$(go-bindata --version)"
 	go generate $(GOFLAGS) -v ./... > /dev/null 2>&1
 
 .PHONY: generate-azure-constants
@@ -143,7 +148,7 @@ build-container:
 	echo 'This target works only for published releases. For example, "VERSION=0.32.0 make build-container".'
 
 .PHONY: clean
-clean:
+clean: tools-clean
 	@rm -rf $(BINDIR) ./_dist ./pkg/helpers/unit_tests
 
 GIT_BASEDIR    = $(shell git rev-parse --show-toplevel 2>/dev/null)
@@ -177,9 +182,17 @@ ifndef HAS_GIT
 	$(error You must install Git)
 endif
 
+.PHONY: tools-reload
+tools-reload:
+	make -C hack/tools reload
+
 .PHONY: tools-install
 tools-install:
 	make -C hack/tools/
+
+.PHONY: tools-clean
+tools-clean:
+	make -C hack/tools/ clean
 
 ci: bootstrap test-style build test lint
 	./scripts/coverage.sh --coveralls
