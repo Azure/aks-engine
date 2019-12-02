@@ -769,7 +769,7 @@ func getContainerAddonsString(cs *api.ContainerService, sourcePath string) strin
 
 	for _, addonName := range addonNames {
 		setting := settingsMap[addonName]
-		if setting.isEnabled {
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(addonName) {
 			var input string
 			if setting.base64Data != "" {
 				var err error
