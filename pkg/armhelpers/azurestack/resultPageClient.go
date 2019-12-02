@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
-	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	azcompute "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 )
 
 //VirtualMachineListResultPageClient Virtual Machine List Result Page Client

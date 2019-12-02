@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers/testserver"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-10-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -17,8 +17,8 @@ const (
 	subscriptionID                             = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
 	tenantID                                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 	resourceGroup                              = "TestResourceGroup"
-	computeAPIVersion                          = "2018-10-01"
-	diskAPIVersion                             = "2018-06-01"
+	computeAPIVersion                          = "2019-03-01"
+	diskAPIVersion                             = "2019-03-01"
 	networkAPIVersion                          = "2018-08-01"
 	deploymentAPIVersion                       = "2018-05-01"
 	resourceGroupAPIVersion                    = "2018-05-01"
