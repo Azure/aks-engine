@@ -139,7 +139,6 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 
 These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine [v0.43.1](https://github.com/Azure/aks-engine/releases/tag/v0.43.1):
 
-- 1.16.1
 - 1.15.5
 - 1.15.4
 - 1.14.8
@@ -152,7 +151,7 @@ _Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |
 |----------------------------|--------------------|---------------------|-------|
 | v0.41.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2019 (2019.09.19)](https://github.com/Azure/aks-engine/blob/v0.41.2/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.09.19.txt) | 1.15.4 - 1.15.3 - 1.14.7 - 1.14.6 - 1.13.11 -  1.13.10 |  |
-| v0.43.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.16.1 - 1.15.5 - 1.15.4 - 1.14.8 - 1.14.7 |  |
+| v0.43.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.15.5 - 1.15.4 - 1.14.8 - 1.14.7 |  |
 
 ## Azure Monitor for containers
 
