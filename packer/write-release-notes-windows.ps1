@@ -22,6 +22,10 @@ Log "Build Branch: $env:BUILD_BRANCH"
 Log "Commit:       $env:BUILD_COMMIT"
 Log ""
 
+$vhdId = Get-Content 'c:\vhd-id.txt'
+LOG ("VHD ID:      $vhdId")
+LOG ""
+
 Log "System Info"
 $systemInfo = Get-ItemProperty -Path 'HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion'
 Log ("`t{0,-14} : {1}" -f "OS Name", $systemInfo.ProductName)
