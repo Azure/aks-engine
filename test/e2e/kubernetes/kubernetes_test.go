@@ -1780,7 +1780,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Creating an AzureFile storage class")
 					storageclassName := "azurefile" // should be the same as in storageclass-azurefile.yaml
 					scFilename := "storageclass-azurefile.yaml"
-					if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
+					useCloudControllerManager := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
+					if useCloudControllerManager && common.IsKubernetesVersionGe(orchestratorVersion, "1.16.0") {
 						scFilename = "storageclass-azurefile-external.yaml"
 					}
 					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, scFilename), storageclassName)
