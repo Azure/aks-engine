@@ -177,6 +177,7 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml
+// ../../parts/k8s/containeraddons/node-problem-detector.yaml
 // ../../parts/k8s/kubeconfig.json
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
@@ -31579,6 +31580,138 @@ func k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml() (*asset, err
 	return a, nil
 }
 
+var _k8sContaineraddonsNodeProblemDetectorYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: node-problem-detector
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: node-problem-detector-binding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:node-problem-detector
+subjects:
+- kind: ServiceAccount
+  name: node-problem-detector
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-problem-detector-{{ContainerConfig "versionLabel"}}
+  namespace: kube-system
+  labels:
+    k8s-app: node-problem-detector
+    version: {{ContainerConfig "versionLabel"}}
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: node-problem-detector
+      version: {{ContainerConfig "versionLabel"}}
+  template:
+    metadata:
+      labels:
+        k8s-app: node-problem-detector
+        version: {{ContainerConfig "versionLabel"}}
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+      - name: node-problem-detector
+        image: {{ContainerImage "node-problem-detector"}}
+        command:
+        - "/bin/sh"
+        - "-c"
+        - "exec /node-problem-detector --logtostderr --prometheus-address=0.0.0.0 --config.system-log-monitor={{ContainerConfig "systemLogMonitor"}} --config.custom-plugin-monitor={{ContainerConfig "customPluginMonitor"}} --config.system-stats-monitor={{ContainerConfig "systemStatsMonitor"}} >>/var/log/node-problem-detector.log 2>&1"
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "node-problem-detector"}}
+            memory: {{ContainerMemLimits "node-problem-detector"}}
+          requests:
+            cpu: {{ContainerCPUReqs "node-problem-detector"}}
+            memory: {{ContainerMemReqs "node-problem-detector"}}
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        volumeMounts:
+        - name: log
+          mountPath: /var/log
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: kmsg
+          mountPath: /dev/kmsg
+          readOnly: true
+      volumes:
+      - name: log
+        hostPath:
+          path: /var/log/
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: "FileOrCreate"
+      - name: kmsg
+        hostPath:
+          path: /dev/kmsg
+          type: "CharDevice"
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      serviceAccountName: node-problem-detector
+      tolerations:
+      - operator: "Exists"
+        effect: "NoExecute"
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: node-problem-detector
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: node-problem-detector
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+  - name: exporter
+    port: 20257
+    protocol: TCP
+  selector:
+    k8s-app: node-problem-detector
+  type: ClusterIP
+`)
+
+func k8sContaineraddonsNodeProblemDetectorYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsNodeProblemDetectorYaml, nil
+}
+
+func k8sContaineraddonsNodeProblemDetectorYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsNodeProblemDetectorYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/node-problem-detector.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sKubeconfigJson = []byte(`    {
         "apiVersion": "v1",
         "clusters": [
@@ -38082,6 +38215,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml":                   k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":             k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml":                    k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml,
+	"k8s/containeraddons/node-problem-detector.yaml":                                       k8sContaineraddonsNodeProblemDetectorYaml,
 	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
 	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
@@ -38379,6 +38513,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-omsagent-daemonset.yaml":              {k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
+			"node-problem-detector.yaml":                                  {k8sContaineraddonsNodeProblemDetectorYaml, map[string]*bintree{}},
 		}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},

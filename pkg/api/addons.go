@@ -434,6 +434,27 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultNodeProblemDetectorConfig := KubernetesAddon{
+		Name:    NodeProblemDetectorAddonName,
+		Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+		Config: map[string]string{
+			"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+			"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+			"systemStatsMonitor":  "/config/system-stats-monitor.json",
+			"versionLabel":        "v0.8.0",
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           "node-problem-detector",
+				Image:          "k8s.gcr.io/node-problem-detector:v0.8.0",
+				CPURequests:    "20m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "100Mi",
+			},
+		},
+	}
+
 	defaultAppGwAddonsConfig := KubernetesAddon{
 		Name:    AppGwIngressAddonName,
 		Enabled: to.BoolPtr(DefaultAppGwIngressAddonEnabled),
@@ -530,6 +551,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureDiskCSIDriverAddonsConfig,
 		defaultAzureFileCSIDriverAddonsConfig,
 		defaultsAzurePolicyAddonsConfig,
+		defaultNodeProblemDetectorConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

@@ -137,6 +137,12 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(AzurePolicyAddonName),
 			destinationFile: "azure-policy-deployment.yaml",
 		},
+		NodeProblemDetectorAddonName: {
+			sourceFile:      "node-problem-detector.yaml",
+			base64Data:      k.GetAddonScript(NodeProblemDetectorAddonName),
+			destinationFile: "node-problem-detector.yaml",
+			isEnabled:       k.IsAddonEnabled(NodeProblemDetectorAddonName),
+		},
 		CloudNodeManagerAddonName: {
 			sourceFile:      "kubernetesmasteraddons-cloud-node-manager.yaml",
 			base64Data:      "",

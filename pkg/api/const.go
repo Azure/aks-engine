@@ -133,6 +133,8 @@ const (
 	DefaultAADPodIdentityAddonEnabled = false
 	// DefaultAzurePolicyAddonEnabled determines the aks-engine provided default for enabling azure policy addon
 	DefaultAzurePolicyAddonEnabled = false
+	// DefaultNodeProblemDetectorAddonEnabled determines the aks-engine provided default for enabling the node problem detector addon
+	DefaultNodeProblemDetectorAddonEnabled = false
 	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
 	DefaultACIConnectorAddonEnabled = false
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
@@ -219,6 +221,8 @@ const (
 	PodSecurityPolicyAddonName = "pod-security-policy"
 	// AzurePolicyAddonName is the name of the Azure Policy addon
 	AzurePolicyAddonName = "azure-policy"
+	// NodeProblemDetectorAddonName is the name of the node problem detector addon
+	NodeProblemDetectorAddonName = "node-problem-detector"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
