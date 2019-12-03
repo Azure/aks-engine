@@ -241,6 +241,7 @@ switch ($env:ProvisioningPhase)
         Install-Docker
         Get-ContainerImages
         Get-FilesToCacheOnVHD
+        (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }
     default
     {
