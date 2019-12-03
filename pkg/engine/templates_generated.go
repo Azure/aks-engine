@@ -31669,6 +31669,8 @@ spec:
         hostPath:
           path: /dev/kmsg
           type: "CharDevice"
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       serviceAccountName: node-problem-detector
       tolerations:
       - operator: "Exists"
@@ -31680,7 +31682,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: node-problem-detector
+    k8s-app: node-problem-detector
+    addonmanager.kubernetes.io/mode: Reconcile
   name: node-problem-detector
   namespace: kube-system
 spec:
@@ -31690,7 +31693,7 @@ spec:
     port: 20257
     protocol: TCP
   selector:
-    app: node-problem-detector
+    k8s-app: node-problem-detector
   type: ClusterIP
 `)
 
