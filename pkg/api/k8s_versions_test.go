@@ -24,7 +24,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"kube-apiserver":                       "kube-apiserver:v1.17.0",
 		"kube-proxy":                           "kube-proxy:v1.17.0",
 		"ccm":                                  "azure-cloud-controller-manager:v0.3.0",
-		common.CloudNodeManagerAddonName:              "azure-cloud-node-manager:v0.3.0",
+		common.CloudNodeManagerAddonName:       "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                           "v1.17.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
 		"exechealthz":                          k8sComponent["exechealthz"],
@@ -69,7 +69,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.16.0",
 		"ccm":                                  "azure-cloud-controller-manager:v0.3.0",
-		common.CloudNodeManagerAddonName:              "azure-cloud-node-manager:v0.3.0",
+		common.CloudNodeManagerAddonName:       "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                           "v1.16.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
 		"exechealthz":                          k8sComponent["exechealthz"],
