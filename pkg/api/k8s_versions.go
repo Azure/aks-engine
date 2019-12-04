@@ -30,7 +30,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"aci-connector":                        "virtual-kubelet:latest",
 		common.ContainerMonitoringAddonName:    "oms:ciprod11012019",
 		common.AzureCNINetworkMonitorAddonName: "networkmonitor:v0.0.6",
-		"cluster-autoscaler":                   "cluster-autoscaler:v1.16.2",
+		"cluster-autoscaler":                   "cluster-autoscaler:v1.17.0",
 		common.NVIDIADevicePluginAddonName:     "k8s-device-plugin:1.11",
 		"k8s-dns-sidecar":                      "k8s-dns-sidecar-amd64:1.14.10",
 		"nodestatusfreq":                       DefaultKubernetesNodeStatusUpdateFrequency,
