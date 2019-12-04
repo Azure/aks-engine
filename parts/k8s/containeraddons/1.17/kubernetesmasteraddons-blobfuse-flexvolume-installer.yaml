@@ -15,6 +15,8 @@ spec:
       labels:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       containers:
       - name: blobfuse-flexvol-installer

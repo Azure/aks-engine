@@ -9863,6 +9863,7 @@ spec:
         tier: node
         k8s-app: kube-proxy
       annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
@@ -22923,6 +22924,8 @@ spec:
       labels:
         component: nmi
         tier: node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
@@ -23275,6 +23278,8 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -23343,6 +23348,8 @@ spec:
       labels:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       containers:
       - name: blobfuse-flexvol-installer
@@ -23825,6 +23832,8 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:
@@ -24209,6 +24218,8 @@ spec:
     metadata:
       labels:
         k8s-app: cloud-node-manager
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: cloud-node-manager
@@ -24751,6 +24762,8 @@ spec:
         app: keyvault-flexvolume
         kubernetes.io/cluster-service: "true"
         addonmanager.kubernetes.io/mode: Reconcile
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       tolerations:
       containers:
@@ -25178,6 +25191,8 @@ spec:
     metadata:
       labels:
         k8s-app: nvidia-device-plugin
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       affinity:
@@ -25577,6 +25592,7 @@ spec:
     metadata:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
         schema-versions:  {{ContainerConfig "schema-versions"}}
       labels:
@@ -25848,6 +25864,8 @@ spec:
       labels:
         name: smb
         kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       containers:
       - name: smb-flexvol-installer

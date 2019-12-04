@@ -49,6 +49,7 @@ spec:
         tier: node
         k8s-app: kube-proxy
       annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       priorityClassName: system-node-critical
