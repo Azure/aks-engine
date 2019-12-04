@@ -161,6 +161,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.0-beta.1":  true,
 	"1.17.0-beta.2":  true,
 	"1.17.0-rc.1":    true,
+	"1.17.0-rc.2":    true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release
