@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -209,7 +210,7 @@ func TestK8sOutputsWithAppGwIngressAddon(t *testing.T) {
 				KubernetesConfig: &api.KubernetesConfig{
 					Addons: []api.KubernetesAddon{
 						{
-							Name:    AppGwIngressAddonName,
+							Name:    common.AppGwIngressAddonName,
 							Enabled: to.BoolPtr(true),
 						},
 					},

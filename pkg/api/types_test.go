@@ -3370,7 +3370,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return %t when no aad pod identity addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(AADPodIdentityAddonName))
+	c.Addons = append(c.Addons, getMockAddon(common.AADPodIdentityAddonName))
 	enabled = c.IsAADPodIdentityEnabled()
 	if enabled != enabledDefault {
 		t.Fatalf("KubernetesConfig.IsAADPodIdentityEnabled() should return default when aad pod identity addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
@@ -3380,7 +3380,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    AADPodIdentityAddonName,
+				Name:    common.AADPodIdentityAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3394,7 +3394,7 @@ func TestIsAADPodIdentityEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    AADPodIdentityAddonName,
+				Name:    common.AADPodIdentityAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3417,7 +3417,7 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return %t when no cluster autoscaler addon has been specified, instead returned %t", false, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(ClusterAutoscalerAddonName))
+	c.Addons = append(c.Addons, getMockAddon(common.ClusterAutoscalerAddonName))
 	enabled = c.IsClusterAutoscalerEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsClusterAutoscalerEnabled() should return false when cluster autoscaler has been specified w/ no enabled value, instead returned %t", enabled)
@@ -3427,7 +3427,7 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3441,7 +3441,7 @@ func TestIsClusterAutoscalerEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ClusterAutoscalerAddonName,
+				Name:    common.ClusterAutoscalerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3464,7 +3464,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return %t when no container monitoring addon has been specified, instead returned %t", false, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(ContainerMonitoringAddonName))
+	c.Addons = append(c.Addons, getMockAddon(common.ContainerMonitoringAddonName))
 	enabled = c.IsContainerMonitoringAddonEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return false when container monitoring addon has been specified w/ no enabled value, instead returned %t", enabled)
@@ -3474,7 +3474,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ContainerMonitoringAddonName,
+				Name:    common.ContainerMonitoringAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3488,7 +3488,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ContainerMonitoringAddonName,
+				Name:    common.ContainerMonitoringAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3503,7 +3503,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ContainerMonitoringAddonName,
+				Name:    common.ContainerMonitoringAddonName,
 				Enabled: &b,
 				Config: map[string]string{
 					"logAnalyticsWorkspaceResourceId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-workspace-rg/providers/Microsoft.OperationalInsights/workspaces/test-workspace",
@@ -3516,7 +3516,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
 	}
 
-	addon := c.GetAddonByName(ContainerMonitoringAddonName)
+	addon := c.GetAddonByName(common.ContainerMonitoringAddonName)
 	if addon.Config == nil || len(addon.Config) == 0 {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
 	}
@@ -3540,7 +3540,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ContainerMonitoringAddonName,
+				Name:    common.ContainerMonitoringAddonName,
 				Enabled: &b,
 				Config: map[string]string{
 					"workspaceGuid": "MDAwMDAwMDAtMDAwMC0wMDAwLTAwMDAtMDAwMDAwMDAwMDAw",
@@ -3554,7 +3554,7 @@ func TestIsContainerMonitoringEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should return true when container monitoring addon has been specified as enabled, instead returned %t", enabled)
 	}
 
-	addon = c.GetAddonByName(ContainerMonitoringAddonName)
+	addon = c.GetAddonByName(common.ContainerMonitoringAddonName)
 	if addon.Config == nil || len(addon.Config) == 0 {
 		t.Fatalf("KubernetesConfig.IsContainerMonitoringAddonEnabled() should have addon config instead returned null or empty")
 	}
@@ -3579,7 +3579,7 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 	}
 	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name:    NVIDIADevicePluginAddonName,
+			Name:    common.NVIDIADevicePluginAddonName,
 			Enabled: to.BoolPtr(true),
 		},
 	}
@@ -3590,7 +3590,7 @@ func TestIsNVIDIADevicePluginEnabled(t *testing.T) {
 
 	p.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name:    NVIDIADevicePluginAddonName,
+			Name:    common.NVIDIADevicePluginAddonName,
 			Enabled: to.BoolPtr(false),
 		},
 	}
@@ -3612,7 +3612,7 @@ func TestIsAzurePolicyEnabled(t *testing.T) {
 		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return %t when no azure policy addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
 	// Addon present, but enabled not specified
-	c.Addons = append(c.Addons, getMockAddon(AzurePolicyAddonName))
+	c.Addons = append(c.Addons, getMockAddon(common.AzurePolicyAddonName))
 	enabled = c.IsAzurePolicyEnabled()
 	if enabled != enabledDefault {
 		t.Fatalf("KubernetesConfig.IsAzurePolicyEnabled() should return default when azure policy addon addon has been specified w/ no enabled value, expected %t, instead returned %t", enabledDefault, enabled)
@@ -3622,7 +3622,7 @@ func TestIsAzurePolicyEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    AzurePolicyAddonName,
+				Name:    common.AzurePolicyAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3636,7 +3636,7 @@ func TestIsAzurePolicyEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    AzurePolicyAddonName,
+				Name:    common.AzurePolicyAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3682,7 +3682,7 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	if enabled != enabledDefault {
 		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return %t when no rescheduler addon has been specified, instead returned %t", enabledDefault, enabled)
 	}
-	c.Addons = append(c.Addons, getMockAddon(ReschedulerAddonName))
+	c.Addons = append(c.Addons, getMockAddon(common.ReschedulerAddonName))
 	enabled = c.IsReschedulerEnabled()
 	if enabled {
 		t.Fatalf("KubernetesConfig.IsReschedulerEnabled() should return true when a custom rescheduler addon has been specified, instead returned %t", enabled)
@@ -3691,7 +3691,7 @@ func TestIsReschedulerEnabled(t *testing.T) {
 	c = KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    ReschedulerAddonName,
+				Name:    common.ReschedulerAddonName,
 				Enabled: &b,
 			},
 		},
@@ -3714,7 +3714,7 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
-							getMockAddon(IPMASQAgentAddonName),
+							getMockAddon(common.IPMASQAgentAddonName),
 						},
 					},
 				},
@@ -3741,10 +3741,10 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name: IPMASQAgentAddonName,
+								Name: common.IPMASQAgentAddonName,
 								Containers: []KubernetesContainerSpec{
 									{
-										Name: IPMASQAgentAddonName,
+										Name: common.IPMASQAgentAddonName,
 									},
 								},
 							},
@@ -3762,11 +3762,11 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name:    IPMASQAgentAddonName,
+								Name:    common.IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(false),
 								Containers: []KubernetesContainerSpec{
 									{
-										Name: IPMASQAgentAddonName,
+										Name: common.IPMASQAgentAddonName,
 									},
 								},
 							},
@@ -3784,11 +3784,11 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name:    IPMASQAgentAddonName,
+								Name:    common.IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(false),
 								Containers: []KubernetesContainerSpec{
 									{
-										Name: IPMASQAgentAddonName,
+										Name: common.IPMASQAgentAddonName,
 									},
 								},
 							},
@@ -3809,11 +3809,11 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name:    IPMASQAgentAddonName,
+								Name:    common.IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(true),
 								Containers: []KubernetesContainerSpec{
 									{
-										Name: IPMASQAgentAddonName,
+										Name: common.IPMASQAgentAddonName,
 									},
 								},
 							},
@@ -3834,11 +3834,11 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name:    IPMASQAgentAddonName,
+								Name:    common.IPMASQAgentAddonName,
 								Enabled: to.BoolPtr(true),
 								Containers: []KubernetesContainerSpec{
 									{
-										Name: IPMASQAgentAddonName,
+										Name: common.IPMASQAgentAddonName,
 									},
 								},
 							},
@@ -5579,7 +5579,7 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 }
 
 func TestKubernetesConfig_GetAddonScript(t *testing.T) {
-	addon := getMockAddon(IPMASQAgentAddonName)
+	addon := getMockAddon(common.IPMASQAgentAddonName)
 	addon.Data = "foobarbazdata"
 	k := &KubernetesConfig{
 		Addons: []KubernetesAddon{
@@ -5588,7 +5588,7 @@ func TestKubernetesConfig_GetAddonScript(t *testing.T) {
 	}
 
 	expected := "foobarbazdata"
-	actual := k.GetAddonScript(IPMASQAgentAddonName)
+	actual := k.GetAddonScript(common.IPMASQAgentAddonName)
 	if actual != expected {
 		t.Errorf("expected GetAddonScript to return %s, but got %s", expected, actual)
 	}

@@ -181,48 +181,6 @@ const (
 	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
-	// HeapsterAddonName is the name of the heapster addon
-	HeapsterAddonName = "heapster"
-	// TillerAddonName is the name of the tiller addon deployment
-	TillerAddonName = "tiller"
-	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
-	AADPodIdentityAddonName = "aad-pod-identity"
-	// ACIConnectorAddonName is the name of the aci-connector addon deployment
-	ACIConnectorAddonName = "aci-connector"
-	// AppGwIngressAddonName appgw addon
-	AppGwIngressAddonName = "appgw-ingress"
-	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
-	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
-	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
-	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
-	// ClusterAutoscalerAddonName is the name of the cluster autoscaler addon deployment
-	ClusterAutoscalerAddonName = "cluster-autoscaler"
-	// BlobfuseFlexVolumeAddonName is the name of the blobfuse flexvolume addon
-	BlobfuseFlexVolumeAddonName = "blobfuse-flexvolume"
-	// SMBFlexVolumeAddonName is the name of the smb flexvolume addon
-	SMBFlexVolumeAddonName = "smb-flexvolume"
-	// KeyVaultFlexVolumeAddonName is the name of the key vault flexvolume addon deployment
-	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
-	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
-	DashboardAddonName = "kubernetes-dashboard"
-	// ReschedulerAddonName is the name of the rescheduler addon deployment
-	ReschedulerAddonName = "rescheduler"
-	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
-	MetricsServerAddonName = "metrics-server"
-	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
-	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
-	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
-	ContainerMonitoringAddonName = "container-monitoring"
-	// CalicoAddonName is the name of calico daemonset addon
-	CalicoAddonName = "calico-daemonset"
-	// IPMASQAgentAddonName is the name of the ip masq agent addon
-	IPMASQAgentAddonName = "ip-masq-agent"
-	// PodSecurityPolicyAddonName is the name of the PodSecurityPolicy addon
-	PodSecurityPolicyAddonName = "pod-security-policy"
-	// AzurePolicyAddonName is the name of the Azure Policy addon
-	AzurePolicyAddonName = "azure-policy"
-	// NodeProblemDetectorAddonName is the name of the node problem detector addon
-	NodeProblemDetectorAddonName = "node-problem-detector"
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
 	DefaultPrivateClusterEnabled = false
 	// NetworkPolicyAzure is the string expression for Azure CNI network policy manager
@@ -248,8 +206,6 @@ const (
 	DefaultVMSSOverProvisioningEnabled = false
 	// DefaultAuditDEnabled determines the aks-engine provided default for enabling auditd
 	DefaultAuditDEnabled = false
-	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DNSAutoscalerAddonName = "dns-autoscaler"
 	// DefaultUseCosmos determines if the cluster will use cosmos as etcd storage
 	DefaultUseCosmos = false
 	// etcdEndpointURIFmt is the name format for a typical etcd account uri
@@ -435,14 +391,6 @@ const (
 	DefaultEtcdDiskSizeGT10Nodes = "1024"
 	// DefaultEtcdDiskSizeGT20Nodes = size for Kubernetes master etcd disk volumes in GB if > 20 nodes
 	DefaultEtcdDiskSizeGT20Nodes = "2048"
-	// AzureCNINetworkMonitoringAddonName is the name of the Azure CNI networkmonitor addon
-	AzureCNINetworkMonitoringAddonName = "azure-cni-networkmonitor"
-	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
-	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
-	// CloudNodeManagerAddonName is the name of the cloud node manager addon
-	CloudNodeManagerAddonName = "cloud-node-manager"
-	// AzureVnetTelemetryAddonName is the name of the Azure vnet telemetry addon
-	AzureVnetTelemetryAddonName = "azure-vnet-telemetry-daemonset"
 	// DefaultMasterEtcdClientPort is the default etcd client port for Kubernetes master nodes
 	DefaultMasterEtcdClientPort = 2379
 	// DefaultKubeletEventQPS is 0, see --event-qps at https://kubernetes.io/docs/reference/generated/kubelet/

@@ -196,26 +196,26 @@ func TestAddonsIndexByName(t *testing.T) {
 func TestAssignDefaultAddonImages(t *testing.T) {
 	customImage := "myimage"
 	defaultAddonImages := map[string]string{
-		TillerAddonName:                    "gcr.io/kubernetes-helm/tiller:v2.13.1",
-		ACIConnectorAddonName:              "microsoft/virtual-kubelet:latest",
-		ClusterAutoscalerAddonName:         "k8s.gcr.io/cluster-autoscaler:v1.3.9",
-		BlobfuseFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-		SMBFlexVolumeAddonName:             "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		KeyVaultFlexVolumeAddonName:        "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-		DashboardAddonName:                 "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		ReschedulerAddonName:               "k8s.gcr.io/rescheduler:v0.4.0",
-		MetricsServerAddonName:             "k8s.gcr.io/metrics-server-amd64:v0.2.1",
-		NVIDIADevicePluginAddonName:        "nvidia/k8s-device-plugin:1.11",
-		ContainerMonitoringAddonName:       "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
-		IPMASQAgentAddonName:               "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
-		AzureCNINetworkMonitoringAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
-		DNSAutoscalerAddonName:             "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		HeapsterAddonName:                  "k8s.gcr.io/heapster-amd64:v1.5.4",
-		CalicoAddonName:                    "calico/typha:v3.8.0",
-		AzureNetworkPolicyAddonName:        "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-		AADPodIdentityAddonName:            "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
-		AzurePolicyAddonName:               "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
-		NodeProblemDetectorAddonName:       "k8s.gcr.io/node-problem-detector:v0.8.0",
+		common.TillerAddonName:                 "gcr.io/kubernetes-helm/tiller:v2.13.1",
+		common.ACIConnectorAddonName:           "microsoft/virtual-kubelet:latest",
+		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.3.9",
+		common.BlobfuseFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+		common.SMBFlexVolumeAddonName:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+		common.KeyVaultFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+		common.DashboardAddonName:              "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
+		common.ReschedulerAddonName:            "k8s.gcr.io/rescheduler:v0.4.0",
+		common.MetricsServerAddonName:          "k8s.gcr.io/metrics-server-amd64:v0.2.1",
+		common.NVIDIADevicePluginAddonName:     "nvidia/k8s-device-plugin:1.11",
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
+		common.IPMASQAgentAddonName:            "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
+		common.AzureCNINetworkMonitorAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
+		common.DNSAutoscalerAddonName:          "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
+		common.HeapsterAddonName:               "k8s.gcr.io/heapster-amd64:v1.5.4",
+		common.CalicoAddonName:                 "calico/typha:v3.8.0",
+		common.AzureNetworkPolicyAddonName:     "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+		common.AADPodIdentityAddonName:         "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+		common.AzurePolicyAddonName:            "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
 	}
 
 	customAddonImages := make(map[string]string)
@@ -271,13 +271,13 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 	var fakeCustomAddons []KubernetesAddon
 	for addonName := range defaultAddonMap {
 		containerName := addonName
-		if addonName == ContainerMonitoringAddonName {
+		if addonName == common.ContainerMonitoringAddonName {
 			containerName = "omsagent"
 		}
-		if addonName == CalicoAddonName {
+		if addonName == common.CalicoAddonName {
 			containerName = "calico-typha"
 		}
-		if addonName == AADPodIdentityAddonName {
+		if addonName == common.AADPodIdentityAddonName {
 			containerName = "nmi"
 		}
 		customAddon := KubernetesAddon{
@@ -1787,10 +1787,10 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 	properties.MasterProfile.Count = 1
 	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name: AzureCNINetworkMonitoringAddonName,
+			Name: common.AzureCNINetworkMonitorAddonName,
 			Containers: []KubernetesContainerSpec{
 				{
-					Name:           AzureCNINetworkMonitoringAddonName,
+					Name:           common.AzureCNINetworkMonitorAddonName,
 					CPURequests:    "50m",
 					MemoryRequests: "150Mi",
 					CPULimits:      "50m",
@@ -1802,7 +1802,7 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 	}
 	mockCS.setOrchestratorDefaults(true, true)
 
-	i := getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, AzureCNINetworkMonitoringAddonName)
+	i := getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, common.AzureCNINetworkMonitorAddonName)
 	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
 		t.Fatalf("Azure CNI networkmonitor addon should be present")
 	}
@@ -1814,7 +1814,7 @@ func TestIsAzureCNINetworkmonitorAddon(t *testing.T) {
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 	mockCS.setOrchestratorDefaults(true, true)
 
-	i = getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, AzureCNINetworkMonitoringAddonName)
+	i = getAddonsIndexByName(properties.OrchestratorProfile.KubernetesConfig.Addons, common.AzureCNINetworkMonitorAddonName)
 	if !to.Bool(properties.OrchestratorProfile.KubernetesConfig.Addons[i].Enabled) {
 		t.Fatalf("Azure CNI networkmonitor addon should be present by default if Azure CNI is set")
 	}

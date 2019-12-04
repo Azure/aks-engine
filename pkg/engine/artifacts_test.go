@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -200,7 +201,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 						LoadBalancerSku: api.StandardLoadBalancerSku,
 						Addons: []api.KubernetesAddon{
 							{
-								Name:    ScheduledMaintenanceAddonName,
+								Name:    common.ScheduledMaintenanceAddonName,
 								Enabled: to.BoolPtr(true),
 							},
 						},
@@ -402,35 +403,35 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			switch componentFileSpec.destinationFile {
 			case "kube-dns-deployment.yaml":
 				if c.expectedKubeDNS != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", KubeDNSAddonName, c.expectedKubeDNS)
+					t.Fatalf("Expected %s to be %t", common.KubeDNSAddonName, c.expectedKubeDNS)
 				}
 			case "coredns.yaml":
 				if c.expectedCoreDNS != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", CoreDNSAddonName, c.expectedCoreDNS)
+					t.Fatalf("Expected %s to be %t", common.CoreDNSAddonName, c.expectedCoreDNS)
 				}
 			case "kube-proxy-daemonset.yaml":
 				if c.expectedKubeProxy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", KubeProxyAddonName, c.expectedKubeProxy)
+					t.Fatalf("Expected %s to be %t", common.KubeProxyAddonName, c.expectedKubeProxy)
 				}
 			case "cilium-daemonset.yaml":
 				if c.expectedCilium != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", CiliumAddonName, c.expectedCilium)
+					t.Fatalf("Expected %s to be %t", common.CiliumAddonName, c.expectedCilium)
 				}
 			case "flannel-daemonset.yaml":
 				if c.expectedFlannel != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", FlannelAddonName, c.expectedFlannel)
+					t.Fatalf("Expected %s to be %t", common.FlannelAddonName, c.expectedFlannel)
 				}
 			case "aad-default-admin-group-rbac.yaml":
 				if c.expectedAADAdminGroup != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", AADAdminGroupAddonName, c.expectedAADAdminGroup)
+					t.Fatalf("Expected %s to be %t", common.AADAdminGroupAddonName, c.expectedAADAdminGroup)
 				}
 			case "azure-cloud-provider-deployment.yaml":
 				if c.expectedAzureCloudProvider != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", AzureCloudProviderAddonName, c.expectedAzureCloudProvider)
+					t.Fatalf("Expected %s to be %t", common.AzureCloudProviderAddonName, c.expectedAzureCloudProvider)
 				}
 			case "audit-policy.yaml":
 				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", AuditPolicyAddonName, c.expectedAuditPolicy)
+					t.Fatalf("Expected %s to be %t", common.AuditPolicyAddonName, c.expectedAuditPolicy)
 				}
 			case "pod-security-policy.yaml":
 				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
@@ -466,7 +467,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				}
 			case "scheduled-maintenance-deployment.yaml":
 				if c.expectedScheduledMaintenance != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", ScheduledMaintenanceAddonName, c.expectedScheduledMaintenance)
+					t.Fatalf("Expected %s to be %t", common.ScheduledMaintenanceAddonName, c.expectedScheduledMaintenance)
 				}
 			case "azure-csi-storage-classes.yaml":
 				if c.expectedAzureCSIStorageClasses != componentFileSpec.isEnabled {

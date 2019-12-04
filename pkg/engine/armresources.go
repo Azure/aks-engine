@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -105,7 +106,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		armResources = append(armResources, masterResources...)
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		armResources = append(armResources, createAppGwPublicIPAddress())
 		armResources = append(armResources, createAppGwUserAssignedIdentities())
 		armResources = append(armResources, createApplicationGateway(cs.Properties))

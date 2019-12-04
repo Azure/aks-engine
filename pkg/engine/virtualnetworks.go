@@ -5,6 +5,7 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -69,7 +70,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 		},
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		subnetAppGw := network.Subnet{
 			Name: to.StringPtr("[variables('appGwSubnetName')]"),
 			SubnetPropertiesFormat: &network.SubnetPropertiesFormat{
@@ -163,7 +164,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		},
 	}
 
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		subnetAppGw := network.Subnet{
 			Name: to.StringPtr("[variables('appGwSubnetName')]"),
 			SubnetPropertiesFormat: &network.SubnetPropertiesFormat{

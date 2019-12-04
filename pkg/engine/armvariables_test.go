@@ -741,7 +741,7 @@ func TestK8sVars(t *testing.T) {
 
 	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
 		{
-			Name:    AppGwIngressAddonName,
+			Name:    common.AppGwIngressAddonName,
 			Enabled: to.BoolPtr(true),
 			Config: map[string]string{
 				"appgw-sku": "WAF_v2",

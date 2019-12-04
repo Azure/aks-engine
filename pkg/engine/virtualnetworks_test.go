@@ -5,6 +5,7 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
@@ -173,7 +174,7 @@ func TestCreateVirtualNetwork(t *testing.T) {
 					NetworkPolicy: "azure",
 					Addons: []api.KubernetesAddon{
 						{
-							Name:    AppGwIngressAddonName,
+							Name:    common.AppGwIngressAddonName,
 							Enabled: to.BoolPtr(true),
 							Config: map[string]string{
 								"appgw-subnet": "10.0.0.1/16",

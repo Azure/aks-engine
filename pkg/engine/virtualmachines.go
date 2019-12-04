@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -53,7 +54,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	}
 
 	if kubernetesConfig != nil && kubernetesConfig.IsContainerMonitoringAddonEnabled() {
-		addon := kubernetesConfig.GetAddonByName(ContainerMonitoringAddonName)
+		addon := kubernetesConfig.GetAddonByName(common.ContainerMonitoringAddonName)
 		clusterDNSPrefix := "aks-engine-cluster"
 		if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.DNSPrefix != "" {
 			clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix

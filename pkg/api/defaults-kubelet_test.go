@@ -412,7 +412,7 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
 	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name:    IPMASQAgentAddonName,
+			Name:    common.IPMASQAgentAddonName,
 			Enabled: to.BoolPtr(true),
 		},
 	}
@@ -432,7 +432,7 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
 	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name:    IPMASQAgentAddonName,
+			Name:    common.IPMASQAgentAddonName,
 			Enabled: to.BoolPtr(true),
 		},
 	}
@@ -448,7 +448,7 @@ func TestKubeletHostedMasterIPMasqAgentDisabled(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = subnet
 	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
 		{
-			Name:    IPMASQAgentAddonName,
+			Name:    common.IPMASQAgentAddonName,
 			Enabled: to.BoolPtr(true),
 		},
 	}
@@ -468,7 +468,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    IPMASQAgentAddonName,
+				Name:    common.IPMASQAgentAddonName,
 				Enabled: &b,
 			},
 		},
@@ -487,7 +487,7 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    IPMASQAgentAddonName,
+				Name:    common.IPMASQAgentAddonName,
 				Enabled: &b,
 			},
 		},

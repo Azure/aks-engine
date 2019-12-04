@@ -56,13 +56,13 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
-				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(AADPodIdentityAddonName)
-				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(AADPodIdentityAddonName)
+				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(common.AADPodIdentityAddonName)
+				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(common.AADPodIdentityAddonName)
 				if aadIndex > -1 {
 					addValue(parametersMap, "kubernetesAADPodIdentityEnabled", to.Bool(aadPodIdentityAddon.Enabled))
 				}
 			}
-			if kubernetesConfig.IsAddonEnabled(api.ACIConnectorAddonName) {
+			if kubernetesConfig.IsAddonEnabled(common.ACIConnectorAddonName) {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", true)
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
@@ -249,9 +249,9 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 		}
 
-		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(AppGwIngressAddonName) {
-			addValue(parametersMap, "appGwSku", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-sku"])
-			addValue(parametersMap, "appGwSubnet", kubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-subnet"])
+		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
+			addValue(parametersMap, "appGwSku", kubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-sku"])
+			addValue(parametersMap, "appGwSubnet", kubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-subnet"])
 		}
 	}
 }

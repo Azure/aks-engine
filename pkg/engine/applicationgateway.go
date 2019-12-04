@@ -5,6 +5,7 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -108,14 +109,14 @@ func createApplicationGateway(prop *api.Properties) ApplicationGatewayARM {
 		},
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-sku"] == "WAF_v2" {
+	if prop.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-sku"] == "WAF_v2" {
 		applicationGateway.ApplicationGateway.ApplicationGatewayPropertiesFormat.WebApplicationFirewallConfiguration = &network.ApplicationGatewayWebApplicationFirewallConfiguration{
 			Enabled:      to.BoolPtr(true),
 			FirewallMode: network.Detection,
 		}
 	}
 
-	privateIP := prop.OrchestratorProfile.KubernetesConfig.GetAddonByName(AppGwIngressAddonName).Config["appgw-private-ip"]
+	privateIP := prop.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-private-ip"]
 	if privateIP != "" {
 		frontendIPConfigurations := append(
 			*applicationGateway.ApplicationGateway.ApplicationGatewayPropertiesFormat.FrontendIPConfigurations,
