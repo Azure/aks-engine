@@ -134,7 +134,7 @@ const (
 	// DefaultAzurePolicyAddonEnabled determines the aks-engine provided default for enabling azure policy addon
 	DefaultAzurePolicyAddonEnabled = false
 	// DefaultNodeProblemDetectorAddonEnabled determines the aks-engine provided default for enabling the node problem detector addon
-	DefaultNodeProblemDetectorAddonEnabled = false
+	DefaultNodeProblemDetectorAddonEnabled = true
 	// DefaultACIConnectorAddonEnabled determines the aks-engine provided default for enabling aci connector addon
 	DefaultACIConnectorAddonEnabled = false
 	// DefaultAppGwIngressAddonEnabled determines the aks-engine provided default for enabling appgw ingress addon
