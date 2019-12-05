@@ -295,7 +295,6 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	uc.containerService.Properties.CertificateProfile.KubeConfigCertificate = uc.getKeyVaultSecret(ctx, certProfile.KubeConfigCertificate)
 	uc.containerService.Properties.CertificateProfile.KubeConfigPrivateKey = uc.getKeyVaultSecret(ctx, certProfile.KubeConfigPrivateKey)
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
-	log.Infoln(kubeConfig)
 
 	// Set the values back to originals
 	uc.containerService.Properties.CertificateProfile.CaCertificate = certProfile.CaCertificate
