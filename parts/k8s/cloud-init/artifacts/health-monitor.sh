@@ -16,19 +16,19 @@ container_runtime_monitoring() {
     healthcheck_command="${crictl} pods"
   fi
 
-  until timeout 60 ${healthcheck_command} > /dev/null; do
-    if (( attempt == max_attempts )); then
+  until timeout 60 ${healthcheck_command} >/dev/null; do
+    if ((attempt == max_attempts)); then
       echo "Max attempt ${max_attempts} reached! Proceeding to monitor container runtime healthiness."
       break
     fi
     echo "$attempt initial attempt \"${healthcheck_command}\"! Trying again in $attempt seconds..."
-    sleep "$(( 2 ** attempt++ ))"
+    sleep "$((2 ** attempt++))"
   done
   while true; do
-    if ! timeout 60 ${healthcheck_command} > /dev/null; then
+    if ! timeout 60 ${healthcheck_command} >/dev/null; then
       echo "Container runtime ${container_runtime_name} failed!"
       if [[ "$container_runtime_name" == "docker" ]]; then
-          pkill -SIGUSR1 dockerd
+        pkill -SIGUSR1 dockerd
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
       sleep 120
@@ -62,7 +62,7 @@ fi
 
 KUBE_HOME="/usr/local/bin"
 KUBE_ENV="/etc/default/kube-env"
-if [[  -e "${KUBE_ENV}" ]]; then
+if [[ -e "${KUBE_ENV}" ]]; then
   source "${KUBE_ENV}"
 fi
 

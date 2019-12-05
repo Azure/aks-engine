@@ -7,7 +7,7 @@ DOMAINNAME=$1
 
 echo $(date) " - Starting Script"
 
-cat > /etc/network/if-up.d/register-dns <<EOFDHCP
+cat >/etc/network/if-up.d/register-dns <<EOFDHCP
 #!/bin/sh
 
 # only execute on the primary nic
@@ -26,12 +26,11 @@ EOFDHCP
 
 chmod 755 /etc/network/if-up.d/register-dns
 
-if ! grep -Fq "${DOMAINNAME}" /etc/dhcp/dhclient.conf
-then
-    echo $(date) " - Adding domain to dhclient.conf"
+if ! grep -Fq "${DOMAINNAME}" /etc/dhcp/dhclient.conf; then
+  echo $(date) " - Adding domain to dhclient.conf"
 
-    echo "supersede domain-name \"${DOMAINNAME}\";" >> /etc/dhcp/dhclient.conf
-    echo "prepend domain-search \"${DOMAINNAME}\";" >> /etc/dhcp/dhclient.conf
+  echo "supersede domain-name \"${DOMAINNAME}\";" >>/etc/dhcp/dhclient.conf
+  echo "prepend domain-search \"${DOMAINNAME}\";" >>/etc/dhcp/dhclient.conf
 fi
 
 # service networking restart

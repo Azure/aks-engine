@@ -4,14 +4,14 @@ OS=$(cat /etc/*-release | grep ^ID= | tr -d 'ID="' | awk '{print toupper($0)}')
 UBUNTU_OS_NAME="UBUNTU"
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    ENSURE_NOT_INSTALLED="
+  ENSURE_NOT_INSTALLED="
     postfix
     "
-    for PACKAGE in ${ENSURE_NOT_INSTALLED}; do
-        apt list --installed | grep -E "^${PACKAGE}" && exit 1
-    done
+  for PACKAGE in ${ENSURE_NOT_INSTALLED}; do
+    apt list --installed | grep -E "^${PACKAGE}" && exit 1
+  done
 
-    ENSURE_INSTALLED="
+  ENSURE_INSTALLED="
     apt-transport-https
     blobfuse
     ca-certificates
@@ -41,9 +41,9 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     iftop
     sysstat
     "
-    for PACKAGE in ${ENSURE_INSTALLED}; do
-        apt list --installed | grep -E "^${PACKAGE}" || exit 1
-    done
+  for PACKAGE in ${ENSURE_INSTALLED}; do
+    apt list --installed | grep -E "^${PACKAGE}" || exit 1
+  done
 else
-    exit 1
+  exit 1
 fi

@@ -7,11 +7,10 @@
 # TODO: make PythonLocalizerTool public
 set -eo pipefail
 
-langdirs=( loc/* )
+langdirs=(loc/*)
 
 convert_lcl_to_po() {
-  for dir in "${langdirs[@]}"
-  do
+  for dir in "${langdirs[@]}"; do
     loc_lang=$(basename "$dir")
     translation_lang="$(echo "$loc_lang" | tr - _)"
     publish/PythonLocalizerTool lcltopo "$dir" translations/"$translation_lang"/LC_MESSAGES/ translations/en_US/LC_MESSAGES/en-US/metadata acsengine ""
@@ -24,15 +23,16 @@ convert_po_to_lcg() {
 }
 
 case "${1-}" in
-  --potolcg)
-    echo "converting po to lcg..."
-    convert_po_to_lcg
-    ;;
-  --lcltopo)
-    echo "converting lcl to po..."
-    convert_lcl_to_po
-    ;;
-  *)
-    echo $"Usage: $0 {--potolcg|--lcltopo}"
-    exit 1
+--potolcg)
+  echo "converting po to lcg..."
+  convert_po_to_lcg
+  ;;
+--lcltopo)
+  echo "converting lcl to po..."
+  convert_lcl_to_po
+  ;;
+*)
+  echo $"Usage: $0 {--potolcg|--lcltopo}"
+  exit 1
+  ;;
 esac
