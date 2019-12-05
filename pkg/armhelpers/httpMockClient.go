@@ -58,6 +58,8 @@ const (
 	filePathCreateOrUpdateWorkspace            = "httpMockClientData/createOrUpdateWorkspace.json"
 	filePathListWorkspacesByResourceGroupInMC  = "httpMockClientData/getListWorkspacesByResourceGroup.json"
 	filePathCreateOrUpdateWorkspaceInMC        = "httpMockClientData/createOrUpdateWorkspace.json"
+	filePathGetVirtualMachineImage             = "httpMockClientData/getVirtualMachineImage.json"
+	filePathListVirtualMachineImages           = "httpMockClientData/listVirtualMachineImages.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -105,6 +107,8 @@ type HTTPMockClient struct {
 	ResponseCreateOrUpdateWorkspace            string
 	ResponseListWorkspacesByResourceGroupInMC  string
 	ResponseCreateOrUpdateWorkspaceInMC        string
+	ResponseGetVirtualMachineImage             string
+	ResponseListVirtualMachineImages           string
 	mux                                        *http.ServeMux
 	server                                     *testserver.TestServer
 }
@@ -214,6 +218,16 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		return client, err
 	}
 	client.ResponseCreateOrUpdateWorkspaceInMC, err = readFromFile(filePathCreateOrUpdateWorkspaceInMC)
+	if err != nil {
+		return client, err
+	}
+
+	client.ResponseGetVirtualMachineImage, err = readFromFile(filePathGetVirtualMachineImage)
+	if err != nil {
+		return client, err
+	}
+
+	client.ResponseListVirtualMachineImages, err = readFromFile(filePathListVirtualMachineImages)
 	if err != nil {
 		return client, err
 	}
@@ -610,10 +624,19 @@ func (mc HTTPMockClient) RegisterEnsureDefaultLogAnalyticsWorkspaceCreateNewInMC
 func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
 	pattern := fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, mc.Publisher, mc.Offer, mc.Sku, mc.Version)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("api-version") != mc.LogAnalyticsAPIVersion {
+		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
-			_, _ = fmt.Fprint(w, mc.ResponseCreateOrUpdateWorkspaceInMC)
+			_, _ = fmt.Fprint(w, mc.ResponseGetVirtualMachineImage)
+		}
+	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions", mc.SubscriptionID, mc.Location, mc.Publisher, mc.Offer, mc.Sku)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseListVirtualMachineImages)
 		}
 	})
 
