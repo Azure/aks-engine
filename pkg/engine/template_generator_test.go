@@ -51,7 +51,7 @@ func TestGenerateMasterCustomDataSize(t *testing.T) {
 
 	// Since a unit test can't reasonably call ARM, inspect the customData size in the unexpanded
 	// template as a proxy for testing the "maximum length of 87380 characters" runtime error.
-	bestGuessAtAcceptableSize := 40010
+	bestGuessAtAcceptableSize := 38300
 
 	var result map[string]interface{}
 	json.Unmarshal([]byte(tmpl), &result)
