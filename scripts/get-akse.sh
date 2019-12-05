@@ -75,9 +75,9 @@ checkDesiredVersion() {
   local release_url="https://github.com/Azure/aks-engine/releases/${DESIRED_VERSION:-latest}"
   # shellcheck disable=SC2086
   if type "curl" >/dev/null; then
-    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+    TAG=$(curl -SsL $release_url | awk '/\/tag\//' | grep -v no-underline | grep '<a href="/Azure/aks-engine/releases' | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   elif type "wget" >/dev/null; then
-    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep "<a href=\"/Azure/aks-engine/releases" | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
+    TAG=$(wget -q -O - $release_url | awk '/\/tag\//' | grep -v no-underline | grep '<a href="/Azure/aks-engine/releases' | head -n 1 | cut -d '"' -f 2 | awk '{n=split($NF,a,"/");print a[n]}' | awk 'a !~ $0{print}; {a=$0}')
   fi
   if [ "x$TAG" == "x" ]; then
     echo "Cannot determine ${DESIRED_VERSION} tag."
@@ -91,7 +91,7 @@ checkAKSEInstalledVersion() {
   if [[ -f "${AKSE_INSTALL_DIR}/${PROJECT_NAME}" ]]; then
     local version
     version=$(aks-engine version | grep 'Version' | cut -d' ' -f2)
-    if [[ "$version" == "$TAG" ]]; then
+    if [[ $version == "$TAG" ]]; then
       echo "AKS-Engine ${version} is already ${DESIRED_VERSION:-latest}"
       return 0
     else
@@ -134,7 +134,7 @@ installFile() {
 fail_trap() {
   result=$?
   if [ "$result" != "0" ]; then
-    if [[ -n "$INPUT_ARGUMENTS" ]]; then
+    if [[ -n $INPUT_ARGUMENTS ]]; then
       echo "Failed to install $PROJECT_NAME with the arguments provided: $INPUT_ARGUMENTS"
       help
     else
@@ -169,7 +169,7 @@ help() {
 
 # cleanup temporary files
 cleanup() {
-  if [[ -d "${AKSE_TMP_ROOT:-}" ]]; then
+  if [[ -d ${AKSE_TMP_ROOT:-} ]]; then
     rm -rf "$AKSE_TMP_ROOT"
   fi
 }

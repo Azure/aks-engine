@@ -17,7 +17,7 @@ K8S_PROXY_CRT_FILEPATH="${K8S_PROXY_CRT_FILEPATH:=/etc/kubernetes/certs/proxy.cr
 PROXY_CERTS_LOCK_NAME="master_proxy_cert_lock"
 PROXY_CERT_LOCK_FILE="/tmp/create_cert.fifl"
 
-if [[ -z "${COSMOS_URI}" ]]; then
+if [[ -z ${COSMOS_URI} ]]; then
   ETCDCTL_ENDPOINTS="${ETCDCTL_ENDPOINTS:=https://127.0.0.1:2379}"
   ETCDCTL_CA_FILE="${ETCDCTL_CA_FILE:=/etc/kubernetes/certs/ca.crt}"
   ETCD_CA_PARAM="--cacert=${ETCDCTL_CA_FILE}"

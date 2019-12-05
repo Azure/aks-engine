@@ -35,7 +35,7 @@ az login --service-principal \
 az account set -s $SUBSCRIPTION_ID_TO_CLEANUP
 
 # convert to seconds so we can compare it against the "tags.now" property in the resource group metadata
-((expirationInSecs = ${EXPIRATION_IN_HOURS} * 60 * 60))
+((expirationInSecs = EXPIRATION_IN_HOURS * 60 * 60))
 # deadline = the "date +%s" representation of the oldest age we're willing to keep
 ((deadline = $(date +%s) - ${expirationInSecs%.*}))
 # find resource groups created before our deadline

@@ -13023,7 +13023,7 @@ configureSecrets() {
   ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
   touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
   chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
   fi
 
@@ -13035,7 +13035,7 @@ configureSecrets() {
   ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
   touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
   chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
   fi
 
@@ -13097,7 +13097,7 @@ ensureRPC() {
 }
 
 ensureAuditD() {
-  if [[ "${AUDITD_ENABLED}" == true ]]; then
+  if [[ ${AUDITD_ENABLED} == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
     if apt list --installed | grep 'auditd'; then
@@ -13183,12 +13183,12 @@ configureK8s() {
 }
 EOF
   set -x
-  if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" == "v2" ]]; then
+  if [[ ${CLOUDPROVIDER_BACKOFF_MODE} == "v2" ]]; then
     sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
     sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
   fi
-  if [[ -n "${MASTER_NODE}" ]]; then
-    if [[ "${ENABLE_AGGREGATED_APIS}" == True ]]; then
+  if [[ -n ${MASTER_NODE} ]]; then
+    if [[ ${ENABLE_AGGREGATED_APIS} == True ]]; then
       generateAggregatedAPICerts
     fi
   fi
@@ -13201,13 +13201,13 @@ configureCNI() {
   retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
   echo -n "br_netfilter" >/etc/modules-load.d/br_netfilter.conf
   configureCNIIPTables
-  if [[ "${NETWORK_PLUGIN}" == "cilium" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "cilium" ]]; then
     systemctl enable sys-fs-bpf.mount
     systemctl restart sys-fs-bpf.mount
     REBOOTREQUIRED=true
   fi
   {{- if IsAzureStackCloud}}
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     {{/* set environment to mas when using Azure CNI on Azure Stack */}}
     {{/* shellcheck disable=SC2002,SC2005 */}}
     echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') >"$CNI_CONFIG_DIR/10-azure.conflist"
@@ -13216,12 +13216,12 @@ configureCNI() {
 }
 
 configureCNIIPTables() {
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
+    if [[ ${NETWORK_POLICY} == "calico" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
+    elif [[ ${NETWORK_POLICY} == "" || ${NETWORK_POLICY} == "none" ]] && [[ ${NETWORK_MODE} == "transparent" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
@@ -13373,7 +13373,7 @@ configClusterAutoscalerAddon() {
 }
 
 configACIConnectorAddon() {
-  ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"%s\", \"clientSecret\": \"%s\", \"tenantId\": \"%s\", \"subscriptionId\": \"%s\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
+  ACI_CONNECTOR_CREDENTIALS=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
 
   openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
   ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
@@ -13395,12 +13395,12 @@ configAzurePolicyAddon() {
 {{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
-  if [[ "${CLUSTER_AUTOSCALER_ADDON}" == true ]]; then
+  if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
   fi
   {{end}}
   {{if IsACIConnectorAddonEnabled}}
-  if [[ "${ACI_CONNECTOR_ADDON}" == True ]]; then
+  if [[ ${ACI_CONNECTOR_ADDON} == True ]]; then
     configACIConnectorAddon
   fi
   {{end}}
@@ -13466,7 +13466,7 @@ var _k8sCloudInitArtifactsCse_customcloudSh = []byte(`#!/bin/bash
 
 ensureCertificates() {
   AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
-  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d "\"")
+  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
   AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
   curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
   CURL_RETURNCODE=$?
@@ -13507,17 +13507,17 @@ configureK8sCustomCloud() {
   #    "dataType" :"pfx",
   #    "password": "$password"
   #}
-  if [[ "${AUTHENTICATION_METHOD,,}" == "client_certificate" ]]; then
+  if [[ ${AUTHENTICATION_METHOD,,} == "client_certificate" ]]; then
     SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED=$(echo ${SERVICE_PRINCIPAL_CLIENT_SECRET} | base64 --decode)
     SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED | jq .data)
     SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED | jq .password)
 
     # trim the starting and ending "
-    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT#"\""}
-    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT%"\""}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT#'"'}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT%'"'}
 
-    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD#"\""}
-    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD%"\""}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD#'"'}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD%'"'}
 
     KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
     K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
@@ -13529,7 +13529,7 @@ configureK8sCustomCloud() {
       jq 'del(.aadClientSecret)') >${AZURE_JSON_PATH}
   fi
 
-  if [[ "${IDENTITY_SYSTEM,,}" == "adfs" ]]; then
+  if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     # update the tenent id for ADFS environment.
     # shellcheck disable=SC2002,SC2005
     echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') >${AZURE_JSON_PATH}
@@ -13554,7 +13554,7 @@ configureAzureStackInterfaces() {
   ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
   RESOURCE_MANAGER_ENDPOINT=$(jq -r '.resourceManagerEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
 
-  if [[ "${IDENTITY_SYSTEM,,}" == "adfs" ]]; then
+  if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
   else
     TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
@@ -13581,7 +13581,7 @@ configureAzureStackInterfaces() {
     --data-urlencode "resource=$SERVICE_MANAGEMENT_ENDPOINT" \
     ${TOKEN_URL} | jq '.access_token' | xargs)
 
-  if [[ -z "$TOKEN" ]]; then
+  if [[ -z $TOKEN ]]; then
     echo "Error generating token for Azure Resource Manager"
     exit ${ERR_AZURE_STACK_GET_ARM_TOKEN}
   fi
@@ -13623,7 +13623,7 @@ configureAzureStackInterfaces() {
       "${RESOURCE_MANAGER_ENDPOINT}${SUBNET_ID:1}?api-version=$NETWORK_API_VERSION" |
       jq '.properties.addressPrefix' -r)
 
-    if [[ -z "$SUBNET_PREFIX" ]]; then
+    if [[ -z $SUBNET_PREFIX ]]; then
       echo "Error fetching the subnet address prefix for a subnet ID"
       exit ${ERR_AZURE_STACK_GET_SUBNET_PREFIX}
     fi
@@ -13734,9 +13734,9 @@ NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 aptmarkWALinuxAgent() {
   wait_for_apt_locks
   retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent ||
-    if [[ "$1" == "hold" ]]; then
+    if [[ $1 == "hold" ]]; then
       exit $ERR_HOLD_WALINUXAGENT
-    elif [[ "$1" == "unhold" ]]; then
+    elif [[ $1 == "unhold" ]]; then
       exit $ERR_RELEASE_HOLD_WALINUXAGENT
     fi
 }
@@ -13995,7 +13995,7 @@ removeMoby() {
 
 installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-  if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${ETCD_VERSION}" ]]; then
     echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
   else
     retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
@@ -14020,7 +14020,7 @@ installDeps() {
       exit $ERR_APT_INSTALL_TIMEOUT
     fi
   done
-  if [[ "${AUDITD_ENABLED}" == true ]]; then
+  if [[ ${AUDITD_ENABLED} == true ]]; then
     if ! apt_get_install 30 1 600 auditd; then
       journalctl --no-pager -u auditd
       exit $ERR_APT_INSTALL_TIMEOUT
@@ -14082,14 +14082,14 @@ installSGXDrivers() {
 }
 
 installContainerRuntime() {
-  if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+  if [[ $CONTAINER_RUNTIME == "docker" ]]; then
     installMoby
   fi
 }
 
 installMoby() {
   CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
-  if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${MOBY_VERSION}" ]]; then
     echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
   else
     removeMoby
@@ -14099,7 +14099,7 @@ installMoby() {
     retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     MOBY_CLI=${MOBY_VERSION}
-    if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
+    if [[ ${MOBY_CLI} == "3.0.4" ]]; then
       MOBY_CLI="3.0.3"
     fi
     apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_CLI} --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
@@ -14123,7 +14123,7 @@ installKataContainersRuntime() {
 }
 
 installNetworkPlugin() {
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     installAzureCNI
   fi
   installCNI
@@ -14174,7 +14174,7 @@ installAzureCNI() {
 
 installContainerd() {
   CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-  if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${CONTAINERD_VERSION}" ]]; then
     echo "containerd is already installed, skipping install"
   else
     CONTAINERD_TGZ_TMP="cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
@@ -14200,7 +14200,7 @@ extractHyperkube() {
   CLI_TOOL=$1
   path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
-  if [[ "$CLI_TOOL" == "docker" ]]; then
+  if [[ $CLI_TOOL == "docker" ]]; then
     mkdir -p "$path"
     # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
     if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
@@ -14240,7 +14240,7 @@ installKubeletAndKubectl() {
     if version_gte ${KUBERNETES_VERSION} 1.17; then # don't use hyperkube
       extractKubeBinaries
     else
-      if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+      if [[ $CONTAINER_RUNTIME == "docker" ]]; then
         extractHyperkube "docker"
       else
         installImg
@@ -14339,8 +14339,8 @@ source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
 set +x
-ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX} + 1)))
-ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX} + 1)))
+ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
+ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
 if [[ $OS == $COREOS_OS_NAME ]]; then
@@ -14358,7 +14358,7 @@ fi
 cleanUpContainerd
 {{end}}
 
-if [[ "${GPU_NODE}" != "true" ]]; then
+if [[ ${GPU_NODE} != "true" ]]; then
   cleanUpGPUDrivers
 fi
 
@@ -14368,7 +14368,7 @@ if [ -f $VHD_LOGS_FILEPATH ]; then
   cleanUpContainerImages
   FULL_INSTALL_REQUIRED=false
 else
-  if [[ "${IS_VHD}" == true ]]; then
+  if [[ ${IS_VHD} == true ]]; then
     echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
     exit $ERR_VHD_FILE_NOT_FOUND
   fi
@@ -14385,7 +14385,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
   ensureAuditD
 fi
 
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   installEtcd
 fi
 
@@ -14400,7 +14400,7 @@ installContainerd
 {{end}}
 
 {{- if HasNSeriesSKU}}
-if [[ "${GPU_NODE}" == true ]]; then
+if [[ ${GPU_NODE} == true ]]; then
   if $FULL_INSTALL_REQUIRED; then
     installGPUDrivers
   fi
@@ -14421,24 +14421,24 @@ fi
 createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
-if [[ "${SGX_NODE}" == true ]]; then
+if [[ ${SGX_NODE} == true ]]; then
   installSGXDrivers
 fi
 {{end}}
 
 {{/* create etcd user if we are configured for etcd */}}
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   configureEtcdUser
 fi
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   {{/* this step configures all certs */}}
   {{/* both configs etcd/cosmos */}}
   configureSecrets
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   configureEtcd
 else
   removeEtcd
@@ -14468,7 +14468,7 @@ configureAzureStackInterfaces
 
 configureCNI
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   configAddons
 fi
 
@@ -14477,7 +14477,7 @@ ensureContainerd
 {{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
-if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
+if [[ -n ${MASTER_NODE} && ${KMS_PROVIDER_VAULT_NAME} != "" ]]; then
   ensureKMS
 fi
 {{end}}
@@ -14490,12 +14490,12 @@ ensureDHCPv6
 ensureKubelet
 ensureJournal
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     ensureLabelNodes
   fi
   writeKubeConfig
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     ensureEtcd
   fi
   ensureK8sControlPlane
@@ -14818,7 +14818,7 @@ K8S_PROXY_CRT_FILEPATH="${K8S_PROXY_CRT_FILEPATH:=/etc/kubernetes/certs/proxy.cr
 PROXY_CERTS_LOCK_NAME="master_proxy_cert_lock"
 PROXY_CERT_LOCK_FILE="/tmp/create_cert.fifl"
 
-if [[ -z "${COSMOS_URI}" ]]; then
+if [[ -z ${COSMOS_URI} ]]; then
   ETCDCTL_ENDPOINTS="${ETCDCTL_ENDPOINTS:=https://127.0.0.1:2379}"
   ETCDCTL_CA_FILE="${ETCDCTL_CA_FILE:=/etc/kubernetes/certs/ca.crt}"
   ETCD_CA_PARAM="--cacert=${ETCDCTL_CA_FILE}"
@@ -14924,7 +14924,7 @@ container_runtime_monitoring() {
   local -r crictl="${KUBE_HOME}/bin/crictl"
   local -r container_runtime_name="${CONTAINER_RUNTIME_NAME:-docker}"
   local healthcheck_command="docker ps"
-  if [[ "${CONTAINER_RUNTIME:-docker}" != "docker" ]]; then
+  if [[ ${CONTAINER_RUNTIME:-docker} != "docker" ]]; then
     healthcheck_command="${crictl} pods"
   fi
 
@@ -14939,7 +14939,7 @@ container_runtime_monitoring() {
   while true; do
     if ! timeout 60 ${healthcheck_command} >/dev/null; then
       echo "Container runtime ${container_runtime_name} failed!"
-      if [[ "$container_runtime_name" == "docker" ]]; then
+      if [[ $container_runtime_name == "docker" ]]; then
         pkill -SIGUSR1 dockerd
       fi
       systemctl kill --kill-who=main "${container_runtime_name}"
@@ -14967,14 +14967,14 @@ kubelet_monitoring() {
   done
 }
 
-if [[ "$#" -ne 1 ]]; then
+if [[ $# -ne 1 ]]; then
   echo "Usage: health-monitor.sh <container-runtime/kubelet>"
   exit 1
 fi
 
 KUBE_HOME="/usr/local/bin"
 KUBE_ENV="/etc/default/kube-env"
-if [[ -e "${KUBE_ENV}" ]]; then
+if [[ -e ${KUBE_ENV} ]]; then
   source "${KUBE_ENV}"
 fi
 
@@ -14982,9 +14982,9 @@ SLEEP_SECONDS=10
 component=$1
 echo "Start kubernetes health monitoring for ${component}"
 
-if [[ "${component}" == "container-runtime" ]]; then
+if [[ ${component} == "container-runtime" ]]; then
   container_runtime_monitoring
-elif [[ "${component}" == "kubelet" ]]; then
+elif [[ ${component} == "kubelet" ]]; then
   kubelet_monitoring
 else
   echo "Health monitoring for component ${component} is not supported!"

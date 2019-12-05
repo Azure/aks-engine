@@ -46,13 +46,13 @@ if ! command -v msginit >/dev/null; then
   exit 1
 fi
 
-if [[ "${generate_po}" == "true" ]]; then
+if [[ ${generate_po} == "true" ]]; then
   echo "Extract strings and generate PO files..."
   go-xgettext -o ${DOMAIN}.pot --keyword=Translator.Errorf --keyword-plural=Translator.NErrorf --msgid-bugs-address="" --sort-output "${GO_SOURCE}"
   msginit -l "${LANGUAGE}" -o ${DOMAIN}.po -i ${DOMAIN}.pot
 fi
 
-if [[ "${generate_mo}" == "true" ]]; then
+if [[ ${generate_mo} == "true" ]]; then
   echo "Generate MO file..."
   if [ ! -f ${DOMAIN}.po ]; then
     echo "${DOMAIN}.po not found!"

@@ -2,7 +2,7 @@
 
 ensureCertificates() {
   AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
-  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d "\"")
+  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
   AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
   curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
   CURL_RETURNCODE=$?
@@ -43,17 +43,17 @@ configureK8sCustomCloud() {
   #    "dataType" :"pfx",
   #    "password": "$password"
   #}
-  if [[ "${AUTHENTICATION_METHOD,,}" == "client_certificate" ]]; then
+  if [[ ${AUTHENTICATION_METHOD,,} == "client_certificate" ]]; then
     SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED=$(echo ${SERVICE_PRINCIPAL_CLIENT_SECRET} | base64 --decode)
     SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED | jq .data)
     SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET_DECODED | jq .password)
 
     # trim the starting and ending "
-    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT#"\""}
-    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT%"\""}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT#'"'}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_CERT=${SERVICE_PRINCIPAL_CLIENT_SECRET_CERT%'"'}
 
-    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD#"\""}
-    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD%"\""}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD#'"'}
+    SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD=${SERVICE_PRINCIPAL_CLIENT_SECRET_PASSWORD%'"'}
 
     KUBERNETES_FILE_DIR=$(dirname "${AZURE_JSON_PATH}")
     K8S_CLIENT_CERT_PATH="${KUBERNETES_FILE_DIR}/k8s_auth_certificate.pfx"
@@ -65,7 +65,7 @@ configureK8sCustomCloud() {
       jq 'del(.aadClientSecret)') >${AZURE_JSON_PATH}
   fi
 
-  if [[ "${IDENTITY_SYSTEM,,}" == "adfs" ]]; then
+  if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     # update the tenent id for ADFS environment.
     # shellcheck disable=SC2002,SC2005
     echo $(cat "${AZURE_JSON_PATH}" | jq '.tenantId = "adfs"') >${AZURE_JSON_PATH}
@@ -90,7 +90,7 @@ configureAzureStackInterfaces() {
   ACTIVE_DIRECTORY_ENDPOINT=$(jq -r '.activeDirectoryEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
   RESOURCE_MANAGER_ENDPOINT=$(jq -r '.resourceManagerEndpoint' ${AZURESTACK_ENVIRONMENT_JSON_PATH})
 
-  if [[ "${IDENTITY_SYSTEM,,}" == "adfs" ]]; then
+  if [[ ${IDENTITY_SYSTEM,,} == "adfs" ]]; then
     TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}adfs/oauth2/token"
   else
     TOKEN_URL="${ACTIVE_DIRECTORY_ENDPOINT}${TENANT_ID}/oauth2/token"
@@ -117,7 +117,7 @@ configureAzureStackInterfaces() {
     --data-urlencode "resource=$SERVICE_MANAGEMENT_ENDPOINT" \
     ${TOKEN_URL} | jq '.access_token' | xargs)
 
-  if [[ -z "$TOKEN" ]]; then
+  if [[ -z $TOKEN ]]; then
     echo "Error generating token for Azure Resource Manager"
     exit ${ERR_AZURE_STACK_GET_ARM_TOKEN}
   fi
@@ -159,7 +159,7 @@ configureAzureStackInterfaces() {
       "${RESOURCE_MANAGER_ENDPOINT}${SUBNET_ID:1}?api-version=$NETWORK_API_VERSION" |
       jq '.properties.addressPrefix' -r)
 
-    if [[ -z "$SUBNET_PREFIX" ]]; then
+    if [[ -z $SUBNET_PREFIX ]]; then
       echo "Error fetching the subnet address prefix for a subnet ID"
       exit ${ERR_AZURE_STACK_GET_SUBNET_PREFIX}
     fi

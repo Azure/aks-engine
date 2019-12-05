@@ -28,8 +28,8 @@ source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
 set +x
-ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX} + 1)))
-ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX} + 1)))
+ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
+ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
 if [[ $OS == $COREOS_OS_NAME ]]; then
@@ -47,7 +47,7 @@ fi
 cleanUpContainerd
 {{end}}
 
-if [[ "${GPU_NODE}" != "true" ]]; then
+if [[ ${GPU_NODE} != "true" ]]; then
   cleanUpGPUDrivers
 fi
 
@@ -57,7 +57,7 @@ if [ -f $VHD_LOGS_FILEPATH ]; then
   cleanUpContainerImages
   FULL_INSTALL_REQUIRED=false
 else
-  if [[ "${IS_VHD}" == true ]]; then
+  if [[ ${IS_VHD} == true ]]; then
     echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
     exit $ERR_VHD_FILE_NOT_FOUND
   fi
@@ -74,7 +74,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
   ensureAuditD
 fi
 
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   installEtcd
 fi
 
@@ -89,7 +89,7 @@ installContainerd
 {{end}}
 
 {{- if HasNSeriesSKU}}
-if [[ "${GPU_NODE}" == true ]]; then
+if [[ ${GPU_NODE} == true ]]; then
   if $FULL_INSTALL_REQUIRED; then
     installGPUDrivers
   fi
@@ -110,24 +110,24 @@ fi
 createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
-if [[ "${SGX_NODE}" == true ]]; then
+if [[ ${SGX_NODE} == true ]]; then
   installSGXDrivers
 fi
 {{end}}
 
 {{/* create etcd user if we are configured for etcd */}}
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   configureEtcdUser
 fi
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   {{/* this step configures all certs */}}
   {{/* both configs etcd/cosmos */}}
   configureSecrets
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   configureEtcd
 else
   removeEtcd
@@ -157,7 +157,7 @@ configureAzureStackInterfaces
 
 configureCNI
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   configAddons
 fi
 
@@ -166,7 +166,7 @@ ensureContainerd
 {{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
-if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
+if [[ -n ${MASTER_NODE} && ${KMS_PROVIDER_VAULT_NAME} != "" ]]; then
   ensureKMS
 fi
 {{end}}
@@ -179,12 +179,12 @@ ensureDHCPv6
 ensureKubelet
 ensureJournal
 
-if [[ -n "${MASTER_NODE}" ]]; then
+if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     ensureLabelNodes
   fi
   writeKubeConfig
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     ensureEtcd
   fi
   ensureK8sControlPlane

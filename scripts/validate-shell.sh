@@ -38,4 +38,4 @@ SC2206
 "
 
 shellcheck $(printf -- "-e %s " $IGNORED) $files
-shfmt -d -i 2 $files
+shfmt -d -i 2 -s $files

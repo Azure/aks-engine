@@ -39,7 +39,7 @@ wait_for_master_nodes() {
 
   ITERATION=0
   while [[ $ITERATION -lt $ATTEMPTS ]]; do
-    echo $(date) " - Is kubectl returning master nodes? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+    echo $(date) " - Is kubectl returning master nodes? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
     FIRST_K8S_MASTER=$(master_nodes)
 
@@ -48,7 +48,7 @@ wait_for_master_nodes() {
       return
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 
@@ -66,7 +66,7 @@ wait_for_agent_nodes() {
 
   ITERATION=0
   while [[ $ITERATION -lt $ATTEMPTS ]]; do
-    echo $(date) " - Is kubectl returning agent nodes? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+    echo $(date) " - Is kubectl returning agent nodes? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
     FIRST_K8S_AGENT=$(agent_nodes)
 
@@ -75,7 +75,7 @@ wait_for_agent_nodes() {
       return
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 
@@ -112,14 +112,14 @@ wait_for_tiller() {
 
   ITERATION=0
   while [[ $ITERATION -lt $ATTEMPTS ]]; do
-    echo $(date) " - Is Helm running? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+    echo $(date) " - Is Helm running? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
     if helm version >/dev/null 2>&1; then
       echo $(date) " - Helm is running"
       return
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 
@@ -202,7 +202,7 @@ install_prometheus() {
       echo $(date) " - Helm install returned a non-zero exit code. Retrying."
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 
@@ -211,7 +211,7 @@ install_prometheus() {
 
   ITERATION=0
   while [[ $ITERATION -lt $ATTEMPTS ]]; do
-    echo $(date) " - Is the prometheus server pod ($PROM_POD_PREFIX-*) running? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+    echo $(date) " - Is the prometheus server pod ($PROM_POD_PREFIX-*) running? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
     if kubectl get po -n $NAMESPACE --no-headers |
       awk '{print $1 " " $3}' |
@@ -221,7 +221,7 @@ install_prometheus() {
       break
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 }
@@ -244,7 +244,7 @@ install_grafana() {
 
   ITERATION=0
   while [[ $ITERATION -lt $ATTEMPTS ]]; do
-    echo $(date) " - Is the grafana pod ($GF_POD_PREFIX-*) running? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+    echo $(date) " - Is the grafana pod ($GF_POD_PREFIX-*) running? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
     if kubectl get po -n $NAMESPACE --no-headers |
       awk '{print $1 " " $3}' |
@@ -254,7 +254,7 @@ install_grafana() {
       break
     fi
 
-    ITERATION=$(($ITERATION + 1))
+    ITERATION=$((ITERATION + 1))
     sleep $SLEEP_TIME
   done
 }
@@ -275,17 +275,17 @@ RAW_PROMETHEUS_CHART_VALS="https://raw.githubusercontent.com/Azure/aks-engine/ma
 CADVISOR_CONFIG_URL="https://raw.githubusercontent.com/Azure/aks-engine/master/extensions/prometheus-grafana-k8s/v1/cadvisor_daemonset.yml"
 
 # retrieve and parse extension parameters
-if [[ -n "$1" ]]; then
+if [[ -n $1 ]]; then
   IFS=';' read -ra INPUT <<<"$1"
-  if [[ -n "${INPUT[0]}" ]]; then
+  if [[ -n ${INPUT[0]} ]]; then
     NAMESPACE="${INPUT[0]}"
     echo "$(date) - Custom namespace specified: $NAMESPACE"
   fi
-  if [[ -n "${INPUT[1]}" ]]; then
+  if [[ -n ${INPUT[1]} ]]; then
     RAW_PROMETHEUS_CHART_VALS="${INPUT[1]}"
     echo "$(date) - Custom prometheus chart values url specified: $RAW_PROMETHEUS_CHART_VALS"
   fi
-  if [[ -n "${INPUT[2]}" ]]; then
+  if [[ -n ${INPUT[2]} ]]; then
     CADVISOR_CONFIG_URL="${INPUT[2]}"
     echo "$(date) - Custom cAdvisor config url specified: $CADVISOR_CONFIG_URL"
   fi
@@ -370,7 +370,7 @@ SLEEP_TIME=10
 
 ITERATION=0
 while [[ $ITERATION -lt $ATTEMPTS ]]; do
-  echo $(date) " - Is the grafana api running? (attempt $(($ITERATION + 1)) of $ATTEMPTS)"
+  echo $(date) " - Is the grafana api running? (attempt $((ITERATION + 1)) of $ATTEMPTS)"
 
   response=$(curl \
     -X POST \
@@ -384,7 +384,7 @@ while [[ $ITERATION -lt $ATTEMPTS ]]; do
     break
   fi
 
-  ITERATION=$(($ITERATION + 1))
+  ITERATION=$((ITERATION + 1))
   sleep $SLEEP_TIME
 done
 

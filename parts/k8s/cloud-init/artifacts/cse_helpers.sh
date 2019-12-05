@@ -76,9 +76,9 @@ NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 aptmarkWALinuxAgent() {
   wait_for_apt_locks
   retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent ||
-    if [[ "$1" == "hold" ]]; then
+    if [[ $1 == "hold" ]]; then
       exit $ERR_HOLD_WALINUXAGENT
-    elif [[ "$1" == "unhold" ]]; then
+    elif [[ $1 == "unhold" ]]; then
       exit $ERR_RELEASE_HOLD_WALINUXAGENT
     fi
 }

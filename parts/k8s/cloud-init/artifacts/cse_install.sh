@@ -23,7 +23,7 @@ removeMoby() {
 
 installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-  if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${ETCD_VERSION}" ]]; then
     echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
   else
     retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
@@ -48,7 +48,7 @@ installDeps() {
       exit $ERR_APT_INSTALL_TIMEOUT
     fi
   done
-  if [[ "${AUDITD_ENABLED}" == true ]]; then
+  if [[ ${AUDITD_ENABLED} == true ]]; then
     if ! apt_get_install 30 1 600 auditd; then
       journalctl --no-pager -u auditd
       exit $ERR_APT_INSTALL_TIMEOUT
@@ -110,14 +110,14 @@ installSGXDrivers() {
 }
 
 installContainerRuntime() {
-  if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+  if [[ $CONTAINER_RUNTIME == "docker" ]]; then
     installMoby
   fi
 }
 
 installMoby() {
   CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
-  if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${MOBY_VERSION}" ]]; then
     echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
   else
     removeMoby
@@ -127,7 +127,7 @@ installMoby() {
     retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     MOBY_CLI=${MOBY_VERSION}
-    if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
+    if [[ ${MOBY_CLI} == "3.0.4" ]]; then
       MOBY_CLI="3.0.3"
     fi
     apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_CLI} --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
@@ -151,7 +151,7 @@ installKataContainersRuntime() {
 }
 
 installNetworkPlugin() {
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     installAzureCNI
   fi
   installCNI
@@ -202,7 +202,7 @@ installAzureCNI() {
 
 installContainerd() {
   CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-  if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
+  if [[ $CURRENT_VERSION == "${CONTAINERD_VERSION}" ]]; then
     echo "containerd is already installed, skipping install"
   else
     CONTAINERD_TGZ_TMP="cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
@@ -228,7 +228,7 @@ extractHyperkube() {
   CLI_TOOL=$1
   path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
-  if [[ "$CLI_TOOL" == "docker" ]]; then
+  if [[ $CLI_TOOL == "docker" ]]; then
     mkdir -p "$path"
     # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
     if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
@@ -268,7 +268,7 @@ installKubeletAndKubectl() {
     if version_gte ${KUBERNETES_VERSION} 1.17; then # don't use hyperkube
       extractKubeBinaries
     else
-      if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+      if [[ $CONTAINER_RUNTIME == "docker" ]]; then
         extractHyperkube "docker"
       else
         installImg

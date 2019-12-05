@@ -44,7 +44,7 @@ configureSecrets() {
   ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
   touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
   chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
   fi
 
@@ -56,7 +56,7 @@ configureSecrets() {
   ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
   touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
   chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
-  if [[ -z "${COSMOS_URI}" ]]; then
+  if [[ -z ${COSMOS_URI} ]]; then
     chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
   fi
 
@@ -118,7 +118,7 @@ ensureRPC() {
 }
 
 ensureAuditD() {
-  if [[ "${AUDITD_ENABLED}" == true ]]; then
+  if [[ ${AUDITD_ENABLED} == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
     if apt list --installed | grep 'auditd'; then
@@ -204,12 +204,12 @@ configureK8s() {
 }
 EOF
   set -x
-  if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" == "v2" ]]; then
+  if [[ ${CLOUDPROVIDER_BACKOFF_MODE} == "v2" ]]; then
     sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
     sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
   fi
-  if [[ -n "${MASTER_NODE}" ]]; then
-    if [[ "${ENABLE_AGGREGATED_APIS}" == True ]]; then
+  if [[ -n ${MASTER_NODE} ]]; then
+    if [[ ${ENABLE_AGGREGATED_APIS} == True ]]; then
       generateAggregatedAPICerts
     fi
   fi
@@ -222,13 +222,13 @@ configureCNI() {
   retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
   echo -n "br_netfilter" >/etc/modules-load.d/br_netfilter.conf
   configureCNIIPTables
-  if [[ "${NETWORK_PLUGIN}" == "cilium" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "cilium" ]]; then
     systemctl enable sys-fs-bpf.mount
     systemctl restart sys-fs-bpf.mount
     REBOOTREQUIRED=true
   fi
   {{- if IsAzureStackCloud}}
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     {{/* set environment to mas when using Azure CNI on Azure Stack */}}
     {{/* shellcheck disable=SC2002,SC2005 */}}
     echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') >"$CNI_CONFIG_DIR/10-azure.conflist"
@@ -237,12 +237,12 @@ configureCNI() {
 }
 
 configureCNIIPTables() {
-  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
+    if [[ ${NETWORK_POLICY} == "calico" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
+    elif [[ ${NETWORK_POLICY} == "" || ${NETWORK_POLICY} == "none" ]] && [[ ${NETWORK_MODE} == "transparent" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
@@ -394,7 +394,7 @@ configClusterAutoscalerAddon() {
 }
 
 configACIConnectorAddon() {
-  ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"%s\", \"clientSecret\": \"%s\", \"tenantId\": \"%s\", \"subscriptionId\": \"%s\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
+  ACI_CONNECTOR_CREDENTIALS=$(printf '{"clientId": "%s", "clientSecret": "%s", "tenantId": "%s", "subscriptionId": "%s", "activeDirectoryEndpointUrl": "https://login.microsoftonline.com","resourceManagerEndpointUrl": "https://management.azure.com/", "activeDirectoryGraphResourceId": "https://graph.windows.net/", "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/", "galleryEndpointUrl": "https://gallery.azure.com/", "managementEndpointUrl": "https://management.core.windows.net/"}' "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
 
   openssl req -newkey rsa:4096 -new -nodes -x509 -days 3650 -keyout /etc/kubernetes/certs/aci-connector-key.pem -out /etc/kubernetes/certs/aci-connector-cert.pem -subj "/C=US/ST=CA/L=virtualkubelet/O=virtualkubelet/OU=virtualkubelet/CN=virtualkubelet"
   ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
@@ -416,12 +416,12 @@ configAzurePolicyAddon() {
 {{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
-  if [[ "${CLUSTER_AUTOSCALER_ADDON}" == true ]]; then
+  if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
   fi
   {{end}}
   {{if IsACIConnectorAddonEnabled}}
-  if [[ "${ACI_CONNECTOR_ADDON}" == True ]]; then
+  if [[ ${ACI_CONNECTOR_ADDON} == True ]]; then
     configACIConnectorAddon
   fi
   {{end}}
