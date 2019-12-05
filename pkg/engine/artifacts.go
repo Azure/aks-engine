@@ -169,7 +169,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			sourceFile:      "coredns.yaml",
 			base64Data:      k.GetAddonScript(common.CoreDNSAddonName),
 			destinationFile: "coredns.yaml",
-			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0"),
+			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") && !k.IsAddonEnabled(common.KubeDNSAddonName),
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-kube-proxy-daemonset.yaml",

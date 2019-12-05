@@ -381,6 +381,36 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedScheduledMaintenance:   false,
 			expectedAzureCSIStorageClasses: true,
 		},
+		// kube-dns addon enabled scenario
+		{
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.14.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						NetworkPlugin: NetworkPluginAzure,
+						Addons: []api.KubernetesAddon{
+							{
+								Name:    common.KubeDNSAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedCoreDNS:                false,
+			expectedKubeProxy:              true,
+			expectedCilium:                 false,
+			expectedFlannel:                false,
+			expectedAADAdminGroup:          false,
+			expectedAzureCloudProvider:     true,
+			expectedAuditPolicy:            true,
+			expectedPodSecurityPolicy:      false,
+			expectedManagedStorageClass:    true,
+			expectedUnmanagedStorageClass:  false,
+			expectedScheduledMaintenance:   false,
+			expectedAzureCSIStorageClasses: false,
+		},
 	}
 
 	for _, c := range cases {

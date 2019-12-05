@@ -641,6 +641,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Back-compat for kube-dns prior to 1.12
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(false)
+		}
+	}
+
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}
