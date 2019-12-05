@@ -322,13 +322,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
 			},
 		},
-	}
-
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29"})
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{

@@ -4311,11 +4311,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-						},
-						{
-							Name:  common.AzureVnetTelemetryContainerName,
-							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
 						},
 					},
 				},
@@ -4483,7 +4479,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
 						},
 					},
 				},
@@ -4533,11 +4529,7 @@ func TestSetAddonsConfig(t *testing.T) {
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.AzureNetworkPolicyAddonName,
-											Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-										},
-										{
-											Name:  common.AzureVnetTelemetryContainerName,
-											Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+											Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
 										},
 									},
 								},
@@ -4667,7 +4659,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
 						},
 					},
 				},
