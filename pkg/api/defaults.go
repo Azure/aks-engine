@@ -224,11 +224,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
 		}
 
-		// K8s 1.17 and later require Azure cloud-controller-manager components
-		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0-alpha.1") {
-			o.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(true)
-		}
-
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 			o.KubernetesConfig.CloudProviderBackoffMode = CloudProviderBackoffModeV2
 			if o.KubernetesConfig.CloudProviderBackoff == nil {

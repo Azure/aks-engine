@@ -1258,7 +1258,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should create pv with zone labels and node affinity", func() {
 			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-					if !common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0-alpha.1") {
+					if !(common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
+						to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)) {
 						By("Creating a persistent volume claim")
 						pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
 						pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
@@ -1317,7 +1318,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						err = pvc.Delete(util.DefaultDeleteRetries)
 						Expect(err).NotTo(HaveOccurred())
 					} else {
-						Skip("Zones aren't yet supported in CSI disk driver for v1.17")
+						Skip("Zones aren't yet supported in CSI disk driver")
 					}
 				} else {
 					Skip("Availability zones was not configured for this Cluster Definition")
@@ -1766,9 +1767,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should be able to attach azure file", func() {
 			if eng.HasWindowsAgents() {
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
-				if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
-					Skip("Azure disk and file CSI drivers are not yet supported on Windows")
-				}
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
 					Skip("Kubernetes 1.11.0 has a known issue creating Azure PersistentVolumeClaim")
@@ -1783,7 +1781,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Creating an AzureFile storage class")
 					storageclassName := "azurefile" // should be the same as in storageclass-azurefile.yaml
 					scFilename := "storageclass-azurefile.yaml"
-					if common.IsKubernetesVersionGe(orchestratorVersion, "1.17.0-alpha.1") {
+					useCloudControllerManager := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
+					if useCloudControllerManager && common.IsKubernetesVersionGe(orchestratorVersion, "1.16.0") {
 						scFilename = "storageclass-azurefile-external.yaml"
 					}
 					sc, err := storageclass.CreateStorageClassFromFile(filepath.Join(WorkloadDir, scFilename), storageclassName)

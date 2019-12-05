@@ -32955,6 +32955,9 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
@@ -32964,6 +32967,9 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
+    - name: etc-ssl
+      hostPath:
+        path: /etc/ssl
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet

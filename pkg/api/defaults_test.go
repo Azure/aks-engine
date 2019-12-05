@@ -2007,11 +2007,11 @@ func TestCloudControllerManagerEnabled(t *testing.T) {
 		t.Fatal("expected UseCloudControllerManager to default to false")
 	}
 
-	// test that 1.17 defaults to true
+	// test that 1.17 defaults to false
 	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
 	cs.setOrchestratorDefaults(false, false)
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(false) {
-		t.Fatal("expected UseCloudControllerManager to default to true")
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager == to.BoolPtr(true) {
+		t.Fatal("expected UseCloudControllerManager to default to false")
 	}
 }
 
