@@ -722,7 +722,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 			},
 			expectedCloudNodeManager: kubernetesComponentFileSpec{
 				sourceFile:      cloudNodeManagerAddonSourceFilename,
-				base64Data:      "", // cloud-node-manager addon doesn't support arbitrary data manifest // TODO determine why this is?
+				base64Data:      base64Data,
 				destinationFile: cloudNodeManagerAddonDestinationFilename,
 			},
 			expectedNodeProblemDetector: kubernetesComponentFileSpec{

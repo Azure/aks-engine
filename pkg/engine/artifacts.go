@@ -139,7 +139,7 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 		},
 		common.CloudNodeManagerAddonName: {
 			sourceFile:      cloudNodeManagerAddonSourceFilename,
-			base64Data:      "",
+			base64Data:      k.GetAddonScript(common.CloudNodeManagerAddonName),
 			destinationFile: cloudNodeManagerAddonDestinationFilename,
 		},
 		common.NodeProblemDetectorAddonName: {
