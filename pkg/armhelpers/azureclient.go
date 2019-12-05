@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
+	"github.com/Azure/azure-sdk-for-go/services/keyvault/2016-10-01/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationalinsights/mgmt/2015-11-01-preview/operationalinsights"
@@ -60,6 +61,7 @@ type AzureClient struct {
 	msiClient                       msi.UserAssignedIdentitiesClient
 	resourcesClient                 apimanagement.GroupClient
 	storageAccountsClient           storage.AccountsClient
+	keyvaultClient                  keyvault.BaseClient
 	interfacesClient                network.InterfacesClient
 	groupsClient                    resources.GroupsClient
 	providersClient                 resources.ProvidersClient
@@ -92,7 +94,7 @@ func NewAzureClientWithCLI(env azure.Environment, subscriptionID string) (*Azure
 		return nil, err
 	}
 
-	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(&adalToken), autorest.NewBearerAuthorizer(&adalToken)), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(&adalToken), autorest.NewBearerAuthorizer(&adalToken), autorest.NewBearerAuthorizer(&adalToken)), nil
 }
 
 // NewAzureClientWithDeviceAuth returns an AzureClient by having a user complete a device authentication flow
@@ -136,7 +138,17 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 				return nil, err
 			}
 
-			return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
+			var keyvaultSpt *adal.ServicePrincipalToken
+			keyvaultSpt, err = adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, aksEngineClientID, strings.TrimSuffix(env.KeyVaultEndpoint, "/"), armSpt.Token())
+			if err != nil {
+				return nil, err
+			}
+			err = keyvaultSpt.Refresh()
+			if err != nil {
+				return nil, err
+			}
+
+			return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt), autorest.NewBearerAuthorizer(keyvaultSpt)), nil
 		}
 	}
 
@@ -167,8 +179,13 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 		return nil, err
 	}
 	graphSpt.Refresh()
+	keyvaultSpt, err := adal.NewServicePrincipalTokenFromManualToken(*oauthConfig, aksEngineClientID, strings.TrimSuffix(env.KeyVaultEndpoint, "/"), adRawToken)
+	if err != nil {
+		return nil, err
+	}
+	keyvaultSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt), autorest.NewBearerAuthorizer(keyvaultSpt)), nil
 }
 
 // NewAzureClientWithClientSecret returns an AzureClient via client_id and client_secret
@@ -187,8 +204,13 @@ func NewAzureClientWithClientSecret(env azure.Environment, subscriptionID, clien
 		return nil, err
 	}
 	graphSpt.Refresh()
+	keyvaultSpt, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, strings.TrimSuffix(env.KeyVaultEndpoint, "/"))
+	if err != nil {
+		return nil, err
+	}
+	keyvaultSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt), autorest.NewBearerAuthorizer(keyvaultSpt)), nil
 }
 
 // NewAzureClientWithClientSecretExternalTenant returns an AzureClient via client_id and client_secret from a tenant
@@ -207,8 +229,13 @@ func NewAzureClientWithClientSecretExternalTenant(env azure.Environment, subscri
 		return nil, err
 	}
 	graphSpt.Refresh()
+	keyvaultSpt, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, strings.TrimSuffix(env.KeyVaultEndpoint, "/"))
+	if err != nil {
+		return nil, err
+	}
+	keyvaultSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt), autorest.NewBearerAuthorizer(keyvaultSpt)), nil
 }
 
 // NewAzureClientWithClientCertificateFile returns an AzureClient via client_id and jwt certificate assertion
@@ -274,8 +301,13 @@ func newAzureClientWithCertificate(env azure.Environment, oauthConfig *adal.OAut
 		return nil, err
 	}
 	graphSpt.Refresh()
+	keyvaultSpt, err := adal.NewServicePrincipalTokenFromCertificate(*oauthConfig, clientID, certificate, privateKey, env.GraphEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	keyvaultSpt.Refresh()
 
-	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
+	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt), autorest.NewBearerAuthorizer(keyvaultSpt)), nil
 }
 
 func tokenCallback(path string) func(t adal.Token) error {
@@ -332,7 +364,7 @@ func getAksEngineClientID(envName string) string {
 	}
 }
 
-func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthorizer autorest.Authorizer, graphAuthorizer autorest.Authorizer) *AzureClient {
+func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthorizer autorest.Authorizer, graphAuthorizer autorest.Authorizer, keyvaultAuthorizer autorest.Authorizer) *AzureClient {
 	c := &AzureClient{
 		environment:    env,
 		subscriptionID: subscriptionID,
@@ -343,6 +375,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		msiClient:                       msi.NewUserAssignedIdentitiesClient(subscriptionID),
 		resourcesClient:                 apimanagement.NewGroupClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		storageAccountsClient:           storage.NewAccountsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		keyvaultClient:                  keyvault.New(),
 		interfacesClient:                network.NewInterfacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		groupsClient:                    resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		providersClient:                 resources.NewProvidersClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
@@ -364,6 +397,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.msiClient.Authorizer = armAuthorizer
 	c.resourcesClient.Authorizer = armAuthorizer
 	c.storageAccountsClient.Authorizer = armAuthorizer
+	c.keyvaultClient.Authorizer = keyvaultAuthorizer
 	c.interfacesClient.Authorizer = armAuthorizer
 	c.groupsClient.Authorizer = armAuthorizer
 	c.providersClient.Authorizer = armAuthorizer
@@ -384,6 +418,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.authorizationClient.PollingDuration = DefaultARMOperationTimeout
 	c.disksClient.PollingDuration = DefaultARMOperationTimeout
 	c.groupsClient.PollingDuration = DefaultARMOperationTimeout
+	c.keyvaultClient.PollingDuration = DefaultARMOperationTimeout
 	c.interfacesClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
 	c.resourcesClient.PollingDuration = DefaultARMOperationTimeout
@@ -470,6 +505,7 @@ func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.deploymentOperationsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.keyvaultClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.interfacesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.groupsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.providersClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -533,6 +569,7 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.deploymentOperationsClient.Client.RequestInspector = requestWithTokens
 	az.resourcesClient.Client.RequestInspector = requestWithTokens
 	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
+	az.keyvaultClient.Client.RequestInspector = requestWithTokens
 	az.interfacesClient.Client.RequestInspector = requestWithTokens
 	az.groupsClient.Client.RequestInspector = requestWithTokens
 	az.providersClient.Client.RequestInspector = requestWithTokens

@@ -98,6 +98,11 @@ type AKSEngineClient interface {
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)
 
+	// KEYVAULT
+
+	// GetKeyVaultSecret gets the specified KeyVault secret.
+	GetKeyVaultSecret(ctx context.Context, vaultName string, secretName string, secretVersion string) (secret string, err error)
+
 	//
 	// COMPUTE
 

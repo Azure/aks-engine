@@ -36,10 +36,10 @@ var kubernetesParamFiles = []string{armParameters, kubernetesParams, masterParam
 var swarmTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 var swarmModeTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 
-var keyvaultSecretPathRe *regexp.Regexp
+var KeyvaultSecretPathRe *regexp.Regexp
 
 func init() {
-	keyvaultSecretPathRe = regexp.MustCompile(`^(/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.KeyVault/vaults/\S+)/secrets/([^/\s]+)(/(\S+))?$`)
+	KeyvaultSecretPathRe = regexp.MustCompile(`^(/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.KeyVault/vaults/\S+)/secrets/([^/\s]+)(/(\S+))?$`)
 }
 
 // GenerateKubeConfig returns a JSON string representing the KubeConfig
@@ -164,7 +164,7 @@ func addSecret(m paramsMap, k string, v interface{}, encode bool) {
 		addValue(m, k, v)
 		return
 	}
-	parts := keyvaultSecretPathRe.FindStringSubmatch(str)
+	parts := KeyvaultSecretPathRe.FindStringSubmatch(str)
 	if parts == nil || len(parts) != 5 {
 		if encode {
 			addValue(m, k, base64.StdEncoding.EncodeToString([]byte(str)))

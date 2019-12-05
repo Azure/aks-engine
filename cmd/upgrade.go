@@ -5,8 +5,10 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -126,6 +128,25 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	}
 
 	return nil
+}
+
+func (uc *upgradeCmd) getKeyVaultSecret(ctx context.Context, key string) string {
+	var parts []string
+	var secret string
+	var err error
+	parts = engine.KeyvaultSecretPathRe.FindStringSubmatch(key)
+	if parts != nil && len(parts) == 5 {
+		secret, err = uc.client.GetKeyVaultSecret(ctx, path.Base(parts[1]), parts[2], parts[4])
+		if err != nil {
+			log.Warnln(fmt.Sprintf("unable to get secret: %s", err))
+		}
+		data, err := base64.StdEncoding.DecodeString(secret)
+		if err != nil {
+			log.Warnln(fmt.Sprintf("unable to decode secret: %s", err))
+		}
+		return string(data)
+	}
+	return key
 }
 
 func (uc *upgradeCmd) loadCluster() error {
@@ -263,7 +284,24 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
 	upgradeCluster.Force = uc.force
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Minute)
+	defer cancel()
+	certProfile := api.CertificateProfile{
+		CaCertificate: uc.containerService.Properties.CertificateProfile.CaCertificate,
+		KubeConfigCertificate: uc.containerService.Properties.CertificateProfile.KubeConfigCertificate,
+		KubeConfigPrivateKey: uc.containerService.Properties.CertificateProfile.KubeConfigPrivateKey,
+	}
+	uc.containerService.Properties.CertificateProfile.CaCertificate = uc.getKeyVaultSecret(ctx, certProfile.CaCertificate)
+	uc.containerService.Properties.CertificateProfile.KubeConfigCertificate = uc.getKeyVaultSecret(ctx, certProfile.KubeConfigCertificate)
+	uc.containerService.Properties.CertificateProfile.KubeConfigPrivateKey = uc.getKeyVaultSecret(ctx, certProfile.KubeConfigPrivateKey)
 	kubeConfig, err := engine.GenerateKubeConfig(uc.containerService.Properties, uc.location)
+	log.Infoln(kubeConfig)
+
+	// Set the values back to originals
+	uc.containerService.Properties.CertificateProfile.CaCertificate = certProfile.CaCertificate
+	uc.containerService.Properties.CertificateProfile.KubeConfigCertificate = certProfile.KubeConfigCertificate
+	uc.containerService.Properties.CertificateProfile.KubeConfigPrivateKey = certProfile.KubeConfigPrivateKey
+
 	if err != nil {
 		return errors.Wrap(err, "generating kubeconfig")
 	}
