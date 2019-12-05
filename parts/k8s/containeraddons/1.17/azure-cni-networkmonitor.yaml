@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       tolerations:

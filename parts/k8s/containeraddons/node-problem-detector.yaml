@@ -44,6 +44,8 @@ spec:
         k8s-app: node-problem-detector
         version: {{ContainerConfig "versionLabel"}}
         kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       containers:
       - name: node-problem-detector

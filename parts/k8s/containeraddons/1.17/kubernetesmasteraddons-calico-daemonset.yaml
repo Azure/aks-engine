@@ -437,6 +437,8 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:

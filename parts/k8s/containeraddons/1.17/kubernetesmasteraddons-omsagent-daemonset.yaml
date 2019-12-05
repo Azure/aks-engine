@@ -338,6 +338,7 @@ spec:
     metadata:
       annotations:
         agentVersion: {{ContainerConfig "omsAgentVersion"}}
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
         dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
         schema-versions:  {{ContainerConfig "schema-versions"}}
       labels:
