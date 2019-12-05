@@ -53,6 +53,8 @@ spec:
       labels:
         tier: node
         app: flannel
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       hostNetwork: true
       nodeSelector:

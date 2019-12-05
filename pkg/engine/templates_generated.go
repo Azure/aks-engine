@@ -8593,6 +8593,7 @@ spec:
   template:
     metadata:
       annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
         prometheus.io/port: "9090"
         prometheus.io/scrape: "true"
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
@@ -9470,6 +9471,8 @@ spec:
       labels:
         tier: node
         app: flannel
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       hostNetwork: true
       nodeSelector:
@@ -22655,6 +22658,8 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -22740,6 +22745,8 @@ spec:
       labels:
         k8s-app: azure-ip-masq-agent
         tier: node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       hostNetwork: true
@@ -31649,6 +31656,8 @@ spec:
         k8s-app: node-problem-detector
         version: {{ContainerConfig "versionLabel"}}
         kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       containers:
       - name: node-problem-detector
