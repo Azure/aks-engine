@@ -32,4 +32,9 @@ func TestVMImageFetcherInterface(t *testing.T) {
 		t.Error(err)
 	}
 
+	_, err = azureClient.ListVirtualMachineImages(context.Background(), location, publisher, offer, sku, "", 50, "")
+	if err != nil {
+		t.Error(err)
+	}
+
 }
