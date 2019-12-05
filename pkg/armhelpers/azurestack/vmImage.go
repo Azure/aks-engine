@@ -16,7 +16,7 @@ func (az *AzureClient) ListVirtualMachineImages(ctx context.Context, location, p
 		return azVMImages, fmt.Errorf("fail to get virtual machine images, %s", err)
 	}
 
-	if err := DeepCopy(&azVMImages, vmImages); err != nil {
+	if err = DeepCopy(&azVMImages, vmImages); err != nil {
 		return azVMImages, fmt.Errorf("fail to convert virtual machine images, %s", err)
 	}
 	return azVMImages, err
@@ -31,7 +31,7 @@ func (az *AzureClient) GetVirtualMachineImage(ctx context.Context, location, pub
 	if err != nil {
 		return azVMImage, fmt.Errorf("fail to get virtual machine image, %s", err)
 	}
-	if err := DeepCopy(&azVMImage, vmImage); err != nil {
+	if err = DeepCopy(&azVMImage, vmImage); err != nil {
 		return azVMImage, fmt.Errorf("fail to convert virtual machine images, %s", err)
 	}
 	return azVMImage, err
