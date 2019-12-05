@@ -238,6 +238,7 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 		// The first extension needs to depend on the billing extension created for all pools
 		// Each proceeding extension needs to depend on the previous one to avoid ARM conflicts in the Compute RP
 		nextDependsOn := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/computeAksLinuxBilling')]"
+
 		for _, extensionProfile := range properties.ExtensionProfiles {
 			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
 			if masterOptedForExtension {
@@ -246,7 +247,7 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 					fmt.Println(e.Error())
 				}
 				var ext DeploymentARM
-				e =  json.Unmarshal([]byte(data), &ext)
+				e = json.Unmarshal([]byte(data), &ext)
 				if e != nil {
 					fmt.Println(e.Error())
 				}
