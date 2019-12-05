@@ -478,6 +478,826 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	}
 }
 
+func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
+	/*
+		$ echo "Hello, World\!" | base64
+		SGVsbG8sIFdvcmxkXCEK
+	*/
+	const base64Data = "SGVsbG8sIFdvcmxkXCEK"
+	cases := []struct {
+		name                           string
+		p                              *api.Properties
+		expectedHeapster               kubernetesComponentFileSpec
+		expectedMetricsServer          kubernetesComponentFileSpec
+		expectedTiller                 kubernetesComponentFileSpec
+		expectedAADPodIdentity         kubernetesComponentFileSpec
+		expectedACIConnector           kubernetesComponentFileSpec
+		expectedAzureDiskCSIDriver     kubernetesComponentFileSpec
+		expectedAzureFileCSIDriver     kubernetesComponentFileSpec
+		expectedClusterAutoscaler      kubernetesComponentFileSpec
+		expectedBlobFlexVolume         kubernetesComponentFileSpec
+		expectedSMBFlexVolume          kubernetesComponentFileSpec
+		expectedKeyVaultFlexVolume     kubernetesComponentFileSpec
+		expectedDashboard              kubernetesComponentFileSpec
+		expectedRescheduler            kubernetesComponentFileSpec
+		expectedNvidia                 kubernetesComponentFileSpec
+		expectedContainerMonitoring    kubernetesComponentFileSpec
+		expectedIPMasqAgent            kubernetesComponentFileSpec
+		expectedAzureCNINetworkMonitor kubernetesComponentFileSpec
+		expectedDNSAutoscaler          kubernetesComponentFileSpec
+		expectedCalico                 kubernetesComponentFileSpec
+		expectedAzureNetworkPolicy     kubernetesComponentFileSpec
+		expectedAzurePolicy            kubernetesComponentFileSpec
+		expectedCloudNodeManager       kubernetesComponentFileSpec
+		expectedNodeProblemDetector    kubernetesComponentFileSpec
+	}{
+		{
+			name: "addons with data",
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.16.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						Addons: []api.KubernetesAddon{
+							{
+								Name: common.HeapsterAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.MetricsServerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.TillerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AADPodIdentityAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ACIConnectorAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzureDiskCSIDriverAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzureFileCSIDriverAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ClusterAutoscalerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.BlobfuseFlexVolumeAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.SMBFlexVolumeAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.KeyVaultFlexVolumeAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.DashboardAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ReschedulerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.NVIDIADevicePluginAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ContainerMonitoringAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.IPMASQAgentAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzureCNINetworkMonitorAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.DNSAutoscalerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.CalicoAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzureNetworkPolicyAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzurePolicyAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.CloudNodeManagerAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.NodeProblemDetectorAddonName,
+								Data: base64Data,
+							},
+						},
+					},
+				},
+			},
+			expectedHeapster: kubernetesComponentFileSpec{
+				sourceFile:      heapsterAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: heapsterAddonDestinationFilename,
+			},
+			expectedMetricsServer: kubernetesComponentFileSpec{
+				sourceFile:      metricsServerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: metricsServerAddonDestinationFilename,
+			},
+			expectedTiller: kubernetesComponentFileSpec{
+				sourceFile:      tillerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: tillerAddonDestinationFilename,
+			},
+			expectedAADPodIdentity: kubernetesComponentFileSpec{
+				sourceFile:      aadPodIdentityAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: aadPodIdentityAddonDestinationFilename,
+			},
+			expectedACIConnector: kubernetesComponentFileSpec{
+				sourceFile:      aciConnectorAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: aciConnectorAddonDestinationFilename,
+			},
+			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureDiskCSIAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: azureDiskCSIAddonDestinationFilename,
+			},
+			expectedAzureFileCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureFileCSIAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: azureFileCSIAddonDestinationFilename,
+			},
+			expectedClusterAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      clusterAutoscalerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: clusterAutoscalerAddonDestinationFilename,
+			},
+			expectedBlobFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      blobfuseFlexVolumeAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: blobfuseFlexVolumeAddonDestinationFilename,
+			},
+			expectedSMBFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      smbFlexVolumeAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: smbFlexVolumeAddonDestinationFilename,
+			},
+			expectedKeyVaultFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      keyvaultFlexVolumeAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: keyvaultFlexVolumeAddonDestinationFilename,
+			},
+			expectedDashboard: kubernetesComponentFileSpec{
+				sourceFile:      dashboardAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: dashboardAddonDestinationFilename,
+			},
+			expectedRescheduler: kubernetesComponentFileSpec{
+				sourceFile:      reschedulerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: reschedulerAddonDestinationFilename,
+			},
+			expectedNvidia: kubernetesComponentFileSpec{
+				sourceFile:      nvidiaAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: nvidiaAddonDestinationFilename,
+			},
+			expectedContainerMonitoring: kubernetesComponentFileSpec{
+				sourceFile:      containerMonitoringAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: containerMonitoringAddonDestinationFilename,
+			},
+			expectedIPMasqAgent: kubernetesComponentFileSpec{
+				sourceFile:      ipMasqAgentAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: ipMasqAgentAddonDestinationFilename,
+			},
+			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
+				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
+			},
+			expectedDNSAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      dnsAutoscalerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: dnsAutoscalerAddonDestinationFilename,
+			},
+			expectedCalico: kubernetesComponentFileSpec{
+				sourceFile:      calicoAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
+				sourceFile:      azureNetworkPolicyAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: azureNetworkPolicyAddonDestinationFilename,
+			},
+			expectedAzurePolicy: kubernetesComponentFileSpec{
+				sourceFile:      azurePolicyAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: azurePolicyAddonDestinationFilename,
+			},
+			expectedCloudNodeManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudNodeManagerAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: cloudNodeManagerAddonDestinationFilename,
+			},
+			expectedNodeProblemDetector: kubernetesComponentFileSpec{
+				sourceFile:      nodeProblemDetectorAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: nodeProblemDetectorAddonDestinationFilename,
+			},
+		},
+		{
+			name: "addons with no data",
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.16.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						Addons: []api.KubernetesAddon{
+							{
+								Name: common.HeapsterAddonName,
+							},
+							{
+								Name: common.MetricsServerAddonName,
+							},
+							{
+								Name: common.TillerAddonName,
+							},
+							{
+								Name: common.AADPodIdentityAddonName,
+							},
+							{
+								Name: common.ACIConnectorAddonName,
+							},
+							{
+								Name: common.AzureDiskCSIDriverAddonName,
+							},
+							{
+								Name: common.AzureFileCSIDriverAddonName,
+							},
+							{
+								Name: common.ClusterAutoscalerAddonName,
+							},
+							{
+								Name: common.BlobfuseFlexVolumeAddonName,
+							},
+							{
+								Name: common.SMBFlexVolumeAddonName,
+							},
+							{
+								Name: common.KeyVaultFlexVolumeAddonName,
+							},
+							{
+								Name: common.DashboardAddonName,
+							},
+							{
+								Name: common.ReschedulerAddonName,
+							},
+							{
+								Name: common.NVIDIADevicePluginAddonName,
+							},
+							{
+								Name: common.ContainerMonitoringAddonName,
+							},
+							{
+								Name: common.IPMASQAgentAddonName,
+							},
+							{
+								Name: common.AzureCNINetworkMonitorAddonName,
+							},
+							{
+								Name: common.DNSAutoscalerAddonName,
+							},
+							{
+								Name: common.CalicoAddonName,
+							},
+							{
+								Name: common.AzureNetworkPolicyAddonName,
+							},
+							{
+								Name: common.AzurePolicyAddonName,
+							},
+							{
+								Name: common.CloudNodeManagerAddonName,
+							},
+							{
+								Name: common.NodeProblemDetectorAddonName,
+							},
+						},
+					},
+				},
+			},
+			expectedHeapster: kubernetesComponentFileSpec{
+				sourceFile:      heapsterAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: heapsterAddonDestinationFilename,
+			},
+			expectedMetricsServer: kubernetesComponentFileSpec{
+				sourceFile:      metricsServerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: metricsServerAddonDestinationFilename,
+			},
+			expectedTiller: kubernetesComponentFileSpec{
+				sourceFile:      tillerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: tillerAddonDestinationFilename,
+			},
+			expectedAADPodIdentity: kubernetesComponentFileSpec{
+				sourceFile:      aadPodIdentityAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aadPodIdentityAddonDestinationFilename,
+			},
+			expectedACIConnector: kubernetesComponentFileSpec{
+				sourceFile:      aciConnectorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aciConnectorAddonDestinationFilename,
+			},
+			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureDiskCSIAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureDiskCSIAddonDestinationFilename,
+			},
+			expectedAzureFileCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureFileCSIAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureFileCSIAddonDestinationFilename,
+			},
+			expectedClusterAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      clusterAutoscalerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: clusterAutoscalerAddonDestinationFilename,
+			},
+			expectedBlobFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      blobfuseFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: blobfuseFlexVolumeAddonDestinationFilename,
+			},
+			expectedSMBFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      smbFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: smbFlexVolumeAddonDestinationFilename,
+			},
+			expectedKeyVaultFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      keyvaultFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: keyvaultFlexVolumeAddonDestinationFilename,
+			},
+			expectedDashboard: kubernetesComponentFileSpec{
+				sourceFile:      dashboardAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: dashboardAddonDestinationFilename,
+			},
+			expectedRescheduler: kubernetesComponentFileSpec{
+				sourceFile:      reschedulerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: reschedulerAddonDestinationFilename,
+			},
+			expectedNvidia: kubernetesComponentFileSpec{
+				sourceFile:      nvidiaAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: nvidiaAddonDestinationFilename,
+			},
+			expectedContainerMonitoring: kubernetesComponentFileSpec{
+				sourceFile:      containerMonitoringAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: containerMonitoringAddonDestinationFilename,
+			},
+			expectedIPMasqAgent: kubernetesComponentFileSpec{
+				sourceFile:      ipMasqAgentAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: ipMasqAgentAddonDestinationFilename,
+			},
+			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
+				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
+			},
+			expectedDNSAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      dnsAutoscalerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: dnsAutoscalerAddonDestinationFilename,
+			},
+			expectedCalico: kubernetesComponentFileSpec{
+				sourceFile:      calicoAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
+				sourceFile:      azureNetworkPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureNetworkPolicyAddonDestinationFilename,
+			},
+			expectedAzurePolicy: kubernetesComponentFileSpec{
+				sourceFile:      azurePolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azurePolicyAddonDestinationFilename,
+			},
+			expectedCloudNodeManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudNodeManagerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudNodeManagerAddonDestinationFilename,
+			},
+			expectedNodeProblemDetector: kubernetesComponentFileSpec{
+				sourceFile:      nodeProblemDetectorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: nodeProblemDetectorAddonDestinationFilename,
+			},
+		},
+		{
+			name: "no addons in ContainerService object",
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.16.1",
+					KubernetesConfig:    &api.KubernetesConfig{},
+				},
+			},
+			expectedHeapster: kubernetesComponentFileSpec{
+				sourceFile:      heapsterAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: heapsterAddonDestinationFilename,
+			},
+			expectedMetricsServer: kubernetesComponentFileSpec{
+				sourceFile:      metricsServerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: metricsServerAddonDestinationFilename,
+			},
+			expectedTiller: kubernetesComponentFileSpec{
+				sourceFile:      tillerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: tillerAddonDestinationFilename,
+			},
+			expectedAADPodIdentity: kubernetesComponentFileSpec{
+				sourceFile:      aadPodIdentityAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aadPodIdentityAddonDestinationFilename,
+			},
+			expectedACIConnector: kubernetesComponentFileSpec{
+				sourceFile:      aciConnectorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aciConnectorAddonDestinationFilename,
+			},
+			expectedAzureDiskCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureDiskCSIAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureDiskCSIAddonDestinationFilename,
+			},
+			expectedAzureFileCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      azureFileCSIAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureFileCSIAddonDestinationFilename,
+			},
+			expectedClusterAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      clusterAutoscalerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: clusterAutoscalerAddonDestinationFilename,
+			},
+			expectedBlobFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      blobfuseFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: blobfuseFlexVolumeAddonDestinationFilename,
+			},
+			expectedSMBFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      smbFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: smbFlexVolumeAddonDestinationFilename,
+			},
+			expectedKeyVaultFlexVolume: kubernetesComponentFileSpec{
+				sourceFile:      keyvaultFlexVolumeAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: keyvaultFlexVolumeAddonDestinationFilename,
+			},
+			expectedDashboard: kubernetesComponentFileSpec{
+				sourceFile:      dashboardAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: dashboardAddonDestinationFilename,
+			},
+			expectedRescheduler: kubernetesComponentFileSpec{
+				sourceFile:      reschedulerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: reschedulerAddonDestinationFilename,
+			},
+			expectedNvidia: kubernetesComponentFileSpec{
+				sourceFile:      nvidiaAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: nvidiaAddonDestinationFilename,
+			},
+			expectedContainerMonitoring: kubernetesComponentFileSpec{
+				sourceFile:      containerMonitoringAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: containerMonitoringAddonDestinationFilename,
+			},
+			expectedIPMasqAgent: kubernetesComponentFileSpec{
+				sourceFile:      ipMasqAgentAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: ipMasqAgentAddonDestinationFilename,
+			},
+			expectedAzureCNINetworkMonitor: kubernetesComponentFileSpec{
+				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
+			},
+			expectedDNSAutoscaler: kubernetesComponentFileSpec{
+				sourceFile:      dnsAutoscalerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: dnsAutoscalerAddonDestinationFilename,
+			},
+			expectedCalico: kubernetesComponentFileSpec{
+				sourceFile:      calicoAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
+				sourceFile:      azureNetworkPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azureNetworkPolicyAddonDestinationFilename,
+			},
+			expectedAzurePolicy: kubernetesComponentFileSpec{
+				sourceFile:      azurePolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: azurePolicyAddonDestinationFilename,
+			},
+			expectedCloudNodeManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudNodeManagerAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudNodeManagerAddonDestinationFilename,
+			},
+			expectedNodeProblemDetector: kubernetesComponentFileSpec{
+				sourceFile:      nodeProblemDetectorAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: nodeProblemDetectorAddonDestinationFilename,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			componentFileSpec := kubernetesContainerAddonSettingsInit(c.p)
+			for addon := range componentFileSpec {
+				switch addon {
+				case common.HeapsterAddonName:
+					if c.expectedHeapster.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedHeapster.sourceFile)
+					}
+					if c.expectedHeapster.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedHeapster.base64Data)
+					}
+					if c.expectedHeapster.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedHeapster.destinationFile)
+					}
+				case common.MetricsServerAddonName:
+					if c.expectedMetricsServer.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedMetricsServer.sourceFile)
+					}
+					if c.expectedMetricsServer.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedMetricsServer.base64Data)
+					}
+					if c.expectedMetricsServer.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedMetricsServer.destinationFile)
+					}
+				case common.TillerAddonName:
+					if c.expectedTiller.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedTiller.sourceFile)
+					}
+					if c.expectedTiller.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedTiller.base64Data)
+					}
+					if c.expectedTiller.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedTiller.destinationFile)
+					}
+				case common.AADPodIdentityAddonName:
+					if c.expectedAADPodIdentity.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAADPodIdentity.sourceFile)
+					}
+					if c.expectedAADPodIdentity.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAADPodIdentity.base64Data)
+					}
+					if c.expectedAADPodIdentity.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAADPodIdentity.destinationFile)
+					}
+				case common.ACIConnectorAddonName:
+					if c.expectedACIConnector.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedACIConnector.sourceFile)
+					}
+					if c.expectedACIConnector.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedACIConnector.base64Data)
+					}
+					if c.expectedACIConnector.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedACIConnector.destinationFile)
+					}
+				case common.AzureDiskCSIDriverAddonName:
+					if c.expectedAzureDiskCSIDriver.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureDiskCSIDriver.sourceFile)
+					}
+					if c.expectedAzureDiskCSIDriver.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureDiskCSIDriver.base64Data)
+					}
+					if c.expectedAzureDiskCSIDriver.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureDiskCSIDriver.destinationFile)
+					}
+				case common.AzureFileCSIDriverAddonName:
+					if c.expectedAzureFileCSIDriver.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureFileCSIDriver.sourceFile)
+					}
+					if c.expectedAzureFileCSIDriver.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureFileCSIDriver.base64Data)
+					}
+					if c.expectedAzureFileCSIDriver.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureFileCSIDriver.destinationFile)
+					}
+				case common.ClusterAutoscalerAddonName:
+					if c.expectedClusterAutoscaler.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedClusterAutoscaler.sourceFile)
+					}
+					if c.expectedClusterAutoscaler.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedClusterAutoscaler.base64Data)
+					}
+					if c.expectedClusterAutoscaler.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedClusterAutoscaler.destinationFile)
+					}
+				case common.BlobfuseFlexVolumeAddonName:
+					if c.expectedBlobFlexVolume.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedBlobFlexVolume.sourceFile)
+					}
+					if c.expectedBlobFlexVolume.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedBlobFlexVolume.base64Data)
+					}
+					if c.expectedBlobFlexVolume.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedBlobFlexVolume.destinationFile)
+					}
+				case common.SMBFlexVolumeAddonName:
+					if c.expectedSMBFlexVolume.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedSMBFlexVolume.sourceFile)
+					}
+					if c.expectedSMBFlexVolume.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedSMBFlexVolume.base64Data)
+					}
+					if c.expectedSMBFlexVolume.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedSMBFlexVolume.destinationFile)
+					}
+				case common.KeyVaultFlexVolumeAddonName:
+					if c.expectedKeyVaultFlexVolume.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedKeyVaultFlexVolume.sourceFile)
+					}
+					if c.expectedKeyVaultFlexVolume.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedKeyVaultFlexVolume.base64Data)
+					}
+					if c.expectedKeyVaultFlexVolume.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedKeyVaultFlexVolume.destinationFile)
+					}
+				case common.DashboardAddonName:
+					if c.expectedDashboard.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedDashboard.sourceFile)
+					}
+					if c.expectedDashboard.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedDashboard.base64Data)
+					}
+					if c.expectedDashboard.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDashboard.destinationFile)
+					}
+				case common.ReschedulerAddonName:
+					if c.expectedRescheduler.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedRescheduler.sourceFile)
+					}
+					if c.expectedRescheduler.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedRescheduler.base64Data)
+					}
+					if c.expectedRescheduler.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedRescheduler.destinationFile)
+					}
+				case common.NVIDIADevicePluginAddonName:
+					if c.expectedNvidia.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedNvidia.sourceFile)
+					}
+					if c.expectedNvidia.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedNvidia.base64Data)
+					}
+					if c.expectedNvidia.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedNvidia.destinationFile)
+					}
+				case common.ContainerMonitoringAddonName:
+					if c.expectedContainerMonitoring.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedContainerMonitoring.sourceFile)
+					}
+					if c.expectedContainerMonitoring.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedContainerMonitoring.base64Data)
+					}
+					if c.expectedContainerMonitoring.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedContainerMonitoring.destinationFile)
+					}
+				case common.IPMASQAgentAddonName:
+					if c.expectedIPMasqAgent.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedIPMasqAgent.sourceFile)
+					}
+					if c.expectedIPMasqAgent.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedIPMasqAgent.base64Data)
+					}
+					if c.expectedIPMasqAgent.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedIPMasqAgent.destinationFile)
+					}
+				case common.AzureCNINetworkMonitorAddonName:
+					if c.expectedAzureCNINetworkMonitor.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureCNINetworkMonitor.sourceFile)
+					}
+					if c.expectedAzureCNINetworkMonitor.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureCNINetworkMonitor.base64Data)
+					}
+					if c.expectedAzureCNINetworkMonitor.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCNINetworkMonitor.destinationFile)
+					}
+				case common.DNSAutoscalerAddonName:
+					if c.expectedDNSAutoscaler.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedDNSAutoscaler.sourceFile)
+					}
+					if c.expectedDNSAutoscaler.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedDNSAutoscaler.base64Data)
+					}
+					if c.expectedDNSAutoscaler.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDNSAutoscaler.destinationFile)
+					}
+				case common.CalicoAddonName:
+					if c.expectedCalico.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedCalico.sourceFile)
+					}
+					if c.expectedCalico.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedCalico.base64Data)
+					}
+					if c.expectedCalico.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedCalico.destinationFile)
+					}
+				case common.AzureNetworkPolicyAddonName:
+					if c.expectedAzureNetworkPolicy.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureNetworkPolicy.sourceFile)
+					}
+					if c.expectedAzureNetworkPolicy.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureNetworkPolicy.base64Data)
+					}
+					if c.expectedAzureNetworkPolicy.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureNetworkPolicy.destinationFile)
+					}
+				case common.AzurePolicyAddonName:
+					if c.expectedAzurePolicy.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzurePolicy.sourceFile)
+					}
+					if c.expectedAzurePolicy.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzurePolicy.base64Data)
+					}
+					if c.expectedAzurePolicy.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzurePolicy.destinationFile)
+					}
+				case common.CloudNodeManagerAddonName:
+					if c.expectedCloudNodeManager.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedCloudNodeManager.sourceFile)
+					}
+					if c.expectedCloudNodeManager.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedCloudNodeManager.base64Data)
+					}
+					if c.expectedCloudNodeManager.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedCloudNodeManager.destinationFile)
+					}
+				case common.NodeProblemDetectorAddonName:
+					if c.expectedNodeProblemDetector.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedNodeProblemDetector.sourceFile)
+					}
+					if c.expectedNodeProblemDetector.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedNodeProblemDetector.base64Data)
+					}
+					if c.expectedNodeProblemDetector.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedNodeProblemDetector.destinationFile)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestKubernetesManifestSettingsInit(t *testing.T) {
 	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
