@@ -405,10 +405,8 @@ func (dc *deployCmd) run() error {
 	}
 
 	// Validate image
-	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
-	defer cancel()
 
-	err = dc.validateDependencies(cx)
+	err = dc.validateDependencies(context.Background())
 
 	if err != nil {
 		return errors.Wrapf(err, "Validating dependencies %s", dc.apimodelPath)
@@ -446,6 +444,9 @@ func (dc *deployCmd) run() error {
 	if err = json.Unmarshal([]byte(parameters), &parametersJSON); err != nil {
 		return err
 	}
+
+	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
+	defer cancel()
 
 	deploymentSuffix := dc.random.Int31()
 

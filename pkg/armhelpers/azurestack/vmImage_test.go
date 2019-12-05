@@ -1,4 +1,4 @@
-package armhelpers
+package azurestack
 
 import (
 	"context"
