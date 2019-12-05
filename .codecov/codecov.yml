@@ -40,3 +40,6 @@ ignore:
   - "pkg/engine/engine_dcos.go"
   - "pkg/engine/templates_generated.go"
   - "pkg/i18n/translations_generated.go"
+  - "pkg/engine/const.go"
+  - "pkg/api/common/const.go"
+  - "pkg/api/const.go"
