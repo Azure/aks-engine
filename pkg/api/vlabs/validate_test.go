@@ -681,7 +681,7 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
 	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
 	err := p.validateCustomKubeComponent()
-	expectedMsg := "customHyperkubeImage has no effect in Kubernetes version 1.17.0-alpha.1 or above"
+	expectedMsg := "customHyperkubeImage has no effect in Kubernetes version 1.17.0 or above"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
@@ -736,7 +736,7 @@ func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
 		t.Errorf("should not error because CustomHyperkubeImage is provided, got error : %s", err.Error())
 	}
 
-	p.OrchestratorProfile.OrchestratorVersion = "1.17.0-alpha.1"
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
 	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
 	err = p.validatePrivateAzureRegistryServer()
 	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided"

@@ -375,7 +375,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.17.0-alpha.1",
+						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &api.KubernetesConfig{
 							ContainerRuntime:                 api.Docker,
 							CustomKubeAPIServerImage:         "example.azurecr.io/kube-apiserver-amd64:tag",
