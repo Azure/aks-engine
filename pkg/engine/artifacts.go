@@ -147,6 +147,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.NodeProblemDetectorAddonName),
 			destinationFile: nodeProblemDetectorAddonDestinationFilename,
 		},
+		common.KubeDNSAddonName: {
+			sourceFile:      kubeDNSAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.KubeDNSAddonName),
+			destinationFile: kubeDNSAddonDestinationFilename,
+		},
 	}
 }
 
@@ -160,12 +165,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 	o := p.OrchestratorProfile
 	k := o.KubernetesConfig
 	kubernetesComponentFileSpecs := []kubernetesComponentFileSpec{
-		{
-			sourceFile:      "kubernetesmasteraddons-kube-dns-deployment.yaml",
-			base64Data:      k.GetAddonScript(common.KubeDNSAddonName),
-			destinationFile: "kube-dns-deployment.yaml",
-			isEnabled:       !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0"),
-		},
 		{
 			sourceFile:      "coredns.yaml",
 			base64Data:      k.GetAddonScript(common.CoreDNSAddonName),

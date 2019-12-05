@@ -483,13 +483,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		// First, Configure addons
-		cs.setAddonsConfig(isUpgrade)
-		// Defaults enforcement flows below inherit from addons configuration,
-		// so it's critical to enforce default addons configuration first
-
 		// Configure kubelet
 		cs.setKubeletConfig(isUpgrade)
+
+		// Configure addons
+		cs.setAddonsConfig(isUpgrade)
 
 		// Master-specific defaults that depend upon kubelet defaults
 		// Set the default number of IP addresses allocated for masters.

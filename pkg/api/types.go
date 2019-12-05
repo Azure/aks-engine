@@ -1676,13 +1676,6 @@ func (o *OrchestratorProfile) IsPrivateCluster() bool {
 	return o.KubernetesConfig != nil && o.KubernetesConfig.PrivateCluster != nil && to.Bool(o.KubernetesConfig.PrivateCluster.Enabled)
 }
 
-// NeedsExecHealthz returns whether or not we have a configuration that requires exechealthz pod anywhere
-func (o *OrchestratorProfile) NeedsExecHealthz() bool {
-	return o.IsKubernetes() &&
-		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.7.0") &&
-		!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")
-}
-
 // GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
 func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
 	return o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"]

@@ -51,10 +51,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
-			if orchestratorProfile.NeedsExecHealthz() {
-				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
-			}
-			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(common.AADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(common.AADPodIdentityAddonName)
@@ -69,9 +65,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			}
 			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
 				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
-			} else {
-				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
-				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{

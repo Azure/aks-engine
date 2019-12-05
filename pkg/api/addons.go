@@ -527,6 +527,29 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultKubeDNSAddonsConfig := KubernetesAddon{
+		Name:    common.KubeDNSAddonName,
+		Enabled: to.BoolPtr(!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")),
+		Config: map[string]string{
+			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "kubedns",
+				Image: specConfig.KubernetesImageBase + k8sComponents["kube-dns"],
+			},
+			{
+				Name:  "dnsmasq",
+				Image: specConfig.KubernetesImageBase + k8sComponents["dnsmasq"],
+			},
+			{
+				Name:  "sidecar",
+				Image: specConfig.KubernetesImageBase + k8sComponents["k8s-dns-sidecar"],
+			},
+		},
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
@@ -552,6 +575,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureFileCSIDriverAddonsConfig,
 		defaultsAzurePolicyAddonsConfig,
 		defaultNodeProblemDetectorConfig,
+		defaultKubeDNSAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

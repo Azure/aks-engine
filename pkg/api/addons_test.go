@@ -383,6 +383,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -579,6 +583,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -780,6 +788,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -1009,6 +1021,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -1253,6 +1269,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1495,6 +1515,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -1726,6 +1750,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -1976,6 +2004,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -2230,6 +2262,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -2540,6 +2576,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -2849,6 +2889,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3107,6 +3151,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -3370,6 +3418,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -3761,6 +3813,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -3953,6 +4009,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -4157,6 +4217,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -4347,6 +4411,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -4513,6 +4581,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -4697,6 +4769,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -4890,6 +4966,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -5086,6 +5166,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -5312,6 +5396,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzureDiskCSIDriverAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -5513,6 +5601,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -5722,6 +5814,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -5878,6 +5974,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -6041,6 +6141,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -6192,6 +6296,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -6337,6 +6445,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 			},
@@ -6553,6 +6665,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -6767,6 +6883,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -6980,6 +7100,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},
@@ -7209,6 +7333,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
 				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 		{
@@ -7436,6 +7564,10 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
 				},
 			},
 		},

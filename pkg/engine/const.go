@@ -250,4 +250,6 @@ const (
 	cloudNodeManagerAddonDestinationFilename       string = "cloud-node-manager.yaml"
 	nodeProblemDetectorAddonSourceFilename         string = "node-problem-detector.yaml"
 	nodeProblemDetectorAddonDestinationFilename    string = "node-problem-detector.yaml"
+	kubeDNSAddonSourceFilename                     string = "kubernetesmasteraddons-kube-dns-deployment.yaml"
+	kubeDNSAddonDestinationFilename                string = "kube-dns-deployment.yaml"
 )

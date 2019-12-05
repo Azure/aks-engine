@@ -171,7 +171,7 @@ const (
 	// AzureStorageClassesAddonName is the name of the azure storage classes addon
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
-	KubeDNSAddonName = "kube-dns-deployment"
+	KubeDNSAddonName = "kube-dns"
 	// CoreDNSAddonName is the name of the coredns addon
 	CoreDNSAddonName = "coredns"
 	// KubeProxyAddonName is the name of the kube-proxy config addon
