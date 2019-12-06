@@ -1,11 +1,12 @@
 # AKS Engine - Network Plugin
 
-There are 2 different Network Plugin options :
+There are 5 different Network Plugin options :
 
 - Azure Container Networking (default)
 - Kubenet
 - Flannel (docs are //TODO)
 - Cilium (docs are //TODO)
+- Antrea (docs are //TODO)
 
 ## Azure Container Networking (default)
 

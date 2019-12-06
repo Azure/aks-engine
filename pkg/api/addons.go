@@ -279,8 +279,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
-		Name:    common.IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled && o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium),
+		Name: common.IPMASQAgentAddonName,
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled &&
+			(o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
+				o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.IPMASQAgentAddonName,
@@ -394,6 +396,32 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			{
 				Name:  common.CiliumEtcdOperatorContainerName,
 				Image: k8sComponents[common.CiliumEtcdOperatorContainerName],
+			},
+		},
+	}
+
+	defaultsAntreaDaemonSetAddonsConfig := KubernetesAddon{
+		Name:    common.AntreaAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea),
+		Config: map[string]string{
+			"serviceCidr": o.KubernetesConfig.ServiceCIDR,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AntreaControllerContainerName,
+				Image: k8sComponents[common.AntreaControllerContainerName],
+			},
+			{
+				Name:  common.AntreaAgentContainerName,
+				Image: k8sComponents[common.AntreaAgentContainerName],
+			},
+			{
+				Name:  common.AntreaOVSContainerName,
+				Image: k8sComponents[common.AntreaOVSContainerName],
+			},
+			{
+				Name:  common.AntreaInstallCNIContainerName,
+				Image: k8sComponents[common.AntreaInstallCNIContainerName],
 			},
 		},
 	}
@@ -652,6 +680,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultKubeProxyAddonsConfig,
 		defaultPodSecurityPolicyAddonsConfig,
 		defaultAADDefaultAdminGroupAddonsConfig,
+		defaultsAntreaDaemonSetAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

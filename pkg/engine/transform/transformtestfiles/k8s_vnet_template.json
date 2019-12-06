@@ -827,6 +827,13 @@
       },
       "type": "string"
     },
+    "kubeServiceCidr": {
+      "defaultValue": "",
+      "metadata": {
+        "description": "Kubernetes service address space"
+      },
+      "type": "string"
+    },
     "kubeConfigCertificate": {
       "metadata": {
         "description": "The base 64 certificate used by cli to communicate with the master"
@@ -1071,11 +1078,12 @@
         "azure",
         "calico",
         "cilium",
-        "flannel"
+        "flannel",
+        "antrea"
       ],
       "defaultValue": "none",
       "metadata": {
-        "description": "The network policy enforcement to use (none|azure|calico|cilium|flannel)"
+        "description": "The network policy enforcement to use (none|azure|calico|cilium|flannel|antrea)"
       },
       "type": "string"
     },
@@ -1157,7 +1165,7 @@
     "kubeConfigCertificate": "[parameters('kubeConfigCertificate')]",
     "kubeConfigPrivateKey": "[parameters('kubeConfigPrivateKey')]",
     "kubeDnsServiceIp": "10.0.0.10",
-    "kubeServiceCidr": "10.0.0.0/16",
+    "kubeServiceCidr": "[parameters('kubeServiceCidr')]",
     "kubernetesAPIServerIP": "[parameters('firstConsecutiveStaticIP')]",
     "kubernetesAddonManagerSpec": "[parameters('kubernetesAddonManagerSpec')]",
     "kubernetesAddonResizerSpec": "[parameters('kubernetesAddonResizerSpec')]",

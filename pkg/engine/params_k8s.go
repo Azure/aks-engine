@@ -79,6 +79,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderDisableOutboundSNAT:  kubernetesConfig.CloudProviderDisableOutboundSNAT,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
+			addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 			addValue(parametersMap, "dockerBridgeCidr", kubernetesConfig.DockerBridgeSubnet)
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)
 			addValue(parametersMap, "networkPlugin", kubernetesConfig.NetworkPlugin)
@@ -121,7 +122,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				// Kubernetes node binaries as packaged by upstream kubernetes
 				// example at https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG-1.11.md#node-binaries-1
 				addValue(parametersMap, "windowsKubeBinariesURL", kubernetesConfig.WindowsNodeBinariesURL)
-				addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 				addValue(parametersMap, "kubeBinariesVersion", k8sVersion)
 				addValue(parametersMap, "windowsTelemetryGUID", cloudSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID)
 			}

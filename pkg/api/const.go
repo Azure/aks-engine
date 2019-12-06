@@ -355,6 +355,10 @@ const (
 	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPluginFlannel is the string expression for flannel network policy config option
 	NetworkPluginFlannel = "flannel"
+	// NetworkPluginAntrea is the string expression for antrea network plugin config option
+	NetworkPluginAntrea = "antrea"
+	// NetworkPolicyAntrea is the string expression for antrea network policy config option
+	NetworkPolicyAntrea = NetworkPluginAntrea
 	// DefaultNetworkPlugin defines the network plugin to use by default
 	DefaultNetworkPlugin = NetworkPluginKubenet
 	// DefaultNetworkPolicy defines the network policy implementation to use by default

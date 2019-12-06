@@ -887,6 +887,13 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
+		t.Errorf(
+			"should error on antrea for windows clusters",
+		)
+	}
+
 	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "flannel"
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
@@ -903,7 +910,7 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	for _, policy := range NetworkPluginValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = policy
-		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err != nil {
+		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err != nil {
 			t.Errorf(
 				"should not error on networkPolicy=\"%s\"",
 				policy,
@@ -912,9 +919,16 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "not-existing"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err == nil {
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err == nil {
 		t.Errorf(
 			"should error on invalid networkPlugin",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err == nil {
+		t.Errorf(
+			"should error on antrea for windows clusters",
 		)
 	}
 }
