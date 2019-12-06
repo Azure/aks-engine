@@ -216,6 +216,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.AADPodIdentityAddonName:         "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
 		common.AzurePolicyAddonName:            "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
+		common.KubeDNSAddonName:                "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
 	}
 
 	customAddonImages := make(map[string]string)
@@ -279,6 +280,9 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == common.AADPodIdentityAddonName {
 			containerName = "nmi"
+		}
+		if addonName == common.KubeDNSAddonName {
+			containerName = "kubedns"
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
