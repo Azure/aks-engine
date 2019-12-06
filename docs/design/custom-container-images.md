@@ -36,11 +36,13 @@ More specifically, the "addons" interface summarized above will allow for the re
 {
 ...
                 "addons": [
-                    "name": "coredns",
-                    "enabled": true,
-                    "containers": {
+                    {
                         "name": "coredns",
-                        "image": "mycustomregistry.com/coredns/dev/coredns:v2.5-dfkjlasdklfjsa"
+                        "enabled": true,
+                        "containers": {
+                            "name": "coredns",
+                            "image": "mycustomregistry.com/coredns/dev/coredns:v2.5-dfkjlasdklfjsa"
+                        }
                     }
                 ]
 ...
@@ -79,11 +81,13 @@ However, the argument is that a flat structure like the above doesn’t scale ac
 {
 ...
                "components": [
-                    "name": "kube-apiserver",
-                    "enabled": true,
-                    "containers": {
+                    {
                         "name": "kube-apiserver",
-                        "image": "mycustomregistry.com/kube-apiserver/dev/kube-apiserver:v1.16.1-dfkjlasdklfjsa"
+                        "enabled": true,
+                        "containers": {
+                            "name": "kube-apiserver",
+                            "image": "mycustomregistry.com/kube-apiserver/dev/kube-apiserver:v1.16.1-dfkjlasdklfjsa"
+                        }
                     }
                 ]
 ...
