@@ -44,9 +44,9 @@
                 ]
             }
         },
-        "servicePrincipalProfile": {	
-            "clientId": "",	
-            "secret": ""	
+        "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
         }
     }
 }

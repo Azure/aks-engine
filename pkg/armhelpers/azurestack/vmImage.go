@@ -28,14 +28,15 @@ func (az *AzureClient) ListVirtualMachineImages(ctx context.Context, location, p
 //GetVirtualMachineImage returns an image or an error if the image is not found
 func (az *AzureClient) GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (azcompute.VirtualMachineImage, error) {
 	vmImage, err := az.virtualMachineImageClient.Get(ctx, location, publisherName, offer, skus, version)
-
 	azVMImage := azcompute.VirtualMachineImage{}
 
 	if err != nil {
 		return azVMImage, fmt.Errorf("fail to get virtual machine image, %s", err)
 	}
+
 	if err = DeepCopy(&azVMImage, vmImage); err != nil {
 		return azVMImage, fmt.Errorf("fail to convert virtual machine images, %s", err)
 	}
+
 	return azVMImage, err
 }
