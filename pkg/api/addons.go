@@ -321,8 +321,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+				Name:           common.AzureNetworkPolicyAddonName,
+				Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+				MemoryRequests: "20Mi",
+				MemoryLimits:   "2Gi",
 			},
 		},
 	}

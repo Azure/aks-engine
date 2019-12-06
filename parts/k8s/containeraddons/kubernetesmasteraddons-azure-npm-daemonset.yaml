@@ -81,9 +81,9 @@ spec:
             privileged: true
           resources:
             requests:
-              memory: 20Mi
+              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
             limits:
-              memory: 2Gi
+              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
               valueFrom:
