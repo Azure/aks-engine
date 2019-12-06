@@ -387,6 +387,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -588,6 +598,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -793,6 +813,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -1025,6 +1055,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -1273,6 +1313,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -1519,6 +1569,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -1754,6 +1814,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -2008,6 +2078,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -2266,6 +2346,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -2580,6 +2670,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -2893,6 +2993,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -3155,6 +3265,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -3423,6 +3543,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -3617,6 +3747,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -3817,6 +3957,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -4014,6 +4164,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -4221,6 +4381,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -4415,6 +4585,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -4586,6 +4766,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -4774,6 +4964,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -4971,6 +5171,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -5171,6 +5381,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -5400,6 +5620,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -5606,6 +5836,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -5818,6 +6058,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -5979,6 +6229,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -6145,6 +6405,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -6300,6 +6570,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -6450,6 +6730,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -6669,6 +6959,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -6887,6 +7187,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -7104,6 +7414,16 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
 				},
 			},
 		},
@@ -7337,6 +7657,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -7569,6 +7899,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 		{
@@ -7758,6 +8098,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.NodeProblemDetectorAddonName,
+					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
+					Config: map[string]string{
+						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
+						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
+						"systemStatsMonitor":  "/config/system-stats-monitor.json",
+						"versionLabel":        "v0.8.0",
+					},
+				},
 			},
 		},
 	}
@@ -7790,6 +8140,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.AzureFileCSIDriverAddonName,
 				common.AzureDiskCSIDriverAddonName,
 				common.CloudNodeManagerAddonName,
+				common.NodeProblemDetectorAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]
