@@ -405,9 +405,7 @@ func (dc *deployCmd) run() error {
 	}
 
 	// Validate image
-
 	err = dc.validateDependencies(context.Background())
-
 	if err != nil {
 		return errors.Wrapf(err, "Validating dependencies %s", dc.apimodelPath)
 	}
@@ -543,10 +541,8 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 
 // validation layer for environment dependencies and supported features
 func (dc *deployCmd) validateDependencies(ctx context.Context) error {
-
 	if dc.containerService.Properties.IsAzureStackCloud() {
 		err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client)
-
 		if err != nil {
 			return errors.Wrap(err, "Validating Images")
 		}

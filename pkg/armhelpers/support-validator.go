@@ -18,65 +18,43 @@ type requiredImage struct {
 
 //ValidateRequiredImages checks both master ang agent profiles and ensures these images are available in the environment
 func ValidateRequiredImages(ctx context.Context, location string, p *api.Properties, client AKSEngineClient) error {
-
 	missingVMImages := make(map[string]requiredImage)
-
-	imageInformation := getDistroVMImageInformation(p.MasterProfile.Distro)
+	imageInformation := getDistroVMImageInformation(string(p.MasterProfile.Distro))
 
 	if imageFetcher, ok := client.(VMImageFetcher); ok {
-		vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformation.ImagePublisher, imageInformation.ImageOffer, imageInformation.ImageSku, imageInformation.ImageVersion)
+		_, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformation.ImagePublisher, imageInformation.ImageOffer, imageInformation.ImageSku, imageInformation.ImageVersion)
 
 		if err != nil {
-			if p.MasterProfile.Distro == "" {
-				missingVMImages[string(api.Ubuntu)] = requiredImage{
-					image:     imageInformation,
-					errorData: err,
-				}
-
-			} else {
-				missingVMImages[string(p.MasterProfile.Distro)] = requiredImage{
-					image:     imageInformation,
-					errorData: err,
-				}
+			var distro = string(api.Ubuntu)
+			if p.MasterProfile.Distro != "" {
+				distro = string(p.MasterProfile.Distro)
 			}
-		} else {
-			log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
+
+			missingVMImages[distro] = requiredImage{
+				image:     imageInformation,
+				errorData: err,
+			}
 		}
 
 		for _, profile := range p.AgentPoolProfiles {
-
+			var imgInfo api.AzureOSImageConfig
+			var distro string
 			if profile.OSType == api.Windows {
-				imageInformaition := api.WindowsServer2019OSImageConfig
-
-				vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
-
-				if err != nil {
-					missingVMImages[string(api.Windows)] = requiredImage{
-						image:     imageInformaition,
-						errorData: err,
-					}
-				} else {
-					log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
-				}
+				imgInfo = api.WindowsServer2019OSImageConfig
+				distro = string(api.Windows)
 			} else {
-				imageInformaition := getDistroVMImageInformation(profile.Distro)
+				distro = string(api.Ubuntu)
+				if profile.Distro != "" {
+					distro = string(profile.Distro)
+				}
 
-				vmImage, err := imageFetcher.GetVirtualMachineImage(ctx, location, imageInformaition.ImagePublisher, imageInformaition.ImageOffer, imageInformaition.ImageSku, imageInformaition.ImageVersion)
+				imgInfo = getDistroVMImageInformation(distro)
+			}
 
-				if err != nil {
-					if profile.Distro == "" {
-						missingVMImages[string(api.Ubuntu)] = requiredImage{
-							image:     imageInformaition,
-							errorData: err,
-						}
-					} else {
-						missingVMImages[string(profile.Distro)] = requiredImage{
-							image:     imageInformaition,
-							errorData: err,
-						}
-					}
-				} else {
-					log.Infof("Image %s-%s-%s found in your environment", imageInformation.ImageOffer, imageInformation.ImageSku, *vmImage.Name)
+			if _, err := imageFetcher.GetVirtualMachineImage(ctx, location, imgInfo.ImagePublisher, imgInfo.ImageOffer, imgInfo.ImageSku, imgInfo.ImageVersion); err != nil {
+				missingVMImages[distro] = requiredImage{
+					image:     imgInfo,
+					errorData: err,
 				}
 			}
 		}
@@ -95,8 +73,9 @@ func ValidateRequiredImages(ctx context.Context, location string, p *api.Propert
 
 }
 
-func getDistroVMImageInformation(d api.Distro) api.AzureOSImageConfig {
-	switch d {
+func getDistroVMImageInformation(d string) api.AzureOSImageConfig {
+	distro := api.Distro(d)
+	switch distro {
 	case api.Ubuntu:
 		return api.Ubuntu1604OSImageConfig
 	case api.Ubuntu1804:
@@ -114,5 +93,4 @@ func getDistroVMImageInformation(d api.Distro) api.AzureOSImageConfig {
 	default:
 		return api.Ubuntu1604OSImageConfig
 	}
-
 }
