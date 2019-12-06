@@ -4,7 +4,7 @@
 
 For more details on the Kubernetes node-problem-detector, see the [GitHub project](https://github.com/kubernetes/node-problem-detector).
 
-The following is a sample API definition with the node-problem-detector addon enabled.
+The following is a sample API definition with the node-problem-detector addon explicitly enabled. (Since node-problem-detector is enabled by default, the entry below in `addons` isn't required.)
 
 ```json
 {
@@ -52,7 +52,7 @@ The following is a sample API definition with the node-problem-detector addon en
 }
 ```
 
-You can validate that the add-on is running as expected with the following command. You should see a node-problem-detector pod running for each agent node in the cluster.
+You can validate that the addon is running as expected with the following command. You should see a node-problem-detector pod running for each agent node in the cluster.
 
 ```bash
 kubectl get pods -n kube-system
