@@ -12,7 +12,8 @@
             }
         },
         "customCloudProfile": {
-            "portalURL": ""
+            "portalURL": "",
+            "identitySystem": ""
         },
         "featureFlags": {
             "enableTelemetry": true
@@ -42,6 +43,10 @@
                     }
                 ]
             }
+        },
+        "servicePrincipalProfile": {	
+            "clientId": "",	
+            "secret": ""	
         }
     }
 }
