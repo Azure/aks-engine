@@ -1,6 +1,6 @@
 {
 	"name": "Go for aks-engine",
-	"image": "quay.io/deis/go-dev:v1.23.6",
+	"image": "quay.io/deis/go-dev:v1.25.0",
 	"extensions": [
 		"ms-vscode.go"
 	],
