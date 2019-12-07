@@ -211,7 +211,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -222,25 +222,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -296,7 +278,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -310,7 +292,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -347,7 +329,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -394,7 +376,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -411,25 +393,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -441,7 +405,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.12.8"][common.TillerAddonName],
+							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.15.4"][common.TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -498,7 +462,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -512,7 +476,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -549,7 +513,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -596,7 +560,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -613,25 +577,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -653,7 +599,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.12.8"][common.ACIConnectorAddonName],
+							Image:          specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
 						},
 					},
 				},
@@ -703,7 +649,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -717,7 +663,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -754,7 +700,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -801,7 +747,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -889,7 +835,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -935,7 +881,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -949,7 +895,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -986,500 +932,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.AzureNetworkPolicyAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.DNSAutoscalerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CalicoAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AADPodIdentityAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureFileCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureDiskCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CloudNodeManagerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzurePolicyAddonName,
-					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
-				},
-				{
-					Name:    common.KubeDNSAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-			},
-		},
-		{
-			name: "cluster-autoscaler addon enabled - 1.12",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
-						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.ClusterAutoscalerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							Name:  "pool1",
-							Count: 1,
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
-				},
-				{
-					Name:    common.TillerAddonName,
-					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
-				},
-				{
-					Name:    common.ACIConnectorAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ClusterAutoscalerAddonName,
-					Enabled: to.BoolPtr(true),
-					Config: map[string]string{
-						"scan-interval":                         "1m",
-						"expendable-pods-priority-cutoff":       "-10",
-						"max-autoprovisioned-node-group-count":  "15",
-						"max-empty-bulk-delete":                 "10",
-						"max-failing-time":                      "15m0s",
-						"max-graceful-termination-sec":          "600",
-						"max-inactivity":                        "10m0s",
-						"max-node-provision-time":               "15m0s",
-						"max-nodes-total":                       "0",
-						"max-total-unready-percentage":          "45",
-						"memory-total":                          "0:6400000",
-						"min-replica-count":                     "0",
-						"node-autoprovisioning-enabled":         "false",
-						"ok-total-unready-count":                "3",
-						"scale-down-candidates-pool-min-count":  "50",
-						"scale-down-candidates-pool-ratio":      "0.1",
-						"scale-down-delay-after-add":            "10m0s",
-						"scale-down-delay-after-delete":         "1m",
-						"scale-down-delay-after-failure":        "3m0s",
-						"scale-down-enabled":                    "true",
-						"scale-down-non-empty-candidates-count": "30",
-						"scale-down-unneeded-time":              "10m0s",
-						"scale-down-unready-time":               "20m0s",
-						"scale-down-utilization-threshold":      "0.5",
-						"skip-nodes-with-local-storage":         "false",
-						"skip-nodes-with-system-pods":           "true",
-						"stderrthreshold":                       "2",
-						"unremovable-node-recheck-timeout":      "5m0s",
-						"v":                                     "3",
-						"write-status-configmap":                "true",
-						"balance-similar-node-groups":           "true",
-					},
-					Pools: []AddonNodePoolsConfig{
-						{
-							Name: "pool1",
-							Config: map[string]string{
-								"min-nodes": "1",
-								"max-nodes": "1",
-							},
-						},
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.ClusterAutoscalerAddonName,
-							CPURequests:    "100m",
-							MemoryRequests: "300Mi",
-							CPULimits:      "100m",
-							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.ClusterAutoscalerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-						},
-					},
-				},
-				{
-					Name:    common.SMBFlexVolumeAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.ReschedulerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.NVIDIADevicePluginAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ContainerMonitoringAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.AzureNetworkPolicyAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.DNSAutoscalerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CalicoAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AADPodIdentityAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureFileCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureDiskCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CloudNodeManagerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzurePolicyAddonName,
-					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
-				},
-				{
-					Name:    common.KubeDNSAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-			},
-		},
-		{
-			name: "cluster-autoscaler addon enabled - 1.11",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.11.10",
-						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.ClusterAutoscalerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							Name:  "pool1",
-							Count: 1,
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
-				},
-				{
-					Name:    common.TillerAddonName,
-					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
-				},
-				{
-					Name:    common.ACIConnectorAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ClusterAutoscalerAddonName,
-					Enabled: to.BoolPtr(true),
-					Config: map[string]string{
-						"scan-interval":                         "1m",
-						"expendable-pods-priority-cutoff":       "-10",
-						"max-autoprovisioned-node-group-count":  "15",
-						"max-empty-bulk-delete":                 "10",
-						"max-failing-time":                      "15m0s",
-						"max-graceful-termination-sec":          "600",
-						"max-inactivity":                        "10m0s",
-						"max-node-provision-time":               "15m0s",
-						"max-nodes-total":                       "0",
-						"max-total-unready-percentage":          "45",
-						"memory-total":                          "0:6400000",
-						"min-replica-count":                     "0",
-						"node-autoprovisioning-enabled":         "false",
-						"ok-total-unready-count":                "3",
-						"scale-down-candidates-pool-min-count":  "50",
-						"scale-down-candidates-pool-ratio":      "0.1",
-						"scale-down-delay-after-add":            "10m0s",
-						"scale-down-delay-after-delete":         "1m",
-						"scale-down-delay-after-failure":        "3m0s",
-						"scale-down-enabled":                    "true",
-						"scale-down-non-empty-candidates-count": "30",
-						"scale-down-unneeded-time":              "10m0s",
-						"scale-down-unready-time":               "20m0s",
-						"scale-down-utilization-threshold":      "0.5",
-						"skip-nodes-with-local-storage":         "false",
-						"skip-nodes-with-system-pods":           "true",
-						"stderrthreshold":                       "2",
-						"v":                                     "3",
-						"write-status-configmap":                "true",
-						"balance-similar-node-groups":           "true",
-					},
-					Pools: []AddonNodePoolsConfig{
-						{
-							Name: "pool1",
-							Config: map[string]string{
-								"min-nodes": "1",
-								"max-nodes": "1",
-							},
-						},
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.ClusterAutoscalerAddonName,
-							CPURequests:    "100m",
-							MemoryRequests: "300Mi",
-							CPULimits:      "100m",
-							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][common.ClusterAutoscalerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-						},
-					},
-				},
-				{
-					Name:    common.SMBFlexVolumeAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.ReschedulerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.11.10"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.NVIDIADevicePluginAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ContainerMonitoringAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.11.10"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -1526,7 +979,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -1618,7 +1071,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1664,7 +1117,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -1678,7 +1131,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -1715,7 +1168,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -1762,7 +1215,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -1872,7 +1325,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1918,7 +1371,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -1932,7 +1385,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -1969,7 +1422,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2016,7 +1469,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2130,7 +1583,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2176,7 +1629,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2190,7 +1643,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2227,7 +1680,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2274,7 +1727,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2443,7 +1896,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2489,7 +1942,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2503,7 +1956,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2540,7 +1993,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2587,7 +2040,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -2756,7 +2209,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -2802,7 +2255,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2816,7 +2269,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2853,7 +2306,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2900,7 +2353,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -3019,7 +2472,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -3065,7 +2518,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -3079,7 +2532,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -3116,7 +2569,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -3163,7 +2616,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -3282,7 +2735,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -3328,7 +2781,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -3342,7 +2795,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -3379,7 +2832,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -3430,7 +2883,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -3447,25 +2900,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -3531,7 +2966,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -3545,7 +2980,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -3582,7 +3017,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -3625,7 +3060,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -3642,25 +3077,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -3716,7 +3133,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -3730,7 +3147,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "10m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.ReschedulerAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
 						},
 					},
 				},
@@ -3740,7 +3157,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -3777,7 +3194,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -3824,7 +3241,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -3840,25 +3257,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -3914,7 +3313,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -3928,7 +3327,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -3942,7 +3341,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.12.8"][common.NVIDIADevicePluginAddonName],
+							Image:          specConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
 						},
 					},
 				},
@@ -3975,7 +3374,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -4022,7 +3421,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -4039,25 +3438,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -4113,7 +3494,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -4127,7 +3508,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -4181,7 +3562,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -4228,7 +3609,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
@@ -4240,25 +3621,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -4314,7 +3677,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -4328,7 +3691,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -4365,7 +3728,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -4782,7 +4145,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -4799,25 +4162,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -4873,7 +4218,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -4887,7 +4232,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -4924,7 +4269,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -4979,7 +4324,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
@@ -4991,25 +4336,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -5065,7 +4392,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -5079,7 +4406,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -5179,7 +4506,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
@@ -5219,25 +4546,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -5293,7 +4602,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -5307,7 +4616,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -5407,7 +4716,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -5424,25 +4733,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -5498,7 +4789,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -5512,7 +4803,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -5549,7 +4840,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -5614,7 +4905,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
@@ -5631,25 +4922,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.TillerAddonName,
@@ -5705,7 +4978,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -5719,7 +4992,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -5756,7 +5029,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.12.8"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -5825,7 +5098,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.12.8",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginCilium,
 						},
@@ -5836,168 +5109,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.HeapsterAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["heapster"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-						{
-							Name:           "heapster-nanny",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"]["addonresizer"],
-							CPURequests:    "88m",
-							MemoryRequests: "204Mi",
-							CPULimits:      "88m",
-							MemoryLimits:   "204Mi",
-						},
-					},
-				},
-				{
-					Name:    common.TillerAddonName,
-					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
-				},
-				{
-					Name:    common.ACIConnectorAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ClusterAutoscalerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-						},
-					},
-				},
-				{
-					Name:    common.SMBFlexVolumeAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.ReschedulerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.12.8"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.NVIDIADevicePluginAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.ContainerMonitoringAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureNetworkPolicyAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.DNSAutoscalerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CalicoAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AADPodIdentityAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzurePolicyAddonName,
-					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
-				},
-				{
-					Name:    common.AzureFileCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.AzureDiskCSIDriverAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.CloudNodeManagerAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KubeDNSAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-			},
-		},
-		{
-			name: "k8s >= 1.13 addons",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.0",
-						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.HeapsterAddonName,
 					Enabled: to.BoolPtr(false),
 				},
 				{
@@ -6054,7 +5165,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -6068,7 +5179,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -6082,32 +5193,11 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 				{
 					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
+					Enabled: to.BoolPtr(false),
 				},
 				{
 					Name:    common.AzureNetworkPolicyAddonName,
@@ -6307,7 +5397,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.0",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -6360,7 +5450,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -6374,7 +5464,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -6411,7 +5501,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -6458,7 +5548,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.0",
+						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
@@ -6526,7 +5616,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.DashboardAddonName],
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -6540,7 +5630,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.0"][common.MetricsServerAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -6577,7 +5667,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.0"][common.AzureCNINetworkMonitorAddonName],
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -7582,6 +6672,10 @@ func TestSetAddonsConfig(t *testing.T) {
 							Addons: []KubernetesAddon{
 								{
 									Name:    common.KubeDNSAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+								{
+									Name:    common.HeapsterAddonName,
 									Enabled: to.BoolPtr(true),
 								},
 							},

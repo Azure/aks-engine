@@ -1521,12 +1521,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on azure-policy when ServicePrincipalProfile is not empty",
 		)
 	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.9"
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error on azure-policy with k8s < 1.10",
-		)
-	}
 	p.OrchestratorProfile.OrchestratorRelease = "1.13"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
@@ -1960,24 +1954,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	// Basic tests for azuredisk-csi-driver
-	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		UseCloudControllerManager: to.BoolPtr(true),
-		Addons: []KubernetesAddon{
-			{
-				Name:    "azuredisk-csi-driver",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error when the orchestrator version is less than 1.13.0 for azuredisk-csi-driver",
-		)
-	}
-
 	p.OrchestratorProfile.OrchestratorVersion = "1.13.0"
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		UseCloudControllerManager: to.BoolPtr(false),
@@ -2009,24 +1985,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.13 for azuredisk-csi-driver",
-		)
-	}
-
-	// Basic tests for azurefile-csi-driver
-	p.OrchestratorProfile.OrchestratorVersion = "1.12.0"
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		UseCloudControllerManager: to.BoolPtr(true),
-		Addons: []KubernetesAddon{
-			{
-				Name:    "azurefile-csi-driver",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error when the orchestrator version is less than 1.13.0 for azurefile-csi-driver",
 		)
 	}
 

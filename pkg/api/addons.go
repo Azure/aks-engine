@@ -41,7 +41,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    common.HeapsterAddonName,
-		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
+		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.HeapsterAddonName,
@@ -108,6 +108,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Config: map[string]string{
 			"scan-interval":                         "1m",
 			"expendable-pods-priority-cutoff":       "-10",
+			"ignore-daemonsets-utilization":         "false",
+			"ignore-mirror-pods-utilization":        "false",
 			"max-autoprovisioned-node-group-count":  "15",
 			"max-empty-bulk-delete":                 "10",
 			"max-failing-time":                      "15m0s",
@@ -118,6 +120,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"max-total-unready-percentage":          "45",
 			"memory-total":                          "0:6400000",
 			"min-replica-count":                     "0",
+			"new-pod-scale-up-delay":                "0s",
 			"node-autoprovisioning-enabled":         "false",
 			"ok-total-unready-count":                "3",
 			"scale-down-candidates-pool-min-count":  "50",
@@ -133,6 +136,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"skip-nodes-with-local-storage":         "false",
 			"skip-nodes-with-system-pods":           "true",
 			"stderrthreshold":                       "2",
+			"unremovable-node-recheck-timeout":      "5m0s",
 			"v":                                     "3",
 			"write-status-configmap":                "true",
 			"balance-similar-node-groups":           "true",
@@ -148,16 +152,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 		},
 		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
-	}
-
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") {
-		defaultClusterAutoscalerAddonsConfig.Config["unremovable-node-recheck-timeout"] = "5m0s"
-	}
-
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") {
-		defaultClusterAutoscalerAddonsConfig.Config["new-pod-scale-up-delay"] = "0s"
-		defaultClusterAutoscalerAddonsConfig.Config["ignore-daemonsets-utilization"] = "false"
-		defaultClusterAutoscalerAddonsConfig.Config["ignore-mirror-pods-utilization"] = "false"
 	}
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
@@ -237,7 +231,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
-		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
+		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
@@ -345,7 +339,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
 		Name: common.DNSAutoscalerAddonName,
 		// TODO enable this when it has been smoke tested
-		//common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
 		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
@@ -467,7 +460,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultAzureDiskCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureDiskCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "csi-provisioner",

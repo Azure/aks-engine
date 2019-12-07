@@ -306,10 +306,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
-			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
-				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
-				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
-			}
+			a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 		} else if isUpdate && a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 			// Upgrade scenario:
 			// We need to force set EnableAggregatedAPIs to false if RBAC was previously disabled
@@ -342,7 +339,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
-		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.11.0") && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
+		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
 
