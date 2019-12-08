@@ -667,6 +667,7 @@ func TestHasStorageProfile(t *testing.T) {
 		expectedAgent0MD  bool
 		expectedPrivateJB bool
 		expectedHasDisks  bool
+		expectedDesID     string
 	}{
 		{
 			name: "Storage Account",
@@ -810,7 +811,6 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0E:   false,
 			expectedPrivateJB: true,
 		},
-
 		{
 			name: "Mixed with jumpbox alternate",
 			p: Properties{
@@ -840,6 +840,34 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedAgent0MD:  true,
 			expectedAgent0E:   false,
 			expectedPrivateJB: true,
+		},
+		{
+			name: "Managed Disk with DiskEncryptionSetID setting",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile: ManagedDisks,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile:      ManagedDisks,
+						DiskEncryptionSetID: "DiskEncryptionSetID",
+					},
+					{
+						StorageProfile:      ManagedDisks,
+						DiskEncryptionSetID: "DiskEncryptionSetID",
+					},
+				},
+			},
+			expectedHasMD:     true,
+			expectedHasSA:     false,
+			expectedMasterMD:  true,
+			expectedAgent0MD:  true,
+			expectedAgent0E:   false,
+			expectedPrivateJB: false,
+			expectedDesID:     "DiskEncryptionSetID",
 		},
 	}
 
@@ -874,6 +902,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.AgentPoolProfiles[0].HasDisks() != c.expectedHasDisks {
 				t.Fatalf("expected HasDisks() to return %t but instead returned %t", c.expectedHasDisks, c.p.AgentPoolProfiles[0].HasDisks())
+			}
+			if c.p.AgentPoolProfiles[0].DiskEncryptionSetID != c.expectedDesID {
+				t.Fatalf("expected DiskEncryptionSetID to return %s but instead returned %s", c.expectedDesID, c.p.AgentPoolProfiles[0].DiskEncryptionSetID)
 			}
 		})
 	}

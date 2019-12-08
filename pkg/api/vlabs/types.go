@@ -478,6 +478,7 @@ type AgentPoolProfile struct {
 	VMSSOverProvisioningEnabled         *bool                `json:"vmssOverProvisioningEnabled,omitempty"`
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
+	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 
 	// subnet is internal
 	subnet string
