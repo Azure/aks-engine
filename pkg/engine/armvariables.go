@@ -154,7 +154,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
 		"maximumLoadBalancerRuleCount":  maxLoadBalancerCount,
 		"masterFqdnPrefix":              "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
-		"apiVersionCompute":             "2018-10-01",
+		"apiVersionCompute":             "2019-07-01",
 		"apiVersionDeployments":         "2018-06-01",
 		"apiVersionStorage":             "2018-07-01",
 		"apiVersionKeyVault":            "2018-02-14",

@@ -531,6 +531,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
 	p.AuditDEnabled = api.AuditDEnabled
+	p.DiskEncryptionSetID = api.DiskEncryptionSetID
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v

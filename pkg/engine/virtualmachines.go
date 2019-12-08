@@ -535,6 +535,12 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(profile.OSDiskSizeGB))
 	}
 
+	if profile.DiskEncryptionSetID != "" {
+		osDisk.ManagedDisk = &compute.ManagedDiskParameters{
+			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
+		}
+	}
+
 	storageProfile.OsDisk = &osDisk
 
 	virtualMachine.StorageProfile = &storageProfile

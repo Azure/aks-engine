@@ -1,0 +1,42 @@
+{
+	"env": {
+		"REGION_OPTIONS": "centraluseuap"
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes"
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2s_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agent1",
+					"count": 2,
+					"vmSize": "Standard_D2s_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"diskEncryptionSetID": "/subscriptions/SUB_ID/resourceGroups/diskEncryptionSet-e2e/providers/Microsoft.Compute/diskEncryptionSets/e2e-des"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}
+
