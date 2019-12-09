@@ -3628,20 +3628,20 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 }
 
 func TestSetTelemetryProfileDefaults(t *testing.T) {
-	cases := []struct{
-		name string
+	cases := []struct {
+		name             string
 		telemetryProfile *TelemetryProfile
-		expected *TelemetryProfile
+		expected         *TelemetryProfile
 	}{
 		{
-			name: "default",
+			name:             "default",
 			telemetryProfile: nil,
 			expected: &TelemetryProfile{
 				ApplicationInsightsKey: DefaultApplicationInsightsKey,
 			},
 		},
 		{
-			name: "key not set",
+			name:             "key not set",
 			telemetryProfile: &TelemetryProfile{},
 			expected: &TelemetryProfile{
 				ApplicationInsightsKey: DefaultApplicationInsightsKey,
@@ -3681,32 +3681,32 @@ func TestSetTelemetryProfileDefaults(t *testing.T) {
 	}
 }
 
-func TestSetPropertiesDefaults(t * testing.T) {
+func TestSetPropertiesDefaults(t *testing.T) {
 	cases := []struct {
-		name string
+		name   string
 		params PropertiesDefaultsParams
 	}{
 		{
 			name: "default",
 			params: PropertiesDefaultsParams{
-				IsUpgrade: false,
-				IsScale: false,
+				IsUpgrade:  false,
+				IsScale:    false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			},
 		},
 		{
 			name: "upgrade",
 			params: PropertiesDefaultsParams{
-				IsUpgrade: true,
-				IsScale: false,
+				IsUpgrade:  true,
+				IsScale:    false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			},
 		},
 		{
 			name: "scale",
 			params: PropertiesDefaultsParams{
-				IsUpgrade: false,
-				IsScale: true,
+				IsUpgrade:  false,
+				IsScale:    true,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			},
 		},
@@ -3714,7 +3714,7 @@ func TestSetPropertiesDefaults(t * testing.T) {
 
 	for _, c := range cases {
 		c := c
-		t.Run(c.name, func(t *testing.T){
+		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
 			cs := getMockBaseContainerService("1.16")

@@ -537,5 +537,5 @@ const TLSStrongCipherSuitesAPIServer = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS
 const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256"
 
 // Default instrmentation key used for routing Application Insights data
-// NOTE! this is in a test sub!
-const DefaultApplicationInsightsKey = "e5386ed7-a78d-41c8-943e-9a56c42fdfec"
+// NOTE! this is in a test sub and needs to be switched to a production sub before collecting user data!
+const DefaultApplicationInsightsKey = "906ba2b3-f3b7-4cbe-ba9f-885d6982de43"
