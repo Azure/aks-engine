@@ -552,8 +552,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "coredns",
-				Image: specConfig.KubernetesImageBase + k8sComponents["coredns"],
+				Name:  common.CoreDNSAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 			},
 		},
 	}

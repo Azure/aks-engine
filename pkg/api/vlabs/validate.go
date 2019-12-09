@@ -755,7 +755,7 @@ func (a *Properties) validateAddons() error {
 				if to.Bool(addon.Enabled) {
 					kubeDNSEnabled = true
 				}
-			case "coredns":
+			case common.CoreDNSAddonName:
 				if to.Bool(addon.Enabled) {
 					corednsEnabled = true
 				}

@@ -2098,7 +2098,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 				Enabled: to.BoolPtr(true),
 			},
 			{
-				Name:    "coredns",
+				Name:    common.CoreDNSAddonName,
 				Enabled: to.BoolPtr(true),
 			},
 		},
