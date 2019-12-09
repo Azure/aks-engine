@@ -201,7 +201,9 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_E16-4s_v3",
         "Standard_E16-8s_v3",
         "Standard_E16_v3",
-        "Standard_E16a_v4",
+        "Standard_E16a_v3",
+        "Standard_E16as_v3",
+  		"Standard_E16a_v4",
         "Standard_E16as_v4",
         "Standard_E16s_v3",
         "Standard_E20_v3",
@@ -209,27 +211,37 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_E20as_v4",
         "Standard_E20s_v3",
         "Standard_E2_v3",
+        "Standard_E2a_v3",
+        "Standard_E2as_v3",
         "Standard_E2a_v4",
         "Standard_E2as_v4",
         "Standard_E2s_v3",
         "Standard_E32-16s_v3",
         "Standard_E32-8s_v3",
         "Standard_E32_v3",
+        "Standard_E32a_v3",
+        "Standard_E32as_v3",
         "Standard_E32a_v4",
         "Standard_E32as_v4",
         "Standard_E32s_v3",
         "Standard_E4-2s_v3",
         "Standard_E48_v3",
-        "Standard_E48a_v4",
+        "Standard_E48a_v3",
+        "Standard_E48as_v3",
+  		"Standard_E48a_v4",
         "Standard_E48as_v4",
         "Standard_E48s_v3",
         "Standard_E4_v3",
+        "Standard_E4a_v3",
+        "Standard_E4as_v3",
         "Standard_E4a_v4",
         "Standard_E4as_v4",
         "Standard_E4s_v3",
         "Standard_E64-16s_v3",
         "Standard_E64-32s_v3",
         "Standard_E64_v3",
+        "Standard_E64a_v3",
+        "Standard_E64as_v3",
         "Standard_E64a_v4",
         "Standard_E64as_v4",
         "Standard_E64i_v3",
@@ -238,6 +250,8 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_E8-2s_v3",
         "Standard_E8-4s_v3",
         "Standard_E8_v3",
+        "Standard_E8a_v3",
+        "Standard_E8as_v3",
         "Standard_E8a_v4",
         "Standard_E8as_v4",
         "Standard_E8s_v3",
@@ -512,6 +526,8 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_E16-4s_v3",
         "Standard_E16-8s_v3",
         "Standard_E16_v3",
+        "Standard_E16a_v3",
+        "Standard_E16as_v3",
         "Standard_E16a_v4",
         "Standard_E16as_v4",
         "Standard_E16s_v3",
@@ -520,27 +536,37 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_E20as_v4",
         "Standard_E20s_v3",
         "Standard_E2_v3",
+        "Standard_E2a_v3",
+        "Standard_E2as_v3",
         "Standard_E2a_v4",
         "Standard_E2as_v4",
         "Standard_E2s_v3",
         "Standard_E32-16s_v3",
         "Standard_E32-8s_v3",
         "Standard_E32_v3",
+        "Standard_E32a_v3",
+        "Standard_E32as_v3",
         "Standard_E32a_v4",
         "Standard_E32as_v4",
         "Standard_E32s_v3",
         "Standard_E4-2s_v3",
         "Standard_E48_v3",
+        "Standard_E48a_v3",
+        "Standard_E48as_v3",
         "Standard_E48a_v4",
         "Standard_E48as_v4",
         "Standard_E48s_v3",
         "Standard_E4_v3",
+        "Standard_E4a_v3",
+        "Standard_E4as_v3",
         "Standard_E4a_v4",
         "Standard_E4as_v4",
         "Standard_E4s_v3",
         "Standard_E64-16s_v3",
         "Standard_E64-32s_v3",
         "Standard_E64_v3",
+        "Standard_E64a_v3",
+        "Standard_E64as_v3",
         "Standard_E64a_v4",
         "Standard_E64as_v4",
         "Standard_E64i_v3",
@@ -549,6 +575,8 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_E8-2s_v3",
         "Standard_E8-4s_v3",
         "Standard_E8_v3",
+        "Standard_E8a_v3",
+        "Standard_E8as_v3",
         "Standard_E8a_v4",
         "Standard_E8as_v4",
         "Standard_E8s_v3",
@@ -1106,6 +1134,12 @@ func GetSizeMap() string {
     "Standard_E16_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_E16a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E16as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_E16a_v4": {
       "storageAccountType": "Standard_LRS"
     },
@@ -1130,7 +1164,13 @@ func GetSizeMap() string {
     "Standard_E2_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E2a_v4": {
+    "Standard_E2a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E2as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+	"Standard_E2a_v4": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_E2as_v4": {
@@ -1148,6 +1188,12 @@ func GetSizeMap() string {
     "Standard_E32_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_E32a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E32as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_E32a_v4": {
       "storageAccountType": "Standard_LRS"
     },
@@ -1163,6 +1209,12 @@ func GetSizeMap() string {
     "Standard_E48_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_E48a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E48as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_E48a_v4": {
       "storageAccountType": "Standard_LRS"
     },
@@ -1174,6 +1226,12 @@ func GetSizeMap() string {
     },
     "Standard_E4_v3": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E4a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E4as_v3": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_E4a_v4": {
       "storageAccountType": "Standard_LRS"
@@ -1192,6 +1250,12 @@ func GetSizeMap() string {
     },
     "Standard_E64_v3": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E64a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E64as_v3": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_E64a_v4": {
       "storageAccountType": "Standard_LRS"
@@ -1216,6 +1280,12 @@ func GetSizeMap() string {
     },
     "Standard_E8_v3": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E8a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E8as_v3": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_E8a_v4": {
       "storageAccountType": "Standard_LRS"
