@@ -4,7 +4,7 @@
 		"REGION_OPTIONS": "eastus,westeurope,southeastasia,westus2"
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15", "1.16", "1.17"]
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16", "1.17"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",

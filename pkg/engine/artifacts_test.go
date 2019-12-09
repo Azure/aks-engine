@@ -30,35 +30,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedScheduledMaintenance   bool
 		expectedAzureCSIStorageClasses bool
 	}{
-		// Legacy default scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.7.10",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						StorageProfile: api.ManagedDisks,
-					},
-				},
-			},
-			expectedCoreDNS:                false,
-			expectedKubeProxy:              true,
-			expectedCilium:                 false,
-			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            false,
-			expectedPodSecurityPolicy:      false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
 		// 1.14 default scenario
 		{
 			p: &api.Properties{
@@ -243,7 +214,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			p: &api.Properties{
 				OrchestratorProfile: &api.OrchestratorProfile{
 					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.7.10",
+					OrchestratorVersion: "1.14.1",
 					KubernetesConfig: &api.KubernetesConfig{
 						NetworkPlugin: NetworkPluginAzure,
 					},
@@ -254,13 +225,13 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                false,
+			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            false,
+			expectedAuditPolicy:            true,
 			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  true,

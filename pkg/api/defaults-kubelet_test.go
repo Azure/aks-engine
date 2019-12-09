@@ -133,7 +133,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.12", "", false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.13", "", false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"
@@ -705,8 +705,8 @@ func TestKubeletRotateCertificates(t *testing.T) {
 			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	// Test 1.11
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	// Test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--rotate-certificates"] != "true" {
@@ -714,8 +714,8 @@ func TestKubeletRotateCertificates(t *testing.T) {
 			defaultTestClusterVer, k["--rotate-certificates"])
 	}
 
-	// Test 1.14
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	// Test 1.16
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--rotate-certificates"] != "true" {
@@ -753,8 +753,8 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.11
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.11", "", false, false), 3, 2, false)
+	// test 1.14
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
@@ -762,8 +762,8 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.14
-	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
+	// test 1.16
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
@@ -784,7 +784,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 
 func TestKubeletStrongCipherSuites(t *testing.T) {
 	// Test allowed versions
-	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.13.0", "1.14.0"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.setKubeletConfig(false)
 		k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
@@ -794,18 +794,9 @@ func TestKubeletStrongCipherSuites(t *testing.T) {
 		}
 	}
 
-	// Validate that 1.9.0 doesn't include --tls-cipher-suites at all
-	cs := CreateMockContainerService("testcluster", "1.9.0", 3, 2, false)
-	cs.setKubeletConfig(false)
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if _, ok := k["--tls-cipher-suites"]; ok {
-		t.Fatalf("got a value for '--tls-cipher-suites' kubelet config, which is not enabled in versions of Kubernetes prior to 1.10: %s",
-			k["--tls-cipher-suites"])
-	}
-
 	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
 	// Test user-override
-	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.13.0", "1.14.0"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
 			"--tls-cipher-suites": allSuites,

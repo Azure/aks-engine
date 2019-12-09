@@ -95,6 +95,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--image-pull-progress-deadline":      "30m",
 		"--enforce-node-allocatable":          "pods",
 		"--streaming-connection-idle-timeout": "4h",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
@@ -110,11 +111,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	minVersionRotateCerts := "1.11.9"
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, minVersionRotateCerts) {
 		defaultKubeletConfig["--rotate-certificates"] = "true"
-	}
-
-	// Disable Weak TLS Cipher Suites for 1.10 and above
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		defaultKubeletConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesKubelet
 	}
 
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
@@ -218,14 +214,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
-
-		// For N Series (GPU) VMs
-		if strings.Contains(profile.VMSize, "Standard_N") {
-			if !cs.Properties.IsNVIDIADevicePluginEnabled() && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.11.0") {
-				// enabling accelerators for Kubernetes >= 1.6 to <= 1.9
-				addDefaultFeatureGates(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.6.0", "Accelerators=true")
-			}
-		}
 
 		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 			hasSupportPodPidsLimitFeatureGate := strings.Contains(profile.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")

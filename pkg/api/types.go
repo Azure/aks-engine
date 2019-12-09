@@ -1920,7 +1920,7 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 
 // IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
 func (p *Properties) IsNvidiaDevicePluginCapable() bool {
-	return p.HasNSeriesSKU() && common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+	return p.HasNSeriesSKU()
 }
 
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
