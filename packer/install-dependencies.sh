@@ -55,6 +55,10 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
+apmz_version="v0.4.0"
+ensureAPMZ "${apmz_version}"
+echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
+
 MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
