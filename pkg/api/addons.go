@@ -558,6 +558,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
+	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
+		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
+	}
+
 	defaultAddons := []KubernetesAddon{
 		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,

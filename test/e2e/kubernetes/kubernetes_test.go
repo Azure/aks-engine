@@ -692,13 +692,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have DNS pod running", func() {
 			var err error
 			var running bool
-			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.12.0") {
-				By("Ensuring that coredns is running")
-				running, err = pod.WaitOnSuccesses("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-
-			} else {
+			if hasAddon, _ := eng.HasAddon("kube-dns"); hasAddon {
 				By("Ensuring that kube-dns is running")
 				running, err = pod.WaitOnSuccesses("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			}
+			if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
+				By("Ensuring that coredns is running")
+				running, err = pod.WaitOnSuccesses("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
