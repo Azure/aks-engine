@@ -785,6 +785,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetPrivateAzureRegistryServer": func() string {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer
 		},
+		"HasTelemetryEnabled": func() bool {
+			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
+		},
+		"GetApplicationInsightsTelemetryKey": func() string {
+			return cs.Properties.TelemetryProfile.ApplicationInsightsKey
+		},
 		"OpenBraces": func() string {
 			return "{{"
 		},
