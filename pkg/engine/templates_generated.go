@@ -9714,7 +9714,7 @@ data:
         errors
         health
         ready
-        kubernetes <domain> in-addr.arpa ip6.arpa {
+        kubernetes {{ContainerConfig "domain"}} in-addr.arpa ip6.arpa {
             pods insecure
             fallthrough in-addr.arpa ip6.arpa
         }
@@ -9807,7 +9807,7 @@ spec:
         beta.kubernetes.io/os: linux
       containers:
       - name: coredns
-        image: <img>
+        image: {{ContainerImage "coredns"}}
         imagePullPolicy: IfNotPresent
         resources:
           limits:
@@ -9887,7 +9887,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: <clustIP>
+  clusterIP: {{ContainerConfig "clusterIP"}}
   ports:
   - name: dns
     port: 53
@@ -15580,9 +15580,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
-{{end}}
-{{if IsKubernetesVersionGe "1.12.0"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCoreDNSSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" /etc/kubernetes/addons/coredns.yaml
 {{end}}
 
 {{if AdminGroupID }}
@@ -31978,12 +31975,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubernetesKubeletClusterDomain": {
-      "metadata": {
-        "description": "--cluster-domain Kubelet config"
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
@@ -32048,14 +32039,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "cloudProviderDisableOutboundSNAT": false
       }
     },
-{{if IsKubernetesVersionGe "1.12.0"}}
-    "kubernetesCoreDNSSpec": {
-      "metadata": {
-        "description": "The container spec for coredns"
-      },
-      "type": "string"
-    },
-{{end}}
     "mobyVersion": {
       "defaultValue": "3.0.8",
       "metadata": {

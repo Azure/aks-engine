@@ -522,7 +522,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultKubeDNSAddonsConfig := KubernetesAddon{
 		Name:    common.KubeDNSAddonName,
-		Enabled: to.BoolPtr(!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0")),
+		Enabled: to.BoolPtr(DefaultKubeDNSAddonEnabled),
 		Config: map[string]string{
 			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
 			"clusterIP": o.KubernetesConfig.DNSServiceIP,
@@ -539,6 +539,21 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			{
 				Name:  "sidecar",
 				Image: specConfig.KubernetesImageBase + k8sComponents["k8s-dns-sidecar"],
+			},
+		},
+	}
+
+	defaultCorednsAddonsConfig := KubernetesAddon{
+		Name:    common.CoreDNSAddonName,
+		Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+		Config: map[string]string{
+			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "coredns",
+				Image: specConfig.KubernetesImageBase + k8sComponents["coredns"],
 			},
 		},
 	}
@@ -569,6 +584,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultsAzurePolicyAddonsConfig,
 		defaultNodeProblemDetectorConfig,
 		defaultKubeDNSAddonsConfig,
+		defaultCorednsAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -635,9 +651,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	// Back-compat for kube-dns prior to 1.12
+	// Migrate to coredns unless coredns is explicitly set to false
 	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
-		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); i > -1 {
-			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(false)
+		// If we don't have coredns in our addons array at all, this means we're in a legacy scenario and we want to migrate from kube-dns to coredns
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName); i == -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); j > -1 {
+				o.KubernetesConfig.Addons[j].Enabled = to.BoolPtr(false)
+			}
 		}
 	}
 

@@ -191,12 +191,6 @@
       },
       "type": "string"
     },
-    "kubernetesKubeletClusterDomain": {
-      "metadata": {
-        "description": "--cluster-domain Kubelet config"
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
@@ -261,14 +255,6 @@
         "cloudProviderDisableOutboundSNAT": false
       }
     },
-{{if IsKubernetesVersionGe "1.12.0"}}
-    "kubernetesCoreDNSSpec": {
-      "metadata": {
-        "description": "The container spec for coredns"
-      },
-      "type": "string"
-    },
-{{end}}
     "mobyVersion": {
       "defaultValue": "3.0.8",
       "metadata": {

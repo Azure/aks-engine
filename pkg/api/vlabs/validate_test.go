@@ -2090,6 +2090,24 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.16 for cloud-node-manager",
 		)
 	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "kube-dns",
+				Enabled: to.BoolPtr(true),
+			},
+			{
+				Name:    "coredns",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when both kube-dns and coredns are enabled",
+		)
+	}
 }
 
 func TestWindowsVersions(t *testing.T) {

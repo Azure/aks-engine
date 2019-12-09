@@ -213,6 +213,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -369,6 +373,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -378,6 +396,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -553,6 +575,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -562,6 +598,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -740,6 +780,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -749,6 +803,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -972,6 +1030,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -981,6 +1053,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1208,6 +1284,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1217,6 +1307,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1462,6 +1556,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1471,6 +1579,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1720,6 +1832,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1729,6 +1855,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2033,6 +2163,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -2042,6 +2186,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2346,6 +2494,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -2355,6 +2517,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2608,6 +2774,20 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
 				},
 			},
 		},
@@ -2618,6 +2798,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2876,6 +3060,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -2885,6 +3083,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3053,6 +3255,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3062,6 +3278,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3234,6 +3454,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3243,6 +3477,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -3414,6 +3652,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3423,6 +3675,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3602,6 +3858,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3611,6 +3881,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 						},
@@ -3778,6 +4052,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3787,6 +4075,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 						},
@@ -3950,6 +4242,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3959,6 +4265,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 							Addons: []KubernetesAddon{
@@ -4138,6 +4448,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4147,6 +4471,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -4317,6 +4645,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4326,6 +4668,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
 						},
@@ -4499,6 +4845,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4508,6 +4868,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
 							Addons: []KubernetesAddon{
@@ -4709,6 +5073,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4718,6 +5096,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -4898,6 +5280,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4907,6 +5303,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -5091,6 +5491,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5100,6 +5514,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginCilium,
 						},
 					},
@@ -5235,6 +5653,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5244,6 +5676,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -5390,6 +5826,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5399,6 +5849,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -5541,6 +5995,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5550,6 +6018,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -5759,6 +6231,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5768,6 +6254,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -5976,6 +6466,20 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
 				},
 			},
 		},
@@ -5986,6 +6490,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -6195,6 +6703,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6204,6 +6726,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 							Addons: []KubernetesAddon{
@@ -6427,6 +6953,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6436,6 +6976,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 							Addons: []KubernetesAddon{
@@ -6659,6 +7203,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6668,6 +7226,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.12.8",
 						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -6851,6 +7413,20 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
 				},
 			},
 		},

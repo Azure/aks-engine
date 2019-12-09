@@ -63,9 +63,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
 			}
-			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
-				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
-			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
@@ -82,7 +79,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderDisableOutboundSNAT:  kubernetesConfig.CloudProviderDisableOutboundSNAT,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
-			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])
 			addValue(parametersMap, "dockerBridgeCidr", kubernetesConfig.DockerBridgeSubnet)
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)
 			addValue(parametersMap, "networkPlugin", kubernetesConfig.NetworkPlugin)
