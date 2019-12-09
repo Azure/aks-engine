@@ -112,45 +112,64 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_D15_v2",
         "Standard_D16_v3",
         "Standard_D16a_v3",
+        "Standard_D16a_v4",
         "Standard_D16as_v3",
+        "Standard_D16as_v4",
         "Standard_D16s_v3",
         "Standard_D2",
         "Standard_D2_v2",
         "Standard_D2_v2_Promo",
         "Standard_D2_v3",
         "Standard_D2a_v3",
+        "Standard_D2a_v4",
         "Standard_D2as_v3",
+        "Standard_D2as_v4",
         "Standard_D2s_v3",
         "Standard_D3",
         "Standard_D32_v3",
         "Standard_D32a_v3",
+        "Standard_D32a_v4",
         "Standard_D32as_v3",
+        "Standard_D32as_v4",
         "Standard_D32s_v3",
         "Standard_D3_v2",
         "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D48_v3",
         "Standard_D48a_v3",
+        "Standard_D48a_v4",
         "Standard_D48as_v3",
+        "Standard_D48as_v4",
         "Standard_D48s_v3",
         "Standard_D4_v2",
         "Standard_D4_v2_Promo",
         "Standard_D4_v3",
         "Standard_D4a_v3",
+        "Standard_D4a_v4",
         "Standard_D4as_v3",
+        "Standard_D4as_v4",
         "Standard_D4s_v3",
         "Standard_D5_v2",
         "Standard_D5_v2_Promo",
         "Standard_D64_v3",
         "Standard_D64a_v3",
+        "Standard_D64a_v4",
         "Standard_D64as_v3",
+        "Standard_D64as_v4",
         "Standard_D64s_v3",
         "Standard_D8_v3",
         "Standard_D8a_v3",
+        "Standard_D8a_v4",
         "Standard_D8as_v3",
+        "Standard_D8as_v4",
         "Standard_D8s_v3",
+        "Standard_D96a_v3",
+        "Standard_D96a_v4",
+        "Standard_D96as_v3",
+        "Standard_D96as_v4",
         "Standard_DC2s",
         "Standard_DC4s",
+        "Standard_DC8s",
         "Standard_DS11",
         "Standard_DS11-1_v2",
         "Standard_DS11_v2",
@@ -182,44 +201,48 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_E16-4s_v3",
         "Standard_E16-8s_v3",
         "Standard_E16_v3",
-        "Standard_E16a_v3",
-        "Standard_E16as_v3",
+        "Standard_E16a_v4",
+        "Standard_E16as_v4",
         "Standard_E16s_v3",
         "Standard_E20_v3",
+        "Standard_E20a_v4",
+        "Standard_E20as_v4",
         "Standard_E20s_v3",
         "Standard_E2_v3",
-        "Standard_E2a_v3",
-        "Standard_E2as_v3",
+        "Standard_E2a_v4",
+        "Standard_E2as_v4",
         "Standard_E2s_v3",
         "Standard_E32-16s_v3",
         "Standard_E32-8s_v3",
         "Standard_E32_v3",
-        "Standard_E32a_v3",
-        "Standard_E32as_v3",
+        "Standard_E32a_v4",
+        "Standard_E32as_v4",
         "Standard_E32s_v3",
         "Standard_E4-2s_v3",
         "Standard_E48_v3",
-        "Standard_E48a_v3",
-        "Standard_E48as_v3",
+        "Standard_E48a_v4",
+        "Standard_E48as_v4",
         "Standard_E48s_v3",
         "Standard_E4_v3",
-        "Standard_E4a_v3",
-        "Standard_E4as_v3",
+        "Standard_E4a_v4",
+        "Standard_E4as_v4",
         "Standard_E4s_v3",
         "Standard_E64-16s_v3",
         "Standard_E64-32s_v3",
         "Standard_E64_v3",
-        "Standard_E64a_v3",
-        "Standard_E64as_v3",
+        "Standard_E64a_v4",
+        "Standard_E64as_v4",
         "Standard_E64i_v3",
         "Standard_E64is_v3",
         "Standard_E64s_v3",
         "Standard_E8-2s_v3",
         "Standard_E8-4s_v3",
         "Standard_E8_v3",
-        "Standard_E8a_v3",
-        "Standard_E8as_v3",
+        "Standard_E8a_v4",
+        "Standard_E8as_v4",
         "Standard_E8s_v3",
+        "Standard_E96a_v4",
+        "Standard_E96as_v4",
         "Standard_F16",
         "Standard_F16s",
         "Standard_F16s_v2",
@@ -261,6 +284,7 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_H8_Promo",
         "Standard_H8m",
         "Standard_H8m_Promo",
+        "Standard_HB120rs_v2",
         "Standard_HB60rs",
         "Standard_HC44rs",
         "Standard_L16s",
@@ -320,7 +344,12 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_ND12s",
         "Standard_ND24rs",
         "Standard_ND24s",
+        "Standard_ND40rs_v2",
+        "Standard_ND40s_v3",
         "Standard_ND6s",
+        "Standard_NP10s",
+        "Standard_NP20s",
+        "Standard_NP40s",
         "Standard_NV12",
         "Standard_NV12_Promo",
         "Standard_NV12s_v2",
@@ -388,7 +417,9 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_D15_v2",
         "Standard_D16_v3",
         "Standard_D16a_v3",
+        "Standard_D16a_v4",
         "Standard_D16as_v3",
+        "Standard_D16as_v4",
         "Standard_D16s_v3",
         "Standard_D1_v2",
         "Standard_D2",
@@ -396,38 +427,55 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_D2_v2_Promo",
         "Standard_D2_v3",
         "Standard_D2a_v3",
+        "Standard_D2a_v4",
         "Standard_D2as_v3",
+        "Standard_D2as_v4",
         "Standard_D2s_v3",
         "Standard_D3",
         "Standard_D32_v3",
         "Standard_D32a_v3",
+        "Standard_D32a_v4",
         "Standard_D32as_v3",
+        "Standard_D32as_v4",
         "Standard_D32s_v3",
         "Standard_D3_v2",
         "Standard_D3_v2_Promo",
         "Standard_D4",
         "Standard_D48_v3",
         "Standard_D48a_v3",
+        "Standard_D48a_v4",
         "Standard_D48as_v3",
+        "Standard_D48as_v4",
         "Standard_D48s_v3",
         "Standard_D4_v2",
         "Standard_D4_v2_Promo",
         "Standard_D4_v3",
         "Standard_D4a_v3",
+        "Standard_D4a_v4",
         "Standard_D4as_v3",
+        "Standard_D4as_v4",
         "Standard_D4s_v3",
         "Standard_D5_v2",
         "Standard_D5_v2_Promo",
         "Standard_D64_v3",
         "Standard_D64a_v3",
+        "Standard_D64a_v4",
         "Standard_D64as_v3",
+        "Standard_D64as_v4",
         "Standard_D64s_v3",
         "Standard_D8_v3",
         "Standard_D8a_v3",
+        "Standard_D8a_v4",
         "Standard_D8as_v3",
+        "Standard_D8as_v4",
         "Standard_D8s_v3",
+        "Standard_D96a_v3",
+        "Standard_D96a_v4",
+        "Standard_D96as_v3",
+        "Standard_D96as_v4",
         "Standard_DC2s",
         "Standard_DC4s",
+        "Standard_DC8s",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11-1_v2",
@@ -464,44 +512,48 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_E16-4s_v3",
         "Standard_E16-8s_v3",
         "Standard_E16_v3",
-        "Standard_E16a_v3",
-        "Standard_E16as_v3",
+        "Standard_E16a_v4",
+        "Standard_E16as_v4",
         "Standard_E16s_v3",
         "Standard_E20_v3",
+        "Standard_E20a_v4",
+        "Standard_E20as_v4",
         "Standard_E20s_v3",
         "Standard_E2_v3",
-        "Standard_E2a_v3",
-        "Standard_E2as_v3",
+        "Standard_E2a_v4",
+        "Standard_E2as_v4",
         "Standard_E2s_v3",
         "Standard_E32-16s_v3",
         "Standard_E32-8s_v3",
         "Standard_E32_v3",
-        "Standard_E32a_v3",
-        "Standard_E32as_v3",
+        "Standard_E32a_v4",
+        "Standard_E32as_v4",
         "Standard_E32s_v3",
         "Standard_E4-2s_v3",
         "Standard_E48_v3",
-        "Standard_E48a_v3",
-        "Standard_E48as_v3",
+        "Standard_E48a_v4",
+        "Standard_E48as_v4",
         "Standard_E48s_v3",
         "Standard_E4_v3",
-        "Standard_E4a_v3",
-        "Standard_E4as_v3",
+        "Standard_E4a_v4",
+        "Standard_E4as_v4",
         "Standard_E4s_v3",
         "Standard_E64-16s_v3",
         "Standard_E64-32s_v3",
         "Standard_E64_v3",
-        "Standard_E64a_v3",
-        "Standard_E64as_v3",
+        "Standard_E64a_v4",
+        "Standard_E64as_v4",
         "Standard_E64i_v3",
         "Standard_E64is_v3",
         "Standard_E64s_v3",
         "Standard_E8-2s_v3",
         "Standard_E8-4s_v3",
         "Standard_E8_v3",
-        "Standard_E8a_v3",
-        "Standard_E8as_v3",
+        "Standard_E8a_v4",
+        "Standard_E8as_v4",
         "Standard_E8s_v3",
+        "Standard_E96a_v4",
+        "Standard_E96as_v4",
         "Standard_F1",
         "Standard_F16",
         "Standard_F16s",
@@ -546,6 +598,7 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_H8_Promo",
         "Standard_H8m",
         "Standard_H8m_Promo",
+        "Standard_HB120rs_v2",
         "Standard_HB60rs",
         "Standard_HC44rs",
         "Standard_L16s",
@@ -605,7 +658,12 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_ND12s",
         "Standard_ND24rs",
         "Standard_ND24s",
+        "Standard_ND40rs_v2",
+        "Standard_ND40s_v3",
         "Standard_ND6s",
+        "Standard_NP10s",
+        "Standard_NP20s",
+        "Standard_NP40s",
         "Standard_NV12",
         "Standard_NV12_Promo",
         "Standard_NV12s_v2",
@@ -763,7 +821,13 @@ func GetSizeMap() string {
     "Standard_D16a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D16a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D16as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D16as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D16s_v3": {
@@ -787,7 +851,13 @@ func GetSizeMap() string {
     "Standard_D2a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D2a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D2as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D2as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D2s_v3": {
@@ -802,7 +872,13 @@ func GetSizeMap() string {
     "Standard_D32a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D32a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D32as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D32as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D32s_v3": {
@@ -823,7 +899,13 @@ func GetSizeMap() string {
     "Standard_D48a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D48a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D48as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D48as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D48s_v3": {
@@ -841,7 +923,13 @@ func GetSizeMap() string {
     "Standard_D4a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D4a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D4as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D4as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D4s_v3": {
@@ -859,7 +947,13 @@ func GetSizeMap() string {
     "Standard_D64a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D64a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D64as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D64as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_D64s_v3": {
@@ -871,16 +965,37 @@ func GetSizeMap() string {
     "Standard_D8a_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_D8a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
     "Standard_D8as_v3": {
       "storageAccountType": "Premium_LRS"
     },
+    "Standard_D8as_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_D8s_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D96a_v3": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D96a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_D96as_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_D96as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_DC2s": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_DC4s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_DC8s": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_DS1": {
@@ -991,10 +1106,10 @@ func GetSizeMap() string {
     "Standard_E16_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E16a_v3": {
+    "Standard_E16a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E16as_v3": {
+    "Standard_E16as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E16s_v3": {
@@ -1003,16 +1118,22 @@ func GetSizeMap() string {
     "Standard_E20_v3": {
       "storageAccountType": "Standard_LRS"
     },
+    "Standard_E20a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E20as_v4": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_E20s_v3": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E2_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E2a_v3": {
+    "Standard_E2a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E2as_v3": {
+    "Standard_E2as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E2s_v3": {
@@ -1027,10 +1148,10 @@ func GetSizeMap() string {
     "Standard_E32_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E32a_v3": {
+    "Standard_E32a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E32as_v3": {
+    "Standard_E32as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E32s_v3": {
@@ -1042,10 +1163,10 @@ func GetSizeMap() string {
     "Standard_E48_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E48a_v3": {
+    "Standard_E48a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E48as_v3": {
+    "Standard_E48as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E48s_v3": {
@@ -1054,10 +1175,10 @@ func GetSizeMap() string {
     "Standard_E4_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E4a_v3": {
+    "Standard_E4a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E4as_v3": {
+    "Standard_E4as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E4s_v3": {
@@ -1072,10 +1193,10 @@ func GetSizeMap() string {
     "Standard_E64_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E64a_v3": {
+    "Standard_E64a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E64as_v3": {
+    "Standard_E64as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E64i_v3": {
@@ -1096,13 +1217,19 @@ func GetSizeMap() string {
     "Standard_E8_v3": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E8a_v3": {
+    "Standard_E8a_v4": {
       "storageAccountType": "Standard_LRS"
     },
-    "Standard_E8as_v3": {
+    "Standard_E8as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_E8s_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_E96a_v4": {
+      "storageAccountType": "Standard_LRS"
+    },
+    "Standard_E96as_v4": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_F1": {
@@ -1236,6 +1363,9 @@ func GetSizeMap() string {
     },
     "Standard_H8m_Promo": {
       "storageAccountType": "Standard_LRS"
+    },
+    "Standard_HB120rs_v2": {
+      "storageAccountType": "Premium_LRS"
     },
     "Standard_HB60rs": {
       "storageAccountType": "Premium_LRS"
@@ -1414,7 +1544,22 @@ func GetSizeMap() string {
     "Standard_ND24s": {
       "storageAccountType": "Premium_LRS"
     },
+    "Standard_ND40rs_v2": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_ND40s_v3": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_ND6s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NP10s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NP20s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_NP40s": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_NV12": {
