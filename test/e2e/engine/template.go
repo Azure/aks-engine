@@ -228,7 +228,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if config.EnableTelemetry == true {
-		if prop.FeatureFlags != nil {
+		if prop.FeatureFlags == nil {
 			prop.FeatureFlags = new(api.FeatureFlags)
 		}
 		prop.FeatureFlags.EnableTelemetry = true
