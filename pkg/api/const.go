@@ -490,4 +490,4 @@ const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TL
 
 // Default instrmentation key used for routing Application Insights data
 // NOTE! this is in a test sub and needs to be switched to a production sub before collecting user data!
-const DefaultApplicationInsightsKey = "906ba2b3-f3b7-4cbe-ba9f-885d6982de43"
+const DefaultApplicationInsightsKey = "c92d8284-b550-4b06-b7ba-e80fd7178faa"
