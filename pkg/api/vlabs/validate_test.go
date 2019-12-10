@@ -925,47 +925,6 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 	}
 }
 
-func Test_Properties_ValidateNetworkMode(t *testing.T) {
-	p := &Properties{}
-	p.OrchestratorProfile = &OrchestratorProfile{}
-	p.OrchestratorProfile.OrchestratorType = Kubernetes
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = ""
-	for _, mode := range NetworkModeValues {
-		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkMode(); err != nil {
-			t.Errorf(
-				"should not error on networkMode=\"%s\" + networkPlugin=\"azure\" + networkPolicy=\"\"",
-				mode,
-			)
-		}
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkMode = "not-existing"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkMode(); err == nil {
-		t.Errorf(
-			"should error on invalid networkMode",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "calico"
-	p.OrchestratorProfile.KubernetesConfig.NetworkMode = "bridge"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkMode(); err == nil {
-		t.Errorf(
-			"should error on networkPolicy=\"calico\" + networkMode=\"bridge\"",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = Kubernetes
-	p.OrchestratorProfile.KubernetesConfig.NetworkMode = "bridge"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkMode(); err == nil {
-		t.Errorf(
-			"should error on networkPlugin=\"kubenet\"",
-		)
-	}
-}
-
 func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	cs := getK8sDefaultContainerService(true)
 	cs.Properties.LinuxProfile.SSH = struct {

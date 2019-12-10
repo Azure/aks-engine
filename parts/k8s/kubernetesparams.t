@@ -377,18 +377,6 @@
       ],
       "type": "string"
     },
-    "networkMode": {
-      "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkMode}}",
-      "metadata": {
-        "description": "The network mode to use for CNI (transparent|bridge)"
-      },
-      "allowedValues": [
-        "",
-        "transparent",
-        "bridge"
-      ],
-      "type": "string"
-    },
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
