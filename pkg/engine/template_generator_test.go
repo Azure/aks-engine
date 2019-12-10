@@ -9,9 +9,9 @@ import (
 	"testing"
 	"text/template"
 
-	"github.com/pkg/errors"
-
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/pkg/errors"
 )
 
 func TestGenerateTemplateV2(t *testing.T) {
