@@ -62,8 +62,9 @@ function Get-FilesToCacheOnVHD
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd",
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/debug/VFP.psm1",
-            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1"
-            "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1"
+            "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1",
+            "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1",
+            "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg"
         );
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
