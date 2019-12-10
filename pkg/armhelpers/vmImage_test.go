@@ -9,12 +9,10 @@ import (
 )
 
 func TestVMImageFetcherInterface(t *testing.T) {
-
 	mc, err := NewHTTPMockClient()
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
 	}
-
 	mc.RegisterLogin()
 	mc.RegisterVMImageFetcherInterface()
 
@@ -35,9 +33,8 @@ func TestVMImageFetcherInterface(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err = azureClient.ListVirtualMachineImages(context.Background(), location, publisher, offer, sku, "", 50, "")
+	_, err = azureClient.ListVirtualMachineImages(context.Background(), location, publisher, offer, sku)
 	if err != nil {
 		t.Error(err)
 	}
-
 }

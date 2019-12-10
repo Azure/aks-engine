@@ -11,7 +11,6 @@ import (
 )
 
 func TestValidateRequiredImages(t *testing.T) {
-
 	mc, err := NewHTTPMockClient()
 	if err != nil {
 		t.Fatalf("failed to create HttpMockClient - %s", err)
@@ -55,5 +54,4 @@ func TestValidateRequiredImages(t *testing.T) {
 	if err := ValidateRequiredImages(context.Background(), location, &testProperties, azureClient); err != nil {
 		t.Fatalf("can not validate required images %s", err)
 	}
-
 }
