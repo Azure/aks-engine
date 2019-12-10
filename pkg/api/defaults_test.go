@@ -218,6 +218,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
 		common.KubeDNSAddonName:                "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
 		common.CoreDNSAddonName:                "k8s.gcr.io/coredns:1.6.5",
+		common.KubeProxyAddonName:              "k8s.gcr.io/hyperkube-amd64:v1.13.11",
 	}
 
 	customAddonImages := make(map[string]string)
@@ -255,7 +256,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.13.12")
+			mockCS := getMockBaseContainerService("1.13.11")
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)

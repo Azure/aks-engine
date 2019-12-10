@@ -1732,7 +1732,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "asdasdasdasda",
 				Config: map[string]string{
 					"foo": "bar",
@@ -1748,7 +1748,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "asdasdasdasda",
 				Containers: []KubernetesContainerSpec{
 					{
@@ -1766,7 +1766,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "foodata",
 			},
 		},
@@ -1779,7 +1779,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "Zm9vZGF0YQ==",
 			},
 		},

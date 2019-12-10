@@ -1,27 +1,4 @@
----
-apiVersion: v1
-kind: ConfigMap
-data:
-  config.yaml: |
-    apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-    clientConnection:
-      kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "<CIDR>"
-    mode: "<kubeProxyMode>"
-    featureGates:
-      <IPv6DualStackFeature>
-metadata:
-  name: kube-proxy-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
----
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
   labels:
@@ -33,15 +10,13 @@ metadata:
   name: kube-proxy
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
   updateStrategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 50%
-  selector:
-    matchLabels:
-      component: kube-proxy
-      tier: node
-      k8s-app: kube-proxy
   template:
     metadata:
       labels:
@@ -67,8 +42,11 @@ spec:
       - command:
         - /hyperkube
         - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
-        image: <img>
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
+        - --feature-gates=ExperimentalCriticalPodAnnotation=true
+        - --proxy-mode={{ContainerConfig "proxy-mode"}}
+        image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
         resources:
@@ -91,10 +69,6 @@ spec:
         - mountPath: /lib/modules/
           name: kernelmodules
           readOnly: true
-        - mountPath: /var/lib/kube-proxy/config.yaml
-          subPath: config.yaml
-          name: kube-proxy-config-volume
-          readOnly: true
       hostNetwork: true
       volumes:
       - hostPath:
@@ -112,8 +86,5 @@ spec:
       - hostPath:
           path: /lib/modules/
         name: kernelmodules
-      - configMap:
-          name: kube-proxy-config
-        name: kube-proxy-config-volume
       nodeSelector:
         beta.kubernetes.io/os: linux

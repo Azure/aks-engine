@@ -68,6 +68,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.16"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.16.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.16.0",
 		"ccm":                                  "azure-cloud-controller-manager:v0.3.0",
 		common.CloudNodeManagerAddonName:       "azure-cloud-node-manager:v0.3.0",
 		"windowszip":                           "v1.16.0-1int.zip",
@@ -113,6 +114,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.15"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.15.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.15.0",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.15.0",
 		"windowszip":                           "v1.15.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -157,6 +159,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.14"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.14.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.14.0",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.14.0",
 		"windowszip":                           "v1.14.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -201,6 +204,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.13"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.13.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.13.0",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.13.0",
 		"windowszip":                           "v1.13.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -245,6 +249,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.12"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.12.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.12.0",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.12.0",
 		"windowszip":                           "v1.12.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -289,6 +294,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.11"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.11.0-alpha.1",
+		"kube-proxy":                           "hyperkube-amd64:v1.11.0-alpha.1",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.11.0-alpha.1",
 		"windowszip":                           "v1.11.0-alpha.1-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -332,6 +338,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.10"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.10.0",
+		"kube-proxy":                           "hyperkube-amd64:v1.10.0",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.10.0",
 		"windowszip":                           "v1.10.0-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -375,6 +382,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.9.3",
+		"kube-proxy":                           "hyperkube-amd64:v1.9.3",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                           "v1.9.3-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -417,6 +425,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.8"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.8.8",
+		"kube-proxy":                           "hyperkube-amd64:v1.8.8",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.8.8",
 		"windowszip":                           "v1.8.8-1int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
@@ -457,6 +466,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.7"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.7.13",
+		"kube-proxy":                           "hyperkube-amd64:v1.7.13",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
 		"exechealthz":                          k8sComponent["exechealthz"],
 		"addonresizer":                         k8sComponent["addon-resizer"],
@@ -495,6 +505,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
 		"hyperkube":                            "hyperkube-amd64:v1.9.3",
+		"kube-proxy":                           "hyperkube-amd64:v1.9.3",
 		"ccm":                                  "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                           "v1.9.3-2int.zip",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
