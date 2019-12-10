@@ -44,6 +44,11 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 		k8sVars[k] = v
 	}
 
+	telemetryVars := getTelemetryVars(cs)
+	for k, v := range telemetryVars {
+		k8sVars[k] = v
+	}
+
 	return k8sVars, nil
 }
 
@@ -626,6 +631,26 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	agentVars[agentOsImageResourceGroup] = fmt.Sprintf("[parameters('%sosImageResourceGroup')]", agentName)
 
 	return agentVars
+}
+
+func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
+
+	enableTelemetry := false
+	if cs.Properties.FeatureFlags != nil {
+		enableTelemetry = cs.Properties.FeatureFlags.EnableTelemetry
+	}
+
+	applicationInsightsKey := ""
+	if cs.Properties.TelemetryProfile != nil {
+		applicationInsightsKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
+	}
+
+	telemetryVars := map[string]interface{}{
+		"enableTelemetry":        enableTelemetry,
+		"applicationInsightsKey": applicationInsightsKey,
+	}
+
+	return telemetryVars
 }
 
 func getSizeMap() map[string]interface{} {

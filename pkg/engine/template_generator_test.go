@@ -824,6 +824,28 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			},
 			ExpectedResult: "foo/pause:1.2.0",
 		},
+		{
+			Name:     "HasTelemetryEnabled",
+			FuncName: "HasTelemetryEnabled",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.FeatureFlags = &api.FeatureFlags{
+					EnableTelemetry: true,
+				}
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "GetApplicationInsightsTelemetryKey",
+			FuncName: "GetApplicationInsightsTelemetryKey",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.TelemetryProfile = &api.TelemetryProfile{
+					ApplicationInsightsKey:"my_telemetry_key",
+				}
+				return cs
+			},
+			ExpectedResult: "my_telemetry_key",
+		},
 	}
 
 	originalCS := &api.ContainerService{}

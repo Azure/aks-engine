@@ -690,6 +690,23 @@ func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	}
 }
 
+func TestConvertTelemetryProfileToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.TelemetryProfile = &TelemetryProfile{
+		ApplicationInsightsKey: "app_insights_key",
+	}
+
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+
+	if vlabsCS.Properties.TelemetryProfile == nil {
+		t.Error("expected ConvertContainerServiceToVLabs to set TelemtryProfile")
+	}
+
+	if vlabsCS.Properties.TelemetryProfile.ApplicationInsightsKey != "app_insights_key" {
+		t.Error("TelemetryProfile.APplicationInsightsKey not converted")
+	}
+}
+
 func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	falseVar := false
 

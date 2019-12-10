@@ -150,10 +150,6 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateFeatureFlags(); e != nil {
-		return e
-	}
-
 	if e := a.validateCustomKubeComponent(); e != nil {
 		return e
 	}
@@ -912,15 +908,6 @@ func (a *Properties) validateManagedIdentity() error {
 				return errors.New("user assigned identity can only be used with Kubernetes 1.12.0 or above. Please specify \"orchestratorRelease\": \"1.12\"")
 			}
 
-		}
-	}
-	return nil
-}
-
-func (a *Properties) validateFeatureFlags() error {
-	if a.FeatureFlags != nil {
-		if !a.IsAzureStackCloud() && a.FeatureFlags.EnableTelemetry {
-			return errors.Errorf("EnableTelemetry flag is only available for Azure Stack")
 		}
 	}
 	return nil

@@ -3456,7 +3456,7 @@ func TestEnableRBAC(t *testing.T) {
 	}
 }
 
-func TestDefaultTelemetry(t *testing.T) {
+func TestDefaultAzureTelemetryPid(t *testing.T) {
 	// Test that the AzureTelemetryPID is set to DefaultAzureStackDeployTelemetryPID  by default
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
 	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
@@ -3627,6 +3627,112 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 			c.cs.setOrchestratorDefaults(false, false)
 			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) != c.expected {
 				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT))
+			}
+		})
+	}
+}
+
+func TestSetTelemetryProfileDefaults(t *testing.T) {
+	cases := []struct {
+		name             string
+		telemetryProfile *TelemetryProfile
+		expected         *TelemetryProfile
+	}{
+		{
+			name:             "default",
+			telemetryProfile: nil,
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+			},
+		},
+		{
+			name:             "key not set",
+			telemetryProfile: &TelemetryProfile{},
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+			},
+		},
+		{
+			name: "key set",
+			telemetryProfile: &TelemetryProfile{
+				ApplicationInsightsKey: "app-insights-key",
+			},
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: "app-insights-key",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			props := Properties{
+				TelemetryProfile: c.telemetryProfile,
+			}
+
+			props.setTelemetryProfileDefaults()
+
+			actual := props.TelemetryProfile
+			expected := c.expected
+
+			diff := cmp.Diff(actual, expected)
+
+			if diff != "" {
+				t.Errorf("unexpected diff while conparing Properties.TelemetryProfile: %s", diff)
+			}
+		})
+	}
+}
+
+func TestSetPropertiesDefaults(t *testing.T) {
+	cases := []struct {
+		name   string
+		params PropertiesDefaultsParams
+	}{
+		{
+			name: "default",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  false,
+				IsScale:    false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+		{
+			name: "upgrade",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  true,
+				IsScale:    false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+		{
+			name: "scale",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  false,
+				IsScale:    true,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			cs := getMockBaseContainerService("1.16")
+
+			_, err := cs.SetPropertiesDefaults(c.params)
+
+			if err != nil {
+				t.Errorf("ContainerService.SetPropertiesDefaults returned error: %s", err)
+			}
+
+			// verify TelemetryProfile is set
+			if cs.Properties.TelemetryProfile == nil {
+				t.Errorf("ContainerService.Properties.TelemetryProfile should be set")
 			}
 		})
 	}

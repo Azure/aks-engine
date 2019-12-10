@@ -125,6 +125,11 @@ func convertPropertiesToVLabs(api *Properties, vlabsProps *vlabs.Properties) {
 		vlabsProps.CustomCloudProfile = &vlabs.CustomCloudProfile{}
 		convertCloudProfileToVLabs(api.CustomCloudProfile, vlabsProps.CustomCloudProfile)
 	}
+
+	if api.TelemetryProfile != nil {
+		vlabsProps.TelemetryProfile = &vlabs.TelemetryProfile{}
+		convertTelemetryProfileToVLabs(api.TelemetryProfile, vlabsProps.TelemetryProfile)
+	}
 }
 
 func convertExtensionProfileToVLabs(api *ExtensionProfile, obj *vlabs.ExtensionProfile) {
@@ -636,6 +641,10 @@ func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomC
 	vlabsccp.AuthenticationMethod = api.AuthenticationMethod
 	vlabsccp.DependenciesLocation = vlabs.DependenciesLocation(api.DependenciesLocation)
 	vlabsccp.PortalURL = api.PortalURL
+}
+
+func convertTelemetryProfileToVLabs(api *TelemetryProfile, vlabstp *vlabs.TelemetryProfile) {
+	vlabstp.ApplicationInsightsKey = api.ApplicationInsightsKey
 }
 
 func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, vlabses *vlabs.AzureEnvironmentSpecConfig) {
