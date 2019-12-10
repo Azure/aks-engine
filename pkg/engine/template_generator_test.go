@@ -840,7 +840,7 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			FuncName: "GetApplicationInsightsTelemetryKey",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
 				cs.Properties.TelemetryProfile = &api.TelemetryProfile{
-					ApplicationInsightsKey:"my_telemetry_key",
+					ApplicationInsightsKey: "my_telemetry_key",
 				}
 				return cs
 			},
