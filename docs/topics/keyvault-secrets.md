@@ -104,3 +104,7 @@ To enable Azure Resource Manager to retrieve the secrets from Key Vault, templat
 ```sh
 az keyvault update -g $RG_NAME -n $KV_NAME --enabled-for-template-deployment
 ```
+
+## Upgrade Considerations
+
+**Important** As of now, there is no working cluster upgrade implementation for clusters that were built according to the Key Vault-derived secrets. If you expect to use `aks-engine upgrade` to maintain a long-lived Kubernetes cluster built by `aks-engine`, you will not be able to take advantage of this feature at this time.
