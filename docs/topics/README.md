@@ -14,6 +14,7 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 - [Monitoring Kubernetes Clusters](monitoring.md)
 - [Scaling Kubernetes Clusters](scale.md)
 - [Service Principals](service-principals.md)
+- [Use Key Vault as the Source of Cluster Configuration Secrets](keyvault-secrets.md)
 - [Upgrading Kubernetes Clusters](upgrade.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
 - [Kubernetes Windows Walkthrough](windows.md)
