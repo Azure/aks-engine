@@ -46,7 +46,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml
-// ../../parts/k8s/addons/coredns.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
@@ -157,6 +156,7 @@
 // ../../parts/k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/azure-policy-deployment.yaml
+// ../../parts/k8s/containeraddons/coredns.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -9648,273 +9648,6 @@ func k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsCorednsYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-      kubernetes.io/cluster-service: "true"
-      addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: system:coredns
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - endpoints
-  - services
-  - pods
-  - namespaces
-  verbs:
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  annotations:
-    rbac.authorization.kubernetes.io/autoupdate: "true"
-  labels:
-    kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: EnsureExists
-  name: system:coredns
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:coredns
-subjects:
-- kind: ServiceAccount
-  name: coredns
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-      addonmanager.kubernetes.io/mode: Reconcile
-data:
-  Corefile: |
-    import conf.d/Corefile*
-    .:53 {
-        errors
-        health
-        ready
-        kubernetes <domain> in-addr.arpa ip6.arpa {
-            pods insecure
-            fallthrough in-addr.arpa ip6.arpa
-        }
-        prometheus :9153
-        forward . /etc/resolv.conf
-        cache 30
-        loop
-        reload
-        loadbalance
-        import custom/*.override
-    }
-    import custom/*.server
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns-custom
-  namespace: kube-system
-  labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  Corefile: |
-    # Add custom CoreDNS configuration here.
-    {{- /*
-    See https://github.com/coredns/coredns/tree/master/plugin/azure for information
-    about the Azure DNS plugin. */}}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: coredns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/name: "CoreDNS"
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-      annotations:
-        seccomp.security.alpha.kubernetes.io/pod: docker/default
-    spec:
-      priorityClassName: system-cluster-critical
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-dns
-              topologyKey: failure-domain.beta.kubernetes.io/zone
-            weight: 10
-          - podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: k8s-app
-                  operator: In
-                  values:
-                  - kube-dns
-              topologyKey: kubernetes.io/hostname
-            weight: 5
-      serviceAccountName: coredns
-      tolerations:
-        - key: node-role.kubernetes.io/master
-          effect: NoSchedule
-        - key: CriticalAddonsOnly
-          operator: "Exists"
-        - operator: "Exists"
-          effect: NoExecute
-        - operator: "Exists"
-          effect: NoSchedule
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: coredns
-        image: <img>
-        imagePullPolicy: IfNotPresent
-        resources:
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        args: [ "-conf", "/etc/coredns/Corefile" ]
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/coredns
-          readOnly: true
-        - mountPath: /etc/coredns/conf.d
-          name: config-custom
-          readOnly: true
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        - containerPort: 9153
-          name: metrics
-          protocol: TCP
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: 8181
-            scheme: HTTP
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            add:
-            - NET_BIND_SERVICE
-            drop:
-            - all
-          readOnlyRootFilesystem: true
-      dnsPolicy: Default
-      volumes:
-        - name: config-volume
-          configMap:
-            name: coredns
-            items:
-            - key: Corefile
-              path: Corefile
-        - name: config-custom
-          configMap:
-            name: coredns-custom
-            items:
-            - key: Corefile
-              path: Corefile
-            optional: true
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  annotations:
-    prometheus.io/port: "9153"
-    prometheus.io/scrape: "true"
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: CoreDNS
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: <clustIP>
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
-  - name: metrics
-    port: 9153
-    protocol: TCP
-`)
-
-func k8sAddonsCorednsYamlBytes() ([]byte, error) {
-	return _k8sAddonsCorednsYaml, nil
-}
-
-func k8sAddonsCorednsYaml() (*asset, error) {
-	bytes, err := k8sAddonsCorednsYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/coredns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddonsKubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1beta1 # This is required.
 kind: Policy
 omitStages:
@@ -15580,9 +15313,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{ else }}
     sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
     {{ end }}
-{{end}}
-{{if IsKubernetesVersionGe "1.12.0"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCoreDNSSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" /etc/kubernetes/addons/coredns.yaml
 {{end}}
 
 {{if AdminGroupID }}
@@ -27136,6 +26866,273 @@ func k8sContaineraddonsAzurePolicyDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddonsCorednsYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+      kubernetes.io/cluster-service: "true"
+      addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: system:coredns
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
+  - services
+  - pods
+  - namespaces
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  labels:
+    kubernetes.io/bootstrapping: rbac-defaults
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: system:coredns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:coredns
+subjects:
+- kind: ServiceAccount
+  name: coredns
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+      addonmanager.kubernetes.io/mode: Reconcile
+data:
+  Corefile: |
+    import conf.d/Corefile*
+    .:53 {
+        errors
+        health
+        ready
+        kubernetes {{ContainerConfig "domain"}} in-addr.arpa ip6.arpa {
+            pods insecure
+            fallthrough in-addr.arpa ip6.arpa
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf
+        cache 30
+        loop
+        reload
+        loadbalance
+        import custom/*.override
+    }
+    import custom/*.server
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+  labels:
+      addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  Corefile: |
+    # Add custom CoreDNS configuration here.
+    {{- /*
+    See https://github.com/coredns/coredns/tree/master/plugin/azure for information
+    about the Azure DNS plugin. */}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  {{- /* replicas: not specified here:
+  1. In order to make Addon Manager do not reconcile this replicas parameter.
+  2. Default is 1.
+  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-dns
+      annotations:
+        seccomp.security.alpha.kubernetes.io/pod: docker/default
+    spec:
+      priorityClassName: system-cluster-critical
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - kube-dns
+              topologyKey: failure-domain.beta.kubernetes.io/zone
+            weight: 10
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: k8s-app
+                  operator: In
+                  values:
+                  - kube-dns
+              topologyKey: kubernetes.io/hostname
+            weight: 5
+      serviceAccountName: coredns
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: "Exists"
+        - operator: "Exists"
+          effect: NoExecute
+        - operator: "Exists"
+          effect: NoSchedule
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - name: coredns
+        image: {{ContainerImage "coredns"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: 170Mi
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        args: [ "-conf", "/etc/coredns/Corefile" ]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/coredns
+          readOnly: true
+        - mountPath: /etc/coredns/conf.d
+          name: config-custom
+          readOnly: true
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        - containerPort: 9153
+          name: metrics
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8181
+            scheme: HTTP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            add:
+            - NET_BIND_SERVICE
+            drop:
+            - all
+          readOnlyRootFilesystem: true
+      dnsPolicy: Default
+      volumes:
+        - name: config-volume
+          configMap:
+            name: coredns
+            items:
+            - key: Corefile
+              path: Corefile
+        - name: config-custom
+          configMap:
+            name: coredns-custom
+            items:
+            - key: Corefile
+              path: Corefile
+            optional: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  annotations:
+    prometheus.io/port: "9153"
+    prometheus.io/scrape: "true"
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: CoreDNS
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    k8s-app: kube-dns
+  clusterIP: {{ContainerConfig "clusterIP"}}
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+  - name: metrics
+    port: 9153
+    protocol: TCP
+`)
+
+func k8sContaineraddonsCorednsYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsCorednsYaml, nil
+}
+
+func k8sContaineraddonsCorednsYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsCorednsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/coredns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsDnsAutoscalerYaml = []byte(`apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31978,12 +31975,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
       },
       "type": "string"
     },
-    "kubernetesKubeletClusterDomain": {
-      "metadata": {
-        "description": "--cluster-domain Kubelet config"
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
@@ -32048,14 +32039,6 @@ var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
         "cloudProviderDisableOutboundSNAT": false
       }
     },
-{{if IsKubernetesVersionGe "1.12.0"}}
-    "kubernetesCoreDNSSpec": {
-      "metadata": {
-        "description": "The container spec for coredns"
-      },
-      "type": "string"
-    },
-{{end}}
     "mobyVersion": {
       "defaultValue": "3.0.8",
       "metadata": {
@@ -38076,21 +38059,20 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
 	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                        iaasoutputsT,
-	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":                          k8sAddons116KubernetesmasterAuditPolicyYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml":                k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":               k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":            k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                          k8sAddons117KubernetesmasterAuditPolicyYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":                k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":               k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":            k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/coredns.yaml":                                                       k8sAddonsCorednsYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":                            k8sAddons116KubernetesmasterAuditPolicyYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml":                  k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":              k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                            k8sAddons117KubernetesmasterAuditPolicyYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":                  k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":              k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
@@ -38201,6 +38183,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                    k8sContaineraddonsAzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/azure-policy-deployment.yaml":                                     k8sContaineraddonsAzurePolicyDeploymentYaml,
+	"k8s/containeraddons/coredns.yaml":                                                     k8sContaineraddonsCorednsYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -38358,8 +38341,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":            {k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
-			"coredns.yaml":                       {k8sAddonsCorednsYaml, map[string]*bintree{}},
-			"kubernetesmaster-audit-policy.yaml": {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
+			"kubernetesmaster-audit-policy.yaml":                                 {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-csi-storage-classes.yaml":              {k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml, map[string]*bintree{}},
@@ -38497,10 +38479,11 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.9": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
-			"azure-cni-networkmonitor.yaml":                               {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
-			"azure-policy-deployment.yaml":                                {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
-			"dns-autoscaler.yaml":                                         {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
-			"ip-masq-agent.yaml":                                          {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"azure-cni-networkmonitor.yaml": {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
+			"azure-policy-deployment.yaml":  {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
+			"coredns.yaml":                  {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
+			"dns-autoscaler.yaml":           {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
+			"ip-masq-agent.yaml":            {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},

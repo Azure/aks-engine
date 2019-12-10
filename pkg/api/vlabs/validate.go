@@ -616,6 +616,8 @@ func (a *Properties) validateAddons() error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
 		var IsNSeriesSKU bool
+		var kubeDNSEnabled bool
+		var corednsEnabled bool
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -749,7 +751,18 @@ func (a *Properties) validateAddons() error {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
 					}
 				}
+			case "kube-dns":
+				if to.Bool(addon.Enabled) {
+					kubeDNSEnabled = true
+				}
+			case common.CoreDNSAddonName:
+				if to.Bool(addon.Enabled) {
+					corednsEnabled = true
+				}
 			}
+		}
+		if kubeDNSEnabled && corednsEnabled {
+			return errors.New("Both kube-dns and coredns addons are enabled, only one of these may be enabled on a cluster")
 		}
 	}
 	return nil

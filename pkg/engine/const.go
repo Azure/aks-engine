@@ -252,4 +252,6 @@ const (
 	nodeProblemDetectorAddonDestinationFilename    string = "node-problem-detector.yaml"
 	kubeDNSAddonSourceFilename                     string = "kubernetesmasteraddons-kube-dns-deployment.yaml"
 	kubeDNSAddonDestinationFilename                string = "kube-dns-deployment.yaml"
+	corednsAddonSourceFilename                     string = "coredns.yaml"
+	corednsAddonDestinationFilename                string = "coredns.yaml"
 )

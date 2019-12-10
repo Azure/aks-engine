@@ -64,7 +64,7 @@ data:
         errors
         health
         ready
-        kubernetes <domain> in-addr.arpa ip6.arpa {
+        kubernetes {{ContainerConfig "domain"}} in-addr.arpa ip6.arpa {
             pods insecure
             fallthrough in-addr.arpa ip6.arpa
         }
@@ -157,7 +157,7 @@ spec:
         beta.kubernetes.io/os: linux
       containers:
       - name: coredns
-        image: <img>
+        image: {{ContainerImage "coredns"}}
         imagePullPolicy: IfNotPresent
         resources:
           limits:
@@ -237,7 +237,7 @@ metadata:
 spec:
   selector:
     k8s-app: kube-dns
-  clusterIP: <clustIP>
+  clusterIP: {{ContainerConfig "clusterIP"}}
   ports:
   - name: dns
     port: 53

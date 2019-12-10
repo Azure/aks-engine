@@ -17,7 +17,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
 		p                              *api.Properties
-		expectedCoreDNS                bool
 		expectedKubeProxy              bool
 		expectedCilium                 bool
 		expectedFlannel                bool
@@ -41,7 +40,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -65,7 +63,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 true,
 			expectedFlannel:                false,
@@ -89,7 +86,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                true,
@@ -116,7 +112,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					AdminGroupID: "1234-5",
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -141,7 +136,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -172,7 +166,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -196,7 +189,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -225,7 +217,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -255,7 +246,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -285,7 +275,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -309,7 +298,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -339,7 +327,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCoreDNS:                true,
 			expectedKubeProxy:              true,
 			expectedCilium:                 false,
 			expectedFlannel:                false,
@@ -352,46 +339,12 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedScheduledMaintenance:   false,
 			expectedAzureCSIStorageClasses: true,
 		},
-		// kube-dns addon enabled scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-						Addons: []api.KubernetesAddon{
-							{
-								Name:    common.KubeDNSAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-						},
-					},
-				},
-			},
-			expectedCoreDNS:                false,
-			expectedKubeProxy:              true,
-			expectedCilium:                 false,
-			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
 	}
 
 	for _, c := range cases {
 		componentFileSpecArray := kubernetesAddonSettingsInit(c.p)
 		for _, componentFileSpec := range componentFileSpecArray {
 			switch componentFileSpec.destinationFile {
-			case "coredns.yaml":
-				if c.expectedCoreDNS != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.CoreDNSAddonName, c.expectedCoreDNS)
-				}
 			case "kube-proxy-daemonset.yaml":
 				if c.expectedKubeProxy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", common.KubeProxyAddonName, c.expectedKubeProxy)
@@ -494,6 +447,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedCloudNodeManager       kubernetesComponentFileSpec
 		expectedNodeProblemDetector    kubernetesComponentFileSpec
 		expectedKubeDNS                kubernetesComponentFileSpec
+		expectedCoreDNS                kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -599,6 +553,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.KubeDNSAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.CoreDNSAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -722,6 +680,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeDNSAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: kubeDNSAddonDestinationFilename,
+			},
+			expectedCoreDNS: kubernetesComponentFileSpec{
+				sourceFile:      corednsAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: corednsAddonDestinationFilename,
 			},
 		},
 		{
@@ -804,6 +767,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.KubeDNSAddonName,
 							},
+							{
+								Name: common.CoreDNSAddonName,
+							},
 						},
 					},
 				},
@@ -927,6 +893,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeDNSAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: kubeDNSAddonDestinationFilename,
+			},
+			expectedCoreDNS: kubernetesComponentFileSpec{
+				sourceFile:      corednsAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: corednsAddonDestinationFilename,
 			},
 		},
 		{
@@ -1051,6 +1022,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeDNSAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: kubeDNSAddonDestinationFilename,
+			},
+			expectedCoreDNS: kubernetesComponentFileSpec{
+				sourceFile:      corednsAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: corednsAddonDestinationFilename,
 			},
 		},
 	}
@@ -1301,6 +1277,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedKubeDNS.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedKubeDNS.destinationFile)
+					}
+				case common.CoreDNSAddonName:
+					if c.expectedCoreDNS.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedCoreDNS.sourceFile)
+					}
+					if c.expectedCoreDNS.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedCoreDNS.base64Data)
+					}
+					if c.expectedCoreDNS.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedCoreDNS.destinationFile)
 					}
 				}
 			}
