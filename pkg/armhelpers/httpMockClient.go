@@ -667,7 +667,6 @@ func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
 			_, _ = fmt.Fprint(w, mc.ResponseListVirtualMachineImages)
 		}
 	})
-
 }
 
 func readFromFile(filePath string) (string, error) {

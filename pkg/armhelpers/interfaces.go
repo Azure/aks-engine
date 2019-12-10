@@ -83,7 +83,7 @@ type DiskListPage interface {
 type VMImageFetcher interface {
 
 	// ListVirtualMachineImages return a list of images
-	ListVirtualMachineImages(ctx context.Context, location, publisherName, offer, skus, filter string, top int32, orderBy string) (compute.ListVirtualMachineImageResource, error)
+	ListVirtualMachineImages(ctx context.Context, location, publisherName, offer, skus string) (compute.ListVirtualMachineImageResource, error)
 
 	// GetVirtualMachineImage return a virtual machine image
 	GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (compute.VirtualMachineImage, error)
