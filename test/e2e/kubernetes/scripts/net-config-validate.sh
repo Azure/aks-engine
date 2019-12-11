@@ -11,6 +11,13 @@ KERNEL_PANIC_VALUE=10
 KERNEL_PANIC_ON_OOPS_VALUE=1
 VM_OVERCOMMIT_MEMORY_VALUE=1
 INOTIFY_MAX_USER_WATCHES=1048576
+SOMAXCONN=16384
+TCP_MAX_SYN_BACKLOG=16384
+MESSAGE_COST=40
+MESSAGE_BURST=80
+GT_8_CORES_GC_THRESH1=4096
+GT_8_CORES_GC_THRESH2=8192
+GT_8_CORES_GC_THRESH3=16384
 
 set -x
 grep $IPV4_SEND_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/send_redirects || exit 1
@@ -28,9 +35,19 @@ grep $IPV6_ACCEPT_RA_VALUE /proc/sys/net/ipv6/conf/default/accept_ra || exit 1
 grep $IPV6_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv6/conf/all/accept_redirects || exit 1
 grep $IPV6_ACCEPT_REDIRECTS_VALUE /proc/sys/net/ipv6/conf/default/accept_redirects || exit 1
 
-# validate net config workaround from kubelet.service
+# validate kubelet.service configs
 grep $IPV4_TCP_RETRIES2_VALUE /proc/sys/net/ipv4/tcp_retries2 || exit 1
 grep $KERNEL_PANIC_VALUE /proc/sys/kernel/panic || exit 1
 grep $KERNEL_PANIC_ON_OOPS_VALUE /proc/sys/kernel/panic_on_oops || exit 1
 grep $VM_OVERCOMMIT_MEMORY_VALUE /proc/sys/vm/overcommit_memory || exit 1
 grep $INOTIFY_MAX_USER_WATCHES /proc/sys/fs/inotify/max_user_watches || exit 1
+grep $SOMAXCONN /proc/sys/net/core/somaxconn || exit 1
+grep $TCP_MAX_SYN_BACKLOG /proc/sys/net/ipv4/tcp_max_syn_backlog || exit 1
+grep $MESSAGE_COST /proc/sys/net/core/message_cost || exit 1
+grep $MESSAGE_BURST /proc/sys/net/core/message_burst || exit 1
+
+if [[ "${GT_8_CORE_SKU}" == "true" ]]; then
+    grep $GT_8_CORES_GC_THRESH1 /proc/sys/net/ipv4/neigh/default/gc_thresh1 || exit 1
+    grep $GT_8_CORES_GC_THRESH2 /proc/sys/net/ipv4/neigh/default/gc_thresh2 || exit 1
+    grep $GT_8_CORES_GC_THRESH3 /proc/sys/net/ipv4/neigh/default/gc_thresh3 || exit 1
+fi

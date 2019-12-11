@@ -315,15 +315,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("SSH port is blocked")
 			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					var largeSKUPrefixes []string
+					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+						if util.IsLargeVMSKU(eng.ExpandedDefinition.Properties.MasterProfile.VMSize) {
+							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-master-")
+						}
+					}
+					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+						if util.IsLargeVMSKU(profile.VMSize) {
+							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-"+profile.Name)
+						}
+					}
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
 					netConfigValidateScript := "net-config-validate.sh"
 					err = sshConn.CopyTo(netConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-					err = sshConn.Execute(netConfigValidationCommand, false)
-					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
+						var gt8CoreSKU string
+						if node.HasSubstring(largeSKUPrefixes) && node.IsUbuntu() {
+							gt8CoreSKU = "true"
+						}
+						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
