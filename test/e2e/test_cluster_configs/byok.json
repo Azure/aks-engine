@@ -19,7 +19,7 @@
 					"count": 2,
 					"vmSize": "Standard_D2s_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"diskEncryptionSetID": "/subscriptions/SUB_ID/resourceGroups/diskEncryptionSet-e2e/providers/Microsoft.Compute/diskEncryptionSets/e2e-des"
+					"diskEncryptionSetID": "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/Microsoft.Compute/diskEncryptionSets/des"
 				}
 			],
 			"linuxProfile": {
@@ -39,4 +39,3 @@
 		}
 	}
 }
-
