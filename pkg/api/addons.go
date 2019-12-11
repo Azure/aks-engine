@@ -558,6 +558,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// If we have any explicit coredns or kube-dns configuration in the addons array
+	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName) != -1 {
+		// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
+		if o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
+			defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
+		}
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -661,7 +669,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		// If we don't have coredns in our addons array at all, this means we're in a legacy scenario and we want to migrate from kube-dns to coredns
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName); i == -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
-			// This is sort of academic, but it's insurance to make sure we don't prepare an addons spec w/ both kube-dns and coredns enabled
+			// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
 			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); j > -1 {
 				o.KubernetesConfig.Addons[j].Enabled = to.BoolPtr(false)
 			}
