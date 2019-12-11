@@ -72,6 +72,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 							]
 
 						withCredentials(creds) {
+							echo "THIS IS A TEST - TODO REMOVE"
 							echo "Running tests for: ${jobName}"
 							try {
 								echo "EXECUTOR_NUMBER :: $EXECUTOR_NUMBER"
