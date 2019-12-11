@@ -103,9 +103,6 @@ var (
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
-
-	// NetworkModeValues holds the valid values for network mode implementation for cni
-	NetworkModeValues = [...]string{"", NetworkModeBridge, NetworkModeTransparent}
 )
 
 // Kubernetes configuration
@@ -126,10 +123,6 @@ const (
 	NetworkPolicyCilium = "cilium"
 	// NetworkPluginCilium is the string expression for cilium network policy config option
 	NetworkPluginCilium = NetworkPolicyCilium
-	// NetworkModeBridge is the string expression for bridge network mode config option
-	NetworkModeBridge = "bridge"
-	// NetworkModeTransparent is the string expression for transparent network mode config option
-	NetworkModeTransparent = "transparent"
 )
 
 const (

@@ -240,8 +240,6 @@ configureCNIIPTables() {
         chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
         if [[ "${NETWORK_POLICY}" == "calico" ]]; then
           sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-        elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-          sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
         fi
         /sbin/ebtables -t nat --list
     fi
