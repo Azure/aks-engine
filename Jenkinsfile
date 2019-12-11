@@ -68,6 +68,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 						// define any sensitive data needed for the test script
 						def creds = [
 								string(credentialsId: 'LOG_ANALYTICS_WORKSPACE_KEY', variable: 'LOG_ANALYTICS_WORKSPACE_KEY')
+								microsoftAzureServicePrincipal(credentialsId: 'SERVICE_PRINCIPAL', subscriptionIdVariable: 'SUBSCRIPTION_ID', clientIdVariable: 'CLIENT_ID', clientSecretVariable: 'CLIENT_SECRET', tenantIdVariable: 'TENANT_ID'),
 							]
 
 						withCredentials(creds) {
