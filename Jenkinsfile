@@ -66,12 +66,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 						] + jobSpecificEnv
 					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 						// define any sensitive data needed for the test script
-						def clientIdOverride = opts?.clientId ? opts.clientId : 'AKS_ENGINE_3014546b_CLIENT_ID'
-						def clientSecretOverride = opts?.clientSecret ? opts.clientSecret : 'AKS_ENGINE_3014546b_CLIENT_SECRET'
 						def creds = [
-								string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
-								string(credentialsId: clientIdOverride, variable: 'CLIENT_ID'),
-								string(credentialsId: clientSecretOverride, variable: 'CLIENT_SECRET'),
 								string(credentialsId: 'LOG_ANALYTICS_WORKSPACE_KEY', variable: 'LOG_ANALYTICS_WORKSPACE_KEY')
 							]
 
