@@ -47,7 +47,19 @@ function DownloadFileOverHttp
     
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
+
+        $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
         Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $downloadTimer.Stop()
+
+        if ($global:AppInsightsClient -ne $null) {
+            $event = New-Object "Microsoft.ApplicationInsights.DataContracts.EventTelemetry"
+            $event.Name = "FileDownload"
+            $event.Properties["FileName"] = $fileName
+            $event.Metrics["DurationMs"] = $downloadTimer.ElapsedMilliseconds
+            $global:AppInsightsClient.TrackEvent($event)
+        }
+
         $ProgressPreference = $oldProgressPreference
         Write-Log "Downloaded file to $DestinationPath"
     }
