@@ -8383,7 +8383,7 @@ func TestSetAddonsConfig(t *testing.T) {
 								"--cluster-domain": "cluster.local",
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
- 							ProxyMode:     KubeProxyModeIPTables,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -8597,7 +8597,7 @@ func TestSetAddonsConfig(t *testing.T) {
 								"--cluster-domain": "cluster.local",
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
- 							ProxyMode:     KubeProxyModeIPTables,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
