@@ -566,6 +566,22 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	defaultKubeProxyAddonsConfig := KubernetesAddon{
+		Name:    common.KubeProxyAddonName,
+		Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+		Config: map[string]string{
+			"cluster-cidr": o.KubernetesConfig.ClusterSubnet,
+			"proxy-mode":   string(o.KubernetesConfig.ProxyMode),
+			"featureGates": cs.Properties.GetKubeProxyFeatureGates(),
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeProxyAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -598,6 +614,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultNodeProblemDetectorConfig,
 		defaultKubeDNSAddonsConfig,
 		defaultCorednsAddonsConfig,
+		defaultKubeProxyAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -719,6 +736,22 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			}
 		}
 	}
+
+	// Specific back-compat business logic for deprecated "kube-proxy-daemonset" addon
+	if i := getAddonsIndexByName(o.KubernetesConfig.Addons, "kube-proxy-daemonset"); i > -1 {
+		if to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
+			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); j > -1 {
+				// Copy data from deprecated addon spec to the current "kube-proxy" addon
+				o.KubernetesConfig.Addons[j] = KubernetesAddon{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(true),
+					Data:    o.KubernetesConfig.Addons[i].Data,
+				}
+			}
+		}
+		// Remove deprecated "kube-proxy-daemonset addon"
+		o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons[:i], o.KubernetesConfig.Addons[i+1:]...)
+	}
 }
 
 func appendAddonIfNotPresent(addons []KubernetesAddon, addon KubernetesAddon) []KubernetesAddon {
@@ -747,6 +780,13 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 		return KubernetesAddon{
 			Name:    addon.Name,
 			Enabled: addon.Enabled,
+		}
+	}
+	if addon.Data != "" {
+		return KubernetesAddon{
+			Name:    addon.Name,
+			Enabled: addon.Enabled,
+			Data:    addon.Data,
 		}
 	}
 	if addon.Mode == "" {

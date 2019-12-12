@@ -1269,6 +1269,14 @@ func (p *Properties) AnyAgentHasLoadBalancerBackendAddressPoolIDs() bool {
 	return false
 }
 
+// GetKubeProxyFeatureGates returns the feature gates string for the kube-proxy yaml manifest
+func (p *Properties) GetKubeProxyFeatureGates() string {
+	if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		return "IPv6DualStack: true"
+	}
+	return "{}"
+}
+
 // IsValid returns true if ImageRefernce contains at least Name and ResourceGroup
 func (i *ImageReference) IsValid() bool {
 	return len(i.Name) > 0 && len(i.ResourceGroup) > 0

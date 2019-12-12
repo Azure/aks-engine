@@ -175,7 +175,7 @@ const (
 	// CoreDNSAddonName is the name of the coredns addon
 	CoreDNSAddonName = "coredns"
 	// KubeProxyAddonName is the name of the kube-proxy config addon
-	KubeProxyAddonName = "kube-proxy-daemonset"
+	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon
 	CiliumAddonName = "cilium-daemonset"
 	// FlannelAddonName is the name of flannel plugin daemonset addon

@@ -254,4 +254,6 @@ const (
 	kubeDNSAddonDestinationFilename                string = "kube-dns-deployment.yaml"
 	corednsAddonSourceFilename                     string = "coredns.yaml"
 	corednsAddonDestinationFilename                string = "coredns.yaml"
+	kubeProxyAddonSourceFilename                   string = "kubernetesmasteraddons-kube-proxy-daemonset.yaml"
+	kubeProxyAddonDestinationFilename              string = "kube-proxy-daemonset.yaml"
 )

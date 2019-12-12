@@ -217,6 +217,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -387,6 +389,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -400,6 +417,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -589,6 +608,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -602,6 +636,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -794,6 +830,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -807,6 +858,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1044,6 +1097,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1057,6 +1125,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1298,6 +1368,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1311,6 +1396,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1570,6 +1657,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1583,6 +1685,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -1846,6 +1950,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -1859,6 +1978,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2177,6 +2298,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -2190,6 +2326,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2508,6 +2646,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -2521,6 +2674,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -2786,6 +2941,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -2802,6 +2972,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3074,6 +3246,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3087,6 +3274,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3273,6 +3462,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3286,6 +3490,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3472,6 +3678,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3485,6 +3706,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -3670,6 +3893,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3683,6 +3921,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -3876,6 +4116,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -3889,6 +4144,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 						},
@@ -4070,6 +4327,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4083,6 +4355,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 						},
@@ -4260,6 +4534,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4273,6 +4562,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyAzure,
 							Addons: []KubernetesAddon{
@@ -4466,6 +4757,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4479,6 +4785,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -4663,6 +4971,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4676,6 +4999,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
 						},
@@ -4863,6 +5188,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -4876,6 +5216,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							NetworkPolicy: NetworkPolicyCalico,
 							Addons: []KubernetesAddon{
@@ -5091,6 +5433,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5104,6 +5461,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -5298,6 +5657,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5311,6 +5685,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -5509,6 +5885,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5522,6 +5913,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginCilium,
 						},
 					},
@@ -5671,6 +6064,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5684,6 +6092,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -5844,6 +6254,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -5857,6 +6282,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 						},
 					},
@@ -6013,6 +6440,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6026,6 +6468,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -6249,6 +6693,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6262,6 +6721,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -6482,6 +6943,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CoreDNSAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -6498,6 +6974,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 						},
@@ -6721,6 +7199,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6734,6 +7227,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 							Addons: []KubernetesAddon{
@@ -6971,6 +7466,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -6984,6 +7494,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
 							NetworkPlugin:             NetworkPluginAzure,
 							UseCloudControllerManager: to.BoolPtr(true),
 							Addons: []KubernetesAddon{
@@ -7218,6 +7730,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CoreDNSAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -7407,6 +7934,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -7590,21 +8132,36 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  "dnsmasq",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["dnsmasq"],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["dnsmasq"],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["k8s-dns-sidecar"],
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["k8s-dns-sidecar"],
 						},
 					},
 				},
 				{
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
+						},
+					},
 				},
 			},
 		},
@@ -7797,6 +8354,21 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -7810,6 +8382,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -7994,6 +8568,21 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(false),
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
 			},
 		},
 		{
@@ -8007,6 +8596,8 @@ func TestSetAddonsConfig(t *testing.T) {
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
 							Addons: []KubernetesAddon{
 								{
@@ -8183,6 +8774,433 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "kube-proxy w/ user configuration",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KubeProxyAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"cluster-cidr": "foo",
+										"proxy-mode":   "bar",
+										"featureGates": "baz",
+									},
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:  common.KubeProxyAddonName,
+											Image: "bam",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    common.HeapsterAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.TillerAddonName,
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
+				},
+				{
+					Name:    common.ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    common.SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+						},
+					},
+				},
+				{
+					Name:    common.DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+						"enable-ipv6":         "false",
+					},
+				},
+				{
+					Name:    common.AzureCNINetworkMonitorAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.AzureCNINetworkMonitorAddonName,
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CalicoAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": "foo",
+						"proxy-mode":   "bar",
+						"featureGates": "baz",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: "bam",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "kube-proxy disabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KubeProxyAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: []KubernetesAddon{
+				{
+					Name:    common.HeapsterAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.TillerAddonName,
+					Enabled: to.BoolPtr(DefaultTillerAddonEnabled),
+				},
+				{
+					Name:    common.ACIConnectorAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.ClusterAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.BlobfuseFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.BlobfuseFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+						},
+					},
+				},
+				{
+					Name:    common.SMBFlexVolumeAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+						},
+					},
+				},
+				{
+					Name:    common.DashboardAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.DashboardAddonName,
+							CPURequests:    "300m",
+							MemoryRequests: "150Mi",
+							CPULimits:      "300m",
+							MemoryLimits:   "150Mi",
+							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.ReschedulerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.MetricsServerAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.MetricsServerAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.NVIDIADevicePluginAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.ContainerMonitoringAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr": DefaultVNETCIDR,
+						"non-masq-cni-cidr":   DefaultCNICIDR,
+						"enable-ipv6":         "false",
+					},
+				},
+				{
+					Name:    common.AzureCNINetworkMonitorAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.AzureCNINetworkMonitorAddonName,
+							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.AzureNetworkPolicyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.DNSAutoscalerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CalicoAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AADPodIdentityAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzurePolicyAddonName,
+					Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled),
+				},
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.KubeDNSAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":    "cluster.local",
+						"clusterIP": DefaultKubernetesDNSServiceIP,
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						},
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(false),
+				},
 			},
 		},
 	}
@@ -8217,6 +9235,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.CloudNodeManagerAddonName,
 				common.CoreDNSAddonName,
 				common.KubeDNSAddonName,
+				common.KubeProxyAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]
