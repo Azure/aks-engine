@@ -122,7 +122,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} \
       ./bin/aks-engine scale \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --deployment-dir _output/$RESOURCE_GROUP \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
@@ -164,7 +164,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --deployment-dir _output/$RESOURCE_GROUP \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
@@ -205,7 +205,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     ${DEV_IMAGE} \
     ./bin/aks-engine scale \
     --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-    --deployment-dir _output/$RESOURCE_GROUP \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
     --location $REGION \
     --resource-group $RESOURCE_GROUP \
     --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
