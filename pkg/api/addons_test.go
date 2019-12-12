@@ -4015,12 +4015,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-						},
-						{
-							Name:  common.AzureVnetTelemetryContainerName,
-							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -4209,8 +4207,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -4281,12 +4281,10 @@ func TestSetAddonsConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 									Containers: []KubernetesContainerSpec{
 										{
-											Name:  common.AzureNetworkPolicyAddonName,
-											Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-										},
-										{
-											Name:  common.AzureVnetTelemetryContainerName,
-											Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+											Name:           common.AzureNetworkPolicyAddonName,
+											Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+											MemoryRequests: "20Mi",
+											MemoryLimits:   "2Gi",
 										},
 									},
 								},
@@ -4415,8 +4413,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},

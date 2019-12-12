@@ -315,14 +315,22 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+				Name:           common.AzureNetworkPolicyAddonName,
+				Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+				MemoryRequests: "20Mi",
+				MemoryLimits:   "2Gi",
 			},
 		},
 	}
 
 	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29"})
+		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers,
+			KubernetesContainerSpec{
+				Name:           common.AzureNetworkPolicyAddonName,
+				Image:          "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30",
+				MemoryRequests: "20Mi",
+				MemoryLimits:   "2Gi",
+			})
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
