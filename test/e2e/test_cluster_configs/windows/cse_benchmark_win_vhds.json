@@ -4,8 +4,6 @@
 	},
 	"options": {
 		"allowedOrchestratorVersions": ["latestReleasedVersion"],
-		"clientId": "AKS_ENGINE_e7b1dca4_CLIENT_ID",
-		"clientSecret": "AKS_ENGINE_e7b1dca4_CLIENT_SECRET"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
