@@ -27735,6 +27735,11 @@ spec:
           image: {{ContainerImage "azure-npm-daemonset"}}
           securityContext:
             privileged: true
+          resources:
+            requests:
+              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
+            limits:
+              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
               valueFrom:
@@ -27746,17 +27751,6 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
-          - name: socket-dir
-            mountPath: /var/run
-          - name: tmp
-            mountPath: /tmp
-        - name: azure-vnet-telemetry
-          image: {{ContainerImage "azure-vnet-telemetry-daemonset"}}
-          volumeMounts:
-          - name: socket-dir
-            mountPath: /var/run
-          - name: tmp
-            mountPath: /tmp
       hostNetwork: true
       volumes:
       - name: log
@@ -27767,12 +27761,6 @@ spec:
         hostPath:
           path: /run/xtables.lock
           type: File
-      - name: tmp
-        hostPath:
-          path: /tmp
-          type: Directory
-      - name: socket-dir
-        emptyDir: {}
       serviceAccountName: azure-npm
 `)
 
