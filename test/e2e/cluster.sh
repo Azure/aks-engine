@@ -125,7 +125,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
-      --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+      --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
       --node-pool $nodepool \
       --new-node-count 1 \
       --auth-method client_secret \
@@ -208,7 +208,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     --api-model _output/$RESOURCE_GROUP/apimodel.json \
     --location $REGION \
     --resource-group $RESOURCE_GROUP \
-    --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
     --node-pool $nodepool \
     --new-node-count $NODE_COUNT \
     --auth-method client_secret \
