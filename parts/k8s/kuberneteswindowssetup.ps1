@@ -226,15 +226,15 @@ try
 
         Write-Log "Write ca root"
         Write-CACert -CACertificate $global:CACertificate `
-                     -KubeDir $global:KubeDir
+            -KubeDir $global:KubeDir
 
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate `
-                         -KubeDir $global:KubeDir `
-                         -MasterFQDNPrefix $MasterFQDNPrefix `
-                         -MasterIP $MasterIP `
-                         -AgentKey $AgentKey `
-                         -AgentCertificate $global:AgentCertificate
+            -KubeDir $global:KubeDir `
+            -MasterFQDNPrefix $MasterFQDNPrefix `
+            -MasterIP $MasterIP `
+            -AgentKey $AgentKey `
+            -AgentCertificate $global:AgentCertificate
 
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
@@ -249,18 +249,22 @@ try
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
         # Configure network policy.
+        Get-HnsPsm1 -HNSModule $global:HNSModule
+        Import-Module $global:HNSModule
+
         if ($global:NetworkPlugin -eq "azure") {
             Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir `
-                                -AzureCNIBinDir $global:AzureCNIBinDir `
-                                -VNetCNIPluginsURL $global:VNetCNIPluginsURL
+                -AzureCNIBinDir $global:AzureCNIBinDir `
+                -VNetCNIPluginsURL $global:VNetCNIPluginsURL
+
             Set-AzureCNIConfig -AzureCNIConfDir $global:AzureCNIConfDir `
-                               -KubeDnsSearchPath $global:KubeDnsSearchPath `
-                               -KubeClusterCIDR $global:KubeClusterCIDR `
-                               -MasterSubnet $global:MasterSubnet `
-                               -KubeServiceCIDR $global:KubeServiceCIDR `
-                               -VNetCIDR $global:VNetCIDR `
-                               -TargetEnvironment $TargetEnvironment
+                -KubeDnsSearchPath $global:KubeDnsSearchPath `
+                -KubeClusterCIDR $global:KubeClusterCIDR `
+                -MasterSubnet $global:MasterSubnet `
+                -KubeServiceCIDR $global:KubeServiceCIDR `
+                -VNetCIDR $global:VNetCIDR `
+                -TargetEnvironment $TargetEnvironment
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `
@@ -275,11 +279,13 @@ try
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
 
-        } elseif ($global:NetworkPlugin -eq "kubenet") {
+            New-ExternalHnsNetwork
+        }
+        elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
-            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
+
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `

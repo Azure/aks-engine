@@ -32350,8 +32350,7 @@ var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This is a temporary file to te
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
-function
-Write-Log($message)
+function Write-Log($message)
 {
     $msg = $message | Timestamp
     Write-Output $msg
@@ -32730,15 +32729,15 @@ try
 
         Write-Log "Write ca root"
         Write-CACert -CACertificate $global:CACertificate ` + "`" + `
-                     -KubeDir $global:KubeDir
+            -KubeDir $global:KubeDir
 
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
-                         -KubeDir $global:KubeDir ` + "`" + `
-                         -MasterFQDNPrefix $MasterFQDNPrefix ` + "`" + `
-                         -MasterIP $MasterIP ` + "`" + `
-                         -AgentKey $AgentKey ` + "`" + `
-                         -AgentCertificate $global:AgentCertificate
+            -KubeDir $global:KubeDir ` + "`" + `
+            -MasterFQDNPrefix $MasterFQDNPrefix ` + "`" + `
+            -MasterIP $MasterIP ` + "`" + `
+            -AgentKey $AgentKey ` + "`" + `
+            -AgentCertificate $global:AgentCertificate
 
         Write-Log "Create the Pause Container kubletwin/pause"
         New-InfraContainer -KubeDir $global:KubeDir
@@ -32753,18 +32752,22 @@ try
         Write-Log "Configuring networking with NetworkPlugin:$global:NetworkPlugin"
 
         # Configure network policy.
+        Get-HnsPsm1 -HNSModule $global:HNSModule
+        Import-Module $global:HNSModule
+
         if ($global:NetworkPlugin -eq "azure") {
             Write-Log "Installing Azure VNet plugins"
             Install-VnetPlugins -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
-                                -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
-                                -VNetCNIPluginsURL $global:VNetCNIPluginsURL
+                -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
+                -VNetCNIPluginsURL $global:VNetCNIPluginsURL
+
             Set-AzureCNIConfig -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
-                               -KubeDnsSearchPath $global:KubeDnsSearchPath ` + "`" + `
-                               -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
-                               -MasterSubnet $global:MasterSubnet ` + "`" + `
-                               -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
-                               -VNetCIDR $global:VNetCIDR ` + "`" + `
-                               -TargetEnvironment $TargetEnvironment
+                -KubeDnsSearchPath $global:KubeDnsSearchPath ` + "`" + `
+                -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
+                -MasterSubnet $global:MasterSubnet ` + "`" + `
+                -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
+                -VNetCIDR $global:VNetCIDR ` + "`" + `
+                -TargetEnvironment $TargetEnvironment
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig ` + "`" + `
@@ -32779,11 +32782,13 @@ try
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
 
-        } elseif ($global:NetworkPlugin -eq "kubenet") {
+            New-ExternalHnsNetwork
+        }
+        elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
-            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
+
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices ` + "`" + `
@@ -33621,6 +33626,41 @@ function GenerateAzureStackCNIConfig
     Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
 }
 
+function New-ExternalHnsNetwork {
+    Write-Log "Creating new HNS network ` + "`" + `"ext` + "`" + `""
+    $externalNetwork = "ext"
+    $na = @(Get-NetAdapter -Physical)
+
+    if ($na.Count -eq 0) {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    $managementIP = (Get-NetIPAddress -ifIndex $na[0].ifIndex -AddressFamily IPv4).IPAddress
+    $adapterName = $na[0].Name
+    Write-Log "Using adapter $adapterName with IP address $managementIP"
+    $mgmtIPAfterNetworkCreate
+
+    $stopWatch = New-Object System.Diagnostics.Stopwatch
+    $stopWatch.Start()
+    # Fixme : use a smallest range possible, that will not collide with any pod space
+    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for ($i = 0; $i -lt 60; $i++) {
+        $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
+        if ($mgmtIPAfterNetworkCreate) {
+            break
+        }
+        sleep -Milliseconds 500
+    }
+
+    $stopWatch.Stop()
+    if (-not $mgmtIPAfterNetworkCreate) {
+        throw "Failed to find $managementIP after creating $externalNetwork network"
+    }
+    Write-Log "It took $($StopWatch.Elapsed.Seconds) seconds to create the $externalNetwork network."
+}
 `)
 
 func k8sWindowsazurecnifuncPs1Bytes() ([]byte, error) {
@@ -34346,50 +34386,6 @@ Write-Host "NetworkPlugin azure, starting kubelet."
 # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
 netsh advfirewall set allprofiles state off
 # startup the service
-
-# Find if the primary external switch network exists. If not create one.
-# This is done only once in the lifetime of the node
-` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ ` + "`" + `$global:ExternalNetwork
-if (!` + "`" + `$hnsNetwork)
-{
-    Write-Host "Creating a new hns Network"
-    ipmo ` + "`" + `$global:HNSModule
-
-    ` + "`" + `$na = @(Get-NetAdapter -Physical)
-    if (` + "`" + `$na.Count -eq 0)
-    {
-        throw "Failed to find any physical network adapters"
-    }
-
-    # If there is more than one adapter, use the first adapter.
-    ` + "`" + `$managementIP = (Get-NetIPAddress -ifIndex ` + "`" + `$na[0].ifIndex -AddressFamily IPv4).IPAddress
-    ` + "`" + `$adapterName = ` + "`" + `$na[0].Name
-    write-host "Using adapter ` + "`" + `$adapterName with IP address ` + "`" + `$managementIP"
-    ` + "`" + `$mgmtIPAfterNetworkCreate
-
-    ` + "`" + `$stopWatch = New-Object System.Diagnostics.Stopwatch
-    ` + "`" + `$stopWatch.Start()
-    # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName ` + "`" + `$adapterName -Name ` + "`" + `$global:ExternalNetwork -Verbose
-
-    # Wait for the switch to be created and the ip address to be assigned.
-    for (` + "`" + `$i=0;` + "`" + `$i -lt 180;` + "`" + `$i++)
-    {
-        ` + "`" + `$mgmtIPAfterNetworkCreate = Get-NetIPAddress ` + "`" + `$managementIP -ErrorAction SilentlyContinue
-        if (` + "`" + `$mgmtIPAfterNetworkCreate)
-        {
-            break
-        }
-        sleep -Milliseconds 1000
-    }
-
-    ` + "`" + `$stopWatch.Stop()
-    if (-not ` + "`" + `$mgmtIPAfterNetworkCreate)
-    {
-        throw "Failed to find ` + "`" + `$managementIP after creating ` + "`" + `$global:ExternalNetwork network"
-    }
-    write-host "It took ` + "`" + `$(` + "`" + `$StopWatch.Elapsed.Seconds) seconds to create the ` + "`" + `$global:ExternalNetwork network."
-}
 
 # Find if network created by CNI exists, if yes, remove it
 # This is required to keep the network non-persistent behavior
