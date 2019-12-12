@@ -146,6 +146,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.3":         false,
 	"1.15.4":         true,
 	"1.15.5":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
+	"1.15.7":         true,
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -155,6 +156,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.0":         false,
 	"1.16.1":         true,
 	"1.16.2":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
+	"1.16.4":         true,  // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.17.0-alpha.1": true,
 	"1.17.0-alpha.2": true,
 	"1.17.0-alpha.3": true,
@@ -162,6 +164,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.0-beta.2":  true,
 	"1.17.0-rc.1":    true,
 	"1.17.0-rc.2":    true,
+	"1.17.0":         true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release
