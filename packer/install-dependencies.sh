@@ -62,6 +62,7 @@ installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
+1.0.30
 1.0.29
 1.0.28
 "
