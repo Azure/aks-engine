@@ -1,0 +1,41 @@
+{
+	"env": {
+		"REGION_OPTIONS": "eastus,westeurope,southeastasia,westus2"
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes"
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agentpool1",
+					"count": 2,
+					"vmSize": "Standard_D16_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Low"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}
