@@ -198,7 +198,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 	defaultAddonImages := map[string]string{
 		common.TillerAddonName:                 "gcr.io/kubernetes-helm/tiller:v2.13.1",
 		common.ACIConnectorAddonName:           "microsoft/virtual-kubelet:latest",
-		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.13.7",
+		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.13.9",
 		common.BlobfuseFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
 		common.SMBFlexVolumeAddonName:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 		common.KeyVaultFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
