@@ -476,6 +476,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
+		if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
+			return errors.Errorf("Accelerated Networking is currently unstable for Windows + Kubernetes, please set acceleratedNetworkingEnabledWindows to false")
+		}
+
 		if to.Bool(agentPoolProfile.AcceleratedNetworkingEnabled) || to.Bool(agentPoolProfile.AcceleratedNetworkingEnabledWindows) {
 			if a.IsAzureStackCloud() {
 				return errors.Errorf("AcceleratedNetworkingEnabled or AcceleratedNetworkingEnabledWindows shouldn't be set to true as feature is not yet supported on Azure Stack")
