@@ -410,7 +410,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.AzurePolicyAddonName,
-				Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+				Image:          k8sComponents[common.AzurePolicyAddonName],
 				CPURequests:    "30m",
 				MemoryRequests: "50Mi",
 				CPULimits:      "100m",
@@ -418,7 +418,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           common.GatekeeperContainerName,
-				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
+				Image:          k8sComponents[common.GatekeeperContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
 				CPULimits:      "100m",
@@ -438,8 +438,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "node-problem-detector",
-				Image:          "k8s.gcr.io/node-problem-detector:v0.8.0",
+				Name:           common.NodeProblemDetectorAddonName,
+				Image:          k8sComponents[common.NodeProblemDetectorAddonName],
 				CPURequests:    "20m",
 				MemoryRequests: "20Mi",
 				CPULimits:      "200m",

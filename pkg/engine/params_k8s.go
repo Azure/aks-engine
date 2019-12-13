@@ -32,7 +32,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig != nil {
-			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
+			kubeProxySpec := kubernetesImageBase + k8sComponents[common.KubeProxyAddonName]
 			if kubernetesConfig.CustomKubeProxyImage != "" {
 				kubeProxySpec = kubernetesConfig.CustomKubeProxyImage
 			}

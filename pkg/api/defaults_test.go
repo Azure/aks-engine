@@ -218,10 +218,10 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
 		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
-		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
-		common.KubeDNSAddonName:                "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
-		common.CoreDNSAddonName:                "k8s.gcr.io/coredns:1.6.5",
-		common.KubeProxyAddonName:              "k8s.gcr.io/hyperkube-amd64:v1.13.11",
+		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
+		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 	}
 
 	customAddonImages := make(map[string]string)
