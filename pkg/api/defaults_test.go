@@ -214,10 +214,10 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
 		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
 		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
-		common.CalicoAddonName:                 "calico/typha:v3.8.0",
-		common.AzureNetworkPolicyAddonName:     "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-		common.AADPodIdentityAddonName:         "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
-		common.AzurePolicyAddonName:            "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
+		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
+		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
 		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
 		common.KubeDNSAddonName:                "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
 		common.CoreDNSAddonName:                "k8s.gcr.io/coredns:1.6.5",
@@ -265,6 +265,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 			for _, result := range resultAddons {
+				// TODO test more than just the first container image reference
 				if len(result.Containers) > 0 && result.Containers[0].Image != c.expectedImages[result.Name] {
 					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
 				}

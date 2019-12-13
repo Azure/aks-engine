@@ -4333,11 +4333,11 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
 						},
 						{
 							Name:  common.AzureVnetTelemetryContainerName,
-							Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureVnetTelemetryContainerName],
 						},
 					},
 				},
@@ -4548,7 +4548,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
 						},
 					},
 				},
@@ -4641,11 +4641,11 @@ func TestSetAddonsConfig(t *testing.T) {
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.AzureNetworkPolicyAddonName,
-											Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 										},
 										{
 											Name:  common.AzureVnetTelemetryContainerName,
-											Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29",
+											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureVnetTelemetryContainerName],
 										},
 									},
 								},
@@ -4775,7 +4775,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
 						},
 					},
 				},
@@ -5206,23 +5206,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
 						},
 					},
 				},
@@ -5459,23 +5459,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + "node:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
 						},
 					},
 				},
@@ -5690,16 +5690,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:           "nmi",
-							Image:          "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+							Name:           common.NMIContainerName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.NMIContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
 						},
 						{
-							Name:           "mic",
-							Image:          "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2",
+							Name:           common.MICContainerName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.MICContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
@@ -5926,16 +5926,16 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:           "azure-policy",
-							Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+							Name:           common.AzurePolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzurePolicyAddonName],
 							CPURequests:    "30m",
 							MemoryRequests: "50Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "200Mi",
 						},
 						{
-							Name:           "gatekeeper",
-							Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
+							Name:           common.GatekeeperContainerName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "256Mi",
 							CPULimits:      "100m",

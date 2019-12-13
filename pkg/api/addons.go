@@ -316,13 +316,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+				Image: k8sComponents[common.AzureNetworkPolicyAddonName],
 			},
 		},
 	}
 
 	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29"})
+		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: k8sComponents[common.AzureVnetTelemetryContainerName]})
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
@@ -356,23 +356,23 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "calico-typha",
-				Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-typha"],
 			},
 			{
 				Name:  "calico-cni",
-				Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-cni"],
 			},
 			{
 				Name:  "calico-node",
-				Image: specConfig.CalicoImageBase + "node:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-node"],
 			},
 			{
 				Name:  "calico-pod2daemon",
-				Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-pod2daemon"],
 			},
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
-				Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+				Image: specConfig.KubernetesImageBase + k8sComponents["calico-cluster-proportional-autoscaler"],
 			},
 		},
 	}
@@ -382,16 +382,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "nmi",
-				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+				Name:           common.NMIContainerName,
+				Image:          k8sComponents[common.NMIContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "300Mi",
 			},
 			{
-				Name:           "mic",
-				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2",
+				Name:           common.MICContainerName,
+				Image:          k8sComponents[common.MICContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
@@ -409,7 +409,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "azure-policy",
+				Name:           common.AzurePolicyAddonName,
 				Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
 				CPURequests:    "30m",
 				MemoryRequests: "50Mi",
@@ -417,7 +417,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:           "gatekeeper",
+				Name:           common.GatekeeperContainerName,
 				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",

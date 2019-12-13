@@ -152,6 +152,12 @@ const (
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
 	// AzureVnetTelemetryContainerName is the name of the Azure vnet telemetry container in the azure-npm-daemonset addon
 	AzureVnetTelemetryContainerName = "azure-vnet-telemetry-daemonset"
+	// NMIContainerName is the name of the nmi container in the aad-pod-identity addon
+	NMIContainerName = "nmi"
+	// MICContainerName is the name of the mic container in the aad-pod-identity addon
+	MICContainerName = "mic"
+	// GatekeeperContainerName is the name of the gatekeeper container in the azure-policy addon
+	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
 	CloudNodeManagerAddonName = "cloud-node-manager"
 	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
