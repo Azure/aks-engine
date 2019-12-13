@@ -194,7 +194,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+				Image:          k8sComponents[common.KeyVaultFlexVolumeAddonName],
 			},
 		},
 	}
@@ -288,7 +288,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 			},
 		},
 		Config: map[string]string{
@@ -343,7 +343,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.DNSAutoscalerAddonName,
-				Image:          specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
 				CPURequests:    "20m",
 				MemoryRequests: "100Mi",
 			},
