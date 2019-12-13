@@ -198,7 +198,6 @@ type OrchestratorProfile struct {
 	OrchestratorRelease string            `json:"orchestratorRelease,omitempty"`
 	OrchestratorVersion string            `json:"orchestratorVersion,omitempty"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-	DcosConfig          *DcosConfig       `json:"dcosConfig,omitempty"`
 }
 
 // UnmarshalJSON unmarshal json using the default behavior
@@ -214,14 +213,8 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 	// Unmarshal OrchestratorType, format it as well
 	orchestratorType := o.OrchestratorType
 	switch {
-	case strings.EqualFold(orchestratorType, DCOS):
-		o.OrchestratorType = DCOS
-	case strings.EqualFold(orchestratorType, Swarm):
-		o.OrchestratorType = Swarm
 	case strings.EqualFold(orchestratorType, Kubernetes):
 		o.OrchestratorType = Kubernetes
-	case strings.EqualFold(orchestratorType, SwarmMode):
-		o.OrchestratorType = SwarmMode
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)
 	}
@@ -359,28 +352,6 @@ type KubernetesConfig struct {
 type CustomFile struct {
 	Source string `json:"source,omitempty"`
 	Dest   string `json:"dest,omitempty"`
-}
-
-// BootstrapProfile represents the definition of the DCOS bootstrap node used to deploy the cluster
-type BootstrapProfile struct {
-	VMSize       string `json:"vmSize,omitempty"`
-	OSDiskSizeGB int    `json:"osDiskSizeGB,omitempty"`
-	OAuthEnabled bool   `json:"oauthEnabled,omitempty"`
-	StaticIP     string `json:"staticIP,omitempty"`
-	Subnet       string `json:"subnet,omitempty"`
-}
-
-// DcosConfig Configuration for DC/OS
-type DcosConfig struct {
-	DcosBootstrapURL         string            `json:"dcosBootstrapURL,omitempty"`
-	DcosWindowsBootstrapURL  string            `json:"dcosWindowsBootstrapURL,omitempty"`
-	Registry                 string            `json:"registry,omitempty"`
-	RegistryUser             string            `json:"registryUser,omitempty"`
-	RegistryPass             string            `json:"registryPassword,omitempty"`
-	DcosRepositoryURL        string            `json:"dcosRepositoryURL,omitempty"`        // For CI use, you need to specify
-	DcosClusterPackageListID string            `json:"dcosClusterPackageListID,omitempty"` // all three of these items
-	DcosProviderPackageID    string            `json:"dcosProviderPackageID,omitempty"`    // repo url is the location of the build,
-	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
 }
 
 // MasterProfile represents the definition of the master cluster
@@ -843,11 +814,6 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 		}
 	}
 	return false
-}
-
-// IsSwarmMode returns true if this template is for Swarm Mode orchestrator
-func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == SwarmMode
 }
 
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.

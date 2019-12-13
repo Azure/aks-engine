@@ -336,8 +336,6 @@ func GetSupportedVersions(orchType string, isUpdate, hasWindows bool) (versions 
 	switch orchType {
 	case Kubernetes:
 		return GetAllSupportedKubernetesVersions(isUpdate, hasWindows), GetDefaultKubernetesVersion(hasWindows)
-	case DCOS:
-		return AllDCOSSupportedVersions, DCOSDefaultVersion
 	default:
 		return nil, ""
 	}

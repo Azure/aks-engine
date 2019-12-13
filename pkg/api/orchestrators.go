@@ -21,15 +21,9 @@ var versionsMap map[string][]string
 func init() {
 	funcmap = map[string]orchestratorsFunc{
 		Kubernetes: kubernetesInfo,
-		DCOS:       dcosInfo,
-		Swarm:      swarmInfo,
-		SwarmMode:  dockerceInfo,
 	}
 	versionsMap = map[string][]string{
 		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false),
-		DCOS:       common.GetAllSupportedDCOSVersions(),
-		Swarm:      common.GetAllSupportedSwarmVersions(),
-		SwarmMode:  common.GetAllSupportedDockerCEVersions(),
 	}
 }
 
@@ -37,12 +31,6 @@ func validate(orchestrator, version string) (string, error) {
 	switch {
 	case strings.EqualFold(orchestrator, Kubernetes):
 		return Kubernetes, nil
-	case strings.EqualFold(orchestrator, DCOS):
-		return DCOS, nil
-	case strings.EqualFold(orchestrator, Swarm):
-		return Swarm, nil
-	case strings.EqualFold(orchestrator, SwarmMode):
-		return SwarmMode, nil
 	case orchestrator == "":
 		if version != "" {
 			return "", errors.Errorf("Must specify orchestrator for version '%s'", version)
@@ -110,7 +98,7 @@ func GetOrchestratorVersionProfile(orch *OrchestratorProfile, hasWindows bool) (
 		return nil, errors.New("Missing Orchestrator Version")
 	}
 	switch orch.OrchestratorType {
-	case Kubernetes, DCOS:
+	case Kubernetes:
 		arr, err := funcmap[orch.OrchestratorType](orch, hasWindows)
 		if err != nil {
 			return nil, err
@@ -205,103 +193,4 @@ func getKubernetesAvailableUpgradeVersions(orchestratorVersion string, supported
 	}
 	return []string{}, nil
 
-}
-
-func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
-	orchs := []*OrchestratorVersionProfile{}
-	if csOrch.OrchestratorVersion == "" {
-		// get info for all supported versions
-		for _, ver := range common.AllDCOSSupportedVersions {
-			upgrades := dcosUpgrades(&OrchestratorProfile{OrchestratorVersion: ver})
-			orchs = append(orchs,
-				&OrchestratorVersionProfile{
-					OrchestratorProfile: OrchestratorProfile{
-						OrchestratorType:    DCOS,
-						OrchestratorVersion: ver,
-					},
-					Default:  ver == common.DCOSDefaultVersion,
-					Upgrades: upgrades,
-				})
-		}
-	} else {
-		if !isVersionSupported(csOrch) {
-			return nil, errors.Errorf("DCOS version %s is not supported", csOrch.OrchestratorVersion)
-		}
-
-		// get info for the specified version
-		upgrades := dcosUpgrades(csOrch)
-		orchs = append(orchs,
-			&OrchestratorVersionProfile{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    DCOS,
-					OrchestratorVersion: csOrch.OrchestratorVersion,
-				},
-				Default:  csOrch.OrchestratorVersion == common.DCOSDefaultVersion,
-				Upgrades: upgrades,
-			})
-	}
-	return orchs, nil
-}
-
-func dcosUpgrades(csOrch *OrchestratorProfile) []*OrchestratorProfile {
-	ret := []*OrchestratorProfile{}
-
-	if csOrch.OrchestratorVersion == common.DCOSVersion1Dot11Dot0 {
-		ret = append(ret, &OrchestratorProfile{
-			OrchestratorType:    DCOS,
-			OrchestratorVersion: common.DCOSVersion1Dot11Dot2,
-		})
-	}
-	return ret
-}
-
-func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
-	if csOrch.OrchestratorVersion == "" {
-		return []*OrchestratorVersionProfile{
-			{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    Swarm,
-					OrchestratorVersion: SwarmVersion,
-				},
-			},
-		}, nil
-	}
-
-	if !isVersionSupported(csOrch) {
-		return nil, errors.Errorf("Swarm version %s is not supported", csOrch.OrchestratorVersion)
-	}
-	return []*OrchestratorVersionProfile{
-		{
-			OrchestratorProfile: OrchestratorProfile{
-				OrchestratorType:    Swarm,
-				OrchestratorVersion: csOrch.OrchestratorVersion,
-			},
-		},
-	}, nil
-}
-
-func dockerceInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
-
-	if csOrch.OrchestratorVersion == "" {
-		return []*OrchestratorVersionProfile{
-			{
-				OrchestratorProfile: OrchestratorProfile{
-					OrchestratorType:    SwarmMode,
-					OrchestratorVersion: DockerCEVersion,
-				},
-			},
-		}, nil
-	}
-
-	if !isVersionSupported(csOrch) {
-		return nil, errors.Errorf("Docker CE version %s is not supported", csOrch.OrchestratorVersion)
-	}
-	return []*OrchestratorVersionProfile{
-		{
-			OrchestratorProfile: OrchestratorProfile{
-				OrchestratorType:    SwarmMode,
-				OrchestratorVersion: csOrch.OrchestratorVersion,
-			},
-		},
-	}, nil
 }

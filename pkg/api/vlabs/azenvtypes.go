@@ -6,30 +6,9 @@ package vlabs
 //AzureEnvironmentSpecConfig is the overall configuration differences in different cloud environments.
 type AzureEnvironmentSpecConfig struct {
 	CloudName            string                        `json:"cloudName,omitempty"`
-	DockerSpecConfig     DockerSpecConfig              `json:"dockerSpecConfig,omitempty"`
 	KubernetesSpecConfig KubernetesSpecConfig          `json:"kubernetesSpecConfig,omitempty"`
-	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
-}
-
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string `json:"dockerEngineRepo,omitempty"`
-	DockerComposeDownloadURL string `json:"dockerComposeDownloadURL,omitempty"`
-}
-
-//DCOSSpecConfig is the configurations of DCOS
-type DCOSSpecConfig struct {
-	DCOS188BootstrapDownloadURL     string
-	DCOS190BootstrapDownloadURL     string
-	DCOS198BootstrapDownloadURL     string
-	DCOS110BootstrapDownloadURL     string
-	DCOS111BootstrapDownloadURL     string
-	DCOSWindowsBootstrapDownloadURL string
-	DcosRepositoryURL               string // For custom install, for example CI, need these three addributes
-	DcosClusterPackageListID        string // the id of the package list file
-	DcosProviderPackageID           string // the id of the dcos-provider-xxx package
 }
 
 //KubernetesSpecConfig is the kubernetes container images used.

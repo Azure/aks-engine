@@ -17,25 +17,6 @@ type VlabsContainerService struct {
 	*vlabs.ContainerService
 }
 
-//DockerSpecConfig is the configurations of docker
-type DockerSpecConfig struct {
-	DockerEngineRepo         string
-	DockerComposeDownloadURL string
-}
-
-//DCOSSpecConfig is the configurations of DCOS
-type DCOSSpecConfig struct {
-	DCOS188BootstrapDownloadURL     string
-	DCOS190BootstrapDownloadURL     string
-	DCOS198BootstrapDownloadURL     string
-	DCOS110BootstrapDownloadURL     string
-	DCOS111BootstrapDownloadURL     string
-	DCOSWindowsBootstrapDownloadURL string
-	DcosRepositoryURL               string // For custom install, for example CI, need these three addributes
-	DcosClusterPackageListID        string // the id of the package list file
-	DcosProviderPackageID           string // the id of the dcos-provider-xxx package
-}
-
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
 	KubernetesImageBase              string

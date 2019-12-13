@@ -148,12 +148,6 @@ func (p *Properties) SetAzureStackCloudSpec(params AzureStackCloudSpecParams) er
 			ascc := p.CustomCloudProfile.AzureEnvironmentSpecConfig
 			azureStackCloudSpec.CloudName = helpers.EnsureString(ascc.CloudName, azureStackCloudSpec.CloudName)
 
-			// DockerSpecConfig
-			asccDockerSpecConfig := ascc.DockerSpecConfig
-			azsDockerSpecConfig := azureStackCloudSpec.DockerSpecConfig
-			azureStackCloudSpec.DockerSpecConfig.DockerComposeDownloadURL = helpers.EnsureString(asccDockerSpecConfig.DockerComposeDownloadURL, azsDockerSpecConfig.DockerComposeDownloadURL)
-			azureStackCloudSpec.DockerSpecConfig.DockerEngineRepo = helpers.EnsureString(asccDockerSpecConfig.DockerEngineRepo, azsDockerSpecConfig.DockerComposeDownloadURL)
-
 			//KubernetesSpecConfig
 			asccKubernetesSpecConfig := ascc.KubernetesSpecConfig
 			azsKubernetesSpecConfig := azureStackCloudSpec.KubernetesSpecConfig

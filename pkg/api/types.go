@@ -249,7 +249,6 @@ type OrchestratorProfile struct {
 	OrchestratorType    string            `json:"orchestratorType"`
 	OrchestratorVersion string            `json:"orchestratorVersion"`
 	KubernetesConfig    *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-	DcosConfig          *DcosConfig       `json:"dcosConfig,omitempty"`
 }
 
 // OrchestratorVersionProfile contains information of a supported orchestrator version:
@@ -456,38 +455,6 @@ type KubernetesConfig struct {
 type CustomFile struct {
 	Source string `json:"source,omitempty"`
 	Dest   string `json:"dest,omitempty"`
-}
-
-// BootstrapProfile represents the definition of the DCOS bootstrap node used to deploy the cluster
-type BootstrapProfile struct {
-	VMSize       string `json:"vmSize,omitempty"`
-	OSDiskSizeGB int    `json:"osDiskSizeGB,omitempty"`
-	OAuthEnabled bool   `json:"oauthEnabled,omitempty"`
-	StaticIP     string `json:"staticIP,omitempty"`
-	Subnet       string `json:"subnet,omitempty"`
-}
-
-// DcosConfig Configuration for DC/OS
-type DcosConfig struct {
-	DcosBootstrapURL         string            `json:"dcosBootstrapURL,omitempty"`
-	DcosWindowsBootstrapURL  string            `json:"dcosWindowsBootstrapURL,omitempty"`
-	Registry                 string            `json:"registry,omitempty"`
-	RegistryUser             string            `json:"registryUser,omitempty"`
-	RegistryPass             string            `json:"registryPassword,omitempty"`
-	DcosRepositoryURL        string            `json:"dcosRepositoryURL,omitempty"`        // For CI use, you need to specify
-	DcosClusterPackageListID string            `json:"dcosClusterPackageListID,omitempty"` // all three of these items
-	DcosProviderPackageID    string            `json:"dcosProviderPackageID,omitempty"`    // repo url is the location of the build,
-	BootstrapProfile         *BootstrapProfile `json:"bootstrapProfile,omitempty"`
-}
-
-// HasPrivateRegistry returns if a private registry is specified
-func (d *DcosConfig) HasPrivateRegistry() bool {
-	return len(d.Registry) > 0
-}
-
-// HasBootstrap returns if a bootstrap profile is specified
-func (d *DcosConfig) HasBootstrap() bool {
-	return d.BootstrapProfile != nil
 }
 
 // MasterProfile represents the definition of the master cluster
@@ -1640,26 +1607,9 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 	return false
 }
 
-// IsSwarmMode returns true if this template is for Swarm Mode orchestrator
-func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == SwarmMode
-}
-
 // IsKubernetes returns true if this template is for Kubernetes orchestrator
 func (o *OrchestratorProfile) IsKubernetes() bool {
 	return o.OrchestratorType == Kubernetes
-}
-
-// IsDCOS returns true if this template is for DCOS orchestrator
-func (o *OrchestratorProfile) IsDCOS() bool {
-	return o.OrchestratorType == DCOS
-}
-
-// IsDCOS19 returns true if this is a DCOS 1.9 orchestrator using the latest version
-func (o *OrchestratorProfile) IsDCOS19() bool {
-	return o.OrchestratorType == DCOS &&
-		(o.OrchestratorVersion == common.DCOSVersion1Dot9Dot0 ||
-			o.OrchestratorVersion == common.DCOSVersion1Dot9Dot8)
 }
 
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
