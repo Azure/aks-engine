@@ -164,7 +164,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+				Image:          k8sComponents[common.BlobfuseFlexVolumeAddonName],
 			},
 		},
 	}
@@ -179,7 +179,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+				Image:          k8sComponents[common.SMBFlexVolumeAddonName],
 			},
 		},
 	}

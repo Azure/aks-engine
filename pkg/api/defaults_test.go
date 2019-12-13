@@ -194,12 +194,14 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
+	kubernetesVersion := "1.13.11"
 	customImage := "myimage"
+	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
-		common.TillerAddonName:                 "gcr.io/kubernetes-helm/tiller:v2.13.1",
-		common.ACIConnectorAddonName:           "microsoft/virtual-kubelet:latest",
-		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.13.9",
-		common.BlobfuseFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+		common.TillerAddonName:                 specConfig.TillerImageBase + K8sComponentsByVersionMap[kubernetesVersion][common.TillerAddonName],
+		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap[kubernetesVersion][common.ACIConnectorAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + K8sComponentsByVersionMap[kubernetesVersion][common.ClusterAutoscalerAddonName],
+		common.BlobfuseFlexVolumeAddonName:     K8sComponentsByVersionMap[kubernetesVersion][common.BlobfuseFlexVolumeAddonName],
 		common.SMBFlexVolumeAddonName:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
 		common.KeyVaultFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
 		common.DashboardAddonName:              "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
@@ -256,7 +258,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.13.11")
+			mockCS := getMockBaseContainerService(kubernetesVersion)
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
