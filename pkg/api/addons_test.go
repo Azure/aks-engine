@@ -224,119 +224,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4"),
 		},
 		{
 			name: "tiller addon is enabled",
@@ -363,11 +252,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.HeapsterAddonName,
-					Enabled: to.BoolPtr(false),
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.TillerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -385,117 +270,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"max-history": strconv.Itoa(0),
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "ACI Connector addon enabled",
@@ -522,7 +297,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ACIConnectorAddonName,
 					Enabled: to.BoolPtr(true),
@@ -543,117 +318,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled",
@@ -686,7 +351,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -746,117 +411,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled - update",
@@ -893,7 +448,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -953,121 +508,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.SMBFlexVolumeAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled on cluster with multiple pools",
@@ -1108,7 +549,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1182,117 +623,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled on cluster with multiple pools - update",
@@ -1337,7 +668,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1411,121 +742,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.SMBFlexVolumeAddonName,
-					Enabled: to.BoolPtr(false),
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with configuration",
@@ -1625,7 +842,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1699,117 +916,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with configuration - update",
@@ -1909,7 +1016,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -1983,117 +1090,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with mixed configuration plus defaults",
@@ -2157,7 +1154,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2217,117 +1214,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with mixed configuration plus defaults - update",
@@ -2391,7 +1278,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ClusterAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2451,121 +1338,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.NodeProblemDetectorAddonName,
-					Enabled: to.BoolPtr(DefaultNodeProblemDetectorAddonEnabled),
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "smb-flexvolume addon enabled",
@@ -2592,21 +1365,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.SMBFlexVolumeAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2621,103 +1380,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "rescheduler addon enabled",
@@ -2744,49 +1407,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ReschedulerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2801,75 +1422,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "nvidia addon enabled",
@@ -2895,59 +1448,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.NVIDIADevicePluginAddonName,
 					Enabled: to.BoolPtr(true),
@@ -2962,65 +1463,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "container-monitoring addon enabled",
@@ -3047,59 +1490,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.ContainerMonitoringAddonName,
 					Enabled: to.BoolPtr(true),
@@ -3121,65 +1512,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "Azure Network Policy addon enabled",
@@ -3201,88 +1534,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureNetworkPolicyAddonName,
 					Enabled: to.BoolPtr(true),
@@ -3297,36 +1549,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "Azure Network Policy addon enabled - 1.16",
@@ -3348,128 +1571,18 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.0"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureNetworkPolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.16.0"),
 		},
 		{
 			name: "Azure Network Policy addon enabled - 1.16 upgrade",
@@ -3507,128 +1620,18 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.0"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureNetworkPolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.16.0"),
 		},
 		{
 			name: "dns-autoscaler addon enabled",
@@ -3655,88 +1658,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.DNSAutoscalerAddonName,
 					Enabled: to.BoolPtr(true),
@@ -3749,36 +1671,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "calico addon enabled",
@@ -3800,78 +1693,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
@@ -3898,36 +1720,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4")),
 		},
 		{
 			name: "calico addon back-compat",
@@ -3977,78 +1770,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4075,36 +1797,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4")),
 		},
 		{
 			name: "aad-pod-identity enabled",
@@ -4131,88 +1824,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AADPodIdentityAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4235,36 +1847,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "azure-policy addon enabled",
@@ -4291,88 +1874,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
@@ -4399,36 +1901,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "cilium addons",
@@ -4448,90 +1921,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
 			name: "Azure Stack addons",
@@ -4671,91 +2062,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.BlobfuseFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
 			name: "azure disk and azure file csi driver enabled for k8s >= 1.13.0 and UseCloudControllerManager is true",
@@ -4777,115 +2085,34 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureFileCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azurefile-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+							Name:  common.CSIAzureFileContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -4894,61 +2121,32 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azuredisk-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+							Name:  common.CSIAzureDiskContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16 and useCloudControllerManager is true",
@@ -4970,115 +2168,34 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.1"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.1"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.1"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureFileCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azurefile-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+							Name:  common.CSIAzureFileContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -5087,61 +2204,36 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azuredisk-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+							Name:  common.CSIAzureDiskContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
 				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CoreDNSAddonName],
-						},
-					},
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.16.1"),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.17.0 and useCloudControllerManager is true",
@@ -5163,115 +2255,34 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.17.0"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.17.0"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.17.0"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureFileCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azurefile-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+							Name:  common.CSIAzureFileContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -5280,61 +2291,36 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azuredisk-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+							Name:  common.CSIAzureDiskContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
 				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CoreDNSAddonName],
-						},
-					},
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.17.0"),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s >= 1.17.0 - upgrade",
@@ -5370,115 +2356,34 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.17.0"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.17.0"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.17.0"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureFileCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azurefile-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+							Name:  common.CSIAzureFileContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -5487,61 +2392,36 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azuredisk-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+							Name:  common.CSIAzureDiskContainerName,
+							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
 				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CoreDNSAddonName],
-						},
-					},
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.17.0"),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16.1 upgrade",
@@ -5577,115 +2457,34 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.1"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.16.1"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.16.1"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AzureFileCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azurefile-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+							Name:  common.CSIAzureFileContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -5694,61 +2493,36 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "csi-provisioner",
-							Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+							Name:  common.CSIProvisionerContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
-							Name:  "csi-attacher",
-							Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+							Name:  common.CSIAttacherContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
-							Name:  "csi-cluster-driver-registrar",
-							Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+							Name:  common.CSIClusterDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
-							Name:  "livenessprobe",
-							Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+							Name:  common.CSILivenessProbeContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
-							Name:  "csi-node-driver-registrar",
-							Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+							Name:  common.CSINodeDriverRegistrarContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
-							Name:  "azuredisk-csi",
-							Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+							Name:  common.CSIAzureDiskContainerName,
+							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
 				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CoreDNSAddonName],
-						},
-					},
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.16.1"),
 		},
 		{
 			name: "upgrade w/ no kube-dns or coredns specified", // back-compat support for clusters configured prior to user-configurable coredns and kube-dns addons
@@ -5769,119 +2543,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.13.11"),
 		},
 		{
 			name: "upgrade w/ manual kube-dns enabled",
@@ -5908,88 +2571,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: omitFromAddons([]string{common.CoreDNSAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(true),
@@ -6012,22 +2594,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.13.11")),
 		},
 		{
 			name: "upgrade w/ manual coredns enabled",
@@ -6053,119 +2620,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: true,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.13.11"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.13.11"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(true),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.13.11"),
 		},
 		{
 			name: "kube-dns enabled",
@@ -6192,88 +2648,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
+			expectedAddons: omitFromAddons([]string{common.CoreDNSAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.KubeDNSAddonName,
 					Enabled: to.BoolPtr(true),
@@ -6296,22 +2671,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			}, "1.15.4")),
 		},
 		{
 			name: "coredns enabled",
@@ -6337,119 +2697,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4"),
 		},
 		{
 			name: "kube-proxy w/ user configuration",
@@ -6487,102 +2736,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.KubeProxyAddonName,
 					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
@@ -6598,7 +2752,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			},
+			}, "1.15.4"),
 		},
 		{
 			name: "kube-proxy disabled",
@@ -6624,104 +2778,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.KubeProxyAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
 			name: "node-problem-detector addon enabled",
@@ -6748,117 +2806,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: []KubernetesAddon{
-				{
-					Name:    common.BlobfuseFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.BlobfuseFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.BlobfuseFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KeyVaultFlexVolumeAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.KeyVaultFlexVolumeAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "100Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.KeyVaultFlexVolumeAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DashboardAddonName,
-							CPURequests:    "300m",
-							MemoryRequests: "150Mi",
-							CPULimits:      "300m",
-							MemoryLimits:   "150Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DashboardAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.MetricsServerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.MetricsServerAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.MetricsServerAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr": DefaultVNETCIDR,
-						"non-masq-cni-cidr":   DefaultCNICIDR,
-						"enable-ipv6":         "false",
-					},
-				},
-				{
-					Name:    common.AzureCNINetworkMonitorAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap["1.15.4"][common.AzureCNINetworkMonitorAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesSubnet,
-						"proxy-mode":   string(KubeProxyModeIPTables),
-						"featureGates": "{}",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeProxyAddonName],
-						},
-					},
-				},
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.NodeProblemDetectorAddonName,
 					Enabled: to.BoolPtr(true),
@@ -6879,7 +2827,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			},
+			}, "1.15.4"),
 		},
 	}
 
@@ -6918,6 +2866,9 @@ func TestSetAddonsConfig(t *testing.T) {
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
+					if i := getAddonsIndexByName(test.expectedAddons, addonName); i == -1 {
+						t.Fatalf("got addon %s that we weren't expecting", addon.Name)
+					}
 					expectedAddon := test.expectedAddons[getAddonsIndexByName(test.expectedAddons, addonName)]
 					if to.Bool(addon.Enabled) != to.Bool(expectedAddon.Enabled) {
 						t.Fatalf("expected addon %s to have Enabled value %t, instead got %t", expectedAddon.Name, to.Bool(expectedAddon.Enabled), to.Bool(addon.Enabled))
@@ -7320,5 +3271,161 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 				t.Errorf("expected GetClusterAutoscalerNodesConfig to return %s, instead got %s", c.expectedNodesConfig, result)
 			}
 		})
+	}
+}
+
+func concatenateDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
+	defaults := getDefaultAddons(version)
+	defaults = append(defaults, addons...)
+	return defaults
+}
+
+func overwriteDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
+	var ret []KubernetesAddon
+	defaults := getDefaultAddons(version)
+	for _, addonOverride := range addons {
+		for _, addon := range defaults {
+			if addon.Name == addonOverride.Name {
+				ret = append(ret, addonOverride)
+			} else {
+				ret = append(ret, addon)
+			}
+		}
+	}
+	return ret
+}
+
+func omitFromAddons(addons []string, completeSet []KubernetesAddon) []KubernetesAddon {
+	var ret []KubernetesAddon
+	for _, addon := range completeSet {
+		if !isInStrSlice(addon.Name, addons) {
+			ret = append(ret, addon)
+		}
+	}
+	return ret
+}
+
+func isInStrSlice(name string, names []string) bool {
+	for _, n := range names {
+		if name == n {
+			return true
+		}
+	}
+	return false
+}
+
+func getDefaultAddons(version string) []KubernetesAddon {
+	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	return []KubernetesAddon{
+		{
+			Name:    common.BlobfuseFlexVolumeAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.BlobfuseFlexVolumeAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "100Mi",
+					Image:          K8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.KeyVaultFlexVolumeAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.KeyVaultFlexVolumeAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "100Mi",
+					Image:          K8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.DashboardAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.DashboardAddonName,
+					CPURequests:    "300m",
+					MemoryRequests: "150Mi",
+					CPULimits:      "300m",
+					MemoryLimits:   "150Mi",
+					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.DashboardAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.MetricsServerAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:  common.MetricsServerAddonName,
+					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.MetricsServerAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.IPMASQAgentAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "50Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "250Mi",
+					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.IPMASQAgentAddonName],
+				},
+			},
+			Config: map[string]string{
+				"non-masquerade-cidr": DefaultVNETCIDR,
+				"non-masq-cni-cidr":   DefaultCNICIDR,
+				"enable-ipv6":         "false",
+			},
+		},
+		{
+			Name:    common.AzureCNINetworkMonitorAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:  common.AzureCNINetworkMonitorAddonName,
+					Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.CoreDNSAddonName,
+			Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+			Config: map[string]string{
+				"domain":    "cluster.local",
+				"clusterIP": DefaultKubernetesDNSServiceIP,
+			},
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:  common.CoreDNSAddonName,
+					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.CoreDNSAddonName],
+				},
+			},
+		},
+		{
+			Name:    common.KubeProxyAddonName,
+			Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+			Config: map[string]string{
+				"cluster-cidr": DefaultKubernetesSubnet,
+				"proxy-mode":   string(KubeProxyModeIPTables),
+				"featureGates": "{}",
+			},
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:  common.KubeProxyAddonName,
+					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.KubeProxyAddonName],
+				},
+			},
+		},
 	}
 }

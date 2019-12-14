@@ -463,28 +463,28 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "csi-provisioner",
-				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+				Name:  common.CSIProvisionerContainerName,
+				Image: k8sComponents[common.CSIProvisionerContainerName],
 			},
 			{
-				Name:  "csi-attacher",
-				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+				Name:  common.CSIAttacherContainerName,
+				Image: k8sComponents[common.CSIAttacherContainerName],
 			},
 			{
-				Name:  "csi-cluster-driver-registrar",
-				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+				Name:  common.CSIClusterDriverRegistrarContainerName,
+				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
 			},
 			{
-				Name:  "livenessprobe",
-				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+				Name:  common.CSILivenessProbeContainerName,
+				Image: k8sComponents[common.CSILivenessProbeContainerName],
 			},
 			{
-				Name:  "csi-node-driver-registrar",
-				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+				Name:  common.CSINodeDriverRegistrarContainerName,
+				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
 			},
 			{
-				Name:  "azuredisk-csi",
-				Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+				Name:  common.CSIAzureDiskContainerName,
+				Image: k8sComponents[common.CSIAzureDiskContainerName],
 			},
 		},
 	}
@@ -494,28 +494,28 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "csi-provisioner",
-				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+				Name:  common.CSIProvisionerContainerName,
+				Image: k8sComponents[common.CSIProvisionerContainerName],
 			},
 			{
-				Name:  "csi-attacher",
-				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+				Name:  common.CSIAttacherContainerName,
+				Image: k8sComponents[common.CSIAttacherContainerName],
 			},
 			{
-				Name:  "csi-cluster-driver-registrar",
-				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+				Name:  common.CSIClusterDriverRegistrarContainerName,
+				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
 			},
 			{
-				Name:  "livenessprobe",
-				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+				Name:  common.CSILivenessProbeContainerName,
+				Image: k8sComponents[common.CSILivenessProbeContainerName],
 			},
 			{
-				Name:  "csi-node-driver-registrar",
-				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+				Name:  common.CSINodeDriverRegistrarContainerName,
+				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
 			},
 			{
-				Name:  "azurefile-csi",
-				Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+				Name:  common.CSIAzureFileContainerName,
+				Image: k8sComponents[common.CSIAzureFileContainerName],
 			},
 		},
 	}
