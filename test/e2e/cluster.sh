@@ -99,6 +99,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
       done
     done
   fi
+  git reset --hard
   git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
   git fetch $UPGRADE_FORK
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
