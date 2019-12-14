@@ -48,7 +48,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "KubernetesConfig can be specified only when OrchestratorType is Kubernetes",
+			expectedError: "OrchestratorProfile has unknown orchestrator: DCOS",
 		},
 		"should error when KubernetesConfig has invalid etcd version": {
 			properties: &Properties{

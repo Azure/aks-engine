@@ -199,7 +199,7 @@ const jsonWithTypo = `
 	"apiVersion": "ignored",
 	"properties": {
 	  "orchestratorProfile": {
-		"orchestratorType": "DCOS"
+		"orchestratorType": "Kubernetes"
 	  },
 	  "masterProfile": {
 		"count": 1,
