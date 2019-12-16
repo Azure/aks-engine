@@ -540,7 +540,7 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 // validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
 func (dc *deployCmd) validateOSBaseImage() error {
 	if dc.containerService.Properties.IsAzureStackCloud() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 		if err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client); err != nil {
 			return errors.Wrap(err, "OS base image not available in target cloud")
