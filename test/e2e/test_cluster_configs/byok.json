@@ -1,6 +1,7 @@
 {
 	"env": {
-		"REGION_OPTIONS": "centraluseuap"
+		"REGION_OPTIONS": "centraluseuap",
+		"SKIP_TESTS": "true"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
