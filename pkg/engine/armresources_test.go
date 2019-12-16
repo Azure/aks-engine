@@ -28,6 +28,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 	var cs api.ContainerService
 
 	json.Unmarshal([]byte(apiModelStr), &cs)
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 
 	armResources := GenerateARMResources(&cs)
 
@@ -707,6 +708,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 	var cs api.ContainerService
 
 	json.Unmarshal([]byte(apiModelStr), &cs)
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 
 	armResources := GenerateARMResources(&cs)
 
@@ -1257,6 +1259,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 	var cs api.ContainerService
 
 	json.Unmarshal([]byte(apiModelStr), &cs)
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 
 	armResources := GenerateARMResources(&cs)
 

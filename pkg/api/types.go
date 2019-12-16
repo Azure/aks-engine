@@ -492,34 +492,35 @@ func (d *DcosConfig) HasBootstrap() bool {
 
 // MasterProfile represents the definition of the master cluster
 type MasterProfile struct {
-	Count                    int               `json:"count"`
-	DNSPrefix                string            `json:"dnsPrefix"`
-	SubjectAltNames          []string          `json:"subjectAltNames"`
-	VMSize                   string            `json:"vmSize"`
-	OSDiskSizeGB             int               `json:"osDiskSizeGB,omitempty"`
-	VnetSubnetID             string            `json:"vnetSubnetID,omitempty"`
-	VnetCidr                 string            `json:"vnetCidr,omitempty"`
-	AgentVnetSubnetID        string            `json:"agentVnetSubnetID,omitempty"`
-	FirstConsecutiveStaticIP string            `json:"firstConsecutiveStaticIP,omitempty"`
-	Subnet                   string            `json:"subnet"`
-	SubnetIPv6               string            `json:"subnetIPv6"`
-	IPAddressCount           int               `json:"ipAddressCount,omitempty"`
-	StorageProfile           string            `json:"storageProfile,omitempty"`
-	HTTPSourceAddressPrefix  string            `json:"HTTPSourceAddressPrefix,omitempty"`
-	OAuthEnabled             bool              `json:"oauthEnabled"`
-	PreprovisionExtension    *Extension        `json:"preProvisionExtension"`
-	Extensions               []Extension       `json:"extensions"`
-	Distro                   Distro            `json:"distro,omitempty"`
-	KubernetesConfig         *KubernetesConfig `json:"kubernetesConfig,omitempty"`
-	ImageRef                 *ImageReference   `json:"imageReference,omitempty"`
-	CustomFiles              *[]CustomFile     `json:"customFiles,omitempty"`
-	AvailabilityProfile      string            `json:"availabilityProfile"`
-	PlatformFaultDomainCount *int              `json:"platformFaultDomainCount"`
-	AgentSubnet              string            `json:"agentSubnet,omitempty"`
-	AvailabilityZones        []string          `json:"availabilityZones,omitempty"`
-	SinglePlacementGroup     *bool             `json:"singlePlacementGroup,omitempty"`
-	AuditDEnabled            *bool             `json:"auditDEnabled,omitempty"`
-	CustomVMTags             map[string]string `json:"customVMTags,omitempty"`
+	Count                     int               `json:"count"`
+	DNSPrefix                 string            `json:"dnsPrefix"`
+	SubjectAltNames           []string          `json:"subjectAltNames"`
+	VMSize                    string            `json:"vmSize"`
+	OSDiskSizeGB              int               `json:"osDiskSizeGB,omitempty"`
+	VnetSubnetID              string            `json:"vnetSubnetID,omitempty"`
+	VnetCidr                  string            `json:"vnetCidr,omitempty"`
+	AgentVnetSubnetID         string            `json:"agentVnetSubnetID,omitempty"`
+	FirstConsecutiveStaticIP  string            `json:"firstConsecutiveStaticIP,omitempty"`
+	Subnet                    string            `json:"subnet"`
+	SubnetIPv6                string            `json:"subnetIPv6"`
+	IPAddressCount            int               `json:"ipAddressCount,omitempty"`
+	StorageProfile            string            `json:"storageProfile,omitempty"`
+	HTTPSourceAddressPrefix   string            `json:"HTTPSourceAddressPrefix,omitempty"`
+	OAuthEnabled              bool              `json:"oauthEnabled"`
+	PreprovisionExtension     *Extension        `json:"preProvisionExtension"`
+	Extensions                []Extension       `json:"extensions"`
+	Distro                    Distro            `json:"distro,omitempty"`
+	KubernetesConfig          *KubernetesConfig `json:"kubernetesConfig,omitempty"`
+	ImageRef                  *ImageReference   `json:"imageReference,omitempty"`
+	CustomFiles               *[]CustomFile     `json:"customFiles,omitempty"`
+	AvailabilityProfile       string            `json:"availabilityProfile"`
+	PlatformFaultDomainCount  *int              `json:"platformFaultDomainCount"`
+	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
+	AgentSubnet               string            `json:"agentSubnet,omitempty"`
+	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
+	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
+	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
@@ -591,6 +592,7 @@ type AgentPoolProfile struct {
 	EnableAutoScaling                   *bool                `json:"enableAutoScaling,omitempty"`
 	AvailabilityZones                   []string             `json:"availabilityZones,omitempty"`
 	PlatformFaultDomainCount            *int                 `json:"platformFaultDomainCount"`
+	PlatformUpdateDomainCount           *int                 `json:"platformUpdateDomainCount"`
 	SinglePlacementGroup                *bool                `json:"singlePlacementGroup,omitempty"`
 	VnetCidrs                           []string             `json:"vnetCidrs,omitempty"`
 	PreserveNodesProperties             *bool                `json:"preserveNodesProperties,omitempty"`

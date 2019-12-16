@@ -614,6 +614,9 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.IsAzureStackCloud() && p.MasterProfile.PlatformFaultDomainCount == nil {
 		p.MasterProfile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
 	}
+	if p.MasterProfile.PlatformUpdateDomainCount == nil {
+		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
@@ -643,6 +646,9 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		// Update default fault domain value for Azure Stack
 		if p.IsAzureStackCloud() && profile.PlatformFaultDomainCount == nil {
 			profile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
+		}
+		if profile.PlatformUpdateDomainCount == nil {
+			profile.PlatformUpdateDomainCount = to.IntPtr(3)
 		}
 
 		// Accelerated Networking is supported on most general purpose and compute-optimized instance sizes with 2 or more vCPUs.
