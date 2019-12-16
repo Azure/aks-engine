@@ -24,10 +24,11 @@ import (
 )
 
 var (
-	validate        *validator.Validate
-	keyvaultIDRegex *regexp.Regexp
-	labelValueRegex *regexp.Regexp
-	labelKeyRegex   *regexp.Regexp
+	validate                 *validator.Validate
+	keyvaultIDRegex          *regexp.Regexp
+	labelValueRegex          *regexp.Regexp
+	labelKeyRegex            *regexp.Regexp
+	diskEncryptionSetIDRegex *regexp.Regexp
 	// Any version has to be mirrored in https://acs-mirror.azureedge.net/github-coreos/etcd-v[Version]-linux-amd64.tar.gz
 	etcdValidVersions = [...]string{"2.2.5", "2.3.0", "2.3.1", "2.3.2", "2.3.3", "2.3.4", "2.3.5", "2.3.6", "2.3.7", "2.3.8",
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
@@ -107,6 +108,7 @@ func init() {
 	keyvaultIDRegex = regexp.MustCompile(`^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.KeyVault/vaults/[^/\s]+$`)
 	labelValueRegex = regexp.MustCompile(labelValueFormat)
 	labelKeyRegex = regexp.MustCompile(labelKeyFormat)
+	diskEncryptionSetIDRegex = regexp.MustCompile(`^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/diskEncryptionSets/[^/\s]+$`)
 }
 
 // Validate implements APIObject
@@ -451,7 +453,6 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 	profileNames := make(map[string]bool)
 	for i, agentPoolProfile := range a.AgentPoolProfiles {
-
 		if e := validatePoolName(agentPoolProfile.Name); e != nil {
 			return e
 		}
@@ -1124,6 +1125,12 @@ func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorTy
 		}
 		if a.StorageProfile == StorageAccount && (a.AvailabilityProfile == VirtualMachineScaleSets) {
 			return errors.Errorf("VirtualMachineScaleSets does not support storage account attached disks.  Instead specify 'StorageAccount': '%s' or specify AvailabilityProfile '%s'", ManagedDisks, AvailabilitySet)
+		}
+	}
+
+	if a.DiskEncryptionSetID != "" {
+		if !diskEncryptionSetIDRegex.MatchString(a.DiskEncryptionSetID) {
+			return errors.Errorf("DiskEncryptionSetID(%s) is of incorrect format, correct format: %s", a.DiskEncryptionSetID, diskEncryptionSetIDRegex.String())
 		}
 	}
 	return nil

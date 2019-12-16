@@ -48,6 +48,7 @@ type Config struct {
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
 	Distro                         string `envconfig:"DISTRO"`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
+	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
 	TenantID                       string `envconfig:"TENANT_ID"`
 	ImageName                      string `envconfig:"IMAGE_NAME"`
 	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
@@ -232,6 +233,14 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.FeatureFlags = new(vlabs.FeatureFlags)
 		}
 		prop.FeatureFlags.EnableTelemetry = true
+	}
+
+	for _, pool := range prop.AgentPoolProfiles {
+		if pool.DiskEncryptionSetID != "" {
+			str := strings.Replace(pool.DiskEncryptionSetID, "SUB_ID", config.SubscriptionID, 1)
+			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
+			pool.DiskEncryptionSetID = str
+		}
 	}
 
 	return &Engine{
