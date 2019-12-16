@@ -32,6 +32,7 @@ func TestCreateKubernetesMasterResourcesPVC(t *testing.T) {
 			StorageProfile: api.StorageAccount,
 		},
 	}
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 
 	actualResources := createKubernetesMasterResourcesVMAS(&cs)
 

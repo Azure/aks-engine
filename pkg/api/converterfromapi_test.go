@@ -690,6 +690,22 @@ func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	}
 }
 
+func TestPlatformUpdateDomainCountToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
+	cs.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount = to.IntPtr(3)
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
+		t.Errorf("expected the master profile platform FD to be 3")
+	}
+	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
+		t.Errorf("expected the agent pool profile platform FD to be 3")
+	}
+}
+
 func TestConvertTelemetryProfileToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	cs.Properties.TelemetryProfile = &TelemetryProfile{
