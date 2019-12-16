@@ -84,7 +84,8 @@ function Get-FilesToCacheOnVHD
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.28.zip",
-            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.29.zip"
+            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.29.zip",
+            "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.30.zip"
         )
     }
 
