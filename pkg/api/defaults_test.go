@@ -194,31 +194,34 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
+	kubernetesVersion := "1.13.11"
+	k8sComponents := K8sComponentsByVersionMap[kubernetesVersion]
 	customImage := "myimage"
+	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
-		common.TillerAddonName:                 "gcr.io/kubernetes-helm/tiller:v2.13.1",
-		common.ACIConnectorAddonName:           "microsoft/virtual-kubelet:latest",
-		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.13.9",
-		common.BlobfuseFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-		common.SMBFlexVolumeAddonName:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		common.KeyVaultFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-		common.DashboardAddonName:              "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		common.ReschedulerAddonName:            "k8s.gcr.io/rescheduler:v0.4.0",
-		common.MetricsServerAddonName:          "k8s.gcr.io/metrics-server-amd64:v0.2.1",
-		common.NVIDIADevicePluginAddonName:     "nvidia/k8s-device-plugin:1.11",
+		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
+		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
+		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
+		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
+		common.DashboardAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
+		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
 		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
-		common.IPMASQAgentAddonName:            "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
-		common.AzureCNINetworkMonitorAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
-		common.DNSAutoscalerAddonName:          "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		common.HeapsterAddonName:               "k8s.gcr.io/heapster-amd64:v1.5.4",
-		common.CalicoAddonName:                 "calico/typha:v3.8.0",
-		common.AzureNetworkPolicyAddonName:     "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-		common.AADPodIdentityAddonName:         "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
-		common.AzurePolicyAddonName:            "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
-		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
-		common.KubeDNSAddonName:                "k8s.gcr.io/k8s-dns-kube-dns-amd64:1.15.4",
-		common.CoreDNSAddonName:                "k8s.gcr.io/coredns:1.6.5",
-		common.KubeProxyAddonName:              "k8s.gcr.io/hyperkube-amd64:v1.13.11",
+		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
+		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
+		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
+		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
+		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
+		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -256,12 +259,13 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.13.11")
+			mockCS := getMockBaseContainerService(kubernetesVersion)
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 			for _, result := range resultAddons {
+				// TODO test more than just the first container image reference
 				if len(result.Containers) > 0 && result.Containers[0].Image != c.expectedImages[result.Name] {
 					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
 				}

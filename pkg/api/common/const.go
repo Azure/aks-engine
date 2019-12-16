@@ -152,6 +152,12 @@ const (
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
 	// AzureVnetTelemetryContainerName is the name of the Azure vnet telemetry container in the azure-npm-daemonset addon
 	AzureVnetTelemetryContainerName = "azure-vnet-telemetry-daemonset"
+	// NMIContainerName is the name of the nmi container in the aad-pod-identity addon
+	NMIContainerName = "nmi"
+	// MICContainerName is the name of the mic container in the aad-pod-identity addon
+	MICContainerName = "mic"
+	// GatekeeperContainerName is the name of the gatekeeper container in the azure-policy addon
+	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
 	CloudNodeManagerAddonName = "cloud-node-manager"
 	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
@@ -166,8 +172,22 @@ const (
 	AppGwIngressAddonName = "appgw-ingress"
 	// AzureDiskCSIDriverAddonName is the name of Azure Disk CSI Driver addon
 	AzureDiskCSIDriverAddonName = "azuredisk-csi-driver"
+	// CSIProvisionerContainerName is the name of the csi-provisioner container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSIProvisionerContainerName = "csi-provisioner"
+	// CSIAttacherContainerName is the name of the csi-attacher container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSIAttacherContainerName = "csi-attacher"
+	// CSIClusterDriverRegistrarContainerName is the name of the csi-cluster-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSIClusterDriverRegistrarContainerName = "csi-cluster-driver-registrar"
+	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSILivenessProbeContainerName = "livenessprobe"
+	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSINodeDriverRegistrarContainerName = "csi-node-driver-registrar"
+	// CSIAzureDiskContainerName is the name of the azuredisk-csi container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSIAzureDiskContainerName = "azuredisk-csi"
 	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
 	AzureFileCSIDriverAddonName = "azurefile-csi-driver"
+	// CSIAzureFileContainerName is the name of the azurefile-csi container in the azurefile-csi-driver addon
+	CSIAzureFileContainerName = "azurefile-csi"
 	// AzureStorageClassesAddonName is the name of the azure storage classes addon
 	AzureStorageClassesAddonName = "azure-storage-classes"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
