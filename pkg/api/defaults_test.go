@@ -3175,7 +3175,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "default",
@@ -3188,7 +3188,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "default",
@@ -3201,7 +3201,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 	}
 

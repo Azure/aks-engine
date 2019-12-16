@@ -345,10 +345,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
 		}
 
-		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.15.0-beta.1") {
-			a.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
-		}
-
 		if a.OrchestratorProfile.IsAzureCNI() {
 			if a.HasWindows() {
 				a.OrchestratorProfile.KubernetesConfig.AzureCNIVersion = AzureCniPluginVerWindows

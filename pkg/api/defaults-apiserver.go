@@ -166,7 +166,7 @@ func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
 	admissionControlValues := "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
 
 	// Pod Security Policy configuration
-	if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
+	if o.KubernetesConfig.IsAddonEnabled(common.PodSecurityPolicyAddonName) {
 		admissionControlValues += ",PodSecurityPolicy"
 	}
 
