@@ -11,7 +11,8 @@
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2s_v3"
+				"vmSize": "Standard_D2s_v3",
+				"platformUpdateDomainCount": 1
 			},
 			"agentPoolProfiles": [
 				{
