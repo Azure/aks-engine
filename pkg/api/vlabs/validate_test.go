@@ -1732,7 +1732,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "asdasdasdasda",
 				Config: map[string]string{
 					"foo": "bar",
@@ -1748,7 +1748,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "asdasdasdasda",
 				Containers: []KubernetesContainerSpec{
 					{
@@ -1766,7 +1766,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "foodata",
 			},
 		},
@@ -1779,7 +1779,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name: "kube-proxy-daemonset",
+				Name: common.KubeProxyAddonName,
 				Data: "Zm9vZGF0YQ==",
 			},
 		},
@@ -3707,6 +3707,63 @@ func TestValidateLocation(t *testing.T) {
 				cs.Properties = nil
 			}
 			gotErr := cs.Validate(false)
+			if !helpers.EqualError(gotErr, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
+}
+
+func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
+
+	tests := []struct {
+		name        string
+		cs          *ContainerService
+		expectedErr error
+	}{
+		{
+			name: "AcceleratedNetworkingEnabledWindows enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					MasterProfile: &MasterProfile{
+						DNSPrefix: "foo",
+						Count:     1,
+						VMSize:    "Standard_D2_v3",
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType:    Kubernetes,
+						OrchestratorVersion: "1.15.4",
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							Name:                                "testpool",
+							Count:                               1,
+							VMSize:                              "Standard_D2_v2",
+							AcceleratedNetworkingEnabledWindows: to.BoolPtr(true),
+						},
+					},
+					LinuxProfile: &LinuxProfile{
+						AdminUsername: "azureuser",
+						SSH: struct {
+							PublicKeys []PublicKey `json:"publicKeys" validate:"required,min=1"`
+						}{
+							PublicKeys: []PublicKey{{
+								KeyData: "publickeydata",
+							}},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("Accelerated Networking is currently unstable for Windows + Kubernetes, please set acceleratedNetworkingEnabledWindows to false"),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			gotErr := test.cs.Validate(false)
 			if !helpers.EqualError(gotErr, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)

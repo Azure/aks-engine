@@ -60,3 +60,13 @@ func AddToSSHKeyChain(keyfile string) error {
 	}
 	return nil
 }
+
+// IsLargeVMSKU returns if the VM SKU is a known, > 8 core SKU
+func IsLargeVMSKU(sku string) bool {
+	switch sku {
+	case "Standard_D16_v3":
+		return true
+	default:
+		return false
+	}
+}

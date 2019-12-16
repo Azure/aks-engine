@@ -5996,6 +5996,42 @@ func TestGetMasterFQDN(t *testing.T) {
 	}
 }
 
+func TestGetKubeProxyFeatureGates(t *testing.T) {
+	tests := []struct {
+		name                 string
+		properties           *Properties
+		expectedFeatureGates string
+	}{
+		{
+			name: "default",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{},
+			},
+			expectedFeatureGates: "{}",
+		},
+		{
+			name: "IPV6 enabled",
+			properties: &Properties{
+				FeatureFlags: &FeatureFlags{
+					EnableIPv6DualStack: true,
+				},
+			},
+			expectedFeatureGates: "IPv6DualStack: true",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubeProxyFeatureGates()
+			if actual != test.expectedFeatureGates {
+				t.Errorf("expected featureGates %s, but got %s", test.expectedFeatureGates, actual)
+			}
+		})
+	}
+}
+
 func TestDcosConfigHasPrivateRegistry(t *testing.T) {
 	cases := []struct {
 		p        Properties

@@ -157,6 +157,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.CoreDNSAddonName),
 			destinationFile: corednsAddonDestinationFilename,
 		},
+		common.KubeProxyAddonName: {
+			sourceFile:      kubeProxyAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.KubeProxyAddonName),
+			destinationFile: kubeProxyAddonDestinationFilename,
+		},
 	}
 }
 
@@ -170,12 +175,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 	o := p.OrchestratorProfile
 	k := o.KubernetesConfig
 	kubernetesComponentFileSpecs := []kubernetesComponentFileSpec{
-		{
-			sourceFile:      "kubernetesmasteraddons-kube-proxy-daemonset.yaml",
-			base64Data:      k.GetAddonScript(common.KubeProxyAddonName),
-			destinationFile: "kube-proxy-daemonset.yaml",
-			isEnabled:       true,
-		},
 		{
 			sourceFile:      "kubernetesmasteraddons-cilium-daemonset.yaml",
 			base64Data:      k.GetAddonScript(common.CiliumAddonName),

@@ -27,6 +27,7 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/job"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/namespace"
@@ -315,15 +316,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("SSH port is blocked")
 			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
+					var largeSKUPrefixes []string
+					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+						if util.IsLargeVMSKU(eng.ExpandedDefinition.Properties.MasterProfile.VMSize) {
+							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-master-")
+						}
+					}
+					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+						if util.IsLargeVMSKU(profile.VMSize) {
+							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-"+profile.Name)
+						}
+					}
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
 					netConfigValidateScript := "net-config-validate.sh"
 					err = sshConn.CopyTo(netConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", netConfigValidateScript)
-					err = sshConn.Execute(netConfigValidationCommand, false)
-					Expect(err).NotTo(HaveOccurred())
 					for _, node := range nodeList.Nodes {
+						var gt8CoreSKU string
+						if node.HasSubstring(largeSKUPrefixes) && node.IsUbuntu() {
+							gt8CoreSKU = "true"
+						}
+						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
 						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
 							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
@@ -791,6 +805,32 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					fmt.Printf("%s disabled for this cluster, will not test\n", addonName)
 				}
+			}
+		})
+
+		It("should have a working node-problem-detector configuration", func() {
+			if hasNpd, _ := eng.HasAddon("node-problem-detector"); hasNpd {
+				running, err := pod.WaitOnSuccesses("node-problem-detector", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				pods, err := pod.GetAllRunningByPrefixWithRetry("node-problem-detector", "kube-system", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(pods).NotTo(BeEmpty())
+				nodeName := pods[0].Spec.NodeName
+				// Create a fake kernel message on a node running node-problem-detector
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				msgId := r.Intn(999999999999)
+				msg := fmt.Sprintf("kernel: BUG: unable to handle kernel NULL pointer dereference at TESTING-%d", msgId)
+				kernelMsgTestCommand := fmt.Sprintf("sudo 'echo %s | sudo tee /dev/kmsg'", msg)
+				if cfg.BlockSSHPort {
+					Skip("SSH port is blocked")
+				}
+				err = sshConn.ExecuteRemoteWithRetry(nodeName, kernelMsgTestCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				evt, err := event.GetWithRetry(msg, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(evt.Type).To(Equal("Warning"))
+				Expect(evt.Reason).To(Equal("KernelOops"))
 			}
 		})
 

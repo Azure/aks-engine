@@ -59,11 +59,11 @@ docker run --rm \
 -v $(pwd):${WORK_DIR} \
 -w ${WORK_DIR} \
 -e CLUSTER_DEFINITION=${TMP_BASENAME}/apimodel-input.json \
--e CLIENT_ID="${CLIENT_ID}" \
--e CLIENT_SECRET="${CLIENT_SECRET}" \
+-e CLIENT_ID="${AZURE_CLIENT_ID}" \
+-e CLIENT_SECRET="${AZURE_CLIENT_SECRET}" \
 -e CLIENT_OBJECTID="${CLIENT_OBJECTID}" \
--e TENANT_ID="${TENANT_ID}" \
--e SUBSCRIPTION_ID="$SUBSCRIPTION_ID" \
+-e TENANT_ID="${AZURE_TENANT_ID}" \
+-e SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID}" \
 -e ORCHESTRATOR=kubernetes \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
@@ -92,13 +92,14 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
     echo Removing bookkeeping tags from VMs in resource group $RESOURCE_GROUP ...
-    az login --username ${CLIENT_ID} --password ${CLIENT_SECRET} --tenant ${TENANT_ID} --service-principal > /dev/null
+    az login --username ${AZURE_CLIENT_ID} --password ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID} --service-principal > /dev/null
     for vm_type in vm vmss; do
-      for vm in $(az $vm_type list -g $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --query '[].name' -o table | tail -n +3); do
-        az $vm_type update -n $vm -g $RESOURCE_GROUP --subscription $SUBSCRIPTION_ID --set tags={} > /dev/null
+      for vm in $(az $vm_type list -g $RESOURCE_GROUP --subscription ${AZURE_SUBSCRIPTION_ID} --query '[].name' -o table | tail -n +3); do
+        az $vm_type update -n $vm -g $RESOURCE_GROUP --subscription ${AZURE_SUBSCRIPTION_ID} --set tags={} > /dev/null
       done
     done
   fi
+  git reset --hard
   git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
   git fetch $UPGRADE_FORK
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
@@ -121,26 +122,26 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
       -e REGION=$REGION \
       ${DEV_IMAGE} \
       ./bin/aks-engine scale \
-      --subscription-id $SUBSCRIPTION_ID \
-      --deployment-dir _output/$RESOURCE_GROUP \
+      --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
-      --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+      --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
       --node-pool $nodepool \
       --new-node-count 1 \
       --auth-method client_secret \
-      --client-id ${CLIENT_ID} \
-      --client-secret ${CLIENT_SECRET} || exit 1
+      --client-id ${AZURE_CLIENT_ID} \
+      --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
-    -e CLIENT_ID=${CLIENT_ID} \
-    -e CLIENT_SECRET=${CLIENT_SECRET} \
+    -e CLIENT_ID=${AZURE_CLIENT_ID} \
+    -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
-    -e TENANT_ID=${TENANT_ID} \
-    -e SUBSCRIPTION_ID=$SUBSCRIPTION_ID \
+    -e TENANT_ID=${AZURE_TENANT_ID} \
+    -e SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
@@ -163,24 +164,24 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e REGION=$REGION \
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
-      --subscription-id $SUBSCRIPTION_ID \
-      --deployment-dir _output/$RESOURCE_GROUP \
+      --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
       --vm-timeout 20 \
       --auth-method client_secret \
-      --client-id ${CLIENT_ID} \
-      --client-secret ${CLIENT_SECRET} || exit 1
+      --client-id ${AZURE_CLIENT_ID} \
+      --client-secret ${AZURE_CLIENT_SECRET} || exit 1
 
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
-      -e CLIENT_ID=${CLIENT_ID} \
-      -e CLIENT_SECRET=${CLIENT_SECRET} \
+      -e CLIENT_ID=${AZURE_CLIENT_ID} \
+      -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
       -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
-      -e TENANT_ID=${TENANT_ID} \
-      -e SUBSCRIPTION_ID=$SUBSCRIPTION_ID \
+      -e TENANT_ID=${AZURE_TENANT_ID} \
+      -e SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
       -e ORCHESTRATOR=kubernetes \
       -e NAME=$RESOURCE_GROUP \
       -e TIMEOUT=${E2E_TEST_TIMEOUT} \
@@ -204,26 +205,26 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e REGION=$REGION \
     ${DEV_IMAGE} \
     ./bin/aks-engine scale \
-    --subscription-id $SUBSCRIPTION_ID \
-    --deployment-dir _output/$RESOURCE_GROUP \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
     --location $REGION \
     --resource-group $RESOURCE_GROUP \
-    --master-FQDN "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
     --node-pool $nodepool \
     --new-node-count $NODE_COUNT \
     --auth-method client_secret \
-    --client-id ${CLIENT_ID} \
-    --client-secret ${CLIENT_SECRET} || exit 1
+    --client-id ${AZURE_CLIENT_ID} \
+    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
   done
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
-    -e CLIENT_ID=${CLIENT_ID} \
-    -e CLIENT_SECRET=${CLIENT_SECRET} \
+    -e CLIENT_ID=${AZURE_CLIENT_ID} \
+    -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
     -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
-    -e TENANT_ID=${TENANT_ID} \
-    -e SUBSCRIPTION_ID=$SUBSCRIPTION_ID \
+    -e TENANT_ID=${AZURE_TENANT_ID} \
+    -e SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \

@@ -1,5 +1,7 @@
 {
-	"env": {},
+	"env": {
+		"REGION_OPTIONS": "eastus,westeurope,southeastasia,westus2"
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -13,21 +15,13 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agentwin",
-					"count": 3,
-					"vmSize": "Standard_D2_v2",
-					"osType": "Windows",
-					"acceleratedNetworkingEnabledWindows": true,
+					"name": "agentpool1",
+					"count": 2,
+					"vmSize": "Standard_D16_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"scalesetPriority": "Low"
 				}
 			],
-			"windowsProfile": {
-				"adminUsername": "azureuser",
-				"adminPassword": "replacepassword1234$",
-				"enableAutomaticUpdates": false,
-				"sshEnabled": true
-			},
 			"linuxProfile": {
 				"adminUsername": "azureuser",
 				"ssh": {
