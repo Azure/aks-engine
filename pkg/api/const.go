@@ -105,9 +105,6 @@ const (
 	Ephemeral = "Ephemeral"
 )
 
-// To identify programmatically generated public agent pools
-const publicAgentPoolSuffix = "-public"
-
 const (
 	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
 	DefaultHeapsterAddonEnabled = false

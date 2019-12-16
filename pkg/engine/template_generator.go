@@ -9,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"runtime/debug"
 	"strings"
 	"text/template"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,74 +52,6 @@ func InitializeTemplateGenerator(ctx Context) (*TemplateGenerator, error) {
 	return t, nil
 }
 
-// GenerateTemplate generates the template from the API Model
-func (t *TemplateGenerator) GenerateTemplate(containerService *api.ContainerService, generatorCode string, aksEngineVersion string) (templateRaw string, parametersRaw string, err error) {
-	// named return values are used in order to set err in case of a panic
-	templateRaw = ""
-	parametersRaw = ""
-	err = nil
-
-	var templ *template.Template
-
-	properties := containerService.Properties
-	// save the current orchestrator version and restore it after deploying.
-	// this allows us to deploy agents on the most recent patch without updating the orchestator version in the object
-	orchVersion := properties.OrchestratorProfile.OrchestratorVersion
-	defer func() {
-		properties.OrchestratorProfile.OrchestratorVersion = orchVersion
-	}()
-
-	templ = template.New("acs template").Funcs(t.getTemplateFuncMap(containerService))
-
-	files, baseFile, e := t.prepareTemplateFiles(properties)
-	if e != nil {
-		return "", "", e
-	}
-
-	for _, file := range files {
-		bytes, e := Asset(file)
-		if e != nil {
-			err = t.Translator.Errorf("Error reading file %s, Error: %s", file, e.Error())
-			return templateRaw, parametersRaw, err
-		}
-		if _, err = templ.New(file).Parse(string(bytes)); err != nil {
-			return templateRaw, parametersRaw, err
-		}
-	}
-	// template generation may have panics in the called functions.  This catches those panics
-	// and ensures the panic is returned as an error
-	defer func() {
-		if r := recover(); r != nil {
-			s := debug.Stack()
-			err = errors.Errorf("%v - %s", r, s)
-
-			// invalidate the template and the parameters
-			templateRaw = ""
-			parametersRaw = ""
-		}
-	}()
-
-	if !validateDistro(containerService) {
-		return templateRaw, parametersRaw, errors.New("Invalid distro")
-	}
-
-	var b bytes.Buffer
-	if err = templ.ExecuteTemplate(&b, baseFile, properties); err != nil {
-		return templateRaw, parametersRaw, err
-	}
-	templateRaw = b.String()
-
-	var parametersMap = getParameters(containerService, generatorCode, aksEngineVersion)
-
-	var parameterBytes []byte
-	if parameterBytes, err = helpers.JSONMarshal(parametersMap, false); err != nil {
-		return templateRaw, parametersRaw, err
-	}
-	parametersRaw = string(parameterBytes)
-
-	return templateRaw, parametersRaw, err
-}
-
 func (t *TemplateGenerator) verifyFiles() error {
 	allFiles := commonTemplateFiles
 	for _, file := range allFiles {
@@ -130,17 +60,6 @@ func (t *TemplateGenerator) verifyFiles() error {
 		}
 	}
 	return nil
-}
-
-func (t *TemplateGenerator) prepareTemplateFiles(properties *api.Properties) ([]string, string, error) {
-	var files []string
-	var baseFile string
-	switch properties.OrchestratorProfile.OrchestratorType {
-	default:
-		return nil, "", t.Translator.Errorf("orchestrator '%s' is unsupported", properties.OrchestratorProfile.OrchestratorType)
-	}
-
-	return files, baseFile, nil
 }
 
 func (t *TemplateGenerator) GetJumpboxCustomDataJSON(cs *api.ContainerService) string {

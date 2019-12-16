@@ -49,7 +49,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	// Set master profile defaults if this cluster configuration includes master node(s)
 	if cs.Properties.MasterProfile != nil {
-		properties.setMasterProfileDefaults(params.IsUpgrade)
+		properties.setMasterProfileDefaults()
 	}
 
 	properties.setAgentProfileDefaults(params.IsUpgrade, params.IsScale)
@@ -533,7 +533,7 @@ func (p *Properties) setExtensionDefaults() {
 	}
 }
 
-func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
+func (p *Properties) setMasterProfileDefaults() {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet

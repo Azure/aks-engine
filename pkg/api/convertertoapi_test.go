@@ -16,31 +16,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func makeAgentPoolProfile(count int, name, dNSPrefix, vMSize string, oSType OSType) *AgentPoolProfile {
-	return &AgentPoolProfile{
-		Name:      name,
-		Count:     count,
-		DNSPrefix: dNSPrefix,
-		OSType:    oSType,
-		VMSize:    vMSize,
-	}
-}
-
-func makeMasterProfile(count int, dNSPrefix, vMSize string) *MasterProfile {
-	return &MasterProfile{
-		Count:     count,
-		DNSPrefix: dNSPrefix,
-		VMSize:    vMSize,
-	}
-}
-
-func getProperties(profiles []*AgentPoolProfile, master *MasterProfile) *Properties {
-	return &Properties{
-		AgentPoolProfiles: profiles,
-		MasterProfile:     master,
-	}
-}
-
 func TestKubernetesOrchestratorVersionFailWhenInvalid(t *testing.T) {
 	vlabscs := &vlabs.ContainerService{
 		Properties: &vlabs.Properties{

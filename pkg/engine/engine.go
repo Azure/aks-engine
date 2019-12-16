@@ -649,28 +649,6 @@ func getContainerAddonsString(cs *api.ContainerService, sourcePath string) strin
 	return result
 }
 
-func buildYamlFileWithWriteFiles(files []string, cs *api.ContainerService) string {
-	clusterYamlFile := `#cloud-config
-
-write_files:
-%s
-`
-	writeFileBlock := ` -  encoding: gzip
-    content: !!binary |
-        %s
-    path: /opt/azure/containers/%s
-    permissions: "0744"
-`
-
-	filelines := ""
-	for _, file := range files {
-		b64GzipString := getBase64EncodedGzippedCustomScript(file, cs)
-		fileNoPath := strings.TrimPrefix(file, "swarm/")
-		filelines += fmt.Sprintf(writeFileBlock, b64GzipString, fileNoPath)
-	}
-	return fmt.Sprintf(clusterYamlFile, filelines)
-}
-
 func getKubernetesSubnets(properties *api.Properties) string {
 	subnetString := `{
             "name": "podCIDR%d",
@@ -860,10 +838,6 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
-}
-
-func getSwarmVersions(orchestratorVersion, dockerComposeVersion string) string {
-	return fmt.Sprintf("\"orchestratorVersion\": \"%s\",\n\"dockerComposeVersion\": \"%s\",\n", orchestratorVersion, dockerComposeVersion)
 }
 
 func wrapAsVariableObject(o, v string) string {
