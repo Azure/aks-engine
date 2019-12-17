@@ -235,9 +235,9 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 	var extensionsARM []DeploymentARM
 
 	if properties.MasterProfile != nil {
-		// The first extension needs to depend on the billing extension created for all pools
+		// The first extension needs to depend on the master cse created for all nodes
 		// Each proceeding extension needs to depend on the previous one to avoid ARM conflicts in the Compute RP
-		nextDependsOn := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/computeAksLinuxBilling')]"
+		nextDependsOn := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse-master-', copyIndex(variables('masterOffset')))]"
 
 		for _, extensionProfile := range properties.ExtensionProfiles {
 			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
@@ -259,9 +259,9 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 	}
 
 	for _, agentPoolProfile := range properties.AgentPoolProfiles {
-		// The first extension needs to depend on the billing extension created for all pools
+		// The first extension needs to depend on the agent cse created for all nodes
 		// Each proceeding extension needs to depend on the previous one to avoid ARM conflicts in the Compute RP
-		nextDependsOn := fmt.Sprintf("[concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')), '/extensions/computeAksLinuxBilling')]", agentPoolProfile.Name)
+		nextDependsOn := fmt.Sprintf("[concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')), '/extensions/cse-agent-', copyIndex(variables('%[1]sOffset')))]", agentPoolProfile.Name)
 
 		for _, extensionProfile := range properties.ExtensionProfiles {
 			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, agentPoolProfile.Extensions)

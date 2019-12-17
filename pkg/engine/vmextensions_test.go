@@ -524,7 +524,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 					"count": "[sub(variables('windowspool1Count'), variables('windowspool1Offset'))]",
 					"name":  "winrmExtensionLoop",
 				},
-				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), '/extensions/computeAksLinuxBilling')]"},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), '/extensions/cse-agent-', copyIndex(variables('windowspool1Offset')))]"},
 			},
 			DeploymentExtended: resources.DeploymentExtended{
 				Name: to.StringPtr("[concat(variables('windowspool1VMNamePrefix'), copyIndex(variables('windowspool1Offset')), 'winrm')]"),
@@ -553,7 +553,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 					"count": "[sub(variables('windowspool2Count'), variables('windowspool2Offset'))]",
 					"name":  "winrmExtensionLoop",
 				},
-				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), '/extensions/computeAksLinuxBilling')]"},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), '/extensions/cse-agent-', copyIndex(variables('windowspool2Offset')))]"},
 			},
 			DeploymentExtended: resources.DeploymentExtended{
 				Name: to.StringPtr("[concat(variables('windowspool2VMNamePrefix'), copyIndex(variables('windowspool2Offset')), 'winrm')]"),
@@ -645,7 +645,7 @@ func TestCreateCustomExtensions(t *testing.T) {
 					"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 					"name":  "helloWorldExtensionLoop",
 				},
-				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/computeAksLinuxBilling')]"},
+				DependsOn: []string{"[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse-master-', copyIndex(variables('masterOffset')))]"},
 			},
 			DeploymentExtended: resources.DeploymentExtended{
 				Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), 'HelloWorldK8s')]"),
