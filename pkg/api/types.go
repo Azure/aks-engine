@@ -302,7 +302,7 @@ func (a *KubernetesAddon) IsDisabled() bool {
 	if a.Enabled == nil {
 		return false
 	}
-	return *a.Enabled == false
+	return !*a.Enabled
 }
 
 // GetAddonContainersIndexByName returns the KubernetesAddon containers index with the name `containerName`
