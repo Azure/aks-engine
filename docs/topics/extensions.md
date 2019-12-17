@@ -99,6 +99,67 @@ Or they can be referenced as a preprovision extension, this will run during clou
 |---|---|---|
 |name|yes|The name of the extension. This must match the name in the extensionProfiles|
 
+## agentPoolProfiles
+
+Extensions run a script on every node in an agent pool. The extensions array in the
+agentPoolProfiles defines that an extension will be run on every node of that agent
+configuration.
+
+``` javascript
+{
+    "agentPoolProfiles": [
+        {
+            "name": "agentpool1",
+            "count": 3,
+            "vmSize": "Standard_DS2_v2",
+            "availabilityProfile": "AvailabilitySet",
+            "extensions": [
+                {
+                    "name": "prometheus-grafana-k8s"
+                }
+            ]
+        }
+    ],
+    "extensionProfiles": [
+        {
+            "name": "prometheus-grafana-k8s",
+            "version": "v1",
+            "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
+        }
+    ]
+}
+```
+
+Or they can be referenced as a preprovision extension, this will run during cloud init before the cluster is brought up.
+
+``` javascript
+{
+    "agentPoolProfiles": [
+        {
+            "name": "agentpool1",
+            "count": 3,
+            "vmSize": "Standard_D2_v3",
+            "availabilityProfile": "AvailabilitySet",
+            "preProvisionExtension": {
+                "name": "hello-world",
+                "singleOrAll": "All"
+            }
+        }
+    ],
+    "extensionProfiles": [
+        {
+            "name": "hello-world",
+            "version": "v1",
+            "script": "hello.sh"
+        }
+    ]
+}
+```
+
+|Name|Required|Description|
+|---|---|---|
+|name|yes|The name of the extension. This must match the name in the extensionProfiles|
+
 ## Required Extension Files
 
 In order to install a post provision extension, there are four required files - supported-orchestrators.json, template.json, template-link.json and EXTENSION-NAME.sh. Following is a description of each file.
