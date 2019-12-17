@@ -636,9 +636,10 @@ func (a *Properties) validateAddons() error {
 				}
 			}
 
-			switch addon.Name {
-			case "cluster-autoscaler":
-				if to.Bool(addon.Enabled) {
+			// Validation for addons if they are enabled
+			if to.Bool(addon.Enabled) {
+				switch addon.Name {
+				case "cluster-autoscaler":
 					if isAvailabilitySets {
 						return errors.Errorf("cluster-autoscaler addon can only be used with VirtualMachineScaleSets. Please specify \"availabilityProfile\": \"%s\"", VirtualMachineScaleSets)
 					}
@@ -669,9 +670,7 @@ func (a *Properties) validateAddons() error {
 							}
 						}
 					}
-				}
-			case "nvidia-device-plugin":
-				if to.Bool(addon.Enabled) {
+				case "nvidia-device-plugin":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
@@ -682,25 +681,23 @@ func (a *Properties) validateAddons() error {
 					if a.HasCoreOS() {
 						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
 					}
-				}
-			case "aad":
-				if !a.HasAADAdminGroupID() {
-					return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
-				}
-			case "blobfuse-flexvolume":
-				if to.Bool(addon.Enabled) && a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
-				}
-			case "smb-flexvolume":
-				if to.Bool(addon.Enabled) && a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
-				}
-			case "keyvault-flexvolume":
-				if to.Bool(addon.Enabled) && a.HasCoreOS() {
-					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
-				}
-			case "appgw-ingress":
-				if to.Bool(addon.Enabled) {
+				case "aad":
+					if !a.HasAADAdminGroupID() {
+						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
+					}
+				case "blobfuse-flexvolume":
+					if a.HasCoreOS() {
+						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+					}
+				case "smb-flexvolume":
+					if a.HasCoreOS() {
+						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+					}
+				case "keyvault-flexvolume":
+					if a.HasCoreOS() {
+						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+					}
+				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
 						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("appgw-ingress add-ons requires 'objectID' to be specified or UseManagedIdentity to be true")
@@ -713,29 +710,18 @@ func (a *Properties) validateAddons() error {
 					if len(addon.Config["appgw-subnet"]) == 0 {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
 					}
-				}
-			case "azuredisk-csi-driver", "azurefile-csi-driver":
-				if to.Bool(addon.Enabled) {
+				case "azuredisk-csi-driver", "azurefile-csi-driver":
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
 					}
-				}
-			case "cloud-node-manager":
-				if to.Bool(addon.Enabled) {
+				case "cloud-node-manager":
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.16 or above", addon.Name))
 					}
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
 					}
-				} else {
-					if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
-						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
-					}
-				}
-			case "azure-policy":
-				if to.Bool(addon.Enabled) {
+				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
 						return err
@@ -746,14 +732,19 @@ func (a *Properties) validateAddons() error {
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
 					}
-				}
-			case "kube-dns":
-				if to.Bool(addon.Enabled) {
+				case "kube-dns":
 					kubeDNSEnabled = true
-				}
-			case common.CoreDNSAddonName:
-				if to.Bool(addon.Enabled) {
+				case common.CoreDNSAddonName:
 					corednsEnabled = true
+				}
+			} else {
+				// Validation for addons if they are disabled
+				switch addon.Name {
+				case "cloud-node-manager":
+					if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
+						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
+					}
 				}
 			}
 		}
