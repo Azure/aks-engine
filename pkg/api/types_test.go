@@ -6063,6 +6063,57 @@ func TestGetKubeProxyFeatureGates(t *testing.T) {
 	}
 }
 
+func TestAADAdminGroupIDMethods(t *testing.T) {
+	tests := []struct {
+		name                       string
+		properties                 *Properties
+		expectedHasAADAdminGroupID bool
+		expectedGetAADAdminGroupID string
+	}{
+		{
+			name:                       "default",
+			properties:                 &Properties{},
+			expectedHasAADAdminGroupID: false,
+			expectedGetAADAdminGroupID: "",
+		},
+		{
+			name: "no AdminGroupID",
+			properties: &Properties{
+				AADProfile: &AADProfile{
+					ClientAppID: "",
+				},
+			},
+			expectedHasAADAdminGroupID: false,
+			expectedGetAADAdminGroupID: "",
+		},
+		{
+			name: "AdminGroupID value",
+			properties: &Properties{
+				AADProfile: &AADProfile{
+					AdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+				},
+			},
+			expectedHasAADAdminGroupID: true,
+			expectedGetAADAdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			hasAADAdminGroupID := test.properties.HasAADAdminGroupID()
+			if hasAADAdminGroupID != test.expectedHasAADAdminGroupID {
+				t.Errorf("expected featureGates %t, but got %t", test.expectedHasAADAdminGroupID, hasAADAdminGroupID)
+			}
+			getAADAdminGroupID := test.properties.GetAADAdminGroupID()
+			if getAADAdminGroupID != test.expectedGetAADAdminGroupID {
+				t.Errorf("expected featureGates %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
+			}
+		})
+	}
+}
+
 func TestDcosConfigHasPrivateRegistry(t *testing.T) {
 	cases := []struct {
 		p        Properties

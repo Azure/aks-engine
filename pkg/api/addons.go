@@ -585,6 +585,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
 	}
 
+	defaultAADDefaultAdminGroupAddonsConfig := KubernetesAddon{
+		Name:    common.AADAdminGroupAddonName,
+		Enabled: to.BoolPtr(cs.Properties.HasAADAdminGroupID()),
+		Config: map[string]string{
+			"adminGroupID": cs.Properties.GetAADAdminGroupID(),
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -619,6 +627,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultCorednsAddonsConfig,
 		defaultKubeProxyAddonsConfig,
 		defaultPodSecurityPolicyAddonsConfig,
+		defaultAADDefaultAdminGroupAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

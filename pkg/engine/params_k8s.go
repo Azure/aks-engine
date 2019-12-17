@@ -231,13 +231,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
 		}
 
-		if properties.AADProfile != nil {
-			addValue(parametersMap, "aadTenantId", properties.AADProfile.TenantID)
-			if properties.AADProfile.AdminGroupID != "" {
-				addValue(parametersMap, "aadAdminGroupId", properties.AADProfile.AdminGroupID)
-			}
-		}
-
 		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 			addValue(parametersMap, "appGwSku", kubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-sku"])
 			addValue(parametersMap, "appGwSubnet", kubernetesConfig.GetAddonByName(common.AppGwIngressAddonName).Config["appgw-subnet"])

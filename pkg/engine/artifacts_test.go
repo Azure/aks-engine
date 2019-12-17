@@ -19,7 +19,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		p                              *api.Properties
 		expectedCilium                 bool
 		expectedFlannel                bool
-		expectedAADAdminGroup          bool
 		expectedAzureCloudProvider     bool
 		expectedAuditPolicy            bool
 		expectedManagedStorageClass    bool
@@ -40,7 +39,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -61,7 +59,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 true,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -82,7 +79,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                true,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -106,7 +102,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          true,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -128,7 +123,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -156,7 +150,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -182,7 +175,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
@@ -209,7 +201,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -236,7 +227,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
@@ -257,7 +247,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
@@ -284,7 +273,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 			expectedCilium:                 false,
 			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
@@ -305,10 +293,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "flannel-daemonset.yaml":
 				if c.expectedFlannel != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", common.FlannelAddonName, c.expectedFlannel)
-				}
-			case "aad-default-admin-group-rbac.yaml":
-				if c.expectedAADAdminGroup != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.AADAdminGroupAddonName, c.expectedAADAdminGroup)
 				}
 			case "azure-cloud-provider-deployment.yaml":
 				if c.expectedAzureCloudProvider != componentFileSpec.isEnabled {
@@ -395,6 +379,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedCoreDNS                kubernetesComponentFileSpec
 		expectedKubeProxy              kubernetesComponentFileSpec
 		expectedPodSecurityPolicy      kubernetesComponentFileSpec
+		expectedAADDefaultAdminGroup   kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -512,6 +497,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.PodSecurityPolicyAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.AADAdminGroupAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -650,6 +639,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      podSecurityPolicyAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: podSecurityPolicyAddonDestinationFilename,
+			},
+			expectedAADDefaultAdminGroup: kubernetesComponentFileSpec{
+				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: aadDefaultAdminGroupDestinationFilename,
 			},
 		},
 		{
@@ -741,6 +735,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.PodSecurityPolicyAddonName,
 							},
+							{
+								Name: common.AADAdminGroupAddonName,
+							},
 						},
 					},
 				},
@@ -879,6 +876,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      podSecurityPolicyAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: podSecurityPolicyAddonDestinationFilename,
+			},
+			expectedAADDefaultAdminGroup: kubernetesComponentFileSpec{
+				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aadDefaultAdminGroupDestinationFilename,
 			},
 		},
 		{
@@ -1018,6 +1020,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      podSecurityPolicyAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: podSecurityPolicyAddonDestinationFilename,
+			},
+			expectedAADDefaultAdminGroup: kubernetesComponentFileSpec{
+				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: aadDefaultAdminGroupDestinationFilename,
 			},
 		},
 	}
@@ -1298,6 +1305,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedPodSecurityPolicy.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedPodSecurityPolicy.destinationFile)
+					}
+				case common.AADAdminGroupAddonName:
+					if c.expectedAADDefaultAdminGroup.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAADDefaultAdminGroup.sourceFile)
+					}
+					if c.expectedAADDefaultAdminGroup.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAADDefaultAdminGroup.base64Data)
+					}
+					if c.expectedAADDefaultAdminGroup.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAADDefaultAdminGroup.destinationFile)
 					}
 				}
 			}

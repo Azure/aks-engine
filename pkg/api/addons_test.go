@@ -2874,6 +2874,38 @@ func TestSetAddonsConfig(t *testing.T) {
 			isUpgrade:      true,
 			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
 		},
+		{
+			name: "aad-default-aad-admin-group addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+					AADProfile: &AADProfile{
+						AdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AADAdminGroupAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"adminGroupID": "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+					},
+				},
+			}, "1.15.4"),
+		},
 	}
 
 	for _, test := range tests {
@@ -2909,6 +2941,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.KubeProxyAddonName,
 				common.NodeProblemDetectorAddonName,
 				common.PodSecurityPolicyAddonName,
+				common.AADAdminGroupAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {

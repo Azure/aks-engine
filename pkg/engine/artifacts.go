@@ -167,6 +167,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.PodSecurityPolicyAddonName),
 			destinationFile: podSecurityPolicyAddonDestinationFilename,
 		},
+		common.AADAdminGroupAddonName: {
+			sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AADAdminGroupAddonName),
+			destinationFile: aadDefaultAdminGroupDestinationFilename,
+		},
 	}
 }
 
@@ -191,12 +196,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			base64Data:      k.GetAddonScript(common.FlannelAddonName),
 			destinationFile: "flannel-daemonset.yaml",
 			isEnabled:       k.NetworkPlugin == NetworkPluginFlannel,
-		},
-		{
-			sourceFile:      "kubernetesmasteraddons-aad-default-admin-group-rbac.yaml",
-			base64Data:      k.GetAddonScript(common.AADAdminGroupAddonName),
-			destinationFile: "aad-default-admin-group-rbac.yaml",
-			isEnabled:       p.AADProfile != nil && p.AADProfile.AdminGroupID != "",
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-azure-cloud-provider-deployment.yaml",

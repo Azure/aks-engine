@@ -1,19 +1,3 @@
-{{if .HasAadProfile}}
-    "aadTenantId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
-      },
-      "type": "string"
-    },
-    "aadAdminGroupId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
-      },
-      "type": "string"
-    },
-{{end}}
 {{if IsHostedMaster}}
     "kubernetesEndpoint": {
       "metadata": {

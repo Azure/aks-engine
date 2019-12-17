@@ -388,10 +388,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 
-{{if AdminGroupID }}
-    sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
-{{end}}
-
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
