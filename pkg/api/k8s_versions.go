@@ -35,8 +35,7 @@ const (
 	calicoNodeImageReference                          string = "node:v3.8.0"
 	calicoPod2DaemonImageReference                    string = "pod2daemon-flexvol:v3.8.0"
 	calicoClusterProportionalAutoscalerImageReference string = "cluster-proportional-autoscaler-amd64:1.1.2-r2"
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29"
-	azureVNETTelemetryContainerImageReference         string = "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.30"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"
@@ -238,7 +237,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -302,7 +300,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -365,7 +362,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -428,7 +424,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -491,7 +486,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -554,7 +548,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -616,7 +609,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -678,7 +670,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -740,7 +731,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,
@@ -799,7 +789,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.IPMASQAgentAddonName:                   ipMasqAgentImageReference,
 			common.DNSAutoscalerAddonName:                 dnsAutoscalerImageReference,
 			common.AzureNetworkPolicyAddonName:            azureNPMContainerImageReference,
-			common.AzureVnetTelemetryContainerName:        azureVNETTelemetryContainerImageReference,
 			"calico-typha":                                calicoTyphaImageReference,
 			"calico-cni":                                  calicoCNIImageReference,
 			"calico-node":                                 calicoNodeImageReference,

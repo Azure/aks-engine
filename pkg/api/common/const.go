@@ -150,7 +150,7 @@ const (
 	AzureCNINetworkMonitorAddonName = "azure-cni-networkmonitor"
 	// AzureNetworkPolicyAddonName is the name of the Azure network policy manager addon
 	AzureNetworkPolicyAddonName = "azure-npm-daemonset"
-	// AzureVnetTelemetryContainerName is the name of the Azure vnet telemetry container in the azure-npm-daemonset addon
+	// AzureVnetTelemetryContainerName is the name of the deprecated Azure vnet telemetry container in the azure-npm-daemonset addon
 	AzureVnetTelemetryContainerName = "azure-vnet-telemetry-daemonset"
 	// NMIContainerName is the name of the nmi container in the aad-pod-identity addon
 	NMIContainerName = "nmi"

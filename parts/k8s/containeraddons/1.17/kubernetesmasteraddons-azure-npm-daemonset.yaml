@@ -79,6 +79,11 @@ spec:
           image: {{ContainerImage "azure-npm-daemonset"}}
           securityContext:
             privileged: true
+          resources:
+            requests:
+              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
+            limits:
+              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
               valueFrom:
