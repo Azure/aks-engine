@@ -103,7 +103,8 @@ Or they can be referenced as a preprovision extension, this will run during clou
 
 Extensions run a script on every node in an agent pool. The extensions array in the
 agentPoolProfiles defines that an extension will be run on every node of that agent
-configuration.
+configuration. Extensions in agentPoolProfiles are only supported for VMAS agent pools,
+not VMSS.
 
 ``` javascript
 {
