@@ -278,13 +278,13 @@ try
                     -AzureEnvironmentFilePath $([io.path]::Combine($global:KubeDir, "azurestackcloud.json")) `
                     -IdentitySystem "{{ GetIdentitySystem }}"
             }
-
-            New-ExternalHnsNetwork
         }
         elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
             Update-WinCNI -CNIPath $global:CNIPath
         }
+
+        New-ExternalHnsNetwork
 
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"

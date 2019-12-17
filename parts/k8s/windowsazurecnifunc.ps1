@@ -281,7 +281,7 @@ function New-ExternalHnsNetwork {
         if ($mgmtIPAfterNetworkCreate) {
             break
         }
-        sleep -Milliseconds 500
+        Start-Sleep -Milliseconds 500
     }
 
     $stopWatch.Stop()
