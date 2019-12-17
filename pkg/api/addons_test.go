@@ -1540,8 +1540,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:  common.AzureVnetTelemetryContainerName,
@@ -1577,8 +1579,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -1605,8 +1609,10 @@ func TestSetAddonsConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 									Containers: []KubernetesContainerSpec{
 										{
-											Name:  common.AzureNetworkPolicyAddonName,
-											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+											Name:           common.AzureNetworkPolicyAddonName,
+											Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+											MemoryRequests: "20Mi",
+							                MemoryLimits:   "2Gi",
 										},
 										{
 											Name:  common.AzureVnetTelemetryContainerName,
@@ -1626,8 +1632,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
