@@ -135,6 +135,10 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID != "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is not empty after unmarshal")
+	}
+
 	// With osType Windows
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
@@ -157,7 +161,7 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	// With osType Windows and Ephemeral disks
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345" }`
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -179,9 +183,13 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
 	// With osType Linux and RHEL distro
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -207,9 +215,13 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
 	// With osType Linux and coreos distro
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "coreos", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000] }`
+"availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000], "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -241,6 +253,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsVirtualMachineScaleSets() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.AvailabilitySets != VirtualMachineScaleSets after unmarshal")
+	}
+
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
 	}
 }
 
