@@ -1463,6 +1463,80 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	}
 }
 
+func TestValidateAddons(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
+		{
+			name: "aad addon enabled w/ no AADProfile",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    "aad",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID"),
+		},
+		{
+			name: "aad addon enabled w/ no AADProfile.AdminGroupID",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    "aad",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+				AADProfile: &AADProfile{},
+			},
+			expectedErr: errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID"),
+		},
+		{
+			name: "valid aad addon enabled spec",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    "aad",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+				AADProfile: &AADProfile{
+					AdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			gotErr := test.p.validateAddons()
+			if !helpers.EqualError(gotErr, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, gotErr)
+			}
+		})
+	}
+}
+
+// TODO move these to TestValidateAddons above
 func Test_Properties_ValidateAddons(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}

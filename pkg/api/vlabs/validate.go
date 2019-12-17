@@ -683,6 +683,10 @@ func (a *Properties) validateAddons() error {
 						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
 					}
 				}
+			case "aad":
+				if !a.HasAADAdminGroupID() {
+					return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
+				}
 			case "blobfuse-flexvolume":
 				if to.Bool(addon.Enabled) && a.HasCoreOS() {
 					return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
