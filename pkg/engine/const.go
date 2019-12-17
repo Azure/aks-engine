@@ -256,6 +256,6 @@ const (
 	corednsAddonDestinationFilename                string = "coredns.yaml"
 	kubeProxyAddonSourceFilename                   string = "kubernetesmasteraddons-kube-proxy-daemonset.yaml"
 	kubeProxyAddonDestinationFilename              string = "kube-proxy-daemonset.yaml"
-	podSecurityPolicyAddonSourceFilename           string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
-	podSecurityPolicyAddonDestinationFilename      string = "scheduled-maintenance-deployment.yaml"
+	podSecurityPolicyAddonSourceFilename           string = "kubernetesmasteraddons-pod-security-policy.yaml"
+	podSecurityPolicyAddonDestinationFilename      string = "pod-security-policy.yaml"
 )
