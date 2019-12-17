@@ -156,6 +156,7 @@
 // ../../parts/k8s/containeraddons/coredns.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml
@@ -26983,6 +26984,38 @@ func k8sContaineraddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml = []byte(`kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: aad-default-admin-group
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+subjects:
+- kind: Group
+  name: {{ContainerConfig "adminGroupID"}}
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -38120,6 +38153,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/coredns.yaml":                                                     k8sContaineraddonsCorednsYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":         k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":             k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
@@ -38417,6 +38451,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"coredns.yaml":                  {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
 			"dns-autoscaler.yaml":           {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":            {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":    {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
