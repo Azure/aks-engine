@@ -268,11 +268,13 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 
 	var kubeConfig string
 	if uc.kubeconfigPath != "" {
-		path, err := filepath.Abs(uc.kubeconfigPath)
+		var path string
+		var content []byte
+		path, err = filepath.Abs(uc.kubeconfigPath)
 		if err != nil {
 			return errors.Wrap(err, "reading --kubeconfig")
 		}
-		content, err := ioutil.ReadFile(path)
+		content, err = ioutil.ReadFile(path)
 		if err != nil {
 			return errors.Wrap(err, "reading --kubeconfig")
 		}
