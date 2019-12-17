@@ -255,3 +255,38 @@ function GenerateAzureStackCNIConfig
     Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
 }
 
+function New-ExternalHnsNetwork {
+    Write-Log "Creating new HNS network `"ext`""
+    $externalNetwork = "ext"
+    $na = @(Get-NetAdapter -Physical)
+
+    if ($na.Count -eq 0) {
+        throw "Failed to find any physical network adapters"
+    }
+
+    # If there is more than one adapter, use the first adapter.
+    $managementIP = (Get-NetIPAddress -ifIndex $na[0].ifIndex -AddressFamily IPv4).IPAddress
+    $adapterName = $na[0].Name
+    Write-Log "Using adapter $adapterName with IP address $managementIP"
+    $mgmtIPAfterNetworkCreate
+
+    $stopWatch = New-Object System.Diagnostics.Stopwatch
+    $stopWatch.Start()
+    # Fixme : use a smallest range possible, that will not collide with any pod space
+    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
+
+    # Wait for the switch to be created and the ip address to be assigned.
+    for ($i = 0; $i -lt 60; $i++) {
+        $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
+        if ($mgmtIPAfterNetworkCreate) {
+            break
+        }
+        Start-Sleep -Milliseconds 500
+    }
+
+    $stopWatch.Stop()
+    if (-not $mgmtIPAfterNetworkCreate) {
+        throw "Failed to find $managementIP after creating $externalNetwork network"
+    }
+    Write-Log "It took $($StopWatch.Elapsed.Seconds) seconds to create the $externalNetwork network."
+}
