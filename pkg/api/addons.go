@@ -760,8 +760,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
-	if i = getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
-		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && o.KubernetesConfig.Addons[i].Enabled != to.BoolPtr(false) {
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}
 	}

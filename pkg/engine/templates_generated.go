@@ -33,17 +33,14 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
-// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
@@ -52,7 +49,6 @@
 // ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml
@@ -109,6 +105,7 @@
 // ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/1.16/ip-masq-agent.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -127,6 +124,7 @@
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-omsagent-daemonset.yaml
+// ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/azure-cni-networkmonitor.yaml
@@ -147,6 +145,7 @@
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-omsagent-daemonset.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml
@@ -175,6 +174,7 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/containeraddons/node-problem-detector.yaml
@@ -6528,155 +6528,6 @@ func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asse
 	return a, nil
 }
 
-var _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: privileged
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: true
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - "*"
-  volumes:
-  - "*"
-  hostNetwork: true
-  hostPorts:
-  - min: 0
-    max: 65535
-  hostIPC: true
-  hostPID: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny
----
-apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: restricted
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: false
-  allowPrivilegeEscalation: false
-  requiredDropCapabilities:
-    - ALL
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - privileged
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - restricted
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:restricted
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:privileged
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:nodes
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, nil
-}
-
-func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
 kind: Policy
 omitStages:
@@ -7872,155 +7723,6 @@ func k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: privileged
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: true
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - "*"
-  volumes:
-  - "*"
-  hostNetwork: true
-  hostPorts:
-  - min: 0
-    max: 65535
-  hostIPC: true
-  hostPID: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny
----
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: restricted
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: false
-  allowPrivilegeEscalation: false
-  requiredDropCapabilities:
-    - ALL
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - privileged
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - restricted
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:restricted
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:privileged
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:nodes
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -9223,155 +8925,6 @@ func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: privileged
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: true
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - "*"
-  volumes:
-  - "*"
-  hostNetwork: true
-  hostPorts:
-  - min: 0
-    max: 65535
-  hostIPC: true
-  hostPID: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny
----
-apiVersion: policy/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: restricted
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: false
-  allowPrivilegeEscalation: false
-  requiredDropCapabilities:
-    - ALL
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - privileged
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - restricted
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:restricted
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:privileged
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:nodes
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -10769,159 +10322,6 @@ func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: privileged
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: true
-  allowPrivilegeEscalation: true
-  allowedCapabilities:
-  - "*"
-  volumes:
-  - "*"
-  hostNetwork: true
-  hostPorts:
-  - min: 0
-    max: 65535
-  hostIPC: true
-  hostPID: true
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  fsGroup:
-    rule: RunAsAny
----
-apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  name: restricted
-  annotations:
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  privileged: false
-  allowPrivilegeEscalation: false
-  requiredDropCapabilities:
-    - ALL
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-  hostNetwork: false
-  hostIPC: false
-  hostPID: false
-  runAsUser:
-    rule: MustRunAsNonRoot
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  fsGroup:
-    rule: MustRunAs
-    ranges:
-      {{- /* Forbid adding the root group. */}}
-      - min: 1
-        max: 65535
-  readOnlyRootFilesystem: false
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:privileged
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - privileged
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: psp:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ['extensions']
-  resources: ['podsecuritypolicies']
-  verbs:     ['use']
-  resourceNames:
-  - restricted
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: default:restricted
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:restricted
-subjects:
-- kind: Group
-  name: system:authenticated
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: default:privileged
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: psp:privileged
-subjects:
-- kind: Group
-  name: system:masters
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:serviceaccounts:kube-system
-  apiGroup: rbac.authorization.k8s.io
-- kind: Group
-  name: system:nodes
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -17940,6 +17340,155 @@ func k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 	return a, nil
 }
 
+var _k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.15/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons116AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -21483,6 +21032,155 @@ func k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYaml() (*asset,
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmasteraddons-omsagent-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -25235,6 +24933,155 @@ func k8sContaineraddons117KubernetesmasteraddonsOmsagentDaemonsetYaml() (*asset,
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-omsagent-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -31420,6 +31267,159 @@ func k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: default:privileged
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:masters
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:serviceaccounts:kube-system
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -38056,17 +38056,14 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                        iaasoutputsT,
 	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":                            k8sAddons116KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml":                  k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                            k8sAddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":                  k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml":               k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
@@ -38075,7 +38072,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                      k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
-	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                    k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
@@ -38132,6 +38128,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                               k8sContaineraddons116AzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                          k8sContaineraddons116IpMasqAgentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -38150,6 +38147,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons116KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  k8sContaineraddons116KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-omsagent-daemonset.yaml":              k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-pod-security-policy.yaml":             k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sContaineraddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":               k8sContaineraddons116KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/containeraddons/1.17/azure-cni-networkmonitor.yaml":                               k8sContaineraddons117AzureCniNetworkmonitorYaml,
@@ -38170,6 +38168,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons117KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  k8sContaineraddons117KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-omsagent-daemonset.yaml":              k8sContaineraddons117KubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/containeraddons/1.17/kubernetesmasteraddons-pod-security-policy.yaml":             k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sContaineraddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":               k8sContaineraddons117KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/containeraddons/1.6/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons16KubernetesmasteraddonsHeapsterDeploymentYaml,
@@ -38198,6 +38197,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-metrics-server-deployment.yaml":            k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":       k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml":                   k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml":                  k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":             k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml":                    k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/containeraddons/node-problem-detector.yaml":                                       k8sContaineraddonsNodeProblemDetectorYaml,
@@ -38319,21 +38319,18 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.15": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"kubernetesmaster-audit-policy.yaml":                                 {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
@@ -38343,7 +38340,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-flannel-daemonset.yaml":                      {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes.yaml":          {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-pod-security-policy.yaml":                    {k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml, map[string]*bintree{}},
@@ -38417,6 +38413,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.15": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":           {k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
 				"azure-cni-networkmonitor.yaml":                               {k8sContaineraddons116AzureCniNetworkmonitorYaml, map[string]*bintree{}},
@@ -38437,6 +38434,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sContaineraddons116KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  {k8sContaineraddons116KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-omsagent-daemonset.yaml":              {k8sContaineraddons116KubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sContaineraddons116KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sContaineraddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sContaineraddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38459,6 +38457,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sContaineraddons117KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  {k8sContaineraddons117KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-omsagent-daemonset.yaml":              {k8sContaineraddons117KubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sContaineraddons117KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sContaineraddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sContaineraddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38496,6 +38495,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  {k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-omsagent-daemonset.yaml":              {k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			"node-problem-detector.yaml":                                  {k8sContaineraddonsNodeProblemDetectorYaml, map[string]*bintree{}},
