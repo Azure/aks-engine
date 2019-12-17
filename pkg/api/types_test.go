@@ -6172,6 +6172,36 @@ func TestKubernetesAddonIsEnabled(t *testing.T) {
 	}
 }
 
+func TestKubernetesAddonIsDisabled(t *testing.T) {
+	cases := []struct {
+		a        *KubernetesAddon
+		expected bool
+	}{
+		{
+			a:        &KubernetesAddon{},
+			expected: false,
+		},
+		{
+			a: &KubernetesAddon{
+				Enabled: to.BoolPtr(false),
+			},
+			expected: true,
+		},
+		{
+			a: &KubernetesAddon{
+				Enabled: to.BoolPtr(true),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.a.IsDisabled() != c.expected {
+			t.Fatalf("expected IsDisabled() to return %t but instead returned %t", c.expected, c.a.IsDisabled())
+		}
+	}
+}
+
 func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 	cases := []struct {
 		k         *KubernetesConfig
@@ -6235,6 +6265,73 @@ func TestKubernetesConfigIsAddonEnabled(t *testing.T) {
 	for _, c := range cases {
 		if c.k.IsAddonEnabled(c.addonName) != c.expected {
 			t.Fatalf("expected KubernetesConfig.IsAddonEnabled(%s) to return %t but instead returned %t", c.addonName, c.expected, c.k.IsAddonEnabled(c.addonName))
+		}
+	}
+}
+
+func TestKubernetesConfigIsAddonDisabled(t *testing.T) {
+	cases := []struct {
+		k         *KubernetesConfig
+		addonName string
+		expected  bool
+	}{
+		{
+			k:         &KubernetesConfig{},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  true,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+		{
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    "bar",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			addonName: "foo",
+			expected:  false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.k.IsAddonDisabled(c.addonName) != c.expected {
+			t.Fatalf("expected KubernetesConfig.IsAddonDisabled(%s) to return %t but instead returned %t", c.addonName, c.expected, c.k.IsAddonDisabled(c.addonName))
 		}
 	}
 }

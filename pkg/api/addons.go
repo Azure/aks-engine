@@ -582,6 +582,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
+		Name:    common.PodSecurityPolicyAddonName,
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -615,6 +620,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultKubeDNSAddonsConfig,
 		defaultCorednsAddonsConfig,
 		defaultKubeProxyAddonsConfig,
+		defaultPodSecurityPolicyAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -699,11 +705,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpgrade {
 		if base64Data, ok := o.KubernetesConfig.PodSecurityPolicyConfig["data"]; ok {
-			pspAddonsConfig := KubernetesAddon{
-				Name: common.PodSecurityPolicyAddonName,
-				Data: base64Data,
+			if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
+				if o.KubernetesConfig.Addons[i].Data == "" {
+					o.KubernetesConfig.Addons[i].Data = base64Data
+				}
 			}
-			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, pspAddonsConfig)
 		}
 	}
 
@@ -751,6 +757,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 		// Remove deprecated "kube-proxy-daemonset addon"
 		o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons[:i], o.KubernetesConfig.Addons[i+1:]...)
+	}
+
+	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+		}
 	}
 }
 

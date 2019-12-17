@@ -206,19 +206,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "enablePodSecurityPolicy requires the enableRbac feature as a prerequisite",
 		},
-		"should error when KubernetesConfig has enablePodSecurity has a k8s version lesser than 1.8.0": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						EnablePodSecurityPolicy: &trueVal,
-						EnableRbac:              &trueVal,
-					},
-				},
-			},
-			expectedError: "enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version 1.8.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
 		"should not error with empty object": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{

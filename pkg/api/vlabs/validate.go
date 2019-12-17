@@ -281,16 +281,9 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
+					log.Warnf("EnablePodSecurityPolicy is deprecated in favor of the addon pod-security-policy.")
 					if !o.KubernetesConfig.IsRBACEnabled() {
 						return errors.Errorf("enablePodSecurityPolicy requires the enableRbac feature as a prerequisite")
-					}
-					minVersion, err := semver.Make("1.8.0")
-					if err != nil {
-						return errors.Errorf("could not validate version")
-					}
-					if sv.LT(minVersion) {
-						return errors.Errorf("enablePodSecurityPolicy is only supported in aks-engine for Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), version)
 					}
 					if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 {
 						log.Warnf("Raw manifest for PodSecurityPolicy using PodSecurityPolicyConfig is deprecated in favor of the addon pod-security-policy. This will be ignored.")

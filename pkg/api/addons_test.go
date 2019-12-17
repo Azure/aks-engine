@@ -65,9 +65,12 @@ func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
 	isUpgrade := true
 	base64DataPSP := "cHNwQ3VzdG9tRGF0YQ=="
 	o.OrchestratorType = Kubernetes
-	o.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
-	o.KubernetesConfig.PodSecurityPolicyConfig = map[string]string{
-		"data": base64DataPSP,
+	o.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+			Data:    base64DataPSP,
+		},
 	}
 
 	mockCS.setAddonsConfig(isUpgrade)
@@ -2829,6 +2832,81 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.15.4"),
 		},
+		{
+			name: "pod-security-policy upgrade to 1.15",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.15.4"),
+		},
+		{
+			name: "pod-security-policy disabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.PodSecurityPolicyAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
+		},
+		{
+			name: "pod-security-policy disabled during upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.PodSecurityPolicyAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
+		},
 	}
 
 	for _, test := range tests {
@@ -2863,6 +2941,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.KubeDNSAddonName,
 				common.KubeProxyAddonName,
 				common.NodeProblemDetectorAddonName,
+				common.PodSecurityPolicyAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
@@ -3316,7 +3395,7 @@ func isInStrSlice(name string, names []string) bool {
 
 func getDefaultAddons(version string) []KubernetesAddon {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
-	return []KubernetesAddon{
+	addons := []KubernetesAddon{
 		{
 			Name:    common.BlobfuseFlexVolumeAddonName,
 			Enabled: to.BoolPtr(true),
@@ -3428,4 +3507,13 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			},
 		},
 	}
+
+	if common.IsKubernetesVersionGe(version, "1.15.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		})
+	}
+
+	return addons
 }

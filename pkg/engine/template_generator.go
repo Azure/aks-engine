@@ -645,9 +645,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return false
 		},
-		"EnablePodSecurityPolicy": func() bool {
-			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
-		},
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
 		},

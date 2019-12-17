@@ -297,6 +297,14 @@ func (a *KubernetesAddon) IsEnabled() bool {
 	return *a.Enabled
 }
 
+// IsDisabled returns true if the addon is explicitly disabled
+func (a *KubernetesAddon) IsDisabled() bool {
+	if a.Enabled == nil {
+		return false
+	}
+	return !*a.Enabled
+}
+
 // GetAddonContainersIndexByName returns the KubernetesAddon containers index with the name `containerName`
 func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int {
 	for i := range a.Containers {
@@ -1737,6 +1745,13 @@ func (k *KubernetesConfig) GetAddonScript(addonName string) string {
 func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 	kubeAddon := k.GetAddonByName(addonName)
 	return kubeAddon.IsEnabled()
+}
+
+// IsAddonDisabled checks whether a k8s addon with name "addonName" is explicitly disabled based on the Enabled field of KubernetesAddon.
+// If the value of Enabled is nil, we return false (not explicitly disabled)
+func (k *KubernetesConfig) IsAddonDisabled(addonName string) bool {
+	kubeAddon := k.GetAddonByName(addonName)
+	return kubeAddon.IsDisabled()
 }
 
 // IsAADPodIdentityEnabled checks if the AAD pod identity addon is enabled

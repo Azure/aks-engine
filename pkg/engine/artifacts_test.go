@@ -22,7 +22,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAADAdminGroup          bool
 		expectedAzureCloudProvider     bool
 		expectedAuditPolicy            bool
-		expectedPodSecurityPolicy      bool
 		expectedManagedStorageClass    bool
 		expectedUnmanagedStorageClass  bool
 		expectedScheduledMaintenance   bool
@@ -44,7 +43,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -66,7 +64,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -88,7 +85,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -113,7 +109,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          true,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -136,7 +131,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -165,32 +159,9 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   true,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// PodSecurityPolicy scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						EnablePodSecurityPolicy: to.BoolPtr(true),
-					},
-				},
-			},
-			expectedCilium:                 false,
-			expectedFlannel:                false,
-			expectedAADAdminGroup:          false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      true,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
 			expectedAzureCSIStorageClasses: false,
 		},
 		// non-Managed Disk scenario
@@ -214,7 +185,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  true,
 			expectedScheduledMaintenance:   false,
@@ -242,7 +212,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -270,7 +239,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  true,
 			expectedScheduledMaintenance:   false,
@@ -292,7 +260,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -320,7 +287,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			expectedAADAdminGroup:          false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
-			expectedPodSecurityPolicy:      false,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -351,10 +317,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "audit-policy.yaml":
 				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", common.AuditPolicyAddonName, c.expectedAuditPolicy)
-				}
-			case "pod-security-policy.yaml":
-				if c.expectedPodSecurityPolicy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", "PodSecurityPolicy", c.expectedPodSecurityPolicy)
 				}
 			case "azure-storage-classes.yaml":
 				if strings.Contains(componentFileSpec.sourceFile, "unmanaged-azure-storage") {
@@ -432,6 +394,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedKubeDNS                kubernetesComponentFileSpec
 		expectedCoreDNS                kubernetesComponentFileSpec
 		expectedKubeProxy              kubernetesComponentFileSpec
+		expectedPodSecurityPolicy      kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -545,6 +508,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.KubeProxyAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.PodSecurityPolicyAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -678,6 +645,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeProxyAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: kubeProxyAddonDestinationFilename,
+			},
+			expectedPodSecurityPolicy: kubernetesComponentFileSpec{
+				sourceFile:      podSecurityPolicyAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: podSecurityPolicyAddonDestinationFilename,
 			},
 		},
 		{
@@ -766,6 +738,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.KubeProxyAddonName,
 							},
+							{
+								Name: common.PodSecurityPolicyAddonName,
+							},
 						},
 					},
 				},
@@ -899,6 +874,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeProxyAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: kubeProxyAddonDestinationFilename,
+			},
+			expectedPodSecurityPolicy: kubernetesComponentFileSpec{
+				sourceFile:      podSecurityPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: podSecurityPolicyAddonDestinationFilename,
 			},
 		},
 		{
@@ -1033,6 +1013,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      kubeProxyAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: kubeProxyAddonDestinationFilename,
+			},
+			expectedPodSecurityPolicy: kubernetesComponentFileSpec{
+				sourceFile:      podSecurityPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: podSecurityPolicyAddonDestinationFilename,
 			},
 		},
 	}
@@ -1303,6 +1288,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedKubeProxy.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedKubeProxy.destinationFile)
+					}
+				case common.PodSecurityPolicyAddonName:
+					if c.expectedPodSecurityPolicy.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedPodSecurityPolicy.sourceFile)
+					}
+					if c.expectedPodSecurityPolicy.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedPodSecurityPolicy.base64Data)
+					}
+					if c.expectedPodSecurityPolicy.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedPodSecurityPolicy.destinationFile)
 					}
 				}
 			}

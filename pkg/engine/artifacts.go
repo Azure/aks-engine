@@ -162,6 +162,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.KubeProxyAddonName),
 			destinationFile: kubeProxyAddonDestinationFilename,
 		},
+		common.PodSecurityPolicyAddonName: {
+			sourceFile:      podSecurityPolicyAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.PodSecurityPolicyAddonName),
+			destinationFile: podSecurityPolicyAddonDestinationFilename,
+		},
 	}
 }
 
@@ -204,12 +209,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
 			destinationFile: "audit-policy.yaml",
 			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0"),
-		},
-		{
-			sourceFile:      "kubernetesmasteraddons-pod-security-policy.yaml",
-			base64Data:      k.GetAddonScript(common.PodSecurityPolicyAddonName),
-			destinationFile: "pod-security-policy.yaml",
-			isEnabled:       to.Bool(p.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) || common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0-beta.1"),
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml",
