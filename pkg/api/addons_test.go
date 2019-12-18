@@ -1543,49 +1543,14 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
-						},
-						{
-							Name:  common.AzureVnetTelemetryContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.AzureVnetTelemetryContainerName],
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
 			}, "1.15.4"),
-		},
-		{
-			name: "Azure Network Policy addon enabled - 1.16",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.16.0",
-						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							NetworkPolicy: NetworkPolicyAzure,
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.AzureNetworkPolicyAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
-						},
-					},
-				},
-			}, "1.16.0"),
 		},
 		{
 			name: "Azure Network Policy addon enabled - 1.16 upgrade",
@@ -1629,8 +1594,10 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureNetworkPolicyAddonName,
-							Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							Name:           common.AzureNetworkPolicyAddonName,
+							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							MemoryRequests: "20Mi",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},

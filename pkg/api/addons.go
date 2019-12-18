@@ -315,14 +315,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureNetworkPolicyAddonName,
-				Image: k8sComponents[common.AzureNetworkPolicyAddonName],
+				Name:           common.AzureNetworkPolicyAddonName,
+				Image:          k8sComponents[common.AzureNetworkPolicyAddonName],
+				MemoryRequests: "20Mi",
+				MemoryLimits:   "2Gi",
 			},
 		},
-	}
-
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: k8sComponents[common.AzureVnetTelemetryContainerName]})
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
