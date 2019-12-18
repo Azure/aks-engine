@@ -845,6 +845,33 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			},
 			ExpectedResult: "my_telemetry_key",
 		},
+		{
+			Name:     "HasCiliumNetworkPolicy - cilium",
+			FuncName: "HasCiliumNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCilium
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasCiliumNetworkPlugin - cilium",
+			FuncName: "HasCiliumNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasCiliumNetworkPlugin - azure",
+			FuncName: "HasCiliumNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
+				return cs
+			},
+			ExpectedResult: false,
+		},
 	}
 
 	originalCS := &api.ContainerService{}
