@@ -6104,11 +6104,11 @@ func TestAADAdminGroupIDMethods(t *testing.T) {
 			t.Parallel()
 			hasAADAdminGroupID := test.properties.HasAADAdminGroupID()
 			if hasAADAdminGroupID != test.expectedHasAADAdminGroupID {
-				t.Errorf("expected featureGates %t, but got %t", test.expectedHasAADAdminGroupID, hasAADAdminGroupID)
+				t.Errorf("expected HasAADAdminGroupID %t, but got %t", test.expectedHasAADAdminGroupID, hasAADAdminGroupID)
 			}
 			getAADAdminGroupID := test.properties.GetAADAdminGroupID()
 			if getAADAdminGroupID != test.expectedGetAADAdminGroupID {
-				t.Errorf("expected featureGates %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
+				t.Errorf("expected HasAADAdminGroupID %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
 			}
 		})
 	}
