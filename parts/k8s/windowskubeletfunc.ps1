@@ -156,20 +156,20 @@ New-InfraContainer {
     cd $KubeDir
     $computerInfo = Get-ComputerInfo
 
-    # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
-    # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
+    # Reference for these tags: curl -L https://mcr.microsoft.com/v2/oss/kubernetes/pause/tags/list
+    # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/oss/kubernetes/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
+    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
-        "1803" { 
+        "1803" {
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
-        "1809" { 
+        "1809" {
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
