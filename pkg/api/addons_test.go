@@ -1887,6 +1887,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPolicy: NetworkPolicyCilium,
+							NetworkPlugin: NetworkPluginCilium,
 						},
 					},
 				},
