@@ -22,7 +22,7 @@ const (
 	tillerImageReference                              string = "tiller:v2.13.1"
 	reschedulerImageReference                         string = "rescheduler:v0.4.0"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
-	omsImageReference                                 string = "oms:ciprod11012019"
+	omsImageReference                                 string = "oms:ciprod12042019"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.6"
 	nvidiaDevicePluginImageReference                  string = "k8s-device-plugin:1.11"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
