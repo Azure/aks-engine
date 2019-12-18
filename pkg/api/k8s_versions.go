@@ -52,6 +52,8 @@ const (
 	csiNodeDriverRegistrarImageReference              string = "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0"
 	csiAzureDiskImageReference                        string = "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0"
 	csiAzureFileImageReference                        string = "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0"
+	azureCloudControllerManagerImageReference         string = "azure-cloud-controller-manager:v0.4.0"
+	azureCloudNodeManagerImageReference               string = "azure-cloud-node-manager:v0.4.0"
 )
 
 // k8sComponentVersions is a convenience map to make UT maintenance easier,
@@ -215,8 +217,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			"kube-controller-manager":                     "kube-controller-manager:v" + version,
 			common.KubeProxyAddonName:                     "kube-proxy:v" + version,
 			"kube-scheduler":                              "kube-scheduler:v" + version,
-			"ccm":                                         "azure-cloud-controller-manager:v0.3.0",
-			common.CloudNodeManagerAddonName:              "azure-cloud-node-manager:v0.3.0",
+			"ccm":                                         azureCloudControllerManagerImageReference,
+			common.CloudNodeManagerAddonName:              azureCloudNodeManagerImageReference,
 			"windowszip":                                  "v" + version + "-1int.zip",
 			common.DashboardAddonName:                     dashboardImageReference,
 			"exechealthz":                                 execHealthZImageReference,
@@ -282,8 +284,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		ret = map[string]string{
 			"hyperkube":                                   "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:                     "hyperkube-amd64:v" + version,
-			"ccm":                                         "azure-cloud-controller-manager:v0.3.0",
-			common.CloudNodeManagerAddonName:              "azure-cloud-node-manager:v0.3.0",
+			"ccm":                                         azureCloudControllerManagerImageReference,
+			common.CloudNodeManagerAddonName:              azureCloudNodeManagerImageReference,
 			"windowszip":                                  "v" + version + "-1int.zip",
 			common.DashboardAddonName:                     dashboardImageReference,
 			"exechealthz":                                 execHealthZImageReference,
