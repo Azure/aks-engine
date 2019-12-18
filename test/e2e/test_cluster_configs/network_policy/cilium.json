@@ -10,8 +10,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPolicy": "cilium",
-					"networkPlugin": "cilium"
+					"networkPolicy": "cilium"
 				}
 			},
 			"masterProfile": {

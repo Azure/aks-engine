@@ -17,7 +17,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	cases := []struct {
 		p                              *api.Properties
-		expectedCilium                 bool
 		expectedFlannel                bool
 		expectedAzureCloudProvider     bool
 		expectedAuditPolicy            bool
@@ -37,7 +36,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -57,7 +55,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 true,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -77,7 +74,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                true,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -100,7 +96,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					AdminGroupID: "1234-5",
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -121,7 +116,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -148,7 +142,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -173,7 +166,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -199,7 +191,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -225,7 +216,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -245,7 +235,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -271,7 +260,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					},
 				},
 			},
-			expectedCilium:                 false,
 			expectedFlannel:                false,
 			expectedAzureCloudProvider:     true,
 			expectedAuditPolicy:            true,
@@ -286,10 +274,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		componentFileSpecArray := kubernetesAddonSettingsInit(c.p)
 		for _, componentFileSpec := range componentFileSpecArray {
 			switch componentFileSpec.destinationFile {
-			case "cilium-daemonset.yaml":
-				if c.expectedCilium != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.CiliumAddonName, c.expectedCilium)
-				}
 			case "flannel-daemonset.yaml":
 				if c.expectedFlannel != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", common.FlannelAddonName, c.expectedFlannel)
@@ -371,6 +355,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedAzureCNINetworkMonitor kubernetesComponentFileSpec
 		expectedDNSAutoscaler          kubernetesComponentFileSpec
 		expectedCalico                 kubernetesComponentFileSpec
+		expectedCilium                 kubernetesComponentFileSpec
 		expectedAzureNetworkPolicy     kubernetesComponentFileSpec
 		expectedAzurePolicy            kubernetesComponentFileSpec
 		expectedCloudNodeManager       kubernetesComponentFileSpec
@@ -463,6 +448,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.CalicoAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.CiliumAddonName,
 								Data: base64Data,
 							},
 							{
@@ -599,6 +588,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedCilium: kubernetesComponentFileSpec{
+				sourceFile:      ciliumAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: ciliumAddonDestinationFilename,
 			},
 			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
 				sourceFile:      azureNetworkPolicyAddonSourceFilename,
@@ -712,6 +706,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.CalicoAddonName,
 							},
 							{
+								Name: common.CiliumAddonName,
+							},
+							{
 								Name: common.AzureNetworkPolicyAddonName,
 							},
 							{
@@ -836,6 +833,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedCilium: kubernetesComponentFileSpec{
+				sourceFile:      ciliumAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: ciliumAddonDestinationFilename,
 			},
 			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
 				sourceFile:      azureNetworkPolicyAddonSourceFilename,
@@ -980,6 +982,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: calicoAddonDestinationFilename,
+			},
+			expectedCilium: kubernetesComponentFileSpec{
+				sourceFile:      ciliumAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: ciliumAddonDestinationFilename,
 			},
 			expectedAzureNetworkPolicy: kubernetesComponentFileSpec{
 				sourceFile:      azureNetworkPolicyAddonSourceFilename,
@@ -1225,6 +1232,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedCalico.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedCalico.destinationFile)
+					}
+				case common.CiliumAddonName:
+					if c.expectedCilium.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedCilium.sourceFile)
+					}
+					if c.expectedCilium.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedCilium.base64Data)
+					}
+					if c.expectedCilium.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedCilium.destinationFile)
 					}
 				case common.AzureNetworkPolicyAddonName:
 					if c.expectedAzureNetworkPolicy.sourceFile != componentFileSpec[addon].sourceFile {

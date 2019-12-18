@@ -1874,7 +1874,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.15.4"),
 		},
 		{
-			name: "cilium addons",
+			name: "cilium networkPolicy",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -1886,13 +1886,36 @@ func TestSetAddonsConfig(t *testing.T) {
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginCilium,
+							NetworkPolicy: NetworkPolicyCilium,
 						},
 					},
 				},
 			},
-			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, getDefaultAddons("1.15.4")),
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CiliumAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CiliumAgentContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
+						},
+						{
+							Name:  common.CiliumCleanStateContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
+						},
+						{
+							Name:  common.CiliumOperatorContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
+						},
+						{
+							Name:  common.CiliumEtcdOperatorContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
+						},
+					},
+				},
+			}, "1.15.4")),
 		},
 		{
 			name: "Azure Stack addons",

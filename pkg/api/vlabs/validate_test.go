@@ -969,6 +969,9 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 			networkPlugin: "kubenet",
 			networkPolicy: "kubenet",
 		},
+		{
+			networkPlugin: "cilium",
+		},
 	} {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = config.networkPlugin
@@ -1517,6 +1520,73 @@ func TestValidateAddons(t *testing.T) {
 				},
 				AADProfile: &AADProfile{
 					AdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "cilium addon enabled w/ no networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ azure networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "azure",
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ azure networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ cilium networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
 				},
 			},
 			expectedErr: nil,

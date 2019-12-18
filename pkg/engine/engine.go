@@ -626,6 +626,7 @@ func getBase64EncodedGzippedCustomScript(csFilename string, cs *api.ContainerSer
 	templ := template.New("ContainerService template").Funcs(getContainerServiceFuncMap(cs))
 	_, err = templ.Parse(string(b))
 	if err != nil {
+		fmt.Println("here")
 		// this should never happen and this is a bug
 		panic(fmt.Sprintf("BUG: %s", err.Error()))
 	}
