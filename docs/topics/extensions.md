@@ -133,7 +133,7 @@ not VMSS.
 
 Or they can be referenced as a preprovision extension, this will run during cloud init before the cluster is brought up.
 
-``` javascript
+``` json
 {
     "agentPoolProfiles": [
         {
