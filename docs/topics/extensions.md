@@ -106,7 +106,7 @@ agentPoolProfiles defines that an extension will be run on every node of that ag
 configuration. Extensions in agentPoolProfiles are only supported for VMAS agent pools,
 not VMSS.
 
-``` javascript
+``` json
 {
     "agentPoolProfiles": [
         {
