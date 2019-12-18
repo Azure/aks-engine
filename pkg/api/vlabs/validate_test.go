@@ -1591,6 +1591,42 @@ func TestValidateAddons(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		{
+			name: "cilium addon enabled w/ cilium networkPolicy + networkPlugin",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						NetworkPlugin: NetworkPluginCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "cilium addon enabled w/ k8s >= 1.16",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName),
+		},
 	}
 
 	for _, test := range tests {
