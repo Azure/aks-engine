@@ -1288,6 +1288,19 @@ func (p *Properties) GetKubeProxyFeatureGates() string {
 	return "{}"
 }
 
+// HasAADAdminGroupID returns true if the cluster has an AADProfile w/ a valid AdminGroupID
+func (p *Properties) HasAADAdminGroupID() bool {
+	return p.AADProfile != nil && p.AADProfile.AdminGroupID != ""
+}
+
+// GetAADAdminGroupID returns AADProfile.AdminGroupID, or "" if no AADProfile
+func (p *Properties) GetAADAdminGroupID() string {
+	if p.AADProfile != nil {
+		return p.AADProfile.AdminGroupID
+	}
+	return ""
+}
+
 // IsValid returns true if ImageRefernce contains at least Name and ResourceGroup
 func (i *ImageReference) IsValid() bool {
 	return len(i.Name) > 0 && len(i.ResourceGroup) > 0

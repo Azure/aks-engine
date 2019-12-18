@@ -603,6 +603,19 @@ func (p *Properties) IsAzureStackCloud() bool {
 	return p.CustomCloudProfile != nil
 }
 
+// HasAADAdminGroupID returns true if the cluster has an AADProfile w/ a valid AdminGroupID
+func (p *Properties) HasAADAdminGroupID() bool {
+	return p.AADProfile != nil && p.AADProfile.AdminGroupID != ""
+}
+
+// GetAADAdminGroupID returns AADProfile.AdminGroupID, or "" if no AADProfile
+func (p *Properties) GetAADAdminGroupID() string {
+	if p.AADProfile != nil {
+		return p.AADProfile.AdminGroupID
+	}
+	return ""
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (m *MasterProfile) IsCustomVNET() bool {
 	return len(m.VnetSubnetID) > 0

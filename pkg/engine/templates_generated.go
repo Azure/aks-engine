@@ -42,7 +42,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -157,6 +156,7 @@
 // ../../parts/k8s/containeraddons/coredns.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml
@@ -8986,38 +8986,6 @@ func k8sAddonsKubernetesmasterAuditPolicyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml = []byte(`kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: aad-default-admin-group
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-subjects:
-- kind: Group
-  name: <gID>
-  apiGroup: rbac.authorization.k8s.io
-roleRef:
-  kind: ClusterRole
-  name: cluster-admin
-  apiGroup: rbac.authorization.k8s.io
-`)
-
-func k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -14331,10 +14299,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-
-{{if AdminGroupID }}
-    sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
-{{end}}
 
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
@@ -27020,6 +26984,38 @@ func k8sContaineraddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml = []byte(`kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: aad-default-admin-group
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+subjects:
+- kind: Group
+  name: {{ContainerConfig "adminGroupID"}}
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -31776,23 +31772,7 @@ func k8sKubeconfigJson() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKubernetesparamsT = []byte(`{{if .HasAadProfile}}
-    "aadTenantId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
-      },
-      "type": "string"
-    },
-    "aadAdminGroupId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
-      },
-      "type": "string"
-    },
-{{end}}
-{{if IsHostedMaster}}
+var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
     "kubernetesEndpoint": {
       "metadata": {
         "description": "The Kubernetes API endpoint https://<kubernetesEndpoint>:443"
@@ -38059,7 +38039,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":                  k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml":              k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml,
 	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":                       k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -38174,6 +38153,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/coredns.yaml":                                                     k8sContaineraddonsCorednsYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":         k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":             k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
@@ -38327,7 +38307,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			}},
 			"kubernetesmaster-audit-policy.yaml":                                 {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":           {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-csi-storage-classes.yaml":              {k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-cilium-daemonset.yaml":                       {k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -38472,6 +38451,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"coredns.yaml":                  {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
 			"dns-autoscaler.yaml":           {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":            {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":    {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},

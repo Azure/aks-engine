@@ -258,4 +258,6 @@ const (
 	kubeProxyAddonDestinationFilename              string = "kube-proxy-daemonset.yaml"
 	podSecurityPolicyAddonSourceFilename           string = "kubernetesmasteraddons-pod-security-policy.yaml"
 	podSecurityPolicyAddonDestinationFilename      string = "pod-security-policy.yaml"
+	aadDefaultAdminGroupAddonSourceFilename        string = "kubernetesmasteraddons-aad-default-admin-group-rbac.yaml"
+	aadDefaultAdminGroupDestinationFilename        string = "aad-default-admin-group-rbac.yaml"
 )
