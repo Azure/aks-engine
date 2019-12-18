@@ -107,4 +107,4 @@ az keyvault update -g $RG_NAME -n $KV_NAME --enabled-for-template-deployment
 
 ## Upgrade Considerations
 
-**Important** As of now, there is no working cluster upgrade implementation for clusters that were built according to the Key Vault-derived secrets. If you expect to use `aks-engine upgrade` to maintain a long-lived Kubernetes cluster built by `aks-engine`, you will not be able to take advantage of this feature at this time.
+AKS Engine is currently unable to read Key Vault secrets specified by the paths in the deployment ARM template. Thus, the only way to upgrade a cluster built using Key Vault-derived secrets is to specify a local [kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) when invoking `aks-engine upgrade`. Please see [steps to run when using Key Vault for secrets](./upgrade.md#steps-to-run-when-using-Key-Vault-for-secrets).

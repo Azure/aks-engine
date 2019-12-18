@@ -94,6 +94,22 @@ For example,
   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
+### Steps to run when using Key Vault for secrets
+
+If you use Key Vault for secrets, you must specify a local [kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) to connect to the cluster because aks-engine is currently unable to read secrets from a Key Vault during an upgrade.
+
+```bash
+ ./bin/aks-engine upgrade \
+   --subscription-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
+   --api-model _output/mycluster/apimodel.json \
+   --location westus \
+   --resource-group test-upgrade \
+   --upgrade-version 1.8.7 \
+   --client-id xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
+   --client-secret xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx \
+   --kubeconfig ./path/to/kubeconfig.json
+```
+
 ## Known Limitations
 
 ### Manual reconciliation
