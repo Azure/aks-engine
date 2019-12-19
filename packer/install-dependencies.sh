@@ -74,11 +74,9 @@ done
 
 CNI_PLUGIN_VERSIONS="
 0.8.3
-0.7.5
-0.7.1
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
-    CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v${CNI_PLUGIN_VERSION}.tgz"
+    CNI_PLUGINS_URL="https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-linux-v${CNI_PLUGIN_VERSION}.tgz"
     downloadCNI
     echo "  - CNI plugin version ${CNI_PLUGIN_VERSION}" >> ${VHD_LOGS_FILEPATH}
 done
