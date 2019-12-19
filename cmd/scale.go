@@ -269,7 +269,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 
 				osPublisher := vm.StorageProfile.ImageReference.Publisher
-				if osPublisher != nil && strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") {
+				if osPublisher != nil && (strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") || strings.EqualFold(*osPublisher, "microsoft-aks")) {
 					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
 				} else {
 					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
@@ -390,7 +390,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				}
 
 				osPublisher := vmss.VirtualMachineProfile.StorageProfile.ImageReference.Publisher
-				if osPublisher != nil && strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") {
+				if osPublisher != nil && (strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") || strings.EqualFold(*osPublisher, "microsoft-aks")) {
 					_, _, winPoolIndex, _, err = utils.WindowsVMNameParts(vmName)
 					log.Errorln(err)
 				}
