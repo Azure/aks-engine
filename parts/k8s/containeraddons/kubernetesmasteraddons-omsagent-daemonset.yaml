@@ -94,13 +94,13 @@ data:
      log_level debug
     </source>
 
-   #Kubernetes health
-   <source>
-    type kubehealth
-    tag kubehealth.ReplicaSet
-    run_interval 60
-    log_level debug
-   </source>
+    #Kubernetes health
+    <source>
+     type kubehealth
+     tag kubehealth.ReplicaSet
+     run_interval 60
+     log_level debug
+    </source>
 
     #cadvisor perf- Windows nodes
     <source>
