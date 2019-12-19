@@ -12859,7 +12859,7 @@ write_certs_to_disk() {
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only > $K8S_PROXY_CA_CRT_FILEPATH
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only > $K8S_PROXY_KEY_FILEPATH
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only > $K8S_PROXY_CRT_FILEPATH
-    # Remove whitespace padding at beginning of 1st line
+    {{- /* Remove whitespace padding at beginning of 1st line */}}
     sed -i '1s/\s//' $K8S_PROXY_CA_CRT_FILEPATH $K8S_PROXY_CRT_FILEPATH $K8S_PROXY_KEY_FILEPATH
     chmod 600 $K8S_PROXY_KEY_FILEPATH
 }
@@ -12875,7 +12875,7 @@ is_etcd_healthy(){
     done
 }
 is_etcd_healthy
-# lock file to enable "only 1 master generates certs"
+{{- /* lock file to enable "only 1 master generates certs" */}}
 rm -f "${PROXY_CERT_LOCK_FILE}"
 mkfifo "${PROXY_CERT_LOCK_FILE}"
 

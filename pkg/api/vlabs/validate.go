@@ -235,11 +235,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if o.KubernetesConfig.EnableAggregatedAPIs {
-					if sv.LT(minVersion) {
-						return errors.Errorf("enableAggregatedAPIs is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), version)
-					}
-
 					if !o.KubernetesConfig.IsRBACEnabled() {
 						return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
 					}

@@ -108,18 +108,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
-		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						EnableAggregatedAPIs: true,
-					},
-				},
-			},
-			expectedError: "enableAggregatedAPIs is only available in Kubernetes version 1.7.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled and enableRBAC disabled": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
