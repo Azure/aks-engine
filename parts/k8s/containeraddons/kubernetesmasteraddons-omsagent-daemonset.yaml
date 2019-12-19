@@ -122,9 +122,9 @@ data:
      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
      metrics_to_collect cpuUsageNanoCores,memoryWorkingSetBytes
      log_level info
-   </filter>
+    </filter>
 
-   #health model aggregation filter
+    #health model aggregation filter
     <filter kubehealth**>
      type filter_health_model_builder
     </filter>
