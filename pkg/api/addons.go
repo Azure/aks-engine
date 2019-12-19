@@ -375,6 +375,29 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultsCiliumAddonsConfig := KubernetesAddon{
+		Name:    common.CiliumAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.CiliumAgentContainerName,
+				Image: k8sComponents[common.CiliumAgentContainerName],
+			},
+			{
+				Name:  common.CiliumCleanStateContainerName,
+				Image: k8sComponents[common.CiliumCleanStateContainerName],
+			},
+			{
+				Name:  common.CiliumOperatorContainerName,
+				Image: k8sComponents[common.CiliumOperatorContainerName],
+			},
+			{
+				Name:  common.CiliumEtcdOperatorContainerName,
+				Image: k8sComponents[common.CiliumEtcdOperatorContainerName],
+			},
+		},
+	}
+
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{
 		Name:    common.AADPodIdentityAddonName,
 		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
@@ -617,6 +640,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
+		defaultsCiliumAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
 		defaultAzureDiskCSIDriverAddonsConfig,

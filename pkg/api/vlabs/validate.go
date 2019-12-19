@@ -58,10 +58,6 @@ var (
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: NetworkPolicyCilium,
-			networkPolicy: "",
-		},
-		{
 			networkPlugin: NetworkPluginCilium,
 			networkPolicy: NetworkPolicyCilium,
 		},
@@ -715,6 +711,14 @@ func (a *Properties) validateAddons() error {
 					}
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
+					}
+				case common.CiliumAddonName:
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyCilium {
+							return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
+						}
+					} else {
+						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
 					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")

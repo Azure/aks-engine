@@ -156,6 +156,14 @@ const (
 	NMIContainerName = "nmi"
 	// MICContainerName is the name of the mic container in the aad-pod-identity addon
 	MICContainerName = "mic"
+	// CiliumAgentContainerName is the name of the cilium-agent container in the cilium addon
+	CiliumAgentContainerName = "cilium-agent"
+	// CiliumCleanStateContainerName is the name of the clean-cilium-state container in the cilium addon
+	CiliumCleanStateContainerName = "clean-cilium-state"
+	// CiliumOperatorContainerName is the name of the cilium-operator container in the cilium addon
+	CiliumOperatorContainerName = "cilium-operator"
+	// CiliumEtcdOperatorContainerName is the name of the cilium-etcd-operator container in the cilium addon
+	CiliumEtcdOperatorContainerName = "cilium-etcd-operator"
 	// GatekeeperContainerName is the name of the gatekeeper container in the azure-policy addon
 	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
@@ -197,7 +205,7 @@ const (
 	// KubeProxyAddonName is the name of the kube-proxy config addon
 	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon
-	CiliumAddonName = "cilium-daemonset"
+	CiliumAddonName = "cilium"
 	// FlannelAddonName is the name of flannel plugin daemonset addon
 	FlannelAddonName = "flannel-daemonset"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon

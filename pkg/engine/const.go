@@ -260,4 +260,6 @@ const (
 	podSecurityPolicyAddonDestinationFilename      string = "pod-security-policy.yaml"
 	aadDefaultAdminGroupAddonSourceFilename        string = "kubernetesmasteraddons-aad-default-admin-group-rbac.yaml"
 	aadDefaultAdminGroupDestinationFilename        string = "aad-default-admin-group-rbac.yaml"
+	ciliumAddonSourceFilename                      string = "kubernetesmasteraddons-cilium-daemonset.yaml"
+	ciliumAddonDestinationFilename                 string = "cilium-daemonset.yaml"
 )

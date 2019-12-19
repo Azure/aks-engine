@@ -172,6 +172,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.AADAdminGroupAddonName),
 			destinationFile: aadDefaultAdminGroupDestinationFilename,
 		},
+		common.CiliumAddonName: {
+			sourceFile:      ciliumAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.CiliumAddonName),
+			destinationFile: ciliumAddonDestinationFilename,
+		},
 	}
 }
 
@@ -185,12 +190,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 	o := p.OrchestratorProfile
 	k := o.KubernetesConfig
 	kubernetesComponentFileSpecs := []kubernetesComponentFileSpec{
-		{
-			sourceFile:      "kubernetesmasteraddons-cilium-daemonset.yaml",
-			base64Data:      k.GetAddonScript(common.CiliumAddonName),
-			destinationFile: "cilium-daemonset.yaml",
-			isEnabled:       k.NetworkPolicy == NetworkPolicyCilium,
-		},
 		{
 			sourceFile:      "kubernetesmasteraddons-flannel-daemonset.yaml",
 			base64Data:      k.GetAddonScript(common.FlannelAddonName),
