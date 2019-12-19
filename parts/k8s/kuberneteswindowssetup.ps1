@@ -182,6 +182,7 @@ try
 
         Write-Log "Install docker"
         Install-Docker -DockerVersion $global:DockerVersion
+        Set-DockerLogFileOptions
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL

@@ -32655,6 +32655,7 @@ try
 
         Write-Log "Install docker"
         Install-Docker -DockerVersion $global:DockerVersion
+        Set-DockerLogFileOptions
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
@@ -33826,6 +33827,31 @@ function Install-Docker
         $currentDockerVersion = (Get-Package -Name Docker -ProviderName DockerMsftProvider).Version
         Write-Log "Not able to install docker version. Using default version $currentDockerVersion"
     }
+}
+
+function Set-DockerLogFileOptions {
+    Write-Log "Updating log file options in docker config"
+    $dockerConfigPath = "C:\ProgramData\docker\config\daemon.json"
+
+    if (-not (Test-Path $dockerConfigPath)) {
+        "{}" | Out-File $dockerConfigPath
+    }
+
+    $dockerConfig = Get-Content $dockerConfigPath | ConvertFrom-Json
+    $dockerConfig | Add-Member -Name "log-driver" -Value "json-file" -MemberType NoteProperty
+    $logOpts = @{ "max-size" = "50m"; "max-file" = "5" }
+    $dockerConfig | Add-Member -Name "log-opts" -Value $logOpts -MemberType NoteProperty
+    $dockerConfig = $dockerConfig | ConvertTo-Json -Depth 10
+
+    Write-Log "New docker config:"
+    Write-Log $dockerConfig
+
+    # daemon.json MUST be encoded as UTF8-no-BOM!
+    Remove-Item $dockerConfigPath
+    $fileEncoding = New-Object System.Text.UTF8Encoding $false
+    [IO.File]::WriteAllLInes($dockerConfigPath, $dockerConfig, $fileEncoding)
+
+    Restart-Service docker
 }
 
 # Pagefile adjustments
