@@ -18,7 +18,7 @@ const (
 	kubeDNSImageReference                             string = "k8s-dns-kube-dns-amd64:1.15.4"
 	kubeDNSMasqNannyImageReference                    string = "k8s-dns-dnsmasq-nanny-amd64:1.15.4"
 	kubeDNSSidecarImageReference                      string = "k8s-dns-sidecar-amd64:1.14.10"
-	pauseImageReference                               string = "pause:1.2.0"
+	pauseImageReference                               string = "k8s/core/pause:1.2.0"
 	tillerImageReference                              string = "tiller:v2.13.1"
 	reschedulerImageReference                         string = "rescheduler:v0.4.0"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
@@ -52,8 +52,8 @@ const (
 	csiNodeDriverRegistrarImageReference              string = "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0"
 	csiAzureDiskImageReference                        string = "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0"
 	csiAzureFileImageReference                        string = "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0"
-	azureCloudControllerManagerImageReference         string = "azure-cloud-controller-manager:v0.4.0"
-	azureCloudNodeManagerImageReference               string = "azure-cloud-node-manager:v0.4.0"
+	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.4.0"
+	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.4.0"
 )
 
 // k8sComponentVersions is a convenience map to make UT maintenance easier,
