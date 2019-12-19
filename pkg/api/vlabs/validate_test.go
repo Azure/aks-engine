@@ -1538,7 +1538,7 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
 		},
 		{
 			name: "cilium addon enabled w/ azure networkPolicy",
@@ -1555,7 +1555,7 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
 		},
 		{
 			name: "cilium addon enabled w/ azure networkPolicy",
@@ -1572,7 +1572,7 @@ func TestValidateAddons(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
 		},
 		{
 			name: "cilium addon enabled w/ cilium networkPolicy",

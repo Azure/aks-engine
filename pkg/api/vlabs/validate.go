@@ -720,7 +720,7 @@ func (a *Properties) validateAddons() error {
 				case common.CiliumAddonName:
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyCilium {
-							return errors.Errorf("%s addon may only be enabled the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
+							return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
 						}
 					} else {
 						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
