@@ -577,8 +577,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasCiliumNetworkPolicy": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium
 		},
-		"HasAntreaNetworkPlugin": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea
+		"HasAntreaNetworkPolicy": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPolicyAntrea
 		},
 		"HasCustomNodesDNS": func() bool {
 			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()

@@ -150,6 +150,7 @@
 // ../../parts/k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/antrea.yaml
 // ../../parts/k8s/containeraddons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/azure-policy-deployment.yaml
 // ../../parts/k8s/containeraddons/coredns.yaml
@@ -158,7 +159,6 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/containeraddons/kubernetesmasteraddons-antrea-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml
@@ -8717,6 +8717,11 @@ ensureKubelet() {
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
     {{if HasCiliumNetworkPolicy}}
     while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
+        sleep 3
+    done
+    {{end}}
+    {{if HasAntreaNetworkPolicy}}
+    while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
         sleep 3
     done
     {{end}}
@@ -25006,6 +25011,518 @@ func k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml() (*a
 	return a, nil
 }
 
+var _k8sContaineraddonsAntreaYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antreaagentinfos.clusterinformation.crd.antrea.io
+spec:
+  group: clusterinformation.crd.antrea.io
+  names:
+    kind: AntreaAgentInfo
+    plural: antreaagentinfos
+    shortNames:
+    - aai
+    singular: antreaagentinfo
+  scope: Cluster
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antreacontrollerinfos.clusterinformation.crd.antrea.io
+spec:
+  group: clusterinformation.crd.antrea.io
+  names:
+    kind: AntreaControllerInfo
+    plural: antreacontrollerinfos
+    shortNames:
+    - aci
+    singular: antreacontrollerinfo
+  scope: Cluster
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-agent
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-agent
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - clusterinformation.crd.antrea.io
+  resources:
+  - antreaagentinfos
+  verbs:
+  - get
+  - create
+  - update
+  - delete
+- apiGroups:
+  - networkpolicy.antrea.io
+  resources:
+  - networkpolicies
+  - appliedtogroups
+  - addressgroups
+  verbs:
+  - get
+  - watch
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - clusterinformation.crd.antrea.io
+  resources:
+  - antreacontrollerinfos
+  verbs:
+  - get
+  - create
+  - update
+  - delete
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller-authentication-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: antrea-controller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: antrea-agent
+subjects:
+- kind: ServiceAccount
+  name: antrea-agent
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: antrea-controller
+subjects:
+- kind: ServiceAccount
+  name: antrea-controller
+  namespace: kube-system
+---
+apiVersion: v1
+data:
+  antrea-agent.conf: |
+    # Name of the OpenVSwitch bridge antrea-agent will create and use.
+    # Make sure it doesn't conflict with your existing OpenVSwitch bridges.
+    #ovsBridge: br-int
+
+    # Datapath type to use for the OpenVSwitch bridge created by Antrea. Supported values are:
+    # - system
+    # - netdev
+    # 'system' is the default value and corresponds to the kernel datapath. Use 'netdev' to run
+    # OVS in userspace mode. Userspace mode requires the tun device driver to be available.
+    #ovsDatapathType: system
+
+    # Name of the interface antrea-agent will create and use for host <--> pod communication.
+    # Make sure it doesn't conflict with your existing interfaces.
+    #hostGateway: gw0
+
+    # Encapsulation mode for communication between Pods across Nodes, supported values:
+    # - vxlan (default)
+    # - geneve
+    #tunnelType: vxlan
+
+    # Default MTU to use for the host gateway interface and the network interface of each Pod. If
+    # omitted, antrea-agent will default this value to 1450 to accomodate for tunnel encapsulate
+    # overhead.
+    #defaultMTU: 1450
+
+    # CIDR Range for services in cluster. It's required to support egress network policy, should
+    # be set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver.
+    serviceCIDR: {{ContainerConfig "serviceCidr"}}
+  antrea-cni.conf: |
+    {
+        "cniVersion":"0.3.0",
+        "name": "antrea",
+        "type": "antrea",
+        "ipam": {
+            "type": "host-local"
+        }
+    }
+  antrea-controller.conf: ""
+kind: ConfigMap
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: antrea-config-fh9t4g64dc
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea
+  namespace: kube-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: antrea
+    component: antrea-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: antrea
+    component: antrea-controller
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-controller
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: antrea
+      component: antrea-controller
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: antrea
+        component: antrea-controller
+    spec:
+      containers:
+      - args:
+        - --config
+        - /etc/antrea/antrea-controller.conf
+        command:
+        - antrea-controller
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: antrea/antrea-ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        name: antrea-controller
+        ports:
+        - containerPort: 443
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/antrea/antrea-controller.conf
+          name: antrea-config
+          readOnly: true
+          subPath: antrea-controller.conf
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      serviceAccountName: antrea-controller
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      volumes:
+      - configMap:
+          name: antrea-config-fh9t4g64dc
+        name: antrea-config
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: antrea
+    component: antrea-agent
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-agent
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: antrea
+      component: antrea-agent
+  template:
+    metadata:
+      labels:
+        app: antrea
+        component: antrea-agent
+    spec:
+      containers:
+      - args:
+        - --config
+        - /etc/antrea/antrea-agent.conf
+        command:
+        - antrea-agent
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: antrea/antrea-ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - container_liveness_probe agent
+          failureThreshold: 5
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: antrea-agent
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/antrea/antrea-agent.conf
+          name: antrea-config
+          readOnly: true
+          subPath: antrea-agent.conf
+        - mountPath: /var/run/antrea
+          name: host-var-run-antrea
+        - mountPath: /var/run/openvswitch
+          name: host-var-run-antrea
+          subPath: openvswitch
+        - mountPath: /var/lib/cni
+          name: host-var-run-antrea
+          subPath: cni
+        - mountPath: /host/proc
+          name: host-proc
+          readOnly: true
+        - mountPath: /host/var/run/netns
+          mountPropagation: HostToContainer
+          name: host-var-run-netns
+          readOnly: true
+      - command:
+        - start_ovs
+        image: antrea/antrea-ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - timeout 5 container_liveness_probe ovs
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        name: antrea-ovs
+        securityContext:
+          capabilities:
+            add:
+            - SYS_NICE
+            - NET_ADMIN
+            - SYS_ADMIN
+            - IPC_LOCK
+        volumeMounts:
+        - mountPath: /var/run/openvswitch
+          name: host-var-run-antrea
+          subPath: openvswitch
+        - mountPath: /var/log/openvswitch
+          name: host-var-log-antrea
+          subPath: openvswitch
+      hostNetwork: true
+      initContainers:
+      - command:
+        - install_cni
+        image: antrea/antrea-ubuntu:latest
+        imagePullPolicy: IfNotPresent
+        name: install-cni
+        securityContext:
+          capabilities:
+            add:
+            - SYS_MODULE
+        volumeMounts:
+        - mountPath: /etc/antrea/antrea-cni.conf
+          name: antrea-config
+          readOnly: true
+          subPath: antrea-cni.conf
+        - mountPath: /host/etc/cni/net.d
+          name: host-cni-conf
+        - mountPath: /host/opt/cni/bin
+          name: host-cni-bin
+        - mountPath: /lib/modules
+          name: host-lib-modules
+          readOnly: true
+        - mountPath: /sbin/depmod
+          name: host-depmod
+          readOnly: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      serviceAccountName: antrea-agent
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+      volumes:
+      - configMap:
+          name: antrea-config-fh9t4g64dc
+        name: antrea-config
+      - hostPath:
+          path: /etc/cni/net.d
+        name: host-cni-conf
+      - hostPath:
+          path: /opt/cni/bin
+        name: host-cni-bin
+      - hostPath:
+          path: /proc
+        name: host-proc
+      - hostPath:
+          path: /var/run/netns
+        name: host-var-run-netns
+      - hostPath:
+          path: /var/run/antrea
+          type: DirectoryOrCreate
+        name: host-var-run-antrea
+      - hostPath:
+          path: /var/log/antrea
+          type: DirectoryOrCreate
+        name: host-var-log-antrea
+      - hostPath:
+          path: /lib/modules
+        name: host-lib-modules
+      - hostPath:
+          path: /sbin/depmod
+        name: host-depmod
+  updateStrategy:
+    type: RollingUpdate
+`)
+
+func k8sContaineraddonsAntreaYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsAntreaYaml, nil
+}
+
+func k8sContaineraddonsAntreaYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsAntreaYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/antrea.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsAzureCniNetworkmonitorYaml = []byte(`apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -26516,518 +27033,6 @@ func k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml() (*asse
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antreaagentinfos.clusterinformation.crd.antrea.io
-spec:
-  group: clusterinformation.crd.antrea.io
-  names:
-    kind: AntreaAgentInfo
-    plural: antreaagentinfos
-    shortNames:
-    - aai
-    singular: antreaagentinfo
-  scope: Cluster
-  versions:
-  - name: v1beta1
-    served: true
-    storage: true
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antreacontrollerinfos.clusterinformation.crd.antrea.io
-spec:
-  group: clusterinformation.crd.antrea.io
-  names:
-    kind: AntreaControllerInfo
-    plural: antreacontrollerinfos
-    shortNames:
-    - aci
-    singular: antreacontrollerinfo
-  scope: Cluster
-  versions:
-  - name: v1beta1
-    served: true
-    storage: true
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent
-  namespace: kube-system
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  - pods
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - clusterinformation.crd.antrea.io
-  resources:
-  - antreaagentinfos
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-- apiGroups:
-  - networkpolicy.antrea.io
-  resources:
-  - networkpolicies
-  - appliedtogroups
-  - addressgroups
-  verbs:
-  - get
-  - watch
-  - list
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  - namespaces
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - networkpolicies
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - clusterinformation.crd.antrea.io
-  resources:
-  - antreacontrollerinfos
-  verbs:
-  - get
-  - create
-  - update
-  - delete
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  verbs:
-  - create
-- apiGroups:
-  - authorization.k8s.io
-  resources:
-  - subjectaccessreviews
-  verbs:
-  - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller-authentication-reader
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: extension-apiserver-authentication-reader
-subjects:
-- kind: ServiceAccount
-  name: antrea-controller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: antrea-agent
-subjects:
-- kind: ServiceAccount
-  name: antrea-agent
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: antrea-controller
-subjects:
-- kind: ServiceAccount
-  name: antrea-controller
-  namespace: kube-system
----
-apiVersion: v1
-data:
-  antrea-agent.conf: |
-    # Name of the OpenVSwitch bridge antrea-agent will create and use.
-    # Make sure it doesn't conflict with your existing OpenVSwitch bridges.
-    #ovsBridge: br-int
-
-    # Datapath type to use for the OpenVSwitch bridge created by Antrea. Supported values are:
-    # - system
-    # - netdev
-    # 'system' is the default value and corresponds to the kernel datapath. Use 'netdev' to run
-    # OVS in userspace mode. Userspace mode requires the tun device driver to be available.
-    #ovsDatapathType: system
-
-    # Name of the interface antrea-agent will create and use for host <--> pod communication.
-    # Make sure it doesn't conflict with your existing interfaces.
-    #hostGateway: gw0
-
-    # Encapsulation mode for communication between Pods across Nodes, supported values:
-    # - vxlan (default)
-    # - geneve
-    #tunnelType: vxlan
-
-    # Default MTU to use for the host gateway interface and the network interface of each Pod. If
-    # omitted, antrea-agent will default this value to 1450 to accomodate for tunnel encapsulate
-    # overhead.
-    #defaultMTU: 1450
-
-    # CIDR Range for services in cluster. It's required to support egress network policy, should
-    # be set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver.
-    serviceCIDR: {{ContainerConfig "serviceCidr"}}
-  antrea-cni.conf: |
-    {
-        "cniVersion":"0.3.0",
-        "name": "antrea",
-        "type": "antrea",
-        "ipam": {
-            "type": "host-local"
-        }
-    }
-  antrea-controller.conf: ""
-kind: ConfigMap
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-fh9t4g64dc
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: antrea
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea
-  namespace: kube-system
-spec:
-  ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 443
-  selector:
-    app: antrea
-    component: antrea-controller
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: antrea
-    component: antrea-controller
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-controller
-  namespace: kube-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: antrea
-      component: antrea-controller
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: antrea
-        component: antrea-controller
-    spec:
-      containers:
-      - args:
-        - --config
-        - /etc/antrea/antrea-controller.conf
-        command:
-        - antrea-controller
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        image: antrea/antrea-ubuntu:latest
-        imagePullPolicy: IfNotPresent
-        name: antrea-controller
-        ports:
-        - containerPort: 443
-          protocol: TCP
-        volumeMounts:
-        - mountPath: /etc/antrea/antrea-controller.conf
-          name: antrea-config
-          readOnly: true
-          subPath: antrea-controller.conf
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      priorityClassName: system-cluster-critical
-      serviceAccountName: antrea-controller
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-      volumes:
-      - configMap:
-          name: antrea-config-fh9t4g64dc
-        name: antrea-config
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    app: antrea
-    component: antrea-agent
-    addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antrea-agent
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: antrea
-      component: antrea-agent
-  template:
-    metadata:
-      labels:
-        app: antrea
-        component: antrea-agent
-    spec:
-      containers:
-      - args:
-        - --config
-        - /etc/antrea/antrea-agent.conf
-        command:
-        - antrea-agent
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        image: antrea/antrea-ubuntu:latest
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - container_liveness_probe agent
-          failureThreshold: 5
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 5
-        name: antrea-agent
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/antrea/antrea-agent.conf
-          name: antrea-config
-          readOnly: true
-          subPath: antrea-agent.conf
-        - mountPath: /var/run/antrea
-          name: host-var-run-antrea
-        - mountPath: /var/run/openvswitch
-          name: host-var-run-antrea
-          subPath: openvswitch
-        - mountPath: /var/lib/cni
-          name: host-var-run-antrea
-          subPath: cni
-        - mountPath: /host/proc
-          name: host-proc
-          readOnly: true
-        - mountPath: /host/var/run/netns
-          mountPropagation: HostToContainer
-          name: host-var-run-netns
-          readOnly: true
-      - command:
-        - start_ovs
-        image: antrea/antrea-ubuntu:latest
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          exec:
-            command:
-            - /bin/sh
-            - -c
-            - timeout 5 container_liveness_probe ovs
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        name: antrea-ovs
-        securityContext:
-          capabilities:
-            add:
-            - SYS_NICE
-            - NET_ADMIN
-            - SYS_ADMIN
-            - IPC_LOCK
-        volumeMounts:
-        - mountPath: /var/run/openvswitch
-          name: host-var-run-antrea
-          subPath: openvswitch
-        - mountPath: /var/log/openvswitch
-          name: host-var-log-antrea
-          subPath: openvswitch
-      hostNetwork: true
-      initContainers:
-      - command:
-        - install_cni
-        image: antrea/antrea-ubuntu:latest
-        imagePullPolicy: IfNotPresent
-        name: install-cni
-        securityContext:
-          capabilities:
-            add:
-            - SYS_MODULE
-        volumeMounts:
-        - mountPath: /etc/antrea/antrea-cni.conf
-          name: antrea-config
-          readOnly: true
-          subPath: antrea-cni.conf
-        - mountPath: /host/etc/cni/net.d
-          name: host-cni-conf
-        - mountPath: /host/opt/cni/bin
-          name: host-cni-bin
-        - mountPath: /lib/modules
-          name: host-lib-modules
-          readOnly: true
-        - mountPath: /sbin/depmod
-          name: host-depmod
-          readOnly: true
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      priorityClassName: system-node-critical
-      serviceAccountName: antrea-agent
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - effect: NoSchedule
-        operator: Exists
-      volumes:
-      - configMap:
-          name: antrea-config-fh9t4g64dc
-        name: antrea-config
-      - hostPath:
-          path: /etc/cni/net.d
-        name: host-cni-conf
-      - hostPath:
-          path: /opt/cni/bin
-        name: host-cni-bin
-      - hostPath:
-          path: /proc
-        name: host-proc
-      - hostPath:
-          path: /var/run/netns
-        name: host-var-run-netns
-      - hostPath:
-          path: /var/run/antrea
-          type: DirectoryOrCreate
-        name: host-var-run-antrea
-      - hostPath:
-          path: /var/log/antrea
-          type: DirectoryOrCreate
-        name: host-var-log-antrea
-      - hostPath:
-          path: /lib/modules
-        name: host-lib-modules
-      - hostPath:
-          path: /sbin/depmod
-        name: host-depmod
-  updateStrategy:
-    type: RollingUpdate
-`)
-
-func k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYaml, nil
-}
-
-func k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-antrea-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -32449,12 +32454,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
     "kubeClusterCidr": {
       "metadata": {
         "description": "Kubernetes cluster subnet"
-      },
-      "type": "string"
-    },
-    "kubeServiceCidr": {
-      "metadata": {
-        "description": "Kubernetes service address space"
       },
       "type": "string"
     },
@@ -38664,6 +38663,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.7/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons17KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":              k8sContaineraddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/antrea.yaml":                                                      k8sContaineraddonsAntreaYaml,
 	"k8s/containeraddons/azure-cni-networkmonitor.yaml":                                    k8sContaineraddonsAzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/azure-policy-deployment.yaml":                                     k8sContaineraddonsAzurePolicyDeploymentYaml,
 	"k8s/containeraddons/coredns.yaml":                                                     k8sContaineraddonsCorednsYaml,
@@ -38672,7 +38672,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":         k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":             k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/containeraddons/kubernetesmasteraddons-antrea-daemonset.yaml":                     k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml,
@@ -38963,6 +38962,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.9": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
+			"antrea.yaml":                   {k8sContaineraddonsAntreaYaml, map[string]*bintree{}},
 			"azure-cni-networkmonitor.yaml": {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"azure-policy-deployment.yaml":  {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"coredns.yaml":                  {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
@@ -38971,7 +38971,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":    {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-antrea-daemonset.yaml":                {k8sContaineraddonsKubernetesmasteraddonsAntreaDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},

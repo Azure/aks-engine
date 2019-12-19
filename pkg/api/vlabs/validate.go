@@ -86,10 +86,6 @@ var (
 			networkPolicy: NetworkPolicyAntrea,
 		},
 		{
-			networkPlugin: NetworkPluginAntrea,
-			networkPolicy: "",
-		},
-		{
 			networkPlugin: "",
 			networkPolicy: "azure", // for backwards-compatibility w/ prior networkPolicy usage
 		},
@@ -731,6 +727,10 @@ func (a *Properties) validateAddons() error {
 						}
 					} else {
 						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
+					}
+				case common.AntreaAddonName:
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea {
+						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
 					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")

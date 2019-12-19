@@ -829,13 +829,6 @@
       },
       "type": "string"
     },
-    "kubeServiceCidr": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "Kubernetes service address space"
-      },
-      "type": "string"
-    },
     "kubeConfigCertificate": {
       "metadata": {
         "description": "The base 64 certificate used by cli to communicate with the master"
@@ -1166,7 +1159,7 @@
     "kubeConfigCertificate": "[parameters('kubeConfigCertificate')]",
     "kubeConfigPrivateKey": "[parameters('kubeConfigPrivateKey')]",
     "kubeDnsServiceIp": "10.0.0.10",
-    "kubeServiceCidr": "[parameters('kubeServiceCidr')]",
+    "kubeServiceCidr": "10.0.0.0/16",
     "kubernetesAPIServerIP": "[concat(variables('masterFirstAddrPrefix'), add(variables('masterInternalLbIPOffset'), int(variables('masterFirstAddrOctet4'))))]",
     "kubernetesAddonManagerSpec": "[parameters('kubernetesAddonManagerSpec')]",
     "kubernetesAddonResizerSpec": "[parameters('kubernetesAddonResizerSpec')]",

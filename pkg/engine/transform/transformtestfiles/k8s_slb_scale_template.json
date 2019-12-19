@@ -508,12 +508,6 @@
         },
         "type": "string"
       },
-      "kubeServiceCidr": {
-        "metadata": {
-          "description": "Kubernetes service address space"
-        },
-        "type": "string"
-      },
       "kubeConfigCertificate": {
         "metadata": {
           "description": "The base 64 certificate used by cli to communicate with the master"

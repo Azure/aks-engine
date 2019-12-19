@@ -126,10 +126,10 @@ const (
 	NetworkPolicyCilium = "cilium"
 	// NetworkPluginCilium is the string expression for cilium network policy config option
 	NetworkPluginCilium = NetworkPolicyCilium
-	// NetworkPluginAntrea is the string expression for antrea network plugin config option
-	NetworkPluginAntrea = "antrea"
 	// NetworkPolicyAntrea is the string expression for antrea network policy config option
-	NetworkPolicyAntrea = NetworkPluginAntrea
+	NetworkPolicyAntrea = "antrea"
+	// NetworkPluginAntrea is the string expression for antrea network plugin config option
+	NetworkPluginAntrea = NetworkPolicyAntrea
 	// NetworkModeBridge is the string expression for bridge network mode config option
 	NetworkModeBridge = "bridge"
 	// NetworkModeTransparent is the string expression for transparent network mode config option

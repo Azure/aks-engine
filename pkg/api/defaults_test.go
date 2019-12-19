@@ -835,7 +835,7 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginCilium)
 	}
 
-	mockCS = getMockBaseContainerService("1.8.10")
+	mockCS = getMockBaseContainerService("1.15.7")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea

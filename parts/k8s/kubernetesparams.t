@@ -169,12 +169,6 @@
       },
       "type": "string"
     },
-    "kubeServiceCidr": {
-      "metadata": {
-        "description": "Kubernetes service address space"
-      },
-      "type": "string"
-    },
     "kubeDNSServiceIP": {
       "metadata": {
         "description": "Kubernetes DNS IP"

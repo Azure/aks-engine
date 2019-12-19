@@ -215,7 +215,7 @@ const (
 	// CiliumAddonName is the name of cilium daemonset addon
 	CiliumAddonName = "cilium"
 	// AntreaAddonName is the name of antrea daemonset addon
-	AntreaAddonName = "antrea-daemonset"
+	AntreaAddonName = "antrea"
 	// FlannelAddonName is the name of flannel plugin daemonset addon
 	FlannelAddonName = "flannel-daemonset"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon

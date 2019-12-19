@@ -646,11 +646,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "antrea network plugin",
-			apiModelPath: "../examples/networkplugin/kubernetes-antrea.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "antrea network policy",
 			apiModelPath: "../examples/networkpolicy/kubernetes-antrea.json",
 			setArgs:      defaultSet,

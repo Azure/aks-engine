@@ -312,6 +312,11 @@ ensureKubelet() {
         sleep 3
     done
     {{end}}
+    {{if HasAntreaNetworkPolicy}}
+    while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
+        sleep 3
+    done
+    {{end}}
 }
 
 ensureLabelNodes() {
