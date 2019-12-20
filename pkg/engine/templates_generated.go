@@ -32,15 +32,8 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml
@@ -99,13 +92,16 @@
 // ../../parts/k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/containeraddons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/1.16/ip-masq-agent.yaml
+// ../../parts/k8s/containeraddons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
+// ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-calico-daemonset.yaml
@@ -126,8 +122,10 @@
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/containeraddons/1.17/ip-masq-agent.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
@@ -156,9 +154,11 @@
 // ../../parts/k8s/containeraddons/coredns.yaml
 // ../../parts/k8s/containeraddons/dns-autoscaler.yaml
 // ../../parts/k8s/containeraddons/ip-masq-agent.yaml
+// ../../parts/k8s/containeraddons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml
@@ -6430,261 +6430,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs:
-  - create
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider-secret-getter
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
-`)
-
-func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
-}
-
-func k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons116KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons116KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons116KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs:
-  - create
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider-secret-getter
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
-`)
-
-func k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 apiVersion: v1
@@ -6852,162 +6597,6 @@ func k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons117KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons117KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs:
-  - create
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-rules:
-- apiGroups: [""]
-  resources: ["secrets"]
-  verbs:
-  - get
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider-secret-getter
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider-secret-getter
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
-`)
-
-func k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -7181,135 +6770,6 @@ func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1beta1 # This is required.
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddonsKubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddonsKubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-rules:
-- apiGroups: [""]
-  resources: ["events"]
-  verbs:
-  - create
-  - patch
-  - update
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-  name: system:azure-cloud-provider
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:azure-cloud-provider
-subjects:
-- kind: ServiceAccount
-  name: azure-cloud-provider
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-rules:
-- apiGroups: ['']
-  resources: ['secrets']
-  verbs:     ['get','create']
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:azure-persistent-volume-binder
-  labels:
-    kubernetes.io/cluster-service: "true"
-roleRef:
-  kind: ClusterRole
-  apiGroup: rbac.authorization.k8s.io
-  name: system:azure-persistent-volume-binder
-subjects:
-- kind: ServiceAccount
-  name: persistent-volume-binder
-  namespace: kube-system
-`)
-
-func k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -14240,6 +13700,105 @@ func k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml() (*
 	return a, nil
 }
 
+var _k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+`)
+
+func k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
 apiVersion: v1
 kind: ServiceAccount
@@ -15017,6 +14576,63 @@ func k8sContaineraddons116IpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddons116KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: ""
+      resources: ["endpoints", "services"]
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - /api*
+    - /version
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+    namespaces: ["kube-system"]
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["secrets"]
+  - level: Request
+    resources:
+    - group: ""
+    - group: extensions
+  - level: Metadata
+    omitStages:
+      - RequestReceived
+`)
+
+func k8sContaineraddons116KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons116KubernetesmasterAuditPolicyYaml, nil
+}
+
+func k8sContaineraddons116KubernetesmasterAuditPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons116KubernetesmasterAuditPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -15403,6 +15019,105 @@ func k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYaml() (*a
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+`)
+
+func k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -19772,6 +19487,63 @@ func k8sContaineraddons117IpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddons117KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: ""
+      resources: ["endpoints", "services"]
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - /api*
+    - /version
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+    namespaces: ["kube-system"]
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["secrets"]
+  - level: Request
+    resources:
+    - group: ""
+    - group: extensions
+  - level: Metadata
+    omitStages:
+      - RequestReceived
+`)
+
+func k8sContaineraddons117KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasterAuditPolicyYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasterAuditPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasterAuditPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -20160,6 +19932,105 @@ func k8sContaineraddons117KubernetesmasteraddonsAciConnectorDeploymentYaml() (*a
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+`)
+
+func k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -26632,6 +26503,63 @@ func k8sContaineraddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sContaineraddonsKubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1beta1 # This is required.
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: ""
+      resources: ["endpoints", "services"]
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - /api*
+    - /version
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+    namespaces: ["kube-system"]
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["secrets"]
+  - level: Request
+    resources:
+    - group: ""
+    - group: extensions
+  - level: Metadata
+    omitStages:
+      - RequestReceived
+`)
+
+func k8sContaineraddonsKubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasterAuditPolicyYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasterAuditPolicyYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasterAuditPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml = []byte(`kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -27040,6 +26968,78 @@ func k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml() (*asse
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -38546,49 +38546,42 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                       agentoutputsT,
-	"agentparams.t":                        agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":  dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":        dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":    dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":     dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":          dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":  dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":  dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":               dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":    dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":         dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":         dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t": dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t": dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":        dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":        dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":        dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                 dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                      dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":             dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":             dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":             dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":             dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":             dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":             dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":           dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                    dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                        iaasoutputsT,
-	"k8s/addons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":                            k8sAddons116KubernetesmasterAuditPolicyYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                            k8sAddons117KubernetesmasterAuditPolicyYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":                 k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmaster-audit-policy.yaml":                                 k8sAddonsKubernetesmasterAuditPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml":              k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml,
-	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                      k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
+	"agentoutputs.t":                                                   agentoutputsT,
+	"agentparams.t":                                                    agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":                              dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":                                    dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":                                dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":                                 dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":                                      dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":                              dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":                              dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":                                           dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":                                dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":                                     dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":                                     dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t":                             dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t":                             dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":                                    dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":                                    dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":                                    dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                                             dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                                                  dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":                                         dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":                                         dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":                                         dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":                                         dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":                                         dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":                                         dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":                                       dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                                            dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                                                dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                                            dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":                                      dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                                                    iaasoutputsT,
+	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":    k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":    k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml": k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml,
+	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":         k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
 	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
 	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
@@ -38645,13 +38638,16 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.13/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons113KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.14/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons114KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.14/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/containeraddons/1.15/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/containeraddons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/containeraddons/1.16/azure-cni-networkmonitor.yaml":                               k8sContaineraddons116AzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/1.16/ip-masq-agent.yaml":                                          k8sContaineraddons116IpMasqAgentYaml,
+	"k8s/containeraddons/1.16/kubernetesmaster-audit-policy.yaml":                          k8sContaineraddons116KubernetesmasterAuditPolicyYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":        k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml":             k8sContaineraddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   k8sContaineraddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":                k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -38672,8 +38668,10 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":               k8sContaineraddons116KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/containeraddons/1.17/azure-cni-networkmonitor.yaml":                               k8sContaineraddons117AzureCniNetworkmonitorYaml,
 	"k8s/containeraddons/1.17/ip-masq-agent.yaml":                                          k8sContaineraddons117IpMasqAgentYaml,
+	"k8s/containeraddons/1.17/kubernetesmaster-audit-policy.yaml":                          k8sContaineraddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sContaineraddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":        k8sContaineraddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/containeraddons/1.17/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml":             k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":                k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -38702,9 +38700,11 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/coredns.yaml":                                                     k8sContaineraddonsCorednsYaml,
 	"k8s/containeraddons/dns-autoscaler.yaml":                                              k8sContaineraddonsDnsAutoscalerYaml,
 	"k8s/containeraddons/ip-masq-agent.yaml":                                               k8sContaineraddonsIpMasqAgentYaml,
+	"k8s/containeraddons/kubernetesmaster-audit-policy.yaml":                               k8sContaineraddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":         k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":          k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-aci-connector-deployment.yaml":             k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                  k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":      k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml,
@@ -38841,21 +38841,12 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"iaasoutputs.t": {iaasoutputsT, map[string]*bintree{}},
 	"k8s": {nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
-			"1.15": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-			}},
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-flannel-daemonset.yaml": {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-flannel-daemonset.yaml": {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			}},
-			"kubernetesmaster-audit-policy.yaml":                                 {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-csi-storage-classes.yaml":              {k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-flannel-daemonset.yaml":                      {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
@@ -38931,15 +38922,18 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons114KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.15": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-metrics-server-deployment.yaml":     {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-pod-security-policy.yaml":           {k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sContaineraddons115KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sContaineraddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
 				"azure-cni-networkmonitor.yaml":                               {k8sContaineraddons116AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sContaineraddons116IpMasqAgentYaml, map[string]*bintree{}},
+				"kubernetesmaster-audit-policy.yaml":                          {k8sContaineraddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddons116KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -38962,8 +38956,10 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.17": {nil, map[string]*bintree{
 				"azure-cni-networkmonitor.yaml":                               {k8sContaineraddons117AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sContaineraddons117IpMasqAgentYaml, map[string]*bintree{}},
+				"kubernetesmaster-audit-policy.yaml":                          {k8sContaineraddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -38995,15 +38991,17 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.9": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-metrics-server-deployment.yaml": {k8sContaineraddons19KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
 			}},
-			"antrea.yaml":                   {k8sContaineraddonsAntreaYaml, map[string]*bintree{}},
-			"azure-cni-networkmonitor.yaml": {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
-			"azure-policy-deployment.yaml":  {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
-			"coredns.yaml":                  {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
-			"dns-autoscaler.yaml":           {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
-			"ip-masq-agent.yaml":            {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"antrea.yaml":                        {k8sContaineraddonsAntreaYaml, map[string]*bintree{}},
+			"azure-cni-networkmonitor.yaml":      {k8sContaineraddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
+			"azure-policy-deployment.yaml":       {k8sContaineraddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
+			"coredns.yaml":                       {k8sContaineraddonsCorednsYaml, map[string]*bintree{}},
+			"dns-autoscaler.yaml":                {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
+			"ip-masq-agent.yaml":                 {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"kubernetesmaster-audit-policy.yaml": {k8sContaineraddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":    {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},

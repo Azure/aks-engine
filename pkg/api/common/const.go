@@ -220,8 +220,8 @@ const (
 	FlannelAddonName = "flannel-daemonset"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
 	AADAdminGroupAddonName = "aad"
-	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
-	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
+	// AzureCloudProviderAddonName is the name of the azure-cloud-provider addon
+	AzureCloudProviderAddonName = "azure-cloud-provider"
 	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
 	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
 	// AuditPolicyAddonName is the name of the audit policy addon

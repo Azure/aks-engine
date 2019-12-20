@@ -636,6 +636,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
 	}
 
+	defaultAuditPolicyAddonsConfig := KubernetesAddon{
+		Name:    common.AuditPolicyAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
+	defaultAzureCloudProviderAddonsConfig := KubernetesAddon{
+		Name:    common.AzureCloudProviderAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
 	defaultAADDefaultAdminGroupAddonsConfig := KubernetesAddon{
 		Name:    common.AADAdminGroupAddonName,
 		Enabled: to.BoolPtr(cs.Properties.HasAADAdminGroupID()),
@@ -679,6 +689,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultCorednsAddonsConfig,
 		defaultKubeProxyAddonsConfig,
 		defaultPodSecurityPolicyAddonsConfig,
+		defaultAuditPolicyAddonsConfig,
+		defaultAzureCloudProviderAddonsConfig,
 		defaultAADDefaultAdminGroupAddonsConfig,
 		defaultsAntreaDaemonSetAddonsConfig,
 	}

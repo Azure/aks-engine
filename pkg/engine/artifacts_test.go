@@ -18,8 +18,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	cases := []struct {
 		p                              *api.Properties
 		expectedFlannel                bool
-		expectedAzureCloudProvider     bool
-		expectedAuditPolicy            bool
 		expectedManagedStorageClass    bool
 		expectedUnmanagedStorageClass  bool
 		expectedScheduledMaintenance   bool
@@ -37,8 +35,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -56,8 +52,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -75,8 +69,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                true,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -97,8 +89,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -117,8 +107,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -143,8 +131,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   true,
@@ -167,8 +153,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  true,
 			expectedScheduledMaintenance:   false,
@@ -192,8 +176,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -217,8 +199,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  true,
 			expectedScheduledMaintenance:   false,
@@ -236,8 +216,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    true,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -261,8 +239,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				},
 			},
 			expectedFlannel:                false,
-			expectedAzureCloudProvider:     true,
-			expectedAuditPolicy:            true,
 			expectedManagedStorageClass:    false,
 			expectedUnmanagedStorageClass:  false,
 			expectedScheduledMaintenance:   false,
@@ -277,14 +253,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			case "flannel-daemonset.yaml":
 				if c.expectedFlannel != componentFileSpec.isEnabled {
 					t.Fatalf("Expected %s to be %t", common.FlannelAddonName, c.expectedFlannel)
-				}
-			case "azure-cloud-provider-deployment.yaml":
-				if c.expectedAzureCloudProvider != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.AzureCloudProviderAddonName, c.expectedAzureCloudProvider)
-				}
-			case "audit-policy.yaml":
-				if c.expectedAuditPolicy != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.AuditPolicyAddonName, c.expectedAuditPolicy)
 				}
 			case "azure-storage-classes.yaml":
 				if strings.Contains(componentFileSpec.sourceFile, "unmanaged-azure-storage") {
@@ -366,6 +334,8 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedPodSecurityPolicy      kubernetesComponentFileSpec
 		expectedAADDefaultAdminGroup   kubernetesComponentFileSpec
 		expectedAntrea                 kubernetesComponentFileSpec
+		expectedAuditPolicy            kubernetesComponentFileSpec
+		expectedAzureCloudProvider     kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -495,6 +465,14 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.AntreaAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.AuditPolicyAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AzureCloudProviderAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -648,6 +626,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      antreaAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: antreaAddonDestinationFilename,
+			},
+			expectedAuditPolicy: kubernetesComponentFileSpec{
+				sourceFile:      auditPolicyAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: auditPolicyAddonDestinationFilename,
+			},
+			expectedAzureCloudProvider: kubernetesComponentFileSpec{
+				sourceFile:      cloudProviderAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: cloudProviderAddonDestinationFilename,
 			},
 		},
 		{
@@ -748,6 +736,12 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.AntreaAddonName,
 							},
+							{
+								Name: common.AuditPolicyAddonName,
+							},
+							{
+								Name: common.AzureCloudProviderAddonName,
+							},
 						},
 					},
 				},
@@ -901,6 +895,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      antreaAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: antreaAddonDestinationFilename,
+			},
+			expectedAuditPolicy: kubernetesComponentFileSpec{
+				sourceFile:      auditPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: auditPolicyAddonDestinationFilename,
+			},
+			expectedAzureCloudProvider: kubernetesComponentFileSpec{
+				sourceFile:      cloudProviderAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudProviderAddonDestinationFilename,
 			},
 		},
 		{
@@ -1055,6 +1059,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      antreaAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: antreaAddonDestinationFilename,
+			},
+			expectedAuditPolicy: kubernetesComponentFileSpec{
+				sourceFile:      auditPolicyAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: auditPolicyAddonDestinationFilename,
+			},
+			expectedAzureCloudProvider: kubernetesComponentFileSpec{
+				sourceFile:      cloudProviderAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudProviderAddonDestinationFilename,
 			},
 		},
 	}
@@ -1365,6 +1379,26 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedAntrea.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAntrea.destinationFile)
+					}
+				case common.AuditPolicyAddonName:
+					if c.expectedAuditPolicy.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAuditPolicy.sourceFile)
+					}
+					if c.expectedAuditPolicy.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAuditPolicy.base64Data)
+					}
+					if c.expectedAuditPolicy.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAuditPolicy.destinationFile)
+					}
+				case common.AzureCloudProviderAddonName:
+					if c.expectedAzureCloudProvider.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAzureCloudProvider.sourceFile)
+					}
+					if c.expectedAzureCloudProvider.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAzureCloudProvider.base64Data)
+					}
+					if c.expectedAzureCloudProvider.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCloudProvider.destinationFile)
 					}
 				}
 			}

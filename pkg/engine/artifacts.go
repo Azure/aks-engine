@@ -182,6 +182,16 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.AntreaAddonName),
 			destinationFile: antreaAddonDestinationFilename,
 		},
+		common.AuditPolicyAddonName: {
+			sourceFile:      auditPolicyAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
+			destinationFile: auditPolicyAddonDestinationFilename,
+		},
+		common.AzureCloudProviderAddonName: {
+			sourceFile:      cloudProviderAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
+			destinationFile: cloudProviderAddonDestinationFilename,
+		},
 	}
 }
 
@@ -200,18 +210,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 			base64Data:      k.GetAddonScript(common.FlannelAddonName),
 			destinationFile: "flannel-daemonset.yaml",
 			isEnabled:       k.NetworkPlugin == NetworkPluginFlannel,
-		},
-		{
-			sourceFile:      "kubernetesmasteraddons-azure-cloud-provider-deployment.yaml",
-			base64Data:      k.GetAddonScript(common.AzureCloudProviderAddonName),
-			destinationFile: "azure-cloud-provider-deployment.yaml",
-			isEnabled:       true,
-		},
-		{
-			sourceFile:      "kubernetesmaster-audit-policy.yaml",
-			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
-			destinationFile: "audit-policy.yaml",
-			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0"),
 		},
 		{
 			sourceFile:      "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml",
