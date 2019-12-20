@@ -39,7 +39,7 @@ const (
 	ciliumCleanStateImageReference                    string = "docker.io/cilium/cilium-init:2018-10-16"
 	ciliumOperatorImageReference                      string = "docker.io/cilium/operator:v1.4"
 	ciliumEtcdOperatorImageReference                  string = "docker.io/cilium/cilium-etcd-operator:v2.0.5"
-	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:latest"
+	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.2.0"
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference

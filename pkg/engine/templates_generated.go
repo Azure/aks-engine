@@ -25119,6 +25119,7 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - nodes
   - pods
   - namespaces
   verbs:
@@ -25141,6 +25142,13 @@ rules:
   - get
   - create
   - update
+  - delete
+- apiGroups:
+  - clusterinformation.crd.antrea.io
+  resources:
+  - antreaagentinfos
+  verbs:
+  - list
   - delete
 - apiGroups:
   - authentication.k8s.io
@@ -25225,6 +25233,8 @@ data:
     # Encapsulation mode for communication between Pods across Nodes, supported values:
     # - vxlan (default)
     # - geneve
+    # - gre
+    # - stt
     #tunnelType: vxlan
 
     # Default MTU to use for the host gateway interface and the network interface of each Pod. If
@@ -25247,10 +25257,11 @@ data:
   antrea-controller.conf: ""
 kind: ConfigMap
 metadata:
+  annotations: {}
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-fh9t4g64dc
+  name: antrea-config-48gttf992h
   namespace: kube-system
 ---
 apiVersion: v1
@@ -25313,7 +25324,6 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         image: {{ContainerImage "antrea-controller"}}
-        imagePullPolicy: IfNotPresent
         name: antrea-controller
         ports:
         - containerPort: 443
@@ -25335,7 +25345,7 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-fh9t4g64dc
+          name: antrea-config-48gttf992h
         name: antrea-config
 ---
 apiVersion: apps/v1
@@ -25378,7 +25388,6 @@ spec:
             fieldRef:
               fieldPath: spec.nodeName
         image: {{ContainerImage "antrea-agent"}}
-        imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
             command:
@@ -25415,7 +25424,6 @@ spec:
       - command:
         - start_ovs
         image: {{ContainerImage "antrea-ovs"}}
-        imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
             command:
@@ -25444,7 +25452,6 @@ spec:
       - command:
         - install_cni
         image: {{ContainerImage "install-cni"}}
-        imagePullPolicy: IfNotPresent
         name: install-cni
         securityContext:
           capabilities:
@@ -25476,7 +25483,7 @@ spec:
         operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-fh9t4g64dc
+          name: antrea-config-48gttf992h
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d

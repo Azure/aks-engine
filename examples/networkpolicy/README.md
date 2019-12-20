@@ -114,4 +114,4 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
 
 ### Post installation
 
-For the latest documentation on Antrea, please refer to [this](https://github.com/vmware-tanzu/antrea)
+For the latest documentation on Antrea, please refer to [this](https://github.com/vmware-tanzu/antrea).
