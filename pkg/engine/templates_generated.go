@@ -25312,7 +25312,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: antrea/antrea-ubuntu:latest
+        image: {{ContainerImage "antrea-controller"}}
         imagePullPolicy: IfNotPresent
         name: antrea-controller
         ports:
@@ -25377,7 +25377,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: antrea/antrea-ubuntu:latest
+        image: {{ContainerImage "antrea-agent"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
@@ -25414,7 +25414,7 @@ spec:
           readOnly: true
       - command:
         - start_ovs
-        image: antrea/antrea-ubuntu:latest
+        image: {{ContainerImage "antrea-ovs"}}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
@@ -25443,7 +25443,7 @@ spec:
       initContainers:
       - command:
         - install_cni
-        image: antrea/antrea-ubuntu:latest
+        image: {{ContainerImage "install-cni"}}
         imagePullPolicy: IfNotPresent
         name: install-cni
         securityContext:
