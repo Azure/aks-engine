@@ -756,6 +756,8 @@ func (a *Properties) validateAddons() error {
 						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
 					}
+				case common.AzureCloudProviderAddonName:
+					return errors.Errorf("%s add-on is required, it cannot be disabled", addon.Name)
 				}
 			}
 		}

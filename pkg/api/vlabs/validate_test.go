@@ -1714,6 +1714,24 @@ func TestValidateAddons(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
+		{
+			name: "azure-cloud-provider addon disabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						NetworkPlugin: NetworkPluginAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AzureCloudProviderAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s add-on is required, it cannot be disabled", common.AzureCloudProviderAddonName),
+		},
 	}
 
 	for _, test := range tests {

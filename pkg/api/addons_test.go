@@ -2899,6 +2899,33 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
+			name: "audit-policy disabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AuditPolicyAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4")),
+		},
+		{
 			name: "aad-default-aad-admin-group addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -3529,6 +3556,14 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
 				},
 			},
+		},
+		{
+			Name:    common.AuditPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+		{
+			Name:    common.AzureCloudProviderAddonName,
+			Enabled: to.BoolPtr(true),
 		},
 		{
 			Name:    common.CoreDNSAddonName,
