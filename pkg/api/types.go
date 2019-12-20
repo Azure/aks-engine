@@ -1699,9 +1699,9 @@ func (o *OrchestratorProfile) RequireRouteTable() bool {
 	switch o.OrchestratorType {
 	case Kubernetes:
 		if o.IsAzureCNI() ||
-		   NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
-		   "flannel" == o.KubernetesConfig.NetworkPlugin ||
-		   NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
+			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
+			"flannel" == o.KubernetesConfig.NetworkPlugin ||
+			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
 			return false
 		}
 		return true
