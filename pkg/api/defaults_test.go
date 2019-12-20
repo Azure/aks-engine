@@ -222,6 +222,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
 		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -289,6 +290,9 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == common.KubeDNSAddonName {
 			containerName = "kubedns"
+		}
+		if addonName == common.AntreaAddonName {
+			containerName = common.AntreaControllerContainerName
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
