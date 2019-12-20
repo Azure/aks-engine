@@ -1047,6 +1047,19 @@ func TestSetVlabsKubernetesDefaults(t *testing.T) {
 			expectedNetworkPlugin: "",
 			expectedNetworkPolicy: "cilium",
 		},
+		{
+			name: "antrea networkPlugin",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "antrea",
+					},
+				},
+			},
+			expectedNetworkPlugin: "",
+			expectedNetworkPolicy: "antrea",
+		},
 	}
 
 	for _, test := range tests {

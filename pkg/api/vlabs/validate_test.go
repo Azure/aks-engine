@@ -887,6 +887,13 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
+		t.Errorf(
+			"should error on antrea for windows clusters",
+		)
+	}
+
 	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "flannel"
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
@@ -903,7 +910,7 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	for _, policy := range NetworkPluginValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = policy
-		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err != nil {
+		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err != nil {
 			t.Errorf(
 				"should not error on networkPolicy=\"%s\"",
 				policy,
@@ -912,9 +919,16 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "not-existing"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err == nil {
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err == nil {
 		t.Errorf(
 			"should error on invalid networkPlugin",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err == nil {
+		t.Errorf(
+			"should error on antrea for windows clusters",
 		)
 	}
 }
@@ -1546,7 +1560,7 @@ func TestValidateAddons(t *testing.T) {
 			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
 		},
 		{
-			name: "cilium addon enabled w/ azure networkPolicy",
+			name: "cilium addon enabled w/ calico networkPolicy",
 			p: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					KubernetesConfig: &KubernetesConfig{
@@ -1614,6 +1628,91 @@ func TestValidateAddons(t *testing.T) {
 				},
 			},
 			expectedErr: errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName),
+		},
+		{
+			name: "antrea addon enabled w/ no networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ azure networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "azure",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ calico networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ antrea networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "antrea addon enabled w/ antrea networkPolicy + networkPlugin",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						NetworkPlugin: NetworkPluginAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
 		},
 	}
 

@@ -164,6 +164,14 @@ const (
 	CiliumOperatorContainerName = "cilium-operator"
 	// CiliumEtcdOperatorContainerName is the name of the cilium-etcd-operator container in the cilium addon
 	CiliumEtcdOperatorContainerName = "cilium-etcd-operator"
+	// AntreaControllerContainerName is the name of the antrea-controller container in the antrea addon
+	AntreaControllerContainerName = "antrea-controller"
+	// AntreaAgentContainerName is the name of the antrea-agent container in the antrea addon
+	AntreaAgentContainerName = "antrea-agent"
+	// AntreaOVSContainerName is the name of the antrea-ovs container in the antrea addon
+	AntreaOVSContainerName = "antrea-ovs"
+	// AntreaInstallCNIContainerName is the name of the install-cni container in the antrea addon
+	AntreaInstallCNIContainerName = "install-cni"
 	// GatekeeperContainerName is the name of the gatekeeper container in the azure-policy addon
 	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
@@ -206,6 +214,8 @@ const (
 	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon
 	CiliumAddonName = "cilium"
+	// AntreaAddonName is the name of antrea daemonset addon
+	AntreaAddonName = "antrea"
 	// FlannelAddonName is the name of flannel plugin daemonset addon
 	FlannelAddonName = "flannel-daemonset"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon

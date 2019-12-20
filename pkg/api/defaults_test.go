@@ -222,6 +222,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
 		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -289,6 +290,9 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == common.KubeDNSAddonName {
 			containerName = "kubedns"
+		}
+		if addonName == common.AntreaAddonName {
+			containerName = common.AntreaControllerContainerName
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
@@ -833,6 +837,16 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginCilium {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginCilium)
+	}
+
+	mockCS = getMockBaseContainerService("1.15.7")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAntrea)
 	}
 
 	mockCS = getMockBaseContainerService("1.8.10")

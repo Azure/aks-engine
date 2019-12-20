@@ -177,6 +177,11 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.CiliumAddonName),
 			destinationFile: ciliumAddonDestinationFilename,
 		},
+		common.AntreaAddonName: {
+			sourceFile:      antreaAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AntreaAddonName),
+			destinationFile: antreaAddonDestinationFilename,
+		},
 	}
 }
 

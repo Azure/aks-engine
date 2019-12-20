@@ -646,6 +646,11 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "antrea network policy",
+			apiModelPath: "../examples/networkpolicy/kubernetes-antrea.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "istio",
 			apiModelPath: "../examples/service-mesh/istio.json",
 			setArgs:      defaultSet,

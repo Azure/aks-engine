@@ -271,27 +271,29 @@
     "networkPolicy": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPolicy}}",
       "metadata": {
-        "description": "The network policy enforcement to use (calico|cilium); 'none' and 'azure' here for backwards compatibility"
+        "description": "The network policy enforcement to use (calico|cilium|antrea); 'none' and 'azure' here for backwards compatibility"
       },
       "allowedValues": [
         "",
         "none",
         "azure",
         "calico",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "type": "string"
     },
     "networkPlugin": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPlugin}}",
       "metadata": {
-        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium)"
+        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium|antrea)"
       },
       "allowedValues": [
         "kubenet",
         "azure",
         "flannel",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "type": "string"
     },

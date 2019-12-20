@@ -78,6 +78,14 @@ var (
 			networkPolicy: NetworkPolicyCilium,
 		},
 		{
+			networkPlugin: NetworkPluginAntrea,
+			networkPolicy: NetworkPolicyAntrea,
+		},
+		{
+			networkPlugin: "",
+			networkPolicy: NetworkPolicyAntrea,
+		},
+		{
 			networkPlugin: "",
 			networkPolicy: "azure", // for backwards-compatibility w/ prior networkPolicy usage
 		},
@@ -719,6 +727,10 @@ func (a *Properties) validateAddons() error {
 						}
 					} else {
 						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
+					}
+				case common.AntreaAddonName:
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea {
+						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
 					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
@@ -1408,7 +1420,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 	}
 
-	if e := k.validateNetworkPlugin(); e != nil {
+	if e := k.validateNetworkPlugin(hasWindows); e != nil {
 		return e
 	}
 	if e := k.validateNetworkPolicy(k8sVersion, hasWindows); e != nil {
@@ -1423,7 +1435,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	return nil
 }
 
-func (k *KubernetesConfig) validateNetworkPlugin() error {
+func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 
 	networkPlugin := k.NetworkPlugin
 
@@ -1437,6 +1449,11 @@ func (k *KubernetesConfig) validateNetworkPlugin() error {
 	}
 	if !valid {
 		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
+	}
+
+	// Temporary safety check, to be removed when Windows support is added.
+	if (networkPlugin == NetworkPluginAntrea) && hasWindows {
+		return errors.Errorf("networkPlugin '%s' is not supporting windows agents", networkPlugin)
 	}
 
 	return nil
@@ -1464,7 +1481,8 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium || networkPolicy == "flannel") && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium ||
+		networkPolicy == "flannel" || networkPolicy == NetworkPolicyAntrea) && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 

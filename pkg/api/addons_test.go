@@ -2930,6 +2930,35 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.15.4"),
 		},
+		{
+			name: "antrea addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"serviceCidr": DefaultKubernetesServiceCIDR,
+					},
+				},
+			}, "1.15.4"),
+		},
 	}
 
 	for _, test := range tests {

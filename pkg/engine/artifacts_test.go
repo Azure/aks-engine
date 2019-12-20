@@ -365,6 +365,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedKubeProxy              kubernetesComponentFileSpec
 		expectedPodSecurityPolicy      kubernetesComponentFileSpec
 		expectedAADDefaultAdminGroup   kubernetesComponentFileSpec
+		expectedAntrea                 kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -490,6 +491,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.AADAdminGroupAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.AntreaAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -638,6 +643,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: aadDefaultAdminGroupDestinationFilename,
+			},
+			expectedAntrea: kubernetesComponentFileSpec{
+				sourceFile:      antreaAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: antreaAddonDestinationFilename,
 			},
 		},
 		{
@@ -735,6 +745,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.AADAdminGroupAddonName,
 							},
+							{
+								Name: common.AntreaAddonName,
+							},
 						},
 					},
 				},
@@ -883,6 +896,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: aadDefaultAdminGroupDestinationFilename,
+			},
+			expectedAntrea: kubernetesComponentFileSpec{
+				sourceFile:      antreaAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: antreaAddonDestinationFilename,
 			},
 		},
 		{
@@ -1032,6 +1050,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      aadDefaultAdminGroupAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: aadDefaultAdminGroupDestinationFilename,
+			},
+			expectedAntrea: kubernetesComponentFileSpec{
+				sourceFile:      antreaAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: antreaAddonDestinationFilename,
 			},
 		},
 	}
@@ -1332,6 +1355,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedAADDefaultAdminGroup.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAADDefaultAdminGroup.destinationFile)
+					}
+				case common.AntreaAddonName:
+					if c.expectedAntrea.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedAntrea.sourceFile)
+					}
+					if c.expectedAntrea.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedAntrea.base64Data)
+					}
+					if c.expectedAntrea.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAntrea.destinationFile)
 					}
 				}
 			}

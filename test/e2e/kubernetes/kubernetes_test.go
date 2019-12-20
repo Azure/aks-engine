@@ -1361,7 +1361,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
-			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") || eng.HasNetworkPolicy("cilium") {
+			if (eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
+                            eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea")) {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
 				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
@@ -1583,7 +1584,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = namespaceProd.Delete()
 				Expect(err).NotTo(HaveOccurred())
 			} else {
-				Skip("Calico or Azure network policy was not provisioned for this Cluster Definition")
+				Skip("Calico or Azure or Cilium or Antrea network policy was not provisioned for this Cluster Definition")
 			}
 		})
 	})

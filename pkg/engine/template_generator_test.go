@@ -872,6 +872,24 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			},
 			ExpectedResult: false,
 		},
+		{
+			Name:     "HasAntreaNetworkPolicy - antrea",
+			FuncName: "HasAntreaNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPluginAntrea
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasAntreaNetworkPolicy - azure",
+			FuncName: "HasAntreaNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAzure
+				return cs
+			},
+			ExpectedResult: false,
+		},
 	}
 
 	originalCS := &api.ContainerService{}
