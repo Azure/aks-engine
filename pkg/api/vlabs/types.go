@@ -220,8 +220,6 @@ func (o *OrchestratorProfile) UnmarshalJSON(b []byte) error {
 		o.OrchestratorType = Swarm
 	case strings.EqualFold(orchestratorType, Kubernetes):
 		o.OrchestratorType = Kubernetes
-	case strings.EqualFold(orchestratorType, SwarmMode):
-		o.OrchestratorType = SwarmMode
 	default:
 		return errors.Errorf("OrchestratorType has unknown orchestrator: %s", orchestratorType)
 	}
@@ -859,11 +857,6 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 		}
 	}
 	return false
-}
-
-// IsSwarmMode returns true if this template is for Swarm Mode orchestrator
-func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == SwarmMode
 }
 
 // RequiresDocker returns if the kubernetes settings require docker binary to be installed.

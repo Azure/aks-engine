@@ -198,7 +198,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 			}
 		case Swarm:
-		case SwarmMode:
 		case Kubernetes:
 			version := common.RationalizeReleaseAndVersion(
 				o.OrchestratorType,
@@ -978,7 +977,6 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 		case DCOS:
 		case Swarm:
 		case Kubernetes:
-		case SwarmMode:
 		default:
 			return errors.Errorf("HA volumes are currently unsupported for Orchestrator %s", orchestratorType)
 		}
@@ -990,7 +988,6 @@ func (a *AgentPoolProfile) validateStorageProfile(orchestratorType string) error
 			break
 		case DCOS:
 		case Swarm:
-		case SwarmMode:
 		default:
 			return errors.Errorf("Ephemeral volumes are currently unsupported for Orchestrator %s", orchestratorType)
 		}
@@ -1063,7 +1060,6 @@ func (a *AgentPoolProfile) validateWindows(o *OrchestratorProfile, w *WindowsPro
 	switch o.OrchestratorType {
 	case DCOS:
 	case Swarm:
-	case SwarmMode:
 	case Kubernetes:
 		version := common.RationalizeReleaseAndVersion(
 			o.OrchestratorType,

@@ -49,8 +49,6 @@ func ConvertOrchestratorVersionProfileToVLabs(api *OrchestratorVersionProfile) *
 		vlabsProfile.OrchestratorType = vlabs.DCOS
 	case Swarm:
 		vlabsProfile.OrchestratorType = vlabs.Swarm
-	case SwarmMode:
-		vlabsProfile.OrchestratorType = vlabs.SwarmMode
 	}
 	vlabsProfile.OrchestratorVersion = api.OrchestratorVersion
 	vlabsProfile.Default = api.Default

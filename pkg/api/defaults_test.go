@@ -1567,19 +1567,6 @@ func TestDistroDefaults(t *testing.T) {
 			AzurePublicCloud,
 		},
 		{
-			"default_swarmmode",
-			OrchestratorProfile{
-				OrchestratorType: SwarmMode,
-			},
-			"",
-			"",
-			Ubuntu,
-			Ubuntu,
-			false,
-			false,
-			AzurePublicCloud,
-		},
-		{
 			"default_dcos",
 			OrchestratorProfile{
 				OrchestratorType: DCOS,

@@ -24,17 +24,6 @@ func TestOrchestratorProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
 	}
 
-	OrchestratorProfileText = `{ "orchestratorType": "SwarmMode" }`
-	op = &OrchestratorProfile{}
-	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {
-		t.Fatalf("unexpectedly detected unmarshal failure for OrchestratorProfile, %+v", e)
-	}
-
-	if !op.IsSwarmMode() {
-		t.Fatalf("unexpectedly detected OrchestratorProfile.Type != DockerCE after unmarshal")
-
-	}
-
 	OrchestratorProfileText = `{ "orchestratorType": "DCOS" }`
 	op = &OrchestratorProfile{}
 	if e := json.Unmarshal([]byte(OrchestratorProfileText), op); e != nil {

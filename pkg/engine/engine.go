@@ -34,7 +34,6 @@ var dcosTemplateFiles = []string{dcosBaseFile, dcosAgentResourcesVMAS, dcosAgent
 var dcos2TemplateFiles = []string{dcos2BaseFile, dcosAgentResourcesVMAS, dcosAgentResourcesVMSS, dcosAgentVars, dcos2MasterResources, dcos2BootstrapResources, dcos2MasterVars, dcosParams, dcosWindowsAgentResourcesVMAS, dcosWindowsAgentResourcesVMSS, dcos2BootstrapVars, dcos2BootstrapParams}
 var kubernetesParamFiles = []string{armParameters, kubernetesParams, masterParams, agentParams, windowsParams}
 var swarmTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
-var swarmModeTemplateFiles = []string{swarmBaseFile, swarmParams, swarmAgentResourcesVMAS, swarmAgentVars, swarmAgentResourcesVMSS, swarmBaseFile, swarmMasterResources, swarmMasterVars, swarmWinAgentResourcesVMAS, swarmWinAgentResourcesVMSS}
 
 var keyvaultSecretPathRe *regexp.Regexp
 
@@ -103,15 +102,13 @@ func GenerateKubeConfig(properties *api.Properties, location string) (string, er
 // validateDistro checks if the requested orchestrator type is supported on the requested Linux distro.
 func validateDistro(cs *api.ContainerService) bool {
 	// Check Master distro
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL &&
-		(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.Distro == api.RHEL {
 		log.Printf("Orchestrator type %s not suported on RHEL Master", cs.Properties.OrchestratorProfile.OrchestratorType)
 		return false
 	}
 	// Check Agent distros
 	for _, agentProfile := range cs.Properties.AgentPoolProfiles {
-		if agentProfile.Distro == api.RHEL &&
-			(cs.Properties.OrchestratorProfile.OrchestratorType != api.SwarmMode) {
+		if agentProfile.Distro == api.RHEL {
 			log.Printf("Orchestrator type %s not suported on RHEL Agent", cs.Properties.OrchestratorProfile.OrchestratorType)
 			return false
 		}

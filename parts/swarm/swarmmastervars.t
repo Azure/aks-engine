@@ -1,11 +1,7 @@
     "adminUsername": "[parameters('linuxAdminUsername')]",
     "maxVMsPerPool": 100,
     "apiVersionDefault": "2016-03-30",
-{{if .OrchestratorProfile.IsSwarmMode}}
-    "configureClusterScriptFile": "configure-swarmmode-cluster.sh",
-{{else}}
     "configureClusterScriptFile": "configure-swarm-cluster.sh",
-{{end}}
 {{if .MasterProfile.IsRHEL}}
     "agentCustomScript": "[concat('/usr/bin/nohup /bin/bash -c \"/bin/bash ',variables('configureClusterScriptFile'), ' ',variables('clusterInstallParameters'),' >> /var/log/azure/cluster-bootstrap.log 2>&1 &\" &')]",
 {{else}}
@@ -96,21 +92,12 @@
         }
       ]
     ],
-{{if .OrchestratorProfile.IsSwarmMode}}
-    "orchestratorName": "swarmm",
-    "masterOSImageOffer": {{GetMasterOSImageOffer}},
-    "masterOSImagePublisher": {{GetMasterOSImagePublisher}},
-    "masterOSImageSKU": {{GetMasterOSImageSKU}},
-    "masterOSImageVersion": {{GetMasterOSImageVersion}},
-    {{GetSwarmModeVersions}}
-{{else}}
     "orchestratorName": "swarm",
     "osImageOffer": "[parameters('osImageOffer')]",
     "osImagePublisher": "[parameters('osImagePublisher')]",
     "osImageSKU": "14.04.5-LTS",
     "osImageVersion": "14.04.201706190",
     {{getSwarmVersions}}
-{{end}}
     "locations": [
          "[resourceGroup().location]",
          "[parameters('location')]"
@@ -175,4 +162,3 @@
       ]
       {{end}}
 {{end}}
-
