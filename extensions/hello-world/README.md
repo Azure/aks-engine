@@ -26,7 +26,7 @@ ls -l /var/log
       ...
       "extensions": [
         {
-          "name": "hello-world-dcos",
+          "name": "hello-world",
           "singleOrAll": "single"
         }
      ]
@@ -34,7 +34,7 @@ ls -l /var/log
     ...
     "extensionProfiles": [
       {
-        "name": "hello-world-dcos",
+        "name": "hello-world",
         "version": "v1",
         "script": "hello.sh"
       }
