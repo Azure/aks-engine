@@ -71,7 +71,7 @@ az group create -n aks-custom-vnet -l "westeurope"
 Then you can deploy the virtual network using the JSON description above and the following command:
 
 ```bash
-az group deployment create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.swarm.vnet.json
+az group deployment create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.vnet.json
 ```
 
 Alternatively, you can use Azure CLI to create the vnet and the subnet directly:
@@ -140,7 +140,7 @@ _Note: Make sure the the vnetSubnetId matches with your subnet, by giving your *
 
 ## Deploy the AKS Engine template
 
-Once you are ready with the cluster definition file, you can either use AKS engine to deploy the cluster on Azure or you can use AKS Engine to generate an ARM template to deploy using Azure CLI. 
+Once you are ready with the cluster definition file, you can either use AKS engine to deploy the cluster on Azure or you can use AKS Engine to generate an ARM template to deploy using Azure CLI.
 
 ### Deploy using AKS Engine
 

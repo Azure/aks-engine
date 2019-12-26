@@ -2,7 +2,7 @@
 
 ## Overview
 
-These cluster definition examples show how to create customized [Kubernetes](../../docs/kubernetes.md) clusters on Microsoft Azure.
+These cluster definition examples show how to create customized [Kubernetes](../../docs/tutorials/deploy.md) clusters on Microsoft Azure.
 
 1. [**kubernetes-clustersubnet.json**](kubernetes-clustersubnet.json) - Configuring a custom cluster IP subnet.
 2. [**kubernetes-maxpods.json**](kubernetes-maxpods.json) - Configuring a custom maximum limit on the number of pods per node.
