@@ -198,6 +198,7 @@
 // ../../parts/k8s/windowsconfigfunc.ps1
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
+// ../../parts/k8s/windowslogscleanup.ps1
 // ../../parts/masteroutputs.t
 // ../../parts/masterparams.t
 // ../../parts/swarm/Install-ContainerHost-And-Join-Swarm.ps1
@@ -32981,7 +32982,19 @@ function Get-NetworkLogCollectionScripts {
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
 }
-`)
+
+function Register-LogsCleanupScriptTask {
+    Write-Log "Creating a scheduled task to run windowslogscleanup.ps1"
+
+    (Get-Content "c:\AzureData\k8s\windowslogscleanup.ps1") |
+    Out-File "c:\k\windowslogscleanup.ps1"
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowslogscleanup.ps1` + "`" + `""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "log-cleanup-task"
+    Register-ScheduledTask -TaskName "log-cleanup-task" -InputObject $definition
+}`)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -33321,6 +33334,8 @@ try
 
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
+
+        Register-LogsCleanupScriptTask
 
         if (Test-Path $CacheDir)
         {
@@ -34772,7 +34787,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
@@ -34790,7 +34805,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
 }
 
 # Renamed from Write-KubernetesStartFiles
@@ -35139,6 +35154,47 @@ func k8sWindowskubeletfuncPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/windowskubeletfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowslogscleanupPs1 = []byte(`<#
+.DESCRIPTION
+    This script cleans old rotated logs for various kubernetes components.
+#>
+
+$global:LogPath = "c:\k\windowslogscleanup.log"
+
+filter Timestamp { "$(Get-Date -Format o): $_" }
+
+function Write-Log ($message) {
+    $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
+}
+
+Write-Log "Entering windowslogscleanup.ps1"
+
+$logFilePrefixes = @("kubelet", "kubelet.err", "kubeproxy", "kubeproxy.err")
+
+foreach ($logFilePrefix in $logFilePrefixes) {
+    $oldLogs = [IO.Directory]::GetFiles("c:\temp\kubelogs\logs", "$($logFilePrefix)-*.log")
+    $oldLogs = $oldLogs | Sort-Object | Select-Object -SkipLast 5
+    foreach ($oldLog in $oldLogs) {
+        Write-Log "Removing $oldLog"
+        Remove-Item $oldLog
+    }
+}`)
+
+func k8sWindowslogscleanupPs1Bytes() ([]byte, error) {
+	return _k8sWindowslogscleanupPs1, nil
+}
+
+func k8sWindowslogscleanupPs1() (*asset, error) {
+	bytes, err := k8sWindowslogscleanupPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowslogscleanup.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -38744,6 +38800,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/windowsconfigfunc.ps1":                                          k8sWindowsconfigfuncPs1,
 	"k8s/windowsinstallopensshfunc.ps1":                                  k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                         k8sWindowskubeletfuncPs1,
+	"k8s/windowslogscleanup.ps1":                                         k8sWindowslogscleanupPs1,
 	"masteroutputs.t":                                                    masteroutputsT,
 	"masterparams.t":                                                     masterparamsT,
 	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                     swarmInstallContainerhostAndJoinSwarmPs1,
@@ -39046,6 +39103,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"windowsconfigfunc.ps1":         {k8sWindowsconfigfuncPs1, map[string]*bintree{}},
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
+		"windowslogscleanup.ps1":        {k8sWindowslogscleanupPs1, map[string]*bintree{}},
 	}},
 	"masteroutputs.t": {masteroutputsT, map[string]*bintree{}},
 	"masterparams.t":  {masterparamsT, map[string]*bintree{}},

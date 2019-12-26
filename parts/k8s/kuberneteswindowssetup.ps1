@@ -322,6 +322,8 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
+        Register-LogsCleanupScriptTask
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
