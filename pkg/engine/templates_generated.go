@@ -13659,7 +13659,6 @@ metadata:
   name: aad-pod-id-nmi-service-account
   namespace: default
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -13667,7 +13666,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -13682,7 +13680,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -13697,7 +13694,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureidentities.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -13712,9 +13708,6 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: azurepodidentityexceptions.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -13729,7 +13722,6 @@ kind: ClusterRole
 metadata:
   name: aad-pod-id-nmi-role
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
@@ -13737,25 +13729,24 @@ rules:
   verbs: ["get", "list"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureidentitybindings", "azureidentities", "azurepodidentityexceptions"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureassignedidentities"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-nmi-binding
   labels:
-    k8s-app: aad-pod-id-nmi-binding
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
@@ -13770,10 +13761,10 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
-    addonmanager.kubernetes.io/mode: Reconcile
   name: nmi
   namespace: default
 spec:
@@ -13800,13 +13791,6 @@ spec:
       - name: nmi
         image: {{ContainerImage "nmi"}}
         imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
         args:
           - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
@@ -13819,6 +13803,13 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
+          requests:
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
         securityContext:
           privileged: true
           capabilities:
@@ -13842,7 +13833,6 @@ metadata:
   name: aad-pod-id-mic-service-account
   namespace: default
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -13850,7 +13840,6 @@ kind: ClusterRole
 metadata:
   name: aad-pod-id-mic-role
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
@@ -13877,9 +13866,8 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-mic-binding
   labels:
-    k8s-app: aad-pod-id-mic-binding
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
@@ -13895,15 +13883,15 @@ metadata:
   labels:
     component: mic
     k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
   namespace: default
 spec:
+  replicas: 2
   selector:
     matchLabels:
       component: mic
-  replicas: 2
+      app: mic
   template:
     metadata:
       labels:
@@ -13915,16 +13903,16 @@ spec:
       - name: mic
         image: {{ContainerImage "mic"}}
         imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
         args:
           - "--cloudconfig=/etc/kubernetes/azure.json"
           - "--logtostderr"
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
+          requests:
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
         volumeMounts:
         - name: k8s-azure-file
           mountPath: /etc/kubernetes/azure.json
@@ -19014,8 +19002,6 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: azurepodidentityexceptions.aadpodidentity.k8s.io
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -19053,8 +19039,8 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-nmi-binding
   labels:
-    k8s-app: aad-pod-id-nmi-binding
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
@@ -19069,10 +19055,10 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
-    addonmanager.kubernetes.io/mode: Reconcile
   name: nmi
   namespace: default
 spec:
@@ -19087,8 +19073,6 @@ spec:
       labels:
         component: nmi
         tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
@@ -19114,12 +19098,12 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
         resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
           limits:
             cpu: {{ContainerCPULimits "nmi"}}
             memory: {{ContainerMemLimits "nmi"}}
+          requests:
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
         securityContext:
           privileged: true
           capabilities:
@@ -19176,8 +19160,8 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-mic-binding
   labels:
-    k8s-app: aad-pod-id-mic-binding
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
@@ -19217,16 +19201,16 @@ spec:
           - "--cloudconfig=/etc/kubernetes/azure.json"
           - "--logtostderr"
         resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
           limits:
             cpu: {{ContainerCPULimits "mic"}}
             memory: {{ContainerMemLimits "mic"}}
+          requests:
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
         volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
+        - name: k8s-azure-file
+          mountPath: /etc/kubernetes/azure.json
+          readOnly: true
         livenessProbe:
           httpGet:
             path: /healthz
@@ -31677,7 +31661,6 @@ metadata:
   name: aad-pod-id-nmi-service-account
   namespace: default
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -31685,7 +31668,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureassignedidentities.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -31700,7 +31682,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureidentitybindings.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -31715,7 +31696,6 @@ kind: CustomResourceDefinition
 metadata:
   name: azureidentities.aadpodidentity.k8s.io
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
@@ -31730,9 +31710,6 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: azurepodidentityexceptions.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: aadpodidentity.k8s.io
   version: v1
@@ -31747,7 +31724,6 @@ kind: ClusterRole
 metadata:
   name: aad-pod-id-nmi-role
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
@@ -31755,25 +31731,24 @@ rules:
   verbs: ["get", "list"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureidentitybindings", "azureidentities", "azurepodidentityexceptions"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 - apiGroups: ["aadpodidentity.k8s.io"]
   resources: ["azureassignedidentities"]
-  verbs: ["get", "list"]
+  verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-nmi-binding
   labels:
-    k8s-app: aad-pod-id-nmi-binding
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-nmi-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
@@ -31788,15 +31763,19 @@ kind: DaemonSet
 metadata:
   labels:
     kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
     component: nmi
     tier: node
     k8s-app: aad-pod-id
-    addonmanager.kubernetes.io/mode: Reconcile
   name: nmi
   namespace: default
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
   template:
     metadata:
       labels:
@@ -31814,13 +31793,6 @@ spec:
       - name: nmi
         image: {{ContainerImage "nmi"}}
         imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
         args:
           - "--host-ip=$(HOST_IP)"
           - "--node=$(NODE_NAME)"
@@ -31833,6 +31805,13 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
+          requests:
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
         securityContext:
           privileged: true
           capabilities:
@@ -31856,7 +31835,6 @@ metadata:
   name: aad-pod-id-mic-service-account
   namespace: default
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -31864,7 +31842,6 @@ kind: ClusterRole
 metadata:
   name: aad-pod-id-mic-role
   labels:
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups: ["apiextensions.k8s.io"]
@@ -31891,9 +31868,8 @@ kind: ClusterRoleBinding
 metadata:
   name: aad-pod-id-mic-binding
   labels:
-    k8s-app: aad-pod-id-mic-binding
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-mic-binding
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
@@ -31909,12 +31885,15 @@ metadata:
   labels:
     component: mic
     k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
   namespace: default
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      component: mic
+      app: mic
   template:
     metadata:
       labels:
@@ -31926,16 +31905,16 @@ spec:
       - name: mic
         image: {{ContainerImage "mic"}}
         imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
         args:
           - "--cloudconfig=/etc/kubernetes/azure.json"
           - "--logtostderr"
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
+          requests:
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
         volumeMounts:
         - name: k8s-azure-file
           mountPath: /etc/kubernetes/azure.json
