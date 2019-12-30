@@ -650,7 +650,7 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
 
-func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
+func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"ContainerImage": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
@@ -678,6 +678,18 @@ func getAddonFuncMap(addon api.KubernetesAddon) template.FuncMap {
 		},
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
+		},
+		"IsAzureStackCloud": func() bool {
+			return cs.Properties.IsAzureStackCloud()
+		},
+		"NeedsStorageAccountStorageClasses": func() bool {
+			return len(cs.Properties.AgentPoolProfiles) > 0 && cs.Properties.AgentPoolProfiles[0].StorageProfile == api.StorageAccount
+		},
+		"NeedsManagedDiskStorageClasses": func() bool {
+			return len(cs.Properties.AgentPoolProfiles) > 0 && cs.Properties.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks
+		},
+		"UsesCloudControllerManager": func() bool {
+			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
 		},
 	}
 }
@@ -786,7 +798,7 @@ func getContainerAddonsString(cs *api.ContainerService, sourcePath string) strin
 				case "cluster-autoscaler":
 					templ = template.New("addon resolver template").Funcs(getClusterAutoscalerAddonFuncMap(addon, cs))
 				default:
-					templ = template.New("addon resolver template").Funcs(getAddonFuncMap(addon))
+					templ = template.New("addon resolver template").Funcs(getAddonFuncMap(addon, cs))
 				}
 				addonFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
 				addonFileBytes, err := Asset(addonFile)

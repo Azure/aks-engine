@@ -2452,3 +2452,362 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAddonFuncMap(t *testing.T) {
+	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	cases := []struct {
+		name                                      string
+		addon                                     api.KubernetesAddon
+		cs                                        *api.ContainerService
+		expectedImage                             string
+		expectedCPUReqs                           string
+		expectedCPULimits                         string
+		expectedMemReqs                           string
+		expectedMemLimits                         string
+		expectedFoo                               string
+		expectedIsAzureStackCloud                 bool
+		expectedNeedsStorageAccountStorageClasses bool
+		expectedNeedsManagedDiskStorageClasses    bool
+		expectedUsesCloudControllerManager        bool
+	}{
+		{
+			name: "coredns as an example",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+						},
+					},
+				},
+			},
+			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:           "100m",
+			expectedCPULimits:         "100m",
+			expectedMemReqs:           "300Mi",
+			expectedMemLimits:         "300Mi",
+			expectedFoo:               "bar",
+			expectedIsAzureStackCloud: false,
+			expectedNeedsStorageAccountStorageClasses: false,
+			expectedNeedsManagedDiskStorageClasses:    true,
+			expectedUsesCloudControllerManager:        false,
+		},
+		{
+			name: "coredns as an example - Azure Stack",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+						},
+					},
+					CustomCloudProfile: &api.CustomCloudProfile{
+						IdentitySystem: "adfs",
+						PortalURL:      "https://portal.testlocation.contoso.com/",
+					},
+				},
+			},
+			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:           "100m",
+			expectedCPULimits:         "100m",
+			expectedMemReqs:           "300Mi",
+			expectedMemLimits:         "300Mi",
+			expectedFoo:               "bar",
+			expectedIsAzureStackCloud: true,
+			expectedNeedsStorageAccountStorageClasses: false,
+			expectedNeedsManagedDiskStorageClasses:    true,
+			expectedUsesCloudControllerManager:        false,
+		},
+		{
+			name: "coredns as an example - StorageAccoun",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							NetworkPlugin: api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.StorageAccount,
+						},
+					},
+				},
+			},
+			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:           "100m",
+			expectedCPULimits:         "100m",
+			expectedMemReqs:           "300Mi",
+			expectedMemLimits:         "300Mi",
+			expectedFoo:               "bar",
+			expectedIsAzureStackCloud: false,
+			expectedNeedsStorageAccountStorageClasses: true,
+			expectedNeedsManagedDiskStorageClasses:    false,
+			expectedUsesCloudControllerManager:        false,
+		},
+		{
+			name: "coredns as an example - CCM",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+						},
+					},
+				},
+			},
+			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:           "100m",
+			expectedCPULimits:         "100m",
+			expectedMemReqs:           "300Mi",
+			expectedMemLimits:         "300Mi",
+			expectedFoo:               "bar",
+			expectedIsAzureStackCloud: false,
+			expectedNeedsStorageAccountStorageClasses: false,
+			expectedNeedsManagedDiskStorageClasses:    true,
+			expectedUsesCloudControllerManager:        true,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			funcMap := getAddonFuncMap(c.addon, c.cs)
+			v := reflect.ValueOf(funcMap["ContainerImage"])
+			ret := v.Call([]reflect.Value{reflect.ValueOf(common.CoreDNSAddonName)})
+			if ret[0].Interface() != c.expectedImage {
+				t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", common.CoreDNSAddonName, c.expectedImage, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerCPUReqs"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.CoreDNSAddonName)})
+			if ret[0].Interface() != c.expectedCPUReqs {
+				t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", common.CoreDNSAddonName, c.expectedCPUReqs, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerCPULimits"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.CoreDNSAddonName)})
+			if ret[0].Interface() != c.expectedCPULimits {
+				t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", common.CoreDNSAddonName, c.expectedCPULimits, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerMemReqs"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.CoreDNSAddonName)})
+			if ret[0].Interface() != c.expectedMemReqs {
+				t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", common.CoreDNSAddonName, c.expectedMemReqs, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerMemLimits"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.CoreDNSAddonName)})
+			if ret[0].Interface() != c.expectedMemLimits {
+				t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", common.CoreDNSAddonName, c.expectedMemLimits, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ContainerConfig"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("foo")})
+			if ret[0].Interface() != c.expectedFoo {
+				t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "foo", c.expectedFoo, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsAzureStackCloud"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsAzureStackCloud {
+				t.Errorf("expected funcMap invocation of IsAzureStackCloud to return %t, instead got %t", c.expectedIsAzureStackCloud, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["NeedsStorageAccountStorageClasses"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedNeedsStorageAccountStorageClasses {
+				t.Errorf("expected funcMap invocation of NeedsStorageAccountStorageClasses to return %t, instead got %t", c.expectedNeedsStorageAccountStorageClasses, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["NeedsManagedDiskStorageClasses"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedNeedsManagedDiskStorageClasses {
+				t.Errorf("expected funcMap invocation of NeedsManagedDiskStorageClasses to return %t, instead got %t", c.expectedNeedsManagedDiskStorageClasses, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["UsesCloudControllerManager"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedUsesCloudControllerManager {
+				t.Errorf("expected funcMap invocation of UsesCloudControllerManager to return %t, instead got %t", c.expectedUsesCloudControllerManager, ret[0].Interface())
+			}
+		})
+	}
+}

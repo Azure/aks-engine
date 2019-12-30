@@ -219,41 +219,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpe
 		},
 	}
 
-	if len(p.AgentPoolProfiles) > 0 {
-		if to.Bool(k.UseCloudControllerManager) {
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      "kubernetesmasteraddons-azure-csi-storage-classes.yaml",
-					base64Data:      k.GetAddonScript(common.AzureCSIStorageClassesAddonName),
-					destinationFile: "azure-csi-storage-classes.yaml",
-					isEnabled:       true,
-				})
-		} else {
-			// Use built-in storage classes if CCM is disabled
-			unmanagedStorageClassesSourceYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
-			managedStorageClassesSourceYaml := "kubernetesmasteraddons-managed-azure-storage-classes.yaml"
-			if p.IsAzureStackCloud() {
-				unmanagedStorageClassesSourceYaml = "kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml"
-				managedStorageClassesSourceYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
-			}
-
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      unmanagedStorageClassesSourceYaml,
-					base64Data:      k.GetAddonScript(common.AzureStorageClassesAddonName),
-					destinationFile: "azure-storage-classes.yaml",
-					isEnabled:       p.AgentPoolProfiles[0].StorageProfile == api.StorageAccount,
-				})
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      managedStorageClassesSourceYaml,
-					base64Data:      k.GetAddonScript(common.AzureStorageClassesAddonName),
-					destinationFile: "azure-storage-classes.yaml",
-					isEnabled:       p.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
-				})
-		}
-	}
-
 	return kubernetesComponentFileSpecs
 }
 

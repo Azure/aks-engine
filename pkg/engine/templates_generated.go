@@ -34,13 +34,8 @@
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml
 // ../../parts/k8s/armparameters.t
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
@@ -6774,78 +6769,6 @@ func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml = []byte(`apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: default
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-  annotations:
-    storageclass.beta.kubernetes.io/is-default-class: "true"
-provisioner: disk.csi.azure.com
-parameters:
-  skuName: Standard_LRS
-  kind: managed
-  cachingMode: ReadOnly
-reclaimPolicy: Delete
-volumeBindingMode: Immediate
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: managed-premium
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-provisioner: disk.csi.azure.com
-parameters:
-  skuName: Premium_LRS
-  kind: managed
-  cachingMode: ReadOnly
-reclaimPolicy: Delete
-volumeBindingMode: Immediate
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: managed-standard
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-provisioner: disk.csi.azure.com
-parameters:
-  skuName: Standard_LRS
-  kind: managed
-  cachingMode: ReadOnly
-reclaimPolicy: Delete
-volumeBindingMode: Immediate
----
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: azurefile
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-provisioner: file.csi.azure.com
-parameters:
-  skuName: Standard_LRS
-reclaimPolicy: Delete
-volumeBindingMode: Immediate
-`)
-
-func k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 apiVersion: v1
@@ -7011,129 +6934,6 @@ func k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: default
-  annotations:
-    storageclass.beta.kubernetes.io/is-default-class: "true"
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: managed-premium
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Premium_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: managed-standard
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
-`)
-
-func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: default
-  annotations:
-    storageclass.beta.kubernetes.io/is-default-class: "true"
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: managed-premium
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Premium_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: managed-standard
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: Managed
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
----
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: azurefile
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-file
-parameters:
-  skuName: Standard_LRS
-`)
-
-func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -7480,125 +7280,6 @@ func k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml() (*asset
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: default
-  annotations:
-    storageclass.beta.kubernetes.io/is-default-class: "true"
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: unmanaged-premium
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: shared
-  storageaccounttype: Premium_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: unmanaged-standard
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: shared
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
-`)
-
-func k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: default
-  annotations:
-    storageclass.beta.kubernetes.io/is-default-class: "true"
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: unmanaged-premium
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: shared
-  storageaccounttype: Premium_LRS
-  cachingmode: ReadOnly
----
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: unmanaged-standard
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-disk
-parameters:
-  kind: shared
-  storageaccounttype: Standard_LRS
-  cachingmode: ReadOnly
----
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: azurefile
-  annotations:
-  labels:
-    kubernetes.io/cluster-service: "true"
-provisioner: kubernetes.io/azure-file
-parameters:
-  skuName: Standard_LRS
-`)
-
-func k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -13782,6 +13463,173 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}
 `)
 
 func k8sContaineraddons115KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
@@ -15105,6 +14953,173 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}
 `)
 
 func k8sContaineraddons116KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
@@ -20018,6 +20033,173 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}
 `)
 
 func k8sContaineraddons117KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
@@ -27027,6 +27209,173 @@ subjects:
 - kind: ServiceAccount
   name: persistent-volume-binder
   namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}
 `)
 
 func k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
@@ -38546,47 +38895,42 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                                                   agentoutputsT,
-	"agentparams.t":                                                    agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":                              dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":                                    dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":                                dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":                                 dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":                                      dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":                              dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":                              dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":                                           dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":                                dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":                                     dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":                                     dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t":                             dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t":                             dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":                                    dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":                                    dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":                                    dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                                             dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                                                  dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":                                         dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":                                         dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":                                         dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":                                         dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":                                         dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":                                         dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":                                       dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                                            dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                                                dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                                            dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":                                      dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                                                    iaasoutputsT,
-	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":    k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":    k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-csi-storage-classes.yaml": k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml,
-	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":         k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml,
-	"k8s/addons/kubernetesmasteraddons-managed-azure-storage-classes.yaml":          k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml,
-	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml,
-	"k8s/addons/kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml,
+	"agentoutputs.t":                                                agentoutputsT,
+	"agentparams.t":                                                 agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":                           dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":                                 dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":                             dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":                              dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":                                   dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":                           dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":                           dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":                                        dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":                             dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":                                  dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":                                  dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t":                          dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t":                          dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":                                 dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":                                 dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":                                 dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                                          dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                                               dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":                                      dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":                                      dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":                                      dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":                                      dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":                                      dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":                                      dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":                                    dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                                         dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                                             dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                                         dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":                                   dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                                                 iaasoutputsT,
+	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml": k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml": k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":      k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/armparameters.t":                                                                  k8sArmparametersT,
 	"k8s/cloud-init/artifacts/apt-preferences":                                             k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                                                k8sCloudInitArtifactsAuditdRules,
@@ -38847,13 +39191,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.17": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-flannel-daemonset.yaml": {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			}},
-			"kubernetesmasteraddons-azure-csi-storage-classes.yaml":              {k8sAddonsKubernetesmasteraddonsAzureCsiStorageClassesYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-flannel-daemonset.yaml":                      {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml":   {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-managed-azure-storage-classes.yaml":          {k8sAddonsKubernetesmasteraddonsManagedAzureStorageClassesYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":       {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml": {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesCustomYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml":        {k8sAddonsKubernetesmasteraddonsUnmanagedAzureStorageClassesYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-flannel-daemonset.yaml":                {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
 		}},
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
