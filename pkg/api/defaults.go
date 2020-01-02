@@ -480,11 +480,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
+		// Configure addons
+		// This needs to be configured first as set kubelet config depends
+		// on certains default addons to be populated (eg. ip-masq-agent)
+		cs.setAddonsConfig(isUpgrade)
+
 		// Configure kubelet
 		cs.setKubeletConfig(isUpgrade)
-
-		// Configure addons
-		cs.setAddonsConfig(isUpgrade)
 
 		// Master-specific defaults that depend upon kubelet defaults
 		// Set the default number of IP addresses allocated for masters.
