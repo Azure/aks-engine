@@ -114,7 +114,7 @@ func AcceleratedNetworkingSupported(sku string) bool {
 	// Trim the optional _Promo suffix.
 	sku = strings.TrimSuffix(sku, "_Promo")
 	switch sku {
-	case "Standard_D3_v2", "Standard_D12_v2", "Standard_DS13-4_v2", "Standard_DS14-4_v2", "Standard_F4", "Standard_F4s", "Standard_D8_v3", "Standard_D8s_v3",
+	case "Standard_D3_v2", "Standard_DS3_v2", "Standard_D12_v2", "Standard_DS13-4_v2", "Standard_DS14-4_v2", "Standard_F4", "Standard_F4s", "Standard_D8_v3", "Standard_D8s_v3",
 		"Standard_D32-8s_v3", "Standard_E8_v3", "Standard_E8s_v3", "Standard_D3_v2_ABC",
 		"Standard_D12_v2_ABC", "Standard_F4_ABC", "Standard_F8s_v2", "Standard_D4_v2",
 		"Standard_D13_v2", "Standard_DS4_v2",
