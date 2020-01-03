@@ -6,7 +6,7 @@
         },
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.16",
+            "orchestratorRelease": "1.17",
             "kubernetesConfig": {
                 "loadBalancerSku": "Standard",
                 "excludeMasterFromStandardLB": true,
@@ -22,7 +22,8 @@
                     "--feature-gates": "IPv6DualStack=true"
                 },
                 "controllerManagerConfig": {
-                    "--feature-gates": "IPv6DualStack=true"
+                    "--feature-gates": "IPv6DualStack=true",
+                    "--non-masquerade-cidr": "0.0.0.0/0"
                 }
             }
         },
