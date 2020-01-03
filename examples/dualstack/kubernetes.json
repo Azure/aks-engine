@@ -10,7 +10,7 @@
             "kubernetesConfig": {
                 "loadBalancerSku": "Standard",
                 "excludeMasterFromStandardLB": true,
-                "clusterSubnet": "10.244.0.0/16,fc00::/8",
+                "clusterSubnet": "10.244.0.0/16,fc00::/48",
                 "serviceCidr": "10.0.0.0/16,fd00::/108",
                 "dnsServiceIP": "10.0.0.10",
                 "kubeProxyMode": "ipvs",
