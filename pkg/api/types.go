@@ -1011,12 +1011,15 @@ func (p *Properties) IsIPMasqAgentEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
 }
 
-// IsIPMasqAgentDisabled ...
+// IsIPMasqAgentDisabled returns true if the ip-masq-agent functionality is disabled
 func (p *Properties) IsIPMasqAgentDisabled() bool {
 	if p.HostedMasterProfile != nil {
 		return !p.HostedMasterProfile.IPMasqAgent
 	}
-	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentDisabled()
+	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil {
+		return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentDisabled()
+	}
+	return false
 }
 
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
