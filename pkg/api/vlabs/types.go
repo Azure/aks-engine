@@ -255,6 +255,14 @@ type KubernetesAddon struct {
 	Data       string                    `json:"data,omitempty"`
 }
 
+// IsEnabled returns true if the addon is enabled
+func (a *KubernetesAddon) IsEnabled() bool {
+	if a.Enabled == nil {
+		return false
+	}
+	return *a.Enabled
+}
+
 // PrivateCluster defines the configuration for a private cluster
 type PrivateCluster struct {
 	Enabled        *bool                  `json:"enabled,omitempty"`
@@ -876,6 +884,28 @@ func (k *KubernetesConfig) RequiresDocker() bool {
 func (k *KubernetesConfig) IsRBACEnabled() bool {
 	if k.EnableRbac != nil {
 		return to.Bool(k.EnableRbac)
+	}
+	return false
+}
+
+// GetAddonByName returns the KubernetesAddon instance with name `addonName`
+func (k *KubernetesConfig) GetAddonByName(addonName string) KubernetesAddon {
+	var kubeAddon KubernetesAddon
+	for _, addon := range k.Addons {
+		if addon.Name == addonName {
+			kubeAddon = addon
+			break
+		}
+	}
+	return kubeAddon
+}
+
+// IsAddonEnabled checks whether a k8s addon with name "addonName" is enabled or not based on the Enabled field of KubernetesAddon.
+// If the value of Enabled is nil, the "defaultValue" is returned.
+func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
+	if k != nil {
+		kubeAddon := k.GetAddonByName(addonName)
+		return kubeAddon.IsEnabled()
 	}
 	return false
 }

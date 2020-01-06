@@ -130,6 +130,8 @@ const (
 	NetworkPolicyAntrea = "antrea"
 	// NetworkPluginAntrea is the string expression for antrea network plugin config option
 	NetworkPluginAntrea = NetworkPolicyAntrea
+	// NetworkPluginFlannel is the string expression for flannel network plugin config option
+	NetworkPluginFlannel = "flannel"
 	// NetworkModeBridge is the string expression for bridge network mode config option
 	NetworkModeBridge = "bridge"
 	// NetworkModeTransparent is the string expression for transparent network mode config option

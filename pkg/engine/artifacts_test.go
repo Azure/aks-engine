@@ -13,288 +13,6 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func TestKubernetesAddonSettingsInit(t *testing.T) {
-	mockAzureStackProperties := api.GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
-	cases := []struct {
-		p                              *api.Properties
-		expectedFlannel                bool
-		expectedManagedStorageClass    bool
-		expectedUnmanagedStorageClass  bool
-		expectedScheduledMaintenance   bool
-		expectedAzureCSIStorageClasses bool
-	}{
-		// 1.14 default scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// Cilium scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPolicy: NetworkPolicyCilium,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// Flannel scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginFlannel,
-					},
-				},
-			},
-			expectedFlannel:                true,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// AAD Admin Group scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AADProfile: &api.AADProfile{
-					AdminGroupID: "1234-5",
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// ELB service scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin:   NetworkPluginAzure,
-						LoadBalancerSku: api.StandardLoadBalancerSku,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// Scheduled Maintenance Scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin:   NetworkPluginAzure,
-						LoadBalancerSku: api.StandardLoadBalancerSku,
-						Addons: []api.KubernetesAddon{
-							{
-								Name:    common.ScheduledMaintenanceAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-						},
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   true,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// non-Managed Disk scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						StorageProfile: api.StorageAccount,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    false,
-			expectedUnmanagedStorageClass:  true,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// Azure Stack Managed Disk scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						StorageProfile: api.ManagedDisks,
-					},
-				},
-				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// Azure Stack non-Managed Disk scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.14.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						StorageProfile: api.StorageAccount,
-					},
-				},
-				CustomCloudProfile: mockAzureStackProperties.CustomCloudProfile,
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    false,
-			expectedUnmanagedStorageClass:  true,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// 1.15.0-beta.1 scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.15.0-beta.1",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin: NetworkPluginAzure,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    true,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: false,
-		},
-		// CSI storage classes scenario
-		{
-			p: &api.Properties{
-				OrchestratorProfile: &api.OrchestratorProfile{
-					OrchestratorType:    Kubernetes,
-					OrchestratorVersion: "1.13.0",
-					KubernetesConfig: &api.KubernetesConfig{
-						NetworkPlugin:             NetworkPluginAzure,
-						UseCloudControllerManager: to.BoolPtr(true),
-					},
-				},
-				AgentPoolProfiles: []*api.AgentPoolProfile{
-					{
-						StorageProfile: api.StorageAccount,
-					},
-				},
-			},
-			expectedFlannel:                false,
-			expectedManagedStorageClass:    false,
-			expectedUnmanagedStorageClass:  false,
-			expectedScheduledMaintenance:   false,
-			expectedAzureCSIStorageClasses: true,
-		},
-	}
-
-	for _, c := range cases {
-		componentFileSpecArray := kubernetesAddonSettingsInit(c.p)
-		for _, componentFileSpec := range componentFileSpecArray {
-			switch componentFileSpec.destinationFile {
-			case "flannel-daemonset.yaml":
-				if c.expectedFlannel != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.FlannelAddonName, c.expectedFlannel)
-				}
-			case "azure-storage-classes.yaml":
-				if strings.Contains(componentFileSpec.sourceFile, "unmanaged-azure-storage") {
-					if c.expectedUnmanagedStorageClass != componentFileSpec.isEnabled {
-						t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedUnmanagedStorageClass)
-					}
-					if c.p.CustomCloudProfile != nil {
-						if !strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
-							t.Fatalf("Expected an Azure Stack-specific unmanaged disk spec, got %s instead", componentFileSpec.sourceFile)
-						}
-					} else {
-						if strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
-							t.Fatalf("Got an unexpected Azure Stack-specific unmanaged disk spec in a non-Azure Stack cluster configuration")
-						}
-					}
-				} else {
-					if c.expectedManagedStorageClass != componentFileSpec.isEnabled {
-						t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedManagedStorageClass)
-					}
-					if c.p.CustomCloudProfile != nil {
-						if !strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
-							t.Fatalf("Expected an Azure Stack-specific Managed disk spec, got %s instead", componentFileSpec.sourceFile)
-						}
-					} else {
-						if strings.Contains(componentFileSpec.sourceFile, "-custom.yaml") {
-							t.Fatalf("Got an unexpected Azure Stack-specific Managed disk spec in a non-Azure Stack cluster configuration")
-						}
-					}
-				}
-			case "scheduled-maintenance-deployment.yaml":
-				if c.expectedScheduledMaintenance != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", common.ScheduledMaintenanceAddonName, c.expectedScheduledMaintenance)
-				}
-			case "azure-csi-storage-classes.yaml":
-				if c.expectedAzureCSIStorageClasses != componentFileSpec.isEnabled {
-					t.Fatalf("Expected %s to be %t", componentFileSpec.sourceFile, c.expectedAzureCSIStorageClasses)
-				}
-			}
-		}
-	}
-}
-
 func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 	/*
 		$ echo "Hello, World\!" | base64
@@ -336,6 +54,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		expectedAntrea                 kubernetesComponentFileSpec
 		expectedAuditPolicy            kubernetesComponentFileSpec
 		expectedAzureCloudProvider     kubernetesComponentFileSpec
+		expectedFlannel                kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -473,6 +192,10 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 								Name: common.AzureCloudProviderAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.FlannelAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -636,6 +359,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      cloudProviderAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: cloudProviderAddonDestinationFilename,
+			},
+			expectedFlannel: kubernetesComponentFileSpec{
+				sourceFile:      flannelAddonSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: flannelAddonDestinationFilename,
 			},
 		},
 		{
@@ -742,6 +470,9 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.AzureCloudProviderAddonName,
 							},
+							{
+								Name: common.FlannelAddonName,
+							},
 						},
 					},
 				},
@@ -905,6 +636,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      cloudProviderAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: cloudProviderAddonDestinationFilename,
+			},
+			expectedFlannel: kubernetesComponentFileSpec{
+				sourceFile:      flannelAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: flannelAddonDestinationFilename,
 			},
 		},
 		{
@@ -1069,6 +805,11 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 				sourceFile:      cloudProviderAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: cloudProviderAddonDestinationFilename,
+			},
+			expectedFlannel: kubernetesComponentFileSpec{
+				sourceFile:      flannelAddonSourceFilename,
+				base64Data:      "",
+				destinationFile: flannelAddonDestinationFilename,
 			},
 		},
 	}
@@ -1399,6 +1140,16 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedAzureCloudProvider.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCloudProvider.destinationFile)
+					}
+				case common.FlannelAddonName:
+					if c.expectedFlannel.sourceFile != componentFileSpec[addon].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedFlannel.sourceFile)
+					}
+					if c.expectedFlannel.base64Data != componentFileSpec[addon].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedFlannel.base64Data)
+					}
+					if c.expectedFlannel.destinationFile != componentFileSpec[addon].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedFlannel.destinationFile)
 					}
 				}
 			}

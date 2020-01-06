@@ -223,6 +223,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
+		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -293,6 +294,9 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == common.AntreaAddonName {
 			containerName = common.AntreaControllerContainerName
+		}
+		if addonName == common.FlannelAddonName {
+			containerName = common.KubeFlannelContainerName
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
@@ -875,6 +879,32 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
 		t.Fatalf("NetworkPolicy did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy, "")
+	}
+}
+
+func TestNetworkPluginDefaults(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != DefaultNetworkPlugin {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, DefaultNetworkPlugin)
+	}
+
+	mockCS = getMockBaseContainerService("1.15.7")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.FlannelAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginFlannel {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
 	}
 }
 

@@ -272,4 +272,8 @@ const (
 	auditPolicyAddonDestinationFilename            string = "audit-policy.yaml"
 	cloudProviderAddonSourceFilename               string = "kubernetesmasteraddons-azure-cloud-provider-deployment.yaml"
 	cloudProviderAddonDestinationFilename          string = "azure-cloud-provider-deployment.yaml"
+	flannelAddonSourceFilename                     string = "kubernetesmasteraddons-flannel-daemonset.yaml"
+	flannelAddonDestinationFilename                string = "flannel-daemonset.yaml"
+	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
+	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
 )

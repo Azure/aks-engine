@@ -187,14 +187,6 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
 		profile.OrchestratorProfile.OrchestratorVersion, cs)
 
-	// add addons
-	str = substituteConfigString(str,
-		kubernetesAddonSettingsInit(profile),
-		"k8s/addons",
-		"/etc/kubernetes/addons",
-		"MASTER_ADDONS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion, cs)
-
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
 	if err != nil {
@@ -579,6 +571,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"HasAntreaNetworkPolicy": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea
+		},
+		"HasFlannelNetworkPlugin": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel
 		},
 		"HasCustomNodesDNS": func() bool {
 			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()

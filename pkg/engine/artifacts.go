@@ -192,34 +192,17 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
 			destinationFile: cloudProviderAddonDestinationFilename,
 		},
-	}
-}
-
-func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpec {
-	if p.OrchestratorProfile == nil {
-		p.OrchestratorProfile = &api.OrchestratorProfile{}
-	}
-	if p.OrchestratorProfile.KubernetesConfig == nil {
-		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-	}
-	o := p.OrchestratorProfile
-	k := o.KubernetesConfig
-	kubernetesComponentFileSpecs := []kubernetesComponentFileSpec{
-		{
-			sourceFile:      "kubernetesmasteraddons-flannel-daemonset.yaml",
+		common.FlannelAddonName: {
+			sourceFile:      flannelAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.FlannelAddonName),
-			destinationFile: "flannel-daemonset.yaml",
-			isEnabled:       k.NetworkPlugin == NetworkPluginFlannel,
+			destinationFile: flannelAddonDestinationFilename,
 		},
-		{
-			sourceFile:      "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml",
+		common.ScheduledMaintenanceAddonName: {
+			sourceFile:      scheduledMaintenanceAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
-			destinationFile: "scheduled-maintenance-deployment.yaml",
-			isEnabled:       k.IsAddonEnabled(common.ScheduledMaintenanceAddonName),
+			destinationFile: scheduledMaintenanceAddonSourceFilename,
 		},
 	}
-
-	return kubernetesComponentFileSpecs
 }
 
 func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFileSpec {

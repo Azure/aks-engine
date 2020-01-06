@@ -2,7 +2,16 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "containerRuntime": "docker",
+        "addons": [
+          {
+            "name": "flannel",
+            "enabled": true
+          }
+        ]
+      }
     },
     "masterProfile": {
       "count": 1,
