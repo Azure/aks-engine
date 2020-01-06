@@ -1800,6 +1800,13 @@ func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
 	return k.IsAddonEnabled(common.IPMASQAgentAddonName)
 }
 
+// EnableIPMasqAgentByDefault checks if the default conditions are true to enable the ip-masq-agent addon
+func (k *KubernetesConfig) EnableIPMasqAgentByDefault() bool {
+	return DefaultIPMasqAgentAddonEnabled &&
+		(k.NetworkPlugin != NetworkPluginCilium &&
+			k.NetworkPlugin != NetworkPluginAntrea)
+}
+
 // IsRBACEnabled checks if RBAC is enabled
 func (k *KubernetesConfig) IsRBACEnabled() bool {
 	if k.EnableRbac != nil {

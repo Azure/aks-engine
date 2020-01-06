@@ -99,7 +99,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	}
 
 	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
-	if !cs.Properties.IsIPMasqAgentEnabled() {
+	if !o.KubernetesConfig.EnableIPMasqAgentByDefault() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 	}
 

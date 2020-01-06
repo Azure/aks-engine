@@ -3842,6 +3842,44 @@ func TestIsIPMasqAgentEnabled(t *testing.T) {
 	}
 }
 
+func TestEnableIPMasqAgentByDefault(t *testing.T) {
+	cases := []struct {
+		name            string
+		k               *KubernetesConfig
+		expectedEnabled bool
+	}{
+		{
+			name:            "default",
+			k:               &KubernetesConfig{},
+			expectedEnabled: true,
+		},
+		{
+			name: "cilium",
+			k: &KubernetesConfig{
+				NetworkPlugin: NetworkPluginCilium,
+			},
+			expectedEnabled: false,
+		},
+		{
+			name: "antrea",
+			k: &KubernetesConfig{
+				NetworkPlugin: NetworkPluginAntrea,
+			},
+			expectedEnabled: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.k.EnableIPMasqAgentByDefault() != c.expectedEnabled {
+				t.Fatalf("expected KubernetesConfig.EnableIPMasqAgentByDefault() to return %t but instead returned %t", c.expectedEnabled, c.k.EnableIPMasqAgentByDefault())
+			}
+		})
+	}
+}
+
 func TestGetAzureCNIURLFuncs(t *testing.T) {
 	// Default case
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 1, 3, false)
