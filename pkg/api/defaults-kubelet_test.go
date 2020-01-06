@@ -519,6 +519,15 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
 			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
 	}
+
+	// No ip-masq-agent addon configuration specified, --non-masquerade-cidr should be 0.0.0.0/0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
+	}
 }
 
 func TestEnforceNodeAllocatable(t *testing.T) {
