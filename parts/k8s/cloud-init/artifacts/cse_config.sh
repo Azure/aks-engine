@@ -317,6 +317,11 @@ ensureKubelet() {
         sleep 3
     done
     {{end}}
+    {{if HasFlannelNetworkPlugin}}
+    while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do
+        sleep 3
+    done
+    {{end}}
 }
 
 ensureLabelNodes() {

@@ -890,6 +890,24 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			},
 			ExpectedResult: false,
 		},
+		{
+			Name:     "HasFlannelNetworkPlugin - flannel",
+			FuncName: "HasFlannelNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPluginFlannel
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasFlannelNetworkPlugin - azure",
+			FuncName: "HasFlannelNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAzure
+				return cs
+			},
+			ExpectedResult: false,
+		},
 	}
 
 	originalCS := &api.ContainerService{}

@@ -32,10 +32,6 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
 // ../../parts/k8s/armparameters.t
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
@@ -103,6 +99,7 @@
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
+// ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -127,6 +124,7 @@
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
+// ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -161,6 +159,7 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-cilium-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-kube-dns-deployment.yaml
@@ -171,6 +170,7 @@
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml
+// ../../parts/k8s/containeraddons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/containeraddons/node-problem-detector.yaml
@@ -6425,865 +6425,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: flannel
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: kube-flannel-cfg
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  cni-conf.json: |
-    {
-      "name": "cbr0",
-      "type": "flannel",
-      "delegate": {
-        "isDefaultGateway": true
-      }
-    }
-  net-conf.json: |
-    {
-      "Network": "<kubeClusterCidr>",
-      "Backend": {
-        "Type": "vxlan"
-      }
-    }
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: kube-flannel-ds
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      tier: node
-      app: flannel
-  template:
-    metadata:
-      labels:
-        tier: node
-        app: flannel
-    spec:
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
-      priorityClassName: system-node-critical
-      tolerations:
-        - key: node.kubernetes.io/not-ready
-          operator: Exists
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/master
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-        - key: CriticalAddonsOnly
-          operator: Exists
-      serviceAccountName: flannel
-      containers:
-      - name: kube-flannel
-        image: quay.io/coreos/flannel:v0.8.0-amd64
-        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
-        securityContext:
-          privileged: true
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        volumeMounts:
-        - name: run
-          mountPath: /run
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      - name: install-cni
-        image: quay.io/coreos/flannel:v0.10.0-amd64
-        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
-        volumeMounts:
-        - name: cni
-          mountPath: /etc/cni/net.d
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      volumes:
-        - name: run
-          hostPath:
-            path: /run
-        - name: cni
-          hostPath:
-            path: /etc/cni/net.d
-        - name: flannel-cfg
-          configMap:
-            name: kube-flannel-cfg
----
-{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/status
-    verbs:
-      - patch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flannel
-subjects:
-- kind: ServiceAccount
-  name: flannel
-  namespace: kube-system
-`)
-
-func k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: flannel
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: kube-flannel-cfg
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  cni-conf.json: |
-    {
-      "name": "cbr0",
-      "type": "flannel",
-      "delegate": {
-        "isDefaultGateway": true
-      }
-    }
-  net-conf.json: |
-    {
-      "Network": "<kubeClusterCidr>",
-      "Backend": {
-        "Type": "vxlan"
-      }
-    }
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: kube-flannel-ds
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      tier: node
-      app: flannel
-  template:
-    metadata:
-      labels:
-        tier: node
-        app: flannel
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
-      priorityClassName: system-node-critical
-      tolerations:
-        - key: node.kubernetes.io/not-ready
-          operator: Exists
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/master
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-        - key: CriticalAddonsOnly
-          operator: Exists
-      serviceAccountName: flannel
-      containers:
-      - name: kube-flannel
-        image: quay.io/coreos/flannel:v0.8.0-amd64
-        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
-        securityContext:
-          privileged: true
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        volumeMounts:
-        - name: run
-          mountPath: /run
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      - name: install-cni
-        image: quay.io/coreos/flannel:v0.10.0-amd64
-        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
-        volumeMounts:
-        - name: cni
-          mountPath: /etc/cni/net.d
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      volumes:
-        - name: run
-          hostPath:
-            path: /run
-        - name: cni
-          hostPath:
-            path: /etc/cni/net.d
-        - name: flannel-cfg
-          configMap:
-            name: kube-flannel-cfg
----
-{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/status
-    verbs:
-      - patch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flannel
-subjects:
-- kind: ServiceAccount
-  name: flannel
-  namespace: kube-system
-`)
-
-func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: flannel
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: kube-flannel-cfg
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  cni-conf.json: |
-    {
-      "name": "cbr0",
-      "type": "flannel",
-      "delegate": {
-        "isDefaultGateway": true
-      }
-    }
-  net-conf.json: |
-    {
-      "Network": "<kubeClusterCidr>",
-      "Backend": {
-        "Type": "vxlan"
-      }
-    }
----
-apiVersion: extensions/v1beta1
-kind: DaemonSet
-metadata:
-  name: kube-flannel-ds
-  namespace: kube-system
-  labels:
-    tier: node
-    app: flannel
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  template:
-    metadata:
-      labels:
-        tier: node
-        app: flannel
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
-      priorityClassName: system-node-critical
-      tolerations:
-        - key: node.kubernetes.io/not-ready
-          operator: Exists
-          effect: NoSchedule
-        - key: node-role.kubernetes.io/master
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
-        - key: CriticalAddonsOnly
-          operator: Exists
-      serviceAccountName: flannel
-      containers:
-      - name: kube-flannel
-        image: quay.io/coreos/flannel:v0.8.0-amd64
-        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
-        securityContext:
-          privileged: true
-        env:
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        volumeMounts:
-        - name: run
-          mountPath: /run
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      - name: install-cni
-        image: quay.io/coreos/flannel:v0.10.0-amd64
-        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
-        volumeMounts:
-        - name: cni
-          mountPath: /etc/cni/net.d
-        - name: flannel-cfg
-          mountPath: /etc/kube-flannel/
-      volumes:
-        - name: run
-          hostPath:
-            path: /run
-        - name: cni
-          hostPath:
-            path: /etc/cni/net.d
-        - name: flannel-cfg
-          configMap:
-            name: kube-flannel-cfg
----
-{{- /* This file was pulled from:
-https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - nodes/status
-    verbs:
-      - patch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: flannel
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flannel
-subjects:
-- kind: ServiceAccount
-  name: flannel
-  namespace: kube-system
-`)
-
-func k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml = []byte(`apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-    control-plane: controller-manager
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: drainsafe-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: drainsafe-leader-election-role
-  namespace: drainsafe-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - configmaps/status
-  verbs:
-  - get
-  - update
-  - patch
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  creationTimestamp: null
-  name: drainsafe-manager-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - repairman.k8s.io
-  resources:
-  - maintenancerequests
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - extensions
-  resources:
-  - daemonsets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - pods/eviction
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - events
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: drainsafe-proxy-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - authentication.k8s.io
-  resources:
-  - tokenreviews
-  - subjectaccessreviews
-  verbs:
-  - create
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: drainsafe-leader-election-rolebinding
-  namespace: drainsafe-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: drainsafe-leader-election-role
-subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: drainsafe-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: drainsafe-manager-rolebinding
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: drainsafe-manager-role
-subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: drainsafe-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: drainsafe-proxy-rolebinding
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: drainsafe-proxy-role
-subjects:
-- kind: ServiceAccount
-  name: default
-  namespace: drainsafe-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  annotations:
-    prometheus.io/port: "8443"
-    prometheus.io/scheme: https
-    prometheus.io/scrape: "true"
-  labels:
-    control-plane: controller-manager
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: drainsafe-controller-manager-metrics-service
-  namespace: drainsafe-system
-spec:
-  ports:
-  - name: https
-    port: 8443
-    targetPort: https
-  selector:
-    control-plane: controller-manager
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    control-plane: controller-manager
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: drainsafe-controller-manager
-  namespace: drainsafe-system
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      control-plane: controller-manager
-  template:
-    metadata:
-      labels:
-        control-plane: controller-manager
-    spec:
-      containers:
-      - args:
-        - --secure-listen-address=0.0.0.0:8443
-        - --upstream=http://127.0.0.1:8080/
-        - --logtostderr=true
-        - --v=10
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.4.0
-        name: kube-rbac-proxy
-        ports:
-        - containerPort: 8443
-          name: https
-      - args:
-        - --metrics-addr=127.0.0.1:8080
-        command:
-        - /manager
-        env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        image: quay.io/awesomenix/drainsafe-manager:latest
-        name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 100m
-            memory: 20Mi
-      terminationGracePeriodSeconds: 10
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    control-plane: controller-manager
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: drainsafe-controller-scheduledevent-manager
-  namespace: drainsafe-system
-spec:
-  selector:
-    matchLabels:
-      control-plane: controller-manager
-  template:
-    metadata:
-      labels:
-        control-plane: controller-manager
-    spec:
-      containers:
-      - command:
-        - /scheduledevent-manager
-        env:
-        - name: POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        image: quay.io/awesomenix/drainsafe-manager:latest
-        name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 30Mi
-          requests:
-            cpu: 100m
-            memory: 20Mi
-      terminationGracePeriodSeconds: 10
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-`)
-
-func k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sArmparametersT = []byte(`{
   "parameters": {
     {{range .AgentPoolProfiles}}{{template "agentparams.t" .}},{{end}}
@@ -7863,6 +7004,11 @@ ensureKubelet() {
     {{end}}
     {{if HasAntreaNetworkPolicy}}
     while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
+        sleep 3
+    done
+    {{end}}
+    {{if HasFlannelNetworkPlugin}}
+    while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do
         sleep 3
     done
     {{end}}
@@ -10778,8 +9924,6 @@ write_files:
 {{end}}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
-
-MASTER_ADDONS_CONFIG_PLACEHOLDER
 
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
@@ -17344,6 +16488,177 @@ func k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml(
 	return a, nil
 }
 
+var _k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "type": "flannel",
+      "delegate": {
+        "isDefaultGateway": true
+      }
+    }
+  net-conf.json: |
+    {
+      "Network": "<kubeClusterCidr>",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      tier: node
+      app: flannel
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: Exists
+      serviceAccountName: flannel
+      containers:
+      - name: kube-flannel
+        image: {{ContainerImage "kube-flannel"}}
+        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: run
+          mountPath: /run
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      - name: install-cni
+        image: {{ContainerImage "install-cni"}}
+        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      volumes:
+        - name: run
+          hostPath:
+            path: /run
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        - name: flannel-cfg
+          configMap:
+            name: kube-flannel-cfg
+---
+{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+    verbs:
+      - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-system
+`)
+
+func k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYaml, nil
+}
+
+func k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddons116KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -22434,6 +21749,179 @@ func k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml(
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "type": "flannel",
+      "delegate": {
+        "isDefaultGateway": true
+      }
+    }
+  net-conf.json: |
+    {
+      "Network": "<kubeClusterCidr>",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      tier: node
+      app: flannel
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: Exists
+      serviceAccountName: flannel
+      containers:
+      - name: kube-flannel
+        image: {{ContainerImage "kube-flannel"}}
+        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: run
+          mountPath: /run
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      - name: install-cni
+        image: {{ContainerImage "install-cni"}}
+        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      volumes:
+        - name: run
+          hostPath:
+            path: /run
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        - name: flannel-cfg
+          configMap:
+            name: kube-flannel-cfg
+---
+{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+    verbs:
+      - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-system
+`)
+
+func k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYaml, nil
+}
+
+func k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -30503,6 +29991,175 @@ func k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml() (
 	return a, nil
 }
 
+var _k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "type": "flannel",
+      "delegate": {
+        "isDefaultGateway": true
+      }
+    }
+  net-conf.json: |
+    {
+      "Network": "<kubeClusterCidr>",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: Exists
+      serviceAccountName: flannel
+      containers:
+      - name: kube-flannel
+        image: {{ContainerImage "kube-flannel"}}
+        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: run
+          mountPath: /run
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      - name: install-cni
+        image: {{ContainerImage "install-cni"}}
+        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      volumes:
+        - name: run
+          hostPath:
+            path: /run
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        - name: flannel-cfg
+          configMap:
+            name: kube-flannel-cfg
+---
+{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+    verbs:
+      - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-system
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -32284,6 +31941,352 @@ func k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, er
 	}
 
 	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml = []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: drainsafe-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: drainsafe-leader-election-role
+  namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps/status
+  verbs:
+  - get
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: drainsafe-manager-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - repairman.k8s.io
+  resources:
+  - maintenancerequests
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - extensions
+  resources:
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - pods/eviction
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: drainsafe-proxy-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: drainsafe-leader-election-rolebinding
+  namespace: drainsafe-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: drainsafe-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: drainsafe-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: drainsafe-manager-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: drainsafe-manager-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: drainsafe-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: drainsafe-proxy-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: drainsafe-proxy-role
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: drainsafe-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "8443"
+    prometheus.io/scheme: https
+    prometheus.io/scrape: "true"
+  labels:
+    control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: drainsafe-controller-manager-metrics-service
+  namespace: drainsafe-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    targetPort: https
+  selector:
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: drainsafe-controller-manager
+  namespace: drainsafe-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --secure-listen-address=0.0.0.0:8443
+        - --upstream=http://127.0.0.1:8080/
+        - --logtostderr=true
+        - --v=10
+        image: {{ContainerImage "kube-rbac-proxy"}}
+        name: kube-rbac-proxy
+        ports:
+        - containerPort: 8443
+          name: https
+      - args:
+        - --metrics-addr=127.0.0.1:8080
+        command:
+        - /manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: {{ContainerImage "manager"}}
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    control-plane: controller-manager
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: drainsafe-controller-scheduledevent-manager
+  namespace: drainsafe-system
+spec:
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      labels:
+        control-plane: controller-manager
+    spec:
+      containers:
+      - command:
+        - /scheduledevent-manager
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        image: {{ContainerImage "manager"}}
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+`)
+
+func k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYamlBytes() ([]byte, error) {
+	return _k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, nil
+}
+
+func k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml() (*asset, error) {
+	bytes, err := k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/containeraddons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -38895,42 +38898,38 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                                                agentoutputsT,
-	"agentparams.t":                                                 agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":                           dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":                                 dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":                             dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":                              dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":                                   dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":                           dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":                           dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":                                        dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":                             dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":                                  dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":                                  dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t":                          dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t":                          dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":                                 dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":                                 dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":                                 dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                                          dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                                               dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":                                      dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":                                      dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":                                      dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":                                      dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":                                      dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":                                      dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":                                    dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                                         dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                                             dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                                         dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":                                   dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                                                 iaasoutputsT,
-	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml": k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml": k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":      k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
+	"agentoutputs.t":                                                                       agentoutputsT,
+	"agentparams.t":                                                                        agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":                                                  dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":                                                        dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":                                                    dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":                                                     dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":                                                          dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":                                                  dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":                                                  dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":                                                               dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":                                                    dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":                                                         dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":                                                         dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t":                                                 dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t":                                                 dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":                                                        dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":                                                        dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":                                                        dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                                                                 dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                                                                      dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":                                                             dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":                                                             dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":                                                             dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":                                                             dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":                                                             dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":                                                             dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":                                                           dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                                                                dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                                                                    dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                                                                dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":                                                          dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                                                                        iaasoutputsT,
 	"k8s/armparameters.t":                                                                  k8sArmparametersT,
 	"k8s/cloud-init/artifacts/apt-preferences":                                             k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                                                k8sCloudInitArtifactsAuditdRules,
@@ -38998,6 +38997,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml":                k8sContaineraddons116KubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-cloud-node-manager.yaml":              k8sContaineraddons116KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/containeraddons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":               k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   k8sContaineraddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sContaineraddons116KubernetesmasteraddonsKubeDnsDeploymentYaml,
@@ -39022,6 +39022,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":                k8sContaineraddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml":              k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/containeraddons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":               k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":             k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/containeraddons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sContaineraddons117KubernetesmasteraddonsKubeDnsDeploymentYaml,
@@ -39056,6 +39057,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-calico-daemonset.yaml":                     k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-cilium-daemonset.yaml":                     k8sContaineraddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":        k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-flannel-daemonset.yaml":                    k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-heapster-deployment.yaml":                  k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":        k8sContaineraddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-kube-dns-deployment.yaml":                  k8sContaineraddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
@@ -39066,6 +39068,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/containeraddons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":       k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-omsagent-daemonset.yaml":                   k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-pod-security-policy.yaml":                  k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/containeraddons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":     k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":             k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/containeraddons/kubernetesmasteraddons-tiller-deployment.yaml":                    k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/containeraddons/node-problem-detector.yaml":                                       k8sContaineraddonsNodeProblemDetectorYaml,
@@ -39184,16 +39187,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	}},
 	"iaasoutputs.t": {iaasoutputsT, map[string]*bintree{}},
 	"k8s": {nil, map[string]*bintree{
-		"addons": {nil, map[string]*bintree{
-			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-flannel-daemonset.yaml": {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-			}},
-			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-flannel-daemonset.yaml": {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-			}},
-			"kubernetesmasteraddons-flannel-daemonset.yaml":                {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
-		}},
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
 			"artifacts": {nil, map[string]*bintree{
@@ -39279,6 +39272,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sContaineraddons116KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cloud-node-manager.yaml":              {k8sContaineraddons116KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddons116KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sContaineraddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sContaineraddons116KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sContaineraddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":             {k8sContaineraddons116KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
@@ -39305,6 +39299,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sContaineraddons117KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cloud-node-manager.yaml":              {k8sContaineraddons117KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddons117KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sContaineraddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sContaineraddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sContaineraddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":             {k8sContaineraddons117KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
@@ -39337,30 +39332,32 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"dns-autoscaler.yaml":                {k8sContaineraddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                 {k8sContaineraddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kubernetesmaster-audit-policy.yaml": {k8sContaineraddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":    {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sContaineraddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sContaineraddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-dns-deployment.yaml":             {k8sContaineraddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":            {k8sContaineraddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":     {k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  {k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-omsagent-daemonset.yaml":              {k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			"node-problem-detector.yaml":                                  {k8sContaineraddonsNodeProblemDetectorYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":     {k8sContaineraddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":      {k8sContaineraddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aci-connector-deployment.yaml":         {k8sContaineraddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":  {k8sContaineraddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-npm-daemonset.yaml":              {k8sContaineraddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":  {k8sContaineraddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":  {k8sContaineraddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":    {k8sContaineraddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-calico-daemonset.yaml":                 {k8sContaineraddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-cilium-daemonset.yaml":                 {k8sContaineraddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":    {k8sContaineraddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-flannel-daemonset.yaml":                {k8sContaineraddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-heapster-deployment.yaml":              {k8sContaineraddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":    {k8sContaineraddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-dns-deployment.yaml":              {k8sContaineraddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":             {k8sContaineraddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":      {k8sContaineraddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  {k8sContaineraddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-metrics-server-deployment.yaml":        {k8sContaineraddonsKubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":   {k8sContaineraddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-omsagent-daemonset.yaml":               {k8sContaineraddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-pod-security-policy.yaml":              {k8sContaineraddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": {k8sContaineraddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":         {k8sContaineraddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-tiller-deployment.yaml":                {k8sContaineraddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
+			"node-problem-detector.yaml":                                   {k8sContaineraddonsNodeProblemDetectorYaml, map[string]*bintree{}},
 		}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},

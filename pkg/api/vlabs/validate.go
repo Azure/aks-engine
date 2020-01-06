@@ -732,6 +732,16 @@ func (a *Properties) validateAddons() error {
 					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea {
 						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
 					}
+				case common.FlannelAddonName:
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
+						return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
+					}
+					networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
+					if networkPlugin != "" {
+						if networkPlugin != NetworkPluginFlannel {
+							return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+						}
+					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
@@ -1484,7 +1494,7 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 
 	// Temporary safety check, to be removed when Windows support is added.
 	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium ||
-		networkPolicy == "flannel" || networkPolicy == NetworkPolicyAntrea) && hasWindows {
+		networkPolicy == NetworkPolicyAntrea) && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 

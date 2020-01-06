@@ -1,17 +1,19 @@
 {
 	"env": {
 	},
-	"options": {
-		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15"]
-	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPlugin": "flannel",
-					"containerRuntime": "docker"
+					"containerRuntime": "docker",
+					"addons": [
+						{
+							"name": "flannel",
+							"enabled": true
+						}
+					]
 				}
 			},
 			"masterProfile": {

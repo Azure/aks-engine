@@ -421,7 +421,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:  common.AntreaInstallCNIContainerName,
-				Image: k8sComponents[common.AntreaInstallCNIContainerName],
+				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
 			},
 		},
 	}
@@ -654,6 +654,36 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultFlannelAddonsConfig := KubernetesAddon{
+		Name:    common.FlannelAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeFlannelContainerName,
+				Image: k8sComponents[common.KubeFlannelContainerName],
+			},
+			{
+				Name:  common.FlannelInstallCNIContainerName,
+				Image: k8sComponents["flannel"+common.FlannelInstallCNIContainerName],
+			},
+		},
+	}
+
+	defaultScheduledMaintenanceAddonsConfig := KubernetesAddon{
+		Name:    common.ScheduledMaintenanceAddonName,
+		Enabled: to.BoolPtr(false),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeRBACProxyContainerName,
+				Image: k8sComponents[common.KubeRBACProxyContainerName],
+			},
+			{
+				Name:  common.ScheduledMaintenanceManagerContainerName,
+				Image: k8sComponents[common.ScheduledMaintenanceManagerContainerName],
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -693,6 +723,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureCloudProviderAddonsConfig,
 		defaultAADDefaultAdminGroupAddonsConfig,
 		defaultsAntreaDaemonSetAddonsConfig,
+		defaultFlannelAddonsConfig,
+		defaultScheduledMaintenanceAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

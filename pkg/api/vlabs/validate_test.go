@@ -893,13 +893,6 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 			"should error on antrea for windows clusters",
 		)
 	}
-
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "flannel"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
-		t.Errorf(
-			"should error on flannel for windows clusters",
-		)
-	}
 }
 
 func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
@@ -958,6 +951,14 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 		{
 			networkPlugin: "azure",
 			networkPolicy: "flannel",
+		},
+		{
+			networkPlugin: "flannel",
+			networkPolicy: "flannel",
+		},
+		{
+			networkPlugin: "flannel",
+			networkPolicy: "calico",
 		},
 		{
 			networkPlugin: "kubenet",
@@ -1713,6 +1714,90 @@ func TestValidateAddons(t *testing.T) {
 				},
 			},
 			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=flannel",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: NetworkPluginFlannel,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=azure",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: DefaultNetworkPlugin,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, DefaultNetworkPlugin, NetworkPluginFlannel),
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=kubenet",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: "kubenet",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, "kubenet", NetworkPluginFlannel),
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPolicy=calico",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, "calico"),
 		},
 		{
 			name: "azure-cloud-provider addon disabled",

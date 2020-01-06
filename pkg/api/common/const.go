@@ -217,7 +217,15 @@ const (
 	// AntreaAddonName is the name of antrea daemonset addon
 	AntreaAddonName = "antrea"
 	// FlannelAddonName is the name of flannel plugin daemonset addon
-	FlannelAddonName = "flannel-daemonset"
+	FlannelAddonName = "flannel"
+	// KubeFlannelContainerName is the name of the kube-flannel container in the flannel addon
+	KubeFlannelContainerName = "kube-flannel"
+	// FlannelInstallCNIContainerName is the name of the install-cni container in the flannel addon
+	FlannelInstallCNIContainerName = "install-cni"
+	// KubeRBACProxyContainerName is the name of the kube-rbac-proxy container in the scheduled-maintenance addon
+	KubeRBACProxyContainerName = "kube-rbac-proxy"
+	// ScheduledMaintenanceManagerContainerName is the name of the manager container in the scheduled-maintenance addon
+	ScheduledMaintenanceManagerContainerName = "manager"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
 	AADAdminGroupAddonName = "aad"
 	// AzureCloudProviderAddonName is the name of the azure-cloud-provider addon
