@@ -319,8 +319,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			{
 				Name:           common.AzureNetworkPolicyAddonName,
 				Image:          k8sComponents[common.AzureNetworkPolicyAddonName],
+				CPURequests:    "10m",
 				MemoryRequests: "20Mi",
-				MemoryLimits:   "2Gi",
+				CPULimits:      "100m",
+				MemoryLimits:   "200Mi",
 			},
 		},
 	}
