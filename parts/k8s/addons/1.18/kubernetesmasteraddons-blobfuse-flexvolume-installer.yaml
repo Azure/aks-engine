@@ -18,6 +18,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}

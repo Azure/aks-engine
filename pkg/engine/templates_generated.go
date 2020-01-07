@@ -9508,7 +9508,7 @@ var _k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`ap
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -9582,7 +9582,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-nmi-role
@@ -9598,7 +9598,7 @@ metadata:
     tier: node
     k8s-app: aad-pod-id
   name: nmi
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -9610,6 +9610,7 @@ spec:
         component: nmi
         tier: node
     spec:
+      priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
       containers:
@@ -9647,7 +9648,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -9687,7 +9688,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-mic-role
@@ -9702,7 +9703,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -10301,6 +10302,7 @@ spec:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -12747,6 +12749,7 @@ spec:
         kubernetes.io/cluster-service: "true"
         addonmanager.kubernetes.io/mode: Reconcile
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       containers:
       - name: keyvault-flexvolume
@@ -14757,7 +14760,7 @@ var _k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`ap
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -14831,7 +14834,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-nmi-role
@@ -14847,7 +14850,7 @@ metadata:
     tier: node
     k8s-app: aad-pod-id
   name: nmi
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -14861,6 +14864,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
       containers:
@@ -14898,7 +14902,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -14938,7 +14942,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-mic-role
@@ -14953,7 +14957,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -15556,6 +15560,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -18016,6 +18021,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       containers:
       - name: keyvault-flexvolume
@@ -20034,7 +20040,7 @@ var _k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`ap
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -20108,7 +20114,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-nmi-role
@@ -20124,7 +20130,7 @@ metadata:
     tier: node
     k8s-app: aad-pod-id
   name: nmi
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -20138,6 +20144,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
       containers:
@@ -20175,7 +20182,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -20215,7 +20222,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-mic-role
@@ -20230,7 +20237,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
-  namespace: default
+  namespace: kube-system
 spec:
   selector:
     matchLabels:
@@ -20833,6 +20840,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -23293,6 +23301,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       containers:
       - name: keyvault-flexvolume
@@ -27422,7 +27431,7 @@ var _k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVe
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -27496,7 +27505,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-nmi-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-nmi-role
@@ -27512,7 +27521,7 @@ metadata:
     tier: node
     k8s-app: aad-pod-id
   name: nmi
-  namespace: default
+  namespace: kube-system
 spec:
   template:
     metadata:
@@ -27520,6 +27529,7 @@ spec:
         component: nmi
         tier: node
     spec:
+      priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
       hostNetwork: true
       containers:
@@ -27557,7 +27567,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
   labels:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
@@ -27597,7 +27607,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: aad-pod-id-mic-service-account
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: aad-pod-id-mic-role
@@ -27612,7 +27622,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: mic
-  namespace: default
+  namespace: kube-system
 spec:
   template:
     metadata:
@@ -29164,6 +29174,7 @@ spec:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -29179,11 +29190,11 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/      
+          mountPath: /var/log/
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/              
+          path: /var/log/
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
@@ -31524,6 +31535,7 @@ spec:
         kubernetes.io/cluster-service: "true"
         addonmanager.kubernetes.io/mode: Reconcile
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       containers:
       - name: keyvault-flexvolume
