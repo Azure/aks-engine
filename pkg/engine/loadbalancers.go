@@ -243,8 +243,9 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 					BackendAddressPool: &network.SubResource{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 					},
-					Protocol:             network.Protocol1All,
-					IdleTimeoutInMinutes: to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+					Protocol:               network.Protocol1All,
+					IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+					AllocatedOutboundPorts: to.Int32Ptr(4096),
 				},
 			},
 		}
@@ -261,9 +262,10 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 				BackendAddressPool: &network.SubResource{
 					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 				},
-				Protocol:             network.Protocol1All,
-				IdleTimeoutInMinutes: to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-				EnableTCPReset:       to.BoolPtr(true),
+				Protocol:               network.Protocol1All,
+				IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+				EnableTCPReset:         to.BoolPtr(true),
+				AllocatedOutboundPorts: to.Int32Ptr(4096),
 			},
 		},
 	}
