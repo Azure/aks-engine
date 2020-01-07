@@ -31,7 +31,7 @@ jobs:
     GINKGO_SKIP: ${{ parameters.skipTests }}
     STABILITY_ITERATIONS: ${{ parameters.stabilityIterations }}
     RETAIN_SSH: false
-    ENABLE_KMS_ENCRYPTION: true
+    ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
 
   steps:
