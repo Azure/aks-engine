@@ -52,6 +52,8 @@ jobs:
       -w /go/src/github.com/Azure/aks-engine \
       ${DEIS_GO_DEV_IMAGE} make all
     displayName: build aks-engine-test - make all
+    condition: eq(variables.COPY_VHD, 'False')
+
 
   - script: |
       OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
