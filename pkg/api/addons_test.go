@@ -2086,27 +2086,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureFileContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -2116,27 +2116,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureDiskContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
@@ -2169,27 +2169,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureFileContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -2199,27 +2199,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureDiskContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
@@ -2256,27 +2256,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureFileContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -2286,27 +2286,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureDiskContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
@@ -2357,27 +2357,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureFileContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -2387,27 +2387,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureDiskContainerName,
-							Image: K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},
@@ -2458,27 +2458,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureFileContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 						},
 					},
 				},
@@ -2488,27 +2488,27 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CSIProvisionerContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 						},
 						{
 							Name:  common.CSIAttacherContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 						},
 						{
 							Name:  common.CSIClusterDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSILivenessProbeContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 						},
 						{
 							Name:  common.CSINodeDriverRegistrarContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 						},
 						{
 							Name:  common.CSIAzureDiskContainerName,
-							Image: K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 						},
 					},
 				},

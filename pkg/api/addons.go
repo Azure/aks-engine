@@ -513,58 +513,58 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CSIProvisionerContainerName,
-				Image: k8sComponents[common.CSIProvisionerContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
 			},
 			{
 				Name:  common.CSIAttacherContainerName,
-				Image: k8sComponents[common.CSIAttacherContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
 			},
 			{
 				Name:  common.CSIClusterDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
 			},
 			{
 				Name:  common.CSILivenessProbeContainerName,
-				Image: k8sComponents[common.CSILivenessProbeContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
 			},
 			{
 				Name:  common.CSINodeDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
 			},
 			{
 				Name:  common.CSIAzureDiskContainerName,
-				Image: k8sComponents[common.CSIAzureDiskContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureDiskContainerName],
 			},
 		},
 	}
 
 	defaultAzureFileCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureFileCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CSIProvisionerContainerName,
-				Image: k8sComponents[common.CSIProvisionerContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
 			},
 			{
 				Name:  common.CSIAttacherContainerName,
-				Image: k8sComponents[common.CSIAttacherContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
 			},
 			{
 				Name:  common.CSIClusterDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
 			},
 			{
 				Name:  common.CSILivenessProbeContainerName,
-				Image: k8sComponents[common.CSILivenessProbeContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
 			},
 			{
 				Name:  common.CSINodeDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
 			},
 			{
 				Name:  common.CSIAzureFileContainerName,
-				Image: k8sComponents[common.CSIAzureFileContainerName],
+				Image: specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureFileContainerName],
 			},
 		},
 	}

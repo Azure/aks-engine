@@ -691,6 +691,21 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"UsesCloudControllerManager": func() bool {
 			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
 		},
+		"HasAvailabilityZones": func() bool {
+			return cs.Properties.HasAvailabilityZones()
+		},
+		"GetZones": func() string {
+			if len(cs.Properties.AgentPoolProfiles) == 0 {
+				return ""
+			}
+
+			var zones string
+			location := cs.Location
+			for _, zone := range cs.Properties.AgentPoolProfiles[0].AvailabilityZones {
+				zones += fmt.Sprintf("\n    - %s-%s", location, zone)
+			}
+			return zones
+		},
 	}
 }
 
