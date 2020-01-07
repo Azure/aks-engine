@@ -54,7 +54,6 @@ jobs:
     displayName: build aks-engine-test - make all
     condition: eq(variables.COPY_VHD, 'False')
 
-
   - script: |
       OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
       IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
