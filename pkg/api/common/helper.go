@@ -278,6 +278,8 @@ func IsSgxEnabledSKU(vmSize string) bool {
 func GetMasterKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
 	buf.WriteString("kubernetes.azure.com/role=master")
+	buf.WriteString(",node.kubernetes.io/exclude-from-external-load-balancers=true")
+	buf.WriteString(",node.kubernetes.io/exclude-disruption=true")
 	if deprecated {
 		buf.WriteString(",kubernetes.io/role=master")
 		buf.WriteString(",node-role.kubernetes.io/master=")

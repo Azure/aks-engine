@@ -684,6 +684,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				labels := node.Metadata.Labels
 				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
 				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
+				if role == "master" && common.IsKubernetesVersionGe(
+					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-from-external-load-balancers", "true"))
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
+				}
 			}
 		})
 
