@@ -35176,7 +35176,7 @@ Write-Log "Entering windowslogscleanup.ps1"
 $logFilePrefixes = @("kubelet", "kubelet.err", "kubeproxy", "kubeproxy.err")
 
 foreach ($logFilePrefix in $logFilePrefixes) {
-    $oldLogs = [IO.Directory]::GetFiles("c:\k\logs", "$($logFilePrefix)-*.log")
+    $oldLogs = [IO.Directory]::GetFiles("c:\k", "$($logFilePrefix)-*.log")
     $oldLogs = $oldLogs | Sort-Object | Select-Object -SkipLast 5
     foreach ($oldLog in $oldLogs) {
         Write-Log "Removing $oldLog"
