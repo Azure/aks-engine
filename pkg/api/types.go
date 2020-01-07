@@ -1902,9 +1902,14 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
+// IsCustomCloudProfile return true if user has provided a custom cloud profile
+func (p *Properties) IsCustomCloudProfile() bool {
+	return p.CustomCloudProfile != nil
+}
+
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil
+	return p.CustomCloudProfile != nil && p.CustomCloudProfile.Environment != nil && strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud")
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment

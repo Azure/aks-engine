@@ -22,6 +22,13 @@ type CustomCloudProfileDefaultsParams struct {
 	IsScale   bool
 }
 
+func getAzureStackFQDNSuffix(portalUrl, location string) string {
+	azsFQDNSuffix := strings.Replace(portalUrl, fmt.Sprintf("https://portal.%s.", location), "", -1)
+	azsFQDNSuffix = strings.TrimSuffix(azsFQDNSuffix, "/")
+
+	return azsFQDNSuffix
+}
+
 func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProfileDefaultsParams) error {
 	p := cs.Properties
 	if p.IsAzureStackCloud() {
@@ -40,43 +47,55 @@ func (cs *ContainerService) setCustomCloudProfileDefaults(params CustomCloudProf
 	return nil
 }
 
-// SetCustomCloudProfileEnvironment retrieves the endpoints from Azure Stack metadata endpoint and sets the values for azure.Environment
+// SetCustomCloudProfileEnvironment retrieves the endpoints from metadata endpoint (when required) and sets the values for azure.Environment
 func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 	p := cs.Properties
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		if p.CustomCloudProfile.Environment == nil {
 			p.CustomCloudProfile.Environment = &azure.Environment{}
 		}
 
 		env := p.CustomCloudProfile.Environment
-		if env.Name == "" || env.ResourceManagerEndpoint == "" || env.ServiceManagementEndpoint == "" || env.ActiveDirectoryEndpoint == "" || env.GraphEndpoint == "" || env.ResourceManagerVMDNSSuffix == "" {
-			env.Name = AzureStackCloud
-			if !strings.HasPrefix(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
-				return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
-			}
-			azsFQDNSuffix := strings.Replace(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location), "", -1)
-			azsFQDNSuffix = strings.TrimSuffix(azsFQDNSuffix, "/")
-			env.ResourceManagerEndpoint = fmt.Sprintf("https://management.%s.%s/", cs.Location, azsFQDNSuffix)
-			metadataURL := fmt.Sprintf("%s/metadata/endpoints?api-version=1.0", strings.TrimSuffix(env.ResourceManagerEndpoint, "/"))
 
+		if env.Name == "" {
+			env.Name = AzureStackCloud
+		}
+
+		if (p.IsAzureStackCloud() && !strings.HasPrefix(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location))) {
+			return fmt.Errorf("AzureStack portalURL needs to start with https://portal.%s. ", cs.Location)
+		}
+
+		// Non-AzureStack CustomCloud MUST provide ResourceManagerEndpoint
+		if (env.ResourceManagerEndpoint == "") {
+			if (p.IsAzureStackCloud()) {
+				env.ResourceManagerEndpoint = fmt.Sprintf("https://management.%s.%s/", cs.Location, getAzureStackFQDNSuffix(p.CustomCloudProfile.PortalURL, cs.Location))
+			} else {
+				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerEndpoint")
+			}
+		}
+		
+		// if some of required endpoints are missing, we can pull from metadataURL
+		if env.ServiceManagementEndpoint == "" || env.ActiveDirectoryEndpoint == "" || env.GraphEndpoint == "" || env.ResourceManagerVMDNSSuffix == "" {			
+			metadataURL := fmt.Sprintf("%s/metadata/endpoints?api-version=1.0", strings.TrimSuffix(env.ResourceManagerEndpoint, "/"))
+			
 			// Retrieve the metadata
 			httpClient := &http.Client{
 				Timeout: 30 * time.Second,
 			}
 			endpointsresp, err := httpClient.Get(metadataURL)
 			if err != nil || endpointsresp.StatusCode != 200 {
-				return fmt.Errorf("%s . apimodel invalid: failed to retrieve Azure Stack endpoints from %s", err, metadataURL)
+				return fmt.Errorf("%s . apimodel invalid: failed to retrieve custom endpoints from metadataURL %s", err, metadataURL)
 			}
 
 			body, err := ioutil.ReadAll(endpointsresp.Body)
 			if err != nil {
-				return fmt.Errorf("%s . apimodel invalid: failed to read the response from %s", err, metadataURL)
+				return fmt.Errorf("%s . apimodel invalid: failed to read the response from metadataURL %s", err, metadataURL)
 			}
 
 			endpoints := AzureStackMetadataEndpoints{}
 			err = json.Unmarshal(body, &endpoints)
 			if err != nil {
-				return fmt.Errorf("%s . apimodel invalid: failed to parse the response from %s", err, metadataURL)
+				return fmt.Errorf("%s . apimodel invalid: failed to parse the response from metadataURL %s", err, metadataURL)
 			}
 
 			if endpoints.GraphEndpoint == "" || endpoints.Authentication == nil || endpoints.Authentication.LoginEndpoint == "" || len(endpoints.Authentication.Audiences) == 0 || endpoints.Authentication.Audiences[0] == "" {
@@ -93,11 +112,19 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 			}
 
 			env.ManagementPortalURL = endpoints.PortalEndpoint
-			env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
-			env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
-			env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
+
+			if (p.IsAzureStackCloud()) {
+				azsFQDNSuffix := getAzureStackFQDNSuffix(p.CustomCloudProfile.PortalURL, cs.Location)
+				env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
+				env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
+				env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
+			} else if (env.ResourceManagerVMDNSSuffix == "" || env.StorageEndpointSuffix == "" || env.KeyVaultDNSSuffix == "") {
+				// Non-AzureStack CustomCloud MUST provide suffixes			
+				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerVMDNSSuffix, StorageEndpointSuffix, KeyVaultDNSSuffix")
+			}
 		}
 	}
+
 	return nil
 }
 
