@@ -196,7 +196,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		customFilesReader,
 		"MASTER_CUSTOM_FILES_PLACEHOLDER")
 
-	addonStr := getContainerAddonsString(cs, "k8s/containeraddons")
+	addonStr := getAddonsString(cs, "k8s/addons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
 

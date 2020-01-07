@@ -21,7 +21,7 @@ type kubernetesComponentFileSpec struct {
 	isEnabled       bool   // is this spec enabled?
 }
 
-func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
+func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
 	if p.OrchestratorProfile == nil {
 		p.OrchestratorProfile = &api.OrchestratorProfile{}
 	}

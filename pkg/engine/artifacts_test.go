@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
+func TestKubernetesAddonSettingsInit(t *testing.T) {
 	/*
 		$ echo "Hello, World\!" | base64
 		SGVsbG8sIFdvcmxkXCEK
@@ -818,7 +818,7 @@ func TestKubernetesContainerAddonSettingsInit(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			componentFileSpec := kubernetesContainerAddonSettingsInit(c.p)
+			componentFileSpec := kubernetesAddonSettingsInit(c.p)
 			for addon := range componentFileSpec {
 				switch addon {
 				case common.HeapsterAddonName:
