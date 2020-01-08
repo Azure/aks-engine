@@ -20,7 +20,7 @@ $(LOCALBIN)/golangci-lint:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCALBIN) v1.21.0
 
 $(LOCALBIN)/pub:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...
+	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.0
 
 .PHONY: reload
 reload: clean install
