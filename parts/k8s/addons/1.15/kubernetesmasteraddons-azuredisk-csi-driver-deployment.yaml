@@ -154,12 +154,6 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
-        - name: csi-resizer
-          image: {{ContainerImage "csi-resizer"}}
-          args:
-            - "-csi-address=$(ADDRESS)"
-            - "-v=5"
-            - "-leader-election"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -531,38 +525,3 @@ roleRef:
   kind: ClusterRole
   name: azuredisk-external-snapshotter-role
   apiGroup: rbac.authorization.k8s.io
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: azuredisk-external-resizer-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims/status"]
-    verbs: ["update", "patch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["list", "watch", "create", "update", "patch"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: azuredisk-csi-resizer-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: csi-azuredisk-controller-sa
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azuredisk-external-resizer-role
-  apiGroup: rbac.authorization.k8s.io 

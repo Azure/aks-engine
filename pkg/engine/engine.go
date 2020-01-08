@@ -700,9 +700,8 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 			}
 
 			var zones string
-			location := cs.Location
 			for _, zone := range cs.Properties.AgentPoolProfiles[0].AvailabilityZones {
-				zones += fmt.Sprintf("\n    - %s-%s", location, zone)
+				zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
 			}
 			return zones
 		},
