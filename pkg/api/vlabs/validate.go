@@ -1772,7 +1772,7 @@ func (cs *ContainerService) Validate(isUpdate bool) error {
 }
 
 func (cs *ContainerService) validateLocation() error {
-	if cs.Properties != nil && cs.Properties.IsAzureStackCloud() && cs.Location == "" {
+	if cs.Properties != nil && cs.Properties.IsCustomCloudProfile() && cs.Location == "" {
 		return errors.New("missing ContainerService Location")
 	}
 	return nil

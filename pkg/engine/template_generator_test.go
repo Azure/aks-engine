@@ -39,6 +39,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		t.Fatalf("Error generating function map: %v", err)
 	}
 	cases := []string{
+		"IsCustomCloudProfile",
 		"IsAzureStackCloud",
 		"IsMultiMasterCluster",
 		"IsMasterVirtualMachineScaleSets",

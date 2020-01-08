@@ -246,6 +246,9 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 // all business logic is implemented in the underlying func
 func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
@@ -658,7 +661,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
 		},
 		"GetIdentitySystem": func() string {
-			if cs.Properties.IsAzureStackCloud() {
+			if cs.Properties.IsCustomCloudProfile() {
 				return cs.Properties.CustomCloudProfile.IdentitySystem
 			}
 

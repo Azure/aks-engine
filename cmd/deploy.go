@@ -220,7 +220,7 @@ func (dc *deployCmd) loadAPIModel() error {
 		return errors.New("--location does not match api model location")
 	}
 
-	if dc.containerService.Properties.IsAzureStackCloud() {
+	if dc.containerService.Properties.IsCustomCloudProfile() {
 		err = dc.containerService.SetCustomCloudProfileEnvironment()
 		if err != nil {
 			return errors.Wrap(err, "error parsing the api model")
@@ -365,7 +365,7 @@ func autofillApimodel(dc *deployCmd) error {
 	if k8sConfig != nil && k8sConfig.Addons != nil && k8sConfig.IsContainerMonitoringAddonEnabled() {
 		log.Infoln("container monitoring addon enabled")
 		cloudOrDependenciesLocation := dc.containerService.GetCloudSpecConfig().CloudName
-		if dc.containerService.Properties.IsAzureStackCloud() {
+		if dc.containerService.Properties.IsCustomCloudProfile() {
 			cloudOrDependenciesLocation = string(dc.containerService.Properties.CustomCloudProfile.DependenciesLocation)
 		}
 		workspaceDomain := helpers.GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation)

@@ -1909,7 +1909,7 @@ func (p *Properties) IsCustomCloudProfile() bool {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil && p.CustomCloudProfile.Environment != nil && strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud")
+	return p.CustomCloudProfile != nil && p.CustomCloudProfile.Environment != nil && (p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
@@ -1955,7 +1955,7 @@ func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 // the return value will be empty string for those clouds
 func (p *Properties) GetCustomCloudName() string {
 	var cloudProfileName string
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		cloudProfileName = p.CustomCloudProfile.Environment.Name
 	}
 	return cloudProfileName
@@ -1966,7 +1966,7 @@ func (p *Properties) GetCustomCloudName() string {
 // If AzurePublicCloud, AzureChinaCloud,AzureGermanCloud or AzureUSGovernmentCloud, GetLocations provides all azure regions in prod.
 func (cs *ContainerService) GetLocations() []string {
 	var allLocations []string
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsCustomCloudProfile() {
 		allLocations = []string{cs.Location}
 	} else {
 		allLocations = helpers.GetAzureLocations()
@@ -1978,7 +1978,7 @@ func (cs *ContainerService) GetLocations() []string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be client_secret
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is client_secret.
 func (p *Properties) GetCustomCloudAuthenticationMethod() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.AuthenticationMethod
 	}
 	return ClientSecretAuthMethod
@@ -1988,7 +1988,7 @@ func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be AzureAD
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is AzureAD.
 func (p *Properties) GetCustomCloudIdentitySystem() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.IdentitySystem
 	}
 	return AzureADIdentitySystem

@@ -105,11 +105,11 @@ func (c *Config) GetKubeConfig() string {
 	return kubeconfigPath
 }
 
-// IsAzureStackCloud returns true if the cloud is AzureStack
-func (c *Config) IsAzureStackCloud() bool {
+// IsCustomCloudProfile returns true if the cloud is a custom cloud
+func (c *Config) IsCustomCloudProfile() bool {
 	clusterDefinitionFullPath := fmt.Sprintf("%s/%s", c.CurrentWorkingDir, c.ClusterDefinition)
 	cs := parseVlabsContainerSerice(clusterDefinitionFullPath)
-	return cs.Properties.IsAzureStackCloud()
+	return cs.Properties.IsCustomCloudProfile()
 }
 
 // UpdateCustomCloudClusterDefinition updates the cluster definition from environment variables

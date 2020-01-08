@@ -606,9 +606,14 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+// IsCustomCloudProfile return true if user has provided a custom cloud profile
+func (p *Properties) IsCustomCloudProfile() bool {
+	return p.CustomCloudProfile != nil
+}
+
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil
+	return p.CustomCloudProfile != nil && p.CustomCloudProfile.Environment != nil && (p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // HasAADAdminGroupID returns true if the cluster has an AADProfile w/ a valid AdminGroupID
