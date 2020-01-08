@@ -1921,29 +1921,7 @@ func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("Could not serialize Environment object - %s", err.Error())
 		}
-
-		// For non-AzureStack CustomCloud, we need to overwrite cloud name as AzureStackCloud because Kubernetes can
-		// only read from custom endpoints when cloud name is AzureStackCloud due to a limitation in Azure/go-autorest pkg:
-		// https://github.com/Azure/go-autorest/blob/master/autorest/azure/environments.go
-		if !p.IsAzureStackCloud() {
-			// Quick, dirty trick to deep copy Environment
-			var copiedEnvironment *azure.Environment
-			err = json.Unmarshal(bytes, copiedEnvironment)
-
-			if err != nil {
-				return "", fmt.Errorf("Could not deserialize NonAzureCloud Environment object - %s", err.Error())
-			}
-
-			copiedEnvironment.Name = "AzureStackCloud"
-			bytes, err = json.Marshal(copiedEnvironment)
-
-			if err != nil {
-				return "", fmt.Errorf("Could not serialize NonAzureCloud Environment object - %s", err.Error())
-			}
-		}
-
-		environmentJSON = string(bytes)		
-		
+		environmentJSON = string(bytes)
 		if escape {
 			environmentJSON = strings.Replace(environmentJSON, "\"", "\\\"", -1)
 		}

@@ -216,11 +216,8 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureCustomCloudSpec
 		}
 
-		if p.IsAzureStackCloud() {
-			AzureCloudSpecEnvMap[AzureStackCloud] = azureCustomCloudSpec
-		} else {
-			AzureCloudSpecEnvMap[azureCustomCloudSpec.CloudName] = azureCustomCloudSpec
-		}
+		// Kubernetes only understand AzureStackCloud environment (AzureCloudSpecEnvMap is only accessed using AzureStackCloud for custom clouds)
+		AzureCloudSpecEnvMap[AzureStackCloud] = azureCustomCloudSpec
 	}
 	return nil
 }

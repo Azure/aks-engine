@@ -195,14 +195,17 @@ func GetCloudTargetEnv(location string) string {
 }
 
 // GetTargetEnv determines and returns whether the region is a sovereign cloud which
-// have their own data compliance regulations (China/Germany/USGov) or standard
-// Azure public cloud
+// have their own data compliance regulations (China/Germany/USGov) or standard Azure public cloud
 // CustomCloudName is name of environment if customCloudProfile is provided, it will be empty string if customCloudProfile is empty.
 // Because customCloudProfile is empty for deployment for AzurePublicCloud, AzureChinaCloud,AzureGermanCloud,AzureUSGovernmentCloud,
 // The customCloudName value will be empty string for those clouds
+// This value is also used in azure.json file, which is used by Kubernetes to read various endpoints specific to cloud
 func GetTargetEnv(location, customCloudName string) string {
 	switch {
-	case customCloudName != "" && strings.EqualFold(customCloudName, "AzureStackCloud"):
+	// Kubernetes only understand "AzureStackCloud" env right now to read from custom endpoints:
+	// https://github.com/Azure/go-autorest/blob/master/autorest/azure/environments.go
+	// We should always return "AzureStackCloud" when CustomCloudProfile was used
+	case customCloudName != "":
 		return "AzureStackCloud"
 	default:
 		return GetCloudTargetEnv(location)
