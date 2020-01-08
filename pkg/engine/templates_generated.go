@@ -18941,7 +18941,7 @@ data:
      chunk_size_limit 4m
     </source>
 
-     #Kubernetes pod inventory
+    #Kubernetes pod inventory
     <source>
      type kubepodinventory
      tag oms.containerinsights.KubePodInventory
@@ -18949,13 +18949,13 @@ data:
      log_level debug
     </source>
 
-     #Kubernetes events
+    #Kubernetes events
     <source>
      type kubeevents
      tag oms.containerinsights.KubeEvents
      run_interval 60
      log_level debug
-    </source>
+     </source>
 
     #Kubernetes Nodes
     <source>
@@ -18987,7 +18987,7 @@ data:
      log_level info
     </filter>
 
-    #custom_metrics_mdm filter plugin for perf data from windows nodes
+    # custom_metrics_mdm filter plugin for perf data from windows nodes
     <filter mdm.cadvisorperf**>
      type filter_cadvisor2mdm
      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
