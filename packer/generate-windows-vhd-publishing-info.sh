@@ -27,7 +27,7 @@ if [ ! -f "$RELEASE_NOTES_FILE" ]; then
     exit 1
 fi
 
-windows_version=$(cat release-notes.txt | grep "OS Version" | cut -d ":" -f 2 | tr -d [:space:])
+windows_version=$(grep "OS Version" < release-notes.txt | cut -d ":" -f 2 | tr -d "[:space:]")
 
 cat <<EOF > windows-vhd-publishing-info.json
 {
