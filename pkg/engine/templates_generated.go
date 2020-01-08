@@ -11679,6 +11679,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -11701,6 +11702,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -11723,6 +11725,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -16955,6 +16958,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -16977,6 +16981,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -16999,6 +17004,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -22254,7 +22260,16 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
 volumeBindingMode: Immediate
+  {{end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -22268,7 +22283,16 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
 volumeBindingMode: Immediate
+  {{end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -22282,7 +22306,16 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
 volumeBindingMode: Immediate
+  {{end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -29606,6 +29639,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -29628,6 +29662,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -29650,6 +29685,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:

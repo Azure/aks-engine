@@ -69,6 +69,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -91,6 +92,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -113,6 +115,7 @@ parameters:
   kind: managed
   cachingMode: ReadOnly
 reclaimPolicy: Delete
+allowVolumeExpansion: true
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
