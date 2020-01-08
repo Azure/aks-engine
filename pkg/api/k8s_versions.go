@@ -68,25 +68,25 @@ const (
 // at the expense of some add'l indirection in getK8sVersionComponents below
 var k8sComponentVersions = map[string]map[string]string{
 	"1.18": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
 	},
 	"1.17": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
 	},
 	"1.16": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.4",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.3",
 	},
 	"1.15": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.2.1",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.15.4",
