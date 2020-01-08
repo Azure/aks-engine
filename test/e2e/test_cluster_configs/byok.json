@@ -1,6 +1,6 @@
 {
 	"env": {
-		"REGION_OPTIONS": "centraluseuap",
+		"REGION_OPTIONS": "northeurope",
 		"SKIP_TESTS": "true"
 	},
 	"apiModel": {
