@@ -183,13 +183,13 @@ write_files:
     }
 {{end}}
 
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
+{{if HasCiliumNetworkPlugin}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
+    {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
 {{if NeedsContainerd}}
@@ -341,8 +341,6 @@ write_files:
 {{end}}
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
-
-MASTER_ADDONS_CONFIG_PLACEHOLDER
 
 MASTER_CUSTOM_FILES_PLACEHOLDER
 

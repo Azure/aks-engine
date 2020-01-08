@@ -73,6 +73,7 @@ for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
 done
 
 CNI_PLUGIN_VERSIONS="
+0.7.6
 0.7.5
 0.7.1
 "
@@ -113,6 +114,7 @@ for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
 done
 
 ADDON_RESIZER_VERSIONS="
+1.8.7
 1.8.5
 1.8.4
 1.8.1
@@ -312,6 +314,7 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
+1.0.31
 1.0.30
 1.0.29
 1.0.28
@@ -420,6 +423,7 @@ K8S_VERSIONS="
 1.16.1
 1.16.1-azs
 1.15.7
+1.15.7-azs
 1.15.5
 1.15.4
 1.15.4-azs
@@ -455,11 +459,12 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
 done
 
 CLOUD_MANAGER_VERSIONS="
+0.4.0
 0.3.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
-    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/${COMPONENT}:v${CLOUD_MANAGER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/${COMPONENT}:v${CLOUD_MANAGER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   done

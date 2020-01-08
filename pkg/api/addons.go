@@ -24,18 +24,18 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12042019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod12042019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod12042019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -261,7 +261,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "8.0.0-1",
+			"dockerProviderVersion": "8.0.0-2",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -279,8 +279,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
-		Name:    common.IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled && o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium),
+		Name: common.IPMASQAgentAddonName,
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled &&
+			(o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
+				o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.IPMASQAgentAddonName,
@@ -371,6 +373,55 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
 				Image: specConfig.KubernetesImageBase + k8sComponents["calico-cluster-proportional-autoscaler"],
+			},
+		},
+	}
+
+	defaultsCiliumAddonsConfig := KubernetesAddon{
+		Name:    common.CiliumAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.CiliumAgentContainerName,
+				Image: k8sComponents[common.CiliumAgentContainerName],
+			},
+			{
+				Name:  common.CiliumCleanStateContainerName,
+				Image: k8sComponents[common.CiliumCleanStateContainerName],
+			},
+			{
+				Name:  common.CiliumOperatorContainerName,
+				Image: k8sComponents[common.CiliumOperatorContainerName],
+			},
+			{
+				Name:  common.CiliumEtcdOperatorContainerName,
+				Image: k8sComponents[common.CiliumEtcdOperatorContainerName],
+			},
+		},
+	}
+
+	defaultsAntreaDaemonSetAddonsConfig := KubernetesAddon{
+		Name:    common.AntreaAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea),
+		Config: map[string]string{
+			"serviceCidr": o.KubernetesConfig.ServiceCIDR,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AntreaControllerContainerName,
+				Image: k8sComponents[common.AntreaControllerContainerName],
+			},
+			{
+				Name:  common.AntreaAgentContainerName,
+				Image: k8sComponents[common.AntreaAgentContainerName],
+			},
+			{
+				Name:  common.AntreaOVSContainerName,
+				Image: k8sComponents[common.AntreaOVSContainerName],
+			},
+			{
+				Name:  common.AntreaInstallCNIContainerName,
+				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
 			},
 		},
 	}
@@ -585,11 +636,51 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
 	}
 
+	defaultAuditPolicyAddonsConfig := KubernetesAddon{
+		Name:    common.AuditPolicyAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
+	defaultAzureCloudProviderAddonsConfig := KubernetesAddon{
+		Name:    common.AzureCloudProviderAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
 	defaultAADDefaultAdminGroupAddonsConfig := KubernetesAddon{
 		Name:    common.AADAdminGroupAddonName,
 		Enabled: to.BoolPtr(cs.Properties.HasAADAdminGroupID()),
 		Config: map[string]string{
 			"adminGroupID": cs.Properties.GetAADAdminGroupID(),
+		},
+	}
+
+	defaultFlannelAddonsConfig := KubernetesAddon{
+		Name:    common.FlannelAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeFlannelContainerName,
+				Image: k8sComponents[common.KubeFlannelContainerName],
+			},
+			{
+				Name:  common.FlannelInstallCNIContainerName,
+				Image: k8sComponents["flannel"+common.FlannelInstallCNIContainerName],
+			},
+		},
+	}
+
+	defaultScheduledMaintenanceAddonsConfig := KubernetesAddon{
+		Name:    common.ScheduledMaintenanceAddonName,
+		Enabled: to.BoolPtr(false),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeRBACProxyContainerName,
+				Image: k8sComponents[common.KubeRBACProxyContainerName],
+			},
+			{
+				Name:  common.ScheduledMaintenanceManagerContainerName,
+				Image: k8sComponents[common.ScheduledMaintenanceManagerContainerName],
+			},
 		},
 	}
 
@@ -617,6 +708,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
+		defaultsCiliumAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
 		defaultAzureDiskCSIDriverAddonsConfig,
@@ -627,7 +719,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultCorednsAddonsConfig,
 		defaultKubeProxyAddonsConfig,
 		defaultPodSecurityPolicyAddonsConfig,
+		defaultAuditPolicyAddonsConfig,
+		defaultAzureCloudProviderAddonsConfig,
 		defaultAADDefaultAdminGroupAddonsConfig,
+		defaultsAntreaDaemonSetAddonsConfig,
+		defaultFlannelAddonsConfig,
+		defaultScheduledMaintenanceAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

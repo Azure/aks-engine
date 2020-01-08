@@ -210,6 +210,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules, cs)
 	}
 
+	if kubernetesConfig != nil {
+		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
+			cloudInitFiles["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount, cs)
+		}
+	}
+
 	masterVars["cloudInitFiles"] = cloudInitFiles
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
@@ -235,12 +241,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs)
-	}
-
-	if kubernetesConfig != nil {
-		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
-			masterVars["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount, cs)
-		}
 	}
 
 	masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()

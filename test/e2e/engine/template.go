@@ -49,6 +49,7 @@ type Config struct {
 	Distro                         string `envconfig:"DISTRO"`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
 	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
+	Location                       string `envconfig:"LOCATION"`
 	TenantID                       string `envconfig:"TENANT_ID"`
 	ImageName                      string `envconfig:"IMAGE_NAME"`
 	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
@@ -102,6 +103,9 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	cs, err := ParseInput(config.ClusterDefinitionPath)
 	if err != nil {
 		return nil, err
+	}
+	if cs.Location == "" {
+		cs.Location = config.Location
 	}
 	prop := cs.ContainerService.Properties
 	var hasWindows bool

@@ -148,25 +148,25 @@ func TestGetMasterKubernetesLabelsDeprecated(t *testing.T) {
 			"valid rg string",
 			"my-resource-group",
 			false,
-			"kubernetes.azure.com/role=master,kubernetes.azure.com/cluster=my-resource-group",
+			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			"valid rg string",
 			"my-resource-group",
 			true,
-			"kubernetes.azure.com/role=master,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
+			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=my-resource-group",
 		},
 		{
 			"empty string",
 			"",
 			false,
-			"kubernetes.azure.com/role=master,kubernetes.azure.com/cluster=",
+			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.azure.com/cluster=",
 		},
 		{
 			"empty string",
 			"",
 			true,
-			"kubernetes.azure.com/role=master,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
+			"kubernetes.azure.com/role=master,node.kubernetes.io/exclude-from-external-load-balancers=true,node.kubernetes.io/exclude-disruption=true,kubernetes.io/role=master,node-role.kubernetes.io/master=,kubernetes.azure.com/cluster=",
 		},
 	}
 

@@ -108,18 +108,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
 		},
-		"should error when KubernetesConfig has enableAggregatedAPIs enabled with an invalid version": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.6.9",
-					KubernetesConfig: &KubernetesConfig{
-						EnableAggregatedAPIs: true,
-					},
-				},
-			},
-			expectedError: "enableAggregatedAPIs is only available in Kubernetes version 1.7.0 or greater; unable to validate for Kubernetes version 1.6.9",
-		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled and enableRBAC disabled": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -899,10 +887,10 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = "flannel"
+	p.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
 	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPolicy(k8sVersion, true); err == nil {
 		t.Errorf(
-			"should error on flannel for windows clusters",
+			"should error on antrea for windows clusters",
 		)
 	}
 }
@@ -915,7 +903,7 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	for _, policy := range NetworkPluginValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = policy
-		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err != nil {
+		if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err != nil {
 			t.Errorf(
 				"should not error on networkPolicy=\"%s\"",
 				policy,
@@ -924,9 +912,16 @@ func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "not-existing"
-	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(); err == nil {
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(false); err == nil {
 		t.Errorf(
 			"should error on invalid networkPlugin",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+	if err := p.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err == nil {
+		t.Errorf(
+			"should error on antrea for windows clusters",
 		)
 	}
 }
@@ -958,6 +953,14 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 			networkPolicy: "flannel",
 		},
 		{
+			networkPlugin: "flannel",
+			networkPolicy: "flannel",
+		},
+		{
+			networkPlugin: "flannel",
+			networkPolicy: "calico",
+		},
+		{
 			networkPlugin: "kubenet",
 			networkPolicy: "none",
 		},
@@ -968,6 +971,9 @@ func Test_Properties_ValidateNetworkPluginPlusPolicy(t *testing.T) {
 		{
 			networkPlugin: "kubenet",
 			networkPolicy: "kubenet",
+		},
+		{
+			networkPlugin: "cilium",
 		},
 	} {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
@@ -1520,6 +1526,296 @@ func TestValidateAddons(t *testing.T) {
 				},
 			},
 			expectedErr: nil,
+		},
+		{
+			name: "cilium addon enabled w/ no networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ azure networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "azure",
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ calico networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium),
+		},
+		{
+			name: "cilium addon enabled w/ cilium networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "cilium addon enabled w/ cilium networkPolicy + networkPlugin",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						NetworkPlugin: NetworkPluginCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "cilium addon enabled w/ k8s >= 1.16",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyCilium,
+						Addons: []KubernetesAddon{
+							{
+								Name:    "cilium",
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName),
+		},
+		{
+			name: "antrea addon enabled w/ no networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ azure networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "azure",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ calico networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea),
+		},
+		{
+			name: "antrea addon enabled w/ antrea networkPolicy",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "antrea addon enabled w/ antrea networkPolicy + networkPlugin",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						NetworkPlugin: NetworkPluginAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AntreaAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=flannel",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: NetworkPluginFlannel,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=azure",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: DefaultNetworkPlugin,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, DefaultNetworkPlugin, NetworkPluginFlannel),
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPlugin=kubenet",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: "kubenet",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, "kubenet", NetworkPluginFlannel),
+		},
+		{
+			name: "flannel addon enabled w/ NetworkPolicy=calico",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: "calico",
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, "calico"),
+		},
+		{
+			name: "azure-cloud-provider addon disabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPolicy: NetworkPolicyAntrea,
+						NetworkPlugin: NetworkPluginAntrea,
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.AzureCloudProviderAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s add-on is required, it cannot be disabled", common.AzureCloudProviderAddonName),
 		},
 	}
 

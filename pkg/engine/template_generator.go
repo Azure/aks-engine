@@ -187,14 +187,6 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
 		profile.OrchestratorProfile.OrchestratorVersion, cs)
 
-	// add addons
-	str = substituteConfigString(str,
-		kubernetesAddonSettingsInit(profile),
-		"k8s/addons",
-		"/etc/kubernetes/addons",
-		"MASTER_ADDONS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion, cs)
-
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
 	if err != nil {
@@ -204,7 +196,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		customFilesReader,
 		"MASTER_CUSTOM_FILES_PLACEHOLDER")
 
-	addonStr := getContainerAddonsString(cs, "k8s/containeraddons")
+	addonStr := getAddonsString(cs, "k8s/addons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
 
@@ -481,6 +473,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
+				kubernetesWindowsLogsCleanupPS1,
 				kubernetesWindowsOpenSSHFunctionPS1}
 
 			// Create a buffer, new zip
@@ -573,6 +566,15 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"HasCiliumNetworkPlugin": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginCilium
+		},
+		"HasCiliumNetworkPolicy": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium
+		},
+		"HasAntreaNetworkPolicy": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea
+		},
+		"HasFlannelNetworkPlugin": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel
 		},
 		"HasCustomNodesDNS": func() bool {
 			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()

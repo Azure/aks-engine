@@ -234,8 +234,12 @@ func CreateAgentVMASAKSBillingExtension(cs *api.ContainerService, profile *api.A
 func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 	var extensionsARM []DeploymentARM
 
-	for _, extensionProfile := range properties.ExtensionProfiles {
-		if properties.MasterProfile != nil {
+	if properties.MasterProfile != nil {
+		// The first extension needs to depend on the master cse created for all nodes
+		// Each proceeding extension needs to depend on the previous one to avoid ARM conflicts in the Compute RP
+		nextDependsOn := "[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), copyIndex(variables('masterOffset')), '/extensions/cse-master-', copyIndex(variables('masterOffset')))]"
+
+		for _, extensionProfile := range properties.ExtensionProfiles {
 			masterOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, properties.MasterProfile.Extensions)
 			if masterOptedForExtension {
 				data, e := getMasterLinkedTemplateText(properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
@@ -243,30 +247,40 @@ func CreateCustomExtensions(properties *api.Properties) []DeploymentARM {
 					fmt.Println(e.Error())
 				}
 				var ext DeploymentARM
-				if err := json.Unmarshal([]byte(data), &ext); err != nil {
-					fmt.Println(err.Error())
+				e = json.Unmarshal([]byte(data), &ext)
+				if e != nil {
+					fmt.Println(e.Error())
 				}
+				ext.DependsOn = []string{nextDependsOn}
+				nextDependsOn = *ext.Name
 				extensionsARM = append(extensionsARM, ext)
 			}
-
 		}
+	}
 
-		for _, agentPoolProfile := range properties.AgentPoolProfiles {
-			poolProfileExtensions := agentPoolProfile.Extensions
-			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, poolProfileExtensions)
+	for _, agentPoolProfile := range properties.AgentPoolProfiles {
+		// The first extension needs to depend on the agent cse created for all nodes
+		// Each proceeding extension needs to depend on the previous one to avoid ARM conflicts in the Compute RP
+		nextDependsOn := fmt.Sprintf("[concat('Microsoft.Compute/virtualMachines/', variables('%[1]sVMNamePrefix'), copyIndex(variables('%[1]sOffset')), '/extensions/cse-agent-', copyIndex(variables('%[1]sOffset')))]", agentPoolProfile.Name)
+
+		for _, extensionProfile := range properties.ExtensionProfiles {
+			poolOptedForExtension, singleOrAll := validateProfileOptedForExtension(extensionProfile.Name, agentPoolProfile.Extensions)
 			if poolOptedForExtension {
 				data, e := getAgentPoolLinkedTemplateText(agentPoolProfile, properties.OrchestratorProfile.OrchestratorType, extensionProfile, singleOrAll)
 				if e != nil {
 					fmt.Println(e.Error())
 				}
 				var ext DeploymentARM
-				if err := json.Unmarshal([]byte(data), &ext); err != nil {
-					fmt.Println(err.Error())
+				e = json.Unmarshal([]byte(data), &ext)
+				if e != nil {
+					fmt.Println(e.Error())
 				}
+				ext.DependsOn = []string{nextDependsOn}
+				nextDependsOn = *ext.Name
 				extensionsARM = append(extensionsARM, ext)
 			}
-
 		}
 	}
+
 	return extensionsARM
 }

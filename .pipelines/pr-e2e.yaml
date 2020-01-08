@@ -62,6 +62,7 @@ jobs:
   parameters:
     name: 'k8s_non_vhd_deployment'
     apimodel: 'examples/kubernetes-ubuntu-distro.json'
+    enableKMSEncryption: false
 
 - template: e2e-job-template.yaml
   parameters:
@@ -69,6 +70,7 @@ jobs:
     apimodel: 'examples/ubuntu-1804/kubernetes.json'
     skipTests: 'should have healthy time synchronization'
     stabilityIterations: '10'
+    enableKMSEncryption: false
 
 - template: e2e-job-template.yaml
   parameters:
@@ -76,6 +78,7 @@ jobs:
     k8sRelease: '1.13'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    enableKMSEncryption: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -83,6 +86,7 @@ jobs:
     k8sRelease: '1.14'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    enableKMSEncryption: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -90,6 +94,7 @@ jobs:
     k8sRelease: '1.15'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    enableKMSEncryption: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -97,6 +102,7 @@ jobs:
     k8sRelease: '1.16'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    enableKMSEncryption: true
 
 - template: e2e-job-template.yaml
   parameters:
@@ -104,3 +110,12 @@ jobs:
     k8sRelease: '1.17'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
+    enableKMSEncryption: true
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_18_release_e2e'
+    k8sRelease: '1.18'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false

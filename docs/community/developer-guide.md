@@ -55,23 +55,25 @@ The build process leaves the compiled `aks-engine` binary in the `bin` directory
 
 ```sh
 $ ./bin/aks-engine
-AKS Engine deploys and manages Kubernetes, Swarm Mode, and DC/OS clusters in Azure
-
 Usage:
+  aks-engine [flags]
   aks-engine [command]
 
 Available Commands:
+  completion    Generates bash completion scripts
   deploy        Deploy an Azure Resource Manager template
   generate      Generate an Azure Resource Manager template
+  get-versions  Display info about supported Kubernetes versions
   help          Help about any command
-  orchestrators Display info about supported orchestrators
+  rotate-certs  Rotate certificates on an existing Kubernetes cluster
   scale         Scale an existing Kubernetes cluster
   upgrade       Upgrade an existing Kubernetes cluster
   version       Print the version of AKS Engine
 
 Flags:
-      --debug   enable verbose debug logs
-  -h, --help    help for aks-engine
+      --debug                enable verbose debug logs
+  -h, --help                 help for aks-engine
+      --show-default-model   Dump the default API model to stdout
 
 Use "aks-engine [command] --help" for more information about a command.
 ```
@@ -339,7 +341,7 @@ The following steps constitute the AKS Engine CI pipeline:
 To make it easier use AKS Engine as a library and to `go get github.com/Azure/aks-engine`, some
 generated Go code is committed to the repository. Your pull request may need to regenerate those
 files before it will pass the required `make ensure-generated` step.
-	
+
 Always run `make build` before you submit a pull request to validate compilation and
 generated code hygiene. Run `make ensure-generated` yourself to validate that things check out. If there are
 discrepencies, `make ensure-generated` will output a brief error report.

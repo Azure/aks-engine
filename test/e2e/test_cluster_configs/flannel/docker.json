@@ -10,8 +10,13 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPlugin": "flannel",
-					"containerRuntime": "docker"
+					"containerRuntime": "docker",
+					"addons": [
+						{
+							"name": "flannel",
+							"enabled": true
+						}
+					]
 				}
 			},
 			"masterProfile": {

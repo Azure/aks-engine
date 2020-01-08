@@ -42,7 +42,7 @@ write_certs_to_disk() {
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only > $K8S_PROXY_CA_CRT_FILEPATH
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only > $K8S_PROXY_KEY_FILEPATH
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only > $K8S_PROXY_CRT_FILEPATH
-    # Remove whitespace padding at beginning of 1st line
+    {{- /* Remove whitespace padding at beginning of 1st line */}}
     sed -i '1s/\s//' $K8S_PROXY_CA_CRT_FILEPATH $K8S_PROXY_CRT_FILEPATH $K8S_PROXY_KEY_FILEPATH
     chmod 600 $K8S_PROXY_KEY_FILEPATH
 }
@@ -58,37 +58,27 @@ is_etcd_healthy(){
     done
 }
 is_etcd_healthy
-# lock file to enable "only 1 master generates certs"
+{{- /* lock file to enable "only 1 master generates certs" */}}
 rm -f "${PROXY_CERT_LOCK_FILE}"
 mkfifo "${PROXY_CERT_LOCK_FILE}"
 
-echo "$(date) attempting to acquire lock for proxy cert gen"
 ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} lock ${PROXY_CERTS_LOCK_NAME}  > "${PROXY_CERT_LOCK_FILE}" &
-echo "$(date) lock acquired"
 
 pid=$!
 if read -r lockthis < "${PROXY_CERT_LOCK_FILE}"; then
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_REQUESTHEADER_CLIENT_CA --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_REQUESTHEADER_CLIENT_CA " $(cat ${PROXY_CRT})" >/dev/null 2>&1;
-	else
-		echo "found client request header ca, not creating one"
   fi
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_KEY --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_KEY " $(cat ${PROXY_CLIENT_KEY})" >/dev/null 2>&1;
-	else
-		 echo "found proxy key, not creating one"
   fi
   if [[ "" == "$(ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} get $ETCD_PROXY_CERT --print-value-only)" ]]; then
     ETCDCTL_API=3 etcdctl ${ETCDCTL_PARAMS} put $ETCD_PROXY_CERT " $(cat ${PROXY_CLIENT_CRT})" >/dev/null 2>&1;
-	else
-		echo "found proxy cert, not creating one"
   fi
 fi
 kill $pid
 wait $pid
 rm -f "${PROXY_CERT_LOCK_FILE}"
-
-echo "$(date) cert gen and save/check etcd completed"
 
 write_certs_to_disk_with_retry
 #EOF

@@ -59,6 +59,8 @@ func createWindowsImage(profile *api.AgentPoolProfile) ImageARM {
 						StorageAccountType: compute.StorageAccountTypesStandardLRS,
 					},
 				},
+				// TODO: Expose Hyper-V generation for VHD URL refs in apimodel
+				HyperVGeneration: compute.HyperVGenerationTypesV1,
 			},
 		},
 	}

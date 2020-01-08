@@ -156,6 +156,22 @@ const (
 	NMIContainerName = "nmi"
 	// MICContainerName is the name of the mic container in the aad-pod-identity addon
 	MICContainerName = "mic"
+	// CiliumAgentContainerName is the name of the cilium-agent container in the cilium addon
+	CiliumAgentContainerName = "cilium-agent"
+	// CiliumCleanStateContainerName is the name of the clean-cilium-state container in the cilium addon
+	CiliumCleanStateContainerName = "clean-cilium-state"
+	// CiliumOperatorContainerName is the name of the cilium-operator container in the cilium addon
+	CiliumOperatorContainerName = "cilium-operator"
+	// CiliumEtcdOperatorContainerName is the name of the cilium-etcd-operator container in the cilium addon
+	CiliumEtcdOperatorContainerName = "cilium-etcd-operator"
+	// AntreaControllerContainerName is the name of the antrea-controller container in the antrea addon
+	AntreaControllerContainerName = "antrea-controller"
+	// AntreaAgentContainerName is the name of the antrea-agent container in the antrea addon
+	AntreaAgentContainerName = "antrea-agent"
+	// AntreaOVSContainerName is the name of the antrea-ovs container in the antrea addon
+	AntreaOVSContainerName = "antrea-ovs"
+	// AntreaInstallCNIContainerName is the name of the install-cni container in the antrea addon
+	AntreaInstallCNIContainerName = "install-cni"
 	// GatekeeperContainerName is the name of the gatekeeper container in the azure-policy addon
 	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
@@ -197,13 +213,23 @@ const (
 	// KubeProxyAddonName is the name of the kube-proxy config addon
 	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon
-	CiliumAddonName = "cilium-daemonset"
+	CiliumAddonName = "cilium"
+	// AntreaAddonName is the name of antrea daemonset addon
+	AntreaAddonName = "antrea"
 	// FlannelAddonName is the name of flannel plugin daemonset addon
-	FlannelAddonName = "flannel-daemonset"
+	FlannelAddonName = "flannel"
+	// KubeFlannelContainerName is the name of the kube-flannel container in the flannel addon
+	KubeFlannelContainerName = "kube-flannel"
+	// FlannelInstallCNIContainerName is the name of the install-cni container in the flannel addon
+	FlannelInstallCNIContainerName = "install-cni"
+	// KubeRBACProxyContainerName is the name of the kube-rbac-proxy container in the scheduled-maintenance addon
+	KubeRBACProxyContainerName = "kube-rbac-proxy"
+	// ScheduledMaintenanceManagerContainerName is the name of the manager container in the scheduled-maintenance addon
+	ScheduledMaintenanceManagerContainerName = "manager"
 	// AADAdminGroupAddonName is the name of the default admin group RBAC addon
 	AADAdminGroupAddonName = "aad"
-	// AzureCloudProviderAddonName is the name of the azure cloud provider deployment addon
-	AzureCloudProviderAddonName = "azure-cloud-provider-deployment"
+	// AzureCloudProviderAddonName is the name of the azure-cloud-provider addon
+	AzureCloudProviderAddonName = "azure-cloud-provider"
 	// AzureCSIStorageClassesAddonName is the name of Azure CSI storage classes addon
 	AzureCSIStorageClassesAddonName = "azure-csi-storage-classes"
 	// AuditPolicyAddonName is the name of the audit policy addon

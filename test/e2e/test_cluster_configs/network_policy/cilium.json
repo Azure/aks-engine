@@ -1,5 +1,6 @@
 {
 	"env": {
+		"GINKGO_FOCUS": "should apply various network policies"
 	},
 	"options": {
 		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15"]
@@ -10,8 +11,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPolicy": "cilium",
-					"networkPlugin": "cilium"
+					"networkPolicy": "cilium"
 				}
 			},
 			"masterProfile": {
@@ -22,7 +22,7 @@
 			"agentPoolProfiles": [
 				{
 					"name": "agent1",
-					"count": 3,
+					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"scalesetPriority": "Low"

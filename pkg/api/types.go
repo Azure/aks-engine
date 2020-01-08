@@ -1011,6 +1011,17 @@ func (p *Properties) IsIPMasqAgentEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentEnabled()
 }
 
+// IsIPMasqAgentDisabled returns true if the ip-masq-agent functionality is disabled
+func (p *Properties) IsIPMasqAgentDisabled() bool {
+	if p.HostedMasterProfile != nil {
+		return !p.HostedMasterProfile.IPMasqAgent
+	}
+	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil {
+		return p.OrchestratorProfile.KubernetesConfig.IsIPMasqAgentDisabled()
+	}
+	return false
+}
+
 // GetVNetResourceGroupName returns the virtual network resource group name of the cluster
 func (p *Properties) GetVNetResourceGroupName() string {
 	var vnetResourceGroupName string
@@ -1698,7 +1709,10 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 func (o *OrchestratorProfile) RequireRouteTable() bool {
 	switch o.OrchestratorType {
 	case Kubernetes:
-		if o.IsAzureCNI() || NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy || "flannel" == o.KubernetesConfig.NetworkPlugin {
+		if o.IsAzureCNI() ||
+			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
+			"flannel" == o.KubernetesConfig.NetworkPlugin ||
+			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
 			return false
 		}
 		return true
@@ -1795,6 +1809,11 @@ func (k *KubernetesConfig) IsAppGWIngressEnabled() bool {
 // IsIPMasqAgentEnabled checks if the ip-masq-agent addon is enabled
 func (k *KubernetesConfig) IsIPMasqAgentEnabled() bool {
 	return k.IsAddonEnabled(common.IPMASQAgentAddonName)
+}
+
+// IsIPMasqAgentDisabled checks if the ip-masq-agent addon is disabled
+func (k *KubernetesConfig) IsIPMasqAgentDisabled() bool {
+	return k.IsAddonDisabled(common.IPMASQAgentAddonName)
 }
 
 // IsRBACEnabled checks if RBAC is enabled

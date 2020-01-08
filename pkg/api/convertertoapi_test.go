@@ -6,6 +6,7 @@ package api
 import (
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/davecgh/go-spew/spew"
@@ -1046,6 +1047,37 @@ func TestSetVlabsKubernetesDefaults(t *testing.T) {
 			},
 			expectedNetworkPlugin: "",
 			expectedNetworkPolicy: "cilium",
+		},
+		{
+			name: "antrea networkPlugin",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						NetworkPolicy: "antrea",
+					},
+				},
+			},
+			expectedNetworkPlugin: "",
+			expectedNetworkPolicy: "antrea",
+		},
+		{
+			name: "flannel addon",
+			p: &vlabs.Properties{
+				OrchestratorProfile: &vlabs.OrchestratorProfile{
+					KubernetesConfig: &vlabs.KubernetesConfig{
+						NetworkPlugin: "",
+						Addons: []vlabs.KubernetesAddon{
+							{
+								Name:    common.FlannelAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedNetworkPlugin: NetworkPluginFlannel,
+			expectedNetworkPolicy: "",
 		},
 	}
 

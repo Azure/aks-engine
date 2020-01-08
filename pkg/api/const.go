@@ -305,7 +305,7 @@ const (
 	AzureCniPluginVerWindows = "v1.0.30"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.5"
+	CNIPluginVer = "v0.7.6"
 )
 
 const (
@@ -355,6 +355,10 @@ const (
 	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPluginFlannel is the string expression for flannel network policy config option
 	NetworkPluginFlannel = "flannel"
+	// NetworkPluginAntrea is the string expression for antrea network plugin config option
+	NetworkPluginAntrea = "antrea"
+	// NetworkPolicyAntrea is the string expression for antrea network policy config option
+	NetworkPolicyAntrea = NetworkPluginAntrea
 	// DefaultNetworkPlugin defines the network plugin to use by default
 	DefaultNetworkPlugin = NetworkPluginKubenet
 	// DefaultNetworkPolicy defines the network policy implementation to use by default

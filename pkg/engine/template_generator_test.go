@@ -240,7 +240,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				"kube-scheduler":          "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.16.1",
-			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.0",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -277,7 +277,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				"kube-scheduler":          "kube-scheduler:v1.17.0-beta.1",
 			},
 			expectedGetHyperkubeImageReference: "",
-			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.0",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -396,7 +396,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				"kube-scheduler":          "example.azurecr.io/kube-scheduler-amd64:tag",
 			},
 			expectedGetHyperkubeImageReference: "",
-			expectedGetCCMImageReference:       "azure-cloud-controller-manager:v0.3.0",
+			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.0",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -844,6 +844,69 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 				return cs
 			},
 			ExpectedResult: "my_telemetry_key",
+		},
+		{
+			Name:     "HasCiliumNetworkPolicy - cilium",
+			FuncName: "HasCiliumNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyCilium
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasCiliumNetworkPlugin - cilium",
+			FuncName: "HasCiliumNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasCiliumNetworkPlugin - azure",
+			FuncName: "HasCiliumNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
+				return cs
+			},
+			ExpectedResult: false,
+		},
+		{
+			Name:     "HasAntreaNetworkPolicy - antrea",
+			FuncName: "HasAntreaNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPluginAntrea
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasAntreaNetworkPolicy - azure",
+			FuncName: "HasAntreaNetworkPolicy",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAzure
+				return cs
+			},
+			ExpectedResult: false,
+		},
+		{
+			Name:     "HasFlannelNetworkPlugin - flannel",
+			FuncName: "HasFlannelNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPluginFlannel
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "HasFlannelNetworkPlugin - azure",
+			FuncName: "HasFlannelNetworkPlugin",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAzure
+				return cs
+			},
+			ExpectedResult: false,
 		},
 	}
 

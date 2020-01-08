@@ -119,7 +119,7 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 		},
 		OrchestratorVersion: "1.16.0",
 	}
-	expected := "foo/pause:1.2.0"
+	expected := "foo/k8s/core/pause:1.2.0"
 	actual := o.GetPodInfraContainerSpec()
 	if actual != expected {
 		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
@@ -2840,6 +2840,17 @@ func TestRequireRouteTable(t *testing.T) {
 					OrchestratorType: Kubernetes,
 					KubernetesConfig: &KubernetesConfig{
 						NetworkPolicy: NetworkPolicyCilium,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						NetworkPlugin: NetworkPolicyAntrea,
 					},
 				},
 			},
@@ -6853,5 +6864,185 @@ func TestPropertiesHasDCSeriesSKU(t *testing.T) {
 		if ret != c.Expected {
 			t.Fatalf("expected HasDCSeriesSKU(%s) to return %t, but instead got %t", c.VMSKU, c.Expected, ret)
 		}
+	}
+}
+
+func TestPropertiesIsIPMasqAgentDisabled(t *testing.T) {
+	cases := []struct {
+		name             string
+		p                *Properties
+		expectedDisabled bool
+	}{
+		{
+			name:             "default",
+			p:                &Properties{},
+			expectedDisabled: false,
+		},
+		{
+			name: "hostedMasterProfile disabled",
+			p: &Properties{
+				HostedMasterProfile: &HostedMasterProfile{
+					IPMasqAgent: false,
+				},
+			},
+			expectedDisabled: true,
+		},
+		{
+			name: "hostedMasterProfile enabled",
+			p: &Properties{
+				HostedMasterProfile: &HostedMasterProfile{
+					IPMasqAgent: true,
+				},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "nil KubernetesConfig",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "default KubernetesConfig",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{},
+				},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "addons configured but no ip-masq-agent configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.CoreDNSAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "ip-masq-agent explicitly disabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(false),
+							},
+						},
+					},
+				},
+			},
+			expectedDisabled: true,
+		},
+		{
+			name: "ip-masq-agent present but no configuration",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name: common.IPMASQAgentAddonName,
+							},
+						},
+					},
+				},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "ip-masq-agent explicitly enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.IPMASQAgentAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedDisabled: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.p.IsIPMasqAgentDisabled() != c.expectedDisabled {
+				t.Fatalf("expected Properties.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.p.IsIPMasqAgentDisabled())
+			}
+		})
+	}
+}
+
+func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
+	cases := []struct {
+		name             string
+		k                *KubernetesConfig
+		expectedDisabled bool
+	}{
+		{
+			name:             "default",
+			k:                &KubernetesConfig{},
+			expectedDisabled: false,
+		},
+		{
+			name: "ip-masq-agent present but no configuration",
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name: common.IPMASQAgentAddonName,
+					},
+				},
+			},
+			expectedDisabled: false,
+		},
+		{
+			name: "ip-masq-agent explicitly disabled",
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    common.IPMASQAgentAddonName,
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expectedDisabled: true,
+		},
+		{
+			name: "ip-masq-agent explicitly enabled",
+			k: &KubernetesConfig{
+				Addons: []KubernetesAddon{
+					{
+						Name:    common.IPMASQAgentAddonName,
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedDisabled: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.k.IsIPMasqAgentDisabled() != c.expectedDisabled {
+				t.Fatalf("expected KubernetesConfig.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.k.IsIPMasqAgentDisabled())
+			}
+		})
 	}
 }

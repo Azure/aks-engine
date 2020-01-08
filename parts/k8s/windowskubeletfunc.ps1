@@ -291,7 +291,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
@@ -309,7 +309,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
 }
 
 # Renamed from Write-KubernetesStartFiles

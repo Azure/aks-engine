@@ -58,10 +58,6 @@ var (
 			networkPolicy: "",
 		},
 		{
-			networkPlugin: NetworkPolicyCilium,
-			networkPolicy: "",
-		},
-		{
 			networkPlugin: NetworkPluginCilium,
 			networkPolicy: NetworkPolicyCilium,
 		},
@@ -80,6 +76,14 @@ var (
 		{
 			networkPlugin: "",
 			networkPolicy: NetworkPolicyCilium,
+		},
+		{
+			networkPlugin: NetworkPluginAntrea,
+			networkPolicy: NetworkPolicyAntrea,
+		},
+		{
+			networkPlugin: "",
+			networkPolicy: NetworkPolicyAntrea,
 		},
 		{
 			networkPlugin: "",
@@ -235,11 +239,6 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if o.KubernetesConfig.EnableAggregatedAPIs {
-					if sv.LT(minVersion) {
-						return errors.Errorf("enableAggregatedAPIs is only available in Kubernetes version %s or greater; unable to validate for Kubernetes version %s",
-							minVersion.String(), version)
-					}
-
 					if !o.KubernetesConfig.IsRBACEnabled() {
 						return errors.New("enableAggregatedAPIs requires the enableRbac feature as a prerequisite")
 					}
@@ -721,6 +720,28 @@ func (a *Properties) validateAddons() error {
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
 					}
+				case common.CiliumAddonName:
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyCilium {
+							return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
+						}
+					} else {
+						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
+					}
+				case common.AntreaAddonName:
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea {
+						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.AntreaAddonName, NetworkPolicyAntrea)
+					}
+				case common.FlannelAddonName:
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
+						return errors.Errorf("%s addon does not support NetworkPolicy, replace %s with \"\"", common.FlannelAddonName, a.OrchestratorProfile.KubernetesConfig.NetworkPolicy)
+					}
+					networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
+					if networkPlugin != "" {
+						if networkPlugin != NetworkPluginFlannel {
+							return errors.Errorf("%s addon is not supported with networkPlugin=%s, please use networkPlugin=%s", common.FlannelAddonName, networkPlugin, NetworkPluginFlannel)
+						}
+					}
 				case "azure-policy":
 					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
 					if err != nil {
@@ -745,6 +766,8 @@ func (a *Properties) validateAddons() error {
 						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
 					}
+				case common.AzureCloudProviderAddonName:
+					return errors.Errorf("%s add-on is required, it cannot be disabled", addon.Name)
 				}
 			}
 		}
@@ -1409,7 +1432,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 	}
 
-	if e := k.validateNetworkPlugin(); e != nil {
+	if e := k.validateNetworkPlugin(hasWindows); e != nil {
 		return e
 	}
 	if e := k.validateNetworkPolicy(k8sVersion, hasWindows); e != nil {
@@ -1424,7 +1447,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	return nil
 }
 
-func (k *KubernetesConfig) validateNetworkPlugin() error {
+func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 
 	networkPlugin := k.NetworkPlugin
 
@@ -1438,6 +1461,11 @@ func (k *KubernetesConfig) validateNetworkPlugin() error {
 	}
 	if !valid {
 		return errors.Errorf("unknown networkPlugin '%s' specified", networkPlugin)
+	}
+
+	// Temporary safety check, to be removed when Windows support is added.
+	if (networkPlugin == NetworkPluginAntrea) && hasWindows {
+		return errors.Errorf("networkPlugin '%s' is not supporting windows agents", networkPlugin)
 	}
 
 	return nil
@@ -1465,7 +1493,8 @@ func (k *KubernetesConfig) validateNetworkPolicy(k8sVersion string, hasWindows b
 	}
 
 	// Temporary safety check, to be removed when Windows support is added.
-	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium || networkPolicy == "flannel") && hasWindows {
+	if (networkPolicy == "calico" || networkPolicy == NetworkPolicyCilium ||
+		networkPolicy == NetworkPolicyAntrea) && hasWindows {
 		return errors.Errorf("networkPolicy '%s' is not supporting windows agents", networkPolicy)
 	}
 

@@ -1499,7 +1499,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "8.0.0-1",
+						"dockerProviderVersion": "8.0.0-2",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 						"workspaceDomain":       "b3BpbnNpZ2h0cy5henVyZS5jb20=",
@@ -1511,7 +1511,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod12042019",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
 						},
 					},
 				},
@@ -1874,7 +1874,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.15.4"),
 		},
 		{
-			name: "cilium addons",
+			name: "cilium networkPolicy",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -1886,13 +1886,37 @@ func TestSetAddonsConfig(t *testing.T) {
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPolicy: NetworkPolicyCilium,
 							NetworkPlugin: NetworkPluginCilium,
 						},
 					},
 				},
 			},
-			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, getDefaultAddons("1.15.4")),
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CiliumAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CiliumAgentContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
+						},
+						{
+							Name:  common.CiliumCleanStateContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
+						},
+						{
+							Name:  common.CiliumOperatorContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
+						},
+						{
+							Name:  common.CiliumEtcdOperatorContainerName,
+							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
+						},
+					},
+				},
+			}, "1.15.4")),
 		},
 		{
 			name: "Azure Stack addons",
@@ -2875,6 +2899,33 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
+			name: "audit-policy disabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AuditPolicyAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4")),
+		},
+		{
 			name: "aad-default-aad-admin-group addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -2902,6 +2953,35 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"adminGroupID": "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+					},
+				},
+			}, "1.15.4"),
+		},
+		{
+			name: "antrea addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"serviceCidr": DefaultKubernetesServiceCIDR,
 					},
 				},
 			}, "1.15.4"),
@@ -3476,6 +3556,14 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
 				},
 			},
+		},
+		{
+			Name:    common.AuditPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+		{
+			Name:    common.AzureCloudProviderAddonName,
+			Enabled: to.BoolPtr(true),
 		},
 		{
 			Name:    common.CoreDNSAddonName,

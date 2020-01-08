@@ -4,18 +4,18 @@ Extensions in AKS Engine provide an easy way for AKS Engine users to add pre-pac
 
 ## extensionProfiles
 
-The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world-dcos extension.
+The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world extension.
 
 ``` javascript
 {
   ...
   "extensionProfiles": [
     {
-        "name": "hello-world-dcos",
+        "name": "hello-world",
         "version": "v1",
         "extensionParameters": "parameters",
-        "rootURL": "http://mytestlocation.com/hello-world-dcos/",
-        "script": "hello-world-dcos.sh"
+        "rootURL": "http://mytestlocation.com/hello-world/",
+        "script": "hello-world.sh"
     }
   ]
 }

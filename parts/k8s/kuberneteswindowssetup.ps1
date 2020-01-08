@@ -182,6 +182,7 @@ try
 
         Write-Log "Install docker"
         Install-Docker -DockerVersion $global:DockerVersion
+        Set-DockerLogFileOptions
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
@@ -320,6 +321,8 @@ try
 
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
+
+        Register-LogsCleanupScriptTask
 
         if (Test-Path $CacheDir)
         {

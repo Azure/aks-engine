@@ -883,11 +883,12 @@
         "kubenet",
         "azure",
         "flannel",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "defaultValue": "azure",
       "metadata": {
-        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium)"
+        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium|antrea)"
       },
       "type": "string"
     },
@@ -897,11 +898,12 @@
         "none",
         "azure",
         "calico",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "defaultValue": "",
       "metadata": {
-        "description": "The network policy enforcement to use (calico|cilium); 'none' and 'azure' here for backwards compatibility"
+        "description": "The network policy enforcement to use (calico|cilium|antrea); 'none' and 'azure' here for backwards compatibility"
       },
       "type": "string"
     },

@@ -5,6 +5,7 @@
 |Managed Disks|Beta|`vlabs`|[kubernetes-vmas.json](../../examples/disks-managed/kubernetes-vmas.json)|[Description](#feat-managed-disks)|
 |Calico Network Policy|Alpha|`vlabs`|[kubernetes-calico.json](../../examples/networkpolicy/kubernetes-calico-azure.json)|[Description](#feat-calico)|
 |Cilium Network Policy|Alpha|`vlabs`|[kubernetes-cilium.json](../../examples/networkpolicy/kubernetes-cilium.json)|[Description](#feat-cilium)|
+|Antrea Network Policy|Alpha|`vlabs`|[kubernetes-antrea.json](../../examples/networkpolicy/kubernetes-antrea.json)|[Description](#feat-antrea)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
 |Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
@@ -223,6 +224,39 @@ you can define stricter policies. Good resources to get information about that a
 - [NetworkPolicy User Guide](https://kubernetes.io/docs/user-guide/networkpolicies/)
 - [NetworkPolicy Example Walkthrough](https://kubernetes.io/docs/getting-started-guides/network-policy/walkthrough/)
 - [Cilium Kubernetes](https://github.com/Azure/aks-engine/blob/master/examples/networkpolicy)
+
+<a name="feat-antrea"></a>
+
+## Network Policy Enforcement with Antrea
+
+Using the default configuration, Kubernetes allows communication between all
+Pods within a cluster. To ensure that Pods can only be accessed by authorized
+Pods, a policy enforcement is needed. To enable policy enforcement using Antrea refer to the
+[cluster definitions](clusterdefinitions.md#kubernetesconfig)
+document under networkPolicy. There is also a reference cluster definition available
+[here](https://github.com/Azure/aks-engine/blob/master/examples/networkpolicy/kubernetes-antrea.json).
+
+This will deploy single replica of Antrea controller and Antrea agent to every
+instance of the cluster using a Kubernetes DaemonSet. After a successful deployment
+you should be able to see these Pods running in your cluster:
+
+```console
+kubectl get pods --namespace kube-system  -l app=antrea -o wide
+NAME                                 READY   STATUS    RESTARTS   AGE     IP             NODE
+antrea-agent-67t9z                   2/2     Running   1          7m38s   10.240.0.5     k8s-agentpool1-14956401-vmss000001
+antrea-agent-87nm2                   2/2     Running   0          11m     10.240.0.4     k8s-agentpool1-14956401-vmss000000
+antrea-agent-fhbsg                   2/2     Running   0          11m     10.240.0.6     k8s-agentpool1-14956401-vmss000002
+antrea-agent-jjhxt                   2/2     Running   0          11m     10.240.255.5   k8s-master-14956401-0
+antrea-controller-685c8c6f64-zk4jh   1/1     Running   0          11m     10.240.0.4     k8s-agentpool1-14956401-vmss000000
+```
+
+Per default Antrea still allows all communication within the cluster. Using Kubernetes' NetworkPolicy API,
+you can define stricter policies. Good resources to get information about that are:
+
+- [Antrea Architecture Docs](https://github.com/vmware-tanzu/antrea/blob/master/docs/architecture.md)
+- [NetworkPolicy User Guide](https://kubernetes.io/docs/user-guide/networkpolicies/)
+- [NetworkPolicy Example Walkthrough](https://kubernetes.io/docs/getting-started-guides/network-policy/walkthrough/)
+- [Antrea Kubernetes](https://github.com/Azure/aks-engine/blob/master/examples/networkpolicy)
 
 <a name="feat-custom-vnet"></a>
 

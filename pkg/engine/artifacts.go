@@ -21,7 +21,7 @@ type kubernetesComponentFileSpec struct {
 	isEnabled       bool   // is this spec enabled?
 }
 
-func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
+func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
 	if p.OrchestratorProfile == nil {
 		p.OrchestratorProfile = &api.OrchestratorProfile{}
 	}
@@ -172,87 +172,37 @@ func kubernetesContainerAddonSettingsInit(p *api.Properties) map[string]kubernet
 			base64Data:      k.GetAddonScript(common.AADAdminGroupAddonName),
 			destinationFile: aadDefaultAdminGroupDestinationFilename,
 		},
-	}
-}
-
-func kubernetesAddonSettingsInit(p *api.Properties) []kubernetesComponentFileSpec {
-	if p.OrchestratorProfile == nil {
-		p.OrchestratorProfile = &api.OrchestratorProfile{}
-	}
-	if p.OrchestratorProfile.KubernetesConfig == nil {
-		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-	}
-	o := p.OrchestratorProfile
-	k := o.KubernetesConfig
-	kubernetesComponentFileSpecs := []kubernetesComponentFileSpec{
-		{
-			sourceFile:      "kubernetesmasteraddons-cilium-daemonset.yaml",
+		common.CiliumAddonName: {
+			sourceFile:      ciliumAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.CiliumAddonName),
-			destinationFile: "cilium-daemonset.yaml",
-			isEnabled:       k.NetworkPolicy == NetworkPolicyCilium,
+			destinationFile: ciliumAddonDestinationFilename,
 		},
-		{
-			sourceFile:      "kubernetesmasteraddons-flannel-daemonset.yaml",
-			base64Data:      k.GetAddonScript(common.FlannelAddonName),
-			destinationFile: "flannel-daemonset.yaml",
-			isEnabled:       k.NetworkPlugin == NetworkPluginFlannel,
+		common.AntreaAddonName: {
+			sourceFile:      antreaAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AntreaAddonName),
+			destinationFile: antreaAddonDestinationFilename,
 		},
-		{
-			sourceFile:      "kubernetesmasteraddons-azure-cloud-provider-deployment.yaml",
-			base64Data:      k.GetAddonScript(common.AzureCloudProviderAddonName),
-			destinationFile: "azure-cloud-provider-deployment.yaml",
-			isEnabled:       true,
-		},
-		{
-			sourceFile:      "kubernetesmaster-audit-policy.yaml",
+		common.AuditPolicyAddonName: {
+			sourceFile:      auditPolicyAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
-			destinationFile: "audit-policy.yaml",
-			isEnabled:       common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0"),
+			destinationFile: auditPolicyAddonDestinationFilename,
 		},
-		{
-			sourceFile:      "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml",
+		common.AzureCloudProviderAddonName: {
+			sourceFile:      cloudProviderAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.AuditPolicyAddonName),
+			destinationFile: cloudProviderAddonDestinationFilename,
+		},
+		common.FlannelAddonName: {
+			sourceFile:      flannelAddonSourceFilename,
+			base64Data:      k.GetAddonScript(common.FlannelAddonName),
+			destinationFile: flannelAddonDestinationFilename,
+		},
+		common.ScheduledMaintenanceAddonName: {
+			sourceFile:      scheduledMaintenanceAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
-			destinationFile: "scheduled-maintenance-deployment.yaml",
-			isEnabled:       k.IsAddonEnabled(common.ScheduledMaintenanceAddonName),
+			destinationFile: scheduledMaintenanceAddonSourceFilename,
 		},
 	}
-
-	if len(p.AgentPoolProfiles) > 0 {
-		if to.Bool(k.UseCloudControllerManager) {
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      "kubernetesmasteraddons-azure-csi-storage-classes.yaml",
-					base64Data:      k.GetAddonScript(common.AzureCSIStorageClassesAddonName),
-					destinationFile: "azure-csi-storage-classes.yaml",
-					isEnabled:       true,
-				})
-		} else {
-			// Use built-in storage classes if CCM is disabled
-			unmanagedStorageClassesSourceYaml := "kubernetesmasteraddons-unmanaged-azure-storage-classes.yaml"
-			managedStorageClassesSourceYaml := "kubernetesmasteraddons-managed-azure-storage-classes.yaml"
-			if p.IsAzureStackCloud() {
-				unmanagedStorageClassesSourceYaml = "kubernetesmasteraddons-unmanaged-azure-storage-classes-custom.yaml"
-				managedStorageClassesSourceYaml = "kubernetesmasteraddons-managed-azure-storage-classes-custom.yaml"
-			}
-
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      unmanagedStorageClassesSourceYaml,
-					base64Data:      k.GetAddonScript(common.AzureStorageClassesAddonName),
-					destinationFile: "azure-storage-classes.yaml",
-					isEnabled:       p.AgentPoolProfiles[0].StorageProfile == api.StorageAccount,
-				})
-			kubernetesComponentFileSpecs = append(kubernetesComponentFileSpecs,
-				kubernetesComponentFileSpec{
-					sourceFile:      managedStorageClassesSourceYaml,
-					base64Data:      k.GetAddonScript(common.AzureStorageClassesAddonName),
-					destinationFile: "azure-storage-classes.yaml",
-					isEnabled:       p.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks,
-				})
-		}
-	}
-
-	return kubernetesComponentFileSpecs
 }
 
 func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFileSpec {
