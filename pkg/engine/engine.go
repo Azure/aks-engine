@@ -769,10 +769,10 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 	}
 }
 
-func getContainerAddonsString(cs *api.ContainerService, sourcePath string) string {
+func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 	properties := cs.Properties
 	var result string
-	settingsMap := kubernetesContainerAddonSettingsInit(properties)
+	settingsMap := kubernetesAddonSettingsInit(properties)
 
 	var addonNames []string
 
