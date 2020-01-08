@@ -28,7 +28,7 @@ pretty_date=$(date +"%b %Y")
 
 sku_id="${SKU_PREFIX}-${short_date}"
 
-cat $SKU_TEMPLATE_FILE | sed s/{{ID}}/"$sku_id"/ | sed s/{{MONTH-YEAR}}/"$pretty_date/" > sku.json
+< $SKU_TEMPLATE_FILE sed s/{{ID}}/"$sku_id"/ | sed s/{{MONTH-YEAR}}/"$pretty_date/" > sku.json
 cat sku.json
 
 echo "Creating new SKU"
