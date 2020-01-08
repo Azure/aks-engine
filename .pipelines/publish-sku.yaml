@@ -29,4 +29,11 @@ jobs:
     inputs:
       artifact: 'sku_info'
       path: 'sku-publishing-info.json'
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make tools-clean
+    displayName: cleanup - clean hack/tools/bin
+    condition: always()
 
