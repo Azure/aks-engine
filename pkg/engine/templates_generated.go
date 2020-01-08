@@ -39110,6 +39110,11 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
       args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
+{{if IsCustomCloudProfile}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -39282,6 +39287,11 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["kube-controller-manager"]
       args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
+{{if IsCustomCloudProfile}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -39624,6 +39634,11 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
+{{if IsCustomCloudProfile}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

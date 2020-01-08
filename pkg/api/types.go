@@ -1909,7 +1909,8 @@ func (p *Properties) IsCustomCloudProfile() bool {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil && p.CustomCloudProfile.Environment != nil && (p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
+	// For backward compatibility, treat nil Environment and empty Environment name as AzureStackCloud as well
+	return p.CustomCloudProfile != nil && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment

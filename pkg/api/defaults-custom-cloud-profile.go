@@ -57,25 +57,23 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 
 		env := p.CustomCloudProfile.Environment
 
-		if env.Name == "" {
-			env.Name = AzureStackCloud
-		}
+		// if some of required endpoints are missing, we can pull from metadataURL
+		if env.Name == "" || env.ServiceManagementEndpoint == "" || env.ActiveDirectoryEndpoint == "" || env.GraphEndpoint == "" || env.ResourceManagerVMDNSSuffix == "" {
+			if env.Name == "" {
+				env.Name = AzureStackCloud
+			}
 
-		if (p.IsAzureStackCloud() && !strings.HasPrefix(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location))) {
-			return fmt.Errorf("AzureStack portalURL needs to start with https://portal.%s. ", cs.Location)
-		}
+			if p.IsAzureStackCloud() {
+				if !strings.HasPrefix(p.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
+					return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
+				}
 
-		// Non-AzureStack CustomCloud MUST provide ResourceManagerEndpoint
-		if (env.ResourceManagerEndpoint == "") {
-			if (p.IsAzureStackCloud()) {
-				env.ResourceManagerEndpoint = fmt.Sprintf("https://management.%s.%s/", cs.Location, getAzureStackFQDNSuffix(p.CustomCloudProfile.PortalURL, cs.Location))
-			} else {
+				azsFQDNSuffix := getAzureStackFQDNSuffix(p.CustomCloudProfile.PortalURL, cs.Location)
+				env.ResourceManagerEndpoint = fmt.Sprintf("https://management.%s.%s/", cs.Location, azsFQDNSuffix)
+			} else if env.ResourceManagerEndpoint == "" {
 				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerEndpoint")
 			}
-		}
-		
-		// if some of required endpoints are missing, we can pull from metadataURL
-		if env.ServiceManagementEndpoint == "" || env.ActiveDirectoryEndpoint == "" || env.GraphEndpoint == "" || env.ResourceManagerVMDNSSuffix == "" {			
+
 			metadataURL := fmt.Sprintf("%s/metadata/endpoints?api-version=1.0", strings.TrimSuffix(env.ResourceManagerEndpoint, "/"))
 			
 			// Retrieve the metadata
@@ -151,16 +149,16 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			azureCustomCloudSpec = AzureCloudSpecEnvMap[AzurePublicCloud]
 		}
 		if p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix == "" {
-			return errors.New("Failed to set Cloud Spec for Azure CustomCloud due to invalid environment")
+			return errors.New("Failed to set Cloud Spec for Azure Stack due to invalid environment")
 		}
 
 		azureCustomCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 
-		if (p.CustomCloudProfile.Environment.Name == "") {
+		if (p.CustomCloudProfile.Environment.Name == "" || p.IsAzureStackCloud()) {
 			azureCustomCloudSpec.CloudName = AzureStackCloud
 		} else {
 			azureCustomCloudSpec.CloudName = p.CustomCloudProfile.Environment.Name
-		}	
+		}
 
 		//Sets default values for telemetry PID where none is set
 		if p.CustomCloudProfile.AzureEnvironmentSpecConfig == nil {
@@ -217,7 +215,12 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 			}
 			p.CustomCloudProfile.AzureEnvironmentSpecConfig = &azureCustomCloudSpec
 		}
-		AzureCloudSpecEnvMap[azureCustomCloudSpec.CloudName] = azureCustomCloudSpec
+
+		if p.IsAzureStackCloud() {
+			AzureCloudSpecEnvMap[AzureStackCloud] = azureCustomCloudSpec
+		} else {
+			AzureCloudSpecEnvMap[azureCustomCloudSpec.CloudName] = azureCustomCloudSpec
+		}
 	}
 	return nil
 }
