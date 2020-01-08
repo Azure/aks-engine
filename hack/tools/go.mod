@@ -5,8 +5,7 @@ go 1.12
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0 // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.4.2 // indirect
-	github.com/apache/thrift v0.13.0 // indirect
-	github.com/devigned/pub v0.2.0 // indirect
+	github.com/devigned/pub v0.2.0
 	github.com/devigned/tab v0.1.1 // indirect
 	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
