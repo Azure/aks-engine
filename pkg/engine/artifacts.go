@@ -21,6 +21,44 @@ type kubernetesComponentFileSpec struct {
 	isEnabled       bool   // is this spec enabled?
 }
 
+func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
+	if p.OrchestratorProfile == nil {
+		p.OrchestratorProfile = &api.OrchestratorProfile{}
+	}
+	if p.OrchestratorProfile.KubernetesConfig == nil {
+		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+	}
+	o := p.OrchestratorProfile
+	k := o.KubernetesConfig
+	return map[string]kubernetesComponentFileSpec{
+		common.SchedulerComponentName: {
+			sourceFile:      schedulerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.SchedulerComponentName),
+			destinationFile: schedulerComponentDestinationFilename,
+		},
+		common.ControllerManagerComponentName: {
+			sourceFile:      controllerManagerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.ControllerManagerComponentName),
+			destinationFile: controllerManagerComponentDestinationFilename,
+		},
+		common.CloudControllerManagerComponentName: {
+			sourceFile:      cloudControllerManagerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.CloudControllerManagerComponentName),
+			destinationFile: cloudControllerManagerComponentDestinationFilename,
+		},
+		common.APIServerComponentName: {
+			sourceFile:      apiServerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.APIServerComponentName),
+			destinationFile: apiServerComponentDestinationFilename,
+		},
+		common.AddonManagerComponentName: {
+			sourceFile:      apiServerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.AddonManagerComponentName),
+			destinationFile: apiServerComponentDestinationFilename,
+		},
+	}
+}
+
 func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
 	if p.OrchestratorProfile == nil {
 		p.OrchestratorProfile = &api.OrchestratorProfile{}
@@ -266,7 +304,7 @@ func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFile
 	}
 }
 
-func getAddonString(input, destinationPath, destinationFile string) string {
+func getComponentString(input, destinationPath, destinationFile string) string {
 	addonString := getBase64EncodedGzippedCustomScriptFromStr(input)
 	return buildConfigString(addonString, destinationFile, destinationPath)
 }
@@ -284,7 +322,7 @@ func substituteConfigString(input string, kubernetesFeatureSettings []kubernetes
 				if err != nil {
 					return ""
 				}
-				config += getAddonString(cscript, destinationPath, setting.destinationFile)
+				config += getComponentString(cscript, destinationPath, setting.destinationFile)
 			} else {
 				cscript = getCustomScriptFromFile(setting.sourceFile,
 					sourcePath,

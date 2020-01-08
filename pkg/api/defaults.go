@@ -488,6 +488,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// Configure kubelet
 		cs.setKubeletConfig(isUpgrade)
 
+		// Configure components
+		cs.setComponentsConfig(isUpgrade)
+
 		// Configure addons
 		cs.setAddonsConfig(isUpgrade)
 

@@ -183,12 +183,8 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		panic(e)
 	}
 	// add manifests
-	str = substituteConfigString(str,
-		kubernetesManifestSettingsInit(profile),
-		"k8s/manifests",
-		"/etc/kubernetes/manifests",
-		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion, cs)
+	componentStr := getComponentsString(cs, "k8s/manifests")
+	str = strings.Replace(str, "MASTER_MANIFESTS_CONFIG_PLACEHOLDER", componentStr, -1)
 
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))

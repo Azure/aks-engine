@@ -278,3 +278,17 @@ const (
 	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
 )
+
+// components source and destination file references
+const (
+	schedulerComponentSourceFilename                   string = "kubernetesmaster-kube-scheduler.yaml"
+	schedulerComponentDestinationFilename              string = "kube-scheduler.yaml"
+	controllerManagerComponentSourceFilename           string = "kubernetesmaster-kube-controller-manager.yaml"
+	controllerManagerComponentDestinationFilename      string = "kube-controller-manager.yaml"
+	cloudControllerManagerComponentSourceFilename      string = "kubernetesmaster-cloud-controller-manager.yaml"
+	cloudControllerManagerComponentDestinationFilename string = "cloud-controller-manager.yaml"
+	apiServerComponentSourceFilename                   string = "kubernetesmaster-kube-apiserver.yaml"
+	apiServerComponentDestinationFilename              string = "kube-apiserver.yaml"
+	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
+	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
+)

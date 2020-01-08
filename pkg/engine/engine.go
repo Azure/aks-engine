@@ -650,6 +650,51 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
 
+func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerService) template.FuncMap {
+	return template.FuncMap{
+		"ContainerImage": func(name string) string {
+			if i := component.GetContainersIndexByName(name); i > -1 {
+				return component.Containers[i].Image
+			}
+			return ""
+		},
+
+		"ContainerCPUReqs": func(name string) string {
+			if i := component.GetContainersIndexByName(name); i > -1 {
+				return component.Containers[i].CPURequests
+			}
+			return ""
+		},
+
+		"ContainerCPULimits": func(name string) string {
+			if i := component.GetContainersIndexByName(name); i > -1 {
+				return component.Containers[i].CPULimits
+			}
+			return ""
+		},
+
+		"ContainerMemReqs": func(name string) string {
+			if i := component.GetContainersIndexByName(name); i > -1 {
+				return component.Containers[i].MemoryRequests
+			}
+			return ""
+		},
+
+		"ContainerMemLimits": func(name string) string {
+			if i := component.GetContainersIndexByName(name); i > -1 {
+				return component.Containers[i].MemoryLimits
+			}
+			return ""
+		},
+		"ContainerConfig": func(name string) string {
+			return component.Config[name]
+		},
+		"IsAzureStackCloud": func() bool {
+			return cs.Properties.IsAzureStackCloud()
+		},
+	}
+}
+
 func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
 		"ContainerImage": func(name string) string {
@@ -777,6 +822,57 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 	}
 }
 
+func getComponentsString(cs *api.ContainerService, sourcePath string) string {
+	properties := cs.Properties
+	var result string
+	settingsMap := kubernetesComponentSettingsInit(properties)
+
+	var componentNames []string
+
+	for componentName := range settingsMap {
+		componentNames = append(componentNames, componentName)
+	}
+
+	sort.Strings(componentNames)
+
+	for _, componentName := range componentNames {
+		setting := settingsMap[componentName]
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(componentName) {
+			var input string
+			if setting.base64Data != "" {
+				var err error
+				input, err = getStringFromBase64(setting.base64Data)
+				if err != nil {
+					return ""
+				}
+			} else {
+				orchProfile := properties.OrchestratorProfile
+				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
+				component := orchProfile.KubernetesConfig.GetComponentByName(componentName)
+				var templ *template.Template
+				switch componentName {
+				default:
+					templ = template.New("component resolver template").Funcs(getComponentFuncMap(component, cs))
+				}
+				componentFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
+				componentFileBytes, err := Asset(componentFile)
+				if err != nil {
+					return ""
+				}
+				_, err = templ.Parse(string(componentFileBytes))
+				if err != nil {
+					return ""
+				}
+				var buffer bytes.Buffer
+				templ.Execute(&buffer, component)
+				input = buffer.String()
+			}
+			result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
+		}
+	}
+	return result
+}
+
 func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 	properties := cs.Properties
 	var result string
@@ -824,7 +920,7 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 				templ.Execute(&buffer, addon)
 				input = buffer.String()
 			}
-			result += getAddonString(input, "/etc/kubernetes/addons", setting.destinationFile)
+			result += getComponentString(input, "/etc/kubernetes/addons", setting.destinationFile)
 		}
 	}
 	return result

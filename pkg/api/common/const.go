@@ -245,3 +245,17 @@ const (
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
 )
+
+// Component name consts
+const (
+	// SchedulerComponentName is the name of the kube-scheduler component
+	SchedulerComponentName = "kube-scheduler"
+	// ControllerManagerComponentName is the name of the kube-controller-manager component
+	ControllerManagerComponentName = "kube-controller-manager"
+	// CloudControllerManagerComponentName is the name of the cloud-controller-manager component
+	CloudControllerManagerComponentName = "cloud-controller-manager"
+	// APIServerComponentName is the name of the kube-apiserver component
+	APIServerComponentName = "kube-apiserver"
+	// AddonManagerComponentName is the name of the kube-addon-manager component
+	AddonManagerComponentName = "kube-addon-manager"
+)
