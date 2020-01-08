@@ -2,7 +2,7 @@ trigger: none
 pr: none
 
 jobs:
-- job: publish_sku
+- job: create_marketplace_sku
   pool:
     name: $(BUILD_POOL)
   steps:
@@ -24,7 +24,7 @@ jobs:
       -e PUBLISHER=${PUBLISHER} \
       -e OFFER=${OFFER} \
       ${DEIS_GO_DEV_IMAGE} ./vhd/publishing/new-windows-sku.sh
-    displayName: Publishing new SKU
+    displayName: Create a new marketplace SKU
   - task: PublishPipelineArtifact@1
     inputs:
       artifact: 'sku_info'
