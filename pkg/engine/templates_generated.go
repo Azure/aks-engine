@@ -9850,7 +9850,7 @@ spec:
         - name: ACI_RESOURCE_GROUP
           value: <rgName>
         - name: ACI_REGION
-          value: <region>
+          value: {{ContainerConfig "region"}}
         - name: APISERVER_CERT_LOCATION
           value: /etc/virtual-kubelet/cert.pem
         - name: APISERVER_KEY_LOCATION
@@ -15101,7 +15101,7 @@ spec:
         - name: ACI_RESOURCE_GROUP
           value: <rgName>
         - name: ACI_REGION
-          value: <region>
+          value: {{ContainerConfig "region"}}
         - name: APISERVER_CERT_LOCATION
           value: /etc/virtual-kubelet/cert.pem
         - name: APISERVER_KEY_LOCATION
@@ -20378,7 +20378,7 @@ spec:
         - name: ACI_RESOURCE_GROUP
           value: <rgName>
         - name: ACI_REGION
-          value: <region>
+          value: {{ContainerConfig "region"}}
         - name: APISERVER_CERT_LOCATION
           value: /etc/virtual-kubelet/cert.pem
         - name: APISERVER_KEY_LOCATION
@@ -27754,7 +27754,7 @@ spec:
         - name: ACI_RESOURCE_GROUP
           value: <rgName>
         - name: ACI_REGION
-          value: <region>
+          value: {{ContainerConfig "region"}}
         - name: APISERVER_CERT_LOCATION
           value: /etc/virtual-kubelet/cert.pem
         - name: APISERVER_KEY_LOCATION
