@@ -1,0 +1,36 @@
+{
+  "planId": "{{ID}}",
+  "microsoft-azure-corevm.skuTitle": "Windows K8s base image, {{MONTH-YEAR}}",
+  "microsoft-azure-corevm.skuSummary": "Windows K8s base image, {{MONTH-YEAR}}",
+  "microsoft-azure-corevm.hideSKUForSolutionTemplate": true,
+  "microsoft-azure-corevm.hardened": false,
+  "microsoft-azure-corevm.deploymentModels": [
+    "ARM"
+  ],
+  "microsoft-azure-corevm.cloudAvailability": [
+    "PublicAzure"
+  ],
+  "microsoft-azure-corevm.imageType": "VmImage",
+  "microsoft-azure-corevm.imageVisibility": true,
+  "microsoft-azure-corevm.generation": "1",
+  "microsoft-azure-corevm.operatingSystemFamily": "Windows",
+  "microsoft-azure-corevm.osType": "Other",
+  "microsoft-azure-corevm.supportsHubOnOffSwitch": false,
+  "microsoft-azure-corevm.supportsClientHub": false,
+  "microsoft-azure-corevm.isPremiumThirdParty": false,
+  "microsoft-azure-corevm.supportsHub": false,
+  "microsoft-azure-corevm.supportsBackup": false,
+  "microsoft-azure-corevm.freeTierEligible": true,
+  "microsoft-azure-corevm.supportsSriov": false,
+  "microsoft-azure-corevm.supportsAADLogin": false,
+  "microsoft-azure-corevm.defaultImageSizeGB": "30",
+  "microsoft-azure-corevm.vmImagesPublicAzure": {},
+  "microsoft-azure-corevm.skuDescriptionPublicAzure": "Windows Base Image for Azure Kubernetes",
+  "microsoft-azure-corevm.smallLogo": "https://publishingstoredm.blob.core.windows.net/prodcontent/D6191_publishers_microsoft:2Daks/aks:2Dwindows/8dd0a573-9b12-45fe-8251-b873d69b5640.png?sv=2014-02-14&sr=b&sig=FhbGgRkK29YWTPffGx8Fl1z%2BR6TsgWKhFdst%2FQa7QG4%3D&se=2021-12-30T22%3A20%3A06Z&sp=r",
+  "microsoft-azure-corevm.mediumLogo": "https://publishingstoredm.blob.core.windows.net/prodcontent/D6191_publishers_microsoft:2Daks/aks:2Dwindows/04333b54-e40a-4a4d-8b71-9aecaef0610d.png?sv=2014-02-14&sr=b&sig=Kjs%2FjzgNOkBziUL1X92OAGA2Xkvl%2BTqvo3Efniny0CY%3D&se=2021-12-30T22%3A20%3A06Z&sp=r",
+  "microsoft-azure-corevm.largeLogo": "https://publishingstoredm.blob.core.windows.net/prodcontent/D6191_publishers_microsoft:2Daks/aks:2Dwindows/cdca9982-cc33-4af8-94dc-2de23754bb5d.png?sv=2014-02-14&sr=b&sig=giqzJbU7Lccszadxa3%2F70Am4dCpyHmYuIXjYVKktXvE%3D&se=2021-12-30T22%3A20%3A06Z&sp=r",
+  "microsoft-azure-corevm.wideLogo": "https://publishingstoredm.blob.core.windows.net/prodcontent/D6191_publishers_microsoft:2Daks/aks:2Dwindows/35252318-2364-4c0c-aa52-835c8e1c95a8.png?sv=2014-02-14&sr=b&sig=uX1L0gMiBPR4FmkeaK19F4NI5fshzoG05BMfIjKnVKI%3D&se=2021-12-30T22%3A20%3A06Z&sp=r",
+  "microsoft-azure-corevm.privacyURL": "https://github.com/Azure/aks-engine/blob/master/LICENSE",
+  "microsoft-azure-corevm.termsOfUseURL": "https://github.com/Azure/aks-engine/blob/master/LICENSE",
+  "microsoft-azure-corevm.migratedOffer": false
+}
