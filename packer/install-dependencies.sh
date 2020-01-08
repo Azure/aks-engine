@@ -492,7 +492,6 @@ done
 
 CSI_ATTACHER_VERSIONS="
 1.2.0
-1.0.1
 "
 for CSI_ATTACHER_VERSION in ${CSI_ATTACHER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-attacher:v${CSI_ATTACHER_VERSION}"
@@ -520,7 +519,6 @@ done
 
 CSI_PROVISIONER_VERSIONS="
 1.4.0
-1.0.1
 "
 for CSI_PROVISIONER_VERSION in ${CSI_PROVISIONER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v${CSI_PROVISIONER_VERSION}"
