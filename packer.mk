@@ -24,3 +24,6 @@ delete-sa: az-login
 
 generate-sas: az-login
 	az storage container generate-sas --name vhds --permissions lr --connection-string "${CLASSIC_SA_CONNECTION_STRING}" --start ${START_DATE} --expiry ${EXPIRY_DATE} | tr -d '"' | tee -a vhd-sas && cat vhd-sas
+
+windows-vhd-publishing-info: az-login
+	@./packer/generate-windows-vhd-publishing-info.sh
