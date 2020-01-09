@@ -200,7 +200,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -237,7 +237,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -274,7 +274,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "kube-apiserver:v1.17.0-beta.1",
 				"kube-controller-manager": "kube-controller-manager:v1.17.0-beta.1",
 				"kube-scheduler":          "kube-scheduler:v1.17.0-beta.1",
@@ -318,7 +318,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "baz",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -360,7 +360,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            true,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -393,7 +393,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "example.azurecr.io/kube-apiserver-amd64:tag",
 				"kube-controller-manager": "example.azurecr.io/kube-controller-manager-amd64:tag",
 				"kube-scheduler":          "example.azurecr.io/kube-scheduler-amd64:tag",
@@ -431,7 +431,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -469,7 +469,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -543,7 +543,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager": "azurestack/kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName: "azurestack/kube-addon-manager-amd64:v9.0.2",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4-azs",
 			expectedGetCCMImageReference:       "azurestack/cloud-controller-manager-amd64:v1.15.4",
@@ -578,7 +578,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -615,7 +615,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",
@@ -653,7 +653,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				"addonmanager":            "kube-addon-manager-amd64:v9.0.2",
+				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
 				"kube-apiserver":          "",
 				"kube-controller-manager": "",
 				"kube-scheduler":          "",

@@ -40094,7 +40094,7 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-addon-manager
-    image: {{GetComponentImageReference "addonmanager"}}
+    image: {{ContainerImage "kube-addon-manager"}}
     imagePullPolicy: IfNotPresent
     resources:
       requests:
@@ -40144,10 +40144,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-apiserver"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
+      command: [{{ContainerConfig "command"}}]
+      args: [{{ContainerConfig "args"}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

@@ -4,17 +4,24 @@
 package api
 
 import (
+	"fmt"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 	o := cs.Properties.OrchestratorProfile
-	/*
-		cloudSpecConfig := cs.GetCloudSpecConfig()
-		k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
-		specConfig := cloudSpecConfig.KubernetesSpecConfig
-	*/
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
+	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	hyperkubeImageBase := specConfig.KubernetesImageBase
+	hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+	if cs.Properties.IsAzureStackCloud() {
+		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+		hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+	}
 
 	defaultSchedulerComponentConfig := KubernetesComponent{
 		Name:    common.SchedulerComponentName,
@@ -28,17 +35,33 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 
 	defaultCloudControllerManagerComponentConfig := KubernetesComponent{
 		Name:    common.CloudControllerManagerComponentName,
-		Enabled: o.KubernetesConfig.UseCloudControllerManager,
+		Enabled: to.BoolPtr(to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 	}
 
 	defaultAPIServerComponentConfig := KubernetesComponent{
 		Name:    common.APIServerComponentName,
 		Enabled: to.BoolPtr(true),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.APIServerComponentName,
+				Image: hyperkubeImage,
+			},
+		},
+		Config: map[string]string{
+			"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+			"args":    common.GetOrderedEscapedKeyValsString(o.KubernetesConfig.APIServerConfig),
+		},
 	}
 
 	defaultAddonManagerComponentConfig := KubernetesComponent{
 		Name:    common.AddonManagerComponentName,
 		Enabled: to.BoolPtr(true),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AddonManagerComponentName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.AddonManagerComponentName],
+			},
+		},
 	}
 
 	defaultComponents := []KubernetesComponent{

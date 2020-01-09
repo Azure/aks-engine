@@ -179,7 +179,7 @@ func addSecret(m paramsMap, k string, v interface{}, encode bool) {
 func makeMasterExtensionScriptCommands(cs *api.ContainerService) string {
 	curlCaCertOpt := ""
 	if cs.Properties.IsAzureStackCloud() {
-		curlCaCertOpt = fmt.Sprintf("--cacert %s", AzureStackCaCertLocation)
+		curlCaCertOpt = fmt.Sprintf("--cacert %s", common.AzureStackCaCertLocation)
 	}
 	return makeExtensionScriptCommands(cs.Properties.MasterProfile.PreprovisionExtension,
 		curlCaCertOpt, cs.Properties.ExtensionProfiles)
@@ -192,7 +192,7 @@ func makeAgentExtensionScriptCommands(cs *api.ContainerService, profile *api.Age
 	}
 	curlCaCertOpt := ""
 	if cs.Properties.IsAzureStackCloud() {
-		curlCaCertOpt = fmt.Sprintf("--cacert %s", AzureStackCaCertLocation)
+		curlCaCertOpt = fmt.Sprintf("--cacert %s", common.AzureStackCaCertLocation)
 	}
 	return makeExtensionScriptCommands(profile.PreprovisionExtension,
 		curlCaCertOpt, cs.Properties.ExtensionProfiles)
@@ -658,28 +658,24 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 			}
 			return ""
 		},
-
 		"ContainerCPUReqs": func(name string) string {
 			if i := component.GetContainersIndexByName(name); i > -1 {
 				return component.Containers[i].CPURequests
 			}
 			return ""
 		},
-
 		"ContainerCPULimits": func(name string) string {
 			if i := component.GetContainersIndexByName(name); i > -1 {
 				return component.Containers[i].CPULimits
 			}
 			return ""
 		},
-
 		"ContainerMemReqs": func(name string) string {
 			if i := component.GetContainersIndexByName(name); i > -1 {
 				return component.Containers[i].MemoryRequests
 			}
 			return ""
 		},
-
 		"ContainerMemLimits": func(name string) string {
 			if i := component.GetContainersIndexByName(name); i > -1 {
 				return component.Containers[i].MemoryLimits
@@ -691,6 +687,21 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
+		},
+		"GetHyperkubeImageReference": func() string {
+			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+			if cs.Properties.IsAzureStackCloud() {
+				hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
+			}
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+				hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+			}
+			return hyperkubeImage
+		},
+		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
+			return common.GetOrderedEscapedKeyValsString(config)
 		},
 	}
 }
