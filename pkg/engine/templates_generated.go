@@ -7623,7 +7623,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: csi-azuredisk-controller
@@ -7643,10 +7643,6 @@ spec:
             - "--provisioner=disk.csi.azure.com"
             - "--csi-address=$(ADDRESS)"
             - "--connection-timeout=15s"
-            - "--v=5"
-            - "--timeout=120s"
-            - "--enable-leader-election"
-            - "--leader-election-type=leases"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -7657,11 +7653,9 @@ spec:
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
-            - "-v=5"
-            - "-csi-address=$(ADDRESS)"
-            - "-timeout=120s"
-            - "-leader-election"
-            - "-leader-election-type=leases"
+            - --v=5
+            - --csi-address=$(ADDRESS)
+            - --timeout=120s
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -7685,7 +7679,6 @@ spec:
           image: {{ContainerImage "csi-snapshotter"}}
           args:
             - "-csi-address=$(ADDRESS)"
-            - "-leader-election"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -7933,9 +7926,6 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["coordination.k8s.io"]
-    resources: ["leases"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
