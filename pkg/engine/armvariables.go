@@ -608,7 +608,7 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	if profile.IsAvailabilitySets() {
 		agentVars[agentOffset] = fmt.Sprintf("[parameters('%s')]", agentOffset)
 		agentVars[agentAvailabilitySet] = fmt.Sprintf("[concat('%s-availabilitySet-', parameters('nameSuffix'))]", agentName)
-	} else if profile.IsLowPriorityScaleSet() {
+	} else if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
 		agentVars[agentScaleSetPriority] = fmt.Sprintf("[parameters('%s')]", agentScaleSetPriority)
 		agentVars[agentScaleSetEvictionPolicy] = fmt.Sprintf("[parameters('%s')]", agentScaleSetEvictionPolicy)
 	}

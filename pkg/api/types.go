@@ -578,6 +578,7 @@ type AgentPoolProfile struct {
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
+	SpotMaxPrice                        *float64             `json:"spotMaxPrice,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
 	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
@@ -1514,6 +1515,11 @@ func (a *AgentPoolProfile) IsVirtualMachineScaleSets() bool {
 // IsLowPriorityScaleSet returns true if the VMSS is Low Priority
 func (a *AgentPoolProfile) IsLowPriorityScaleSet() bool {
 	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPriorityLow
+}
+
+// IsSpotScaleSet returns true if the VMSS is Spot Scale Set
+func (a *AgentPoolProfile) IsSpotScaleSet() bool {
+	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPrioritySpot
 }
 
 // IsManagedDisks returns true if the customer specified disks

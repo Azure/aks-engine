@@ -1359,7 +1359,23 @@ func TestAvailabilityProfile(t *testing.T) {
 		expectedISVMSS  bool
 		expectedIsAS    bool
 		expectedLowPri  bool
+		expectedSpot    bool
 	}{
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPrioritySpot,
+					},
+				},
+			},
+			expectedHasVMSS: true,
+			expectedISVMSS:  true,
+			expectedIsAS:    false,
+			expectedLowPri:  false,
+			expectedSpot:    true,
+		},
 		{
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -1373,6 +1389,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  true,
 			expectedIsAS:    false,
 			expectedLowPri:  true,
+			expectedSpot:    false,
 		},
 		{
 			p: Properties{
@@ -1390,6 +1407,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  true,
 			expectedIsAS:    false,
 			expectedLowPri:  false,
+			expectedSpot:    false,
 		},
 		{
 			p: Properties{
@@ -1403,6 +1421,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  false,
 			expectedIsAS:    true,
 			expectedLowPri:  false,
+			expectedSpot:    false,
 		},
 	}
 
@@ -1418,6 +1437,9 @@ func TestAvailabilityProfile(t *testing.T) {
 		}
 		if c.p.AgentPoolProfiles[0].IsLowPriorityScaleSet() != c.expectedLowPri {
 			t.Fatalf("expected IsLowPriorityScaleSet() to return %t but instead returned %t", c.expectedLowPri, c.p.AgentPoolProfiles[0].IsLowPriorityScaleSet())
+		}
+		if c.p.AgentPoolProfiles[0].IsSpotScaleSet() != c.expectedSpot {
+			t.Fatalf("expected IsSpotScaleSet() to return %t but instead returned %t", c.expectedSpot, c.p.AgentPoolProfiles[0].IsSpotScaleSet())
 		}
 	}
 }
