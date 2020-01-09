@@ -18,7 +18,7 @@ jobs:
       -w /go/src/github.com/Azure/aks-engine \
       -e AZURE_TENANT_ID=${AZURE_TENANT_ID} \
       -e AZURE_CLIENT_ID=${AZURE_CLIENT_ID} \
-      -e AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
+      -e AZURE_CLIENT_SECRET="$(AZURE_CLIENT_SECRET)" \
       -e SKU_PREFIX=${SKU_PREFIX} \
       -e SKU_TEMPLATE_FILE=${SKU_TEMPLATE_FILE} \
       -e PUBLISHER=${PUBLISHER} \
