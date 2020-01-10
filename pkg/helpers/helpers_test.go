@@ -227,6 +227,10 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 			expectedResult: true,
 		},
 		{
+			input:          "Standard_DS12_v2",
+			expectedResult: true,
+		},
+		{
 			input:          "",
 			expectedResult: false,
 		},
