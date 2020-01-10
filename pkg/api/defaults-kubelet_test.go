@@ -48,14 +48,14 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--network-plugin":                    NetworkPluginKubenet,
 		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
-		"--non-masquerade-cidr":               DefaultKubernetesSubnet,
+		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "4h",
-		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
+		"--feature-gates":                     "RotateKubeletServerCertificate=true",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
@@ -80,6 +80,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
 	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
 	expected["--pod-infra-container-image"] = "kubletwin/pause"
@@ -104,6 +105,25 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		}
 	}
 
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	// check when ip-masq-agent is explicitly disabled in kubernetes config
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(false),
+		},
+	}
+
+	cs.setKubeletConfig(false)
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+
+	for key, val := range map[string]string{"--non-masquerade-cidr": DefaultKubernetesSubnet} {
+		if k[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, k[key], val)
+		}
+	}
+
 	cs = CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
 	// TODO test all default overrides
 	overrideVal := "/etc/override"
@@ -111,7 +131,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--azure-container-registry-config": overrideVal,
 	}
 	cs.setKubeletConfig(false)
-	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	for key, val := range map[string]string{"--azure-container-registry-config": overrideVal} {
 		if k[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -499,6 +519,15 @@ func TestKubeletIPMasqAgentEnabledOrDisabled(t *testing.T) {
 		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
 			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
 	}
+
+	// No ip-masq-agent addon configuration specified, --non-masquerade-cidr should be 0.0.0.0/0
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	if k["--non-masquerade-cidr"] != DefaultNonMasqueradeCIDR {
+		t.Fatalf("got unexpected '--non-masquerade-cidr' kubelet config value %s, the expected value is %s",
+			k["--non-masquerade-cidr"], DefaultNonMasqueradeCIDR)
+	}
 }
 
 func TestEnforceNodeAllocatable(t *testing.T) {
@@ -744,20 +773,11 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.8
-	cs = CreateMockContainerService("testcluster", "1.8.15", 3, 2, false)
-	cs.setKubeletConfig(false)
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true" {
-		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
-			k["--feature-gates"])
-	}
-
 	// test 1.14
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -766,7 +786,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -776,7 +796,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true"
 	cs.setKubeletConfig(false)
-	if k["--feature-gates"] != "DynamicKubeletConfig=true,PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}

@@ -98,8 +98,9 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 	}
 
-	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS
-	if !cs.Properties.IsIPMasqAgentEnabled() {
+	// Set --non-masquerade-cidr if ip-masq-agent is disabled on AKS or
+	// explicitly disabled in kubernetes config
+	if cs.Properties.IsIPMasqAgentDisabled() {
 		defaultKubeletConfig["--non-masquerade-cidr"] = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 	}
 
@@ -123,7 +124,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
-	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, "1.8.0", "PodPriority=true")
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
 
 	// Override default cloud-provider?

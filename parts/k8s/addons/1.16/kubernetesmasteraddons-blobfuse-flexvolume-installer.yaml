@@ -16,6 +16,7 @@ spec:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
     spec:
+      priorityClassName: system-cluster-critical
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}

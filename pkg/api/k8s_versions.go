@@ -22,7 +22,7 @@ const (
 	tillerImageReference                              string = "tiller:v2.13.1"
 	reschedulerImageReference                         string = "rescheduler:v0.4.0"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
-	omsImageReference                                 string = "oms:ciprod11012019"
+	omsImageReference                                 string = "oms:ciprod01072020"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.6"
 	nvidiaDevicePluginImageReference                  string = "k8s-device-plugin:1.11"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
@@ -68,25 +68,25 @@ const (
 // at the expense of some add'l indirection in getK8sVersionComponents below
 var k8sComponentVersions = map[string]map[string]string{
 	"1.18": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
 	},
 	"1.17": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
 	},
 	"1.16": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.4",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.3",
 	},
 	"1.15": {
-		"addon-resizer":                   "addon-resizer:1.8.5",
+		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.2.1",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
 		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.15.4",

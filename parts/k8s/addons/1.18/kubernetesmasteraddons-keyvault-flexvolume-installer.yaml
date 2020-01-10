@@ -22,6 +22,7 @@ spec:
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       containers:
       - name: keyvault-flexvolume
