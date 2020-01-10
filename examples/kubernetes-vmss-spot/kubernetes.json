@@ -21,7 +21,7 @@
         "availabilityProfile": "VirtualMachineScaleSets",
         "scaleSetPriority": "Spot",
         "scaleSetEvictionPolicy": "Delete",
-        "spotMaxPrice": "88",
+        "spotMaxPrice": 88,
         "storageProfile": "ManagedDisks"
       }
     ],
