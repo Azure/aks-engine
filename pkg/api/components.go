@@ -49,7 +49,6 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		},
 		Config: map[string]string{
 			"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			"args":    common.GetOrderedEscapedKeyValsString(o.KubernetesConfig.APIServerConfig),
 		},
 	}
 

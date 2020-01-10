@@ -651,7 +651,7 @@ func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 }
 
 func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerService) template.FuncMap {
-	return template.FuncMap{
+	ret := template.FuncMap{
 		"ContainerImage": func(name string) string {
 			if i := component.GetContainersIndexByName(name); i > -1 {
 				return component.Containers[i].Image
@@ -704,6 +704,12 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 			return common.GetOrderedEscapedKeyValsString(config)
 		},
 	}
+	if component.Name == common.APIServerComponentName {
+		ret["GetAPIServerArgs"] = func() string {
+			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig)
+		}
+	}
+	return ret
 }
 
 func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) template.FuncMap {

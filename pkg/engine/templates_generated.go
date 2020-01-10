@@ -40147,7 +40147,7 @@ spec:
       image: {{ContainerImage "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
       command: [{{ContainerConfig "command"}}]
-      args: [{{ContainerConfig "args"}}]
+      args: [{{GetAPIServerArgs}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
