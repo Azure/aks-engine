@@ -1860,7 +1860,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 							},
 							Protocol:               network.Protocol1All,
 							IdleTimeoutInMinutes:   to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-							AllocatedOutboundPorts: to.Int32Ptr(4096),
+							AllocatedOutboundPorts: to.Int32Ptr(0),
 						},
 						Name: to.StringPtr("LBOutboundRule"),
 					},

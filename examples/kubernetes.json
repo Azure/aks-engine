@@ -2,10 +2,24 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "loadBalancerSku": "Standard",
+        "excludeMasterFromStandardLB": true,
+        "privateCluster": {
+          "enabled": true,
+          "jumpboxProfile": {
+            "name": "jumpbox",
+            "vmSize": "Standard_D2_v3",
+            "osDiskSizeGB": 30,
+            "username": "azureuser",
+            "publickey": ""
+          }
+        }
+      }
     },
     "masterProfile": {
-      "count": 1,
+      "count": 3,
       "dnsPrefix": "",
       "vmSize": "Standard_D2_v3"
     },

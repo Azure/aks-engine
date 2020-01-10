@@ -245,7 +245,7 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 					},
 					Protocol:               network.Protocol1All,
 					IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-					AllocatedOutboundPorts: to.Int32Ptr(4096),
+					AllocatedOutboundPorts: to.Int32Ptr(0),
 				},
 			},
 		}
@@ -265,7 +265,7 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 				Protocol:               network.Protocol1All,
 				IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
 				EnableTCPReset:         to.BoolPtr(true),
-				AllocatedOutboundPorts: to.Int32Ptr(4096),
+				AllocatedOutboundPorts: to.Int32Ptr(0),
 			},
 		},
 	}
