@@ -29,13 +29,11 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 
 	lbBackendAddressPools := []network.BackendAddressPool{}
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		dependencies = append(dependencies, "[variables('masterLbName')]")
-		publicLbPool := network.BackendAddressPool{
-			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-		}
-		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
+	dependencies = append(dependencies, "[variables('masterLbName')]")
+	publicLbPool := network.BackendAddressPool{
+		ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 	}
+	lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
@@ -66,14 +64,12 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		},
 	}
 
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		publicNatRules := []network.InboundNatRule{
-			{
-				ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
-			},
-		}
-		loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
+	publicNatRules := []network.InboundNatRule{
+		{
+			ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+		},
 	}
+	loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
@@ -153,7 +149,6 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 			"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
 			"name":  "nicLoopNode",
 		},
-		DependsOn: dependencies,
 	}
 
 	var lbBackendAddressPools []network.BackendAddressPool
@@ -163,7 +158,14 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
 		lbBackendAddressPools = append(lbBackendAddressPools, internalLbPool)
+		dependencies = append(dependencies, "[variables('masterLbName')]")
+		publicLbPool := network.BackendAddressPool{
+			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+		}
+		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 	}
+
+	armResource.DependsOn = dependencies
 
 	loadBalancerIPConfig := network.InterfaceIPConfiguration{
 		Name: to.StringPtr("ipconfig1"),

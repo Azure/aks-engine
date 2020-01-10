@@ -72,7 +72,6 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 }
 
 func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
-
 	loadBalancer := LoadBalancerARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -99,39 +98,6 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 						},
 					},
 				},
-				LoadBalancingRules: &[]network.LoadBalancingRule{
-					{
-						Name: to.StringPtr("LBRuleHTTPS"),
-						LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-							FrontendIPConfiguration: &network.SubResource{
-								ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-							},
-							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-							},
-							Protocol:             network.TransportProtocolTCP,
-							FrontendPort:         to.Int32Ptr(443),
-							BackendPort:          to.Int32Ptr(443),
-							EnableFloatingIP:     to.BoolPtr(false),
-							IdleTimeoutInMinutes: to.Int32Ptr(5),
-							LoadDistribution:     network.Default,
-							Probe: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
-							},
-						},
-					},
-				},
-				Probes: &[]network.Probe{
-					{
-						Name: to.StringPtr("tcpHTTPSProbe"),
-						ProbePropertiesFormat: &network.ProbePropertiesFormat{
-							Protocol:          network.ProbeProtocolTCP,
-							Port:              to.Int32Ptr(443),
-							IntervalInSeconds: to.Int32Ptr(5),
-							NumberOfProbes:    to.Int32Ptr(2),
-						},
-					},
-				},
 			},
 			Sku: &network.LoadBalancerSku{
 				Name: "[variables('loadBalancerSku')]",
@@ -140,73 +106,109 @@ func CreateLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 		},
 	}
 
-	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
-		udpRule := network.LoadBalancingRule{
-			Name: to.StringPtr("LBRuleUDP"),
-			LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
-				FrontendIPConfiguration: &network.SubResource{
-					ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-				},
-				BackendAddressPool: &network.SubResource{
-					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-				},
-				Protocol:             network.TransportProtocolUDP,
-				FrontendPort:         to.Int32Ptr(1123),
-				BackendPort:          to.Int32Ptr(1123),
-				EnableFloatingIP:     to.BoolPtr(false),
-				IdleTimeoutInMinutes: to.Int32Ptr(5),
-				LoadDistribution:     network.Default,
-				Probe: &network.SubResource{
-					ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
-				},
-			},
-		}
-		*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = append(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules, udpRule)
-	}
-
-	if isVMSS {
-		inboundNATPools := []network.InboundNatPool{
+	if !prop.OrchestratorProfile.IsPrivateCluster() {
+		loadBalancingRules := &[]network.LoadBalancingRule{
 			{
-				Name: to.StringPtr("[concat('SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-				InboundNatPoolPropertiesFormat: &network.InboundNatPoolPropertiesFormat{
+				Name: to.StringPtr("LBRuleHTTPS"),
+				LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
 					FrontendIPConfiguration: &network.SubResource{
 						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
 					},
-					Protocol:               network.TransportProtocolTCP,
-					BackendPort:            to.Int32Ptr(22),
-					FrontendPortRangeStart: to.Int32Ptr(50001),
-					FrontendPortRangeEnd:   to.Int32Ptr(50119),
-					EnableFloatingIP:       to.BoolPtr(false),
+					BackendAddressPool: &network.SubResource{
+						ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+					Protocol:             network.TransportProtocolTCP,
+					FrontendPort:         to.Int32Ptr(443),
+					BackendPort:          to.Int32Ptr(443),
+					EnableFloatingIP:     to.BoolPtr(false),
+					IdleTimeoutInMinutes: to.Int32Ptr(5),
+					LoadDistribution:     network.Default,
+					Probe: &network.SubResource{
+						ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
+					},
 				},
 			},
 		}
-		loadBalancer.InboundNatPools = &inboundNATPools
-
-	} else {
-		var inboundNATRules []network.InboundNatRule
-		sshNATPorts := []int32{
-			22,
-			2201,
-			2202,
-			2203,
-			2204,
+		probes := &[]network.Probe{
+			{
+				Name: to.StringPtr("tcpHTTPSProbe"),
+				ProbePropertiesFormat: &network.ProbePropertiesFormat{
+					Protocol:          network.ProbeProtocolTCP,
+					Port:              to.Int32Ptr(443),
+					IntervalInSeconds: to.Int32Ptr(5),
+					NumberOfProbes:    to.Int32Ptr(2),
+				},
+			},
 		}
-		for i := 0; i < prop.MasterProfile.Count; i++ {
-			inboundNATRule := network.InboundNatRule{
-				Name: to.StringPtr(fmt.Sprintf("[concat('SSH-', variables('masterVMNamePrefix'), %d)]", i)),
-				InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
-					BackendPort:      to.Int32Ptr(22),
-					EnableFloatingIP: to.BoolPtr(false),
+		loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = loadBalancingRules
+		loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.Probes = probes
+		if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			udpRule := network.LoadBalancingRule{
+				Name: to.StringPtr("LBRuleUDP"),
+				LoadBalancingRulePropertiesFormat: &network.LoadBalancingRulePropertiesFormat{
 					FrontendIPConfiguration: &network.SubResource{
 						ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
 					},
-					FrontendPort: to.Int32Ptr(sshNATPorts[i]),
-					Protocol:     network.TransportProtocolTCP,
+					BackendAddressPool: &network.SubResource{
+						ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+					Protocol:             network.TransportProtocolUDP,
+					FrontendPort:         to.Int32Ptr(1123),
+					BackendPort:          to.Int32Ptr(1123),
+					EnableFloatingIP:     to.BoolPtr(false),
+					IdleTimeoutInMinutes: to.Int32Ptr(5),
+					LoadDistribution:     network.Default,
+					Probe: &network.SubResource{
+						ID: to.StringPtr("[concat(variables('masterLbID'),'/probes/tcpHTTPSProbe')]"),
+					},
 				},
 			}
-			inboundNATRules = append(inboundNATRules, inboundNATRule)
+			*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules = append(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.LoadBalancingRules, udpRule)
 		}
-		loadBalancer.InboundNatRules = &inboundNATRules
+		if isVMSS {
+			inboundNATPools := []network.InboundNatPool{
+				{
+					Name: to.StringPtr("[concat('SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+					InboundNatPoolPropertiesFormat: &network.InboundNatPoolPropertiesFormat{
+						FrontendIPConfiguration: &network.SubResource{
+							ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+						},
+						Protocol:               network.TransportProtocolTCP,
+						BackendPort:            to.Int32Ptr(22),
+						FrontendPortRangeStart: to.Int32Ptr(50001),
+						FrontendPortRangeEnd:   to.Int32Ptr(50119),
+						EnableFloatingIP:       to.BoolPtr(false),
+					},
+				},
+			}
+			loadBalancer.InboundNatPools = &inboundNATPools
+
+		} else {
+			var inboundNATRules []network.InboundNatRule
+			sshNATPorts := []int32{
+				22,
+				2201,
+				2202,
+				2203,
+				2204,
+			}
+			for i := 0; i < prop.MasterProfile.Count; i++ {
+				inboundNATRule := network.InboundNatRule{
+					Name: to.StringPtr(fmt.Sprintf("[concat('SSH-', variables('masterVMNamePrefix'), %d)]", i)),
+					InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+						BackendPort:      to.Int32Ptr(22),
+						EnableFloatingIP: to.BoolPtr(false),
+						FrontendIPConfiguration: &network.SubResource{
+							ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+						},
+						FrontendPort: to.Int32Ptr(sshNATPorts[i]),
+						Protocol:     network.TransportProtocolTCP,
+					},
+				}
+				inboundNATRules = append(inboundNATRules, inboundNATRule)
+			}
+			loadBalancer.InboundNatRules = &inboundNATRules
+		}
 	}
 
 	return loadBalancer

@@ -5,6 +5,7 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -49,6 +50,37 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
 	} else {
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			publicIPAddress := PublicIPAddressARM{
+				ARMResource: ARMResource{
+					APIVersion: "[variables('apiVersionNetwork')]",
+				},
+				PublicIPAddress: network.PublicIPAddress{
+					Location: to.StringPtr("[variables('location')]"),
+					Name:     to.StringPtr("master-outbound"),
+					PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+						PublicIPAllocationMethod: network.Static,
+					},
+					Sku: &network.PublicIPAddressSku{
+						Name: "[variables('loadBalancerSku')]",
+					},
+					Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+				},
+			}
+			loadBalancer := CreateLoadBalancer(cs.Properties, false)
+			loadBalancer.ARMResource.DependsOn = []string{
+				"Microsoft.Network/publicIPAddresses/master-outbound",
+			}
+			(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations)[0].FrontendIPConfigurationPropertiesFormat.PublicIPAddress = &network.PublicIPAddress{
+				ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'master-outbound')]"),
+			}
+			outboundRules := createOutboundRules(cs.Properties)
+			outboundRule := (*outboundRules)[0]
+			outboundRule.OutboundRulePropertiesFormat.BackendAddressPool.ID = to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]")
+			(*outboundRule.OutboundRulePropertiesFormat.FrontendIPConfigurations)[0].ID = to.StringPtr("[variables('masterLbIPConfigID')]")
+			loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules = outboundRules
+			masterResources = append(masterResources, publicIPAddress, loadBalancer)
+		}
 		masterNic := createPrivateClusterNetworkInterface(cs)
 		masterResources = append(masterResources, masterNic)
 
