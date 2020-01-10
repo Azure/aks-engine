@@ -55,7 +55,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "4h",
-		"--feature-gates":                     "PodPriority=true,RotateKubeletServerCertificate=true",
+		"--feature-gates":                     "RotateKubeletServerCertificate=true",
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
@@ -773,20 +773,11 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 			k["--feature-gates"])
 	}
 
-	// test 1.8
-	cs = CreateMockContainerService("testcluster", "1.8.15", 3, 2, false)
-	cs.setKubeletConfig(false)
-	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true" {
-		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
-			k["--feature-gates"])
-	}
-
 	// test 1.14
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.14", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -795,7 +786,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.16", "", false, false), 3, 2, false)
 	cs.setKubeletConfig(false)
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	if k["--feature-gates"] != "PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
@@ -805,7 +796,7 @@ func TestKubeletConfigDefaultFeatureGates(t *testing.T) {
 	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	k["--feature-gates"] = "DynamicKubeletConfig=true"
 	cs.setKubeletConfig(false)
-	if k["--feature-gates"] != "DynamicKubeletConfig=true,PodPriority=true,RotateKubeletServerCertificate=true" {
+	if k["--feature-gates"] != "DynamicKubeletConfig=true,RotateKubeletServerCertificate=true" {
 		t.Fatalf("got unexpected '--feature-gates' kubelet config value for \"--feature-gates\": \"\": %s",
 			k["--feature-gates"])
 	}
