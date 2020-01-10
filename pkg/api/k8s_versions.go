@@ -14,7 +14,7 @@ const (
 	dashboardImageReference                           string = "kubernetes-dashboard-amd64:v1.10.1"
 	execHealthZImageReference                         string = "exechealthz-amd64:1.2"
 	heapsterImageReference                            string = "heapster-amd64:v1.5.4"
-	coreDNSImageReference                             string = "coredns:1.6.5"
+	coreDNSImageReference                             string = "coredns:1.6.6"
 	kubeDNSImageReference                             string = "k8s-dns-kube-dns-amd64:1.15.4"
 	kubeDNSMasqNannyImageReference                    string = "k8s-dns-dnsmasq-nanny-amd64:1.15.4"
 	kubeDNSSidecarImageReference                      string = "k8s-dns-sidecar-amd64:1.14.10"
