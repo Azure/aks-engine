@@ -178,7 +178,7 @@ func (apc *addPoolCmd) load() error {
 
 func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 	if err := apc.validate(cmd); err != nil {
-		return errors.Wrap(err, "failed to validate scale command")
+		return errors.Wrap(err, "failed to validate addpool command")
 	}
 	if err := apc.load(); err != nil {
 		return errors.Wrap(err, "failed to load existing container service")
