@@ -371,6 +371,32 @@ var _agentparamsT = []byte(`    "{{.Name}}Count": {
       "type": "string"
     },
     {{end}}
+{{if .IsSpotScaleSet}}
+    "{{.Name}}ScaleSetPriority": {
+      "allowedValues":[
+        "Spot",
+        "Regular",
+        ""
+      ],
+      "defaultValue": "{{.ScaleSetPriority}}",
+      "metadata": {
+        "description": "The priority for the VM Scale Set. This value can be Spot or Regular."
+      },
+      "type": "string"
+    },
+    "{{.Name}}ScaleSetEvictionPolicy": {
+      "allowedValues":[
+        "Delete",
+        "Deallocate",
+        ""
+      ],
+      "defaultValue": "{{.ScaleSetEvictionPolicy}}",
+      "metadata": {
+        "description": "The Eviction Policy for a Spot VM Scale Set."
+      },
+      "type": "string"
+    },
+{{end}}
     "{{.Name}}VMSize": {
       {{GetKubernetesAllowedVMSKUs}}
       "defaultValue": "{{.VMSize}}",
