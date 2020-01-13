@@ -38568,6 +38568,27 @@ function DownloadFileOverHttp
     }
 }
 
+function Get-WindowsVersion {
+    $systemInfo = Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    return "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)"
+}
+
+function Get-CniVersion {
+    switch($global:NetworkPlugin) {
+        "azure" {
+            if ($global:VNetCNIPluginsURL -match "(v[0-9` + "`" + `.]+).(zip|tar)") {
+                return $matches[1]
+            } else {
+                return ""
+            }
+            break;
+        }
+        default {
+            return ""
+        }
+    }
+}
+
 # https://stackoverflow.com/a/34559554/697126
 function New-TemporaryDirectory {
     $parent = [System.IO.Path]::GetTempPath()
@@ -38861,15 +38882,18 @@ try
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["location"] = $Location
-        $global:AppInsightsClient.Context.Properties["docker_version"] = $global:DockerVersion
-        $global:AppInsightsClient.Context.Properties["subscription_id"] = $global:SubscriptionId
-        $global:AppInsightsClient.Context.Properties["resource_group"] = $global:ResourceGroup
-        $global:AppInsightsClient.Context.Properties["network_plugin"] = $global:NetworkPlugin
         $global:AppInsightsClient.Context.Properties["os_type"] = "windows"
+        $global:AppInsightsClient.Context.Properties["os_version"] = Get-WindowsVersion
+        $global:AppInsightsClient.Context.Properties["network_plugin"] = $global:NetworkPlugin
+        $global:AppInsightsClient.Context.Properties["network_plugin_version"] = Get-CniVersion
+        $global:AppInsightsClient.Context.Properties["network_mode"] = $global:NetworkMode
+        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
+        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
 
         $vhdId = ""
-        if (Test-Path 'c:\vhd-id.txt') {
-            $vhdId = Get-Content 'c:\vhd-id.txt'
+        if (Test-Path "c:\vhd-id.txt") {
+            $vhdId = Get-Content "c:\vhd-id.txt"
         }
         $global:AppInsightsClient.Context.Properties["vhd_id"] = $vhdId
 

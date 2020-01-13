@@ -65,6 +65,27 @@ function DownloadFileOverHttp
     }
 }
 
+function Get-WindowsVersion {
+    $systemInfo = Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    return "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)"
+}
+
+function Get-CniVersion {
+    switch($global:NetworkPlugin) {
+        "azure" {
+            if ($global:VNetCNIPluginsURL -match "(v[0-9`.]+).(zip|tar)") {
+                return $matches[1]
+            } else {
+                return ""
+            }
+            break;
+        }
+        default {
+            return ""
+        }
+    }
+}
+
 # https://stackoverflow.com/a/34559554/697126
 function New-TemporaryDirectory {
     $parent = [System.IO.Path]::GetTempPath()
