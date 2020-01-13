@@ -227,6 +227,10 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 			expectedResult: true,
 		},
 		{
+			input:          "Standard_F64s_v2",
+			expectedResult: true,
+		},
+		{
 			input:          "",
 			expectedResult: false,
 		},
