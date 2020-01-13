@@ -556,6 +556,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
 	api.ScaleSetPriority = vlabs.ScaleSetPriority
 	api.ScaleSetEvictionPolicy = vlabs.ScaleSetEvictionPolicy
+	api.SpotMaxPrice = vlabs.SpotMaxPrice
 	api.StorageProfile = vlabs.StorageProfile
 	api.DiskSizesGB = []int{}
 	api.DiskSizesGB = append(api.DiskSizesGB, vlabs.DiskSizesGB...)

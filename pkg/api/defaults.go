@@ -622,9 +622,15 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.AvailabilityProfile = VirtualMachineScaleSets
 		}
 		if profile.AvailabilityProfile == VirtualMachineScaleSets {
-			if profile.ScaleSetEvictionPolicy == "" && profile.ScaleSetPriority == ScaleSetPriorityLow {
+			if profile.ScaleSetEvictionPolicy == "" && (profile.ScaleSetPriority == ScaleSetPriorityLow || profile.ScaleSetPriority == ScaleSetPrioritySpot) {
 				profile.ScaleSetEvictionPolicy = ScaleSetEvictionPolicyDelete
 			}
+
+			if profile.ScaleSetPriority == ScaleSetPrioritySpot && profile.SpotMaxPrice == nil {
+				var maximumValueFlag float64 = -1
+				profile.SpotMaxPrice = &maximumValueFlag
+			}
+
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 			}

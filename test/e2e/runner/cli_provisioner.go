@@ -303,7 +303,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 		if !cli.IsPrivate() {
 			log.Println("Waiting on nodes to go into ready state...")
 			var expectedReadyNodes int
-			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				expectedReadyNodes = cli.Engine.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -320,7 +320,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 			if err != nil {
 				return errors.Wrap(err, "Unable to get the list of nodes")
 			}
-			if !cli.Engine.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				for _, n := range nodes {
 					exp, err := regexp.Compile("k8s-master")
 					if err != nil {

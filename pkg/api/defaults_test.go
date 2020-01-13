@@ -1435,6 +1435,31 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
 			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
 	}
+	properties.AgentPoolProfiles[0].ScaleSetPriority = ScaleSetPrioritySpot
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete {
+		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
+			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
+	}
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(-1) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(-1))
+	}
+
+	properties.AgentPoolProfiles[0].SpotMaxPrice = to.Float64Ptr(float64(88))
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(88) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(88))
+	}
 }
 
 // TestDistroDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
