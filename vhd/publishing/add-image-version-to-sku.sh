@@ -54,7 +54,7 @@ sku_prefix=$(< $SKU_INFO jq -r ".sku_prefix")
 media_name="aks-windows-${sku_prefix}-${image_version}"
 
 # generate published date
-published_date=$(date +"%d/%m/%Y")
+published_date=$(date +"%m/%d/%Y")
 
 # get vhd url
 vhd_url=$(< $VHD_INFO jq -r ".vhd_url")
