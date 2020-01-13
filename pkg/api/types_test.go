@@ -1639,7 +1639,7 @@ func TestHasAvailabilityZones(t *testing.T) {
 	}
 }
 
-func TestHasLowPriorityScaleset(t *testing.T) {
+func TestHasNonRegularPriorityScaleset(t *testing.T) {
 	cases := []struct {
 		p        Properties
 		expected bool
@@ -1700,6 +1700,40 @@ func TestHasLowPriorityScaleset(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPrioritySpot,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityRegular,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
 					},
 				},
 			},
@@ -1745,8 +1779,8 @@ func TestHasLowPriorityScaleset(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.HasLowPriorityScaleset() != c.expected {
-			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
+		if c.p.HasNonRegularPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasNonRegularPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasNonRegularPriorityScaleset())
 		}
 	}
 }

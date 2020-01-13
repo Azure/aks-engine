@@ -19,7 +19,7 @@
 					"count": 2,
 					"vmSize": "Standard_D16_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"linuxProfile": {

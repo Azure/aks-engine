@@ -1218,10 +1218,10 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
-// HasLowPriorityScaleset returns true if any one node pool has a low-priority scaleset configuration
-func (p *Properties) HasLowPriorityScaleset() bool {
+// HasNonRegularPriorityScaleset returns true if any one node pool has a low or spot priority scaleset configuration
+func (p *Properties) HasNonRegularPriorityScaleset() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.IsLowPriorityScaleSet() {
+		if agentPoolProfile.IsLowPriorityScaleSet() || agentPoolProfile.IsSpotScaleSet() {
 			return true
 		}
 	}
