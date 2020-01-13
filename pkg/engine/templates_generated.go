@@ -34010,12 +34010,12 @@ setPWExpiration() {
   grep 'PASS_MIN_DAYS' /etc/login.defs && exit $ERR_CIS_APPLY_PASSWORD_CONFIG
   sed -i "s|INACTIVE=||g" /etc/default/useradd || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
   grep 'INACTIVE=' /etc/default/useradd && exit $ERR_CIS_APPLY_PASSWORD_CONFIG
-  echo 'PASS_MAX_DAYS 90' >> /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
-  grep 'PASS_MAX_DAYS 90' /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
+  echo 'PASS_MAX_DAYS 99999' >> /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
+  grep 'PASS_MAX_DAYS 99999' /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
   echo 'PASS_MIN_DAYS 7' >> /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
   grep 'PASS_MIN_DAYS 7' /etc/login.defs || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
-  echo 'INACTIVE=30' >> /etc/default/useradd || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
-  grep 'INACTIVE=30' /etc/default/useradd || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
+  echo 'INACTIVE=0' >> /etc/default/useradd || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
+  grep 'INACTIVE=0' /etc/default/useradd || exit $ERR_CIS_APPLY_PASSWORD_CONFIG
 }
 
 applyCIS() {
