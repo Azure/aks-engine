@@ -42,15 +42,30 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
+	// Create a Load Balancer resource spec
+	// We will augment the spec in a private cluster Standard Load Balancer scenario, below
+	loadBalancer := CreateLoadBalancer(cs.Properties, false)
 	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 		isForMaster := true
 		publicIPAddress := CreatePublicIPAddress(isForMaster)
-		loadBalancer := CreateLoadBalancer(cs.Properties, false)
 		masterNic := CreateNetworkInterfaces(cs)
 
 		masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
 	} else {
 		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			// Augment the "base" LB spec to include private cluster-specific SLB requirements
+			// E.g.: outbound LB for master vms outbound egress
+			loadBalancer.ARMResource.DependsOn = []string{
+				"Microsoft.Network/publicIPAddresses/master-outbound",
+			}
+			(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations)[0].FrontendIPConfigurationPropertiesFormat.PublicIPAddress = &network.PublicIPAddress{
+				ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'master-outbound')]"),
+			}
+			outboundRules := createOutboundRules(cs.Properties)
+			outboundRule := (*outboundRules)[0]
+			outboundRule.OutboundRulePropertiesFormat.BackendAddressPool.ID = to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]")
+			(*outboundRule.OutboundRulePropertiesFormat.FrontendIPConfigurations)[0].ID = to.StringPtr("[variables('masterLbIPConfigID')]")
+			loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules = outboundRules
 			publicIPAddress := PublicIPAddressARM{
 				ARMResource: ARMResource{
 					APIVersion: "[variables('apiVersionNetwork')]",
@@ -67,18 +82,6 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 					Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 				},
 			}
-			loadBalancer := CreateLoadBalancer(cs.Properties, false)
-			loadBalancer.ARMResource.DependsOn = []string{
-				"Microsoft.Network/publicIPAddresses/master-outbound",
-			}
-			(*loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations)[0].FrontendIPConfigurationPropertiesFormat.PublicIPAddress = &network.PublicIPAddress{
-				ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses', 'master-outbound')]"),
-			}
-			outboundRules := createOutboundRules(cs.Properties)
-			outboundRule := (*outboundRules)[0]
-			outboundRule.OutboundRulePropertiesFormat.BackendAddressPool.ID = to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]")
-			(*outboundRule.OutboundRulePropertiesFormat.FrontendIPConfigurations)[0].ID = to.StringPtr("[variables('masterLbIPConfigID')]")
-			loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules = outboundRules
 			masterResources = append(masterResources, publicIPAddress, loadBalancer)
 		}
 		masterNic := createPrivateClusterNetworkInterface(cs)

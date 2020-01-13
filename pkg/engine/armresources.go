@@ -47,9 +47,10 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
+	// Create Standard Load Balancer resource spec for AKS Engine
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
-		!isHostedMaster &&
-		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
+		!isHostedMaster && // skip for AKS
+		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() { // skip if we have a user-configurable Load Balancer ID to join agent pools to
 		isForMaster := false
 		publicIPAddress := CreatePublicIPAddress(isForMaster)
 		loadBalancer := CreateAgentLoadBalancer(cs.Properties, true)
