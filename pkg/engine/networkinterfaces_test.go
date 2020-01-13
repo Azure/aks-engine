@@ -414,6 +414,7 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
 		"[variables('masterInternalLbName')]",
+		"[variables('masterLbName')]",
 	}
 
 	expected.Interface.NetworkSecurityGroup = &network.SecurityGroup{
@@ -427,6 +428,9 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
 					{
 						ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 					},
 				},
 				LoadBalancerInboundNatRules: &[]network.InboundNatRule{},
@@ -503,6 +507,9 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
 					{
 						ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 					},
 				},
 				LoadBalancerInboundNatRules: &[]network.InboundNatRule{},
