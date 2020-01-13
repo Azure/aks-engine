@@ -34071,8 +34071,6 @@ systemctlEnableAndStart() {
 
 configureEtcdUser(){
     useradd -U "etcd"
-    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
-    passwd -u "etcd"
     id "etcd"
 }
 
