@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-cd '/build  || exit'
+cd '/build' || exit
 echo "PWD: $PWD"
 
 required_env_vars=(
