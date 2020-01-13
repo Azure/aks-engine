@@ -14,12 +14,95 @@ import (
 func TestGetK8sVersionComponents(t *testing.T) {
 	g := NewGomegaWithT(t)
 
+	oneDotEighteenDotZero := getK8sVersionComponents("1.18.0", nil)
+	if oneDotEighteenDotZero == nil {
+		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+	}
+	k8sComponent := k8sComponentVersions["1.18"]
+	expected := map[string]string{
+		"kube-scheduler":                                  "kube-scheduler:v1.18.0",
+		"kube-controller-manager":                         "kube-controller-manager:v1.18.0",
+		"kube-apiserver":                                  "kube-apiserver:v1.18.0",
+		common.KubeProxyAddonName:                         "kube-proxy:v1.18.0",
+		"ccm":                                             azureCloudControllerManagerImageReference,
+		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
+		"windowszip":                                      "v1.18.0-1int.zip",
+		common.DashboardAddonName:                         dashboardImageReference,
+		"exechealthz":                                     execHealthZImageReference,
+		"addonresizer":                                    k8sComponent["addon-resizer"],
+		"heapster":                                        heapsterImageReference,
+		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
+		common.CoreDNSAddonName:                           coreDNSImageReference,
+		"kube-dns":                                        kubeDNSImageReference,
+		"addonmanager":                                    k8sComponent["addon-manager"],
+		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
+		"pause":                                           pauseImageReference,
+		common.TillerAddonName:                            tillerImageReference,
+		common.ReschedulerAddonName:                       reschedulerImageReference,
+		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
+		common.ContainerMonitoringAddonName:               omsImageReference,
+		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
+		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
+		"k8s-dns-sidecar":                                 kubeDNSSidecarImageReference,
+		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
+		common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
+		common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
+		common.IPMASQAgentAddonName:                       ipMasqAgentImageReference,
+		common.DNSAutoscalerAddonName:                     dnsAutoscalerImageReference,
+		common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
+		"calico-typha":                                    calicoTyphaImageReference,
+		"calico-cni":                                      calicoCNIImageReference,
+		"calico-node":                                     calicoNodeImageReference,
+		"calico-pod2daemon":                               calicoPod2DaemonImageReference,
+		"calico-cluster-proportional-autoscaler":          calicoClusterProportionalAutoscalerImageReference,
+		common.CiliumAgentContainerName:                   ciliumAgentImageReference,
+		common.CiliumCleanStateContainerName:              ciliumCleanStateImageReference,
+		common.CiliumOperatorContainerName:                ciliumOperatorImageReference,
+		common.CiliumEtcdOperatorContainerName:            ciliumEtcdOperatorImageReference,
+		common.AntreaControllerContainerName:              antreaControllerImageReference,
+		common.AntreaAgentContainerName:                   antreaAgentImageReference,
+		common.AntreaOVSContainerName:                     antreaOVSImageReference,
+		"antrea" + common.AntreaInstallCNIContainerName:   antreaInstallCNIImageReference,
+		common.NMIContainerName:                           aadPodIdentityNMIImageReference,
+		common.MICContainerName:                           aadPodIdentityMICImageReference,
+		common.AzurePolicyAddonName:                       azurePolicyImageReference,
+		common.GatekeeperContainerName:                    gatekeeperImageReference,
+		common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
+		common.CSIProvisionerContainerName:                csiProvisionerImageReference,
+		common.CSIAttacherContainerName:                   csiAttacherImageReference,
+		common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
+		common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
+		common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+		common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
+		common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+		common.KubeFlannelContainerName:                   kubeFlannelImageReference,
+		"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
+		common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
+		common.ScheduledMaintenanceManagerContainerName:   ScheduledMaintenanceManagerImageReference,
+		"nodestatusfreq":                                  DefaultKubernetesNodeStatusUpdateFrequency,
+		"nodegraceperiod":                                 DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
+		"podeviction":                                     DefaultKubernetesCtrlMgrPodEvictionTimeout,
+		"routeperiod":                                     DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+		"backoffretries":                                  strconv.Itoa(DefaultKubernetesCloudProviderBackoffRetries),
+		"backoffjitter":                                   strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffJitter, 'f', -1, 64),
+		"backoffduration":                                 strconv.Itoa(DefaultKubernetesCloudProviderBackoffDuration),
+		"backoffexponent":                                 strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffExponent, 'f', -1, 64),
+		"ratelimitqps":                                    strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPS, 'f', -1, 64),
+		"ratelimitqpswrite":                               strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPSWrite, 'f', -1, 64),
+		"ratelimitbucket":                                 strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucket),
+		"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
+		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+	}
+	g.Expect(oneDotEighteenDotZero).To(Equal(expected))
+
 	oneDotSeventeenDotZero := getK8sVersionComponents("1.17.0", nil)
 	if oneDotSeventeenDotZero == nil {
 		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
 	}
-	k8sComponent := k8sComponentVersions["1.17"]
-	expected := map[string]string{
+	k8sComponent = k8sComponentVersions["1.17"]
+	expected = map[string]string{
 		"kube-scheduler":                                  "kube-scheduler:v1.17.0",
 		"kube-controller-manager":                         "kube-controller-manager:v1.17.0",
 		"kube-apiserver":                                  "kube-apiserver:v1.17.0",
