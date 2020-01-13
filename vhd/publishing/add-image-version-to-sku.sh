@@ -80,5 +80,5 @@ publisher=$(< $SKU_INFO jq -r ".publisher")
 offer=$(< $SKU_INFO jq -r ".offer")
 sku=$(< $SKU_INFO jq -r ".sku_id")
 
-# TODO: Update pub veresions put to take in version.json as a file
+# TODO: Update pub versions put to take in version.json as a file
 (set -x ; pub versions put corevm -p $publisher -o aks-windows -s $sku --version $image_version --vhd-uri $vhd_url --media-name $media_name --label "AKS Base Image for Windows" --desc "AKS Base Image for Windows" --published-date "$published_date")
