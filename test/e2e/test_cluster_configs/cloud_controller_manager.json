@@ -1,0 +1,50 @@
+{
+    "apiModel": {
+        "apiVersion": "vlabs",
+        "properties": {
+            "orchestratorProfile": {
+                "orchestratorType": "Kubernetes",
+                "kubernetesConfig": {
+                    "useCloudControllerManager": true,
+                    "addons": [
+                        {
+                            "name": "azuredisk-csi-driver",
+                            "enabled": true
+                        },
+                        {
+                            "name": "azurefile-csi-driver",
+                            "enabled": true
+                        }
+                    ]
+                }
+            },
+            "masterProfile": {
+                "count": 1,
+                "dnsPrefix": "",
+                "vmSize": "Standard_D2_v3"
+            },
+            "agentPoolProfiles": [
+                {
+                    "name": "agentpool1",
+                    "count": 2,
+                    "vmSize": "Standard_D2_v3",
+                    "availabilityProfile": "VirtualMachineScaleSets"
+                }
+            ],
+            "linuxProfile": {
+                "adminUsername": "azureuser",
+                "ssh": {
+                    "publicKeys": [
+                        {
+                            "keyData": ""
+                        }
+                    ]
+                }
+            },
+            "servicePrincipalProfile": {
+                "clientId": "",
+                "secret": ""
+            }
+        }
+    }
+}

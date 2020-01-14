@@ -7650,6 +7650,13 @@ spec:
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
@@ -7663,6 +7670,13 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-attacher"}}
+              memory: {{ContainerMemLimits "csi-attacher"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-attacher"}}
+              memory: {{ContainerMemReqs "csi-attacher"}}
         - name: cluster-driver-registrar
           image: {{ContainerImage "csi-cluster-driver-registrar"}}
           args:
@@ -7675,6 +7689,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-cluster-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-cluster-driver-registrar"}}
         - name: csi-snapshotter
           image: {{ContainerImage "csi-snapshotter"}}
           args:
@@ -7691,6 +7712,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-snapshotter"}}
+              memory: {{ContainerMemLimits "csi-snapshotter"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-snapshotter"}}
+              memory: {{ContainerMemReqs "csi-snapshotter"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -7700,6 +7728,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -7735,6 +7770,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -7792,6 +7834,13 @@ spec:
             - --csi-address=/csi/csi.sock
             - --connection-timeout=3s
             - --health-port=9602
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: node-driver-registrar
           image: {{ContainerImage "csi-node-driver-registrar"}}
           args:
@@ -7812,6 +7861,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -7860,6 +7916,13 @@ spec:
               name: sys-devices-dir
             - mountPath: /sys/class/scsi_host/
               name: scsi-host-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/disk.csi.azure.com
@@ -8638,6 +8701,13 @@ spec:
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
@@ -8653,6 +8723,13 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-attacher"}}
+              memory: {{ContainerMemLimits "csi-attacher"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-attacher"}}
+              memory: {{ContainerMemReqs "csi-attacher"}}
         - name: cluster-driver-registrar
           image: {{ContainerImage "csi-cluster-driver-registrar"}}
           args:
@@ -8665,6 +8742,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-cluster-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-cluster-driver-registrar"}}
         - name: csi-snapshotter
           image: {{ContainerImage "csi-snapshotter"}}
           args:
@@ -8682,6 +8766,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-snapshotter"}}
+              memory: {{ContainerMemLimits "csi-snapshotter"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-snapshotter"}}
+              memory: {{ContainerMemReqs "csi-snapshotter"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -8691,6 +8782,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -8726,6 +8824,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -8781,6 +8886,13 @@ spec:
             - --csi-address=/csi/csi.sock
             - --connection-timeout=3s
             - --health-port=9602
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: node-driver-registrar
           image: {{ContainerImage "csi-node-driver-registrar"}}
           args:
@@ -8801,6 +8913,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -8849,6 +8968,13 @@ spec:
               name: sys-devices-dir
             - mountPath: /sys/class/scsi_host/
               name: scsi-host-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/disk.csi.azure.com
@@ -9920,6 +10046,13 @@ spec:
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
@@ -9935,6 +10068,13 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-attacher"}}
+              memory: {{ContainerMemLimits "csi-attacher"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-attacher"}}
+              memory: {{ContainerMemReqs "csi-attacher"}}
         - name: cluster-driver-registrar
           image: {{ContainerImage "csi-cluster-driver-registrar"}}
           args:
@@ -9947,6 +10087,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-cluster-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-cluster-driver-registrar"}}
         - name: csi-snapshotter
           image: {{ContainerImage "csi-snapshotter"}}
           args:
@@ -9964,6 +10111,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-snapshotter"}}
+              memory: {{ContainerMemLimits "csi-snapshotter"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-snapshotter"}}
+              memory: {{ContainerMemReqs "csi-snapshotter"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -9973,6 +10127,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -10008,6 +10169,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -10063,6 +10231,13 @@ spec:
             - --csi-address=/csi/csi.sock
             - --connection-timeout=3s
             - --health-port=9602
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: node-driver-registrar
           image: {{ContainerImage "csi-node-driver-registrar"}}
           args:
@@ -10083,6 +10258,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -10131,6 +10313,13 @@ spec:
               name: sys-devices-dir
             - mountPath: /sys/class/scsi_host/
               name: scsi-host-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/disk.csi.azure.com
@@ -30067,6 +30256,13 @@ spec:
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
@@ -30082,6 +30278,13 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-attacher"}}
+              memory: {{ContainerMemLimits "csi-attacher"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-attacher"}}
+              memory: {{ContainerMemReqs "csi-attacher"}}
         - name: cluster-driver-registrar
           image: {{ContainerImage "csi-cluster-driver-registrar"}}
           args:
@@ -30094,6 +30297,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-cluster-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-cluster-driver-registrar"}}
         - name: csi-snapshotter
           image: {{ContainerImage "csi-snapshotter"}}
           args:
@@ -30105,6 +30315,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-snapshotter"}}
+              memory: {{ContainerMemLimits "csi-snapshotter"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-snapshotter"}}
+              memory: {{ContainerMemReqs "csi-snapshotter"}}
         - name: csi-resizer
           image: {{ContainerImage "csi-resizer"}}
           args:
@@ -30117,6 +30334,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-resizer"}}
+              memory: {{ContainerMemLimits "csi-resizer"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-resizer"}}
+              memory: {{ContainerMemReqs "csi-resizer"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -30126,6 +30350,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -30161,6 +30392,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -30216,6 +30454,13 @@ spec:
             - --csi-address=/csi/csi.sock
             - --connection-timeout=3s
             - --health-port=9602
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: node-driver-registrar
           image: {{ContainerImage "csi-node-driver-registrar"}}
           args:
@@ -30236,6 +30481,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: azuredisk
           image: {{ContainerImage "azuredisk-csi"}}
           args:
@@ -30284,6 +30536,13 @@ spec:
               name: sys-devices-dir
             - mountPath: /sys/class/scsi_host/
               name: scsi-host-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azuredisk-csi"}}
+              memory: {{ContainerMemLimits "azuredisk-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azuredisk-csi"}}
+              memory: {{ContainerMemReqs "azuredisk-csi"}}
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/disk.csi.azure.com
@@ -30516,7 +30775,7 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: azuredisk-external-resizer-role
-  apiGroup: rbac.authorization.k8s.io 
+  apiGroup: rbac.authorization.k8s.io
 `)
 
 func k8sAddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYamlBytes() ([]byte, error) {
@@ -30647,6 +30906,13 @@ spec:
           volumeMounts:
             - mountPath: /csi
               name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-provisioner"}}
+              memory: {{ContainerMemLimits "csi-provisioner"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-provisioner"}}
+              memory: {{ContainerMemReqs "csi-provisioner"}}
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
@@ -30660,6 +30926,13 @@ spec:
           volumeMounts:
           - mountPath: /csi
             name: socket-dir
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-attacher"}}
+              memory: {{ContainerMemLimits "csi-attacher"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-attacher"}}
+              memory: {{ContainerMemReqs "csi-attacher"}}
         - name: cluster-driver-registrar
           image: {{ContainerImage "csi-cluster-driver-registrar"}}
           args:
@@ -30672,6 +30945,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-cluster-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-cluster-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-cluster-driver-registrar"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -30681,6 +30961,13 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: azurefile
           image: {{ContainerImage "azurefile-csi"}}
           args:
@@ -30713,6 +31000,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azurefile-csi"}}
+              memory: {{ContainerMemLimits "azurefile-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azurefile-csi"}}
+              memory: {{ContainerMemReqs "azurefile-csi"}}
       volumes:
         - name: socket-dir
           emptyDir: {}
@@ -30755,6 +31049,13 @@ spec:
             - --csi-address=/csi/csi.sock
             - --connection-timeout=3s
             - --health-port=9702
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
         - name: node-driver-registrar
           image: {{ContainerImage "csi-node-driver-registrar"}}
           args:
@@ -30775,6 +31076,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: azurefile
           image: {{ContainerImage "azurefile-csi"}}
           args:
@@ -30817,6 +31125,13 @@ spec:
             - mountPath: /var/lib/waagent/ManagedIdentity-Settings
               readOnly: true
               name: msi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "azurefile-csi"}}
+              memory: {{ContainerMemLimits "azurefile-csi"}}
+            requests:
+              cpu: {{ContainerCPUReqs "azurefile-csi"}}
+              memory: {{ContainerMemReqs "azurefile-csi"}}
       volumes:
         - hostPath:
             path: /var/lib/kubelet/plugins/file.csi.azure.com
