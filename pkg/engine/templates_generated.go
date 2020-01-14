@@ -40829,6 +40829,24 @@ function Get-CniVersion {
     }
 }
 
+function Get-InstanceMetadataServiceTelemetry {
+    $keys = @{}
+
+    try {
+        # Write-Log "Querying instance metadata service..."
+        # Note: 2019-04-30 is latest api available in all clouds
+        $metadata = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
+        # Write-Log ($metadata | ConvertTo-Json)
+
+        $keys.Add("vm_size", $metadata.compute.vmSize)
+    }
+    catch {
+        Write-Log "Error querying instance metadata service."
+    }
+
+    return $keys
+}
+
 # https://stackoverflow.com/a/34559554/697126
 function New-TemporaryDirectory {
     $parent = [System.IO.Path]::GetTempPath()
@@ -41139,6 +41157,11 @@ try
             $vhdId = Get-Content "c:\vhd-id.txt"
         }
         $global:AppInsightsClient.Context.Properties["vhd_id"] = $vhdId
+
+        $imdsProperties = Get-InstanceMetadataServiceTelemetry
+        foreach ($key in $imdsProperties.keys) {
+            $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
+        }
 
         $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
 
