@@ -19,8 +19,9 @@
         "count": 1,
         "vmSize": "Standard_D2_v3",
         "availabilityProfile": "VirtualMachineScaleSets",
-        "scaleSetPriority": "Low",
+        "scaleSetPriority": "Spot",
         "scaleSetEvictionPolicy": "Delete",
+        "spotMaxPrice": 88,
         "storageProfile": "ManagedDisks"
       }
     ],

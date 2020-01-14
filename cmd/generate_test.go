@@ -586,8 +586,8 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "vmss low priority",
-			apiModelPath: "../examples/kubernetes-vmss-low-priority/kubernetes.json",
+			name:         "vmss spot",
+			apiModelPath: "../examples/kubernetes-vmss-spot/kubernetes.json",
 			setArgs:      defaultSet,
 		},
 		{

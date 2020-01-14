@@ -448,9 +448,15 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssVMProfile := compute.VirtualMachineScaleSetVMProfile{}
 
-	if profile.IsLowPriorityScaleSet() {
+	if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
 		vmssVMProfile.Priority = compute.VirtualMachinePriorityTypes(fmt.Sprintf("[variables('%sScaleSetPriority')]", profile.Name))
 		vmssVMProfile.EvictionPolicy = compute.VirtualMachineEvictionPolicyTypes(fmt.Sprintf("[variables('%sScaleSetEvictionPolicy')]", profile.Name))
+	}
+
+	if profile.IsSpotScaleSet() {
+		vmssVMProfile.BillingProfile = &compute.BillingProfile{
+			MaxPrice: profile.SpotMaxPrice,
+		}
 	}
 
 	vmssNICConfig := compute.VirtualMachineScaleSetNetworkConfiguration{
