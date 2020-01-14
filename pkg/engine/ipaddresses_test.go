@@ -33,7 +33,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 		},
 	}
 	isForMaster := true
-	actual := CreatePublicIPAddress(isForMaster)
+	includeDNS := true
+	actual := CreatePublicIPAddress(isForMaster, includeDNS)
 
 	diff := cmp.Diff(actual, expected)
 
@@ -59,7 +60,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 		},
 	}
 	isForMaster = false
-	actual = CreatePublicIPAddress(isForMaster)
+	includeDNS = false
+	actual = CreatePublicIPAddress(isForMaster, includeDNS)
 
 	diff = cmp.Diff(actual, expected)
 

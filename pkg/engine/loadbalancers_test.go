@@ -27,7 +27,7 @@ func TestCreateLoadBalancer(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, false)
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -131,7 +131,7 @@ func TestCreateLoadBalancerStandard(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, false)
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -255,7 +255,7 @@ func TestCreateLoadBalancerVMSS(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, true)
+	actual := CreateMasterLoadBalancer(cs.Properties, true)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{

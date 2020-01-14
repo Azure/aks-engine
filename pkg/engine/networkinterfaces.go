@@ -29,13 +29,11 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 
 	lbBackendAddressPools := []network.BackendAddressPool{}
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		dependencies = append(dependencies, "[variables('masterLbName')]")
-		publicLbPool := network.BackendAddressPool{
-			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-		}
-		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
+	dependencies = append(dependencies, "[variables('masterLbName')]")
+	publicLbPool := network.BackendAddressPool{
+		ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 	}
+	lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 
 	armResource := ARMResource{
 		APIVersion: "[variables('apiVersionNetwork')]",
@@ -66,14 +64,12 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 		},
 	}
 
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		publicNatRules := []network.InboundNatRule{
-			{
-				ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
-			},
-		}
-		loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
+	publicNatRules := []network.InboundNatRule{
+		{
+			ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+		},
 	}
+	loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
 
@@ -157,6 +153,11 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 	}
 
 	var lbBackendAddressPools []network.BackendAddressPool
+	dependencies = append(dependencies, "[variables('masterLbName')]")
+	publicLbPool := network.BackendAddressPool{
+		ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+	}
+	lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 
 	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		internalLbPool := network.BackendAddressPool{
@@ -305,8 +306,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 	} else {
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-		profile.LoadBalancerBackendAddressPoolIDs == nil &&
+	if profile.LoadBalancerBackendAddressPoolIDs == nil &&
 		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 		!isHostedMaster {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
@@ -352,8 +352,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 					)
 				}
 			} else {
-				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 					!isHostedMaster {
 					agentLbBackendAddressPools := network.BackendAddressPool{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
