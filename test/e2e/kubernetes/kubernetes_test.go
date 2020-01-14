@@ -498,15 +498,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("SSH port is blocked")
 			} else {
 				var auditDNodePrefixes []string
-				var lowPriVMSSPrefixes []string
+				var nonRegularPriVMSSPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if profile.IsLowPriorityScaleSet() {
-						lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
+					if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
+						nonRegularPriVMSSPrefixes = append(nonRegularPriVMSSPrefixes, "k8s-"+profile.Name)
 					} else if to.Bool(profile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 					}
@@ -517,7 +517,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sshConn.CopyTo(auditdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodes {
-					if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
+					if !node.HasSubstring(nonRegularPriVMSSPrefixes) && node.IsUbuntu() {
 						var enabled bool
 						if node.HasSubstring(auditDNodePrefixes) {
 							enabled = true
@@ -1366,8 +1366,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
-			if (eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
-                            eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea")) {
+			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
+				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
 				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
