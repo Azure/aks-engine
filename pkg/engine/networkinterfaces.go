@@ -154,17 +154,19 @@ func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInter
 	if cs.Properties.MasterProfile.HasMultipleNodes() {
 		dependencies = append(dependencies, "[variables('masterInternalLbName')]")
 		var lbBackendAddressPools []network.BackendAddressPool
-		dependencies = append(dependencies, "[variables('masterLbName')]")
-		publicLbPool := network.BackendAddressPool{
-			ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-		}
-		lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
 		internalLbPool := network.BackendAddressPool{
 			ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 		}
 		lbBackendAddressPools = append(lbBackendAddressPools, internalLbPool)
-		loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools = &lbBackendAddressPools
-		loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerInboundNatRules = &[]network.InboundNatRule{}
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+			dependencies = append(dependencies, "[variables('masterLbName')]")
+			publicLbPool := network.BackendAddressPool{
+				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+			}
+			lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
+			loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools = &lbBackendAddressPools
+			loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerInboundNatRules = &[]network.InboundNatRule{}
+		}
 	}
 	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 

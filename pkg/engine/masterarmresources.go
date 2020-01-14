@@ -66,7 +66,9 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	masterResources = append(masterResources, masterNic)
 
 	// We don't create a master load balancer in a private cluster + single master vm scenario
-	if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && !p.MasterProfile.HasMultipleNodes()) {
+	if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && !p.MasterProfile.HasMultipleNodes()) &&
+		// And we don't create a master load balancer in a private cluster + Basic LB scenario
+		!(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
 		isForMaster := true
 		var includeDNS bool
 		loadBalancer := CreateMasterLoadBalancer(cs.Properties, false)
