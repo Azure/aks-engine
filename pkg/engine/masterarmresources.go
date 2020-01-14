@@ -41,40 +41,45 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
-	isForMaster := true
-	var includeDNS bool
-	loadBalancer := CreateMasterLoadBalancer(cs.Properties, false)
-	var masterNic NetworkInterfaceARM
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		includeDNS = true
-		masterNic = CreateNetworkInterfaces(cs)
-	} else {
-		includeDNS = false
-		masterNic = createPrivateClusterNetworkInterface(cs)
-
-		var provisionJumpbox bool
-		if kubernetesConfig != nil {
-			provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
+	if kubernetesConfig.PrivateJumpboxProvision() {
+		jumpboxVM := createJumpboxVirtualMachine(cs)
+		masterResources = append(masterResources, jumpboxVM)
+		jumpboxIsManagedDisks :=
+			kubernetesConfig.PrivateJumpboxProvision() &&
+				kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
+		if !jumpboxIsManagedDisks {
+			jumpBoxStorage := createJumpboxStorageAccount()
+			masterResources = append(masterResources, jumpBoxStorage)
 		}
-
-		if provisionJumpbox {
-			jumpboxVM := createJumpboxVirtualMachine(cs)
-			masterResources = append(masterResources, jumpboxVM)
-			jumpboxIsManagedDisks :=
-				kubernetesConfig.PrivateJumpboxProvision() &&
-					kubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == api.ManagedDisks
-			if !jumpboxIsManagedDisks {
-				jumpBoxStorage := createJumpboxStorageAccount()
-				masterResources = append(masterResources, jumpBoxStorage)
-			}
-			jumpboxNSG := createJumpboxNSG()
-			jumpboxNIC := createJumpboxNetworkInterface(cs)
-			jumpboxPublicIP := createJumpboxPublicIPAddress()
-			masterResources = append(masterResources, jumpboxNSG, jumpboxNIC, jumpboxPublicIP)
-		}
+		jumpboxNSG := createJumpboxNSG()
+		jumpboxNIC := createJumpboxNetworkInterface(cs)
+		jumpboxPublicIP := createJumpboxPublicIPAddress()
+		masterResources = append(masterResources, jumpboxNSG, jumpboxNIC, jumpboxPublicIP)
 	}
-	publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
-	masterResources = append(masterResources, publicIPAddress, loadBalancer, masterNic)
+
+	var masterNic NetworkInterfaceARM
+	if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+		masterNic = createPrivateClusterNetworkInterface(cs)
+	} else {
+		masterNic = CreateNetworkInterfaces(cs)
+	}
+	masterResources = append(masterResources, masterNic)
+
+	// We don't create a master load balancer in a private cluster + single master vm scenario
+	if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && !p.MasterProfile.HasMultipleNodes()) {
+		isForMaster := true
+		var includeDNS bool
+		loadBalancer := CreateMasterLoadBalancer(cs.Properties, false)
+		// In a private cluster scenario, the master NIC spec is different,
+		// and the master LB is for outbound access only and doesn't require a DNS record for the public IP
+		if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
+			includeDNS = false
+		} else {
+			includeDNS = true
+		}
+		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
+		masterResources = append(masterResources, publicIPAddress, loadBalancer)
+	}
 
 	if p.MasterProfile.HasMultipleNodes() {
 		internalLB := CreateMasterInternalLoadBalancer(cs)
