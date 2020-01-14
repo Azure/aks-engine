@@ -51,8 +51,6 @@ param(
     $TargetEnvironment
 )
 
-
-
 # These globals will not change between nodes in the same cluster, so they are not
 # passed as powershell parameters
 
@@ -129,12 +127,12 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 
-# Base64 representation of ZIP archive
-$zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
-
 # Telemetry settings
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
+
+# Base64 representation of ZIP archive
+$zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
 # Extract ZIP from script
 [io.file]::WriteAllBytes("scripts.zip", [System.Convert]::FromBase64String($zippedFiles))
@@ -177,16 +175,17 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
+        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
+        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
+        $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
         $global:AppInsightsClient.Context.Properties["os_type"] = "windows"
         $global:AppInsightsClient.Context.Properties["os_version"] = Get-WindowsVersion
         $global:AppInsightsClient.Context.Properties["network_plugin"] = $global:NetworkPlugin
         $global:AppInsightsClient.Context.Properties["network_plugin_version"] = Get-CniVersion
         $global:AppInsightsClient.Context.Properties["network_mode"] = $global:NetworkMode
-        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
-        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
-        $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
+        $global:AppInsightsClient.Context.Properties["subscription_id"] = $global:SubscriptionId
 
         $vhdId = ""
         if (Test-Path "c:\vhd-id.txt") {
