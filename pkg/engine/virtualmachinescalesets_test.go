@@ -556,6 +556,34 @@ func TestCreateAgentVMSS(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	// Test with Spot Scale Set
+	cs.Properties.AgentPoolProfiles[0].ScaleSetPriority = api.ScaleSetPrioritySpot
+	cs.Properties.AgentPoolProfiles[0].SpotMaxPrice = to.Float64Ptr(float64(22))
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+
+	//   Test VirtualMachineProfile.BillingProfile
+	expected.VirtualMachineProfile.BillingProfile = &compute.BillingProfile{
+		MaxPrice: to.Float64Ptr(float64(22)),
+	}
+	diff = cmp.Diff(actual.VirtualMachineProfile.BillingProfile, expected.VirtualMachineProfile.BillingProfile)
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	//    Test VirtualMachineProfile.Priority
+	expected.VirtualMachineProfile.Priority = compute.VirtualMachinePriorityTypes(fmt.Sprintf("[variables('%sScaleSetPriority')]", cs.Properties.AgentPoolProfiles[0].Name))
+	diff = cmp.Diff(actual.VirtualMachineProfile.BillingProfile, expected.VirtualMachineProfile.BillingProfile)
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	//    Test VirtualMachineProfile.EvictionPolicy
+	expected.VirtualMachineProfile.EvictionPolicy = compute.VirtualMachineEvictionPolicyTypes(fmt.Sprintf("[variables('%sScaleSetEvictionPolicy')]", cs.Properties.AgentPoolProfiles[0].Name))
+	diff = cmp.Diff(actual.VirtualMachineProfile.BillingProfile, expected.VirtualMachineProfile.BillingProfile)
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {

@@ -111,6 +111,7 @@ func TestMasterProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected MasterProfile.AvailabilityZones, HasAvailabilityZones returned false after unmarshal")
 	}
 }
+
 func TestAgentPoolProfile(t *testing.T) {
 	// With osType not specified
 	AgentPoolProfileText := `{"count" : 0, "storageProfile" : "StorageAccount", "vnetSubnetID" : "1234"}`
@@ -217,6 +218,26 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if ap.DiskEncryptionSetID == "" {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
+	// With VMSS and Spot VMs
+	AgentPoolProfileText = `{"name":"linuxpool1","osType":"Linux","distro":"rhel","count":1,"vmSize":"Standard_D2_v2",
+"availabilityProfile":"VirtualMachineScaleSets","scaleSetPriority":"Spot","ScaleSetEvictionPolicy":"Delete","SpotMaxPrice":88}`
+	ap = &AgentPoolProfile{}
+	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
+		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
+	}
+
+	if ap.ScaleSetPriority != "Spot" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.ScaleSetPriority != ScaleSetPrioritySpot after unmarshal")
+	}
+
+	if ap.ScaleSetEvictionPolicy != "Delete" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete after unmarshal")
+	}
+
+	if *ap.SpotMaxPrice != float64(88) {
+		t.Fatalf("unexpectedly detected *AgentPoolProfile.SpotMaxPrice != float64(88) after unmarshal")
 	}
 
 	// With osType Linux and coreos distro

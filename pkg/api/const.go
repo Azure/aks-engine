@@ -98,6 +98,8 @@ const (
 	ScaleSetPriorityRegular = "Regular"
 	// ScaleSetPriorityLow means the ScaleSet will use Low-priority VMs
 	ScaleSetPriorityLow = "Low"
+	// ScaleSetPrioritySpot means the ScaleSet will use Spot VMs
+	ScaleSetPrioritySpot = "Spot"
 	// ScaleSetEvictionPolicyDelete is the default Eviction Policy for Low-priority VM ScaleSets
 	ScaleSetEvictionPolicyDelete = "Delete"
 	// ScaleSetEvictionPolicyDeallocate means a Low-priority VM ScaleSet will deallocate, rather than delete, VMs.

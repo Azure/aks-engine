@@ -68,7 +68,7 @@
 						"1",
 						"2"
 					],
-					"scaleSetPriority": "Low",
+					"scalesetPriority": "Spot",
 					"auditDEnabled": true
 				}
 			],

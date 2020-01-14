@@ -166,8 +166,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				var nodeList *node.List
 				var err error
-				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-					nodeList, err = node.GetReady()
+				if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
 				} else {
 					nodeList = &node.List{
 						Nodes: masterNodes,
@@ -211,8 +211,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate cloudprovider config", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodeList, err := node.GetReady()
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
 				err = sshConn.CopyTo(cloudproviderConfigValidateScript)
@@ -265,7 +265,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should display the installed docker runtime on all nodes", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -291,7 +291,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate that every linux node has a root password", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -313,7 +313,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					var largeSKUPrefixes []string
 					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
@@ -355,7 +355,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate all CIS VHD-paved files", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -385,7 +385,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate kernel module configuration", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -414,8 +414,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate installed software packages", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodeList, err := node.GetReady()
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
 				err = sshConn.CopyTo(installedPackagesValidateScript)
@@ -439,7 +439,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate that every linux node has the right sshd config", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -468,7 +468,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate password enforcement configuration", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					nodeList, err := node.GetReady()
 					Expect(err).NotTo(HaveOccurred())
@@ -639,7 +639,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !clusterAutoscalerEngaged {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -653,7 +653,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -670,13 +670,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels specific to masters or agents", func() {
 			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
 			for _, node := range nodes {
 				role := "master"
 				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
-					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 						continue
 					} else {
 						role = "agent"
@@ -1018,7 +1018,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
 					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
 						nodeList, err := node.GetReady()
@@ -1050,8 +1050,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						}
 
 						var expectedReadyNodes int
-						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
-							expectedReadyNodes = len(nodeList.Nodes)
+						if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !clusterAutoscalerEngaged {
+							expectedReadyNodes = len(nodes)
 							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 						} else {
 							expectedReadyNodes = -1
@@ -1266,7 +1266,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should create pv with zone labels and node affinity", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
 					if !(common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
 						to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)) {
@@ -1855,8 +1855,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have healthy time synchronization", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodeList, err := node.GetReady()
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				timeSyncValidateScript := "time-sync-validate.sh"
 				err = sshConn.CopyTo(timeSyncValidateScript)

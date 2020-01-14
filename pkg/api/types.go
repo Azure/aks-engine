@@ -569,6 +569,7 @@ type AgentPoolProfile struct {
 	AvailabilityProfile                 string               `json:"availabilityProfile"`
 	ScaleSetPriority                    string               `json:"scaleSetPriority,omitempty"`
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty"`
+	SpotMaxPrice                        *float64             `json:"spotMaxPrice,omitempty"`
 	StorageProfile                      string               `json:"storageProfile,omitempty"`
 	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
@@ -1196,10 +1197,10 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
-// HasLowPriorityScaleset returns true if any one node pool has a low-priority scaleset configuration
-func (p *Properties) HasLowPriorityScaleset() bool {
+// HasNonRegularPriorityScaleset returns true if any one node pool has a low or spot priority scaleset configuration
+func (p *Properties) HasNonRegularPriorityScaleset() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.IsLowPriorityScaleSet() {
+		if agentPoolProfile.IsLowPriorityScaleSet() || agentPoolProfile.IsSpotScaleSet() {
 			return true
 		}
 	}
@@ -1480,6 +1481,11 @@ func (a *AgentPoolProfile) IsVirtualMachineScaleSets() bool {
 // IsLowPriorityScaleSet returns true if the VMSS is Low Priority
 func (a *AgentPoolProfile) IsLowPriorityScaleSet() bool {
 	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPriorityLow
+}
+
+// IsSpotScaleSet returns true if the VMSS is Spot Scale Set
+func (a *AgentPoolProfile) IsSpotScaleSet() bool {
+	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPrioritySpot
 }
 
 // IsManagedDisks returns true if the customer specified disks
