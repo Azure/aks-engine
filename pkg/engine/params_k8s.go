@@ -128,8 +128,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig == nil ||
-			!kubernetesConfig.UseManagedIdentity ||
-			properties.IsHostedMasterProfile() {
+			!kubernetesConfig.UseManagedIdentity {
 			servicePrincipalProfile := properties.ServicePrincipalProfile
 
 			if servicePrincipalProfile != nil {
@@ -152,6 +151,17 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 						addValue(parametersMap, "servicePrincipalObjectId", servicePrincipalProfile.ObjectID)
 					}
 				}
+			}
+		}
+		// The cluster is AKS-hosted cluster and it uses managed identity
+		if kubernetesConfig.UseManagedIdentity && properties.IsHostedMasterProfile() {
+			servicePrincipalProfile := properties.ServicePrincipalProfile
+			if servicePrincipalProfile == nil || servicePrincipalProfile.ClientID == "" || servicePrincipalProfile.Secret == "" {
+				addValue(parametersMap, "servicePrincipalClientId", "msi")
+				addValue(parametersMap, "servicePrincipalClientSecret", "msi")
+			} else {
+				addValue(parametersMap, "servicePrincipalClientId", servicePrincipalProfile.ClientID)
+				addValue(parametersMap, "servicePrincipalClientSecret", servicePrincipalProfile.Secret)
 			}
 		}
 
