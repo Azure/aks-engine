@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -96,7 +97,7 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 		var roleAssignments = make([]interface{}, masterProfile.Count)
 
 		for masterIdx := 0; masterIdx < masterProfile.Count; masterIdx++ {
-			masterVmReference := fmt.Sprintf("reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), %d)), '2017-03-30', 'Full').identity.principalId", masterIdx)
+			masterVMReference := fmt.Sprintf("reference(resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(variables('masterVMNamePrefix'), %d)), '2017-03-30', 'Full').identity.principalId", masterIdx)
 
 			assignment := SystemRoleAssignmentARM{
 				ARMResource: ARMResource{
@@ -111,13 +112,13 @@ func createKubernetesMasterRoleAssignmentForAgentPools(masterProfile *api.Master
 				},
 				// Reference to the subnet of the worker VMs:
 				RoleAssignment: authorization.RoleAssignment{
-					Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVnet'), '/Microsoft.Authorization/', guid(uniqueString(%s)))]", agentPool.Name, masterVmReference)),
+					Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVnet'), '/Microsoft.Authorization/', guid(uniqueString(%s)))]", agentPool.Name, masterVMReference)),
 					Type: to.StringPtr("Microsoft.Network/virtualNetworks/providers/roleAssignments"),
 					RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 						// Built-in role `network contributor`:
 						RoleDefinitionID: to.StringPtr("[variables('networkContributorRoleDefinitionId')]"),
 						// The MSI of the master VM:
-						PrincipalID: to.StringPtr(fmt.Sprintf("[%s]", masterVmReference)),
+						PrincipalID: to.StringPtr(fmt.Sprintf("[%s]", masterVMReference)),
 					},
 				},
 			}
