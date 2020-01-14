@@ -3079,11 +3079,6 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetWindowsDockerVersion() to equal default KubernetesWindowsDockerVersion, got %s", dv)
 	}
 
-	windowsSku := w.GetWindowsSku()
-	if windowsSku != KubernetesDefaultWindowsSku {
-		t.Fatalf("Expected GetWindowsSku() to equal default KubernetesDefaultWindowsSku, got %s", windowsSku)
-	}
-
 	update := w.GetEnableWindowsUpdate()
 	if !update {
 		t.Fatalf("Expected GetEnableWindowsUpdate() to equal default 'true', got %t", update)
@@ -3117,11 +3112,6 @@ func TestWindowsProfile(t *testing.T) {
 	dv = w.GetWindowsDockerVersion()
 	if dv != "18.03.1-ee-3" {
 		t.Fatalf("Expected GetWindowsDockerVersion() to equal 18.03.1-ee-3, got %s", dv)
-	}
-
-	windowsSku = w.GetWindowsSku()
-	if windowsSku != "Datacenter-Core-1809-with-Containers-smalldisk" {
-		t.Fatalf("Expected GetWindowsSku() to equal Datacenter-Core-1809-with-Containers-smalldisk, got %s", windowsSku)
 	}
 
 	se := w.SSHEnabled
@@ -3196,6 +3186,88 @@ func TestWindowsProfileCustomOS(t *testing.T) {
 			}
 			if c.w.HasImageGallery() != c.expectedGallery {
 				t.Errorf("expected HasImageGallery() to return %t but instead returned %t", c.expectedGallery, c.w.HasImageGallery())
+			}
+		})
+	}
+}
+
+func TestWindowsProfileDefaultOS(t *testing.T) {
+	cloudSpecConfig := AzureEnvironmentSpecConfig{
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				WindowsOSVersion("Test"): AzureOSImageConfig{
+					ImageOffer:     "aks-windows",
+					ImageSku:       "2019-datacenter-core-smalldisk-1912",
+					ImagePublisher: "microsoft-aks",
+					ImageVersion:   "17763.864.191211",
+				},
+			},
+			DefaultOSImageVersion: WindowsOSVersion("Test"),
+		},
+	}
+	cases := []struct {
+		name              string
+		w                 WindowsProfile
+		expectedPublisher string
+		expectedOffer     string
+		expectedSku       string
+		expectedVersion   string
+		expectedAKSOSVer  string
+	}{
+		{
+			name: "get specified values",
+			w: WindowsProfile{
+				WindowsPublisher:  "FooPublisher",
+				WindowsOffer:      "FooOffer",
+				WindowsSku:        "FooSku",
+				ImageVersion:      "FooVersion",
+				AKSOSImageVersion: "Test",
+			},
+			expectedPublisher: "FooPublisher",
+			expectedOffer:     "FooOffer",
+			expectedSku:       "FooSku",
+			expectedVersion:   "FooVersion",
+		},
+		{
+			name: "get default values",
+			w: WindowsProfile{
+				WindowsPublisher:  "",
+				WindowsOffer:      "",
+				WindowsSku:        "",
+				ImageVersion:      "",
+				AKSOSImageVersion: "Test",
+			},
+			expectedPublisher: "microsoft-aks",
+			expectedOffer:     "aks-windows",
+			expectedSku:       "2019-datacenter-core-smalldisk-1912",
+			expectedVersion:   "17763.864.191211",
+		},
+		{
+			name:              "get empty values",
+			w:                 WindowsProfile{},
+			expectedPublisher: "",
+			expectedOffer:     "",
+			expectedSku:       "",
+			expectedVersion:   "",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			if c.w.GetWindowsPublisher(cloudSpecConfig) != c.expectedPublisher {
+				t.Errorf("expected GetWindowsPublisher() to return %s but instead returned %s", c.expectedPublisher, c.w.GetWindowsPublisher(cloudSpecConfig))
+			}
+			if c.w.GetWindowsOffer(cloudSpecConfig) != c.expectedOffer {
+				t.Errorf("expected GetWindowsOffer() to return %s but instead returned %s", c.expectedOffer, c.w.GetWindowsOffer(cloudSpecConfig))
+			}
+			if c.w.GetWindowsSku(cloudSpecConfig) != c.expectedSku {
+				t.Errorf("expected GetWindowsSku() to return %s but instead returned %s", c.expectedSku, c.w.GetWindowsSku(cloudSpecConfig))
+			}
+			if c.w.GetWindowsImageVersion(cloudSpecConfig) != c.expectedVersion {
+				t.Errorf("expected GetWindowsImageVersion() to return %s but instead returned %s", c.expectedVersion, c.w.GetWindowsImageVersion(cloudSpecConfig))
 			}
 		})
 	}

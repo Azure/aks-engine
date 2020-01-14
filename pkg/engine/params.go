@@ -221,11 +221,10 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 			addValue(parametersMap, "agentWindowsImageResourceGroup", properties.WindowsProfile.ImageRef.ResourceGroup)
 			addValue(parametersMap, "agentWindowsImageName", properties.WindowsProfile.ImageRef.Name)
 		} else {
-			addValue(parametersMap, "agentWindowsPublisher", properties.WindowsProfile.WindowsPublisher)
-			addValue(parametersMap, "agentWindowsOffer", properties.WindowsProfile.WindowsOffer)
-			addValue(parametersMap, "agentWindowsSku", properties.WindowsProfile.GetWindowsSku())
-			addValue(parametersMap, "agentWindowsVersion", properties.WindowsProfile.ImageVersion)
-
+			addValue(parametersMap, "agentWindowsPublisher", properties.WindowsProfile.GetWindowsPublisher(cloudSpecConfig))
+			addValue(parametersMap, "agentWindowsOffer", properties.WindowsProfile.GetWindowsOffer(cloudSpecConfig))
+			addValue(parametersMap, "agentWindowsSku", properties.WindowsProfile.GetWindowsSku(cloudSpecConfig))
+			addValue(parametersMap, "agentWindowsVersion", properties.WindowsProfile.GetWindowsImageVersion(cloudSpecConfig))
 		}
 
 		addValue(parametersMap, "windowsDockerVersion", properties.WindowsProfile.GetWindowsDockerVersion())

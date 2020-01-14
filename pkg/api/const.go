@@ -37,6 +37,11 @@ const (
 	ACC1604           Distro = "acc-16.04"
 )
 
+// WindowsOSVersion string consts
+const (
+	AKSWindowsServer2019 WindowsOSVersion = "aks-windows-server-2019"
+)
+
 const (
 	// SwarmVersion is the Swarm orchestrator version
 	SwarmVersion = "swarm:1.1.0"
@@ -48,8 +53,6 @@ const (
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
 	KubernetesWindowsDockerVersion = "19.03.2"
-	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
-	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
 
 // validation values

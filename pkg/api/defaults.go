@@ -65,7 +65,8 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 	}
 
 	if cs.Properties.WindowsProfile != nil {
-		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
+		cloudSpecConfig := cs.GetCloudSpecConfig()
+		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale, cloudSpecConfig)
 	}
 
 	properties.setTelemetryProfileDefaults()
@@ -692,29 +693,22 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 	}
 }
 
-// setWindowsProfileDefaults sets default WindowsProfile values
-func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
+// setWindowsProfileDefaults sets default Windows OS image version
+func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool, cloudSpecConfig AzureEnvironmentSpecConfig) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
-		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
-		}
-		if windowsProfile.WindowsOffer == "" {
-			windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
-		}
-		if windowsProfile.WindowsSku == "" {
-			windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
-		}
-
-		if windowsProfile.ImageVersion == "" {
-			// default versions are specific to a publisher/offer/sku
-			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
-			} else {
-				windowsProfile.ImageVersion = "latest"
+		if windowsProfile.WindowsPublisher != "" && windowsProfile.WindowsOffer != "" && windowsProfile.WindowsSku != "" && windowsProfile.ImageVersion == "" {
+			// default versions are specific to a publisher/offer/sku	
+			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {	
+				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion	
+			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {	
+				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion	
+			} else {	
+				windowsProfile.ImageVersion = "latest"	
 			}
+		}
+		if windowsProfile.AKSOSImageVersion == "" {
+			windowsProfile.AKSOSImageVersion = cloudSpecConfig.AKSWindowsSpecConfig.DefaultOSImageVersion
 		}
 	}
 }

@@ -171,6 +171,9 @@ type WindowsProfile struct {
 	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
 	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
 	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
+	// AKSOSImageVersion represents the AKS Windows OS image version for all Windows agent pools. For back-compatible,
+	// it is only used to fill non-empty ImageVersion, WindowsPublisher, WindowsOffer and WindowsSku.
+	AKSOSImageVersion WindowsOSVersion `json:"aksOSImageVersion,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -552,6 +555,9 @@ type OSType string
 
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
+
+// WindowsOSVersion represents Windows OS version to use for Windows VMs
+type WindowsOSVersion string
 
 // DependenciesLocation represents location to retrieve the dependencies.
 type DependenciesLocation string

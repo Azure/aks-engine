@@ -13,6 +13,7 @@ type AzureEnvironmentSpecConfig struct {
 	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
+	AKSWindowsSpecConfig AKSWindowsSpecConfig          `json:"aksWindowsSpecConfig,omitempty"`
 }
 
 //DockerSpecConfig is the configurations of docker
@@ -64,6 +65,12 @@ type AzureOSImageConfig struct {
 	ImageSku       string `json:"imageSku,omitempty"`
 	ImagePublisher string `json:"imagePublisher,omitempty"`
 	ImageVersion   string `json:"imageVersion,omitempty"`
+}
+
+// AKSWindowsSpecConfig describes the configurations of AKS Windows
+type AKSWindowsSpecConfig struct {
+	OSImageConfig         map[WindowsOSVersion]AzureOSImageConfig `json:"osImageConfig,omitempty"`
+	DefaultOSImageVersion WindowsOSVersion                        `json:"defaultOSImageVersion,omitempty"`
 }
 
 // AzureTelemetryPID represents the current telemetry ID
@@ -213,6 +220,12 @@ var (
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 			ACC1604:           ACC1604OSImageConfig,
 		},
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				AKSWindowsServer2019: AKSWindowsServer2019OSImageConfig,
+			},
+			DefaultOSImageVersion: AKSWindowsServer2019,
+		},
 	}
 
 	//AzureGermanCloudSpec is the German cloud config.
@@ -234,6 +247,12 @@ var (
 			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
 			AKS1804Deprecated: Ubuntu1604OSImageConfig, // for back-compat
 		},
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				AKSWindowsServer2019: AKSWindowsServer2019OSImageConfig,
+			},
+			DefaultOSImageVersion: AKSWindowsServer2019,
+		},
 	}
 
 	//AzureUSGovernmentCloudSpec is the US government config.
@@ -254,6 +273,12 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+		},
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				AKSWindowsServer2019: AKSWindowsServer2019OSImageConfig,
+			},
+			DefaultOSImageVersion: AKSWindowsServer2019,
 		},
 	}
 
@@ -301,6 +326,12 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
+		},
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				AKSWindowsServer2019: AKSWindowsServer2019OSImageConfig,
+			},
+			DefaultOSImageVersion: AKSWindowsServer2019,
 		},
 	}
 

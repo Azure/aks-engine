@@ -11,6 +11,7 @@ type AzureEnvironmentSpecConfig struct {
 	DCOSSpecConfig       DCOSSpecConfig                `json:"-"`
 	EndpointConfig       AzureEndpointConfig           `json:"endpointConfig,omitempty"`
 	OSImageConfig        map[Distro]AzureOSImageConfig `json:"osImageConfig,omitempty"`
+	AKSWindowsSpecConfig AKSWindowsSpecConfig		   `json:"aksWindowsSpecConfig,omitempty"`
 }
 
 //DockerSpecConfig is the configurations of docker
@@ -62,4 +63,10 @@ type AzureOSImageConfig struct {
 	ImageSku       string `json:"imageSku,omitempty"`
 	ImagePublisher string `json:"imagePublisher,omitempty"`
 	ImageVersion   string `json:"imageVersion,omitempty"`
+}
+
+// AKSWindowsSpecConfig describes the configurations of AKS Windows
+type AKSWindowsSpecConfig struct {
+	OSImageConfig         map[WindowsOSVersion]AzureOSImageConfig `json:"osImageConfig,omitempty"`
+	DefaultOSImageVersion WindowsOSVersion                        `json:"defaultOSImageVersion,omitempty"`
 }

@@ -26,7 +26,7 @@ const (
 	Linux   OSType = "Linux"
 )
 
-// the LinuxDistros supported by vlabs
+// Distro string consts supported by vlabs
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
@@ -38,6 +38,11 @@ const (
 	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
 	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
 	ACC1604           Distro = "acc-16.04"
+)
+
+// WindowsOSVersion string consts
+const (
+	AKSWindowsServer2019 WindowsOSVersion = "aks-windows-server-2019"
 )
 
 // validation values

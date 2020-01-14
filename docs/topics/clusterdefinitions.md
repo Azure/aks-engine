@@ -672,6 +672,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | ----------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | adminUsername                 | yes      | Username for the Windows adminstrator account created on each Windows node                                                                                                                                                                      |
 | adminPassword                 | yes      | Password for the Windows adminstrator account created on each Windows node                                                                                                                                                                      |
+| aksOSImageVersion             | no       | AKS Windows OS image version used to find Windows VM to deploy from marketplace. Default: `aks-windows-server-2019`. This will be always set to the latest image with the latest WIndows patches after being validated by the AKS Engine team. You can specify this or below 4 values. This value will be ignored if below 4 values are set.                          |
 | windowsPublisher              | no       | Publisher used to find Windows VM to deploy from marketplace. Default: `microsoft-aks`                                                                                                                                                          |
 | windowsOffer                  | no       | Offer used to find Windows VM to deploy from marketplace. Default: `aks-windows`                                                                                                                                                                |
 | windowsSku                    | no       | SKU usedto find Windows VM to deploy from marketplace. Default: `2019-datacenter-core-smalldisk`                                                                                                                                                |
@@ -717,6 +718,18 @@ If you want to use a specific image then `windowsPublisher`, `windowsOffer`, `wi
             "imageVersion": "2019.0.20181107"
      },
 ```
+
+Or leave `windowsPublisher`, `windowsOffer`, `windowsSku`, and `imageVersion` to empty and set `aksOSImageVersion`:
+
+```json
+"windowsProfile": {
+            "adminUsername": "...",
+            "adminPassword": "...",
+            "aksOSImageVersion": "aks-windows-server-2019"
+     },
+```
+
+You can find all avilable AKS images in [WindowsOSVersion string consts](../../pkg/api/const.go#L40).
 
 ##### Custom Images
 

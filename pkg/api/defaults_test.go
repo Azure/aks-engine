@@ -1664,6 +1664,12 @@ func TestDistroDefaults(t *testing.T) {
 
 func TestWindowsProfileDefaults(t *testing.T) {
 
+	var mockAzureEnvironmentSpecConfig = AzureEnvironmentSpecConfig{
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			DefaultOSImageVersion: AKSWindowsServer2019,
+		},
+	}
+
 	var tests = []struct {
 		name                   string // test case name
 		windowsProfile         WindowsProfile
@@ -1674,138 +1680,131 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			"defaults",
 			WindowsProfile{},
 			WindowsProfile{
-				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+				AKSOSImageVersion:     AKSWindowsServer2019,
 				AdminUsername:         "",
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
 				SSHEnabled:            false,
+				WindowsPublisher:      "",
+				WindowsOffer:          "",
+				WindowsSku:            "",
+				ImageVersion:          "",
 			},
 			false,
 		},
 		{
 			"aks vhd current version",
 			WindowsProfile{
-				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
+				AKSOSImageVersion: AKSWindowsServer2019,
+				WindowsPublisher:  "FooPublisher",
+				WindowsOffer:      "FooOffer",
+				WindowsSku:        "FooSku",
+				ImageVersion:      "",
 			},
 			WindowsProfile{
-				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+				AKSOSImageVersion:     AKSWindowsServer2019,
 				AdminUsername:         "",
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
 				SSHEnabled:            false,
+				WindowsPublisher:      "FooPublisher",
+				WindowsOffer:          "FooOffer",
+				WindowsSku:            "FooSku",
+				ImageVersion:          "latest",
 			},
 			false,
 		},
 		{
 			"aks vhd specific version",
 			WindowsProfile{
-				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:     "override",
+				AKSOSImageVersion: "override",
+				WindowsPublisher:  "FooPublisher",
+				WindowsOffer:      "FooOffer",
+				WindowsSku:        "FooSku",
+				ImageVersion:      "FooVersion",
 			},
 			WindowsProfile{
-				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:          "override",
+				AKSOSImageVersion:     "override",
 				AdminUsername:         "",
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
 				SSHEnabled:            false,
+				WindowsPublisher:      "FooPublisher",
+				WindowsOffer:          "FooOffer",
+				WindowsSku:            "FooSku",
+				ImageVersion:          "FooVersion",
 			},
 			false,
 		},
 		{
-			"vanilla vhd current version",
+			"aks vhd specific version",
 			WindowsProfile{
-				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
+				AKSOSImageVersion: "override",
+				WindowsPublisher:  "",
+				WindowsOffer:      "",
+				WindowsSku:        "",
+				ImageVersion:      "",
 			},
 			WindowsProfile{
+				AKSOSImageVersion:     "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+				WindowsPublisher:      "",
+				WindowsOffer:          "",
+				WindowsSku:            "",
+				ImageVersion:          "",
+			},
+			false,
+		},
+		{
+			"aks vhd specify AKSWindowsServer2019OSImageConfig",
+			WindowsProfile{
+				AKSOSImageVersion: "override",
+				WindowsPublisher:  AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:      AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:        AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:      "",
+			},
+			WindowsProfile{
+				AKSOSImageVersion:     "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+			},
+			false,
+		},
+		{
+			"aks vhd specific WindowsServer2019OSImageConfig",
+			WindowsProfile{
+				AKSOSImageVersion: "override",
+				WindowsPublisher:  WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:      WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:        WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:      "",
+			},
+			WindowsProfile{
+				AKSOSImageVersion:     "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
 				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
 				ImageVersion:          WindowsServer2019OSImageConfig.ImageVersion,
-				AdminUsername:         "",
-				AdminPassword:         "",
-				WindowsImageSourceURL: "",
-				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
-			},
-			false,
-		},
-		{
-			"vanilla vhd spepcific version",
-			WindowsProfile{
-				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:     "override",
-			},
-			WindowsProfile{
-				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
-				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
-				ImageVersion:          "override",
-				AdminUsername:         "",
-				AdminPassword:         "",
-				WindowsImageSourceURL: "",
-				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
-			},
-			false,
-		},
-		{
-			"user overrides latest version",
-			WindowsProfile{
-				WindowsPublisher: "override",
-				WindowsOffer:     "override",
-				WindowsSku:       "override",
-			},
-			WindowsProfile{
-				WindowsPublisher:      "override",
-				WindowsOffer:          "override",
-				WindowsSku:            "override",
-				ImageVersion:          "latest",
-				AdminUsername:         "",
-				AdminPassword:         "",
-				WindowsImageSourceURL: "",
-				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
-			},
-			false,
-		},
-		{
-			"user overrides specific version",
-			WindowsProfile{
-				WindowsPublisher: "override",
-				WindowsOffer:     "override",
-				WindowsSku:       "override",
-				ImageVersion:     "override",
-			},
-			WindowsProfile{
-				WindowsPublisher:      "override",
-				WindowsOffer:          "override",
-				WindowsSku:            "override",
-				ImageVersion:          "override",
-				AdminUsername:         "",
-				AdminPassword:         "",
-				WindowsImageSourceURL: "",
-				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
 			},
 			false,
 		},
@@ -1821,7 +1820,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			if test.isAzureStack {
 				mockAPI.CustomCloudProfile = &CustomCloudProfile{}
 			}
-			mockAPI.setWindowsProfileDefaults(false, false)
+			mockAPI.setWindowsProfileDefaults(false, false, mockAzureEnvironmentSpecConfig)
 
 			actual := mockAPI.WindowsProfile
 			expected := &test.expectedWindowsProfile
@@ -2501,6 +2500,12 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			},
 			AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 		},
+		AKSWindowsSpecConfig: AKSWindowsSpecConfig{
+			OSImageConfig: map[WindowsOSVersion]AzureOSImageConfig{
+				AKSWindowsServer2019: AKSWindowsServer2019OSImageConfig,
+			},
+			DefaultOSImageVersion: AKSWindowsServer2019,
+		},
 	}
 	mockCSPCustom.CustomCloudProfile.AzureEnvironmentSpecConfig = &customCloudSpec
 	mockCSCustom.Properties.CustomCloudProfile = mockCSPCustom.CustomCloudProfile
@@ -2511,11 +2516,11 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	})
 
 	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec); diff != "" {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
+		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file %s", diff)
 	}
 
 	if diff := cmp.Diff(mockCSCustom.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &customCloudSpec); diff != "" {
-		t.Errorf("setCustomCloudProfileDefaults(): did not set CustomCloudProfile.AzureEnvironmentSpecConfig with customer input")
+		t.Errorf("setCustomCloudProfileDefaults(): did not set CustomCloudProfile.AzureEnvironmentSpecConfig with customer input %s", diff)
 	}
 
 	// Test that default assignment flow set the value if the field is partially  missing in user-provided config

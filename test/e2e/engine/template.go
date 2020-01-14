@@ -285,14 +285,14 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return nil, errors.New("Can't guess a Windows version without Windows nodes in the cluster")
 	}
 
-	windowsSku := e.ExpandedDefinition.Properties.WindowsProfile.GetWindowsSku()
+	windowsSku := e.ExpandedDefinition.Properties.WindowsProfile.WindowsSku
 	// tip: curl -L https://mcr.microsoft.com/v2/windows/servercore/tags/list
 	//      curl -L https://mcr.microsoft.com/v2/windows/servercore/iis/tags/list
 	switch {
 	case strings.Contains(windowsSku, "1903"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1903",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1903"}, nil
-	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
+	case windowsSku == "", strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
@@ -301,7 +301,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 	case strings.Contains(windowsSku, "1709"):
 		return nil, errors.New("Windows Server version 1709 is out of support")
 	}
-	return nil, errors.New("Unknown Windows version. GetWindowsSku() = " + windowsSku)
+	return nil, errors.New("Unknown Windows version. WindowsProfile.WindowsSku = " + windowsSku)
 }
 
 // HasAddon will return true if an addon is enabled

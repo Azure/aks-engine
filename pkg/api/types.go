@@ -219,6 +219,9 @@ type WindowsProfile struct {
 	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
 	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
 	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
+	// AKSOSImageVersion represents the AKS Windows OS image version for all Windows agent pools. For back-compatible,
+	// it is only used to fill non-empty ImageVersion, WindowsPublisher, WindowsOffer and WindowsSku.
+	AKSOSImageVersion WindowsOSVersion `json:"aksOSImageVersion,omitempty"`
 }
 
 // ProvisioningState represents the current state of container service resource.
@@ -675,6 +678,9 @@ type OSType string
 
 // Distro represents Linux distro to use for Linux VMs
 type Distro string
+
+// WindowsOSVersion represents Windows OS version to use for Windows VMs
+type WindowsOSVersion string
 
 // HostedMasterProfile defines properties for a hosted master
 type HostedMasterProfile struct {
@@ -1623,20 +1629,56 @@ func (w *WindowsProfile) GetWindowsDockerVersion() string {
 	return KubernetesWindowsDockerVersion
 }
 
-// GetWindowsSku gets the marketplace sku specified (such as Datacenter-Core-1809-with-Containers-smalldisk) or returns default value
-func (w *WindowsProfile) GetWindowsSku() string {
-	if w.WindowsSku != "" {
-		return w.WindowsSku
-	}
-	return KubernetesDefaultWindowsSku
-}
-
 // GetEnableWindowsUpdate gets the flag for enable windows update or returns the default value
 func (w *WindowsProfile) GetEnableWindowsUpdate() bool {
 	if w.EnableAutomaticUpdates != nil {
 		return *w.EnableAutomaticUpdates
 	}
 	return DefaultEnableAutomaticUpdates
+}
+
+// GetWindowsPublisher gets the Windows OS image publisher
+func (w *WindowsProfile) GetWindowsPublisher(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	// setWindowsProfileDefaults will set the default AKS Windows OS image version if it is not set. But we still check whether AKSOSImageVersion
+	// is empty here for robustness. e.g. rotate_certs.go does not call SetPropertiesDefaults before calling GenerateTemplateV2.
+	if w.WindowsPublisher == "" && w.AKSOSImageVersion != "" {
+		return cloudSpecConfig.AKSWindowsSpecConfig.OSImageConfig[w.AKSOSImageVersion].ImagePublisher
+	}
+
+	return w.WindowsPublisher
+}
+
+// GetWindowsOffer gets the Windows OS image offer
+func (w *WindowsProfile) GetWindowsOffer(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	// setWindowsProfileDefaults will set the default AKS Windows OS image version if it is not set. But we still check whether AKSOSImageVersion
+	// is empty here for robustness. e.g. rotate_certs.go does not call SetPropertiesDefaults before calling GenerateTemplateV2.
+	if w.WindowsOffer == "" && w.AKSOSImageVersion != "" {
+		return cloudSpecConfig.AKSWindowsSpecConfig.OSImageConfig[w.AKSOSImageVersion].ImageOffer
+	}
+
+	return w.WindowsOffer
+}
+
+// GetWindowsSku gets the Windows OS image sku
+func (w *WindowsProfile) GetWindowsSku(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	// setWindowsProfileDefaults will set the default AKS Windows OS image version if it is not set. But we still check whether AKSOSImageVersion
+	// is empty here for robustness. e.g. rotate_certs.go does not call SetPropertiesDefaults before calling GenerateTemplateV2.
+	if w.WindowsSku == "" && w.AKSOSImageVersion != "" {
+		return cloudSpecConfig.AKSWindowsSpecConfig.OSImageConfig[w.AKSOSImageVersion].ImageSku
+	}
+
+	return w.WindowsSku
+}
+
+// GetWindowsImageVersion gets the Windows OS image version
+func (w *WindowsProfile) GetWindowsImageVersion(cloudSpecConfig AzureEnvironmentSpecConfig) string {
+	// setWindowsProfileDefaults will set the default AKS Windows OS image version if it is not set. But we still check whether AKSOSImageVersion
+	// is empty here for robustness. e.g. rotate_certs.go does not call SetPropertiesDefaults before calling GenerateTemplateV2.
+	if w.ImageVersion == "" && w.AKSOSImageVersion != "" {
+		return cloudSpecConfig.AKSWindowsSpecConfig.OSImageConfig[w.AKSOSImageVersion].ImageVersion
+	}
+
+	return w.ImageVersion
 }
 
 // HasSecrets returns true if the customer specified secrets to install
