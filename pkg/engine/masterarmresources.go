@@ -125,6 +125,23 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	if isKMSEnabled {
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
+
+	// TODO: This is only necessary if the resource group of the masters is different from the RG of the node pool
+	// subnet. But when we generate the template we don't know to which RG it will be deployed to. To solve this we
+	// would have to add the necessary condition into the template. For the resources we can use the `condition` field
+	// but how can we conditionally declare the dependencies? Perhaps by creating a variable for the dependency array
+	// and conditionally adding more dependencies.
+	if kubernetesConfig.SystemAssignedIDEnabled() &&
+		// The fix for ticket 2373 is only available for individual VMs / AvailabilitySet.
+		cs.Properties.MasterProfile.IsAvailabilitySet() {
+		masterRoleAssignmentForAgentPools := createKubernetesMasterRoleAssignmentForAgentPools(cs.Properties.MasterProfile, cs.Properties.AgentPoolProfiles)
+
+		for _, assignmentForAgentPool := range masterRoleAssignmentForAgentPools {
+			masterResources = append(masterResources, assignmentForAgentPool)
+			masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, *assignmentForAgentPool.Name)
+		}
+	}
+
 	masterResources = append(masterResources, masterCSE)
 
 	if cs.IsAKSBillingEnabled() {

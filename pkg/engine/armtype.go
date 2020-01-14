@@ -190,3 +190,11 @@ type DeploymentARM struct {
 	DeploymentARMResource
 	resources.DeploymentExtended
 }
+
+// TODO: Should we skip this type and add the `ResourceGroup` field directly to `DeploymentARM` ?
+// DeploymentWithResourceGroupARM is like `DeploymentARM` but includes `ResourceGroup`.
+type DeploymentWithResourceGroupARM struct {
+	DeploymentARMResource
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
+	resources.DeploymentExtended
+}

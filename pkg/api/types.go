@@ -1373,6 +1373,11 @@ func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
 	return m.AvailabilityProfile == VirtualMachineScaleSets
 }
 
+// IsAvailabilitySet returns true if the master availability profile is availability set
+func (m *MasterProfile) IsAvailabilitySet() bool {
+	return m.AvailabilityProfile == AvailabilitySet
+}
+
 // GetFirstConsecutiveStaticIPAddress returns the first static IP address of the given subnet.
 func (m *MasterProfile) GetFirstConsecutiveStaticIPAddress(subnetStr string) string {
 	_, subnet, err := net.ParseCIDR(subnetStr)
@@ -1833,6 +1838,11 @@ func (k *KubernetesConfig) IsRBACEnabled() bool {
 // UserAssignedIDEnabled checks if the user assigned ID is enabled or not.
 func (k *KubernetesConfig) UserAssignedIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedID != ""
+}
+
+// SystemAssignedIDEnabled checks if system assigned IDs should be used.
+func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
+	return k.UseManagedIdentity && k.UserAssignedID == ""
 }
 
 // UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
