@@ -1,6 +1,6 @@
 {
 	"env": {
-		"SKIP_TEST": true
+		"SKIP_TESTS": "true"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
