@@ -717,7 +717,7 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateAgentLoadBalancer(cs.Properties, false)
+	actual := CreateStandardLoadBalancerForNodePools(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{

@@ -267,7 +267,7 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 	}
 }
 
-func CreateAgentLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
+func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 
 	loadBalancer := LoadBalancerARM{
 		ARMResource: ARMResource{

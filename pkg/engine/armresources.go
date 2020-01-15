@@ -53,7 +53,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		isForMaster := false
 		includeDNS := false
 		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
-		loadBalancer := CreateAgentLoadBalancer(cs.Properties, true)
+		loadBalancer := CreateStandardLoadBalancerForNodePools(cs.Properties, true)
 		armResources = append(armResources, publicIPAddress, loadBalancer)
 	}
 
