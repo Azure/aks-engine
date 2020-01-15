@@ -714,7 +714,26 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 				windowsProfile.ImageVersion = "latest"
 			}
 		}
+	} else if isUpgrade {
+		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
+		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
+		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
+			}
+		}
 	}
+	// Scale: Keep the same version to match other nodes because we have no way to rollback
 }
 
 // setStorageDefaults for agents
