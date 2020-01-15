@@ -11,8 +11,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
+// CreateMasterVMNetworkInterfaces returns an ARM resource for the master VM NIC
 func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
-
 	var dependencies []string
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
 		dependencies = append(dependencies, "[variables('nsgID')]")
@@ -131,6 +131,7 @@ func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceA
 	}
 }
 
+// createPrivateClusterMasterVMNetworkInterface returns an ARM resource for the master VM NIC in a private cluster configuration scenario
 func createPrivateClusterMasterVMNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM {
 	var dependencies []string
 	if cs.Properties.MasterProfile.IsCustomVNET() {
