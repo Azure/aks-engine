@@ -1,5 +1,6 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
+
 set -x
 echo $(date),$(hostname), startcustomscript>>/opt/m
 
@@ -18,6 +19,13 @@ source {{GetCSEHelpersScriptFilepath}}
 
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
+
+ensureAPMZ "v0.4.0"
+{{- if HasTelemetryEnabled }}
+eval "$(apmz bash -n "cse" -t "{{GetLinuxDefaultTelemetryTags}}" --api-key "{{GetApplicationInsightsTelemetryKey}}")"
+{{else}}
+eval "$(apmz bash -d)"
+{{end}}
 
 wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEConfigScriptFilepath}}
@@ -39,22 +47,23 @@ fi
 
 if [ -f /var/run/reboot-required ]; then
     REBOOTREQUIRED=true
+    trace_info "RebootRequired" "reboot=true"
 else
     REBOOTREQUIRED=false
 fi
 
 {{- if not NeedsContainerd}}
-cleanUpContainerd
+time_metric "CleanupContainerd" cleanUpContainerd
 {{end}}
 
 if [[ "${GPU_NODE}" != "true" ]]; then
-    cleanUpGPUDrivers
+    time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
-    cleanUpContainerImages
+    time_metric "CleanUpContainerImages" cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
@@ -65,35 +74,37 @@ else
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
-    installDeps
+    time_metric "InstallDeps" installDeps
 else
     echo "Golden image; skipping dependencies installation"
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    ensureAuditD
+    time_metric "EnsureAuditD" ensureAuditD
 fi
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    installEtcd
+    time_metric "InstallEtcd" installEtcd
 fi
 
 {{- if not HasCoreOS}}
-installContainerRuntime
+time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
-installNetworkPlugin
+# this will capture the amount of time to install of the network plugin during cse
+time_metric "InstallNetworkPlugin" installNetworkPlugin
+
 
 {{- if NeedsContainerd}}
-installContainerd
+time_metric "InstallContainerd" installContainerd
 {{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
-        installGPUDrivers
+        time_metric "InstallGPUDrivers" installGPUDrivers
     fi
-    ensureGPUDrivers
+    time_metric "EnsureGPUDrivers" ensureGPUDrivers
 fi
 {{end}}
 
@@ -101,36 +112,36 @@ fi
 docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET {{GetPrivateAzureRegistryServer}}
 {{end}}
 
-installKubeletAndKubectl
+time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
 if [[ $OS != $COREOS_OS_NAME ]]; then
-    ensureRPC
+    time_metric "EnsureRPC" ensureRPC
 fi
 
-createKubeManifestDir
+time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
-    installSGXDrivers
+    time_metric "InstallSGXDrivers" installSGXDrivers
 fi
 {{end}}
 
 {{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    configureEtcdUser
+    time_metric "ConfigureEtcdUser" configureEtcdUser
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
     {{/* this step configures all certs */}}
     {{/* both configs etcd/cosmos */}}
-    configureSecrets
+    time_metric "ConfigureSecrets" configureSecrets
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    configureEtcd
+    time_metric "ConfigureEtcd" configureEtcd
 else
-    removeEtcd
+    time_metric "RemoveEtcd" removeEtcd
 fi
 
 {{- if HasCustomSearchDomain}}
@@ -139,57 +150,57 @@ wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FI
 {{end}}
 
 {{- if IsDockerContainerRuntime}}
-ensureDocker
+time_metric "EnsureDocker" ensureDocker
 {{else if IsKataContainerRuntime}}
 if grep -q vmx /proc/cpuinfo; then
-    installKataContainersRuntime
+    time_metric "InstallKataContainers" installKataContainersRuntime
 fi
 {{end}}
 
-configureK8s
+time_metric "ConfigureK8s" configureK8s
 
 {{- if IsAzureStackCloud}}
-configureK8sCustomCloud
+time_metric "ConfigureK8sCustomCloud" configureK8sCustomCloud
     {{- if IsAzureCNI}}
-    configureAzureStackInterfaces
+    time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
     {{end}}
 {{end}}
 
-configureCNI
+time_metric "ConfigureCNI" configureCNI
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    configAddons
+    time_metric "ConfigAddons" configAddons
 fi
 
 {{- if NeedsContainerd}}
-ensureContainerd
+time_metric "EnsureContainerd" ensureContainerd
 {{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
-    ensureKMS
+    time_metric "EnsureKMS" ensureKMS
 fi
 {{end}}
 
 {{/* configure and enable dhcpv6 for dual stack feature */}}
 {{- if IsIPv6DualStackFeatureEnabled}}
-ensureDHCPv6
+time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
-ensureKubelet
-ensureJournal
+time_metric "EnsureKubelet" ensureKubelet
+time_metric "EnsureJournal" ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.16; then
-        ensureLabelNodes
+        time_metric "EnsureLabelNodes" ensureLabelNodes
     fi
-    writeKubeConfig
+    time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        ensureEtcd
+        time_metric "EnsureEtcd" ensureEtcd
     fi
-    ensureK8sControlPlane
+    time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
-    ensureLabelExclusionForAzurePolicyAddon
+    time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
     {{end}}
 fi
 
@@ -203,7 +214,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    apt_get_purge 20 30 120 apache2-utils &
+    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
 fi
 {{end}}
 

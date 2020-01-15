@@ -7,6 +7,7 @@ CNI_BIN_DIR="/opt/cni/bin"
 CNI_DOWNLOADS_DIR="/opt/cni/downloads"
 CONTAINERD_DOWNLOADS_DIR="/opt/containerd/downloads"
 K8S_DOWNLOADS_DIR="/opt/kubernetes/downloads"
+APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 
 removeEtcd() {
@@ -175,6 +176,27 @@ downloadContainerd() {
     mkdir -p $CONTAINERD_DOWNLOADS_DIR
     CONTAINERD_TGZ_TMP=$(echo ${CONTAINERD_DOWNLOAD_URL} | cut -d "/" -f 5)
     retrycmd_get_tarball 120 5 "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ${CONTAINERD_DOWNLOAD_URL} || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
+}
+
+ensureAPMZ() {
+    local version=$1
+    local apmz_url="https://upstreamartifacts.blob.core.windows.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+    if [[ -f "$apmz_filepath" ]]; then
+        installed_version=$($apmz_filepath version)
+        if [[ "$version" == "$installed_version" ]]; then
+            # already installed, noop
+            return
+        fi
+        # linked, but not the version we expect
+    fi
+    install_dir="$APMZ_DOWNLOADS_DIR/$version"
+    download_path="$install_dir/apmz.gz"
+    mkdir -p "$install_dir"
+    retrycmd_get_tarball 120 5 "$download_path" "${apmz_url}"
+    tar -xvf "$download_path" -C "$install_dir"
+    bin_path="$install_dir/apmz_linux_amd64"
+    chmod +x "$bin_path"
+    ln -Ffs "$bin_path" "$apmz_filepath" # symlink apmz into /usr/local/bin/apmz
 }
 
 installCNI() {
