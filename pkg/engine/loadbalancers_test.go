@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func TestCreateLoadBalancer(t *testing.T) {
+func TestCreateMasterLoadBalancer(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			MasterProfile: &api.MasterProfile{
@@ -99,6 +99,86 @@ func TestCreateLoadBalancer(t *testing.T) {
 							Port:              to.Int32Ptr(443),
 							IntervalInSeconds: to.Int32Ptr(5),
 							NumberOfProbes:    to.Int32Ptr(2),
+						},
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
+	}
+
+}
+
+func TestCreateMasterLoadBalancerPrivate(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.16.4",
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku: BasicLoadBalancerSku,
+					PrivateCluster: &api.PrivateCluster{
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+		},
+	}
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
+
+	expected := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('masterLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('masterLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('masterLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('masterPublicIPAddressName'))]"),
+							},
+						},
+					},
+				},
+				OutboundRules: &[]network.OutboundRule{
+					{
+						Name: to.StringPtr("LBOutboundRule"),
+						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+							FrontendIPConfigurations: &[]network.SubResource{
+								{
+									ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+								},
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+							},
+							Protocol:             network.Protocol1All,
+							IdleTimeoutInMinutes: to.Int32Ptr(0),
+							EnableTCPReset:       to.BoolPtr(true),
 						},
 					},
 				},

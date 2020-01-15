@@ -68,6 +68,34 @@ func TestCreatePublicIPAddress(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	// Testing CreatePublicIPAddress without DNS
+
+	expected = PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('masterPublicIPAddressName')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+	isForMaster = true
+	includeDNS = false
+	actual = CreatePublicIPAddress(isForMaster, includeDNS)
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestCreateJumpboxPublicIPAddress(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
+func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 
 	var dependencies []string
 	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCustomVNET() {
@@ -131,7 +131,7 @@ func CreateNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceARM {
 	}
 }
 
-func createPrivateClusterNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM {
+func createPrivateClusterMasterVMNetworkInterface(cs *api.ContainerService) NetworkInterfaceARM {
 	var dependencies []string
 	if cs.Properties.MasterProfile.IsCustomVNET() {
 		dependencies = append(dependencies, "[variables('nsgID')]")

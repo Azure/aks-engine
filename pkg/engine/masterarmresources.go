@@ -59,9 +59,9 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	var masterNic NetworkInterfaceARM
 	if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-		masterNic = createPrivateClusterNetworkInterface(cs)
+		masterNic = createPrivateClusterMasterVMNetworkInterface(cs)
 	} else {
-		masterNic = CreateNetworkInterfaces(cs)
+		masterNic = CreateMasterVMNetworkInterfaces(cs)
 	}
 	masterResources = append(masterResources, masterNic)
 
