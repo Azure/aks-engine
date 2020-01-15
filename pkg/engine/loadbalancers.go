@@ -71,6 +71,8 @@ func CreateClusterLoadBalancerForIPv6() LoadBalancerARM {
 	return loadbalancer
 }
 
+// CreateMasterLoadBalancer creates a master LB
+// In a private cluster scenario, we don't attach the inbound foo, e.g., TCP 443 and SSH access
 func CreateMasterLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM {
 	loadBalancer := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -267,8 +269,8 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 	}
 }
 
+// CreateStandardLoadBalancerForNodePools returns an ARM resource for the Standard LB that has all nodes in its backend pool
 func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) LoadBalancerARM {
-
 	loadBalancer := LoadBalancerARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
