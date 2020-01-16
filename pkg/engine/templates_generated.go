@@ -37424,7 +37424,7 @@ installContainerd() {
 
 installImg() {
     img_filepath=/usr/local/bin/img
-    retrycmd_get_executable 120 5 $img_filepath "https://acs-mirror.azureedge.net/img/img-linux-amd64-v0.5.6" ls || exit $ERR_IMG_DOWNLOAD_TIMEOUT
+    retrycmd_get_executable 120 5 $img_filepath "https://upstreamartifacts.blob.core.windows.net/img/img-linux-amd64-v0.5.6" ls || exit $ERR_IMG_DOWNLOAD_TIMEOUT
 }
 
 extractHyperkube() {
