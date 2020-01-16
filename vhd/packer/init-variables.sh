@@ -65,4 +65,4 @@ cat <<EOF > settings.json
 }
 EOF
 
-cat packer/settings.json
+cat vhd/packer/settings.json

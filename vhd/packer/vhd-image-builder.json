@@ -48,12 +48,12 @@
         },
         {
             "type": "file",
-            "source": "packer/cleanup-vhd.sh",
+            "source": "vhd/packer/cleanup-vhd.sh",
             "destination": "/home/packer/cleanup-vhd.sh"
         },
         {
             "type": "file",
-            "source": "packer/packer_source.sh",
+            "source": "vhd/packer/packer_source.sh",
             "destination": "/home/packer/packer_source.sh"
         },
         {
@@ -73,7 +73,7 @@
         },
         {
             "type": "file",
-            "source": "packer/install-dependencies.sh",
+            "source": "vhd/packer/install-dependencies.sh",
             "destination": "/home/packer/install-dependencies.sh"
         },
         {
