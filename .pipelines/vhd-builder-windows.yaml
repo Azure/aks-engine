@@ -25,8 +25,8 @@ jobs:
   steps:
   - script: |
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -48,8 +48,8 @@ jobs:
 
   - script: |
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       ${DEIS_GO_DEV_IMAGE} make all
     displayName: build aks-engine-test - make all
     condition: eq(variables.COPY_VHD, 'False')
@@ -58,8 +58,8 @@ jobs:
       OS_DISK_URI="$(cat packer-output | grep "OSDiskUri:" | cut -d " " -f 2)" && \
       IMAGE_NAME="$(echo $OS_DISK_URI | cut -d "/" -f 3 | cut -d "." -f 1)" && \
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       -e CLEANUP_ON_EXIT="true" \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
@@ -77,8 +77,8 @@ jobs:
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -94,8 +94,8 @@ jobs:
       OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -115,8 +115,8 @@ jobs:
   - script: |
       SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
       docker run --rm \
-      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
-      -w /go/src/github.com/Azure/aks-engine \
+      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
+      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
