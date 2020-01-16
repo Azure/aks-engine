@@ -56,13 +56,6 @@
 						{
 							"name": "rescheduler",
 							"enabled": true
-						},
-						{
-							"name": "container-monitoring",
-							"enabled": true,
-							"config": {
-								"workspaceGuid": "OTI1N2ZiOWMtMjRkMi00MzNhLWE1N2EtZmVkN2ZmM2ViNTg0Cg=="
-							}
 						}
 					],
 					"loadBalancerSku": "Standard",
