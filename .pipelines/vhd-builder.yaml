@@ -17,8 +17,8 @@ phases:
   steps:
   - script: |
       docker run --rm \
-      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
-      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -41,8 +41,8 @@ phases:
       VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
       printf "COPY ME ----> ${CLASSIC_BLOB}/${VHD_NAME}?" | tee -a vhd-sas && \
       docker run --rm \
-      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
-      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -56,8 +56,8 @@ phases:
   - script: |
       SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
       docker run --rm \
-      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
-      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
@@ -68,8 +68,8 @@ phases:
     condition: always()
   - script: |
       docker run --rm \
-      -v ${PWD}/vhd/packer:/go/src/github.com/Azure/aks-engine/vhd/packer \
-      -w /go/src/github.com/Azure/aks-engine/vhd/packer \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
       -e CLIENT_ID=${CLIENT_ID} \
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e TENANT_ID=${TENANT_ID} \
