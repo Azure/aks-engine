@@ -19,7 +19,7 @@ cat > ${TMP_DIR}/apimodel-input.json <<END
 ${API_MODEL_INPUT}
 END
 
-if [ -z "$ADD_NODE_POOL_INPUT" ]; then
+if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   cat > ${TMP_DIR}/addpool-input.json <<END
 ${ADD_NODE_POOL_INPUT}
 END
@@ -92,7 +92,7 @@ docker run --rm \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
-if [ -z "$ADD_NODE_POOL_INPUT" ]; then
+if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
