@@ -438,6 +438,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 		}
+		// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
+		// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access
+		// - private cluster + basic LB + multiple masters uses internal master LB for outbound access (doesn't need a public IP)
 		if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
 			masterVars["masterPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]"
 			masterVars["masterLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]"
