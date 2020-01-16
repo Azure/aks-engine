@@ -1,7 +1,7 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: zone-pv-pod
+  name: pv-pod
 spec:
   nodeSelector:
     beta.kubernetes.io/os: linux

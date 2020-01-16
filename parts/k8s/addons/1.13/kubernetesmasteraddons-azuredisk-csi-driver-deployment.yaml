@@ -84,7 +84,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: csi-azuredisk-controller
@@ -102,13 +102,8 @@ spec:
           image: {{ContainerImage "csi-provisioner"}}
           args:
             - "--provisioner=disk.csi.azure.com"
-            - "--feature-gates=Topology=true"
             - "--csi-address=$(ADDRESS)"
             - "--connection-timeout=15s"
-            - "--v=5"
-            - "--timeout=120s"
-            - "--enable-leader-election"
-            - "--leader-election-type=leases"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -126,11 +121,9 @@ spec:
         - name: csi-attacher
           image: {{ContainerImage "csi-attacher"}}
           args:
-            - "-v=5"
-            - "-csi-address=$(ADDRESS)"
-            - "-timeout=120s"
-            - "-leader-election"
-            - "-leader-election-type=leases"
+            - --v=5
+            - --csi-address=$(ADDRESS)
+            - --timeout=120s
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -168,7 +161,12 @@ spec:
           image: {{ContainerImage "csi-snapshotter"}}
           args:
             - "-csi-address=$(ADDRESS)"
-            - "-leader-election"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
           env:
             - name: ADDRESS
               value: /csi/csi.sock
@@ -182,25 +180,6 @@ spec:
             requests:
               cpu: {{ContainerCPUReqs "csi-snapshotter"}}
               memory: {{ContainerMemReqs "csi-snapshotter"}}
-        - name: csi-resizer
-          image: {{ContainerImage "csi-resizer"}}
-          args:
-            - "-csi-address=$(ADDRESS)"
-            - "-v=5"
-            - "-leader-election"
-          env:
-            - name: ADDRESS
-              value: /csi/csi.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-          resources:
-            limits:
-              cpu: {{ContainerCPULimits "csi-resizer"}}
-              memory: {{ContainerMemLimits "csi-resizer"}}
-            requests:
-              cpu: {{ContainerCPUReqs "csi-resizer"}}
-              memory: {{ContainerMemReqs "csi-resizer"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           args:
@@ -275,6 +254,8 @@ kind: Service
 metadata:
   name: csi-azuredisk-controller
   namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     app: csi-azuredisk-controller
@@ -469,9 +450,6 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["coordination.k8s.io"]
-    resources: ["leases"]
-    verbs: ["get", "list", "watch", "create", "update", "patch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -600,39 +578,4 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: azuredisk-external-snapshotter-role
-  apiGroup: rbac.authorization.k8s.io
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: azuredisk-external-resizer-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims/status"]
-    verbs: ["update", "patch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["list", "watch", "create", "update", "patch"]
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: azuredisk-csi-resizer-role
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: csi-azuredisk-controller-sa
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azuredisk-external-resizer-role
   apiGroup: rbac.authorization.k8s.io

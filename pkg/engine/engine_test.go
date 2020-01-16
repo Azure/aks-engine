@@ -2469,6 +2469,8 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedNeedsStorageAccountStorageClasses bool
 		expectedNeedsManagedDiskStorageClasses    bool
 		expectedUsesCloudControllerManager        bool
+		expectedHasAvailabilityZones              bool
+		expectedGetZones                          string
 	}{
 		{
 			name: "coredns as an example",
@@ -2538,6 +2540,8 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedNeedsStorageAccountStorageClasses: false,
 			expectedNeedsManagedDiskStorageClasses:    true,
 			expectedUsesCloudControllerManager:        false,
+			expectedHasAvailabilityZones:              false,
+			expectedGetZones:                          "",
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2611,9 +2615,11 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedNeedsStorageAccountStorageClasses: false,
 			expectedNeedsManagedDiskStorageClasses:    true,
 			expectedUsesCloudControllerManager:        false,
+			expectedHasAvailabilityZones:              false,
+			expectedGetZones:                          "",
 		},
 		{
-			name: "coredns as an example - StorageAccoun",
+			name: "coredns as an example - StorageAccount",
 			addon: api.KubernetesAddon{
 				Name:    common.CoreDNSAddonName,
 				Enabled: to.BoolPtr(true),
@@ -2680,6 +2686,8 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedNeedsStorageAccountStorageClasses: true,
 			expectedNeedsManagedDiskStorageClasses:    false,
 			expectedUsesCloudControllerManager:        false,
+			expectedHasAvailabilityZones:              false,
+			expectedGetZones:                          "",
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2750,6 +2758,85 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedNeedsStorageAccountStorageClasses: false,
 			expectedNeedsManagedDiskStorageClasses:    true,
 			expectedUsesCloudControllerManager:        true,
+			expectedHasAvailabilityZones:              false,
+			expectedGetZones:                          "",
+		},
+		{
+			name: "coredns as an example - Availability Zones",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Location: "eastus2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							AvailabilityZones: []string{
+								"1",
+								"2",
+							},
+						},
+					},
+				},
+			},
+			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:           "100m",
+			expectedCPULimits:         "100m",
+			expectedMemReqs:           "300Mi",
+			expectedMemLimits:         "300Mi",
+			expectedFoo:               "bar",
+			expectedIsAzureStackCloud: false,
+			expectedNeedsStorageAccountStorageClasses: false,
+			expectedNeedsManagedDiskStorageClasses:    true,
+			expectedUsesCloudControllerManager:        true,
+			expectedHasAvailabilityZones:              true,
+			expectedGetZones:                          "\n    - eastus2-1\n    - eastus2-2",
 		},
 	}
 
@@ -2807,6 +2894,16 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedUsesCloudControllerManager {
 				t.Errorf("expected funcMap invocation of UsesCloudControllerManager to return %t, instead got %t", c.expectedUsesCloudControllerManager, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasAvailabilityZones"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasAvailabilityZones {
+				t.Errorf("expected funcMap invocation of HasAvailabilityZones to return %t, instead got %t", c.expectedHasAvailabilityZones, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetZones"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetZones {
+				t.Errorf("expected funcMap invocation of GetZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
 			}
 		})
 	}
