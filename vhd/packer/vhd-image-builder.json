@@ -193,7 +193,7 @@
         },
         {
             "type": "file",
-            "source": "releases/notice/notice.txt",
+            "source": "vhd/notice/notice.txt",
             "destination": "/home/packer/NOTICE.txt"
         },
         {
