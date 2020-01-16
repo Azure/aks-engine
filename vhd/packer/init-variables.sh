@@ -51,7 +51,7 @@ fi
 
 echo "storage name: ${STORAGE_ACCOUNT_NAME}"
 
-cat <<EOF > settings.json
+cat <<EOF > vhd/packer/settings.json
 {
   "subscription_id":  "${SUBSCRIPTION_ID}",
   "client_id": "${CLIENT_ID}",
