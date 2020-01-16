@@ -792,16 +792,16 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.TelemetryProfile.ApplicationInsightsKey
 		},
 		"GetLinuxDefaultTelemetryTags": func() string {
-			tags := map[string]string {
-				"k8s_version": cs.Properties.OrchestratorProfile.OrchestratorVersion,
+			tags := map[string]string{
+				"k8s_version":    cs.Properties.OrchestratorProfile.OrchestratorVersion,
 				"network_plugin": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin,
 				"network_policy": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy,
-				"network_mode": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkMode,
-				"cri": cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime,
-				"cri_version": cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion,
-				"distro": string(cs.Properties.LinuxProfile.Distro),
-				"os_image_sku": cs.GetCloudSpecConfig().OSImageConfig[cs.Properties.LinuxProfile.Distro].ImageSku,
-				"os_type": "linux",
+				"network_mode":   cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkMode,
+				"cri":            cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime,
+				"cri_version":    cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion,
+				"distro":         string(cs.Properties.LinuxProfile.Distro),
+				"os_image_sku":   cs.GetCloudSpecConfig().OSImageConfig[cs.Properties.LinuxProfile.Distro].ImageSku,
+				"os_type":        "linux",
 			}
 
 			var kvs []string
