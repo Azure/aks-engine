@@ -1,0 +1,49 @@
+{
+	"env": {
+		"SKIP_TESTS": "true"
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"loadBalancerSku": "Basic",
+					"etcdVersion": "3.3.15",
+					"privateCluster": {
+						"enabled": true,
+						"jumpboxProfile": {
+							"name": "my-jb",
+							"vmSize": "Standard_D2_v3",
+							"osDiskSizeGB": 30,
+							"username": "azureuser",
+							"publicKey": ""
+						}
+					}
+				}
+			},
+			"masterProfile": {
+				"count": 3,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agentpool1",
+					"count": 2,
+					"vmSize": "Standard_D2_v3"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			}
+		}
+	}
+}
