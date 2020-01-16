@@ -92,25 +92,7 @@ docker run --rm \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
-if [ -n "$ADD_NODE_POOL_INPUT" ]; then
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -w ${WORK_DIR} \
-    -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    -e REGION=$REGION \
-    ${DEV_IMAGE} \
-    ./bin/aks-engine addpool \
-    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-    --api-model _output/$RESOURCE_GROUP/apimodel.json \
-    --node-pool ${TMP_BASENAME}/addpool-input.json \
-    --location $REGION \
-    --resource-group $RESOURCE_GROUP \
-    --auth-method client_secret \
-    --client-id ${AZURE_CLIENT_ID} \
-    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
-fi
-
-if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   # shellcheck disable=SC2012
@@ -136,6 +118,24 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
     "${DEV_IMAGE}" make build-binary > /dev/null 2>&1 || exit 1
 else
   exit 0
+fi
+
+if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    -e REGION=$REGION \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine addpool \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
+    --node-pool ${TMP_BASENAME}/addpool-input.json \
+    --location $REGION \
+    --resource-group $RESOURCE_GROUP \
+    --auth-method client_secret \
+    --client-id ${AZURE_CLIENT_ID} \
+    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
