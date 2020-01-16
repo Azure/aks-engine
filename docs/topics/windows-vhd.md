@@ -32,8 +32,8 @@ Note: See scripts referenced below to for further details
 ### Build Resources
 
 - Azure DevOps build yaml build definition: [.pipelines/vhd-builder-windows.yaml](../../.pipelines/vhd-builder-windows.yaml)
-- Packer job definition: [packer/windows-vhd-builder.json](../../packer/windows-vhd-builder.json)
-- Customization script used in packer: [packer/configure-windows-vhd.ps1](../../packer/configure-windows-vhd.ps1)
+- Packer job definition: [vhd/packer/windows-vhd-builder.json](../../vhd/packer/windows-vhd-builder.json)
+- Customization script used in packer: [vhd/packer/configure-windows-vhd.ps1](../../vhd/packer/configure-windows-vhd.ps1)
 
 ### Testing Private Fixes
 
@@ -42,7 +42,7 @@ Occasionally it may be necessary to validate private fixes provided by the Windo
 - Configure a private build pipeline using [.pipelines/vhd-builder-windows.yaml](../../.pipelines/vhd-builder-windows.yaml) as the pipeline definition
 - Set up the build pipeline variables to point to private Azure subscriptions
   - Pipeline variables are documented in the yaml file
-- Update [packer/configure-windows-vhd.ps1](../../packer/configure-windows-vhd.ps1) to install privates
+- Update [vhd/packer/configure-windows-vhd.ps1](../../vhd/packer/configure-windows-vhd.ps1) to install privates
 - Run the pipeline
 
 ## Usage in aks-engine

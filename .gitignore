@@ -37,8 +37,8 @@ test/e2e/kubernetes/kubernetes.test
 *.coverprofile
 
 # packer
-packer/settings.json
-packer/sp.json
+vhd/packer/settings.json
+vhd/packer/sp.json
 
 .idea
 .vs
