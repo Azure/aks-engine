@@ -63,6 +63,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
 							API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
+							ADD_NODE_POOL_INPUT: "${JsonOutput.toJson(jobCfg.addNodePool)}",
 						] + jobSpecificEnv
 					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 						// define any sensitive data needed for the test script
