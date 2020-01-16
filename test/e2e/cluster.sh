@@ -29,10 +29,8 @@ echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
-if [ "${UPGRADE_CLUSTER}" = "true" ]; then
-  CLEANUP_AFTER_DEPLOYMENT="false";
-elif [ "${SCALE_CLUSTER}" = "true" ]; then
-  CLEANUP_AFTER_DEPLOYMENT="false";
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  CLEANUP_AFTER_DEPLOYMENT="false"
 fi
 
 if [ -n "${GINKGO_SKIP}" ]; then
@@ -136,6 +134,32 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     --auth-method client_secret \
     --client-id ${AZURE_CLIENT_ID} \
     --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+
+  CLEANUP_AFTER_ADD_NODE_POOL=${CLEANUP_ON_EXIT}
+  if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+    CLEANUP_AFTER_ADD_NODE_POOL="false"
+  fi
+
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e CLIENT_ID=${AZURE_CLIENT_ID} \
+    -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
+    -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
+    -e TENANT_ID=${AZURE_TENANT_ID} \
+    -e SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
+    -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
+    -e ORCHESTRATOR=kubernetes \
+    -e NAME=$RESOURCE_GROUP \
+    -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_ADD_NODE_POOL} \
+    -e REGIONS=$REGION \
+    -e IS_JENKINS=${IS_JENKINS} \
+    -e SKIP_LOGS_COLLECTION=true \
+    -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
+    -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
