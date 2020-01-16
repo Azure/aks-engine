@@ -1326,35 +1326,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
-				version := common.RationalizeReleaseAndVersion(
-					common.Kubernetes,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorRelease,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorVersion,
-					false,
-					eng.HasWindowsAgents())
-				if common.IsKubernetesVersionGe(version, "1.10.0") {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
-				} else {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
 				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
 			} else {
 				Skip("This is not a GPU-enabled cluster")
 			}

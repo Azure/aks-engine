@@ -9,7 +9,8 @@
 			"1.14",
 			"1.15",
 			"1.16",
-			"1.17"
+			"1.17",
+			"1.18"
 		]
 	},
 	"apiModel": {
@@ -107,14 +108,6 @@
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
 					"distro": "ubuntu"
-				},
-				{
-					"name": "poolsgx",
-					"count": 1,
-					"availabilityProfile": "VirtualMachineScaleSets",
-					"distro": "aks-ubuntu-18.04",
-					"vmSize": "Standard_DC2s",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				},
 				{
 					"name": "poolwin",
