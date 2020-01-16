@@ -1314,6 +1314,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 		name           string
 		p              Properties
 		expectedISVMSS bool
+		expectedIsVMAS bool
 	}{
 		{
 			name: "zero value master profile",
@@ -1321,6 +1322,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				MasterProfile: &MasterProfile{},
 			},
 			expectedISVMSS: false,
+			expectedIsVMAS: false,
 		},
 		{
 			name: "master profile w/ AS",
@@ -1330,6 +1332,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				},
 			},
 			expectedISVMSS: false,
+			expectedIsVMAS: true,
 		},
 		{
 			name: "master profile w/ VMSS",
@@ -1339,6 +1342,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				},
 			},
 			expectedISVMSS: true,
+			expectedIsVMAS: false,
 		},
 	}
 
@@ -1348,6 +1352,9 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 			t.Parallel()
 			if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
 				t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
+			}
+			if c.p.MasterProfile.IsAvailabilitySet() != c.expectedIsVMAS {
+				t.Fatalf("expected MasterProfile.IsAvailabilitySet() to return %t but instead returned %t", c.expectedIsVMAS, c.p.MasterProfile.IsAvailabilitySet())
 			}
 		})
 	}
@@ -5829,6 +5836,34 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 
 	if k.UserAssignedIDEnabled() {
 		t.Errorf("expected userAssignedIDEnabled to be false when useManagedIdentity is set to false")
+	}
+}
+
+func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
+	k := KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "",
+	}
+	if !k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be true when UseManagedIdentity is true and UserAssignedID is empty")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "foo",
+	}
+
+	if k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be true when UseManagedIdentity is true and UserAssignedID is non-empty")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: false,
+		UserAssignedID:     "",
+	}
+
+	if k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be false when UseManagedIdentity is set to false")
 	}
 }
 
