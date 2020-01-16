@@ -185,8 +185,7 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
 	orchestratorInfo := apc.containerService.Properties.OrchestratorProfile
-	var winPoolIndex int
-	winPoolIndex = -1
+	winPoolIndex := -1
 
 	for vmssListPage, err := apc.client.ListVirtualMachineScaleSets(ctx, apc.resourceGroupName); vmssListPage.NotDone(); err = vmssListPage.NextWithContext(ctx) {
 		if err != nil {
