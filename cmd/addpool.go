@@ -55,8 +55,6 @@ const (
 	addPoolName             = "addpool"
 	addPoolShortDescription = "Add an agent pool to an existing Kubernetes cluster"
 	addPoolLongDescription  = "Add an agent pool to an existing Kubernetes cluster by referencing a new agent pool spec"
-	//	apiModelFilename        = "apimodel.json"
-	agentPoolFilename = "agentpool.json"
 )
 
 // newAddPoolCmd run a command to add an agent pool to a Kubernetes cluster
