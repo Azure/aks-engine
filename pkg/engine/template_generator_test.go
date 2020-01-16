@@ -918,7 +918,7 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			ExpectedResult: "",
 		},
 		{
-			Name: "GetLinuxDefaultTelemetryTags",
+			Name:     "GetLinuxDefaultTelemetryTags",
 			FuncName: "GetLinuxDefaultTelemetryTags",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
 				cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "containerRuntime"
@@ -932,7 +932,7 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			ExpectedResult: "cri=containerRuntime,cri_version=1.2.4,k8s_version=1.2.4,network_mode=networkMode,network_plugin=networkPlugin,network_policy=networkPolicy,os_type=linux",
 		},
 		{
-			Name: "GetLinuxDefaultTelemetryTagsWithEmpties",
+			Name:     "GetLinuxDefaultTelemetryTagsWithEmpties",
 			FuncName: "GetLinuxDefaultTelemetryTags",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
 				cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "containerRuntime"
