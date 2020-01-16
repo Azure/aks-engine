@@ -19,6 +19,12 @@ cat > ${TMP_DIR}/apimodel-input.json <<END
 ${API_MODEL_INPUT}
 END
 
+if [ -z "$ADDPOOL_INPUT" ]; then
+  cat > ${TMP_DIR}/addpool-input.json <<END
+${ADDPOOL_INPUT}
+END
+fi
+
 echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
@@ -85,6 +91,24 @@ docker run --rm \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
+
+if [ -z "$ADDPOOL_INPUT" ]; then
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    -e REGION=$REGION \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine addpool \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
+    --node-pool ${TMP_BASENAME}/apimodel-input.json \
+    --location $REGION \
+    --resource-group $RESOURCE_GROUP \
+    --auth-method client_secret \
+    --client-id ${AZURE_CLIENT_ID} \
+    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
   # shellcheck disable=SC2012

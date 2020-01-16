@@ -16,7 +16,7 @@ func TestNewAddPoolCmd(t *testing.T) {
 		t.Fatalf("addpool command should have use %s equal %s, short %s equal %s and long %s equal to %s", command.Use, addPoolName, command.Short, addPoolShortDescription, command.Long, addPoolLongDescription)
 	}
 
-	expectedFlags := []string{"location", "resource-group", "api-model", "agent-pool"}
+	expectedFlags := []string{"location", "resource-group", "api-model", "node-pool"}
 	for _, f := range expectedFlags {
 		if command.Flags().Lookup(f) == nil {
 			t.Fatalf("addpool command should have flag %s", f)
@@ -40,7 +40,7 @@ func TestAddPoolCmdValidate(t *testing.T) {
 		{
 			sc: &addPoolCmd{
 				apiModelPath:      "./not/used",
-				agentPoolPath:     "",
+				nodePoolPath:      "",
 				location:          "centralus",
 				resourceGroupName: "",
 			},
@@ -50,7 +50,7 @@ func TestAddPoolCmdValidate(t *testing.T) {
 		{
 			sc: &addPoolCmd{
 				apiModelPath:      "./not/used",
-				agentPoolPath:     "",
+				nodePoolPath:      "",
 				location:          "",
 				resourceGroupName: "testRG",
 			},
@@ -63,13 +63,13 @@ func TestAddPoolCmdValidate(t *testing.T) {
 				location:          "centralus",
 				resourceGroupName: "testRG",
 			},
-			expectedErr: errors.New("--agentpool must be specified"),
-			name:        "NoAgentPool",
+			expectedErr: errors.New("--nodepool must be specified"),
+			name:        "NoNodePool",
 		},
 		{
 			sc: &addPoolCmd{
 				apiModelPath:      "",
-				agentPoolPath:     "",
+				nodePoolPath:      "",
 				location:          "centralus",
 				resourceGroupName: "testRG",
 			},
@@ -79,7 +79,7 @@ func TestAddPoolCmdValidate(t *testing.T) {
 		{
 			sc: &addPoolCmd{
 				apiModelPath:      "./not/used",
-				agentPoolPath:     "./some/path",
+				nodePoolPath:      "./some/path",
 				location:          "centralus",
 				resourceGroupName: "testRG",
 			},

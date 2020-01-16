@@ -34,17 +34,17 @@ type addPoolCmd struct {
 	// user input
 	apiModelPath      string
 	resourceGroupName string
-	agentPoolPath     string
+	nodePoolPath      string
 	location          string
 
 	// derived
 	containerService *api.ContainerService
 	apiVersion       string
-	agentPool        *api.AgentPoolProfile
+	nodePool         *api.AgentPoolProfile
 	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
 	nameSuffix       string
-	agentPoolIndex   int
+	nodePoolIndex    int
 	logger           *log.Entry
 	apiserverURL     string
 	kubeconfig       string
@@ -53,8 +53,8 @@ type addPoolCmd struct {
 
 const (
 	addPoolName             = "addpool"
-	addPoolShortDescription = "Add an agent pool to an existing Kubernetes cluster"
-	addPoolLongDescription  = "Add an agent pool to an existing Kubernetes cluster by referencing a new agent pool spec"
+	addPoolShortDescription = "Add a node pool to an existing Kubernetes cluster"
+	addPoolLongDescription  = "Add a node pool to an existing Kubernetes cluster by referencing a new agentpoolProfile spec"
 )
 
 // newAddPoolCmd run a command to add an agent pool to a Kubernetes cluster
@@ -72,7 +72,7 @@ func newAddPoolCmd() *cobra.Command {
 	f.StringVarP(&apc.location, "location", "l", "", "location the cluster is deployed in")
 	f.StringVarP(&apc.resourceGroupName, "resource-group", "g", "", "the resource group where the cluster is deployed")
 	f.StringVarP(&apc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file")
-	f.StringVarP(&apc.agentPoolPath, "agent-pool", "p", "", "path to the generated agentpool.json file")
+	f.StringVarP(&apc.nodePoolPath, "node-pool", "p", "", "path to the generated nodepool.json file")
 
 	addAuthFlags(&apc.authArgs, f)
 
@@ -105,9 +105,9 @@ func (apc *addPoolCmd) validate(cmd *cobra.Command) error {
 		return errors.New("--api-model must be specified")
 	}
 
-	if apc.agentPoolPath == "" {
+	if apc.nodePoolPath == "" {
 		cmd.Usage()
-		return errors.New("--agentpool must be specified")
+		return errors.New("--nodepool must be specified")
 	}
 	return nil
 }
@@ -135,11 +135,11 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if _, err = os.Stat(apc.agentPoolPath); os.IsNotExist(err) {
-		return errors.Errorf("specified agent pool spec does not exist (%s)", apc.agentPoolPath)
+	if _, err = os.Stat(apc.nodePoolPath); os.IsNotExist(err) {
+		return errors.Errorf("specified agent pool spec does not exist (%s)", apc.nodePoolPath)
 	}
 
-	apc.agentPool, err = apiloader.LoadAgentPoolFromFile(apc.agentPoolPath)
+	apc.nodePool, err = apiloader.LoadAgentpoolProfileFromFile(apc.nodePoolPath)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
@@ -196,7 +196,7 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 			segments := strings.Split(*vmss.Name, "-")
 			if len(segments) == 4 && segments[0] == "k8s" {
 				vmssName := segments[1]
-				if apc.agentPool.Name == vmssName {
+				if apc.nodePool.Name == vmssName {
 					return errors.New("An agent pool with the given name already exists in the cluster")
 				}
 			}
@@ -213,7 +213,7 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to initialize template generator")
 	}
 
-	apc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{apc.agentPool}
+	apc.containerService.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{apc.nodePool}
 
 	_, err = apc.containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    true,
@@ -247,13 +247,13 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 
 	transformer := transform.Transformer{Translator: translator.Translator}
 
-	//addValue(parametersJSON, apc.agentPool.Name+"Count", countForTemplate)
-	addValue(parametersJSON, apc.agentPool.Name+"Count", 0)
+	//addValue(parametersJSON, apc.nodePool.Name+"Count", countForTemplate)
+	addValue(parametersJSON, apc.nodePool.Name+"Count", 0)
 
 	// The agent pool is set to index 0 for the scale operation, we need to overwrite the template variables that rely on pool index.
 	if winPoolIndex != -1 {
-		templateJSON["variables"].(map[string]interface{})[apc.agentPool.Name+"Index"] = winPoolIndex
-		templateJSON["variables"].(map[string]interface{})[apc.agentPool.Name+"VMNamePrefix"] = apc.containerService.Properties.GetAgentVMPrefix(apc.agentPool, winPoolIndex)
+		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"Index"] = winPoolIndex
+		templateJSON["variables"].(map[string]interface{})[apc.nodePool.Name+"VMNamePrefix"] = apc.containerService.Properties.GetAgentVMPrefix(apc.nodePool, winPoolIndex)
 	}
 	if orchestratorInfo.OrchestratorType == api.Kubernetes {
 		if orchestratorInfo.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
@@ -281,13 +281,13 @@ func (apc *addPoolCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if apc.nodes != nil {
-		nodes, err := operations.GetNodes(apc.client, apc.logger, apc.apiserverURL, apc.kubeconfig, time.Duration(5)*time.Minute, apc.agentPool.Name, apc.agentPool.Count)
+		nodes, err := operations.GetNodes(apc.client, apc.logger, apc.apiserverURL, apc.kubeconfig, time.Duration(5)*time.Minute, apc.nodePool.Name, apc.nodePool.Count)
 		if err == nil && nodes != nil {
 			apc.nodes = nodes
-			apc.logger.Infof("Nodes in pool '%s' after scaling:\n", apc.agentPool.Name)
+			apc.logger.Infof("Nodes in pool '%s' after scaling:\n", apc.nodePool.Name)
 			operations.PrintNodes(apc.nodes)
 		} else {
-			apc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", apc.agentPool.Name)
+			apc.logger.Warningf("Unable to get nodes in pool %s after scaling:\n", apc.nodePool.Name)
 		}
 	}
 
@@ -306,7 +306,7 @@ func (apc *addPoolCmd) saveAPIModel() error {
 	if err != nil {
 		return err
 	}
-	apc.containerService.Properties.AgentPoolProfiles[apc.agentPoolIndex].Count = apc.agentPool.Count
+	apc.containerService.Properties.AgentPoolProfiles[apc.nodePoolIndex].Count = apc.nodePool.Count
 
 	b, err := apiloader.SerializeContainerService(apc.containerService, apiVersion)
 

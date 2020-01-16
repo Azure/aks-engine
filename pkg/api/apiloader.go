@@ -310,17 +310,17 @@ func (a *Apiloader) serializeHostedContainerService(containerService *ContainerS
 	}
 }
 
-// LoadAgentPoolFromFile loads an AKS Cluster Agent Pool from a JSON file
-func (a *Apiloader) LoadAgentPoolFromFile(jsonFile string) (*AgentPoolProfile, error) {
+// LoadAgentpoolProfileFromFile loads an an AgentPoolProfile object from a JSON file
+func (a *Apiloader) LoadAgentpoolProfileFromFile(jsonFile string) (*AgentPoolProfile, error) {
 	contents, e := ioutil.ReadFile(jsonFile)
 	if e != nil {
 		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
 	}
-	return a.LoadAgentPool(contents)
+	return a.LoadAgentPoolProfile(contents)
 }
 
-// LoadAgentPool loads an unversioned AKS Cluster Agent Pool and returns it
-func (a *Apiloader) LoadAgentPool(contents []byte) (*AgentPoolProfile, error) {
+// LoadAgentPoolProfile marshalls raw data into a strongly typed AgentPoolProfile return object
+func (a *Apiloader) LoadAgentPoolProfile(contents []byte) (*AgentPoolProfile, error) {
 	agentPoolProfile := &AgentPoolProfile{}
 	if e := json.Unmarshal(contents, &agentPoolProfile); e != nil {
 		return nil, e
