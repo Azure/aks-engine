@@ -48,7 +48,7 @@
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars": "ProvisioningPhase=1",
             "type": "powershell",
-            "script": "configure-windows-vhd.ps1"
+            "script": "vhd/packer/configure-windows-vhd.ps1"
         },
         {
             "restart_timeout": "10m",
@@ -63,7 +63,7 @@
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars": "ProvisioningPhase=2",
             "type": "powershell",
-            "script": "configure-windows-vhd.ps1"
+            "script": "vhd/packer/configure-windows-vhd.ps1"
         },
         {
             "restart_timeout": "10m",
