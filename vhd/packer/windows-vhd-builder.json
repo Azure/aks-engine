@@ -86,7 +86,7 @@
                 "BUILD_REPO={{user `build_repo`}}"
             ],
             "type": "powershell",
-            "script": "write-release-notes-windows.ps1"
+            "script": "vhd/packer/write-release-notes-windows.ps1"
         },
         {
             "type": "file",
