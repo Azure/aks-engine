@@ -47,9 +47,14 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		armResources = append(armResources, userAssignedID, msiRoleAssignment)
 	}
 
-	if !isHostedMaster &&
-		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() &&
-		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
+	// Create the Standard Load Balancer resource spec, so long as:
+	// - we are not in an AKS template generation flow
+	// - there are no node pools configured with LoadBalancerBackendAddressPoolIDs
+	//    - i.e., user-provided LoadBalancerBackendAddressPoolIDs is not compatible w/ this Standard LB spec,
+	//      which assumes *all vms in all node pools* as backend pool members
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+		!isHostedMaster &&
+		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
 		isForMaster := false
 		includeDNS := false
 		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
