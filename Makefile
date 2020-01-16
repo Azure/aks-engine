@@ -203,4 +203,3 @@ coverage:
 
 include versioning.mk
 include test.mk
-include packer.mk
