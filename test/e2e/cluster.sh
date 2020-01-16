@@ -102,7 +102,7 @@ if [ -z "$ADDPOOL_INPUT" ]; then
     ./bin/aks-engine addpool \
     --subscription-id ${AZURE_SUBSCRIPTION_ID} \
     --api-model _output/$RESOURCE_GROUP/apimodel.json \
-    --node-pool ${TMP_BASENAME}/apimodel-input.json \
+    --node-pool ${TMP_BASENAME}/addpool-input.json \
     --location $REGION \
     --resource-group $RESOURCE_GROUP \
     --auth-method client_secret \
