@@ -1059,7 +1059,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 			azureDiskStorageClasses := []string{"default"}
 			// CSI driver uses managed disk by default
-			if isUsingCSIDrivers || eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].StorageProfile == api.ManagedDisks {
+			if isUsingCSIDrivers || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
 				azureDiskStorageClasses = append(azureDiskStorageClasses, "managed-premium", "managed-standard")
 			} else {
 				azureDiskStorageClasses = append(azureDiskStorageClasses, "unmanaged-premium", "unmanaged-standard")
@@ -1246,7 +1246,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("Skip PV test for clusters using unmanaged disks")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				By("Creating a persistent volume claim")
 				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
 				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
