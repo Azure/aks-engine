@@ -1057,7 +1057,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				azureFileProvisioner = "kubernetes.io/azure-file"
 			}
 
-			for _, azureDiskStorageClass := range []string{"default", "managed-premium", "managed-standard"} {
+			azureDiskStorageClasses := []string{"default"}
+			// CSI driver uses managed disk by default
+			if isUsingCSIDrivers || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "managed-premium", "managed-standard")
+			} else {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "unmanaged-premium", "unmanaged-standard")
+			}
+			for _, azureDiskStorageClass := range azureDiskStorageClasses {
 				sc, err := storageclass.Get(azureDiskStorageClass)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
@@ -1239,10 +1246,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("Skip PV test for clusters using unmanaged disks")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				By("Creating a persistent volume claim")
-				pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
+				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
 				Expect(err).NotTo(HaveOccurred())
 				// Azure Disk CSI driver in zone-enabled clusters uses 'WaitForFirstConsumer' volume binding mode
 				// thus, pvc won't be available until a pod consumes it
