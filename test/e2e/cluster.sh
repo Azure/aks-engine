@@ -21,7 +21,7 @@ END
 
 # Jenkinsfile will yield a null $ADD_NODE_POOL_INPUT if not set in the test job config
 if [ "$ADD_NODE_POOL_INPUT" == "null" ]; then
-  $ADD_NODE_POOL_INPUT=""
+  ADD_NODE_POOL_INPUT=""
 fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
