@@ -19,7 +19,9 @@ cat > ${TMP_DIR}/apimodel-input.json <<END
 ${API_MODEL_INPUT}
 END
 
-if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+if [ -z "$ADD_NODE_POOL_INPUT" ]; then
+  echo Will not add node pool
+elif [ -n "$ADD_NODE_POOL_INPUT" ]; then
   cat > ${TMP_DIR}/addpool-input.json <<END
 ${ADD_NODE_POOL_INPUT}
 END
@@ -118,7 +120,9 @@ else
   exit 0
 fi
 
-if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+if [ -z "$ADD_NODE_POOL_INPUT" ]; then
+  echo Will not add node pool
+elif [ -n "$ADD_NODE_POOL_INPUT" ]; then
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
