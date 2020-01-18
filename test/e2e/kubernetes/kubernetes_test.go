@@ -1046,6 +1046,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct storage classes deployed", func() {
+			if util.IsUsingEphemeralDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("no storage class is deployed when ephemeral disk is used, will not test")
+			}
 			var azureDiskProvisioner, azureFileProvisioner string
 			isUsingCSIDrivers := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
 				common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0")
