@@ -5,11 +5,14 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 	"text/template"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/telemetry"
+
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 )
@@ -824,28 +827,6 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			ExpectedResult: "foo/k8s/core/pause:1.2.0",
 		},
 		{
-			Name:     "HasTelemetryEnabled",
-			FuncName: "HasTelemetryEnabled",
-			MutateFunc: func(cs api.ContainerService) api.ContainerService {
-				cs.Properties.FeatureFlags = &api.FeatureFlags{
-					EnableTelemetry: true,
-				}
-				return cs
-			},
-			ExpectedResult: true,
-		},
-		{
-			Name:     "GetApplicationInsightsTelemetryKey",
-			FuncName: "GetApplicationInsightsTelemetryKey",
-			MutateFunc: func(cs api.ContainerService) api.ContainerService {
-				cs.Properties.TelemetryProfile = &api.TelemetryProfile{
-					ApplicationInsightsKey: "my_telemetry_key",
-				}
-				return cs
-			},
-			ExpectedResult: "my_telemetry_key",
-		},
-		{
 			Name:     "HasCiliumNetworkPolicy - cilium",
 			FuncName: "HasCiliumNetworkPolicy",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
@@ -909,13 +890,35 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 			ExpectedResult: false,
 		},
 		{
-			Name:     "GetEmptyApplicationInsightsTelemetryKey",
-			FuncName: "GetApplicationInsightsTelemetryKey",
+			Name:     "HasTelemetryEnabled",
+			FuncName: "HasTelemetryEnabled",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.FeatureFlags = &api.FeatureFlags{
+					EnableTelemetry: true,
+				}
+				return cs
+			},
+			ExpectedResult: true,
+		},
+		{
+			Name:     "GetEmptyApplicationInsightsTelemetryKeys",
+			FuncName: "GetApplicationInsightsTelemetryKeys",
 			MutateFunc: func(cs api.ContainerService) api.ContainerService {
 				cs.Properties.TelemetryProfile = nil
 				return cs
 			},
-			ExpectedResult: "",
+			ExpectedResult: telemetry.AKSEngineAppInsightsKey,
+		},
+		{
+			Name:     "GetApplicationInsightsTelemetryKeysWithUserSuppliedKey",
+			FuncName: "GetApplicationInsightsTelemetryKeys",
+			MutateFunc: func(cs api.ContainerService) api.ContainerService {
+				cs.Properties.TelemetryProfile = &api.TelemetryProfile{
+					ApplicationInsightsKey: "my_telemetry_key",
+				}
+				return cs
+			},
+			ExpectedResult: fmt.Sprintf("%s,%s", telemetry.AKSEngineAppInsightsKey, "my_telemetry_key"),
 		},
 		{
 			Name:     "GetLinuxDefaultTelemetryTags",

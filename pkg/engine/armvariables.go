@@ -12,6 +12,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/telemetry"
+
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -646,7 +648,7 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 
 	applicationInsightsKey := ""
 	if cs.Properties.TelemetryProfile != nil {
-		applicationInsightsKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
+		applicationInsightsKey = telemetry.AKSEngineAppInsightsKey
 	}
 
 	telemetryVars := map[string]interface{}{
