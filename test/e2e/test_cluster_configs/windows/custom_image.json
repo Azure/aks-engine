@@ -26,7 +26,7 @@
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"windowsProfile": {

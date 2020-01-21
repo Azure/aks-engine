@@ -68,6 +68,8 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
 	}
 
+	properties.setTelemetryProfileDefaults()
+
 	certsGenerated, _, e := cs.SetDefaultCerts(DefaultCertParams{
 		PkiKeySize: params.PkiKeySize,
 	})
@@ -116,6 +118,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		case NetworkPolicyCilium:
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
+		case NetworkPolicyAntrea:
+			o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
 		}
 
 		if o.KubernetesConfig.KubernetesImageBase == "" {
@@ -145,7 +149,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		} else {
 			if o.KubernetesConfig.NetworkPlugin == "" {
-				o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
+				if o.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
+					o.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
+				} else {
+					o.KubernetesConfig.NetworkPlugin = DefaultNetworkPlugin
+				}
 			}
 		}
 		if o.KubernetesConfig.ContainerRuntime == "" {
@@ -306,10 +314,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
-			if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0") {
-				// TODO make EnableAggregatedAPIs a pointer to bool so that a user can opt out of it
-				a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
-			}
+			a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs = true
 		} else if isUpdate && a.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
 			// Upgrade scenario:
 			// We need to force set EnableAggregatedAPIs to false if RBAC was previously disabled
@@ -342,12 +347,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
-		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.11.0") && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
+		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB == nil {
 			a.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
-		}
-
-		if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.15.0-beta.1") {
-			a.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
 		}
 
 		if a.OrchestratorProfile.IsAzureCNI() {
@@ -483,13 +484,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		// First, Configure addons
-		cs.setAddonsConfig(isUpgrade)
-		// Defaults enforcement flows below inherit from addons configuration,
-		// so it's critical to enforce default addons configuration first
-
 		// Configure kubelet
 		cs.setKubeletConfig(isUpgrade)
+
+		// Configure addons
+		cs.setAddonsConfig(isUpgrade)
 
 		// Master-specific defaults that depend upon kubelet defaults
 		// Set the default number of IP addresses allocated for masters.
@@ -617,6 +616,9 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.IsAzureStackCloud() && p.MasterProfile.PlatformFaultDomainCount == nil {
 		p.MasterProfile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
 	}
+	if p.MasterProfile.PlatformUpdateDomainCount == nil {
+		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
@@ -625,9 +627,15 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			profile.AvailabilityProfile = VirtualMachineScaleSets
 		}
 		if profile.AvailabilityProfile == VirtualMachineScaleSets {
-			if profile.ScaleSetEvictionPolicy == "" && profile.ScaleSetPriority == ScaleSetPriorityLow {
+			if profile.ScaleSetEvictionPolicy == "" && (profile.ScaleSetPriority == ScaleSetPriorityLow || profile.ScaleSetPriority == ScaleSetPrioritySpot) {
 				profile.ScaleSetEvictionPolicy = ScaleSetEvictionPolicyDelete
 			}
+
+			if profile.ScaleSetPriority == ScaleSetPrioritySpot && profile.SpotMaxPrice == nil {
+				var maximumValueFlag float64 = -1
+				profile.SpotMaxPrice = &maximumValueFlag
+			}
+
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 			}
@@ -646,6 +654,9 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		// Update default fault domain value for Azure Stack
 		if p.IsAzureStackCloud() && profile.PlatformFaultDomainCount == nil {
 			profile.PlatformFaultDomainCount = to.IntPtr(DefaultAzureStackFaultDomainCount)
+		}
+		if profile.PlatformUpdateDomainCount == nil {
+			profile.PlatformUpdateDomainCount = to.IntPtr(3)
 		}
 
 		// Accelerated Networking is supported on most general purpose and compute-optimized instance sizes with 2 or more vCPUs.
@@ -711,7 +722,26 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 				windowsProfile.ImageVersion = "latest"
 			}
 		}
+	} else if isUpgrade {
+		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
+		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
+		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.ImageVersion == "" {
+				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
+			}
+		}
 	}
+	// Scale: Keep the same version to match other nodes because we have no way to rollback
 }
 
 // setStorageDefaults for agents
@@ -736,6 +766,16 @@ func (p *Properties) setStorageDefaults() {
 
 func (p *Properties) setHostedMasterProfileDefaults() {
 	p.HostedMasterProfile.Subnet = DefaultKubernetesMasterSubnet
+}
+
+func (p *Properties) setTelemetryProfileDefaults() {
+	if p.TelemetryProfile == nil {
+		p.TelemetryProfile = &TelemetryProfile{}
+	}
+
+	if len(p.TelemetryProfile.ApplicationInsightsKey) == 0 {
+		p.TelemetryProfile.ApplicationInsightsKey = DefaultApplicationInsightsKey
+	}
 }
 
 // DefaultCertParams is the params when we set the default certs.

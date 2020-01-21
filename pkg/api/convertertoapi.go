@@ -110,6 +110,11 @@ func convertVLabsProperties(vlabs *vlabs.Properties, api *Properties, isUpdate b
 		convertVLabsCustomCloudProfile(vlabs.CustomCloudProfile, api.CustomCloudProfile)
 	}
 
+	if vlabs.TelemetryProfile != nil {
+		api.TelemetryProfile = &TelemetryProfile{}
+		convertVLabsTelemetryProfile(vlabs.TelemetryProfile, api.TelemetryProfile)
+	}
+
 	return nil
 }
 
@@ -360,7 +365,11 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 		if vp.HasWindows() {
 			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPluginWindows
 		} else {
-			api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
+			if vp.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.FlannelAddonName) {
+				api.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
+			} else {
+				api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
+			}
 		}
 	}
 }
@@ -532,6 +541,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.AgentSubnet = vlabs.AgentSubnet
 	api.AvailabilityZones = vlabs.AvailabilityZones
 	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
+	api.PlatformUpdateDomainCount = vlabs.PlatformUpdateDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
@@ -551,6 +561,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AvailabilityProfile = vlabs.AvailabilityProfile
 	api.ScaleSetPriority = vlabs.ScaleSetPriority
 	api.ScaleSetEvictionPolicy = vlabs.ScaleSetEvictionPolicy
+	api.SpotMaxPrice = vlabs.SpotMaxPrice
 	api.StorageProfile = vlabs.StorageProfile
 	api.DiskSizesGB = []int{}
 	api.DiskSizesGB = append(api.DiskSizesGB, vlabs.DiskSizesGB...)
@@ -563,10 +574,12 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.VMSSOverProvisioningEnabled = vlabs.VMSSOverProvisioningEnabled
 	api.AvailabilityZones = vlabs.AvailabilityZones
 	api.PlatformFaultDomainCount = vlabs.PlatformFaultDomainCount
+	api.PlatformUpdateDomainCount = vlabs.PlatformUpdateDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.EnableVMSSNodePublicIP = vlabs.EnableVMSSNodePublicIP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
 	api.AuditDEnabled = vlabs.AuditDEnabled
+	api.DiskEncryptionSetID = vlabs.DiskEncryptionSetID
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {
@@ -707,6 +720,10 @@ func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *Custom
 	api.AuthenticationMethod = vlabs.AuthenticationMethod
 	api.DependenciesLocation = DependenciesLocation(vlabs.DependenciesLocation)
 	api.PortalURL = vlabs.PortalURL
+}
+
+func convertVLabsTelemetryProfile(vlabs *vlabs.TelemetryProfile, api *TelemetryProfile) {
+	api.ApplicationInsightsKey = vlabs.ApplicationInsightsKey
 }
 
 func convertAzureEnvironmentSpecConfig(vlabses *vlabs.AzureEnvironmentSpecConfig, api *AzureEnvironmentSpecConfig) {

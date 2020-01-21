@@ -17,8 +17,23 @@ import (
 
 // StorageClass is used to parse data from kubectl get storageclass
 type StorageClass struct {
-	Metadata   Metadata   `json:"metadata"`
-	Parameters Parameters `json:"parameters"`
+	Metadata             Metadata               `json:"metadata"`
+	Parameters           Parameters             `json:"parameters"`
+	Provisioner          string                 `json:"provisioner"`
+	VolumeBindingMode    string                 `json:"volumeBindingMode"`
+	AllowVolumeExpansion bool                   `json:"allowVolumeExpansion,omitempty"`
+	AllowedTopologies    []TopologySelectorTerm `json:"allowedTopologies,omitempty"`
+}
+
+// TopologySelectorTerm is a list of topology selector requirements by labels
+type TopologySelectorTerm struct {
+	MatchLabelExpressions []TopologySelectorLabelRequirement `json:"matchLabelExpressions,omitempty"`
+}
+
+// TopologySelectorLabelRequirement holds information about a topology selector
+type TopologySelectorLabelRequirement struct {
+	Key    string   `json:"key,omitempty"`
+	Values []string `json:"values,omitempty"`
 }
 
 // Metadata holds information like name, create time

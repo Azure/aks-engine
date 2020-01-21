@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -332,18 +333,21 @@ func TestAPIServerConfigEnableSecureKubelet(t *testing.T) {
 }
 
 func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
-	// Test --enable-admission-plugins for v1.10 and above
-	version := "1.10.0"
+	version := "1.15.4"
 	enableAdmissionPluginsKey := "--enable-admission-plugins"
 	admissonControlKey := "--admission-control"
 	cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{}
 	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig[admissonControlKey] = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,AlwaysPullImages,ExtendedResourceToleration"
-	cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy = to.BoolPtr(true)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.PodSecurityPolicyAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 
-	// --enable-admission-plugins should be set for v1.10 and above
 	if _, found := a[enableAdmissionPluginsKey]; !found {
 		t.Fatalf("Admission control key '%s' not set in API server config for version %s", enableAdmissionPluginsKey, version)
 	}
@@ -357,22 +361,6 @@ func TestAPIServerConfigDefaultAdmissionControls(t *testing.T) {
 	admissionControlVal := a[enableAdmissionPluginsKey]
 	if !strings.Contains(admissionControlVal, ",PodSecurityPolicy") {
 		t.Fatalf("Admission control value '%s' expected to contain PodSecurityPolicy", admissionControlVal)
-	}
-
-	// Test --admission-control for v1.9 and below
-	version = "1.9.0"
-	cs = CreateMockContainerService("testcluster", version, 3, 2, false)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-
-	// --enable-admission-plugins is available for v1.10 and above and should not be set here
-	if _, found := a[enableAdmissionPluginsKey]; found {
-		t.Fatalf("Unknown admission control key '%s' set in API server config for version %s", enableAdmissionPluginsKey, version)
-	}
-
-	// --admission-control is used for v1.9 and below
-	if _, found := a[admissonControlKey]; !found {
-		t.Fatalf("Admission control key '%s' not set in API server config for version %s", enableAdmissionPluginsKey, version)
 	}
 }
 
@@ -438,7 +426,7 @@ func TestAPIServerAuditPolicyBackCompatOverride(t *testing.T) {
 
 func TestAPIServerWeakCipherSuites(t *testing.T) {
 	// Test allowed versions
-	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.13.0", "1.14.0"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.setAPIServerConfig()
 		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
@@ -448,18 +436,9 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 		}
 	}
 
-	// Validate that 1.9.0 doesn't include --tls-cipher-suites at all
-	cs := CreateMockContainerService("testcluster", "1.9.0", 3, 2, false)
-	cs.setAPIServerConfig()
-	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--tls-cipher-suites"]; ok {
-		t.Fatalf("got a value for '--tls-cipher-suites' API server config, which is not enabled in versions of Kubernetes prior to 1.10: %s",
-			a["--tls-cipher-suites"])
-	}
-
 	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
 	// Test user-override
-	for _, version := range []string{"1.10.0", "1.11.0", "1.12.0", "1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.13.0", "1.14.0"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
 			"--tls-cipher-suites": allSuites,
@@ -496,5 +475,34 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 	if a["--etcd-servers"] != fmt.Sprintf("https://%s:%s", cs.Properties.MasterProfile.GetCosmosEndPointURI(), strconv.Itoa(DefaultMasterEtcdClientPort)) {
 		t.Fatalf("got unexpected default value for '--etcd-servers' API server config: %s",
 			a["--etcd-servers"])
+	}
+}
+
+func TestAPIServerFeatureGates(t *testing.T) {
+	// Test k8s < 1.13
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
+			defaultTestClusterVer, a["--feature-gates"])
+	}
+
+	// Test 1.13 <= k8s <= 1.16
+	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--feature-gates"] != "VolumeSnapshotDataSource=true" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
+			"1.14.0", a["--feature-gates"])
+	}
+
+	// Test k8s >= 1.17
+	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--feature-gates"] != "" {
+		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
+			"1.17.0", a["--feature-gates"])
 	}
 }

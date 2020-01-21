@@ -48,11 +48,14 @@ type Config struct {
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
 	Distro                         string `envconfig:"DISTRO"`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
+	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
+	Location                       string `envconfig:"LOCATION"`
 	TenantID                       string `envconfig:"TENANT_ID"`
 	ImageName                      string `envconfig:"IMAGE_NAME"`
 	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE"`
+	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -100,6 +103,9 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	cs, err := ParseInput(config.ClusterDefinitionPath)
 	if err != nil {
 		return nil, err
+	}
+	if cs.Location == "" {
+		cs.Location = config.Location
 	}
 	prop := cs.ContainerService.Properties
 	var hasWindows bool
@@ -224,6 +230,21 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.CustomHyperKubeImage != "" {
 		prop.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = config.CustomHyperKubeImage
+	}
+
+	if config.EnableTelemetry == true {
+		if prop.FeatureFlags == nil {
+			prop.FeatureFlags = new(vlabs.FeatureFlags)
+		}
+		prop.FeatureFlags.EnableTelemetry = true
+	}
+
+	for _, pool := range prop.AgentPoolProfiles {
+		if pool.DiskEncryptionSetID != "" {
+			str := strings.Replace(pool.DiskEncryptionSetID, "SUB_ID", config.SubscriptionID, 1)
+			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
+			pool.DiskEncryptionSetID = str
+		}
 	}
 
 	return &Engine{

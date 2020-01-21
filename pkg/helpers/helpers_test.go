@@ -223,6 +223,22 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 			expectedResult: true,
 		},
 		{
+			input:          "Standard_DS3_v2",
+			expectedResult: true,
+		},
+		{
+			input:          "Standard_M8ms",
+			expectedResult: true,
+		},
+		{
+			input:          "AZAP_Performance_ComputeV17C",
+			expectedResult: true,
+		},
+		{
+			input:          "SQLGL",
+			expectedResult: true,
+		},
+		{
 			input:          "",
 			expectedResult: false,
 		},

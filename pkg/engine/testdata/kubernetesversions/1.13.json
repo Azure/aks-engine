@@ -1,0 +1,61 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+       "orchestratorRelease": "1.13"
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "masterdns1",
+      "vmSize": "Standard_D2_v2"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool1",
+        "count": 3,
+        "vmSize": "Standard_D2_v2",
+        "availabilityProfile": "AvailabilitySet",
+        "osType": "Windows"
+      }
+    ],
+    "windowsProfile": {
+      "adminUsername": "azureuser",
+      "adminPassword": "replacepassword1234$"
+    },
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": "ssh-rsa PUBLICKEY azureuser@linuxvm"
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "ServicePrincipalClientID",
+      "secret": "myServicePrincipalClientSecret"
+    },
+    "certificateProfile": {
+      "caCertificate": "caCertificate",
+      "caPrivateKey": "caPrivateKey",
+      "apiServerCertificate": "apiServerCertificate",
+      "apiServerPrivateKey": "apiServerPrivateKey",
+      "clientCertificate": "clientCertificate",
+      "clientPrivateKey": "clientPrivateKey",
+      "kubeConfigCertificate": "kubeConfigCertificate",
+      "kubeConfigPrivateKey": "kubeConfigPrivateKey",
+      "etcdClientCertificate": "etcdClientCertificate",
+      "etcdClientPrivateKey": "etcdClientPrivateKey",
+      "etcdServerCertificate": "etcdServerCertificate",
+      "etcdServerPrivateKey": "etcdServerPrivateKey",
+      "etcdPeerCertificates": [
+        "etcdPeerCertificate0"
+      ],
+      "etcdPeerPrivateKeys": [
+        "etcdPeerPrivateKey0"
+      ]
+    }
+  }
+}

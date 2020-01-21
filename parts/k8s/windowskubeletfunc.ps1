@@ -291,7 +291,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
@@ -309,7 +309,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
     & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 1048576
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
 }
 
 # Renamed from Write-KubernetesStartFiles
@@ -428,50 +428,6 @@ Write-Host "NetworkPlugin azure, starting kubelet."
 # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
 netsh advfirewall set allprofiles state off
 # startup the service
-
-# Find if the primary external switch network exists. If not create one.
-# This is done only once in the lifetime of the node
-`$hnsNetwork = Get-HnsNetwork | ? Name -EQ `$global:ExternalNetwork
-if (!`$hnsNetwork)
-{
-    Write-Host "Creating a new hns Network"
-    ipmo `$global:HNSModule
-
-    `$na = @(Get-NetAdapter -Physical)
-    if (`$na.Count -eq 0)
-    {
-        throw "Failed to find any physical network adapters"
-    }
-
-    # If there is more than one adapter, use the first adapter.
-    `$managementIP = (Get-NetIPAddress -ifIndex `$na[0].ifIndex -AddressFamily IPv4).IPAddress
-    `$adapterName = `$na[0].Name
-    write-host "Using adapter `$adapterName with IP address `$managementIP"
-    `$mgmtIPAfterNetworkCreate
-
-    `$stopWatch = New-Object System.Diagnostics.Stopwatch
-    `$stopWatch.Start()
-    # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type `$global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName `$adapterName -Name `$global:ExternalNetwork -Verbose
-
-    # Wait for the switch to be created and the ip address to be assigned.
-    for (`$i=0;`$i -lt 180;`$i++)
-    {
-        `$mgmtIPAfterNetworkCreate = Get-NetIPAddress `$managementIP -ErrorAction SilentlyContinue
-        if (`$mgmtIPAfterNetworkCreate)
-        {
-            break
-        }
-        sleep -Milliseconds 1000
-    }
-
-    `$stopWatch.Stop()
-    if (-not `$mgmtIPAfterNetworkCreate)
-    {
-        throw "Failed to find `$managementIP after creating `$global:ExternalNetwork network"
-    }
-    write-host "It took `$(`$StopWatch.Elapsed.Seconds) seconds to create the `$global:ExternalNetwork network."
-}
 
 # Find if network created by CNI exists, if yes, remove it
 # This is required to keep the network non-persistent behavior

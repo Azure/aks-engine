@@ -551,16 +551,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.11 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.11.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "1.12 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.12.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.13 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.13.json",
 			setArgs:      defaultSet,
@@ -586,13 +576,18 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "1.18 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.18.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "vmss",
 			apiModelPath: "../examples/kubernetes-vmss/kubernetes.json",
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "vmss low priority",
-			apiModelPath: "../examples/kubernetes-vmss-low-priority/kubernetes.json",
+			name:         "vmss spot",
+			apiModelPath: "../examples/kubernetes-vmss-spot/kubernetes.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -653,6 +648,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "cilium network policy",
 			apiModelPath: "../examples/networkpolicy/kubernetes-cilium.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "antrea network policy",
+			apiModelPath: "../examples/networkpolicy/kubernetes-antrea.json",
 			setArgs:      defaultSet,
 		},
 		{

@@ -2,8 +2,7 @@
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
-function
-Write-Log($message)
+function Write-Log($message)
 {
     $msg = $message | Timestamp
     Write-Output $msg
@@ -48,9 +47,42 @@ function DownloadFileOverHttp
     
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
+
+        $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
         Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $downloadTimer.Stop()
+
+        if ($global:AppInsightsClient -ne $null) {
+            $event = New-Object "Microsoft.ApplicationInsights.DataContracts.EventTelemetry"
+            $event.Name = "FileDownload"
+            $event.Properties["FileName"] = $fileName
+            $event.Metrics["DurationMs"] = $downloadTimer.ElapsedMilliseconds
+            $global:AppInsightsClient.TrackEvent($event)
+        }
+
         $ProgressPreference = $oldProgressPreference
         Write-Log "Downloaded file to $DestinationPath"
+    }
+}
+
+function Get-WindowsVersion {
+    $systemInfo = Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    return "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)"
+}
+
+function Get-CniVersion {
+    switch($global:NetworkPlugin) {
+        "azure" {
+            if ($global:VNetCNIPluginsURL -match "(v[0-9`.]+).(zip|tar)") {
+                return $matches[1]
+            } else {
+                return ""
+            }
+            break;
+        }
+        default {
+            return ""
+        }
     }
 }
 
@@ -136,4 +168,17 @@ function Get-NetworkLogCollectionScripts {
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd' -DestinationPath 'c:\k\debug\startpacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
+}
+
+function Register-LogsCleanupScriptTask {
+    Write-Log "Creating a scheduled task to run windowslogscleanup.ps1"
+
+    (Get-Content "c:\AzureData\k8s\windowslogscleanup.ps1") |
+    Out-File "c:\k\windowslogscleanup.ps1"
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowslogscleanup.ps1`""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "log-cleanup-task"
+    Register-ScheduledTask -TaskName "log-cleanup-task" -InputObject $definition
 }

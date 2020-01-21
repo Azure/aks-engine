@@ -25,8 +25,6 @@ systemctlEnableAndStart() {
 
 configureEtcdUser(){
     useradd -U "etcd"
-    usermod -p "$(head -c 32 /dev/urandom | base64)" "etcd"
-    passwd -u "etcd"
     id "etcd"
 }
 
@@ -222,11 +220,11 @@ configureCNI() {
     retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
     echo -n "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
     configureCNIIPTables
-    if [[ "${NETWORK_PLUGIN}" = "cilium" ]]; then
-        systemctl enable sys-fs-bpf.mount
-        systemctl restart sys-fs-bpf.mount
-        REBOOTREQUIRED=true
-    fi
+    {{if HasCiliumNetworkPlugin}}
+    systemctl enable sys-fs-bpf.mount
+    systemctl restart sys-fs-bpf.mount
+    REBOOTREQUIRED=true
+    {{end}}
 {{- if IsAzureStackCloud}}
     if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         {{/* set environment to mas when using Azure CNI on Azure Stack */}}
@@ -307,6 +305,21 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
+    {{if HasCiliumNetworkPolicy}}
+    while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
+        sleep 3
+    done
+    {{end}}
+    {{if HasAntreaNetworkPolicy}}
+    while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
+        sleep 3
+    done
+    {{end}}
+    {{if HasFlannelNetworkPlugin}}
+    while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do
+        sleep 3
+    done
+    {{end}}
 }
 
 ensureLabelNodes() {

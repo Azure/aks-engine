@@ -4,8 +4,6 @@
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
-        "enableRbac": true,
-        "enablePodSecurityPolicy": true,
         "addons": [
           {
             "name": "pod-security-policy",

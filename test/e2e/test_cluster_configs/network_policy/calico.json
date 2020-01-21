@@ -3,7 +3,7 @@
 		"CREATE_VNET": true
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15", "1.16"]
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -61,7 +61,7 @@
 					],
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"linuxProfile": {

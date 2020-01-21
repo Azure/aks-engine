@@ -1,0 +1,125 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: aci-connector
+  labels:
+    app: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - services
+  - endpoints
+  - events
+  - secrets
+  - nodes
+  - nodes/status
+  - pods/status
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aci-connector
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: aci-connector
+subjects:
+- kind: ServiceAccount
+  name: aci-connector
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aci-connector-secret
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+type: Opaque
+data:
+  credentials.json: <creds>
+  cert.pem: <cert>
+  key.pem: <key>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    app: aci-connector
+    name: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aci-connector
+  template:
+    metadata:
+      labels:
+        app: aci-connector
+    spec:
+      serviceAccountName: aci-connector
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - name: aci-connector
+        image: {{ContainerImage "aci-connector"}}
+        imagePullPolicy: Always
+        env:
+        - name: KUBELET_PORT
+          value: "10250"
+        - name: AZURE_AUTH_LOCATION
+          value: /etc/virtual-kubelet/credentials.json
+        - name: ACI_RESOURCE_GROUP
+          value: <rgName>
+        - name: ACI_REGION
+          value: {{ContainerConfig "region"}}
+        - name: APISERVER_CERT_LOCATION
+          value: /etc/virtual-kubelet/cert.pem
+        - name: APISERVER_KEY_LOCATION
+          value: /etc/virtual-kubelet/key.pem
+        - name: VKUBELET_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "aci-connector"}}
+            memory: {{ContainerMemReqs "aci-connector"}}
+          limits:
+            cpu: {{ContainerCPULimits "aci-connector"}}
+            memory: {{ContainerMemLimits "aci-connector"}}
+        volumeMounts:
+        - name: credentials
+          mountPath: "/etc/virtual-kubelet"
+          readOnly: true
+        command: ["virtual-kubelet"]
+        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
+      volumes:
+      - name: credentials
+        secret:
+          secretName: aci-connector-secret
+#EOF

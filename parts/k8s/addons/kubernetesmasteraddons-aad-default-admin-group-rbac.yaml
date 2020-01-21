@@ -7,7 +7,7 @@ metadata:
     addonmanager.kubernetes.io/mode: EnsureExists
 subjects:
 - kind: Group
-  name: <gID>
+  name: {{ContainerConfig "adminGroupID"}}
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole

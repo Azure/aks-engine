@@ -128,6 +128,7 @@ func TestCreateWindowsImage(t *testing.T) {
 						StorageAccountType: compute.StorageAccountTypesStandardLRS,
 					},
 				},
+				HyperVGeneration: compute.HyperVGenerationTypesV1,
 			},
 		},
 	}

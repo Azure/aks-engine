@@ -4,18 +4,18 @@ Extensions in AKS Engine provide an easy way for AKS Engine users to add pre-pac
 
 ## extensionProfiles
 
-The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world-dcos extension.
+The extensionProfiles contains the extensions that the cluster will install. The following illustrates a template with a hello-world extension.
 
 ``` javascript
 {
   ...
   "extensionProfiles": [
     {
-        "name": "hello-world-dcos",
+        "name": "hello-world",
         "version": "v1",
         "extensionParameters": "parameters",
-        "rootURL": "http://mytestlocation.com/hello-world-dcos/",
-        "script": "hello-world-dcos.sh"
+        "rootURL": "http://mytestlocation.com/hello-world/",
+        "script": "hello-world.sh"
     }
   ]
 }
@@ -92,6 +92,68 @@ Or they can be referenced as a preprovision extension, this will run during clou
         "script": "hello.sh"
     }
   ]
+}
+```
+
+|Name|Required|Description|
+|---|---|---|
+|name|yes|The name of the extension. This must match the name in the extensionProfiles|
+
+## agentPoolProfiles
+
+Extensions run a script on every node in an agent pool. The extensions array in the
+agentPoolProfiles defines that an extension will be run on every node of that agent
+configuration. Extensions in agentPoolProfiles are only supported for VMAS agent pools,
+not VMSS.
+
+``` json
+{
+    "agentPoolProfiles": [
+        {
+            "name": "agentpool1",
+            "count": 3,
+            "vmSize": "Standard_DS2_v2",
+            "availabilityProfile": "AvailabilitySet",
+            "extensions": [
+                {
+                    "name": "prometheus-grafana-k8s"
+                }
+            ]
+        }
+    ],
+    "extensionProfiles": [
+        {
+            "name": "prometheus-grafana-k8s",
+            "version": "v1",
+            "rootURL": "https://raw.githubusercontent.com/Azure/aks-engine/master/"
+        }
+    ]
+}
+```
+
+Or they can be referenced as a preprovision extension, this will run during cloud init before the cluster is brought up.
+
+``` json
+{
+    "agentPoolProfiles": [
+        {
+            "name": "agentpool1",
+            "count": 3,
+            "vmSize": "Standard_D2_v3",
+            "availabilityProfile": "AvailabilitySet",
+            "preProvisionExtension": {
+                "name": "hello-world",
+                "singleOrAll": "All"
+            }
+        }
+    ],
+    "extensionProfiles": [
+        {
+            "name": "hello-world",
+            "version": "v1",
+            "script": "hello.sh"
+        }
+    ]
 }
 ```
 

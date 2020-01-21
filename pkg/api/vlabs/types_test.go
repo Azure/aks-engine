@@ -111,6 +111,7 @@ func TestMasterProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected MasterProfile.AvailabilityZones, HasAvailabilityZones returned false after unmarshal")
 	}
 }
+
 func TestAgentPoolProfile(t *testing.T) {
 	// With osType not specified
 	AgentPoolProfileText := `{"count" : 0, "storageProfile" : "StorageAccount", "vnetSubnetID" : "1234"}`
@@ -135,6 +136,10 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID != "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is not empty after unmarshal")
+	}
+
 	// With osType Windows
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
@@ -157,7 +162,7 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	// With osType Windows and Ephemeral disks
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345" }`
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -179,9 +184,13 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
 	// With osType Linux and RHEL distro
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "rhel", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -207,9 +216,33 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile == Ephemeral after unmarshal")
 	}
 
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
+	// With VMSS and Spot VMs
+	AgentPoolProfileText = `{"name":"linuxpool1","osType":"Linux","distro":"rhel","count":1,"vmSize":"Standard_D2_v2",
+"availabilityProfile":"VirtualMachineScaleSets","scaleSetPriority":"Spot","ScaleSetEvictionPolicy":"Delete","SpotMaxPrice":88}`
+	ap = &AgentPoolProfile{}
+	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
+		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
+	}
+
+	if ap.ScaleSetPriority != "Spot" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.ScaleSetPriority != ScaleSetPrioritySpot after unmarshal")
+	}
+
+	if ap.ScaleSetEvictionPolicy != "Delete" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete after unmarshal")
+	}
+
+	if *ap.SpotMaxPrice != float64(88) {
+		t.Fatalf("unexpectedly detected *AgentPoolProfile.SpotMaxPrice != float64(88) after unmarshal")
+	}
+
 	// With osType Linux and coreos distro
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "coreos", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000] }`
+"availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000], "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -241,6 +274,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if !ap.IsVirtualMachineScaleSets() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.AvailabilitySets != VirtualMachineScaleSets after unmarshal")
+	}
+
+	if ap.DiskEncryptionSetID == "" {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
 	}
 }
 
@@ -712,4 +749,55 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 		}
 	}
 	return p
+}
+
+func TestAADAdminGroupIDMethods(t *testing.T) {
+	tests := []struct {
+		name                       string
+		properties                 *Properties
+		expectedHasAADAdminGroupID bool
+		expectedGetAADAdminGroupID string
+	}{
+		{
+			name:                       "default",
+			properties:                 &Properties{},
+			expectedHasAADAdminGroupID: false,
+			expectedGetAADAdminGroupID: "",
+		},
+		{
+			name: "no AdminGroupID",
+			properties: &Properties{
+				AADProfile: &AADProfile{
+					ClientAppID: "",
+				},
+			},
+			expectedHasAADAdminGroupID: false,
+			expectedGetAADAdminGroupID: "",
+		},
+		{
+			name: "AdminGroupID value",
+			properties: &Properties{
+				AADProfile: &AADProfile{
+					AdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+				},
+			},
+			expectedHasAADAdminGroupID: true,
+			expectedGetAADAdminGroupID: "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			hasAADAdminGroupID := test.properties.HasAADAdminGroupID()
+			if hasAADAdminGroupID != test.expectedHasAADAdminGroupID {
+				t.Errorf("expected HasAADAdminGroupID %t, but got %t", test.expectedHasAADAdminGroupID, hasAADAdminGroupID)
+			}
+			getAADAdminGroupID := test.properties.GetAADAdminGroupID()
+			if getAADAdminGroupID != test.expectedGetAADAdminGroupID {
+				t.Errorf("expected HasAADAdminGroupID %s, but got %s", test.expectedGetAADAdminGroupID, getAADAdminGroupID)
+			}
+		})
+	}
 }

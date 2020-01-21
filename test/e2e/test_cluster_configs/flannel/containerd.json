@@ -7,16 +7,11 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPlugin": "flannel",
 					"containerRuntime": "containerd",
 					"addons": [
 						{
-							"name": "tiller",
-							"enabled": false
-						},
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": false
+							"name": "flannel",
+							"enabled": true
 						}
 					]
 				}
@@ -32,7 +27,7 @@
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"linuxProfile": {

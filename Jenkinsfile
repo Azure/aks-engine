@@ -5,7 +5,7 @@ defaultEnv = [
 	CREATE_VNET: false,
 	] + params
 
-def k8sVersions = ["1.12", "1.13", "1.14", "1.15", "1.16", "1.17"]
+def k8sVersions = ["1.13", "1.14", "1.15", "1.16", "1.17", "1.18"]
 def latestReleasedVersion = "1.16"
 def tasks = [:]
 def testConfigs = []
@@ -63,15 +63,12 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
 							API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
+							ADD_NODE_POOL_INPUT: "${JsonOutput.toJson(jobCfg.addNodePool)}",
 						] + jobSpecificEnv
 					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 						// define any sensitive data needed for the test script
-						def clientIdOverride = opts?.clientId ? opts.clientId : 'AKS_ENGINE_3014546b_CLIENT_ID'
-						def clientSecretOverride = opts?.clientSecret ? opts.clientSecret : 'AKS_ENGINE_3014546b_CLIENT_SECRET'
 						def creds = [
-								string(credentialsId: 'AKS_ENGINE_TENANT_ID', variable: 'TENANT_ID'),
-								string(credentialsId: clientIdOverride, variable: 'CLIENT_ID'),
-								string(credentialsId: clientSecretOverride, variable: 'CLIENT_SECRET'),
+								azureServicePrincipal(params.SERVICE_PRINCIPAL),
 								string(credentialsId: 'LOG_ANALYTICS_WORKSPACE_KEY', variable: 'LOG_ANALYTICS_WORKSPACE_KEY')
 							]
 

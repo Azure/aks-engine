@@ -1,10 +1,10 @@
 {
 	"env": {
 		"CREATE_VNET": true,
-		"REGION_OPTIONS": "eastus,westeurope,southeastasia,westus2"
+		"REGION_OPTIONS": "eastus,westeurope,southeastasia,uksouth"
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15", "1.16", "1.17"]
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16", "1.17"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -68,7 +68,7 @@
 						"1",
 						"2"
 					],
-					"scaleSetPriority": "Low",
+					"scalesetPriority": "Spot",
 					"auditDEnabled": true
 				}
 			],

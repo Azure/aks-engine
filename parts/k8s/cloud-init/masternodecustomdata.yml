@@ -183,13 +183,13 @@ write_files:
     }
 {{end}}
 
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "cilium"}}
+{{if HasCiliumNetworkPlugin}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
-    {{WrapAsVariable "systemdBPFMount"}}
+    {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
 {{if NeedsContainerd}}
@@ -342,8 +342,6 @@ write_files:
 
 MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 
-MASTER_ADDONS_CONFIG_PLACEHOLDER
-
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
@@ -387,31 +385,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-{{if IsKubernetesVersionGe "1.17.0-alpha.1"}}
-    {{ if IsIPv6DualStackFeatureEnabled }}
-    sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
-    {{ else }}
-    sed -i "s|<img>|{{WrapAsParameter "kubeProxySpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
-    {{ end }}
-{{else}}
-    {{ if IsIPv6DualStackFeatureEnabled }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|IPv6DualStack: true|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
-    {{ else }}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesHyperkubeSpec"}}|g; s|<CIDR>|{{WrapAsParameter "kubeClusterCidr"}}|g; s|<kubeProxyMode>|{{ .OrchestratorProfile.KubernetesConfig.ProxyMode}}|g; s|<IPv6DualStackFeature>|{}|g" /etc/kubernetes/addons/kube-proxy-daemonset.yaml
-    {{ end }}
-{{end}}
-    KUBEDNS=/etc/kubernetes/addons/kube-dns-deployment.yaml
-{{if NeedsKubeDNSWithExecHealthz}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgHealthz>|{{WrapAsParameter "kubernetesExecHealthzSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
-{{else if IsKubernetesVersionGe "1.12.0"}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesCoreDNSSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" /etc/kubernetes/addons/coredns.yaml
-{{else}}
-    sed -i "s|<img>|{{WrapAsParameter "kubernetesKubeDNSSpec"}}|g; s|<imgMasq>|{{WrapAsParameter "kubernetesDNSMasqSpec"}}|g; s|<imgSidecar>|{{WrapAsParameter "kubernetesDNSSidecarSpec"}}|g; s|<domain>|{{WrapAsParameter "kubernetesKubeletClusterDomain"}}|g; s|<clustIP>|{{WrapAsParameter "kubeDNSServiceIP"}}|g" $KUBEDNS
-{{end}}
-
-{{if AdminGroupID }}
-    sed -i "s|<gID>|{{WrapAsParameter "aadAdminGroupId"}}|g" "/etc/kubernetes/addons/aad-default-admin-group-rbac.yaml"
-{{end}}
 
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml

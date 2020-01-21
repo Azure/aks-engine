@@ -1,11 +1,11 @@
 build-packer:
-	@packer build -var-file=packer/settings.json packer/vhd-image-builder.json
+	@packer build -var-file=vhd/packer/settings.json vhd/packer/vhd-image-builder.json
 
 build-packer-windows:
-	@packer build -var-file=packer/settings.json packer/windows-vhd-builder.json
+	@packer build -var-file=vhd/packer/settings.json vhd/packer/windows-vhd-builder.json
 
 init-packer:
-	@./packer/init-variables.sh
+	@./vhd/packer/init-variables.sh
 
 az-login:
 	az login --service-principal -u ${CLIENT_ID} -p ${CLIENT_SECRET} --tenant ${TENANT_ID}
@@ -24,3 +24,6 @@ delete-sa: az-login
 
 generate-sas: az-login
 	az storage container generate-sas --name vhds --permissions lr --connection-string "${CLASSIC_SA_CONNECTION_STRING}" --start ${START_DATE} --expiry ${EXPIRY_DATE} | tr -d '"' | tee -a vhd-sas && cat vhd-sas
+
+windows-vhd-publishing-info: az-login
+	@./vhd/packer/generate-windows-vhd-publishing-info.sh

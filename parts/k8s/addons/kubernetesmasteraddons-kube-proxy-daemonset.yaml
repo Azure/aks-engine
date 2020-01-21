@@ -43,10 +43,10 @@ spec:
         - /hyperkube
         - kube-proxy
         - --kubeconfig=/var/lib/kubelet/kubeconfig
-        - --cluster-cidr=<CIDR>
+        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
         - --feature-gates=ExperimentalCriticalPodAnnotation=true
-        - --proxy-mode=<kubeProxyMode>
-        image: <img>
+        - --proxy-mode={{ContainerConfig "proxy-mode"}}
+        image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
         resources:

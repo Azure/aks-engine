@@ -1,6 +1,6 @@
 # Architecture
 
-AKS Engine is a command line tool that generates ARM (Azure Resource Manager) templates in order for one to deploy container-based clusters (like Kubernetes , DCOS, Openshift, Docker swarm) on the Azure platform.
+AKS Engine is a command line tool that generates ARM (Azure Resource Manager) templates to deploy Kubernetes clusters on the Azure platform.
 
 This design document provides a brief and high-level overview of what aks-engine does internally to achieve deployment of containerized clusters. The scope of this document will be limited to the execution of aks-engine when creating Kubernetes clusters.
 

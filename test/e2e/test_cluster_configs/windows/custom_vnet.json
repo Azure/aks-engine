@@ -35,7 +35,7 @@
 						128
 					],
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low",
+					"scalesetPriority": "Spot",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
 			],

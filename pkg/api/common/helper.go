@@ -103,6 +103,8 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 		"Standard_NC12s_v3":  true,
 		"Standard_NC24s_v3":  true,
 		"Standard_NC24rs_v3": true,
+		"Standard_ND40s_v3":  true,
+		"Standard_ND40rs_v2": true,
 	}
 	// Trim the optional _Promo suffix.
 	vmSize = strings.TrimSuffix(vmSize, "_Promo")
@@ -276,6 +278,8 @@ func IsSgxEnabledSKU(vmSize string) bool {
 func GetMasterKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
 	buf.WriteString("kubernetes.azure.com/role=master")
+	buf.WriteString(",node.kubernetes.io/exclude-from-external-load-balancers=true")
+	buf.WriteString(",node.kubernetes.io/exclude-disruption=true")
 	if deprecated {
 		buf.WriteString(",kubernetes.io/role=master")
 		buf.WriteString(",node-role.kubernetes.io/master=")

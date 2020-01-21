@@ -89,7 +89,7 @@ var (
 		NVIDIAImageBase:                  "nvidia/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
-		MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
+		MCRKubernetesImageBase:           "mcr.microsoft.com/",
 		EtcdDownloadURLBase:              "https://acs-mirror.azureedge.net/github-coreos",
 		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
@@ -152,25 +152,25 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-201911",
+		ImageSku:       "aks-ubuntu-1604-202001",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.11.18",
+		ImageVersion:   "2020.01.15",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-201911",
+		ImageSku:       "aks-ubuntu-1804-202001",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2019.11.18",
+		ImageVersion:   "2020.01.15",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk",
+		ImageSku:       "2019-datacenter-core-smalldisk-1912",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.805.191024",
+		ImageVersion:   "17763.864.191211",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -178,7 +178,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.805.1910061628",
+		ImageVersion:   "17763.864.1911120152",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -272,7 +272,7 @@ var (
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
-			MCRKubernetesImageBase:           "mcr.microsoft.com/k8s/core/",
+			MCRKubernetesImageBase:           "mcr.microsoft.com/",
 			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
 			EtcdDownloadURLBase:              "https://mirror.azk8s.cn/kubernetes/etcd",
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,

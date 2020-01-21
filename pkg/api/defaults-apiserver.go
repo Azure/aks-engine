@@ -56,6 +56,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--audit-log-maxbackup": "10",
 		"--audit-log-maxsize":   "100",
 		"--profiling":           DefaultKubernetesAPIServerEnableProfiling,
+		"--tls-cipher-suites":   TLSStrongCipherSuitesAPIServer,
 	}
 
 	// Data Encryption at REST configuration conditions
@@ -93,9 +94,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// Audit Policy configuration
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") {
-		defaultAPIServerConfig["--audit-policy-file"] = "/etc/kubernetes/addons/audit-policy.yaml"
-	}
+	defaultAPIServerConfig["--audit-policy-file"] = "/etc/kubernetes/addons/audit-policy.yaml"
 
 	// RBAC configuration
 	if to.Bool(o.KubernetesConfig.EnableRbac) {
@@ -106,14 +105,15 @@ func (cs *ContainerService) setAPIServerConfig() {
 		}
 	}
 
-	// Disable Weak TLS Cipher Suites for 1.10 and abov
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		defaultAPIServerConfig["--tls-cipher-suites"] = TLSStrongCipherSuitesAPIServer
-	}
-
 	// Set default admission controllers
 	admissionControlKey, admissionControlValues := getDefaultAdmissionControls(cs)
 	defaultAPIServerConfig[admissionControlKey] = admissionControlValues
+
+	// Enable VolumeSnapshotDataSource feature gate for Azure Disk CSI Driver
+	// which is disabled from 1.13 to 1.16 by default
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0") {
+		addDefaultFeatureGates(defaultAPIServerConfig, o.OrchestratorVersion, "1.13.0", "VolumeSnapshotDataSource=true")
+	}
 
 	// If no user-configurable apiserver config values exists, use the defaults
 	if o.KubernetesConfig.APIServerConfig == nil {
@@ -167,23 +167,10 @@ func (cs *ContainerService) setAPIServerConfig() {
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {
 	o := cs.Properties.OrchestratorProfile
 	admissionControlKey := "--enable-admission-plugins"
-	var admissionControlValues string
-
-	// --admission-control was used in v1.9 and earlier and was deprecated in 1.10
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		admissionControlKey = "--admission-control"
-	}
-
-	// Add new version case when applying admission controllers only available in that version or later
-	switch {
-	case common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0"):
-		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
-	default:
-		admissionControlValues = "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota"
-	}
+	admissionControlValues := "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration"
 
 	// Pod Security Policy configuration
-	if to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy) {
+	if o.KubernetesConfig.IsAddonEnabled(common.PodSecurityPolicyAddonName) {
 		admissionControlValues += ",PodSecurityPolicy"
 	}
 

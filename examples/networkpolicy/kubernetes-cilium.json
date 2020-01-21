@@ -3,19 +3,9 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.12",
+      "orchestratorRelease": "1.15",
       "kubernetesConfig": {
-        "networkPolicy": "cilium",
-        "addons": [
-          {
-            "name": "tiller",
-            "enabled" : false
-          },
-          {
-            "name": "kubernetes-dashboard",
-            "enabled" : false
-          }
-        ]
+        "networkPolicy": "cilium"
       }
     },
     "masterProfile": {
@@ -27,8 +17,7 @@
       {
         "name": "agentpool1",
         "count": 3,
-        "vmSize": "Standard_D2_v3",
-        "availabilityProfile": "AvailabilitySet"
+        "vmSize": "Standard_D2_v3"
       }
     ],
     "linuxProfile": {

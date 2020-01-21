@@ -1,0 +1,114 @@
+﻿Build Number: 20191212.1
+Build Id:     2293
+Build Repo:   https://github.com/Azure/aks-engine
+Build Branch: master
+Commit:       a8011d25da58c4a006aa6e92b50a874d4198847c
+
+VHD ID:      c2d3b0e4-95bd-4058-8b3f-090c2f98ee28
+
+System Info
+	OS Name        : Windows Server 2019 Datacenter
+	OS Version     : 17763.864
+	OS InstallType : Server Core
+
+Allowed security protocols: Tls, Tls11, Tls12
+
+Installed Features
+
+Display Name                                            Name                       Install State
+------------                                            ----                       -------------
+[X] File and Storage Services                           FileAndStorage-Services        Installed
+    [X] Storage Services                                Storage-Services               Installed
+[X] Hyper-V                                             Hyper-V                        Installed
+[X] .NET Framework 4.7 Features                         NET-Framework-45-Fea...        Installed
+    [X] .NET Framework 4.7                              NET-Framework-45-Core          Installed
+    [X] WCF Services                                    NET-WCF-Services45             Installed
+        [X] TCP Port Sharing                            NET-WCF-TCP-PortShar...        Installed
+[X] BitLocker Drive Encryption                          BitLocker                      Installed
+[X] Containers                                          Containers                     Installed
+[X] Enhanced Storage                                    EnhancedStorage                Installed
+[X] Remote Server Administration Tools                  RSAT                           Installed
+    [X] Role Administration Tools                       RSAT-Role-Tools                Installed
+        [X] Hyper-V Management Tools                    RSAT-Hyper-V-Tools             Installed
+            [X] Hyper-V Module for Windows PowerShell   Hyper-V-PowerShell             Installed
+[X] System Data Archiver                                System-DataArchiver            Installed
+[X] Windows Defender Antivirus                          Windows-Defender               Installed
+[X] Windows PowerShell                                  PowerShellRoot                 Installed
+    [X] Windows PowerShell 5.1                          PowerShell                     Installed
+[X] WoW64 Support                                       WoW64-Support                  Installed
+
+
+
+Installed Packages
+	Language.Basic~~~en-US~0.0.1.0
+	Language.Handwriting~~~en-US~0.0.1.0
+	Language.OCR~~~en-US~0.0.1.0
+	Language.Speech~~~en-US~0.0.1.0
+	Language.TextToSpeech~~~en-US~0.0.1.0
+	MathRecognizer~~~~0.0.1.0
+	OpenSSH.Client~~~~0.0.1.0
+	OpenSSH.Server~~~~0.0.1.0
+
+Installed QFEs
+	KB4515855 : Update          : http://support.microsoft.com/?kbid=4515855
+	KB4523204 : Security Update : http://support.microsoft.com/?kbid=4523204
+	KB4523205 : Security Update : http://support.microsoft.com/?kbid=4523205
+
+Installed Updates
+	2019-10 Cumulative Update for .NET Framework 3.5, 4.7.2 and 4.8 for Windows Server 2019 for x64 (KB4524099)
+	Security Intelligence Update for Windows Defender Antivirus - KB2267602 (Version 1.307.285.0)
+
+Windows Update Registry Settings
+	https://docs.microsoft.com/en-us/windows/deployment/update/waas-wu-settings
+	HKLM:SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate
+	HKLM:SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU
+		NoAutoUpdate : 1
+
+Docker Info
+Version: Docker version 19.03.2, build c92ab06ed9
+
+Images:
+
+Repository                           Tag      ID          
+----------                           ---      --          
+mcr.microsoft.com/windows/servercore ltsc2019 782a75e44953
+mcr.microsoft.com/windows/nanoserver 1809     c897e7c62e1e
+mcr.microsoft.com/k8s/core/pause     1.2.0    a74290a8271a
+
+
+
+Cached Files:
+
+File                                                                Sha256                                                           SizeBytes
+----                                                                ------                                                           ---------
+c:\akse-cache\collect-windows-logs.ps1                              A29DA10CC26310C5071EC3E44B886C5F860757072BAC9224BB73A99C0DFA7556      3048
+c:\akse-cache\collectlogs.ps1                                       F979A04A6907690681074937337FA3C3F93278DDC6152E4571D8F220FA0AA5E5      7950
+c:\akse-cache\dumpVfpPolicies.ps1                                   02BFF0235421F1C8477E809B8EB354B313C348CE2732C4842B710239CD6FE665      1642
+c:\akse-cache\helper.psm1                                           E3082C3C63F4BE928B2293CA8C83085FA90C717F70314B6B9653E72AFE8CCC18     17945
+c:\akse-cache\hns.psm1                                              A8A53ED4FAC2E27C7E4268DB069D4CF3129A56D466EF3BF9465FB52DCD76A29C     14733
+c:\akse-cache\microsoft.applicationinsights.2.11.0.nupkg            4B0448F9640FCD84979D6CE736348EE9304A7A069F77E38FF411F3211E699C68    776442
+c:\akse-cache\starthnstrace.cmd                                     3A566462ADBD27A0DCAB4049EF4A1A3EE7AECF2FCFEC6ED8A1CAE305AE7EF562       408
+c:\akse-cache\startpacketcapture.cmd                                3E31690E507C8B18AC5CC569C89B51CE1901630A501472DA1BC1FBF2737AA5BC       756
+c:\akse-cache\stoppacketcapture.cmd                                 BD966D7738A3C0FC73E651BAF196C0FB60D889F1180B2D114F8EA3F8A8453C3D        17
+c:\akse-cache\VFP.psm1                                              3F2F44BD4B3219E8BB29EB9F8958EC96F2C8DDCEF556E995790B6476231A92DB      9616
+c:\akse-cache\win-bridge.exe                                        CA12506E55DF3E3428B29994AE1FC8131DDFBB6838A550DFA22287CDC6548634   9599488
+c:\akse-cache\win-k8s\azs-v1.14.7-1int.zip                          B67C9B684FCA483DBDB9C2D1024CE39A06384B63F7E9B261DA4A4E1334C9F8B7  59750140
+c:\akse-cache\win-k8s\azs-v1.14.8-1int.zip                          7E67A468C18C4821DDA2D98E255E4F8915C93458AD48916E4DBF1A481807831C  59761800
+c:\akse-cache\win-k8s\azs-v1.15.4-1int.zip                          1E7B76FA30DFBF14D201D7058FFC258DBB0FA4A96FF07168A4B8AC3D4A200838  99025654
+c:\akse-cache\win-k8s\azs-v1.15.5-1int.zip                          C3432D22404369D6DEBC32B3EC4B90A01FC9AD38BAC28FF9BA838CC2B915FD51  99058367
+c:\akse-cache\win-k8s\azs-v1.16.1-1int.zip                          2B00DECA4D742345DD96B22C9BEDB1FC327CE8563AD0139E7CA5131F052706A9 104444767
+c:\akse-cache\win-k8s\v1.14.7-1int.zip                              161FECE8E31EAF3E9B5F3AFF9D138E3D5CF8F4AC5834C00069ADD815A573AB7B  59754112
+c:\akse-cache\win-k8s\v1.14.8-1int.zip                              BF63ECE78C64F284D3A87DB23664C7FB3E9C946D7B87A2F67D54ECD59BC287B0  59763614
+c:\akse-cache\win-k8s\v1.15.4-1int.zip                              6B7ED827B29D02B161C6F57F23FD483864EBA39FE84E0A66CF366BB583CBB256  59740293
+c:\akse-cache\win-k8s\v1.15.5-1int.zip                              BEE2B8FA7A4BEE07A400285C7753176404828F7C56B1079A760AF14A03F87D8E  59748073
+c:\akse-cache\win-k8s\v1.15.7-1int.zip                              F1E6332A669C1316DF011E8472B72EE93481297CF69940B73BFA28468B1BD9FD  59756938
+c:\akse-cache\win-k8s\v1.16.1-1int.zip                              A8211D7247DB059903541986BAC83F7C4B9C783DB7609F631D155F560FBA5807  62484467
+c:\akse-cache\win-k8s\v1.16.2-1int.zip                              6AE1FA3474AA4BDA1F89C47023F7CC299BFE547A03995D829EA08FB1B886D5DD  62496659
+c:\akse-cache\win-k8s\v1.16.4-1int.zip                              C8EC2AFBED23274D1D52ED5379343284CE75BC45182BB4CC9B664429D288D740  62515568
+c:\akse-cache\win-k8s\v1.17.0-1int.zip                              65E7D53EA57E3D6395923F7FB7E3968651AF2C701EC06F3EC8EB08CD3E59256A  57294137
+c:\akse-cache\win-vnet-cni\azure-vnet-cni-windows-amd64-v1.0.28.zip 0CEA29748C874C93ED9BD6050B3A1519BB52F8B4E86265272227A574BAB514B1   7359512
+c:\akse-cache\win-vnet-cni\azure-vnet-cni-windows-amd64-v1.0.29.zip 9918543C31F2FFAE737D5043954CF0E08DC88F2FCCF5D3731ADD5AFF5DF55614   7609693
+
+
+
+

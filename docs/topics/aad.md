@@ -105,7 +105,7 @@ kubectl create clusterrolebinding aad-default-group-cluster-admin-binding --clus
     "adminGroupID": "7d04bcd3-3c48-49ab-a064-c0b7d69896da"
 }
 ```
-The above config would automatically generate a clusterrolebinding with the cluster-admin clusterrole for the specified Group `ObjectID` on cluster deployment.
+The above config will automatically generate a clusterrolebinding with the cluster-admin clusterrole for the specified Group `ObjectID` on cluster deployment via the "aad" addon. See [addons](clusterdefinitions.md#addons) for more info on addons.
 
 #### Adding another client user:
 To add another client user run the following:

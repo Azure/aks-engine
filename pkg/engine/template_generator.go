@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -187,14 +188,6 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
 		profile.OrchestratorProfile.OrchestratorVersion, cs)
 
-	// add addons
-	str = substituteConfigString(str,
-		kubernetesAddonSettingsInit(profile),
-		"k8s/addons",
-		"/etc/kubernetes/addons",
-		"MASTER_ADDONS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion, cs)
-
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
 	if err != nil {
@@ -204,7 +197,7 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		customFilesReader,
 		"MASTER_CUSTOM_FILES_PLACEHOLDER")
 
-	addonStr := getContainerAddonsString(cs, "k8s/containeraddons")
+	addonStr := getAddonsString(cs, "k8s/addons")
 
 	str = strings.Replace(str, "MASTER_CONTAINER_ADDONS_PLACEHOLDER", addonStr, -1)
 
@@ -340,9 +333,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"UseManagedIdentity": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-		},
-		"NeedsKubeDNSWithExecHealthz": func() bool {
-			return cs.Properties.OrchestratorProfile.NeedsExecHealthz()
 		},
 		"GetVNETSubnetDependencies": func() string {
 			return getVNETSubnetDependencies(cs.Properties)
@@ -484,6 +474,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
+				kubernetesWindowsLogsCleanupPS1,
 				kubernetesWindowsOpenSSHFunctionPS1}
 
 			// Create a buffer, new zip
@@ -577,6 +568,15 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasCiliumNetworkPlugin": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginCilium
 		},
+		"HasCiliumNetworkPolicy": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium
+		},
+		"HasAntreaNetworkPolicy": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea
+		},
+		"HasFlannelNetworkPlugin": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel
+		},
 		"HasCustomNodesDNS": func() bool {
 			return cs.Properties.LinuxProfile != nil && cs.Properties.LinuxProfile.HasCustomNodesDNS()
 		},
@@ -647,9 +647,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				return true
 			}
 			return false
-		},
-		"EnablePodSecurityPolicy": func() bool {
-			return to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy)
 		},
 		"IsCustomVNET": func() bool {
 			return cs.Properties.AreAgentProfilesCustomVNET()
@@ -784,6 +781,37 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"GetPrivateAzureRegistryServer": func() string {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer
+		},
+		"HasTelemetryEnabled": func() bool {
+			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
+		},
+		"GetApplicationInsightsTelemetryKey": func() string {
+			if cs.Properties.TelemetryProfile == nil {
+				return ""
+			}
+			return cs.Properties.TelemetryProfile.ApplicationInsightsKey
+		},
+		"GetLinuxDefaultTelemetryTags": func() string {
+			tags := map[string]string{
+				"k8s_version":    cs.Properties.OrchestratorProfile.OrchestratorVersion,
+				"network_plugin": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin,
+				"network_policy": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy,
+				"network_mode":   cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkMode,
+				"cri":            cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime,
+				"cri_version":    cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion,
+				"distro":         string(cs.Properties.LinuxProfile.Distro),
+				"os_image_sku":   cs.GetCloudSpecConfig().OSImageConfig[cs.Properties.LinuxProfile.Distro].ImageSku,
+				"os_type":        "linux",
+			}
+
+			var kvs []string
+			for k, v := range tags {
+				if v != "" {
+					kvs = append(kvs, fmt.Sprintf("%s=%s", k, v))
+				}
+			}
+			sort.Strings(kvs)
+			return strings.Join(kvs, ",")
 		},
 		"OpenBraces": func() string {
 			return "{{"

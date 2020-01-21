@@ -2,7 +2,7 @@
 	"env": {
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15"]
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -10,8 +10,13 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"networkPlugin": "flannel",
-					"containerRuntime": "docker"
+					"containerRuntime": "docker",
+					"addons": [
+						{
+							"name": "flannel",
+							"enabled": true
+						}
+					]
 				}
 			},
 			"masterProfile": {
@@ -26,7 +31,7 @@
 					"vmSize": "Standard_D2_v3",
 					"osType": "Linux",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"linuxProfile": {

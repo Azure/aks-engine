@@ -32,7 +32,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		}
 
 		if kubernetesConfig != nil {
-			kubeProxySpec := kubernetesImageBase + k8sComponents["kube-proxy"]
+			kubeProxySpec := kubernetesImageBase + k8sComponents[common.KubeProxyAddonName]
 			if kubernetesConfig.CustomKubeProxyImage != "" {
 				kubeProxySpec = kubernetesConfig.CustomKubeProxyImage
 			}
@@ -51,10 +51,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
 
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
-			if orchestratorProfile.NeedsExecHealthz() {
-				addValue(parametersMap, "kubernetesExecHealthzSpec", kubernetesImageBase+k8sComponents["exechealthz"])
-			}
-			addValue(parametersMap, "kubernetesDNSSidecarSpec", kubernetesImageBase+k8sComponents["k8s-dns-sidecar"])
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(common.AADPodIdentityAddonName)
 				aadIndex := aadPodIdentityAddon.GetAddonContainersIndexByName(common.AADPodIdentityAddonName)
@@ -66,12 +62,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", true)
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
-			}
-			if common.IsKubernetesVersionGe(k8sVersion, "1.12.0") {
-				addValue(parametersMap, "kubernetesCoreDNSSpec", kubernetesImageBase+k8sComponents["coredns"])
-			} else {
-				addValue(parametersMap, "kubernetesKubeDNSSpec", kubernetesImageBase+k8sComponents["kube-dns"])
-				addValue(parametersMap, "kubernetesDNSMasqSpec", kubernetesImageBase+k8sComponents["dnsmasq"])
 			}
 			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
@@ -89,7 +79,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				CloudProviderDisableOutboundSNAT:  kubernetesConfig.CloudProviderDisableOutboundSNAT,
 			})
 			addValue(parametersMap, "kubeClusterCidr", kubernetesConfig.ClusterSubnet)
-			addValue(parametersMap, "kubernetesKubeletClusterDomain", kubernetesConfig.KubeletConfig["--cluster-domain"])
 			addValue(parametersMap, "dockerBridgeCidr", kubernetesConfig.DockerBridgeSubnet)
 			addValue(parametersMap, "networkPolicy", kubernetesConfig.NetworkPolicy)
 			addValue(parametersMap, "networkPlugin", kubernetesConfig.NetworkPlugin)
@@ -240,13 +229,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 
 		if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != "" {
 			addValue(parametersMap, "containerdVersion", properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion)
-		}
-
-		if properties.AADProfile != nil {
-			addValue(parametersMap, "aadTenantId", properties.AADProfile.TenantID)
-			if properties.AADProfile.AdminGroupID != "" {
-				addValue(parametersMap, "aadAdminGroupId", properties.AADProfile.AdminGroupID)
-			}
 		}
 
 		if kubernetesConfig != nil && kubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {

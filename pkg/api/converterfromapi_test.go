@@ -540,7 +540,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.29",
+					AzureCNIVersion:                 "1.0.30",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -687,6 +687,39 @@ func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	}
 	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformFaultDomainCount != 5 {
 		t.Errorf("expected the agent pool profile platform FD to be 5")
+	}
+}
+
+func TestPlatformUpdateDomainCountToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
+	cs.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount = to.IntPtr(3)
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *vlabsCS.Properties.MasterProfile.PlatformUpdateDomainCount != 3 {
+		t.Errorf("expected the master profile platform FD to be 3")
+	}
+	if *vlabsCS.Properties.AgentPoolProfiles[0].PlatformUpdateDomainCount != 3 {
+		t.Errorf("expected the agent pool profile platform FD to be 3")
+	}
+}
+
+func TestConvertTelemetryProfileToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.TelemetryProfile = &TelemetryProfile{
+		ApplicationInsightsKey: "app_insights_key",
+	}
+
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+
+	if vlabsCS.Properties.TelemetryProfile == nil {
+		t.Error("expected ConvertContainerServiceToVLabs to set TelemtryProfile")
+	}
+
+	if vlabsCS.Properties.TelemetryProfile.ApplicationInsightsKey != "app_insights_key" {
+		t.Error("TelemetryProfile.APplicationInsightsKey not converted")
 	}
 }
 

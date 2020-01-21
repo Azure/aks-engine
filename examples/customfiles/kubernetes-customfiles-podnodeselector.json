@@ -3,7 +3,7 @@
     "properties": {
       "orchestratorProfile": {
         "orchestratorType": "Kubernetes",
-        "orchestratorVersion": "1.12.8",
+        "orchestratorVersion": "1.13.11",
         "kubernetesConfig": {
           "enableRbac" : true,
           "enableAggregatedAPIs": true,
@@ -22,11 +22,11 @@
         "dnsPrefix": "",
         "vmSize": "Standard_D4s_v3",
         "customFiles": [
-            { 
+            {
                 "source":"/Users/user/files/admissioncontrol.yaml",
                 "dest":"/etc/kubernetes/admissioncontrol.yaml"
             },
-            { 
+            {
                 "source":"/Users/user/files/podnodeselector.yaml",
                 "dest":"/etc/kubernetes/podnodeselector.yaml"
             }

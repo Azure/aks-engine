@@ -1,10 +1,10 @@
 {
   "env": {
     "REGION_OPTIONS": "westeurope",
-    "GINKGO_SKIP": "should have healthy time synchronization"
+    "GINKGO_SKIP": "should have healthy time synchronization|should create a pv by deploying a pod that consumes a pvc"
   },
   "options": {
-    "allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15", "1.16"]
+    "allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16"]
   },
   "apiModel": {
         "apiVersion": "vlabs",

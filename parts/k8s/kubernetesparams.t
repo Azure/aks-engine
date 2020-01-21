@@ -1,19 +1,3 @@
-{{if .HasAadProfile}}
-    "aadTenantId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD tenant ID to use for authentication. If not specified, will use the tenant of the deployment subscription."
-      },
-      "type": "string"
-    },
-    "aadAdminGroupId": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The AAD default Admin group Object ID used to create a cluster-admin RBAC role."
-      },
-      "type": "string"
-    },
-{{end}}
 {{if IsHostedMaster}}
     "kubernetesEndpoint": {
       "metadata": {
@@ -191,12 +175,6 @@
       },
       "type": "string"
     },
-    "kubernetesKubeletClusterDomain": {
-      "metadata": {
-        "description": "--cluster-domain Kubelet config"
-      },
-      "type": "string"
-    },
     "kubeProxySpec": {
       "metadata": {
         "description": "The container spec for kube-proxy."
@@ -222,20 +200,6 @@
       },
       "defaultValue": false,
       "type": "bool"
-    },
-{{if NeedsKubeDNSWithExecHealthz}}
-    "kubernetesExecHealthzSpec": {
-      "metadata": {
-        "description": "The container spec for exechealthz-amd64."
-      },
-      "type": "string"
-    },
-{{end}}
-    "kubernetesDNSSidecarSpec": {
-      "metadata": {
-        "description": "The container spec for k8s-dns-sidecar-amd64."
-      },
-      "type": "string"
     },
 {{if .OrchestratorProfile.KubernetesConfig.IsAADPodIdentityEnabled}}
     "kubernetesAADPodIdentityEnabled": {
@@ -275,27 +239,6 @@
         "cloudProviderDisableOutboundSNAT": false
       }
     },
-{{if IsKubernetesVersionGe "1.12.0"}}
-    "kubernetesCoreDNSSpec": {
-      "metadata": {
-        "description": "The container spec for coredns"
-      },
-      "type": "string"
-    },
-{{else}}
-    "kubernetesKubeDNSSpec": {
-      "metadata": {
-        "description": "The container spec for kubedns-amd64."
-      },
-      "type": "string"
-    },
-    "kubernetesDNSMasqSpec": {
-      "metadata": {
-        "description": "The container spec for kube-dnsmasq-amd64."
-      },
-      "type": "string"
-    },
-{{end}}
     "mobyVersion": {
       "defaultValue": "3.0.8",
       "metadata": {
@@ -328,27 +271,29 @@
     "networkPolicy": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPolicy}}",
       "metadata": {
-        "description": "The network policy enforcement to use (calico|cilium); 'none' and 'azure' here for backwards compatibility"
+        "description": "The network policy enforcement to use (calico|cilium|antrea); 'none' and 'azure' here for backwards compatibility"
       },
       "allowedValues": [
         "",
         "none",
         "azure",
         "calico",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "type": "string"
     },
     "networkPlugin": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.NetworkPlugin}}",
       "metadata": {
-        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium)"
+        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium|antrea)"
       },
       "allowedValues": [
         "kubenet",
         "azure",
         "flannel",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "type": "string"
     },

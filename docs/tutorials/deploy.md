@@ -141,6 +141,7 @@ aks-engine generate --set agentPoolProfiles[0].count=5,agentPoolProfiles[1].name
 
 * To enable the optional network policy enforcement using calico, you have to set the parameter during this step according to this [guide](../topics/features.md#optional-enable-network-policy-enforcement-using-calico)
 * To enable the optional network policy enforcement using cilium, you have to set the parameter during this step according to this [guide](../topics/features.md#optional-enable-network-policy-enforcement-using-cilium)
+* To enable the optional network policy enforcement using antrea, you have to set the parameter during this step according to this [guide](../topics/features.md#optional-enable-network-policy-enforcement-using-antrea)
 
 **Note**: If the cluster is using an existing VNET please see the [Custom VNET](custom-vnet.md) feature documentation for additional steps that must be completed after cluster provisioning.
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/pkg/errors"
 )
 
@@ -59,4 +60,32 @@ func AddToSSHKeyChain(keyfile string) error {
 		return fmt.Errorf("Error while adding private key to ssh agent keychain for forwarding: %s", err)
 	}
 	return nil
+}
+
+// IsLargeVMSKU returns if the VM SKU is a known, > 8 core SKU
+func IsLargeVMSKU(sku string) bool {
+	switch sku {
+	case "Standard_D16_v3":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsUsingManagedDisks(agentPools []*api.AgentPoolProfile) bool {
+	for _, a := range agentPools {
+		if a.IsManagedDisks() {
+			return true
+		}
+	}
+	return false
+}
+
+func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
+	for _, a := range agentPools {
+		if a.IsEphemeral() {
+			return true
+		}
+	}
+	return false
 }

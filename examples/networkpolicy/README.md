@@ -1,9 +1,10 @@
 # AKS Engine - Network Policy
 
-There are 2 different Network Policy options :
+There are 3 different Network Policy options :
 
 - Calico
 - Cilium
+- Antrea
 
 ## Calico
 
@@ -27,7 +28,7 @@ This template will deploy the [Kubernetes Datastore backed version of Calico](ht
 
 If deploying on a K8s 1.8 or later cluster, then egress policies are also supported!
 
-To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/kubernetes.md) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an api model reference.
+To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/tutorials/deploy.md) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an api model reference.
 
 ### Post installation
 
@@ -97,3 +98,20 @@ The kubernetes-cilium deployment template enables Cilium networking and policies
 Once the template has been successfully deployed, following the [deploy the demo application](http://cilium.readthedocs.io/en/latest/gettingstarted/minikube/#step-2-deploy-the-demo-application) tutorial will provide a good foundation for how to do L3/4 policy as well as more advanced Layer 7 inspection and routing. If you have [Istio](https://istio.io) you can try this [tutorial](http://cilium.readthedocs.io/en/latest/gettingstarted/istio/) where cilium is used to side by side with Istio to enforce security policies in a Kubernetes deployment.
 
 For the latest documentation on Cilium (including BPF and XDP reference guides), please refer to [this](http://cilium.readthedocs.io/en/latest/)
+
+## Antrea
+
+The kubernetes-antrea deployment template enables Antrea networking and policies for the AKS Engine cluster via `"networkPolicy": "antrea"` or `"networkPlugin": "antrea"` being present inside the `kubernetesConfig`.
+
+```json
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "networkPolicy": "antrea"
+      }
+```
+
+### Post installation
+
+For the latest documentation on Antrea, please refer to [this](https://github.com/vmware-tanzu/antrea).

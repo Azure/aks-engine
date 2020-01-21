@@ -98,6 +98,8 @@ const (
 	ScaleSetPriorityRegular = "Regular"
 	// ScaleSetPriorityLow means the ScaleSet will use Low-priority VMs
 	ScaleSetPriorityLow = "Low"
+	// ScaleSetPrioritySpot means the ScaleSet will use Spot VMs
+	ScaleSetPrioritySpot = "Spot"
 	// ScaleSetEvictionPolicyDelete is the default Eviction Policy for Low-priority VM ScaleSets
 	ScaleSetEvictionPolicyDelete = "Delete"
 	// ScaleSetEvictionPolicyDeallocate means a Low-priority VM ScaleSet will deallocate, rather than delete, VMs.
@@ -126,7 +128,7 @@ const publicAgentPoolSuffix = "-public"
 
 const (
 	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
-	DefaultHeapsterAddonEnabled = true
+	DefaultHeapsterAddonEnabled = false
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
@@ -157,6 +159,12 @@ const (
 	DefaultReschedulerAddonEnabled = false
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
 	DefaultAzureCNIMonitoringAddonEnabled = true
+	// DefaultKubeDNSAddonEnabled determines the aks-engine provided default for enabling coredns addon
+	DefaultKubeDNSAddonEnabled = false
+	// DefaultCoreDNSAddonEnabled determines the aks-engine provided default for enabling coredns addon
+	DefaultCoreDNSAddonEnabled = true
+	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
+	DefaultKubeProxyAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -292,14 +300,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerLinux = "v1.0.29"
+	AzureCniPluginVerLinux = "v1.0.30"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://acs-mirror.azureedge.net/cni
-	AzureCniPluginVerWindows = "v1.0.29"
+	AzureCniPluginVerWindows = "v1.0.30"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.5"
+	CNIPluginVer = "v0.7.6"
 )
 
 const (
@@ -349,6 +357,10 @@ const (
 	NetworkPluginCilium = NetworkPolicyCilium
 	// NetworkPluginFlannel is the string expression for flannel network policy config option
 	NetworkPluginFlannel = "flannel"
+	// NetworkPluginAntrea is the string expression for antrea network plugin config option
+	NetworkPluginAntrea = "antrea"
+	// NetworkPolicyAntrea is the string expression for antrea network policy config option
+	NetworkPolicyAntrea = NetworkPluginAntrea
 	// DefaultNetworkPlugin defines the network plugin to use by default
 	DefaultNetworkPlugin = NetworkPluginKubenet
 	// DefaultNetworkPolicy defines the network policy implementation to use by default
@@ -382,7 +394,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.15"
+	DefaultEtcdVersion = "3.3.18"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -483,3 +495,7 @@ const TLSStrongCipherSuitesAPIServer = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS
 
 // TLSStrongCipherSuitesKubelet is a kube-bench-recommended allowed cipher suites for kubelet
 const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256"
+
+// Default instrmentation key used for routing Application Insights data
+// NOTE! this is in a test sub and needs to be switched to a production sub before collecting user data!
+const DefaultApplicationInsightsKey = "c92d8284-b550-4b06-b7ba-e80fd7178faa"

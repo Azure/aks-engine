@@ -44,6 +44,11 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 		k8sVars[k] = v
 	}
 
+	telemetryVars := getTelemetryVars(cs)
+	for k, v := range telemetryVars {
+		k8sVars[k] = v
+	}
+
 	return k8sVars, nil
 }
 
@@ -149,7 +154,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
 		"maximumLoadBalancerRuleCount":  maxLoadBalancerCount,
 		"masterFqdnPrefix":              "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
-		"apiVersionCompute":             "2018-10-01",
+		"apiVersionCompute":             "2019-07-01",
 		"apiVersionDeployments":         "2018-06-01",
 		"apiVersionStorage":             "2018-07-01",
 		"apiVersionKeyVault":            "2018-02-14",
@@ -205,6 +210,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cloudInitFiles["auditdRules"] = getBase64EncodedGzippedCustomScript(auditdRules, cs)
 	}
 
+	if kubernetesConfig != nil {
+		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
+			cloudInitFiles["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount, cs)
+		}
+	}
+
 	masterVars["cloudInitFiles"] = cloudInitFiles
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
@@ -230,12 +241,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 		masterVars["environmentJSON"] = environmentJSON
 		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs)
-	}
-
-	if kubernetesConfig != nil {
-		if kubernetesConfig.NetworkPlugin == NetworkPluginCilium {
-			masterVars["systemdBPFMount"] = getBase64EncodedGzippedCustomScript(systemdBPFMount, cs)
-		}
 	}
 
 	masterVars["customCloudAuthenticationMethod"] = cs.Properties.GetCustomCloudAuthenticationMethod()
@@ -425,6 +430,24 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
 		masterVars["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	} else {
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
+			masterVars["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
+			masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
+			masterVars["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
+			masterVars["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
+			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+		}
+		// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
+		// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access
+		// - private cluster + basic LB + multiple masters uses internal master LB for outbound access (doesn't need a public IP)
+		if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
+			masterVars["masterPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]"
+			masterVars["masterLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]"
+			masterVars["masterLbIPConfigID"] = "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]"
+			masterVars["masterLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-lbFrontEnd-', parameters('nameSuffix'))]"
+			masterVars["masterLbName"] = "[concat(parameters('orchestratorName'), '-master-lb-', parameters('nameSuffix'))]"
+		}
 		if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
 			masterVars["kubeconfigServer"] = "[concat('https://', variables('kubernetesAPIServerIP'), ':443')]"
 			if provisionJumpbox {
@@ -452,19 +475,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 
 			}
 		} else {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
-				masterVars["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
-				masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
-				masterVars["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
-				masterVars["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
-				masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
-				masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
-			}
-			masterVars["masterPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-master-ip-', variables('masterFqdnPrefix'), '-', parameters('nameSuffix'))]"
-			masterVars["masterLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]"
-			masterVars["masterLbIPConfigID"] = "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]"
-			masterVars["masterLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-lbFrontEnd-', parameters('nameSuffix'))]"
-			masterVars["masterLbName"] = "[concat(parameters('orchestratorName'), '-master-lb-', parameters('nameSuffix'))]"
 			masterVars["kubeconfigServer"] = "[concat('https://', variables('masterFqdnPrefix'), '.', variables('location'), '.', parameters('fqdnEndpointSuffix'))]"
 		}
 
@@ -603,7 +613,7 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	if profile.IsAvailabilitySets() {
 		agentVars[agentOffset] = fmt.Sprintf("[parameters('%s')]", agentOffset)
 		agentVars[agentAvailabilitySet] = fmt.Sprintf("[concat('%s-availabilitySet-', parameters('nameSuffix'))]", agentName)
-	} else if profile.IsLowPriorityScaleSet() {
+	} else if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
 		agentVars[agentScaleSetPriority] = fmt.Sprintf("[parameters('%s')]", agentScaleSetPriority)
 		agentVars[agentScaleSetEvictionPolicy] = fmt.Sprintf("[parameters('%s')]", agentScaleSetEvictionPolicy)
 	}
@@ -626,6 +636,26 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	agentVars[agentOsImageResourceGroup] = fmt.Sprintf("[parameters('%sosImageResourceGroup')]", agentName)
 
 	return agentVars
+}
+
+func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
+
+	enableTelemetry := false
+	if cs.Properties.FeatureFlags != nil {
+		enableTelemetry = cs.Properties.FeatureFlags.EnableTelemetry
+	}
+
+	applicationInsightsKey := ""
+	if cs.Properties.TelemetryProfile != nil {
+		applicationInsightsKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
+	}
+
+	telemetryVars := map[string]interface{}{
+		"enableTelemetry":        enableTelemetry,
+		"applicationInsightsKey": applicationInsightsKey,
+	}
+
+	return telemetryVars
 }
 
 func getSizeMap() map[string]interface{} {

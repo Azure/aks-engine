@@ -883,11 +883,12 @@
         "kubenet",
         "azure",
         "flannel",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "defaultValue": "azure",
       "metadata": {
-        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium)"
+        "description": "The network plugin to use for Kubernetes (kubenet|azure|flannel|cilium|antrea)"
       },
       "type": "string"
     },
@@ -897,11 +898,12 @@
         "none",
         "azure",
         "calico",
-        "cilium"
+        "cilium",
+        "antrea"
       ],
       "defaultValue": "",
       "metadata": {
-        "description": "The network policy enforcement to use (calico|cilium); 'none' and 'azure' here for backwards compatibility"
+        "description": "The network policy enforcement to use (calico|cilium|antrea); 'none' and 'azure' here for backwards compatibility"
       },
       "type": "string"
     },
@@ -1031,7 +1033,7 @@
     "agentpool1osImageVersion": "[parameters('agentpool1osImageVersion')]",
     "apiVersionAuthorizationSystem": "2018-01-01-preview",
     "apiVersionAuthorizationUser": "2018-09-01-preview",
-    "apiVersionCompute": "2018-10-01",
+    "apiVersionCompute": "2019-07-01",
     "apiVersionDeployments": "2018-06-01",
     "apiVersionKeyVault": "2018-02-14",
     "apiVersionManagedIdentity": "2015-08-31-preview",

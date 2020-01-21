@@ -1,7 +1,7 @@
 {
 	"env": {},
 	"options": {
-		"allowedOrchestratorVersions": ["1.12", "1.13", "1.14", "1.15"]
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16", "1.17"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -31,7 +31,7 @@
 					"count": 3,
 					"vmSize": "Standard_DS2_v2",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"scalesetPriority": "Spot"
 				}
 			],
 			"linuxProfile": {

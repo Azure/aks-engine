@@ -24,24 +24,24 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod11012019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod11012019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
 	defaultsHeapsterAddonsConfig := KubernetesAddon{
 		Name:    common.HeapsterAddonName,
-		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled && !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")),
+		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.HeapsterAddonName,
@@ -108,6 +108,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Config: map[string]string{
 			"scan-interval":                         "1m",
 			"expendable-pods-priority-cutoff":       "-10",
+			"ignore-daemonsets-utilization":         "false",
+			"ignore-mirror-pods-utilization":        "false",
 			"max-autoprovisioned-node-group-count":  "15",
 			"max-empty-bulk-delete":                 "10",
 			"max-failing-time":                      "15m0s",
@@ -118,6 +120,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"max-total-unready-percentage":          "45",
 			"memory-total":                          "0:6400000",
 			"min-replica-count":                     "0",
+			"new-pod-scale-up-delay":                "0s",
 			"node-autoprovisioning-enabled":         "false",
 			"ok-total-unready-count":                "3",
 			"scale-down-candidates-pool-min-count":  "50",
@@ -133,6 +136,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"skip-nodes-with-local-storage":         "false",
 			"skip-nodes-with-system-pods":           "true",
 			"stderrthreshold":                       "2",
+			"unremovable-node-recheck-timeout":      "5m0s",
 			"v":                                     "3",
 			"write-status-configmap":                "true",
 			"balance-similar-node-groups":           "true",
@@ -150,16 +154,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
 	}
 
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") {
-		defaultClusterAutoscalerAddonsConfig.Config["unremovable-node-recheck-timeout"] = "5m0s"
-	}
-
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") {
-		defaultClusterAutoscalerAddonsConfig.Config["new-pod-scale-up-delay"] = "0s"
-		defaultClusterAutoscalerAddonsConfig.Config["ignore-daemonsets-utilization"] = "false"
-		defaultClusterAutoscalerAddonsConfig.Config["ignore-mirror-pods-utilization"] = "false"
-	}
-
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    common.BlobfuseFlexVolumeAddonName,
 		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
@@ -170,7 +164,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
+				Image:          k8sComponents[common.BlobfuseFlexVolumeAddonName],
 			},
 		},
 	}
@@ -185,7 +179,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
+				Image:          k8sComponents[common.SMBFlexVolumeAddonName],
 			},
 		},
 	}
@@ -200,7 +194,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "100Mi",
-				Image:          "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+				Image:          k8sComponents[common.KeyVaultFlexVolumeAddonName],
 			},
 		},
 	}
@@ -237,7 +231,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
-		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.9.0")),
+		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
@@ -267,7 +261,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "7.0.0-6",
+			"dockerProviderVersion": "8.0.0-2",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -275,18 +269,20 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "110m",
+				CPURequests:    "150m",
 				MemoryRequests: "250Mi",
-				CPULimits:      "150m",
-				MemoryLimits:   "600Mi",
+				CPULimits:      "1",
+				MemoryLimits:   "750Mi",
 				Image:          omsagentImage,
 			},
 		},
 	}
 
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
-		Name:    common.IPMASQAgentAddonName,
-		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled && o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium),
+		Name: common.IPMASQAgentAddonName,
+		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled &&
+			(o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
+				o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.IPMASQAgentAddonName,
@@ -294,7 +290,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + "ip-masq-agent-amd64:v2.5.0",
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 			},
 		},
 		Config: map[string]string{
@@ -321,14 +317,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureNetworkPolicyAddonName,
-				Image: "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
+				Name:           common.AzureNetworkPolicyAddonName,
+				Image:          k8sComponents[common.AzureNetworkPolicyAddonName],
+				MemoryRequests: "20Mi",
+				MemoryLimits:   "2Gi",
 			},
 		},
-	}
-
-	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultAzureNetworkPolicyAddonsConfig.Containers = append(defaultAzureNetworkPolicyAddonsConfig.Containers, KubernetesContainerSpec{Name: common.AzureVnetTelemetryContainerName, Image: "mcr.microsoft.com/containernetworking/azure-vnet-telemetry:v1.0.29"})
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
@@ -345,12 +339,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
 		Name: common.DNSAutoscalerAddonName,
 		// TODO enable this when it has been smoke tested
-		//common.IsKubernetesVersionGe(p.OrchestratorProfile.OrchestratorVersion, "1.12.0"),
 		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.DNSAutoscalerAddonName,
-				Image:          specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.1",
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
 				CPURequests:    "20m",
 				MemoryRequests: "100Mi",
 			},
@@ -363,23 +356,72 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "calico-typha",
-				Image: specConfig.CalicoImageBase + "typha:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-typha"],
 			},
 			{
 				Name:  "calico-cni",
-				Image: specConfig.CalicoImageBase + "cni:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-cni"],
 			},
 			{
 				Name:  "calico-node",
-				Image: specConfig.CalicoImageBase + "node:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-node"],
 			},
 			{
 				Name:  "calico-pod2daemon",
-				Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
+				Image: specConfig.CalicoImageBase + k8sComponents["calico-pod2daemon"],
 			},
 			{
 				Name:  "calico-cluster-proportional-autoscaler",
-				Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+				Image: specConfig.KubernetesImageBase + k8sComponents["calico-cluster-proportional-autoscaler"],
+			},
+		},
+	}
+
+	defaultsCiliumAddonsConfig := KubernetesAddon{
+		Name:    common.CiliumAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCilium),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.CiliumAgentContainerName,
+				Image: k8sComponents[common.CiliumAgentContainerName],
+			},
+			{
+				Name:  common.CiliumCleanStateContainerName,
+				Image: k8sComponents[common.CiliumCleanStateContainerName],
+			},
+			{
+				Name:  common.CiliumOperatorContainerName,
+				Image: k8sComponents[common.CiliumOperatorContainerName],
+			},
+			{
+				Name:  common.CiliumEtcdOperatorContainerName,
+				Image: k8sComponents[common.CiliumEtcdOperatorContainerName],
+			},
+		},
+	}
+
+	defaultsAntreaDaemonSetAddonsConfig := KubernetesAddon{
+		Name:    common.AntreaAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea),
+		Config: map[string]string{
+			"serviceCidr": o.KubernetesConfig.ServiceCIDR,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.AntreaControllerContainerName,
+				Image: k8sComponents[common.AntreaControllerContainerName],
+			},
+			{
+				Name:  common.AntreaAgentContainerName,
+				Image: k8sComponents[common.AntreaAgentContainerName],
+			},
+			{
+				Name:  common.AntreaOVSContainerName,
+				Image: k8sComponents[common.AntreaOVSContainerName],
+			},
+			{
+				Name:  common.AntreaInstallCNIContainerName,
+				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
 			},
 		},
 	}
@@ -389,16 +431,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultAADPodIdentityAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "nmi",
-				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
+				Name:           common.NMIContainerName,
+				Image:          k8sComponents[common.NMIContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "300Mi",
 			},
 			{
-				Name:           "mic",
-				Image:          "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2",
+				Name:           common.MICContainerName,
+				Image:          k8sComponents[common.MICContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
@@ -416,16 +458,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "azure-policy",
-				Image:          "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
+				Name:           common.AzurePolicyAddonName,
+				Image:          k8sComponents[common.AzurePolicyAddonName],
 				CPURequests:    "30m",
 				MemoryRequests: "50Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:           "gatekeeper",
-				Image:          "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2",
+				Name:           common.GatekeeperContainerName,
+				Image:          k8sComponents[common.GatekeeperContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
 				CPULimits:      "100m",
@@ -445,8 +487,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:           "node-problem-detector",
-				Image:          "k8s.gcr.io/node-problem-detector:v0.8.0",
+				Name:           common.NodeProblemDetectorAddonName,
+				Image:          k8sComponents[common.NodeProblemDetectorAddonName],
 				CPURequests:    "20m",
 				MemoryRequests: "20Mi",
 				CPULimits:      "200m",
@@ -467,64 +509,248 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultAzureDiskCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureDiskCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "csi-provisioner",
-				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+				Name:           common.CSIProvisionerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-attacher",
-				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+				Name:           common.CSIAttacherContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-cluster-driver-registrar",
-				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+				Name:           common.CSIClusterDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "livenessprobe",
-				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-node-driver-registrar",
-				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "azuredisk-csi",
-				Image: "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0",
+				Name:           common.CSISnapshotterContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISnapshotterContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSIResizerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIResizerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSIAzureDiskContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureDiskContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 		},
 	}
 
 	defaultAzureFileCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureFileCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "csi-provisioner",
-				Image: "quay.io/k8scsi/csi-provisioner:v1.0.1",
+				Name:           common.CSIProvisionerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-attacher",
-				Image: "quay.io/k8scsi/csi-attacher:v1.0.1",
+				Name:           common.CSIAttacherContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-cluster-driver-registrar",
-				Image: "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1",
+				Name:           common.CSIClusterDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "livenessprobe",
-				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-node-driver-registrar",
-				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0",
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "azurefile-csi",
-				Image: "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0",
+				Name:           common.CSIAzureFileContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureFileContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 		},
+	}
+
+	defaultKubeDNSAddonsConfig := KubernetesAddon{
+		Name:    common.KubeDNSAddonName,
+		Enabled: to.BoolPtr(DefaultKubeDNSAddonEnabled),
+		Config: map[string]string{
+			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "kubedns",
+				Image: specConfig.KubernetesImageBase + k8sComponents["kube-dns"],
+			},
+			{
+				Name:  "dnsmasq",
+				Image: specConfig.KubernetesImageBase + k8sComponents["dnsmasq"],
+			},
+			{
+				Name:  "sidecar",
+				Image: specConfig.KubernetesImageBase + k8sComponents["k8s-dns-sidecar"],
+			},
+		},
+	}
+
+	defaultCorednsAddonsConfig := KubernetesAddon{
+		Name:    common.CoreDNSAddonName,
+		Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+		Config: map[string]string{
+			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.CoreDNSAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+			},
+		},
+	}
+
+	// If we have any explicit coredns or kube-dns configuration in the addons array
+	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName) != -1 {
+		// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
+		if o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
+			defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
+		}
+	}
+
+	defaultKubeProxyAddonsConfig := KubernetesAddon{
+		Name:    common.KubeProxyAddonName,
+		Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+		Config: map[string]string{
+			"cluster-cidr": o.KubernetesConfig.ClusterSubnet,
+			"proxy-mode":   string(o.KubernetesConfig.ProxyMode),
+			"featureGates": cs.Properties.GetKubeProxyFeatureGates(),
+		},
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeProxyAddonName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+			},
+		},
+	}
+
+	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
+		Name:    common.PodSecurityPolicyAddonName,
+		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") || to.Bool(o.KubernetesConfig.EnablePodSecurityPolicy)),
+	}
+
+	defaultAuditPolicyAddonsConfig := KubernetesAddon{
+		Name:    common.AuditPolicyAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
+	defaultAzureCloudProviderAddonsConfig := KubernetesAddon{
+		Name:    common.AzureCloudProviderAddonName,
+		Enabled: to.BoolPtr(true),
+	}
+
+	defaultAADDefaultAdminGroupAddonsConfig := KubernetesAddon{
+		Name:    common.AADAdminGroupAddonName,
+		Enabled: to.BoolPtr(cs.Properties.HasAADAdminGroupID()),
+		Config: map[string]string{
+			"adminGroupID": cs.Properties.GetAADAdminGroupID(),
+		},
+	}
+
+	defaultFlannelAddonsConfig := KubernetesAddon{
+		Name:    common.FlannelAddonName,
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginFlannel),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeFlannelContainerName,
+				Image: k8sComponents[common.KubeFlannelContainerName],
+			},
+			{
+				Name:  common.FlannelInstallCNIContainerName,
+				Image: k8sComponents["flannel"+common.FlannelInstallCNIContainerName],
+			},
+		},
+	}
+
+	defaultScheduledMaintenanceAddonsConfig := KubernetesAddon{
+		Name:    common.ScheduledMaintenanceAddonName,
+		Enabled: to.BoolPtr(false),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.KubeRBACProxyContainerName,
+				Image: k8sComponents[common.KubeRBACProxyContainerName],
+			},
+			{
+				Name:  common.ScheduledMaintenanceManagerContainerName,
+				Image: k8sComponents[common.ScheduledMaintenanceManagerContainerName],
+			},
+		},
+	}
+
+	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
+	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
+		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
 	}
 
 	defaultAddons := []KubernetesAddon{
@@ -546,12 +772,23 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultIPMasqAgentAddonsConfig,
 		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
+		defaultsCiliumAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,
 		defaultAppGwAddonsConfig,
 		defaultAzureDiskCSIDriverAddonsConfig,
 		defaultAzureFileCSIDriverAddonsConfig,
 		defaultsAzurePolicyAddonsConfig,
 		defaultNodeProblemDetectorConfig,
+		defaultKubeDNSAddonsConfig,
+		defaultCorednsAddonsConfig,
+		defaultKubeProxyAddonsConfig,
+		defaultPodSecurityPolicyAddonsConfig,
+		defaultAuditPolicyAddonsConfig,
+		defaultAzureCloudProviderAddonsConfig,
+		defaultAADDefaultAdminGroupAddonsConfig,
+		defaultsAntreaDaemonSetAddonsConfig,
+		defaultFlannelAddonsConfig,
+		defaultScheduledMaintenanceAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {
@@ -617,17 +854,30 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Back-compat for pre-1.12 clusters built before kube-dns and coredns were converted to user-configurable addons
+	// Migrate to coredns unless coredns is explicitly set to false
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.12.0") {
+		// If we don't have coredns in our addons array at all, this means we're in a legacy scenario and we want to migrate from kube-dns to coredns
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName); i == -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+			// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
+			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); j > -1 {
+				o.KubernetesConfig.Addons[j].Enabled = to.BoolPtr(false)
+			}
+		}
+	}
+
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}
 
 	if len(o.KubernetesConfig.PodSecurityPolicyConfig) > 0 && isUpgrade {
 		if base64Data, ok := o.KubernetesConfig.PodSecurityPolicyConfig["data"]; ok {
-			pspAddonsConfig := KubernetesAddon{
-				Name: common.PodSecurityPolicyAddonName,
-				Data: base64Data,
+			if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
+				if o.KubernetesConfig.Addons[i].Data == "" {
+					o.KubernetesConfig.Addons[i].Data = base64Data
+				}
 			}
-			o.KubernetesConfig.Addons = appendAddonIfNotPresent(o.KubernetesConfig.Addons, pspAddonsConfig)
 		}
 	}
 
@@ -660,6 +910,29 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			}
 		}
 	}
+
+	// Specific back-compat business logic for deprecated "kube-proxy-daemonset" addon
+	if i := getAddonsIndexByName(o.KubernetesConfig.Addons, "kube-proxy-daemonset"); i > -1 {
+		if to.Bool(o.KubernetesConfig.Addons[i].Enabled) {
+			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); j > -1 {
+				// Copy data from deprecated addon spec to the current "kube-proxy" addon
+				o.KubernetesConfig.Addons[j] = KubernetesAddon{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(true),
+					Data:    o.KubernetesConfig.Addons[i].Data,
+				}
+			}
+		}
+		// Remove deprecated "kube-proxy-daemonset addon"
+		o.KubernetesConfig.Addons = append(o.KubernetesConfig.Addons[:i], o.KubernetesConfig.Addons[i+1:]...)
+	}
+
+	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+		}
+	}
 }
 
 func appendAddonIfNotPresent(addons []KubernetesAddon, addon KubernetesAddon) []KubernetesAddon {
@@ -688,6 +961,13 @@ func assignDefaultAddonVals(addon, defaults KubernetesAddon, isUpgrade bool) Kub
 		return KubernetesAddon{
 			Name:    addon.Name,
 			Enabled: addon.Enabled,
+		}
+	}
+	if addon.Data != "" {
+		return KubernetesAddon{
+			Name:    addon.Name,
+			Enabled: addon.Enabled,
+			Data:    addon.Data,
 		}
 	}
 	if addon.Mode == "" {

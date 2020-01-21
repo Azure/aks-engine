@@ -1,0 +1,220 @@
+{
+    "variables": {
+        "client_id": "{{env `AZURE_CLIENT_ID`}}",
+        "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
+        "tenant_id": "{{env `AZURE_TENANT_ID`}}",
+        "subscription_id": "{{env `AZURE_SUBSCRIPTION_ID`}}",
+        "location": "{{env `AZURE_LOCATION`}}",
+        "vm_size": "{{env `AZURE_VM_SIZE`}}",
+        "build_number": "{{env `BUILD_NUMBER`}}",
+        "build_id": "{{env `BUILD_ID`}}",
+        "commit": "{{env `GIT_VERSION`}}",
+        "feature_flags": "{{env `FEATURE_FLAGS`}}",
+        "ubuntu_sku": "{{env `UBUNTU_SKU`}}"
+    },
+    "builders": [
+        {
+            "type": "azure-arm",
+            "client_id": "{{user `client_id`}}",
+            "client_secret": "{{user `client_secret`}}",
+            "tenant_id": "{{user `tenant_id`}}",
+            "subscription_id": "{{user `subscription_id`}}",
+            "resource_group_name": "{{user `resource_group_name`}}",
+            "capture_container_name": "aksengine-vhds",
+            "capture_name_prefix": "aksengine-{{user `create_time`}}",
+            "storage_account": "{{user `storage_account_name`}}",
+            "os_type": "Linux",
+            "os_disk_size_gb": 30,
+            "image_publisher": "Canonical",
+            "image_offer": "UbuntuServer",
+            "image_sku": "{{user `ubuntu_sku`}}-LTS",
+            "image_version": "latest",
+            "azure_tags": {
+                "os": "Linux",
+                "now": "{{user `create_time`}}",
+                "createdBy": "aks-engine-vhd-pipeline"
+            },
+            "location": "{{user `location`}}",
+            "vm_size": "{{user `vm_size`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "shell",
+            "inline": [
+                "sudo mkdir -p /opt/azure/containers",
+                "sudo chown -R $USER /opt/azure/containers"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "vhd/packer/cleanup-vhd.sh",
+            "destination": "/home/packer/cleanup-vhd.sh"
+        },
+        {
+            "type": "file",
+            "source": "vhd/packer/packer_source.sh",
+            "destination": "/home/packer/packer_source.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/cse_install.sh",
+            "destination": "/home/packer/provision_installs.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/cse_helpers.sh",
+            "destination": "/home/packer/provision_source.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/cis.sh",
+            "destination": "/home/packer/cis.sh"
+        },
+        {
+            "type": "file",
+            "source": "vhd/packer/install-dependencies.sh",
+            "destination": "/home/packer/install-dependencies.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf",
+            "destination": "/home/packer/sysctl-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config",
+            "destination": "/home/packer/sshd_config"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/sshd_config_1604",
+            "destination": "/home/packer/sshd_config_1604"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf",
+            "destination": "/home/packer/rsyslog-d-60-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue",
+            "destination": "/home/packer/etc-issue"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/etc-issue.net",
+            "destination": "/home/packer/etc-issue.net"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/modprobe-CIS.conf",
+            "destination": "/home/packer/modprobe-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pwquality-CIS.conf",
+            "destination": "/home/packer/pwquality-CIS.conf"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-su",
+            "destination": "/home/packer/pam-d-su"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-auth",
+            "destination": "/home/packer/pam-d-common-auth"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/pam-d-common-password",
+            "destination": "/home/packer/pam-d-common-password"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/profile-d-cis.sh",
+            "destination": "/home/packer/profile-d-cis.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/auditd-rules",
+            "destination": "/home/packer/auditd-rules"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/label-nodes.sh",
+            "destination": "/home/packer/label-nodes.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/label-nodes.service",
+            "destination": "/home/packer/label-nodes.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/apt-preferences",
+            "destination": "/home/packer/apt-preferences"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kms.service",
+            "destination": "/home/packer/kms.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/health-monitor.sh",
+            "destination": "/home/packer/health-monitor.sh"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet-monitor.service",
+            "destination": "/home/packer/kubelet-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.service",
+            "destination": "/home/packer/docker-monitor.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker-monitor.timer",
+            "destination": "/home/packer/docker-monitor.timer"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/kubelet.service",
+            "destination": "/home/packer/kubelet.service"
+        },
+        {
+            "type": "file",
+            "source": "parts/k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf",
+            "destination": "/home/packer/docker_clear_mount_propagation_flags.conf"
+        },
+        {
+            "type": "file",
+            "source": "vhd/notice/notice.txt",
+            "destination": "/home/packer/NOTICE.txt"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo FEATURE_FLAGS={{user `feature_flags`}} BUILD_NUMBER={{user `build_number`}} BUILD_ID={{user `build_id`}} COMMIT={{user `commit`}} /bin/bash -ux /home/packer/install-dependencies.sh"
+            ]
+        },
+        {
+            "type": "file",
+            "direction": "download",
+            "source": "/opt/azure/vhd-install.complete",
+            "destination": "release-notes.txt"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo /bin/bash -eux /home/packer/cis.sh",
+                "sudo /bin/bash -eux /home/packer/cleanup-vhd.sh",
+                "sudo /usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync || exit 125"
+            ]
+        }
+    ]
+}

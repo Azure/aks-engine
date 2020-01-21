@@ -194,28 +194,36 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
+	kubernetesVersion := "1.13.11"
+	k8sComponents := K8sComponentsByVersionMap[kubernetesVersion]
 	customImage := "myimage"
+	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
-		common.TillerAddonName:                 "gcr.io/kubernetes-helm/tiller:v2.13.1",
-		common.ACIConnectorAddonName:           "microsoft/virtual-kubelet:latest",
-		common.ClusterAutoscalerAddonName:      "k8s.gcr.io/cluster-autoscaler:v1.3.9",
-		common.BlobfuseFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8",
-		common.SMBFlexVolumeAddonName:          "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2",
-		common.KeyVaultFlexVolumeAddonName:     "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
-		common.DashboardAddonName:              "k8s.gcr.io/kubernetes-dashboard-amd64:v1.10.1",
-		common.ReschedulerAddonName:            "k8s.gcr.io/rescheduler:v0.4.0",
-		common.MetricsServerAddonName:          "k8s.gcr.io/metrics-server-amd64:v0.2.1",
-		common.NVIDIADevicePluginAddonName:     "nvidia/k8s-device-plugin:1.11",
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
-		common.IPMASQAgentAddonName:            "k8s.gcr.io/ip-masq-agent-amd64:v2.5.0",
-		common.AzureCNINetworkMonitorAddonName: "mcr.microsoft.com/containernetworking/networkmonitor:v0.0.6",
-		common.DNSAutoscalerAddonName:          "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-		common.HeapsterAddonName:               "k8s.gcr.io/heapster-amd64:v1.5.4",
-		common.CalicoAddonName:                 "calico/typha:v3.8.0",
-		common.AzureNetworkPolicyAddonName:     "mcr.microsoft.com/containernetworking/azure-npm:v1.0.29",
-		common.AADPodIdentityAddonName:         "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2",
-		common.AzurePolicyAddonName:            "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1",
-		common.NodeProblemDetectorAddonName:    "k8s.gcr.io/node-problem-detector:v0.8.0",
+		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
+		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
+		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
+		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
+		common.DashboardAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
+		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
+		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
+		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
+		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
+		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
+		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
+		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
+		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
 	}
 
 	customAddonImages := make(map[string]string)
@@ -253,12 +261,13 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			mockCS := getMockBaseContainerService("1.11.10")
+			mockCS := getMockBaseContainerService(kubernetesVersion)
 			mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
 			mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons = c.myAddons
 			mockCS.setOrchestratorDefaults(c.isUpdate, c.isUpdate)
 			resultAddons := mockCS.Properties.OrchestratorProfile.KubernetesConfig.Addons
 			for _, result := range resultAddons {
+				// TODO test more than just the first container image reference
 				if len(result.Containers) > 0 && result.Containers[0].Image != c.expectedImages[result.Name] {
 					t.Errorf("expected setDefaults to set Image to \"%s\" in addon %s, but got \"%s\"", c.expectedImages[result.Name], result.Name, result.Containers[0].Image)
 				}
@@ -279,6 +288,15 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 		}
 		if addonName == common.AADPodIdentityAddonName {
 			containerName = "nmi"
+		}
+		if addonName == common.KubeDNSAddonName {
+			containerName = "kubedns"
+		}
+		if addonName == common.AntreaAddonName {
+			containerName = common.AntreaControllerContainerName
+		}
+		if addonName == common.FlannelAddonName {
+			containerName = common.KubeFlannelContainerName
 		}
 		customAddon := KubernetesAddon{
 			Name:    addonName,
@@ -825,6 +843,16 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginCilium)
 	}
 
+	mockCS = getMockBaseContainerService("1.15.7")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAntrea)
+	}
+
 	mockCS = getMockBaseContainerService("1.8.10")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
@@ -851,6 +879,32 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy != "" {
 		t.Fatalf("NetworkPolicy did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy, "")
+	}
+}
+
+func TestNetworkPluginDefaults(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != DefaultNetworkPlugin {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, DefaultNetworkPlugin)
+	}
+
+	mockCS = getMockBaseContainerService("1.15.7")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.FlannelAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginFlannel {
+		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
 	}
 }
 
@@ -1141,7 +1195,7 @@ func TestStorageProfile(t *testing.T) {
 			properties.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet)
 	}
 
-	mockCS = getMockBaseContainerService("1.11.10")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1159,7 +1213,7 @@ func TestStorageProfile(t *testing.T) {
 // TestMasterProfileDefaults covers tests for setMasterProfileDefaults
 func TestMasterProfileDefaults(t *testing.T) {
 	// this validates default masterProfile configuration
-	mockCS := getMockBaseContainerService("1.10.3")
+	mockCS := getMockBaseContainerService("1.13.12")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
@@ -1194,7 +1248,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default VMSS masterProfile configuration
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
@@ -1227,7 +1281,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default masterProfile configuration and kubenet
-	mockCS = getMockBaseContainerService("1.10.3")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = ""
@@ -1306,7 +1360,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for LoadBalancerSku and ExcludeMasterFromStandardLB
-	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
@@ -1322,7 +1376,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for MaximumLoadBalancerRuleCount.
-	mockCS = getMockBaseContainerService("1.11.6")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
@@ -1428,6 +1482,31 @@ func TestAgentPoolProfile(t *testing.T) {
 	if properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete {
 		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
 			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
+	}
+	properties.AgentPoolProfiles[0].ScaleSetPriority = ScaleSetPrioritySpot
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete {
+		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
+			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
+	}
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(-1) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(-1))
+	}
+
+	properties.AgentPoolProfiles[0].SpotMaxPrice = to.Float64Ptr(float64(88))
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(88) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(88))
 	}
 }
 
@@ -1615,9 +1694,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		windowsProfile         WindowsProfile
 		expectedWindowsProfile WindowsProfile
 		isAzureStack           bool
+		isUpgrade              bool
+		isScale                bool
 	}{
 		{
-			"defaults",
+			"defaults in creating",
 			WindowsProfile{},
 			WindowsProfile{
 				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
@@ -1631,9 +1712,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"aks vhd current version",
+			"aks vhd current version in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
@@ -1651,9 +1734,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"aks vhd specific version",
+			"aks vhd specific version in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
@@ -1672,9 +1757,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"vanilla vhd current version",
+			"vanilla vhd current version in creating",
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
@@ -1692,9 +1779,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"vanilla vhd spepcific version",
+			"vanilla vhd spepcific version in creating",
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
@@ -1713,9 +1802,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"user overrides latest version",
+			"user overrides latest version in creating",
 			WindowsProfile{
 				WindowsPublisher: "override",
 				WindowsOffer:     "override",
@@ -1733,9 +1824,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"user overrides specific version",
+			"user overrides specific version in creating",
 			WindowsProfile{
 				WindowsPublisher: "override",
 				WindowsOffer:     "override",
@@ -1754,6 +1847,169 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
+		},
+		{
+			"aks-engine sets default WindowsSku and ImageVersion when they are empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not set default WindowsSku and ImageVersion when they are not empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine sets default vanilla WindowsSku and ImageVersion when they are empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          WindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not set vanilla default WindowsSku and ImageVersion when they are not empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not override version when WindowsPublisher does not match in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not override version when WindowsOffer does not match in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not change any value in scaling",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			false,
+			true,
 		},
 	}
 
@@ -1767,7 +2023,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			if test.isAzureStack {
 				mockAPI.CustomCloudProfile = &CustomCloudProfile{}
 			}
-			mockAPI.setWindowsProfileDefaults(false, false)
+			mockAPI.setWindowsProfileDefaults(test.isUpgrade, test.isScale)
 
 			actual := mockAPI.WindowsProfile
 			expected := &test.expectedWindowsProfile
@@ -1888,7 +2144,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
 	}
 	// agents with VMSS and zones
-	mockCS = getMockBaseContainerService("1.12.0")
+	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.AgentPoolProfiles[0].Count = 4
@@ -3165,7 +3421,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "default",
@@ -3178,7 +3434,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 		{
 			name: "default",
@@ -3191,7 +3447,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 	}
 
@@ -3451,7 +3707,7 @@ func TestEnableRBAC(t *testing.T) {
 	}
 }
 
-func TestDefaultTelemetry(t *testing.T) {
+func TestDefaultAzureTelemetryPid(t *testing.T) {
 	// Test that the AzureTelemetryPID is set to DefaultAzureStackDeployTelemetryPID  by default
 	mockCSDefaultSpec := getMockBaseContainerService("1.11.6")
 	mockCSPDefaultSpec := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
@@ -3622,6 +3878,112 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 			c.cs.setOrchestratorDefaults(false, false)
 			if to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) != c.expected {
 				t.Errorf("expected %t, but got %t", c.expected, to.Bool(c.cs.Properties.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT))
+			}
+		})
+	}
+}
+
+func TestSetTelemetryProfileDefaults(t *testing.T) {
+	cases := []struct {
+		name             string
+		telemetryProfile *TelemetryProfile
+		expected         *TelemetryProfile
+	}{
+		{
+			name:             "default",
+			telemetryProfile: nil,
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+			},
+		},
+		{
+			name:             "key not set",
+			telemetryProfile: &TelemetryProfile{},
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+			},
+		},
+		{
+			name: "key set",
+			telemetryProfile: &TelemetryProfile{
+				ApplicationInsightsKey: "app-insights-key",
+			},
+			expected: &TelemetryProfile{
+				ApplicationInsightsKey: "app-insights-key",
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			props := Properties{
+				TelemetryProfile: c.telemetryProfile,
+			}
+
+			props.setTelemetryProfileDefaults()
+
+			actual := props.TelemetryProfile
+			expected := c.expected
+
+			diff := cmp.Diff(actual, expected)
+
+			if diff != "" {
+				t.Errorf("unexpected diff while conparing Properties.TelemetryProfile: %s", diff)
+			}
+		})
+	}
+}
+
+func TestSetPropertiesDefaults(t *testing.T) {
+	cases := []struct {
+		name   string
+		params PropertiesDefaultsParams
+	}{
+		{
+			name: "default",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  false,
+				IsScale:    false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+		{
+			name: "upgrade",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  true,
+				IsScale:    false,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+		{
+			name: "scale",
+			params: PropertiesDefaultsParams{
+				IsUpgrade:  false,
+				IsScale:    true,
+				PkiKeySize: helpers.DefaultPkiKeySize,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			cs := getMockBaseContainerService("1.16")
+
+			_, err := cs.SetPropertiesDefaults(c.params)
+
+			if err != nil {
+				t.Errorf("ContainerService.SetPropertiesDefaults returned error: %s", err)
+			}
+
+			// verify TelemetryProfile is set
+			if cs.Properties.TelemetryProfile == nil {
+				t.Errorf("ContainerService.Properties.TelemetryProfile should be set")
 			}
 		})
 	}

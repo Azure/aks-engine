@@ -7,10 +7,10 @@ data:
     kind: KubeProxyConfiguration
     clientConnection:
       kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "<CIDR>"
-    mode: "<kubeProxyMode>"
+    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
+    mode: "{{ContainerConfig "proxy-mode"}}"
     featureGates:
-      <IPv6DualStackFeature>
+      {{ContainerConfig "featureGates"}}
 metadata:
   name: kube-proxy-config
   namespace: kube-system
@@ -68,7 +68,7 @@ spec:
         - /hyperkube
         - kube-proxy
         - --config=/var/lib/kube-proxy/config.yaml
-        image: <img>
+        image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
         name: kube-proxy
         resources:

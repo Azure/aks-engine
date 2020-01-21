@@ -80,3 +80,194 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}

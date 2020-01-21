@@ -145,16 +145,14 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		if i == 1 {
 			ipConfigProps.Primary = to.BoolPtr(true)
 			backendAddressPools := []compute.SubResource{}
-			if !cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-				publicBackendAddressPools := compute.SubResource{
-					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-				}
-				backendAddressPools = append(backendAddressPools, publicBackendAddressPools)
-				ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
-					{
-						ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
-					},
-				}
+			publicBackendAddressPools := compute.SubResource{
+				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+			}
+			backendAddressPools = append(backendAddressPools, publicBackendAddressPools)
+			ipConfigProps.LoadBalancerInboundNatPools = &[]compute.SubResource{
+				{
+					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatPools/SSH-', variables('masterVMNamePrefix'), 'natpools')]"),
+				},
 			}
 			if masterCount > 1 {
 				internalLbBackendAddressPool := compute.SubResource{
@@ -354,8 +352,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		dependencies = append(dependencies, "[variables('vnetID')]")
 	}
 
-	if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-		profile.LoadBalancerBackendAddressPoolIDs == nil &&
+	if profile.LoadBalancerBackendAddressPoolIDs == nil &&
 		cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 		!isHostedMaster {
 		dependencies = append(dependencies, "[variables('agentLbID')]")
@@ -448,9 +445,15 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	vmssVMProfile := compute.VirtualMachineScaleSetVMProfile{}
 
-	if profile.IsLowPriorityScaleSet() {
+	if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
 		vmssVMProfile.Priority = compute.VirtualMachinePriorityTypes(fmt.Sprintf("[variables('%sScaleSetPriority')]", profile.Name))
 		vmssVMProfile.EvictionPolicy = compute.VirtualMachineEvictionPolicyTypes(fmt.Sprintf("[variables('%sScaleSetEvictionPolicy')]", profile.Name))
+	}
+
+	if profile.IsSpotScaleSet() {
+		vmssVMProfile.BillingProfile = &compute.BillingProfile{
+			MaxPrice: profile.SpotMaxPrice,
+		}
 	}
 
 	vmssNICConfig := compute.VirtualMachineScaleSetNetworkConfiguration{
@@ -496,8 +499,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 					)
 				}
 			} else {
-				if !cs.Properties.OrchestratorProfile.IsPrivateCluster() &&
-					cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
+				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 					!isHostedMaster {
 					agentLbBackendAddressPools := compute.SubResource{
 						ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
@@ -677,6 +679,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		osDisk.Caching = compute.CachingTypesReadOnly
 		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
 			Option: compute.Local,
+		}
+	}
+
+	if profile.DiskEncryptionSetID != "" {
+		osDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
+			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
 		}
 	}
 

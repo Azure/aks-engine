@@ -22,10 +22,11 @@ func TestMarshalJSON(t *testing.T) {
 				Secret:   "bazSecret",
 			},
 			MasterProfile: &api.MasterProfile{
-				Count:               3,
-				DNSPrefix:           "myprefix1",
-				VMSize:              "Standard_DS2_v2",
-				AvailabilityProfile: api.VirtualMachineScaleSets,
+				Count:                     3,
+				DNSPrefix:                 "myprefix1",
+				VMSize:                    "Standard_DS2_v2",
+				AvailabilityProfile:       api.VirtualMachineScaleSets,
+				PlatformUpdateDomainCount: to.IntPtr(3),
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType:    api.Kubernetes,

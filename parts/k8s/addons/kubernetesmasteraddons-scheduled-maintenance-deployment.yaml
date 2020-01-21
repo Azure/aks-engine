@@ -245,7 +245,7 @@ spec:
         - --upstream=http://127.0.0.1:8080/
         - --logtostderr=true
         - --v=10
-        image: gcr.io/kubebuilder/kube-rbac-proxy:v0.4.0
+        image: {{ContainerImage "kube-rbac-proxy"}}
         name: kube-rbac-proxy
         ports:
         - containerPort: 8443
@@ -267,7 +267,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: quay.io/awesomenix/drainsafe-manager:latest
+        image: {{ContainerImage "manager"}}
         name: manager
         resources:
           limits:
@@ -314,7 +314,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: quay.io/awesomenix/drainsafe-manager:latest
+        image: {{ContainerImage "manager"}}
         name: manager
         resources:
           limits:

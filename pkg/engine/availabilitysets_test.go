@@ -47,7 +47,9 @@ func TestCreateAvailabilitySet(t *testing.T) {
 
 	cs = &api.ContainerService{
 		Properties: &api.Properties{
-			MasterProfile: &api.MasterProfile{},
+			MasterProfile: &api.MasterProfile{
+				PlatformUpdateDomainCount: to.IntPtr(3),
+			},
 		},
 	}
 
@@ -105,12 +107,13 @@ func TestCreateAvailabilitySet(t *testing.T) {
 		t.Errorf("unexpected error while comparing availability sets: %s", diff)
 	}
 
-	// Test availability set with platform fault domain count set
+	// Test availability set with platform fault domain+update count  set
 	count := 3
 	cs = &api.ContainerService{
 		Properties: &api.Properties{
 			MasterProfile: &api.MasterProfile{
-				PlatformFaultDomainCount: &count,
+				PlatformFaultDomainCount:  &count,
+				PlatformUpdateDomainCount: &count,
 			},
 		},
 	}
@@ -171,8 +174,9 @@ func TestCreateAgentAvailabilitySets(t *testing.T) {
 
 	//Test AvSet wit ManagedDisk
 	profile = &api.AgentPoolProfile{
-		Name:           "foobar",
-		StorageProfile: api.ManagedDisks,
+		Name:                      "foobar",
+		StorageProfile:            api.ManagedDisks,
+		PlatformUpdateDomainCount: to.IntPtr(3),
 	}
 
 	avSet = createAgentAvailabilitySets(profile)
@@ -200,12 +204,13 @@ func TestCreateAgentAvailabilitySets(t *testing.T) {
 		t.Errorf("unexpected error while comparing availability sets: %s", diff)
 	}
 
-	// Test availability set with platform fault domain count set
+	// Test availability set with platform fault+update domain count set
 	count := 3
 	profile = &api.AgentPoolProfile{
-		Name:                     "foobar",
-		StorageProfile:           api.ManagedDisks,
-		PlatformFaultDomainCount: &count,
+		Name:                      "foobar",
+		StorageProfile:            api.ManagedDisks,
+		PlatformFaultDomainCount:  &count,
+		PlatformUpdateDomainCount: &count,
 	}
 
 	avSet = createAgentAvailabilitySets(profile)
