@@ -4090,7 +4090,7 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.8",
+						OrchestratorVersion: "1.15.9",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
