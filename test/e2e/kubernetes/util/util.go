@@ -80,3 +80,12 @@ func IsUsingManagedDisks(agentPools []*api.AgentPoolProfile) bool {
 	}
 	return false
 }
+
+func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
+	for _, a := range agentPools {
+		if a.IsEphemeral() {
+			return true
+		}
+	}
+	return false
+}
