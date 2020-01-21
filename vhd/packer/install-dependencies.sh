@@ -567,7 +567,7 @@ for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-# TODO: remove once ACR is available on Azure Stack
+# This is to accommodate air-gapped environments, e.g., Azure Stack
 CONTAINER_IMAGE="registry:2.7.1"
 pullContainerImage "docker" ${CONTAINER_IMAGE}
 echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
