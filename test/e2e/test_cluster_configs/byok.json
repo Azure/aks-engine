@@ -3,6 +3,9 @@
 		"REGION_OPTIONS": "northeurope",
 		"SKIP_TESTS": "true"
 	},
+	"options": {
+		"allowedOrchestratorVersions": ["latestReleasedVersion"]
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
