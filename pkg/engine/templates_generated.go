@@ -40503,7 +40503,7 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       "type": "string"
     },
     "cniPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-latest.tgz",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/cni-plugins/v0.7.6/binaries/cni-plugins-amd64-v0.7.6.tgz",
       "type": "string"
     },
     "vnetCniLinuxPluginsURL": {
