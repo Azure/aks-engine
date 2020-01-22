@@ -422,8 +422,8 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.17.2
 1.17.1
-1.17.0
 1.16.4
 1.16.2
 1.16.1
@@ -567,7 +567,7 @@ for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-# TODO: remove once ACR is available on Azure Stack
+# This is to accommodate air-gapped environments, e.g., Azure Stack
 CONTAINER_IMAGE="registry:2.7.1"
 pullContainerImage "docker" ${CONTAINER_IMAGE}
 echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
