@@ -176,9 +176,10 @@ func TestCreateMasterLoadBalancerPrivate(t *testing.T) {
 							BackendAddressPool: &network.SubResource{
 								ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 							},
-							Protocol:             network.Protocol1All,
-							IdleTimeoutInMinutes: to.Int32Ptr(0),
-							EnableTCPReset:       to.BoolPtr(true),
+							Protocol:               network.Protocol1All,
+							IdleTimeoutInMinutes:   to.Int32Ptr(0),
+							AllocatedOutboundPorts: to.Int32Ptr(0),
+							EnableTCPReset:         to.BoolPtr(true),
 						},
 					},
 				},
