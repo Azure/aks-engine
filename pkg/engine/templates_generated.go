@@ -37312,7 +37312,7 @@ installMoby() {
         if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
             MOBY_CLI="3.0.3"
         fi
-        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION} moby-cli=${MOBY_CLI} --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
+        apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
     fi
 }
 
@@ -40408,7 +40408,7 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.8",
+      "defaultValue": "3.0.10",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -40420,7 +40420,8 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
          "3.0.5",
          "3.0.6",
          "3.0.7",
-         "3.0.8"
+         "3.0.8",
+         "3.0.10"
        ],
       "type": "string"
     },
