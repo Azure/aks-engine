@@ -4,13 +4,13 @@
 package engine
 
 import (
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -128,7 +128,7 @@ func TestCreateKubernetesMasterRoleAssignmentForAgentPools(t *testing.T) {
 	actual := createKubernetesMasterRoleAssignmentForAgentPools(masterProfile, []*api.AgentPoolProfile{agentProfile1, agentProfile2})
 
 	expected := []DeploymentWithResourceGroupARM{
-		DeploymentWithResourceGroupARM{
+		{
 			DeploymentARMResource: DeploymentARMResource{
 				APIVersion: "2017-05-10",
 				DependsOn: []string{
@@ -177,7 +177,7 @@ func TestCreateKubernetesMasterRoleAssignmentForAgentPools(t *testing.T) {
 				},
 			},
 		},
-		DeploymentWithResourceGroupARM{
+		{
 			DeploymentARMResource: DeploymentARMResource{
 				APIVersion: "2017-05-10",
 				DependsOn: []string{
