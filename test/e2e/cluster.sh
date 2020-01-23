@@ -164,6 +164,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
@@ -207,6 +208,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
@@ -248,6 +250,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
+      -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
   done
 fi
@@ -292,5 +295,6 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
