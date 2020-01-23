@@ -1255,7 +1255,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
 			if !util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
 				Skip("Skip PV test for clusters using unmanaged disks")
-			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.TestPVC {
 				By("Creating a persistent volume claim")
 				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
 				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")

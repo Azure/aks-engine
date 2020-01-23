@@ -2,7 +2,8 @@
 	"env": {
 		"CREATE_VNET": true,
 		"REGION_OPTIONS": "eastus,westeurope,westus2",
-		"GINKGO_SKIP": "should report all nodes in a Ready state"
+		"GINKGO_SKIP": "should report all nodes in a Ready state",
+		"TEST_PVC": true
 	},
 	"options": {
 		"allowedOrchestratorVersions": [
