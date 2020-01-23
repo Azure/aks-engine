@@ -638,7 +638,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !clusterAutoscalerEngaged {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				!clusterAutoscalerEngaged &&
+				cfg.AddNodePoolInput != "" {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
