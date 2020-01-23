@@ -46,6 +46,7 @@ type Config struct {
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
+	TestPVC             bool   `envconfig:"TEST_PVC" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom clould
