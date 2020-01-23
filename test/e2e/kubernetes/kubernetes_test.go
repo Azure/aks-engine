@@ -640,7 +640,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var expectedReadyNodes int
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
 				!clusterAutoscalerEngaged &&
-				cfg.AddNodePoolInput != "" {
+				cfg.AddNodePoolInput == "" {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -654,7 +654,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -671,7 +672,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels specific to masters or agents", func() {
 			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
 			for _, node := range nodes {
