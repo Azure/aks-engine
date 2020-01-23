@@ -73,15 +73,13 @@ function Get-FilesToCacheOnVHD
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.8-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.5-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.16.1-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.14.8-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.5-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.15.9-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.1-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.2-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.16.4-1int.zip",
+            "https://acs-mirror.azureedge.net/wink8s/v1.16.6-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.17.1-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/v1.17.2-1int.zip"
         );
