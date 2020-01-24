@@ -348,7 +348,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			Location: to.StringPtr("[variables('location')]"),
 			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
-				IPConfigurations: getNICIPConfigs(31),
+				IPConfigurations: getNICIPConfigs(31, false),
 			},
 			Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
 		},
@@ -591,7 +591,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 	}
 }
 
-func getNICIPConfigs(n int) *[]network.InterfaceIPConfiguration {
+func getNICIPConfigs(n int, skipMasterLB bool) *[]network.InterfaceIPConfiguration {
 	var ipConfigurations []network.InterfaceIPConfiguration
 	for i := 1; i <= n; i++ {
 		ipConfig := network.InterfaceIPConfiguration{
@@ -607,17 +607,19 @@ func getNICIPConfigs(n int) *[]network.InterfaceIPConfiguration {
 		if i == 1 {
 			ipConfig.Primary = to.BoolPtr(true)
 			ipConfig.PrivateIPAllocationMethod = network.Static
-			ipConfig.LoadBalancerBackendAddressPools = &[]network.BackendAddressPool{
-				{
-					ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
-				},
-			}
-			ipConfig.LoadBalancerInboundNatRules = &[]network.InboundNatRule{
-				{
-					ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
-				},
-			}
 			ipConfig.PrivateIPAddress = to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]")
+			if !skipMasterLB {
+				ipConfig.LoadBalancerBackendAddressPools = &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+				}
+				ipConfig.LoadBalancerInboundNatRules = &[]network.InboundNatRule{
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+					},
+				}
+			}
 		}
 		ipConfigurations = append(ipConfigurations, ipConfig)
 	}
@@ -877,7 +879,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 		Interface: network.Interface{
 			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
-				IPConfigurations: getNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount),
+				IPConfigurations: getNICIPConfigs(cs.Properties.MasterProfile.IPAddressCount, false),
 			},
 			Type:     to.StringPtr("Microsoft.Network/networkInterfaces"),
 			Location: to.StringPtr("[variables('location')]"),
@@ -1271,74 +1273,6 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 
 	var userAssignedIDEnabled = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 
-	agentLoadBalancer := LoadBalancerARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-			DependsOn: []string{
-				"[concat('Microsoft.Network/publicIPAddresses/', variables('agentPublicIPAddressName'))]",
-			},
-		},
-		LoadBalancer: network.LoadBalancer{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('agentLbName')]"),
-			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
-				BackendAddressPools: &[]network.BackendAddressPool{
-					{
-						Name: to.StringPtr("[variables('agentLbBackendPoolName')]"),
-					},
-				},
-				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
-					{
-						Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
-						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
-							PublicIPAddress: &network.PublicIPAddress{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
-							},
-						},
-					},
-				},
-				OutboundRules: &[]network.OutboundRule{
-					{
-						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
-							FrontendIPConfigurations: &[]network.SubResource{
-								{
-									ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
-								},
-							},
-							BackendAddressPool: &network.SubResource{
-								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
-							},
-							Protocol:             network.Protocol1All,
-							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-						},
-						Name: to.StringPtr("LBOutboundRule"),
-					},
-				},
-			},
-			Sku: &network.LoadBalancerSku{
-				Name: "[variables('loadBalancerSku')]",
-			},
-			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
-		},
-	}
-
-	agentPublicIPAddress := PublicIPAddressARM{
-		ARMResource: ARMResource{
-			APIVersion: "[variables('apiVersionNetwork')]",
-		},
-		PublicIPAddress: network.PublicIPAddress{
-			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('agentPublicIPAddressName')]"),
-			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				PublicIPAllocationMethod: network.Static,
-			},
-			Sku: &network.PublicIPAddressSku{
-				Name: "[variables('loadBalancerSku')]",
-			},
-			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
-		},
-	}
-
 	agentVM := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionCompute')]",
@@ -1667,7 +1601,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 			Location: to.StringPtr("[variables('location')]"),
 			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
 			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
-				IPConfigurations: getNICIPConfigs(31),
+				IPConfigurations: getNICIPConfigs(31, false),
 			},
 			Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
 		},
@@ -1824,10 +1758,143 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
 	}
 
+	// Now test with private cluster
+	cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &api.PrivateCluster{
+		Enabled: to.BoolPtr(true),
+	}
+	armResources = GenerateARMResources(&cs)
+
+	privateClusterMasterNetworkInterface := NetworkInterfaceARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			Copy: map[string]string{
+				"count": "[sub(variables('masterCount'), variables('masterOffset'))]",
+				"name":  "nicLoopNode",
+			},
+			DependsOn: []string{
+				"[variables('vnetID')]",
+			},
+		},
+		Interface: network.Interface{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[concat(variables('masterVMNamePrefix'), 'nic-', copyIndex(variables('masterOffset')))]"),
+			InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
+				IPConfigurations: getNICIPConfigs(31, true),
+			},
+			Type: to.StringPtr("Microsoft.Network/networkInterfaces"),
+		},
+	}
+
+	for _, rule := range *networkSecurityGroup.SecurityGroup.SecurityGroupPropertiesFormat.SecurityRules {
+		if *rule.Name == "allow_kube_tls" {
+			source := "VirtualNetwork"
+			rule.SourceAddressPrefix = &source
+		}
+	}
+
+	expected = []interface{}{
+		agentVM,
+		masterAvSet,
+		virtualNetwork,
+		networkSecurityGroup,
+		// publicIPAddress, <-- we don't ship a master public IP w/ a private cluster config
+		// loadBalancer, <-- we don't ship a master load balancer w/ a private cluster config + 1 master config
+		privateClusterMasterNetworkInterface,
+		masterVM,
+		masterVMExtension,
+		aksBillingExtension,
+	}
+
+	expectedMap = resourceSliceToMap(expected)
+	actualMap = resourceSliceToMap(armResources)
+
+	if diff := cmp.Diff(actualMap, expectedMap); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+
 	// Now test with no LoadBalancerBackendAddressPoolIDs provided
+	cs.Properties.MasterProfile.Count = 1
+	cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster = &api.PrivateCluster{
+		Enabled: to.BoolPtr(false),
+	}
 	cs.Properties.AgentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = nil
 	armResources = GenerateARMResources(&cs)
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
+
+	agentLoadBalancer := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('agentPublicIPAddressName'))]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('agentLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+							},
+						},
+					},
+				},
+				OutboundRules: &[]network.OutboundRule{
+					{
+						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+							FrontendIPConfigurations: &[]network.SubResource{
+								{
+									ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+								},
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+							},
+							Protocol:             network.Protocol1All,
+							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+						},
+						Name: to.StringPtr("LBOutboundRule"),
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+
+	agentPublicIPAddress := PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentPublicIPAddressName')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+
+	for _, rule := range *networkSecurityGroup.SecurityGroup.SecurityGroupPropertiesFormat.SecurityRules {
+		if *rule.Name == "allow_kube_tls" {
+			source := "*"
+			rule.SourceAddressPrefix = &source
+		}
+	}
 
 	agentVMWithAgentLb := VirtualMachineScaleSetARM{
 		ARMResource: ARMResource{

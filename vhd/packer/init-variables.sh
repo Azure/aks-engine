@@ -2,8 +2,8 @@
 
 CDIR=$(dirname "${BASH_SOURCE}")
 
-SETTINGS_JSON="${SETTINGS_JSON:-./packer/settings.json}"
-SP_JSON="${SP_JSON:-./packer/sp.json}"
+SETTINGS_JSON="${SETTINGS_JSON:-./settings.json}"
+SP_JSON="${SP_JSON:-./sp.json}"
 SUBSCRIPTION_ID="${SUBSCRIPTION_ID:-$(az account show -o json --query="id" | tr -d '"')}"
 CREATE_TIME="$(date +%s)"
 STORAGE_ACCOUNT_NAME="aksimages${CREATE_TIME}"
@@ -51,7 +51,7 @@ fi
 
 echo "storage name: ${STORAGE_ACCOUNT_NAME}"
 
-cat <<EOF > packer/settings.json
+cat <<EOF > vhd/packer/settings.json
 {
   "subscription_id":  "${SUBSCRIPTION_ID}",
   "client_id": "${CLIENT_ID}",
@@ -65,4 +65,4 @@ cat <<EOF > packer/settings.json
 }
 EOF
 
-cat packer/settings.json
+cat vhd/packer/settings.json

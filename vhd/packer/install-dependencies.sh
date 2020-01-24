@@ -55,6 +55,10 @@ ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
 installEtcd
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
+apmz_version="v0.4.0"
+ensureAPMZ "${apmz_version}"
+echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
+
 MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -418,16 +422,14 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.17.0
+1.17.2
+1.17.1
+1.16.6
 1.16.4
-1.16.2
-1.16.1
-1.16.1-azs
+1.15.9
 1.15.7
 1.15.7-azs
 1.15.5
-1.15.4
-1.15.4-azs
 1.14.8
 1.14.7
 1.14.7-azs
@@ -472,6 +474,7 @@ for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
 done
 
 AZUREDISK_CSI_VERSIONS="
+0.5.0
 0.4.0
 "
 for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
@@ -490,10 +493,10 @@ for AZUREFILE_CSI_VERSION in ${AZUREFILE_CSI_VERSIONS}; do
 done
 
 CSI_ATTACHER_VERSIONS="
-1.0.1
+1.2.0
 "
 for CSI_ATTACHER_VERSION in ${CSI_ATTACHER_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/csi-attacher:v${CSI_ATTACHER_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-attacher:v${CSI_ATTACHER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -502,7 +505,7 @@ CSI_CLUSTER_DRIVER_REGISTRAR_VERSIONS="
 1.0.1
 "
 for CSI_CLUSTER_DRIVER_REGISTRAR_VERSION in ${CSI_CLUSTER_DRIVER_REGISTRAR_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/csi-cluster-driver-registrar:v${CSI_CLUSTER_DRIVER_REGISTRAR_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-cluster-driver-registrar:v${CSI_CLUSTER_DRIVER_REGISTRAR_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -511,16 +514,16 @@ CSI_NODE_DRIVER_REGISTRAR_VERSIONS="
 1.1.0
 "
 for CSI_NODE_DRIVER_REGISTRAR_VERSION in ${CSI_NODE_DRIVER_REGISTRAR_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/csi-node-driver-registrar:v${CSI_NODE_DRIVER_REGISTRAR_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v${CSI_NODE_DRIVER_REGISTRAR_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 CSI_PROVISIONER_VERSIONS="
-1.0.1
+1.4.0
 "
 for CSI_PROVISIONER_VERSION in ${CSI_PROVISIONER_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/csi-provisioner:v${CSI_PROVISIONER_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v${CSI_PROVISIONER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -529,7 +532,25 @@ LIVENESSPROBE_VERSIONS="
 1.1.0
 "
 for LIVENESSPROBE_VERSION in ${LIVENESSPROBE_VERSIONS}; do
-  CONTAINER_IMAGE="quay.io/k8scsi/livenessprobe:v${LIVENESSPROBE_VERSION}"
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v${LIVENESSPROBE_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_RESIZER_VERSIONS="
+0.3.0
+"
+for CSI_RESIZER_VERSION in ${CSI_RESIZER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-resizer:v${CSI_RESIZER_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_SNAPSHOTTER_VERSIONS="
+1.1.0
+"
+for CSI_SNAPSHOTTER_VERSION in ${CSI_SNAPSHOTTER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-snapshotter:v${CSI_SNAPSHOTTER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -543,7 +564,7 @@ for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-# TODO: remove once ACR is available on Azure Stack
+# This is to accommodate air-gapped environments, e.g., Azure Stack
 CONTAINER_IMAGE="registry:2.7.1"
 pullContainerImage "docker" ${CONTAINER_IMAGE}
 echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}

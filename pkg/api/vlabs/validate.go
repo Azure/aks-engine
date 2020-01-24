@@ -709,7 +709,7 @@ func (a *Properties) validateAddons() error {
 					if len(addon.Config["appgw-subnet"]) == 0 {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
 					}
-				case "azuredisk-csi-driver", "azurefile-csi-driver":
+				case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
 					}

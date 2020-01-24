@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/pkg/errors"
 )
 
@@ -69,4 +70,22 @@ func IsLargeVMSKU(sku string) bool {
 	default:
 		return false
 	}
+}
+
+func IsUsingManagedDisks(agentPools []*api.AgentPoolProfile) bool {
+	for _, a := range agentPools {
+		if a.IsManagedDisks() {
+			return true
+		}
+	}
+	return false
+}
+
+func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
+	for _, a := range agentPools {
+		if a.IsEphemeral() {
+			return true
+		}
+	}
+	return false
 }

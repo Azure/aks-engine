@@ -47,8 +47,6 @@
 					"storageProfile": "ManagedDisks",
 					"diskSizesGB": [
 						128,
-						128,
-						128,
 						128
 					],
 					"availabilityProfile": "AvailabilitySet",

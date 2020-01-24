@@ -196,6 +196,10 @@ const (
 	CSIClusterDriverRegistrarContainerName = "csi-cluster-driver-registrar"
 	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSILivenessProbeContainerName = "livenessprobe"
+	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver addon
+	CSISnapshotterContainerName = "csi-snapshotter"
+	// CSIResizerContainerName is the name of the csi-resizer container in the azuredisk-csi-driver addon
+	CSIResizerContainerName = "csi-resizer"
 	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSINodeDriverRegistrarContainerName = "csi-node-driver-registrar"
 	// CSIAzureDiskContainerName is the name of the azuredisk-csi container in the azuredisk-csi-driver and azurefile-csi-driver addons

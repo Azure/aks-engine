@@ -49,13 +49,15 @@ const (
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"
 	gatekeeperImageReference                          string = "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.0"
-	csiProvisionerImageReference                      string = "quay.io/k8scsi/csi-provisioner:v1.0.1"
-	csiAttacherImageReference                         string = "quay.io/k8scsi/csi-attacher:v1.0.1"
-	csiClusterDriverRegistrarImageReference           string = "quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1"
-	csiLivenessProbeImageReference                    string = "quay.io/k8scsi/livenessprobe:v1.1.0"
-	csiNodeDriverRegistrarImageReference              string = "quay.io/k8scsi/csi-node-driver-registrar:v1.1.0"
-	csiAzureDiskImageReference                        string = "mcr.microsoft.com/k8s/csi/azuredisk-csi:v0.4.0"
-	csiAzureFileImageReference                        string = "mcr.microsoft.com/k8s/csi/azurefile-csi:v0.3.0"
+	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.4.0"
+	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
+	csiClusterDriverRegistrarImageReference           string = "oss/kubernetes-csi/csi-cluster-driver-registrar:v1.0.1"
+	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v1.1.0"
+	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.1.0"
+	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v1.1.0"
+	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v0.3.0"
+	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.5.0"
+	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.3.0"
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.4.0"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.4.0"
 	kubeFlannelImageReference                         string = "quay.io/coreos/flannel:v0.8.0-amd64"
@@ -280,6 +282,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -357,6 +361,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -432,6 +438,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -506,6 +514,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -580,6 +590,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -654,6 +666,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -723,13 +737,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.AzurePolicyAddonName:                       azurePolicyImageReference,
 			common.GatekeeperContainerName:                    gatekeeperImageReference,
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
-			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
-			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
-			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
-			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
-			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -796,13 +803,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.AzurePolicyAddonName:                       azurePolicyImageReference,
 			common.GatekeeperContainerName:                    gatekeeperImageReference,
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
-			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
-			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
-			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
-			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
-			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -869,13 +869,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.AzurePolicyAddonName:                       azurePolicyImageReference,
 			common.GatekeeperContainerName:                    gatekeeperImageReference,
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
-			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
-			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
-			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
-			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
-			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -942,13 +935,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.AzurePolicyAddonName:                       azurePolicyImageReference,
 			common.GatekeeperContainerName:                    gatekeeperImageReference,
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
-			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
-			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
-			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
-			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
-			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
@@ -1011,13 +997,6 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 			common.MICContainerName:                           aadPodIdentityMICImageReference,
 			common.AzurePolicyAddonName:                       azurePolicyImageReference,
 			common.GatekeeperContainerName:                    gatekeeperImageReference,
-			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
-			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
-			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
-			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
-			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
 			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
 			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,

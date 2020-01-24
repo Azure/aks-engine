@@ -498,15 +498,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("SSH port is blocked")
 			} else {
 				var auditDNodePrefixes []string
-				var lowPriVMSSPrefixes []string
+				var nonRegularPriVMSSPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if profile.IsLowPriorityScaleSet() {
-						lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
+					if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
+						nonRegularPriVMSSPrefixes = append(nonRegularPriVMSSPrefixes, "k8s-"+profile.Name)
 					} else if to.Bool(profile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 					}
@@ -517,7 +517,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sshConn.CopyTo(auditdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				for _, node := range nodes {
-					if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
+					if !node.HasSubstring(nonRegularPriVMSSPrefixes) && node.IsUbuntu() {
 						var enabled bool
 						if node.HasSubstring(auditDNodePrefixes) {
 							enabled = true
@@ -638,7 +638,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !clusterAutoscalerEngaged {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				!clusterAutoscalerEngaged &&
+				cfg.AddNodePoolInput == "" {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -652,7 +654,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -669,7 +672,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels specific to masters or agents", func() {
 			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
 			for _, node := range nodes {
@@ -718,9 +722,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have core kube-system componentry running", func() {
 			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
-				to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
-				coreComponents = append(coreComponents, "cloud-controller-manager", "cloud-node-manager", "csi-azuredisk-controller", "csi-azurefile-controller")
+			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+				coreComponents = append(coreComponents, "cloud-controller-manager")
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
+					coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node", "csi-azurefile-controller", "csi-azurefile-node")
+				}
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					coreComponents = append(coreComponents, "cloud-node-manager")
+				}
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
@@ -1039,6 +1048,56 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			}
 		})
+
+		It("should have the correct storage classes deployed", func() {
+			if util.IsUsingEphemeralDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("no storage class is deployed when ephemeral disk is used, will not test")
+			}
+			var azureDiskProvisioner, azureFileProvisioner string
+			isUsingCSIDrivers := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
+				common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0")
+			if isUsingCSIDrivers {
+				azureDiskProvisioner = "disk.csi.azure.com"
+				azureFileProvisioner = "file.csi.azure.com"
+			} else {
+				azureDiskProvisioner = "kubernetes.io/azure-disk"
+				azureFileProvisioner = "kubernetes.io/azure-file"
+			}
+
+			azureDiskStorageClasses := []string{"default"}
+			// CSI driver uses managed disk by default
+			if isUsingCSIDrivers || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "managed-premium", "managed-standard")
+			} else {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "unmanaged-premium", "unmanaged-standard")
+			}
+			for _, azureDiskStorageClass := range azureDiskStorageClasses {
+				sc, err := storageclass.Get(azureDiskStorageClass)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
+				if isUsingCSIDrivers && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
+					Expect(sc.VolumeBindingMode).To(Equal("WaitForFirstConsumer"))
+					Expect(len(sc.AllowedTopologies)).To(Equal(1))
+					Expect(len(sc.AllowedTopologies[0].MatchLabelExpressions)).To(Equal(1))
+					Expect(sc.AllowedTopologies[0].MatchLabelExpressions[0].Key).To(Equal("topology.disk.csi.azure.com/zone"))
+					for _, zone := range eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].AvailabilityZones {
+						Expect(sc.AllowedTopologies[0].MatchLabelExpressions[0].Values).To(ContainElement(eng.ExpandedDefinition.Location + "-" + zone))
+					}
+				} else {
+					Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+				}
+				if isUsingCSIDrivers && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					Expect(sc.AllowVolumeExpansion).To(BeTrue())
+				}
+			}
+
+			for _, azureFileStorageClass := range []string{"azurefile"} {
+				sc, err := storageclass.Get(azureFileStorageClass)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(sc.Provisioner).To(Equal(azureFileProvisioner))
+				Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+			}
+		})
 	})
 
 	Describe("with a windows agent pool", func() {
@@ -1192,40 +1251,96 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			err = p.Delete(util.DefaultDeleteRetries)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("should create a pv by deploying a pod that consumes a pvc", func() {
+			if !util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("Skip PV test for clusters using unmanaged disks")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.TestPVC {
+				By("Creating a persistent volume claim")
+				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
+				Expect(err).NotTo(HaveOccurred())
+				// Azure Disk CSI driver in zone-enabled clusters uses 'WaitForFirstConsumer' volume binding mode
+				// thus, pvc won't be available until a pod consumes it
+				isUsingAzureDiskCSIDriver, _ := eng.HasAddon("azuredisk-csi-driver")
+				if !(isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools()) {
+					ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
+				}
+
+				By("Launching a pod using the volume claim")
+				podName := "pv-pod" // should be the same as in pod-pvc.yaml
+				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+
+				By("Checking that the pod can access volume")
+				valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
+				Expect(valid).To(BeTrue())
+				Expect(err).NotTo(HaveOccurred())
+
+				// Skip label validation for Azure Disk CSI driver since it currently doesn't apply any label to PV
+				if !isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
+					pvList, err := persistentvolume.Get()
+					Expect(err).NotTo(HaveOccurred())
+					pvZone := ""
+					for _, pv := range pvList.PersistentVolumes {
+						By("Ensuring that we get zones for the pv")
+						// zone is chosen by round-robin across all zones
+						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						fmt.Printf("pvZone: %s\n", pvZone)
+						contains := strings.Contains(pvZone, "-")
+						Expect(contains).To(Equal(true))
+						// VolumeScheduling feature gate is set to true by default starting v1.10+
+						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
+							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+								By("Ensuring that we get nodeAffinity for each pv")
+								value := expression.Values[0]
+								fmt.Printf("NodeAffinity value: %s\n", value)
+								contains := strings.Contains(value, "-")
+								Expect(contains).To(Equal(true))
+							}
+						}
+					}
+
+					By("Ensuring that attached volume pv has the same zone as the zone of the node")
+					nodeName := testPod.Spec.NodeName
+					nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+					fmt.Printf("pvZone: %s\n", pvZone)
+					fmt.Printf("nodeZone: %s\n", nodeZone)
+					Expect(nodeZone == pvZone).To(Equal(true))
+				}
+
+				By("Cleaning up after ourselves")
+				err = testPod.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = pvc.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
 	})
 
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
-				version := common.RationalizeReleaseAndVersion(
-					common.Kubernetes,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorRelease,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorVersion,
-					false,
-					eng.HasWindowsAgents())
-				if common.IsKubernetesVersionGe(version, "1.10.0") {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
-				} else {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
 				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
 			} else {
 				Skip("This is not a GPU-enabled cluster")
 			}
@@ -1289,85 +1404,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("Availability zones was not configured for this Cluster Definition")
 			}
 		})
-
-		It("should create pv with zone labels and node affinity", func() {
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-					if !(common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
-						to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)) {
-						By("Creating a persistent volume claim")
-						pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-						pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
-						Expect(err).NotTo(HaveOccurred())
-						ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(ready).To(Equal(true))
-
-						pvList, err := persistentvolume.Get()
-						Expect(err).NotTo(HaveOccurred())
-						pvZone := ""
-						for _, pv := range pvList.PersistentVolumes {
-							By("Ensuring that we get zones for the pv")
-							// zone is chosen by round-robin across all zones
-							pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-							fmt.Printf("pvZone: %s\n", pvZone)
-							contains := strings.Contains(pvZone, "-")
-							Expect(contains).To(Equal(true))
-							// VolumeScheduling feature gate is set to true by default starting v1.10+
-							for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-								if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
-									By("Ensuring that we get nodeAffinity for each pv")
-									value := expression.Values[0]
-									fmt.Printf("NodeAffinity value: %s\n", value)
-									contains := strings.Contains(value, "-")
-									Expect(contains).To(Equal(true))
-								}
-							}
-						}
-
-						By("Launching a pod using the volume claim")
-						podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-						testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						ready, err = testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(ready).To(Equal(true))
-
-						By("Checking that the pod can access volume")
-						valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
-						Expect(valid).To(BeTrue())
-						Expect(err).NotTo(HaveOccurred())
-
-						By("Ensuring that attached volume pv has the same zone as the zone of the node")
-						nodeName := testPod.Spec.NodeName
-						nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-						fmt.Printf("pvZone: %s\n", pvZone)
-						fmt.Printf("nodeZone: %s\n", nodeZone)
-						Expect(nodeZone == pvZone).To(Equal(true))
-
-						By("Cleaning up after ourselves")
-						err = testPod.Delete(util.DefaultDeleteRetries)
-						Expect(err).NotTo(HaveOccurred())
-						err = pvc.Delete(util.DefaultDeleteRetries)
-						Expect(err).NotTo(HaveOccurred())
-					} else {
-						Skip("Zones aren't yet supported in CSI disk driver")
-					}
-				} else {
-					Skip("Availability zones was not configured for this Cluster Definition")
-				}
-			} else {
-				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
-			}
-		})
 	})
 
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
-			if (eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
-                            eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea")) {
+			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
+				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
 				namespaceDev, err := namespace.CreateIfNotExist(nsDev)

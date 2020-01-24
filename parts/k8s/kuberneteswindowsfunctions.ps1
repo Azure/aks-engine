@@ -47,9 +47,42 @@ function DownloadFileOverHttp
     
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
+
+        $downloadTimer = [System.Diagnostics.Stopwatch]::StartNew()
         Invoke-WebRequest $Url -UseBasicParsing -OutFile $DestinationPath -Verbose
+        $downloadTimer.Stop()
+
+        if ($global:AppInsightsClient -ne $null) {
+            $event = New-Object "Microsoft.ApplicationInsights.DataContracts.EventTelemetry"
+            $event.Name = "FileDownload"
+            $event.Properties["FileName"] = $fileName
+            $event.Metrics["DurationMs"] = $downloadTimer.ElapsedMilliseconds
+            $global:AppInsightsClient.TrackEvent($event)
+        }
+
         $ProgressPreference = $oldProgressPreference
         Write-Log "Downloaded file to $DestinationPath"
+    }
+}
+
+function Get-WindowsVersion {
+    $systemInfo = Get-ItemProperty -Path "HKLM:SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+    return "$($systemInfo.CurrentBuildNumber).$($systemInfo.UBR)"
+}
+
+function Get-CniVersion {
+    switch($global:NetworkPlugin) {
+        "azure" {
+            if ($global:VNetCNIPluginsURL -match "(v[0-9`.]+).(zip|tar)") {
+                return $matches[1]
+            } else {
+                return ""
+            }
+            break;
+        }
+        default {
+            return ""
+        }
     }
 }
 
@@ -126,15 +159,19 @@ function Invoke-Executable
     throw "Exhausted retries for $Executable $ArgList"
 }
 
-function Get-NetworkLogCollectionScripts {
-    Write-Log "Getting CollectLogs.ps1 and depencencies"
+function Get-LogCollectionScripts {
+    Write-Log "Getting various log collect scripts and depencencies"
     mkdir 'c:\k\debug'
+    DownloadFileOverHttp -Url 'https://github.com/Azure/aks-engine/raw/master/scripts/collect-windows-logs.ps1' -DestinationPath 'c:\k\debug\collect-windows-logs.ps1'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/collectlogs.ps1' -DestinationPath 'c:\k\debug\collectlogs.ps1'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/dumpVfpPolicies.ps1' -DestinationPath 'c:\k\debug\dumpVfpPolicies.ps1'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/portReservationTest.ps1' -DestinationPath 'c:\k\debug\portReservationTest.ps1'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/starthnstrace.cmd' -DestinationPath 'c:\k\debug\starthnstrace.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/startpacketcapture.cmd' -DestinationPath 'c:\k\debug\startpacketcapture.cmd'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/debug/stoppacketcapture.cmd' -DestinationPath 'c:\k\debug\stoppacketcapture.cmd'
+    DownloadFileOverHttp -Url 'https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/debug/VFP.psm1' -DestinationPath 'c:\k\debug\VFP.psm1'
     DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1' -DestinationPath 'c:\k\debug\helper.psm1'
+    DownloadFileOverHttp -Url 'https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1' -DestinationPath 'c:\k\debug\hns.psm1'
 }
 
 function Register-LogsCleanupScriptTask {

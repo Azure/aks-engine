@@ -6,7 +6,7 @@ defaultEnv = [
 	] + params
 
 def k8sVersions = ["1.13", "1.14", "1.15", "1.16", "1.17", "1.18"]
-def latestReleasedVersion = "1.16"
+def latestReleasedVersion = "1.17"
 def tasks = [:]
 def testConfigs = []
 
@@ -63,6 +63,7 @@ def runJobWithEnvironment(jobCfg, jobName, version) {
 					def envVars = [
 							ORCHESTRATOR_RELEASE: "${version}",
 							API_MODEL_INPUT: "${JsonOutput.toJson(jobCfg.apiModel)}",
+							ADD_NODE_POOL_INPUT: "${JsonOutput.toJson(jobCfg.addNodePool)}",
 						] + jobSpecificEnv
 					withEnv(envVars.collect{ k, v -> "${k}=${v}" }) {
 						// define any sensitive data needed for the test script
