@@ -548,6 +548,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AppGwIngressAddonName) {
 		masterVars["managedIdentityOperatorRoleDefinitionId"] = "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'f1a07417-d97a-45cb-824c-7a7467783830')]"
 	}
+	masterVars["networkContributorRoleDefinitionId"] = "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]"
 	masterVars["scope"] = "[resourceGroup().id]"
 	masterVars["tenantId"] = "[subscription().tenantId]"
 	masterVars["singleQuote"] = "'"
@@ -590,6 +591,8 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 	agentVnetSubnetID := fmt.Sprintf("%sVnetSubnetID", agentName)
 	agentSubnetName := fmt.Sprintf("%sSubnetName", agentName)
 	agentVnetParts := fmt.Sprintf("%sVnetParts", agentName)
+	agentSubnetResourceGroup := fmt.Sprintf("%sSubnetResourceGroup", agentName)
+	agentVnet := fmt.Sprintf("%sVnet", agentName)
 
 	agentOsImageOffer := fmt.Sprintf("%sosImageOffer", agentName)
 	agentOsImageSku := fmt.Sprintf("%sosImageSKU", agentName)
@@ -627,6 +630,9 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 		agentVars[agentVnetSubnetID] = fmt.Sprintf("[variables('vnetSubnetID')]")
 		agentVars[agentSubnetName] = fmt.Sprintf("[variables('subnetName')]")
 	}
+
+	agentVars[agentSubnetResourceGroup] = fmt.Sprintf("[split(variables('%sVnetSubnetID'), '/')[4]]", agentName)
+	agentVars[agentVnet] = fmt.Sprintf("[split(variables('%sVnetSubnetID'), '/')[8]]", agentName)
 
 	agentVars[agentOsImageOffer] = fmt.Sprintf("[parameters('%sosImageOffer')]", agentName)
 	agentVars[agentOsImageSku] = fmt.Sprintf("[parameters('%sosImageSKU')]", agentName)
