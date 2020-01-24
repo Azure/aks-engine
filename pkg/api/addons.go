@@ -323,8 +323,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			o.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureCNINetworkMonitorAddonName,
-				Image: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+				Name:           common.AzureCNINetworkMonitorAddonName,
+				Image:          specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+				CPURequests:    "30m",
+				MemoryRequests: "25Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "512Mi",
 			},
 		},
 	}
