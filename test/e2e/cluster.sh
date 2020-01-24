@@ -6,6 +6,7 @@ TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
 TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
+MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -213,6 +214,9 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+  # modify the master VM SKU to simulate vertical vm scaling via upgrade
+  cat _output/${RESOURCE_GROUP}/apimodel.json | jq --arg sku "$MASTER_VM_UPGRADE_SKU" '. | .properties.masterProfile.vmSize = $sku' > _output/${RESOURCE_GROUP}/apimodel_new.json || exit 1
+  mv _output/${RESOURCE_GROUP}/apimodel_new.json _output/${RESOURCE_GROUP}/apimodel.json || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
