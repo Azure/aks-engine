@@ -25,9 +25,9 @@ The official [AKS Engine documentation][docs] covers everything you need to know
 
 Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute.
 
-## Official Microsoft Azure Support
+## Support
 
-AKS Engine is an open source project that is **not** backed by a 24/7 service support model. [Please search open issues here](https://github.com/Azure/aks-engine/issues), and [open a new one](https://github.com/Azure/aks-engine/issues/new/choose) if your scenario isn't already represented in an existing issue, and project maintainers will engage in a timely fashion!
+AKS Engine is an open source project that is **not** backed by a Microsoft Azure 24/7 service support model. [Please search open issues here](https://github.com/Azure/aks-engine/issues), and [open a new one](https://github.com/Azure/aks-engine/issues/new/choose) if your scenario isn't already represented in an existing issue, and project maintainers will engage in a timely fashion!
 
 ## Code of conduct
 
