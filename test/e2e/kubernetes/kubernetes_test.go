@@ -71,6 +71,7 @@ var (
 	firstMasterRegexp               *regexp.Regexp
 	masterNodes                     []node.Node
 	clusterAutoscalerEngaged        bool
+	clusterAutoscalerAddon          api.KubernetesAddon
 )
 
 var _ = BeforeSuite(func() {
@@ -127,6 +128,7 @@ var _ = BeforeSuite(func() {
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
 		if hasAddon, addon := eng.HasAddon("cluster-autoscaler"); hasAddon {
+			clusterAutoscalerAddon = addon
 			if len(addon.Pools) > 0 {
 				for _, pool := range addon.Pools {
 					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
@@ -1979,8 +1981,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						// TODO enable cluster-autoscaler tests for Windows
 						if profile.IsLinux() {
-							maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-							totalMaxPods += (profile.Count * maxPods)
+							for _, pool := range clusterAutoscalerAddon.Pools {
+								if pool.Name == profile.Name {
+									maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+									totalMaxPods += (profile.Count * maxPods)
+								}
+							}
 						}
 					}
 					maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])
