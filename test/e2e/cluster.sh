@@ -215,6 +215,9 @@ fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   # modify the master VM SKU to simulate vertical vm scaling via upgrade
+  whoami
+  ls -la _output
+  ls -la _output/${RESOURCE_GROUP}
   jq --arg sku "$MASTER_VM_UPGRADE_SKU" '. | .properties.masterProfile.vmSize = $sku' < _output/${RESOURCE_GROUP}/apimodel.json > ${TMP_DIR}/apimodel-upgrade.json || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
