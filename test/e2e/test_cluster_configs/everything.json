@@ -35,7 +35,7 @@
 									"name": "pool1",
 									"config": {
 										"min-nodes": "1",
-										"max-nodes": "3"
+										"max-nodes": "9"
 									}
 								}
 							],
