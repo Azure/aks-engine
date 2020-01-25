@@ -1545,8 +1545,10 @@ func TestSetAddonsConfig(t *testing.T) {
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
 							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							MemoryLimits:   "2Gi",
+							CPULimits:      "100m",
+							MemoryLimits:   "200Mi",
 						},
 					},
 				},
@@ -1596,8 +1598,10 @@ func TestSetAddonsConfig(t *testing.T) {
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
 							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							MemoryLimits:   "2Gi",
+							CPULimits:      "100m",
+							MemoryLimits:   "200Mi",
 						},
 					},
 				},

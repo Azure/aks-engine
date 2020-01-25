@@ -12134,8 +12134,10 @@ spec:
             privileged: true
           resources:
             requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
               memory: {{ContainerMemReqs "azure-npm-daemonset"}}
             limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
               memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
@@ -17415,8 +17417,10 @@ spec:
             privileged: true
           resources:
             requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
               memory: {{ContainerMemReqs "azure-npm-daemonset"}}
             limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
               memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
@@ -22717,8 +22721,10 @@ spec:
             privileged: true
           resources:
             requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
               memory: {{ContainerMemReqs "azure-npm-daemonset"}}
             limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
               memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
@@ -30096,8 +30102,10 @@ spec:
             privileged: true
           resources:
             requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
               memory: {{ContainerMemReqs "azure-npm-daemonset"}}
             limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
               memory: {{ContainerMemLimits "azure-npm-daemonset"}}
           env:
             - name: HOSTNAME
