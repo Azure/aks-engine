@@ -6,6 +6,7 @@ TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
 TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
+MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -213,6 +214,15 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+  # modify the master VM SKU to simulate vertical vm scaling via upgrade
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e REGION=$REGION \
+      -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
+      ${DEV_IMAGE} \
+      /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -222,7 +232,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --api-model _output/$RESOURCE_GROUP/apimodel.json \
+      --api-model _output/$RESOURCE_GROUP/apimodel-upgrade.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
