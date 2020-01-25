@@ -222,7 +222,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e REGION=$REGION \
       -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
-      /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = $sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
+      /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
