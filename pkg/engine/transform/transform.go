@@ -500,6 +500,13 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		poolName := fmt.Sprint(tags["poolName"]) // poolName tag exists on agents only
 
 		if resourceType == vmResourceType {
+			if strings.Contains(resourceName, "[parameters('jumpboxVMName')]") {
+				logger.Infoln(fmt.Sprintf("Removing jumpbox, resource: %s from template", resourceName))
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			}
+
 			logger.Infoln(fmt.Sprintf("Evaluating if agent pool: %s, resource: %s needs to be removed", poolName, resourceName))
 			// Not an agent (could be a master VM)
 			if tags["poolName"] == nil || strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
@@ -510,13 +517,6 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 
 			if len(agentPoolsToPreserve) == 0 || !agentPoolsToPreserve[poolName] {
 				logger.Infoln(fmt.Sprintf("Removing agent pool: %s, resource: %s from template", poolName, resourceName))
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
-				}
-			}
-
-			if strings.Contains(resourceName, "[parameters('jumpboxVMName')]") {
-				logger.Infoln(fmt.Sprintf("Removing jumpbox, resource: %s from template", resourceName))
 				if len(filteredResources) > 0 {
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
