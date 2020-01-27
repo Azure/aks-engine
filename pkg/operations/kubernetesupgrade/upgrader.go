@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 )
@@ -137,6 +138,8 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	expectedMasterCount := ku.ClusterTopology.DataModel.Properties.MasterProfile.Count
 	mastersUpgradedCount := len(*ku.ClusterTopology.UpgradedMasterVMs)
 	mastersToUgradeCount := expectedMasterCount - mastersUpgradedCount
+	privateCluster := ku.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.PrivateCluster
+	privateClusterEnabled := privateCluster != nil && to.Bool(privateCluster.Enabled)
 
 	ku.logger.Infof("Total expected master count: %d", expectedMasterCount)
 	ku.logger.Infof("Master nodes that need to be upgraded: %d", mastersToUgradeCount)
@@ -177,11 +180,13 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return err
 		}
 
-		tempVMName := ""
-		err = upgradeMasterNode.Validate(&tempVMName)
-		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
-			return err
+		if !privateClusterEnabled {
+			tempVMName := ""
+			err = upgradeMasterNode.Validate(&tempVMName)
+			if err != nil {
+				ku.logger.Infof("Error validating upgraded master VM with index: %d", masterIndexToCreate)
+				return err
+			}
 		}
 
 		upgradedMastersIndex[masterIndexToCreate] = true
@@ -210,10 +215,12 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 			return err
 		}
 
-		err = upgradeMasterNode.Validate(vm.Name)
-		if err != nil {
-			ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
-			return err
+		if !privateClusterEnabled {
+			err = upgradeMasterNode.Validate(vm.Name)
+			if err != nil {
+				ku.logger.Infof("Error validating upgraded master VM: %s", *vm.Name)
+				return err
+			}
 		}
 
 		upgradedMastersIndex[masterIndex] = true
