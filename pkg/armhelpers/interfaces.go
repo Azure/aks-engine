@@ -79,6 +79,16 @@ type DiskListPage interface {
 	Values() []compute.Disk
 }
 
+//VMImageFetcher is an extension of AKSEngine client allows us to operate on the virtual machine images in the environment
+type VMImageFetcher interface {
+
+	// ListVirtualMachineImages return a list of images
+	ListVirtualMachineImages(ctx context.Context, location, publisherName, offer, skus string) (compute.ListVirtualMachineImageResource, error)
+
+	// GetVirtualMachineImage return a virtual machine image
+	GetVirtualMachineImage(ctx context.Context, location, publisherName, offer, skus, version string) (compute.VirtualMachineImage, error)
+}
+
 // AKSEngineClient is the interface used to talk to an Azure environment.
 // This interface exposes just the subset of Azure APIs and clients needed for
 // AKS Engine.

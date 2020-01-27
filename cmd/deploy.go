@@ -404,6 +404,10 @@ func (dc *deployCmd) run() error {
 		return errors.Wrapf(err, "in SetPropertiesDefaults template %s", dc.apimodelPath)
 	}
 
+	if err = dc.validateOSBaseImage(); err != nil {
+		return errors.Wrapf(err, "validating OS base images required by %s", dc.apimodelPath)
+	}
+
 	template, parameters, err := templateGenerator.GenerateTemplateV2(dc.containerService, engine.DefaultGeneratorCode, BuildTag)
 	if err != nil {
 		return errors.Wrapf(err, "generating template %s", dc.apimodelPath)
@@ -437,9 +441,10 @@ func (dc *deployCmd) run() error {
 		return err
 	}
 
-	deploymentSuffix := dc.random.Int31()
 	cx, cancel := context.WithTimeout(context.Background(), armhelpers.DefaultARMOperationTimeout)
 	defer cancel()
+
+	deploymentSuffix := dc.random.Int31()
 
 	if res, err := dc.client.DeployTemplate(
 		cx,
@@ -528,6 +533,18 @@ func (dc *deployCmd) configureContainerMonitoringAddon(ctx context.Context, k8sC
 		log.Infoln("workspaceGuid:", workspaceGUID)
 		log.Infoln("workspaceKey:", workspaceKey)
 		log.Infoln("workspaceDomain:", workspaceDomain)
+	}
+	return nil
+}
+
+// validateOSBaseImage checks if the OS image is available on the target cloud (ATM, Azure Stack only)
+func (dc *deployCmd) validateOSBaseImage() error {
+	if dc.containerService.Properties.IsAzureStackCloud() {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := armhelpers.ValidateRequiredImages(ctx, dc.location, dc.containerService.Properties, dc.client); err != nil {
+			return errors.Wrap(err, "OS base image not available in target cloud")
+		}
 	}
 	return nil
 }
