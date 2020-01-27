@@ -514,6 +514,13 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 					filteredResources = filteredResources[:len(filteredResources)-1]
 				}
 			}
+
+			if strings.Contains(resourceName, "[parameters('jumpboxVMName')]") {
+				logger.Infoln(fmt.Sprintf("Removing jumpbox, resource: %s from template", resourceName))
+				if len(filteredResources) > 0 {
+					filteredResources = filteredResources[:len(filteredResources)-1]
+				}
+			}
 		} else if resourceType == vmExtensionType {
 			logger.Infoln(fmt.Sprintf("Evaluating if extension: %s needs to be removed", resourceName))
 			if strings.Contains(resourceName, "variables('masterVMNamePrefix')") {
