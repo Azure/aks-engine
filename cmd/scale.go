@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -374,8 +375,8 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 				return errors.Wrap(err, "failed to get VMSS list in the resource group")
 			}
 			for _, vmss := range vmssListPage.Values() {
-				vmName := *vmss.Name
-				if !sc.vmInAgentPool(vmName, vmss.Tags) {
+				vmssName := *vmss.Name
+				if !sc.vmInAgentPool(vmssName, vmss.Tags) {
 					continue
 				}
 
@@ -389,10 +390,13 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					}
 				}
 
-				osPublisher := vmss.VirtualMachineProfile.StorageProfile.ImageReference.Publisher
-				if osPublisher != nil && (strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") || strings.EqualFold(*osPublisher, "microsoft-aks")) {
-					_, _, winPoolIndex, _, err = utils.WindowsVMNameParts(vmName)
-					log.Errorln(err)
+				if sc.agentPool.OSType == api.Windows {
+					winPoolIndexStr := vmssName[len(vmssName)-2:]
+					var err error
+					winPoolIndex, err = strconv.Atoi(winPoolIndexStr)
+					if err != nil {
+						return errors.Wrap(err, "failed to get Windows pool index from VMSS name")
+					}
 				}
 
 				currentNodeCount = int(*vmss.Sku.Capacity)
