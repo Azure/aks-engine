@@ -168,7 +168,7 @@ var (
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-1912",
+		ImageSku:       "2019-datacenter-core-smalldisk-2001",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "17763.973.200123",
 	}
