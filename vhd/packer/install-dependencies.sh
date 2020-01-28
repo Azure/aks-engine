@@ -51,8 +51,8 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
 fi
 
 ETCD_VERSION="3.3.18"
-ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
-installEtcd
+ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
+installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
 apmz_version="v0.4.0"

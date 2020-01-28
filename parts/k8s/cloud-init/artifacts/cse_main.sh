@@ -83,13 +83,13 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "EnsureAuditD" ensureAuditD
 fi
 
-if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    time_metric "InstallEtcd" installEtcd
-fi
-
 {{- if not HasCoreOS}}
 time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
+
+if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
+    time_metric "InstallEtcd" installEtcd "docker"
+fi
 
 # this will capture the amount of time to install of the network plugin during cse
 time_metric "InstallNetworkPlugin" installNetworkPlugin
