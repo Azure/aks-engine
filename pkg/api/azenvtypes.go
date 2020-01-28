@@ -170,7 +170,7 @@ var (
 		ImageOffer:     "aks-windows",
 		ImageSku:       "2019-datacenter-core-smalldisk-1912",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.864.191211",
+		ImageVersion:   "17763.973.200123",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -178,7 +178,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.864.1911120152",
+		ImageVersion:   "17763.973.2001110547",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
