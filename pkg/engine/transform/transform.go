@@ -141,6 +141,29 @@ func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, te
 	}
 }
 
+func (t *Transformer) RemoveJumpboxResourcesFromTemplate(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	logger.Debugf("Running RemoveJumpboxResourcesFromTemplate...")
+	resources := templateMap[resourcesFieldName].([]interface{})
+	indexesToRemove := []int{}
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			logger.Warnf("Template improperly formatted for resource")
+			continue
+		}
+
+		resourceName, ok := resourceMap[nameFieldName].(string)
+		if !ok {
+			logger.Warnf("Resource does not have a name property")
+			continue
+		} else if strings.Contains(resourceName, "variables('jumpbox") || strings.Contains(resourceName, "parameters('jumpbox") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	return nil
+}
+
 // NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
 func (t *Transformer) NormalizeForK8sSLBScalingOrUpgrade(logger *logrus.Entry, templateMap map[string]interface{}) error {
 	logger.Debugf("Running NormalizeForK8sSLBScalingOrUpgrade...")
@@ -500,12 +523,6 @@ func (t *Transformer) NormalizeResourcesForK8sMasterUpgrade(logger *logrus.Entry
 		poolName := fmt.Sprint(tags["poolName"]) // poolName tag exists on agents only
 
 		if resourceType == vmResourceType {
-			if strings.Contains(resourceName, "[parameters('jumpboxVMName')]") {
-				logger.Infoln(fmt.Sprintf("Removing jumpbox, resource: %s from template", resourceName))
-				if len(filteredResources) > 0 {
-					filteredResources = filteredResources[:len(filteredResources)-1]
-				}
-			}
 
 			logger.Infoln(fmt.Sprintf("Evaluating if agent pool: %s, resource: %s needs to be removed", poolName, resourceName))
 			// Not an agent (could be a master VM)
