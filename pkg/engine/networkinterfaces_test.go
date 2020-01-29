@@ -420,9 +420,15 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 		{
 			Name: to.StringPtr("ipconfig1"),
 			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-				PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
-				Primary:                   to.BoolPtr(true),
-				PrivateIPAllocationMethod: network.Static,
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+				},
+				LoadBalancerInboundNatRules: &[]network.InboundNatRule{},
+				PrivateIPAddress:            to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+				Primary:                     to.BoolPtr(true),
+				PrivateIPAllocationMethod:   network.Static,
 				Subnet: &network.Subnet{
 					ID: to.StringPtr("[variables('vnetSubnetID')]"),
 				},
@@ -490,9 +496,15 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 		{
 			Name: to.StringPtr("ipconfig1"),
 			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-				PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
-				Primary:                   to.BoolPtr(true),
-				PrivateIPAllocationMethod: network.Static,
+				LoadBalancerBackendAddressPools: &[]network.BackendAddressPool{
+					{
+						ID: to.StringPtr("[concat(variables('masterInternalLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+					},
+				},
+				LoadBalancerInboundNatRules: &[]network.InboundNatRule{},
+				PrivateIPAddress:            to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+				Primary:                     to.BoolPtr(true),
+				PrivateIPAllocationMethod:   network.Static,
 				Subnet: &network.Subnet{
 					ID: to.StringPtr("[variables('vnetSubnetID')]"),
 				},
