@@ -165,9 +165,9 @@ func createPrivateClusterMasterVMNetworkInterface(cs *api.ContainerService) Netw
 				ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
 			}
 			lbBackendAddressPools = append(lbBackendAddressPools, publicLbPool)
-			loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools = &lbBackendAddressPools
-			loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerInboundNatRules = &[]network.InboundNatRule{}
 		}
+		loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerBackendAddressPools = &lbBackendAddressPools
+		loadBalancerIPConfig.InterfaceIPConfigurationPropertiesFormat.LoadBalancerInboundNatRules = &[]network.InboundNatRule{}
 	}
 	ipConfigurations := []network.InterfaceIPConfiguration{loadBalancerIPConfig}
 
