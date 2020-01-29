@@ -37216,23 +37216,23 @@ installEtcd() {
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
         echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
     else
-      CLI_TOOL=$1
-      if [[ $OS == $COREOS_OS_NAME ]]; then
-        path="/opt/bin"
-      else
-        path="/usr/bin"
-      fi
-      CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
-      pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
-      removeEtcd
-      if [[ "$CLI_TOOL" == "docker" ]]; then
-        mkdir -p "$path"
-        docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
-        docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
+        CLI_TOOL=$1
+        if [[ $OS == $COREOS_OS_NAME ]]; then
+            path="/opt/bin"
+        else
+            path="/usr/bin"
+        fi
+        CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
+        pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
+        removeEtcd
+        if [[ "$CLI_TOOL" == "docker" ]]; then
+            mkdir -p "$path"
+            docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
+            docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
+        else
+            img unpack -o "$path" ${CONTAINER_IMAGE}
+        fi
         chmod a+x "$path/etcd" "$path/etcdctl"
-      else
-        img unpack -o "$path" ${CONTAINER_IMAGE}
-      fi
     fi
 }
 
