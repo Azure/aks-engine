@@ -203,7 +203,7 @@ func GetDCOSMasterAllowedSizes() string {
         "Standard_E16_v3",
         "Standard_E16a_v3",
         "Standard_E16as_v3",
-  		"Standard_E16a_v4",
+        "Standard_E16a_v4",
         "Standard_E16as_v4",
         "Standard_E16s_v3",
         "Standard_E20_v3",
@@ -487,9 +487,13 @@ func GetKubernetesAllowedVMSKUs() string {
         "Standard_D96a_v4",
         "Standard_D96as_v3",
         "Standard_D96as_v4",
+        "Standard_DC1s_v2",
         "Standard_DC2s",
+        "Standard_DC2s_v2",
         "Standard_DC4s",
+        "Standard_DC4s_v2",
         "Standard_DC8s",
+        "Standard_DC8_v2",
         "Standard_DS1",
         "Standard_DS11",
         "Standard_DS11-1_v2",
@@ -1017,14 +1021,26 @@ func GetSizeMap() string {
     "Standard_D96as_v4": {
       "storageAccountType": "Premium_LRS"
     },
+    "Standard_DC1s_v2": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_DC2s": {
+      "storageAccountType": "Premium_LRS"
+    },
+    "Standard_DC2s_v2": {
       "storageAccountType": "Premium_LRS"
     },
     "Standard_DC4s": {
       "storageAccountType": "Premium_LRS"
     },
+    "Standard_DC4s_v2": {
+      "storageAccountType": "Premium_LRS"
+    },
     "Standard_DC8s": {
       "storageAccountType": "Premium_LRS"
+    },
+    "Standard_DC8_v2": {
+      "storageAccountType": "Standard_LRS"
     },
     "Standard_DS1": {
       "storageAccountType": "Premium_LRS"
@@ -1170,7 +1186,7 @@ func GetSizeMap() string {
     "Standard_E2as_v3": {
       "storageAccountType": "Premium_LRS"
     },
-	"Standard_E2a_v4": {
+    "Standard_E2a_v4": {
       "storageAccountType": "Standard_LRS"
     },
     "Standard_E2as_v4": {
