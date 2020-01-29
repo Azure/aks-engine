@@ -40506,11 +40506,11 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       "type": "string"
     },
     "vnetCniLinuxPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-latest.tgz",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-linux-amd64-v1.0.30.tgz",
       "type": "string"
     },
     "vnetCniWindowsPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-latest.zip",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip",
       "type": "string"
     },
     "maxPods": {

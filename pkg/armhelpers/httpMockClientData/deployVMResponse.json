@@ -318,11 +318,11 @@
             },
             "vnetCniLinuxPluginsURL": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v1.0.17.tgz"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-linux-amd64-v1.0.17.zip"
             },
             "vnetCniWindowsPluginsURL": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.17.zip"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-windows-amd64-v1.0.17.zip"
             }
         },
         "mode": "Incremental",
