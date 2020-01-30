@@ -37649,7 +37649,12 @@ time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    time_metric "InstallEtcd" installEtcd "docker"
+    if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+        CLI_TOOL="docker"
+    else
+        CLI_TOOL="img"
+    fi
+    time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
 # this will capture the amount of time to install of the network plugin during cse
