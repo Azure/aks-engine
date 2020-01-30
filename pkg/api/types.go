@@ -1067,6 +1067,17 @@ func (p *Properties) GetSubnetName() string {
 	return subnetName
 }
 
+// GetDNSPrefix returns the the string used as master FQDN prefix
+func (p *Properties) GetDNSPrefix() string {
+	if p.MasterProfile != nil {
+		// MasterProfile exists, uses master DNS prefix
+		return strings.ToLower(p.MasterProfile.DNSPrefix)
+	} else if p.HostedMasterProfile != nil {
+		return strings.ToLower(p.HostedMasterProfile.DNSPrefix)
+	}
+	return ""
+}
+
 // AreAgentProfilesCustomVNET returns true if all of the agent profiles in the clusters are configured with VNET.
 func (p *Properties) AreAgentProfilesCustomVNET() bool {
 	if p.AgentPoolProfiles != nil {
@@ -1935,6 +1946,28 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
+// GetKubernetesVersion returns the cluster Kubernetes version, with the Azure Stack suffix if Azure Stack Cloud.
+func (p *Properties) GetKubernetesVersion() string {
+	if p.IsAzureStackCloud() {
+		return p.OrchestratorProfile.OrchestratorVersion + AzureStackSuffix
+	}
+	return p.OrchestratorProfile.OrchestratorVersion
+}
+
+// GetKubernetesHyperkubeSpec returns the string to use for the Kubernetes hyperkube image.
+func (p *Properties) GetKubernetesHyperkubeSpec() string {
+	var kubernetesHyperkubeSpec string
+	k8sComponents := K8sComponentsByVersionMap[p.OrchestratorProfile.OrchestratorVersion]
+	kubernetesHyperkubeSpec = p.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponents["hyperkube"]
+	if p.IsAzureStackCloud() {
+		kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
+	}
+	if p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+		kubernetesHyperkubeSpec = p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+	}
+	return kubernetesHyperkubeSpec
+}
+
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
 	return p.CustomCloudProfile != nil
@@ -2132,6 +2165,71 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+}
+
+// GetProvisionScriptParametersCommon returns the environment variables needed to run the Linux bootstrap scripts
+// Ensure that the clientSecret parameter is surrounded by single quotes to protect against special characters
+func (cs *ContainerService) GetProvisionScriptParametersCommon(location, resourceGroup, tenantID, subscriptionID, clientID, clientSecret, apiServerCertificate, kubeletPrivateKey, clusterKeyVaultName string) string {
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
+
+	provisionScriptParametersCommonString := "" +
+		"ADMINUSER=" + cs.Properties.LinuxProfile.AdminUsername +
+		" ETCD_DOWNLOAD_URL=" + cloudSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase +
+		" ETCD_VERSION=" + kubernetesConfig.EtcdVersion +
+		" CONTAINERD_VERSION=" + kubernetesConfig.ContainerdVersion +
+		" MOBY_VERSION=" + kubernetesConfig.MobyVersion +
+		" TENANT_ID=" + tenantID +
+		" KUBERNETES_VERSION=" + cs.Properties.GetKubernetesVersion() +
+		" HYPERKUBE_URL=" + cs.Properties.GetKubernetesHyperkubeSpec() +
+		" APISERVER_PUBLIC_KEY=" + apiServerCertificate +
+		" SUBSCRIPTION_ID=" + subscriptionID +
+		" RESOURCE_GROUP=" + resourceGroup +
+		" LOCATION=" + location +
+		" VM_TYPE=" + cs.Properties.GetVMType() +
+		" SUBNET=" + cs.Properties.GetSubnetName() +
+		" NETWORK_SECURITY_GROUP=" + cs.Properties.GetNSGName() +
+		" VIRTUAL_NETWORK=" + cs.Properties.GetVirtualNetworkName() +
+		" VIRTUAL_NETWORK_RESOURCE_GROUP=" + cs.Properties.GetVNetResourceGroupName() +
+		" ROUTE_TABLE=" + cs.Properties.GetRouteTableName() +
+		" PRIMARY_AVAILABILITY_SET=" + cs.Properties.GetPrimaryAvailabilitySetName() +
+		" PRIMARY_SCALE_SET=" + cs.Properties.GetPrimaryScaleSetName() +
+		" SERVICE_PRINCIPAL_CLIENT_ID=" + clientID +
+		" SERVICE_PRINCIPAL_CLIENT_SECRET=" + clientSecret +
+		" KUBELET_PRIVATE_KEY=" + kubeletPrivateKey +
+		" NETWORK_PLUGIN=" + kubernetesConfig.NetworkPlugin +
+		" NETWORK_POLICY=" + kubernetesConfig.NetworkPolicy +
+		" VNET_CNI_PLUGINS_URL=" + kubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig) +
+		" CNI_PLUGINS_URL=" + cloudSpecConfig.KubernetesSpecConfig.CNIPluginsDownloadURL +
+		" CLOUDPROVIDER_BACKOFF=" + strconv.FormatBool(to.Bool(kubernetesConfig.CloudProviderBackoff)) +
+		" CLOUDPROVIDER_BACKOFF_MODE=" + kubernetesConfig.CloudProviderBackoffMode +
+		" CLOUDPROVIDER_BACKOFF_RETRIES=" + strconv.Itoa(kubernetesConfig.CloudProviderBackoffRetries) +
+		" CLOUDPROVIDER_BACKOFF_EXPONENT=" + strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffExponent, 'f', -1, 64) +
+		" CLOUDPROVIDER_BACKOFF_DURATION=" + strconv.Itoa(kubernetesConfig.CloudProviderBackoffDuration) +
+		" CLOUDPROVIDER_BACKOFF_JITTER=" + strconv.FormatFloat(kubernetesConfig.CloudProviderBackoffJitter, 'f', -1, 64) +
+		" CLOUDPROVIDER_RATELIMIT=" + strconv.FormatBool(to.Bool(kubernetesConfig.CloudProviderRateLimit)) +
+		" CLOUDPROVIDER_RATELIMIT_QPS=" + strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPS, 'f', -1, 64) +
+		" CLOUDPROVIDER_RATELIMIT_QPS_WRITE=" + strconv.FormatFloat(kubernetesConfig.CloudProviderRateLimitQPSWrite, 'f', -1, 64) +
+		" CLOUDPROVIDER_RATELIMIT_BUCKET=" + strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucket) +
+		" CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=" + strconv.Itoa(kubernetesConfig.CloudProviderRateLimitBucketWrite) +
+		" LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=" + strconv.FormatBool(to.Bool(kubernetesConfig.CloudProviderDisableOutboundSNAT)) +
+		" USE_MANAGED_IDENTITY_EXTENSION=" + strconv.FormatBool(kubernetesConfig.UseManagedIdentity) +
+		" USE_INSTANCE_METADATA=" + strconv.FormatBool(to.Bool(kubernetesConfig.UseInstanceMetadata)) +
+		" LOAD_BALANCER_SKU=" + kubernetesConfig.LoadBalancerSku +
+		" EXCLUDE_MASTER_FROM_STANDARD_LB=" + strconv.FormatBool(to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)) +
+		" MAXIMUM_LOADBALANCER_RULE_COUNT=" + strconv.Itoa(kubernetesConfig.MaximumLoadBalancerRuleCount) +
+		" CONTAINER_RUNTIME=" + kubernetesConfig.ContainerRuntime +
+		" CONTAINERD_DOWNLOAD_URL_BASE=" + cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase +
+		" KMS_PROVIDER_VAULT_NAME=" + clusterKeyVaultName +
+		" IS_HOSTED_MASTER=" + strconv.FormatBool(cs.Properties.IsHostedMasterProfile()) +
+		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=" + strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")) +
+		" AUTHENTICATION_METHOD=" + cs.Properties.GetCustomCloudAuthenticationMethod() +
+		" IDENTITY_SYSTEM=" + cs.Properties.GetCustomCloudIdentitySystem() +
+		" NETWORK_API_VERSION=" + APIVersionNetwork +
+		" NETWORK_MODE=" + kubernetesConfig.NetworkMode +
+		" KUBE_BINARY_URL=" + kubernetesConfig.CustomKubeBinaryURL
+
+	return provisionScriptParametersCommonString
 }
 
 // FormatAzureProdFQDNByLocation constructs an Azure prod fqdn

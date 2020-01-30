@@ -6087,9 +6087,10 @@ func TestGetLocations(t *testing.T) {
 
 func TestGetMasterFQDN(t *testing.T) {
 	tests := []struct {
-		name         string
-		properties   *Properties
-		expectedFQDN string
+		name              string
+		properties        *Properties
+		expectedFQDN      string
+		expectedDNSPrefix string
 	}{
 		{
 			name: "From Master Profile",
@@ -6104,7 +6105,8 @@ func TestGetMasterFQDN(t *testing.T) {
 					},
 				},
 			},
-			expectedFQDN: "FQDNFromMasterProfile",
+			expectedFQDN:      "FQDNFromMasterProfile",
+			expectedDNSPrefix: "foo_master",
 		},
 		{
 			name: "From Hosted Master Profile",
@@ -6119,7 +6121,8 @@ func TestGetMasterFQDN(t *testing.T) {
 					},
 				},
 			},
-			expectedFQDN: "FQDNFromHostedMasterProfile",
+			expectedFQDN:      "FQDNFromHostedMasterProfile",
+			expectedDNSPrefix: "foo_hosted_master",
 		},
 	}
 
@@ -6127,10 +6130,13 @@ func TestGetMasterFQDN(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			actual := test.properties.GetMasterFQDN()
-
-			if actual != test.expectedFQDN {
-				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actual)
+			actualFQDN := test.properties.GetMasterFQDN()
+			if actualFQDN != test.expectedFQDN {
+				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actualFQDN)
+			}
+			actualDNSPrefix := test.properties.GetDNSPrefix()
+			if actualDNSPrefix != test.expectedDNSPrefix {
+				t.Errorf("expected DNS prefix %s, but got %s", test.expectedDNSPrefix, actualDNSPrefix)
 			}
 		})
 	}
@@ -7050,6 +7056,63 @@ func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
 			t.Parallel()
 			if c.k.IsIPMasqAgentDisabled() != c.expectedDisabled {
 				t.Fatalf("expected KubernetesConfig.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.k.IsIPMasqAgentDisabled())
+			}
+		})
+	}
+}
+
+func TestGetProvisionScriptParametersCommon(t *testing.T) {
+	cases := []struct {
+		name                 string
+		cs                   *ContainerService
+		location             string
+		resourceGroup        string
+		tenantID             string
+		subscriptionID       string
+		clientID             string
+		clientSecret         string
+		apiServerCertificate string
+		kubeletPrivateKey    string
+		clusterKeyvaultName  string
+		expected             string
+	}{
+		{
+			name:                 "Default container service with no ARM variables",
+			cs:                   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			location:             "westus",
+			resourceGroup:        "fakerg",
+			tenantID:             "faketenantID",
+			subscriptionID:       "fakesubID",
+			clientID:             "fakeclientID",
+			clientSecret:         "fakeclientSecret",
+			apiServerCertificate: "fakecert",
+			kubeletPrivateKey:    "fakekubeletkey",
+			clusterKeyvaultName:  "",
+			expected:             "ADMINUSER=azureuser ETCD_DOWNLOAD_URL=https://acs-mirror.azureedge.net/github-coreos ETCD_VERSION=3.3.18 CONTAINERD_VERSION=1.1.5 MOBY_VERSION=3.0.8 TENANT_ID=faketenantID KUBERNETES_VERSION=1.16.6 HYPERKUBE_URL=hyperkube-amd64:v1.16.6 APISERVER_PUBLIC_KEY=fakecert SUBSCRIPTION_ID=fakesubID RESOURCE_GROUP=fakerg LOCATION=westus VM_TYPE=standard SUBNET=k8s-subnet NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= ROUTE_TABLE=k8s-master-22998975-routetable PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret KUBELET_PRIVATE_KEY=fakekubeletkey NETWORK_PLUGIN=kubenet NETWORK_POLICY= VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-linux-amd64-v1.0.30.tgz CNI_PLUGINS_URL=https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.6.tgz CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false USE_MANAGED_IDENTITY_EXTENSION=false USE_INSTANCE_METADATA=false LOAD_BALANCER_SKU=Basic EXCLUDE_MASTER_FROM_STANDARD_LB=false MAXIMUM_LOADBALANCER_RULE_COUNT=0 CONTAINER_RUNTIME=docker CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ KMS_PROVIDER_VAULT_NAME= IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false AUTHENTICATION_METHOD=client_secret IDENTITY_SYSTEM=azure_ad NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= KUBE_BINARY_URL=",
+		},
+		{
+			name:                 "With ARM variables",
+			cs:                   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			location:             common.WrapAsARMVariable("location"),
+			resourceGroup:        common.WrapAsARMVariable("resourceGroup"),
+			tenantID:             common.WrapAsARMVariable("tenantID"),
+			subscriptionID:       common.WrapAsARMVariable("subscriptionId"),
+			clientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
+			clientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+			apiServerCertificate: common.WrapAsParameter("apiServerCertificate"),
+			kubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
+			clusterKeyvaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
+			expected:             "ADMINUSER=azureuser ETCD_DOWNLOAD_URL=https://acs-mirror.azureedge.net/github-coreos ETCD_VERSION=3.3.18 CONTAINERD_VERSION=1.1.5 MOBY_VERSION=3.0.8 TENANT_ID=',variables('tenantID'),' KUBERNETES_VERSION=1.16.6 HYPERKUBE_URL=hyperkube-amd64:v1.16.6 APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' SUBSCRIPTION_ID=',variables('subscriptionId'),' RESOURCE_GROUP=',variables('resourceGroup'),' LOCATION=',variables('location'),' VM_TYPE=standard SUBNET=k8s-subnet NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= ROUTE_TABLE=k8s-master-22998975-routetable PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' NETWORK_PLUGIN=kubenet NETWORK_POLICY= VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-linux-amd64-v1.0.30.tgz CNI_PLUGINS_URL=https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.6.tgz CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false USE_MANAGED_IDENTITY_EXTENSION=false USE_INSTANCE_METADATA=false LOAD_BALANCER_SKU=Basic EXCLUDE_MASTER_FROM_STANDARD_LB=false MAXIMUM_LOADBALANCER_RULE_COUNT=0 CONTAINER_RUNTIME=docker CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ KMS_PROVIDER_VAULT_NAME= IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false AUTHENTICATION_METHOD=client_secret IDENTITY_SYSTEM=azure_ad NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= KUBE_BINARY_URL=",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.cs.GetProvisionScriptParametersCommon(c.location, c.resourceGroup, c.tenantID, c.subscriptionID, c.clientID, c.clientSecret, c.apiServerCertificate, c.kubeletPrivateKey, c.clusterKeyvaultName)
+			if actual != c.expected {
+				t.Fatalf("expected cs.GetProvisionScriptParametersCommon() to return %s but instead returned %s", c.expected, actual)
 			}
 		})
 	}

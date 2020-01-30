@@ -24,7 +24,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sComponents := api.K8sComponentsByVersionMap[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
 		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-		mcrKubernetesImageBase := kubernetesConfig.MCRKubernetesImageBase
 		hyperkubeImageBase := kubernetesConfig.KubernetesImageBase
 
 		if properties.IsAzureStackCloud() {
@@ -41,15 +40,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubeBinaryURL", kubernetesConfig.CustomKubeBinaryURL)
 			}
 
-			kubernetesHyperkubeSpec := hyperkubeImageBase + k8sComponents["hyperkube"]
-			if properties.IsAzureStackCloud() {
-				kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix
-			}
-			if kubernetesConfig.CustomHyperkubeImage != "" {
-				kubernetesHyperkubeSpec = kubernetesConfig.CustomHyperkubeImage
-			}
-			addValue(parametersMap, "kubernetesHyperkubeSpec", kubernetesHyperkubeSpec)
-
 			addValue(parametersMap, "kubeDNSServiceIP", kubernetesConfig.DNSServiceIP)
 			if kubernetesConfig.IsAADPodIdentityEnabled() {
 				aadPodIdentityAddon := kubernetesConfig.GetAddonByName(common.AADPodIdentityAddonName)
@@ -63,7 +53,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			} else {
 				addValue(parametersMap, "kubernetesACIConnectorEnabled", false)
 			}
-			addValue(parametersMap, "kubernetesPodInfraContainerSpec", mcrKubernetesImageBase+k8sComponents["pause"])
 			addValue(parametersMap, "cloudproviderConfig", api.CloudProviderConfig{
 				CloudProviderBackoffMode:          kubernetesConfig.CloudProviderBackoffMode,
 				CloudProviderBackoff:              kubernetesConfig.CloudProviderBackoff,

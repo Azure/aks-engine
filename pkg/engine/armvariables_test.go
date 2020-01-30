@@ -64,64 +64,6 @@ func TestK8sVars(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	provisionScriptParametersCommonString := "[concat(" +
-		"'ADMINUSER=',parameters('linuxAdminUsername')," +
-		"' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase')," +
-		"' ETCD_VERSION=',parameters('etcdVersion')," +
-		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
-		"' MOBY_VERSION=',parameters('mobyVersion')," +
-		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s" +
-		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
-		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
-		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
-		"' RESOURCE_GROUP=',variables('resourceGroup')," +
-		"' LOCATION=',variables('location')," +
-		"' VM_TYPE=',variables('vmType')," +
-		"' SUBNET=',variables('subnetName')," +
-		"' NETWORK_SECURITY_GROUP=',variables('nsgName')," +
-		"' VIRTUAL_NETWORK=',variables('virtualNetworkName')," +
-		"' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName')," +
-		"' ROUTE_TABLE=',variables('routeTableName')," +
-		"' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName')," +
-		"' PRIMARY_SCALE_SET=',variables('primaryScaleSetName')," +
-		"' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId')," +
-		"' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote')," +
-		"' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey')," +
-		"' NETWORK_PLUGIN=',parameters('networkPlugin')," +
-		"' NETWORK_POLICY=',parameters('networkPolicy')," +
-		"' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL')," +
-		"' CNI_PLUGINS_URL=',parameters('cniPluginsURL')," +
-		"' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff))," +
-		"' CLOUDPROVIDER_BACKOFF_MODE=',parameters('cloudproviderConfig').cloudProviderBackoffMode," +
-		"' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries," +
-		"' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent," +
-		"' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration," +
-		"' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter," +
-		"' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit))," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
-		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
-		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
-		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
-		"' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB')," +
-		"' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount')," +
-		"' CONTAINER_RUNTIME=',parameters('containerRuntime')," +
-		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
-		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
-		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t" +
-		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
-		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
-		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')," +
-		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
-		")]"
-
 	expectedMap := map[string]interface{}{
 		"agentpool1Count":                    "[parameters('agentpool1Count')]",
 		"agentpool1Index":                    0,
@@ -176,7 +118,7 @@ func TestK8sVars(t *testing.T) {
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
 		"masterFirstAddrPrefix":              "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]",
-		"masterFqdnPrefix":                   "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
+		"masterFqdnPrefix":                   "blueorange",
 		"masterLbBackendPoolName":            "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]",
 		"masterLbID":                         "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]",
 		"masterLbIPConfigID":                 "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]",
@@ -208,7 +150,7 @@ func TestK8sVars(t *testing.T) {
 			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		},
-		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, testK8sVersion, false, false),
+		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]",
 		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",
@@ -258,6 +200,7 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["servicePrincipalClientId"] = "msi"
 	expectedMap["servicePrincipalClientSecret"] = "msi"
 	expectedMap["useManagedIdentityExtension"] = "true"
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -273,6 +216,7 @@ func TestK8sVars(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	expectedMap["servicePrincipalClientId"] = "[parameters('servicePrincipalClientId')]"
 	expectedMap["servicePrincipalClientSecret"] = "[parameters('servicePrincipalClientSecret')]"
 	expectedMap["useManagedIdentityExtension"] = "false"
@@ -314,6 +258,8 @@ func TestK8sVars(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
+
 	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -331,6 +277,7 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
 	expectedMap["virtualNetworkResourceGroupName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
 	expectedMap["vnetSubnetID"] = "[parameters('masterVnetSubnetID')]"
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	delete(expectedMap, "vnetID")
 
 	diff = cmp.Diff(varMap, expectedMap)
@@ -362,6 +309,7 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["masterInternalLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-master-internal-lbFrontEnd-', parameters('nameSuffix'))]"
 	expectedMap["masterInternalLbIPOffset"] = 10
 	expectedMap["masterInternalLbName"] = "[concat(parameters('orchestratorName'), '-master-internal-lb-', parameters('nameSuffix'))]"
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -390,6 +338,7 @@ func TestK8sVars(t *testing.T) {
 		"[parameters('etcdPeerPrivateKey4')]",
 	}
 	expectedMap["masterCount"] = 5
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -414,11 +363,12 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["agentpool1VMNamePrefix"] = "aks-agentpool1-18280257-vmss"
 	expectedMap["dataStorageAccountPrefixSeed"] = 97
 	expectedMap["kubernetesAPIServerIP"] = "[parameters('kubernetesEndpoint')]"
+	expectedMap["masterFqdnPrefix"] = "foodnsprefix"
 	expectedMap["masterVMNamePrefix"] = "aks-master-18280257-"
 	expectedMap["maxStorageAccountsPerAgent"] = "[div(variables('maxVMsPerPool'),variables('maxVMsPerStorageAccount'))]"
 	expectedMap["maxVMsPerStorageAccount"] = 20
 	expectedMap["nsgName"] = "[concat(variables('agentNamePrefix'), 'nsg')]"
-	expectedMap["provisionScriptParametersCommon"] = fmt.Sprintf(provisionScriptParametersCommonString, testK8sVersion, true, false)
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	expectedMap["routeTableName"] = "[concat(variables('agentNamePrefix'), 'routetable')]"
 	expectedMap["storageAccountBaseName"] = "[uniqueString(concat(variables('masterFqdnPrefix'),variables('location')))]"
 	expectedMap["storageAccountPrefixes"] = []string{"0", "6", "c", "i", "o", "u", "1", "7", "d", "j", "p", "v", "2", "8", "e", "k", "q", "w", "3", "9", "f", "l", "r", "x", "4", "a", "g", "m", "s", "y", "5", "b", "h", "n", "t", "z"}
@@ -484,6 +434,7 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	expectedMap["useManagedIdentityExtension"] = "true"
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -497,7 +448,7 @@ func TestK8sVars(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expectedMap["provisionScriptParametersCommon"] = fmt.Sprintf(provisionScriptParametersCommonString, testK8sVersion, true, true)
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
 		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
 		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
@@ -552,11 +503,6 @@ func TestK8sVars(t *testing.T) {
 		containerRegistryDNSSuffix   = "azurecr.io"
 		tokenAudience                = "https://management.azurestack.external/"
 	)
-
-	customCloudK8sVersion := testK8sVersion
-	if name == "azurestackcloud" {
-		customCloudK8sVersion = testK8sVersion + AzureStackSuffix
-	}
 
 	cs = &api.ContainerService{
 		Location: "local",
@@ -677,7 +623,7 @@ func TestK8sVars(t *testing.T) {
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
 		"masterFirstAddrPrefix":              "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]",
-		"masterFqdnPrefix":                   "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
+		"masterFqdnPrefix":                   "blueorange",
 		"masterLbBackendPoolName":            "[concat(parameters('orchestratorName'), '-master-pool-', parameters('nameSuffix'))]",
 		"masterLbID":                         "[resourceId('Microsoft.Network/loadBalancers',variables('masterLbName'))]",
 		"masterLbIPConfigID":                 "[concat(variables('masterLbID'),'/frontendIPConfigurations/', variables('masterLbIPConfigName'))]",
@@ -710,7 +656,7 @@ func TestK8sVars(t *testing.T) {
 			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		},
 		"provisionConfigsCustomCloud":               "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",
-		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, customCloudK8sVersion, false, false),
+		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]",
 		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",
@@ -788,6 +734,8 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 	expectedMap["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 	expectedMap["loadBalancerSku"] = api.StandardLoadBalancerSku
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
+
 	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -816,6 +764,7 @@ func TestK8sVars(t *testing.T) {
 		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"systemdBPFMount":           getBase64EncodedGzippedCustomScript(systemdBPFMount, cs),
 	}
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -834,6 +783,7 @@ func TestK8sVars(t *testing.T) {
 	agentPoolName := cs.Properties.AgentPoolProfiles[0].Name
 	expectedMap[fmt.Sprintf("%sScaleSetPriority", agentPoolName)] = fmt.Sprintf("[parameters('%sScaleSetPriority')]", agentPoolName)
 	expectedMap[fmt.Sprintf("%sScaleSetEvictionPolicy", agentPoolName)] = fmt.Sprintf("[parameters('%sScaleSetEvictionPolicy')]", agentPoolName)
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]"
 	diff = cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
@@ -875,64 +825,6 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	provisionScriptParametersCommonString := "[concat(" +
-		"'ADMINUSER=',parameters('linuxAdminUsername')," +
-		"' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase')," +
-		"' ETCD_VERSION=',parameters('etcdVersion')," +
-		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
-		"' MOBY_VERSION=',parameters('mobyVersion')," +
-		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s" +
-		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
-		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
-		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
-		"' RESOURCE_GROUP=',variables('resourceGroup')," +
-		"' LOCATION=',variables('location')," +
-		"' VM_TYPE=',variables('vmType')," +
-		"' SUBNET=',variables('subnetName')," +
-		"' NETWORK_SECURITY_GROUP=',variables('nsgName')," +
-		"' VIRTUAL_NETWORK=',variables('virtualNetworkName')," +
-		"' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName')," +
-		"' ROUTE_TABLE=',variables('routeTableName')," +
-		"' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName')," +
-		"' PRIMARY_SCALE_SET=',variables('primaryScaleSetName')," +
-		"' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId')," +
-		"' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote')," +
-		"' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey')," +
-		"' NETWORK_PLUGIN=',parameters('networkPlugin')," +
-		"' NETWORK_POLICY=',parameters('networkPolicy')," +
-		"' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL')," +
-		"' CNI_PLUGINS_URL=',parameters('cniPluginsURL')," +
-		"' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff))," +
-		"' CLOUDPROVIDER_BACKOFF_MODE=',parameters('cloudproviderConfig').cloudProviderBackoffMode," +
-		"' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries," +
-		"' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent," +
-		"' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration," +
-		"' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter," +
-		"' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit))," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
-		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
-		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
-		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
-		"' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB')," +
-		"' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount')," +
-		"' CONTAINER_RUNTIME=',parameters('containerRuntime')," +
-		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
-		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
-		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t" +
-		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
-		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
-		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')," +
-		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
-		")]"
 
 	expectedMap := map[string]interface{}{
 		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
@@ -976,7 +868,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
 		"masterFirstAddrPrefix":              "[concat(variables('masterFirstAddrOctets')[0],'.',variables('masterFirstAddrOctets')[1],'.',variables('masterFirstAddrOctets')[2],'.')]",
-		"masterFqdnPrefix":                   "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
+		"masterFqdnPrefix":                   "blueorange",
 		"masterInternalLbID":                 "[resourceId('Microsoft.Network/loadBalancers',variables('masterInternalLbName'))]",
 		"masterInternalLbIPConfigID":         "[concat(variables('masterInternalLbID'),'/frontendIPConfigurations/', variables('masterInternalLbIPConfigName'))]",
 		"masterInternalLbIPConfigName":       "[concat(parameters('orchestratorName'), '-master-internal-lbFrontEnd-', parameters('nameSuffix'))]",
@@ -1013,7 +905,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 			"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		},
-		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, testK8sVersion, false, false),
+		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]",
 		"provisionScriptParametersMaster":           "[concat('COSMOS_URI= MASTER_VM_NAME=',variables('masterVMNames')[variables('masterOffset')],' ETCD_PEER_URL=',variables('masterEtcdPeerURLs')[variables('masterOffset')],' ETCD_CLIENT_URL=',variables('masterEtcdClientURLs')[variables('masterOffset')],' MASTER_NODE=true NO_OUTBOUND=false AUDITD_ENABLED=false CLUSTER_AUTOSCALER_ADDON=false ACI_CONNECTOR_ADDON=',parameters('kubernetesACIConnectorEnabled'),' APISERVER_PRIVATE_KEY=',parameters('apiServerPrivateKey'),' CA_CERTIFICATE=',parameters('caCertificate'),' CA_PRIVATE_KEY=',parameters('caPrivateKey'),' MASTER_FQDN=',variables('masterFqdnPrefix'),' KUBECONFIG_CERTIFICATE=',parameters('kubeConfigCertificate'),' KUBECONFIG_KEY=',parameters('kubeConfigPrivateKey'),' ETCD_SERVER_CERTIFICATE=',parameters('etcdServerCertificate'),' ETCD_CLIENT_CERTIFICATE=',parameters('etcdClientCertificate'),' ETCD_SERVER_PRIVATE_KEY=',parameters('etcdServerPrivateKey'),' ETCD_CLIENT_PRIVATE_KEY=',parameters('etcdClientPrivateKey'),' ETCD_PEER_CERTIFICATES=',string(variables('etcdPeerCertificates')),' ETCD_PEER_PRIVATE_KEYS=',string(variables('etcdPeerPrivateKeys')),' ENABLE_AGGREGATED_APIS=',string(parameters('enableAggregatedAPIs')),' KUBECONFIG_SERVER=',variables('kubeconfigServer'))]",
 		"readerRoleDefinitionId":                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'acdd72a7-3385-48ef-bd42-f606fba81ae7')]",
 		"resourceGroup":                             "[resourceGroup().name]",

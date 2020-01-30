@@ -58,7 +58,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterProfile := cs.Properties.MasterProfile
 	profiles := cs.Properties.AgentPoolProfiles
 
-	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
+	var useManagedIdentity, userAssignedID, userAssignedClientID bool
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
@@ -66,7 +66,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
-		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
@@ -78,70 +77,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
-	isIPv6DualStackFeatureEnabled := cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
-
-	kubernetesVersion := orchProfile.OrchestratorVersion
-	if cs.Properties.IsAzureStackCloud() {
-		kubernetesVersion = orchProfile.OrchestratorVersion + AzureStackSuffix
-	}
-
-	provisionScriptParametersCommonString := "[concat(" +
-		"'ADMINUSER=',parameters('linuxAdminUsername')," +
-		"' ETCD_DOWNLOAD_URL=',parameters('etcdDownloadURLBase')," +
-		"' ETCD_VERSION=',parameters('etcdVersion')," +
-		"' CONTAINERD_VERSION=',parameters('containerdVersion')," +
-		"' MOBY_VERSION=',parameters('mobyVersion')," +
-		"' TENANT_ID=',variables('tenantID')," +
-		"' KUBERNETES_VERSION=%s" +
-		" HYPERKUBE_URL=',parameters('kubernetesHyperkubeSpec')," +
-		"' APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate')," +
-		"' SUBSCRIPTION_ID=',variables('subscriptionId')," +
-		"' RESOURCE_GROUP=',variables('resourceGroup')," +
-		"' LOCATION=',variables('location')," +
-		"' VM_TYPE=',variables('vmType')," +
-		"' SUBNET=',variables('subnetName')," +
-		"' NETWORK_SECURITY_GROUP=',variables('nsgName')," +
-		"' VIRTUAL_NETWORK=',variables('virtualNetworkName')," +
-		"' VIRTUAL_NETWORK_RESOURCE_GROUP=',variables('virtualNetworkResourceGroupName')," +
-		"' ROUTE_TABLE=',variables('routeTableName')," +
-		"' PRIMARY_AVAILABILITY_SET=',variables('primaryAvailabilitySetName')," +
-		"' PRIMARY_SCALE_SET=',variables('primaryScaleSetName')," +
-		"' SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId')," +
-		"' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),variables('servicePrincipalClientSecret'),variables('singleQuote')," +
-		"' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey')," +
-		"' NETWORK_PLUGIN=',parameters('networkPlugin')," +
-		"' NETWORK_POLICY=',parameters('networkPolicy')," +
-		"' VNET_CNI_PLUGINS_URL=',parameters('vnetCniLinuxPluginsURL')," +
-		"' CNI_PLUGINS_URL=',parameters('cniPluginsURL')," +
-		"' CLOUDPROVIDER_BACKOFF=',toLower(string(parameters('cloudproviderConfig').cloudProviderBackoff))," +
-		"' CLOUDPROVIDER_BACKOFF_MODE=',parameters('cloudproviderConfig').cloudProviderBackoffMode," +
-		"' CLOUDPROVIDER_BACKOFF_RETRIES=',parameters('cloudproviderConfig').cloudProviderBackoffRetries," +
-		"' CLOUDPROVIDER_BACKOFF_EXPONENT=',parameters('cloudproviderConfig').cloudProviderBackoffExponent," +
-		"' CLOUDPROVIDER_BACKOFF_DURATION=',parameters('cloudproviderConfig').cloudProviderBackoffDuration," +
-		"' CLOUDPROVIDER_BACKOFF_JITTER=',parameters('cloudproviderConfig').cloudProviderBackoffJitter," +
-		"' CLOUDPROVIDER_RATELIMIT=',toLower(string(parameters('cloudproviderConfig').cloudProviderRatelimit))," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS=',parameters('cloudproviderConfig').cloudProviderRatelimitQPS," +
-		"' CLOUDPROVIDER_RATELIMIT_QPS_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitQPSWrite," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET=',parameters('cloudproviderConfig').cloudProviderRatelimitBucket," +
-		"' CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=',parameters('cloudproviderConfig').cloudProviderRatelimitBucketWrite," +
-		"' LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=',toLower(string(parameters('cloudproviderConfig').cloudProviderDisableOutboundSNAT))," +
-		"' USE_MANAGED_IDENTITY_EXTENSION=',variables('useManagedIdentityExtension')," +
-		"' USE_INSTANCE_METADATA=',variables('useInstanceMetadata')," +
-		"' LOAD_BALANCER_SKU=',variables('loadBalancerSku')," +
-		"' EXCLUDE_MASTER_FROM_STANDARD_LB=',variables('excludeMasterFromStandardLB')," +
-		"' MAXIMUM_LOADBALANCER_RULE_COUNT=',variables('maximumLoadBalancerRuleCount')," +
-		"' CONTAINER_RUNTIME=',parameters('containerRuntime')," +
-		"' CONTAINERD_DOWNLOAD_URL_BASE=',parameters('containerdDownloadURLBase')," +
-		"' POD_INFRA_CONTAINER_SPEC=',parameters('kubernetesPodInfraContainerSpec')," +
-		"' KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyVaultName')," +
-		"' IS_HOSTED_MASTER=%t" +
-		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=%t" +
-		" AUTHENTICATION_METHOD=',variables('customCloudAuthenticationMethod')," +
-		"' IDENTITY_SYSTEM=',variables('customCloudIdentifySystem')," +
-		"' NETWORK_API_VERSION=',variables('apiVersionNetwork')," +
-		"' NETWORK_MODE=',parameters('networkMode')," +
-		"' KUBE_BINARY_URL=',parameters('kubeBinaryURL')" +
-		")]"
 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
@@ -151,7 +86,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
 		"maximumLoadBalancerRuleCount":  maxLoadBalancerCount,
-		"masterFqdnPrefix":              "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
+		"masterFqdnPrefix":              cs.Properties.GetDNSPrefix(),
 		"apiVersionCompute":             api.APIVersionCompute,
 		"apiVersionDeployments":         api.APIVersionDeployments,
 		"apiVersionStorage":             api.APIVersionStorage,
@@ -172,7 +107,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
-		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, kubernetesVersion, isHostedMaster, isIPv6DualStackFeatureEnabled),
+		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]",
 		"orchestratorNameVersionTag":                fmt.Sprintf("%s:%s", orchProfile.OrchestratorType, orchProfile.OrchestratorVersion),
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
@@ -414,7 +349,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		if hasAgentPool {
 			masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", profiles[0].Name)
 		} else {
-			masterVars["primaryAvailabilitySetName"] = ""
 		}
 	}
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
@@ -550,7 +484,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["windowsCustomScriptSuffix"] = " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; Copy-Item $inputFile $outputFile ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; "
 	}
 
-	if enableEncryptionWithExternalKms {
+	if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
 		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
 	} else {
 		masterVars["clusterKeyVaultName"] = ""

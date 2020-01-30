@@ -181,12 +181,6 @@
       },
       "type": "string"
     },
-    "kubernetesHyperkubeSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -215,12 +209,6 @@
         "description": "ACI Connector Status"
       },
       "type": "bool"
-    },
-    "kubernetesPodInfraContainerSpec": {
-      "metadata": {
-        "description": "The container spec for pod infra."
-      },
-      "type": "string"
     },
     "cloudproviderConfig": {
       "type": "object",
