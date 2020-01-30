@@ -37649,11 +37649,11 @@ time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-        CLI_TOOL="docker"
-    else
-        CLI_TOOL="img"
-    fi
+    {{- if IsDockerContainerRuntime}}
+    CLI_TOOL="docker"
+    {{else}}
+    CLI_TOOL="img"
+    {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
