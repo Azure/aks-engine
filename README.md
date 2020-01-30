@@ -27,7 +27,7 @@ Want to get involved? The [community guide][community] covers everything you nee
 
 ## Support
 
-AKS Engine is an open source project that is **not** backed by a Microsoft Azure 24/7 service support model. [Please search open issues here](https://github.com/Azure/aks-engine/issues), and [open a new one](https://github.com/Azure/aks-engine/issues/new/choose) if your scenario isn't already represented in an existing issue, and project maintainers will engage in a timely fashion!
+AKS Engine is an open source project that is [**not** covered by the Microsoft Azure support policy](https://support.microsoft.com/en-us/help/2941892/support-for-linux-and-open-source-technology-in-azure). [Please search open issues here](https://github.com/Azure/aks-engine/issues), and [open a new one](https://github.com/Azure/aks-engine/issues/new/choose) if your issue isn't already represented please [open a new one](https://github.com/Azure/aks-engine/issues/new/choose). The AKS Engine project maintainers will respond to the best of their abilities.
 
 ## Code of conduct
 
