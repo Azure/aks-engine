@@ -27,13 +27,23 @@ installEtcd() {
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
         echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
     else
-        retrycmd_get_tarball 120 5 /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz ${ETCD_DOWNLOAD_URL}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
-        removeEtcd
+        CLI_TOOL=$1
         if [[ $OS == $COREOS_OS_NAME ]]; then
-            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /opt/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+            path="/opt/bin"
         else
-            tar -xzvf /tmp/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz -C /usr/bin/ --strip-components=1 || exit $ERR_ETCD_DOWNLOAD_TIMEOUT
+            path="/usr/bin"
         fi
+        CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
+        pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
+        removeEtcd
+        if [[ "$CLI_TOOL" == "docker" ]]; then
+            mkdir -p "$path"
+            docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
+            docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
+        else
+            img unpack -o "$path" ${CONTAINER_IMAGE}
+        fi
+        chmod a+x "$path/etcd" "$path/etcdctl"
     fi
 }
 
@@ -313,6 +323,7 @@ pullContainerImage() {
 cleanUpContainerImages() {
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${ETCD_VERSION}$" | grep 'etcd') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &

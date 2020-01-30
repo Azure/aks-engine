@@ -50,11 +50,6 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.3.18"
-ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
-installEtcd
-echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
-
 apmz_version="v0.4.0"
 ensureAPMZ "${apmz_version}"
 echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
@@ -64,6 +59,11 @@ installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
+
+ETCD_VERSION="3.3.18"
+ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
+installEtcd "docker"
+echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
 
 VNET_CNI_VERSIONS="
 1.0.30
