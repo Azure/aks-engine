@@ -103,6 +103,14 @@ func (ku *Upgrader) upgradeMasterNodes(ctx context.Context) error {
 	transformer := &transform.Transformer{
 		Translator: ku.Translator,
 	}
+
+	if ku.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() {
+		err = transformer.RemoveJumpboxResourcesFromTemplate(ku.logger, templateMap)
+		if err != nil {
+			return ku.Translator.Errorf("error removing jumpbox resources from template: %s", err.Error())
+		}
+	}
+
 	if ku.DataModel.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku {
 		err = transformer.NormalizeForK8sSLBScalingOrUpgrade(ku.logger, templateMap)
 		if err != nil {
@@ -237,6 +245,14 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 		transformer := &transform.Transformer{
 			Translator: ku.Translator,
 		}
+
+		if ku.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() {
+			err = transformer.RemoveJumpboxResourcesFromTemplate(ku.logger, templateMap)
+			if err != nil {
+				return ku.Translator.Errorf("error removing jumpbox resources from template: %s", err.Error())
+			}
+		}
+
 		var isMasterManagedDisk bool
 		if ku.DataModel.Properties.MasterProfile != nil {
 			isMasterManagedDisk = ku.DataModel.Properties.MasterProfile.IsManagedDisks()
@@ -468,6 +484,13 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 
 		transformer := &transform.Transformer{
 			Translator: ku.Translator,
+		}
+
+		if ku.ClusterTopology.DataModel.Properties.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() {
+			err = transformer.RemoveJumpboxResourcesFromTemplate(ku.logger, templateMap)
+			if err != nil {
+				return ku.Translator.Errorf("error removing jumpbox resources from template: %s", err.Error())
+			}
 		}
 
 		// TODO: rename this!
