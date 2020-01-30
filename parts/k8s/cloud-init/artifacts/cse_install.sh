@@ -24,6 +24,10 @@ removeMoby() {
     apt-get purge -y moby-engine moby-cli
 }
 
+removeContainerd() {
+    apt-get purge -y moby-containerd moby-runc
+}
+
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
@@ -292,17 +296,14 @@ installContainerd() {
     if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
         echo "containerd is already installed"
     else
-        CONTAINERD_TGZ_TMP="cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
-        rm -Rf /usr/bin/containerd
-        rm -Rf /var/lib/docker/containerd
-        rm -Rf /run/docker/containerd
-        if [[ ! -f "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ]]; then
-            downloadContainerd
-        fi
-        tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
-        sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT -w' /etc/systemd/system/containerd.service
+        removeContainerd
+        echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/${UBUNTU_RELEASE}/multiarch/prod testing main" > /tmp/microsoft-prod-testing.list
+        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
+        apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
     fi
-    rm -Rf $CONTAINERD_DOWNLOADS_DIR &
 }
 
 installImg() {

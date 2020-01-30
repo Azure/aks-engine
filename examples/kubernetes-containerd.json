@@ -43,8 +43,8 @@
       }
     },
     "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
+      "clientId": "afcc29db-aa16-4694-bb10-5d86f6e76959",
+      "secret": "6228f04c-9e5d-483a-84ef-d128a5f50d51"
     }
   }
 }
