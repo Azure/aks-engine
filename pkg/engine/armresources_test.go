@@ -1858,8 +1858,9 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 							BackendAddressPool: &network.SubResource{
 								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 							},
-							Protocol:             network.Protocol1All,
-							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+							Protocol:               network.Protocol1All,
+							IdleTimeoutInMinutes:   to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+							AllocatedOutboundPorts: to.Int32Ptr(0),
 						},
 						Name: to.StringPtr("LBOutboundRule"),
 					},
