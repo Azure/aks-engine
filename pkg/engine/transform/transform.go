@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -139,6 +140,28 @@ func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, te
 			resource.RemoveProperty(logger, singlePlacementGroupFieldName)
 		}
 	}
+}
+
+func (t *Transformer) RemoveJumpboxResourcesFromTemplate(logger *logrus.Entry, templateMap map[string]interface{}) error {
+	logger.Debugf("Running RemoveJumpboxResourcesFromTemplate...")
+	resources := templateMap[resourcesFieldName].([]interface{})
+	indexesToRemove := []int{}
+	for index, resource := range resources {
+		resourceMap, ok := resource.(map[string]interface{})
+		if !ok {
+			return errors.Errorf("Template improperly formatted for resource")
+		}
+
+		resourceName, ok := resourceMap[nameFieldName].(string)
+		if !ok {
+			logger.Warnf("Resource does not have a name property")
+			continue
+		} else if strings.Contains(resourceName, "variables('jumpbox") || strings.Contains(resourceName, "parameters('jumpbox") {
+			indexesToRemove = append(indexesToRemove, index)
+		}
+	}
+	templateMap[resourcesFieldName] = removeIndexesFromArray(resources, indexesToRemove)
+	return nil
 }
 
 // NormalizeForK8sSLBScalingOrUpgrade takes a template and removes elements that are unwanted in a K8s Standard LB cluster scale up/down case
