@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -148,8 +149,7 @@ func (t *Transformer) RemoveJumpboxResourcesFromTemplate(logger *logrus.Entry, t
 	for index, resource := range resources {
 		resourceMap, ok := resource.(map[string]interface{})
 		if !ok {
-			logger.Warnf("Template improperly formatted for resource")
-			continue
+			return errors.Errorf("Template improperly formatted for resource")
 		}
 
 		resourceName, ok := resourceMap[nameFieldName].(string)
