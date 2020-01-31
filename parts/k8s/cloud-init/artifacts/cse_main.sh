@@ -52,6 +52,8 @@ else
     REBOOTREQUIRED=false
 fi
 
+time_metric "ConfigureAdminUser" configureAdminUser
+
 {{- if not NeedsContainerd}}
 time_metric "CleanupContainerd" cleanUpContainerd
 {{end}}
