@@ -4549,6 +4549,100 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 }
 
+func TestGetKubernetesVersion(t *testing.T) {
+	K8s1dot13dot11 := getMockAPIProperties("1.13.11")
+	K8s1dot15dot6 := getMockAPIProperties("1.15.5")
+	azureStackProperties := GetMockPropertiesWithCustomCloudProfile(AzureStackCloud, true, true, true)
+	azureStackProperties.OrchestratorProfile = K8s1dot13dot11.OrchestratorProfile
+	tests := []struct {
+		name               string
+		properties         *Properties
+		expectedK8sVersion string
+	}{
+		{
+			name:               "1.13.11 not Azure Stack",
+			properties:         &K8s1dot13dot11,
+			expectedK8sVersion: "1.13.11",
+		},
+		{
+			name:               "1.15.5 not Azure Stack",
+			properties:         &K8s1dot15dot6,
+			expectedK8sVersion: "1.15.5",
+		},
+		{
+			name:               "Azure Stack",
+			properties:         &azureStackProperties,
+			expectedK8sVersion: "1.13.11" + AzureStackSuffix,
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubernetesVersion()
+			if actual != test.expectedK8sVersion {
+				t.Errorf("expected k8s version string \"%s\", but got \"%s\"", test.expectedK8sVersion, actual)
+			}
+		})
+	}
+}
+
+func TestGetKubernetesHyperkubeSpec(t *testing.T) {
+	mock1dot13dot11 := getMockAPIProperties("1.13.11")
+	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot16dot3 := getMockAPIProperties("1.16.0")
+	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStack", true, true, true)
+	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
+		OrchestratorType:    Kubernetes,
+		OrchestratorVersion: "1.15.4",
+		KubernetesConfig: &KubernetesConfig{
+			KubernetesImageBase: "mcr.io/",
+		},
+	}
+	mockcustomproperties := getMockAPIProperties("1.16.0")
+	mockcustomproperties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mockcustomproperties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "mcr.io/my-custom-image"
+
+	tests := []struct {
+		name                  string
+		properties            *Properties
+		expectedHyperkubeSpec string
+	}{
+		{
+			name:                  "1.13.11 Azure public cloud",
+			properties:            &mock1dot13dot11,
+			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.13.11",
+		},
+		{
+			name:                  "1.16.0 Azure public cloud",
+			properties:            &mock1dot16dot3,
+			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.16.0",
+		},
+		{
+			name:                  "1.15.4 Azure Stack",
+			properties:            &mock1dot15dot4azs,
+			expectedHyperkubeSpec: "mcr.io/hyperkube-amd64:v1.15.4-azs",
+		},
+		{
+			name:                  "Custom image",
+			properties:            &mockcustomproperties,
+			expectedHyperkubeSpec: "mcr.io/my-custom-image",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubernetesHyperkubeSpec()
+			if actual != test.expectedHyperkubeSpec {
+				t.Errorf("expected Hyperkube Spec %s, but got %s", test.expectedHyperkubeSpec, actual)
+			}
+		})
+	}
+}
+
 func TestAreAgentProfilesCustomVNET(t *testing.T) {
 	p := Properties{}
 	p.AgentPoolProfiles = []*AgentPoolProfile{

@@ -349,6 +349,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		if hasAgentPool {
 			masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", profiles[0].Name)
 		} else {
+			masterVars["primaryAvailabilitySetName"] = ""
 		}
 	}
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
