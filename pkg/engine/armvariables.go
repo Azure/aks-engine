@@ -174,7 +174,6 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
 		"provisionScriptParametersCommon":           fmt.Sprintf(provisionScriptParametersCommonString, kubernetesVersion, isHostedMaster, isIPv6DualStackFeatureEnabled),
 		"orchestratorNameVersionTag":                fmt.Sprintf("%s:%s", orchProfile.OrchestratorType, orchProfile.OrchestratorVersion),
-		"subnetNameResourceSegmentIndex":            10,
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 	}

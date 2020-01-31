@@ -4913,6 +4913,29 @@ func TestGetSubnetName(t *testing.T) {
 			},
 			expectedSubnetName: "BazAgentSubnet",
 		},
+		{
+			name: "Cluster with VMSS MasterProfile",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:               1,
+					DNSPrefix:           "foo",
+					VMSize:              "Standard_DS2_v2",
+					AvailabilityProfile: VirtualMachineScaleSets,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expectedSubnetName: "subnetmaster",
+		},
 	}
 
 	for _, test := range tests {
