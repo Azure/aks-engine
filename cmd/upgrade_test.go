@@ -295,3 +295,209 @@ func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
 	g.Expect(upgradeCmd.containerService.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal("1.10.12"))
 	resetValidVersions()
 }
+
+func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
+	cases := []struct {
+		vmssName string
+		cs       *api.ContainerService
+		expected bool
+		name     string
+	}{
+		{
+			vmssName: "k8s-agentpool1-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "agentpool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expected: true,
+			name:     "vmss is in the api model spec",
+		},
+		{
+			vmssName: "my-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "agentpool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expected: false,
+			name:     "vmss unrecognized",
+		},
+		{
+			vmssName: "k8s-frontendpool-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "frontendpool",
+							Count:               30,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "backendpool",
+							Count:               7,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "canary",
+							Count:               5,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expected: true,
+			name:     "multiple pools, frontendpool vmss is in spec",
+		},
+		{
+			vmssName: "k8s-backendpool-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "frontendpool",
+							Count:               30,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "backendpool",
+							Count:               7,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "canary",
+							Count:               5,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expected: true,
+			name:     "multiple pools, backendpool vmss is in spec",
+		},
+		{
+			vmssName: "k8s-canary-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "frontendpool",
+							Count:               30,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "backendpool",
+							Count:               7,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "canary",
+							Count:               5,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expected: true,
+			name:     "multiple pools, canary vmss is in spec",
+		},
+		{
+			vmssName: "k8s-canary-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{},
+				},
+			},
+			expected: false,
+			name:     "no pools",
+		},
+		{
+			vmssName: "k8s-canary-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "canary",
+							Count:               1,
+							AvailabilityProfile: api.AvailabilitySet,
+						},
+					},
+				},
+			},
+			expected: false,
+			name:     "availability set",
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ret := isVMSSNameInAgentPoolsArray(c.vmssName, c.cs)
+			if ret != c.expected {
+				t.Errorf("expected %t to be %t", ret, c.expected)
+			}
+		})
+	}
+}
