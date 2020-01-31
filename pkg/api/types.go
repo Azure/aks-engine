@@ -925,18 +925,16 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	return vmPrefix
 }
 
-// AnyAgentUsesVirtualMachineScaleSets checks whether any of the agents in the AgentPool use VMSS or not
-func (p *Properties) AnyAgentUsesVirtualMachineScaleSets() bool {
-	for _, agentProfile := range p.AgentPoolProfiles {
-		if agentProfile.IsVirtualMachineScaleSets() {
-			return true
-		}
+// GetVMType returns the type of VM "vmss" or "standard" to be passed to the cloud provider
+func (p *Properties) GetVMType() string {
+	if p.HasVMSSAgentPool() {
+		return VMSSVMType
 	}
-	return false
+	return StandardVMType
 }
 
-// AnyAgentUsesAvailabilitySets checks whether any of the agents in the AgentPool use VMAS or not
-func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
+// HasVMASAgentPool checks whether any of the agents in the AgentPool use VMAS or not
+func (p *Properties) HasVMASAgentPool() bool {
 	for _, agentProfile := range p.AgentPoolProfiles {
 		if agentProfile.IsAvailabilitySets() {
 			return true

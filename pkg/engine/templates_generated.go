@@ -43348,7 +43348,7 @@ var _masteroutputsT = []byte(`    "masterFQDN": {
       "value": ""
 {{end}}
     }
-{{if AnyAgentUsesAvailabilitySets}}
+{{if HasVMASAgentPool}}
     ,
     "agentStorageAccountSuffix": {
       "type": "string",

@@ -1367,6 +1367,7 @@ func TestAvailabilityProfile(t *testing.T) {
 		expectedIsAS    bool
 		expectedLowPri  bool
 		expectedSpot    bool
+		expectedVMType  string
 	}{
 		{
 			p: Properties{
@@ -1382,6 +1383,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedIsAS:    false,
 			expectedLowPri:  false,
 			expectedSpot:    true,
+			expectedVMType:  VMSSVMType,
 		},
 		{
 			p: Properties{
@@ -1397,6 +1399,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedIsAS:    false,
 			expectedLowPri:  true,
 			expectedSpot:    false,
+			expectedVMType:  VMSSVMType,
 		},
 		{
 			p: Properties{
@@ -1415,6 +1418,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedIsAS:    false,
 			expectedLowPri:  false,
 			expectedSpot:    false,
+			expectedVMType:  VMSSVMType,
 		},
 		{
 			p: Properties{
@@ -1429,6 +1433,7 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedIsAS:    true,
 			expectedLowPri:  false,
 			expectedSpot:    false,
+			expectedVMType:  StandardVMType,
 		},
 	}
 
@@ -1447,6 +1452,9 @@ func TestAvailabilityProfile(t *testing.T) {
 		}
 		if c.p.AgentPoolProfiles[0].IsSpotScaleSet() != c.expectedSpot {
 			t.Fatalf("expected IsSpotScaleSet() to return %t but instead returned %t", c.expectedSpot, c.p.AgentPoolProfiles[0].IsSpotScaleSet())
+		}
+		if c.p.GetVMType() != c.expectedVMType {
+			t.Fatalf("expected GetVMType() to return %s but instead returned %s", c.expectedVMType, c.p.GetVMType())
 		}
 	}
 }
@@ -4541,30 +4549,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 }
 
-func getMockAddon(name string) KubernetesAddon {
-	return KubernetesAddon{
-		Name: name,
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           name,
-				CPURequests:    "50m",
-				MemoryRequests: "150Mi",
-				CPULimits:      "50m",
-				MemoryLimits:   "150Mi",
-			},
-		},
-		Pools: []AddonNodePoolsConfig{
-			{
-				Name: "pool1",
-				Config: map[string]string{
-					"min-nodes": "3",
-					"max-nodes": "3",
-				},
-			},
-		},
-	}
-}
-
 func TestAreAgentProfilesCustomVNET(t *testing.T) {
 	p := Properties{}
 	p.AgentPoolProfiles = []*AgentPoolProfile{
@@ -6489,7 +6473,7 @@ func TestKubernetesConfigIsAddonDisabled(t *testing.T) {
 	}
 }
 
-func TestAnyAgentUsesAvailabilitySets(t *testing.T) {
+func TestHasVMASAgentPool(t *testing.T) {
 	tests := []struct {
 		name     string
 		p        *Properties
@@ -6571,97 +6555,7 @@ func TestAnyAgentUsesAvailabilitySets(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ret := test.p.AnyAgentUsesAvailabilitySets()
-			if test.expected != ret {
-				t.Errorf("expected %t, instead got : %t", test.expected, ret)
-			}
-		})
-	}
-}
-
-func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
-	tests := []struct {
-		name     string
-		p        *Properties
-		expected bool
-	}{
-		{
-			name: "one agent pool w/ AvailabilitySet",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               2,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "two agent pools, one w/ AvailabilitySet",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               2,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  100,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "two agent pools",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  2,
-					},
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  100,
-					},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "two agent pools, one w/ VirtualMachineScaleSets",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  2,
-					},
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               100,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
-			},
-			expected: true,
-		},
-	}
-
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			ret := test.p.AnyAgentUsesVirtualMachineScaleSets()
+			ret := test.p.HasVMASAgentPool()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
 			}

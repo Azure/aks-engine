@@ -234,6 +234,22 @@ const (
 	AddonModeEnsureExists = "EnsureExists"
 	// AddonModeReconcile
 	AddonModeReconcile = "Reconcile"
+	// VMSSVMType is the string const for the vmss VM Type
+	VMSSVMType = "vmss"
+	// StandardVMType is the string const for the standard VM Type
+	StandardVMType = "standard"
+)
+
+// Azure API Versions
+const (
+	APIVersionAuthorizationUser   = "2018-09-01-preview"
+	APIVersionAuthorizationSystem = "2018-01-01-preview"
+	APIVersionCompute             = "2019-07-01"
+	APIVersionDeployments         = "2018-06-01"
+	APIVersionKeyVault            = "2018-02-14"
+	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionNetwork             = "2018-08-01"
+	APIVersionStorage             = "2018-07-01"
 )
 
 // AzureStackCloud Specific Defaults

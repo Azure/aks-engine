@@ -53,7 +53,6 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 }
 
 func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) {
-
 	orchProfile := cs.Properties.OrchestratorProfile
 	kubernetesConfig := orchProfile.KubernetesConfig
 	masterProfile := cs.Properties.MasterProfile
@@ -145,23 +144,22 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		")]"
 
 	masterVars := map[string]interface{}{
-		"maxVMsPerPool":               100,
-		"useManagedIdentityExtension": strconv.FormatBool(useManagedIdentity),
-
+		"maxVMsPerPool":                 100,
+		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
 		"userAssignedIDReference":       "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
 		"maximumLoadBalancerRuleCount":  maxLoadBalancerCount,
 		"masterFqdnPrefix":              "[tolower(parameters('masterEndpointDNSNamePrefix'))]",
-		"apiVersionCompute":             "2019-07-01",
-		"apiVersionDeployments":         "2018-06-01",
-		"apiVersionStorage":             "2018-07-01",
-		"apiVersionKeyVault":            "2018-02-14",
-		"apiVersionNetwork":             "2018-08-01",
-		"apiVersionManagedIdentity":     "2015-08-31-preview",
-		"apiVersionAuthorizationUser":   "2018-09-01-preview",
-		"apiVersionAuthorizationSystem": "2018-01-01-preview",
+		"apiVersionCompute":             api.APIVersionCompute,
+		"apiVersionDeployments":         api.APIVersionDeployments,
+		"apiVersionStorage":             api.APIVersionStorage,
+		"apiVersionKeyVault":            api.APIVersionKeyVault,
+		"apiVersionNetwork":             api.APIVersionNetwork,
+		"apiVersionManagedIdentity":     api.APIVersionManagedIdentity,
+		"apiVersionAuthorizationUser":   api.APIVersionAuthorizationUser,
+		"apiVersionAuthorizationSystem": api.APIVersionAuthorizationSystem,
 		"locations": []string{
 			"[resourceGroup().location]",
 			"[parameters('location')]",
@@ -354,16 +352,13 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			} else {
 				masterVars["vnetSubnetID"] = "[parameters('masterVnetSubnetID')]"
 			}
-			masterVars["subnetName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkResourceGroupName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
 		} else {
 			if masterProfile.IsVirtualMachineScaleSets() {
-				masterVars["subnetName"] = "subnetmaster"
 				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/subnetagent')]"
 				masterVars["vnetSubnetIDMaster"] = "[concat(variables('vnetID'),'/subnets/subnetmaster')]"
 			} else {
-				masterVars["subnetName"] = "[concat(parameters('orchestratorName'), '-subnet')]"
 				masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
 
 			}
@@ -382,11 +377,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			if hasAgentPool {
 				masterVars["vnetSubnetID"] = fmt.Sprintf("[parameters('%sVnetSubnetID')]", profiles[0].Name)
 			}
-			masterVars["subnetName"] = "[split(variables('vnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
 			masterVars["virtualNetworkResourceGroupName"] = "[split(variables('vnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
 		} else {
-			masterVars["subnetName"] = "[concat(parameters('orchestratorName'), '-subnet')]"
 			masterVars["vnetID"] = "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]"
 			masterVars["vnetSubnetID"] = "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]"
 			masterVars["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
@@ -398,6 +391,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	masterVars["nsgID"] = "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]"
+	masterVars["subnetName"] = cs.Properties.GetSubnetName()
 
 	if hasStorageAccountDisks {
 		masterVars["maxVMsPerStorageAccount"] = 20
@@ -413,16 +407,15 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["storageAccountBaseName"] = ""
 	}
 
-	if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
+	masterVars["vmType"] = cs.Properties.GetVMType()
+
+	if cs.Properties.HasVMSSAgentPool() {
 		masterVars["primaryAvailabilitySetName"] = ""
-		masterVars["vmType"] = "vmss"
 	} else {
 		if hasAgentPool {
 			masterVars["primaryAvailabilitySetName"] = fmt.Sprintf("[concat('%s-availabilitySet-',parameters('nameSuffix'))]", profiles[0].Name)
 		} else {
-			masterVars["primaryAvailabilitySetName"] = ""
 		}
-		masterVars["vmType"] = "standard"
 	}
 	masterVars["primaryScaleSetName"] = cs.Properties.GetPrimaryScaleSetName()
 

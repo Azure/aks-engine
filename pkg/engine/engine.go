@@ -744,10 +744,7 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 			return api.GetClusterAutoscalerNodesConfig(addon, cs)
 		},
 		"GetVMType": func() string {
-			if cs.Properties.AnyAgentUsesVirtualMachineScaleSets() {
-				return base64.StdEncoding.EncodeToString([]byte("vmss"))
-			}
-			return base64.StdEncoding.EncodeToString([]byte("standard"))
+			return cs.Properties.GetVMType()
 		},
 		"GetVolumeMounts": func() string {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {

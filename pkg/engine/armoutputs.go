@@ -103,7 +103,7 @@ func getMasterOutputs(cs *api.ContainerService) map[string]interface{} {
 		"value": masterFQDN,
 	}
 
-	if cs.Properties.AnyAgentUsesAvailabilitySets() {
+	if cs.Properties.HasVMASAgentPool() {
 		outputs["agentStorageAccountSuffix"] = map[string]interface{}{
 			"type":  "string",
 			"value": "[variables('storageAccountBaseName')]",

@@ -97,7 +97,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"CloudInitData",
 		"WrapAsParameter",
 		"WrapAsVerbatim",
-		"AnyAgentUsesAvailabilitySets",
+		"HasVMASAgentPool",
 		"AnyAgentIsLinux",
 		"IsNSeriesSKU",
 		"HasAvailabilityZones",
