@@ -529,8 +529,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"WrapAsVerbatim": func(s string) string {
 			return common.WrapAsVerbatim(s)
 		},
-		"AnyAgentUsesAvailabilitySets": func() bool {
-			return cs.Properties.AnyAgentUsesAvailabilitySets()
+		"HasVMASAgentPool": func() bool {
+			return cs.Properties.HasVMASAgentPool()
 		},
 		"AnyAgentIsLinux": func() bool {
 			return cs.Properties.AnyAgentIsLinux()

@@ -222,8 +222,7 @@ func TestK8sVars(t *testing.T) {
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
 		"storageAccountBaseName":                    "",
 		"storageAccountPrefixes":                    []interface{}{},
-		"subnetName":                                "[concat(parameters('orchestratorName'), '-subnet')]",
-		"subnetNameResourceSegmentIndex":            10,
+		"subnetName":                                "k8s-subnet",
 		"subscriptionId":                            "[subscription().subscriptionId]",
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
@@ -322,13 +321,13 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with CustomVnet enabled
-	cs.Properties.MasterProfile.VnetSubnetID = "fooSubnetID"
+	cs.Properties.MasterProfile.VnetSubnetID = "/subscriptions/fakesubID/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/fooSubnetID/subnets/myCustomSubnet"
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expectedMap["subnetName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('subnetNameResourceSegmentIndex')]]"
+	expectedMap["subnetName"] = "myCustomSubnet"
 	expectedMap["virtualNetworkName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetNameResourceSegmentIndex')]]"
 	expectedMap["virtualNetworkResourceGroupName"] = "[split(parameters('masterVnetSubnetID'), '/')[variables('vnetResourceGroupNameResourceSegmentIndex')]]"
 	expectedMap["vnetSubnetID"] = "[parameters('masterVnetSubnetID')]"
@@ -424,7 +423,7 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["storageAccountBaseName"] = "[uniqueString(concat(variables('masterFqdnPrefix'),variables('location')))]"
 	expectedMap["storageAccountPrefixes"] = []string{"0", "6", "c", "i", "o", "u", "1", "7", "d", "j", "p", "v", "2", "8", "e", "k", "q", "w", "3", "9", "f", "l", "r", "x", "4", "a", "g", "m", "s", "y", "5", "b", "h", "n", "t", "z"}
 	expectedMap["storageAccountPrefixesCount"] = "[length(variables('storageAccountPrefixes'))]"
-	expectedMap["subnetName"] = "[concat(parameters('orchestratorName'), '-subnet')]"
+	expectedMap["subnetName"] = "aks-subnet"
 	expectedMap["virtualNetworkName"] = "[concat(parameters('orchestratorName'), '-vnet-', parameters('nameSuffix'))]"
 	expectedMap["virtualNetworkResourceGroupName"] = ""
 	expectedMap["vmSizesMap"] = getSizeMap()["vmSizesMap"]
@@ -725,8 +724,7 @@ func TestK8sVars(t *testing.T) {
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
 		"storageAccountBaseName":                    "",
 		"storageAccountPrefixes":                    []interface{}{},
-		"subnetName":                                "[concat(parameters('orchestratorName'), '-subnet')]",
-		"subnetNameResourceSegmentIndex":            10,
+		"subnetName":                                "k8s-subnet",
 		"subscriptionId":                            "[subscription().subscriptionId]",
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",
@@ -1029,8 +1027,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
 		"storageAccountBaseName":                    "",
 		"storageAccountPrefixes":                    []interface{}{},
-		"subnetName":                                "[concat(parameters('orchestratorName'), '-subnet')]",
-		"subnetNameResourceSegmentIndex":            10,
+		"subnetName":                                "k8s-subnet",
 		"subscriptionId":                            "[subscription().subscriptionId]",
 		"tenantId":                                  "[subscription().tenantId]",
 		"truncatedResourceGroup":                    "[take(replace(replace(resourceGroup().name, '(', '-'), ')', '-'), 63)]",

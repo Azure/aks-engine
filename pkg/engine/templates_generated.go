@@ -6778,7 +6778,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -7222,7 +7222,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -8265,7 +8265,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -9320,7 +9320,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -10665,7 +10665,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -14110,7 +14110,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -19404,7 +19404,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -24708,7 +24708,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -33192,7 +33192,7 @@ data:
   ResourceGroup: <rg>
   SubscriptionID: <subID>
   TenantID: <tenantID>
-  VMType: {{GetVMType}}
+  VMType: {{GetBase64EncodedVMType}}
 kind: Secret
 metadata:
   name: cluster-autoscaler-azure
@@ -43365,7 +43365,7 @@ var _masteroutputsT = []byte(`    "masterFQDN": {
       "value": ""
 {{end}}
     }
-{{if AnyAgentUsesAvailabilitySets}}
+{{if HasVMASAgentPool}}
     ,
     "agentStorageAccountSuffix": {
       "type": "string",

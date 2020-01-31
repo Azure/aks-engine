@@ -925,18 +925,16 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	return vmPrefix
 }
 
-// AnyAgentUsesVirtualMachineScaleSets checks whether any of the agents in the AgentPool use VMSS or not
-func (p *Properties) AnyAgentUsesVirtualMachineScaleSets() bool {
-	for _, agentProfile := range p.AgentPoolProfiles {
-		if agentProfile.IsVirtualMachineScaleSets() {
-			return true
-		}
+// GetVMType returns the type of VM "vmss" or "standard" to be passed to the cloud provider
+func (p *Properties) GetVMType() string {
+	if p.HasVMSSAgentPool() {
+		return VMSSVMType
 	}
-	return false
+	return StandardVMType
 }
 
-// AnyAgentUsesAvailabilitySets checks whether any of the agents in the AgentPool use VMAS or not
-func (p *Properties) AnyAgentUsesAvailabilitySets() bool {
+// HasVMASAgentPool checks whether any of the agents in the AgentPool use VMAS or not
+func (p *Properties) HasVMASAgentPool() bool {
 	for _, agentProfile := range p.AgentPoolProfiles {
 		if agentProfile.IsAvailabilitySets() {
 			return true
@@ -1050,15 +1048,18 @@ func (p *Properties) GetVirtualNetworkName() string {
 // GetSubnetName returns the subnet name of the cluster based on its current configuration.
 func (p *Properties) GetSubnetName() string {
 	var subnetName string
-	if p.IsHostedMasterProfile() {
-		if p.AreAgentProfilesCustomVNET() {
-			subnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
+
+	if !p.IsHostedMasterProfile() {
+		if p.MasterProfile.IsCustomVNET() {
+			subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
+		} else if p.MasterProfile.IsVirtualMachineScaleSets() {
+			subnetName = "subnetmaster"
 		} else {
 			subnetName = p.K8sOrchestratorName() + "-subnet"
 		}
 	} else {
-		if p.MasterProfile.IsCustomVNET() {
-			subnetName = strings.Split(p.MasterProfile.VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
+		if p.AreAgentProfilesCustomVNET() {
+			subnetName = strings.Split(p.AgentPoolProfiles[0].VnetSubnetID, "/")[DefaultSubnetNameResourceSegmentIndex]
 		} else {
 			subnetName = p.K8sOrchestratorName() + "-subnet"
 		}

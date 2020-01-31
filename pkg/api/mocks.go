@@ -84,6 +84,8 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		NetworkPolicy:           DefaultNetworkPolicy,
 		EtcdVersion:             DefaultEtcdVersion,
 		MobyVersion:             DefaultMobyVersion,
+		ContainerdVersion:       DefaultContainerdVersion,
+		LoadBalancerSku:         DefaultLoadBalancerSku,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
 	}
@@ -231,4 +233,28 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 		p.CustomCloudProfile.AuthenticationMethod = ClientSecretAuthMethod
 	}
 	return p
+}
+
+func getMockAddon(name string) KubernetesAddon {
+	return KubernetesAddon{
+		Name: name,
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           name,
+				CPURequests:    "50m",
+				MemoryRequests: "150Mi",
+				CPULimits:      "50m",
+				MemoryLimits:   "150Mi",
+			},
+		},
+		Pools: []AddonNodePoolsConfig{
+			{
+				Name: "pool1",
+				Config: map[string]string{
+					"min-nodes": "3",
+					"max-nodes": "3",
+				},
+			},
+		},
+	}
 }
