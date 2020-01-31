@@ -127,7 +127,7 @@ installContainerRuntime() {
 }
 
 installMoby() {
-    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3)
+    CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
     if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
         echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
     else
