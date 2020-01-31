@@ -87,7 +87,7 @@
             },
             "etcdDownloadURLBase": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/github-coreos"
+                "value": "mcr.microsoft.com/oss/etcd-io/"
             },
             "etcdEncryptionKey": {
                 "type": "String",
