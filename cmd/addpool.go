@@ -44,7 +44,6 @@ type addPoolCmd struct {
 	client           armhelpers.AKSEngineClient
 	locale           *gotext.Locale
 	nameSuffix       string
-	nodePoolIndex    int
 	logger           *log.Entry
 	apiserverURL     string
 	kubeconfig       string
@@ -305,7 +304,8 @@ func (apc *addPoolCmd) saveAPIModel() error {
 	if err != nil {
 		return err
 	}
-	apc.containerService.Properties.AgentPoolProfiles[apc.nodePoolIndex].Count = apc.nodePool.Count
+
+	apc.containerService.Properties.AgentPoolProfiles = append(apc.containerService.Properties.AgentPoolProfiles, apc.nodePool)
 
 	b, err := apiloader.SerializeContainerService(apc.containerService, apiVersion)
 
