@@ -240,8 +240,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				node.DescribeNodes()
 				for _, node := range nodes {
+					err := node.Describe()
+					if err != nil {
+						log.Printf("Unable to describe node %s: %s", node.Metadata.Name, err)
+					}
 					Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Version()))
 				}
 			} else {

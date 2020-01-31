@@ -136,13 +136,19 @@ func GetByRegexAsync(regex string) GetNodesResult {
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
 	if n.Spec.Unschedulable {
+		log.Printf("Unready node\n")
+		log.Printf("%#v\n", n)
 		return false
 	}
 	for _, condition := range n.Status.Conditions {
 		if condition.Type == "Ready" && condition.Status == "True" {
+			log.Printf("Ready node\n")
+			log.Printf("%#v\n", n)
 			return true
 		}
 	}
+	log.Printf("Unready node\n")
+	log.Printf("%#v\n", n)
 	return false
 }
 
@@ -501,6 +507,8 @@ func GetReady() (*List, error) {
 	for _, node := range l.Nodes {
 		if node.IsReady() {
 			nl.Nodes = append(nl.Nodes, node)
+		} else {
+			log.Printf("found an unready node!")
 		}
 	}
 	return nl, nil
