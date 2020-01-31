@@ -1692,7 +1692,7 @@
                 "value": "512"
             },
             "etcdDownloadURLBase": {
-                "value": "https://acs-mirror.azureedge.net/github-coreos"
+                "value": "mcr.microsoft.com/oss/etcd-io/"
             },
             "etcdEncryptionKey": {
                 "value": ""
