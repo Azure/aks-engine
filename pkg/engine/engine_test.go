@@ -2419,10 +2419,10 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedNodesConfig {
 				t.Errorf("expected funcMap invocation of GetClusterAutoscalerNodesConfig to return %s, instead got %s", c.expectedNodesConfig, ret[0].Interface())
 			}
-			v = reflect.ValueOf(funcMap["GetVMType"])
+			v = reflect.ValueOf(funcMap["GetBase64EncodedVMType"])
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedVMType {
-				t.Errorf("expected funcMap invocation of GetVMType to return %s, instead got %s", c.expectedVMType, ret[0].Interface())
+				t.Errorf("expected funcMap invocation of GetBase64EncodedVMType to return %s, instead got %s", c.expectedVMType, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["GetVolumeMounts"])
 			ret = v.Call(make([]reflect.Value, 0))
