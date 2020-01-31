@@ -240,8 +240,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       --auth-method client_secret \
       --client-id ${AZURE_CLIENT_ID} \
       --client-secret ${AZURE_CLIENT_SECRET} || exit 1
-    # wait a few mins for added/deleted vms to sync with the k8s api node registration state
-    sleep 5m
+
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \

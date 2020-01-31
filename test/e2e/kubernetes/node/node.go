@@ -106,6 +106,20 @@ func GetNodesAsync() GetNodesResult {
 	}
 }
 
+// GetReadyNodesAsync wraps Get with a struct response for goroutine + channel usage
+func GetReadyNodesAsync() GetNodesResult {
+	list, err := GetReady()
+	if list == nil {
+		list = &List{
+			Nodes: []Node{},
+		}
+	}
+	return GetNodesResult{
+		Nodes: list.Nodes,
+		Err:   err,
+	}
+}
+
 // GetByRegexAsync wraps GetByRegex with a struct response for goroutine + channel usage
 func GetByRegexAsync(regex string) GetNodesResult {
 	nodes, err := GetByRegex(regex)
@@ -367,6 +381,40 @@ func Get() (*List, error) {
 		log.Printf("Error unmarshalling nodes json:%s", err)
 	}
 	return &nl, nil
+}
+
+// GetReadyWithRetry gets nodes, allowing for retries
+func GetReadyWithRetry(sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentGetReadyWithRetryError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetReadyNodesAsync()
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetReadyWithRetryError = result.Err
+			nodes = result.Nodes
+			if mostRecentGetReadyWithRetryError == nil {
+				if len(nodes) > 0 {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetReadyWithRetry timed out: %s\n", mostRecentGetReadyWithRetryError)
+		}
+	}
 }
 
 // GetWithRetry gets nodes, allowing for retries
