@@ -135,8 +135,11 @@ func GetByRegexAsync(regex string) GetNodesResult {
 
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
+	if n.Spec.Unschedulable {
+		return false
+	}
 	for _, condition := range n.Status.Conditions {
-		if condition.Type == "Ready" && condition.Status == "True" && !n.Spec.Unschedulable {
+		if condition.Type == "Ready" && condition.Status == "True" {
 			return true
 		}
 	}
