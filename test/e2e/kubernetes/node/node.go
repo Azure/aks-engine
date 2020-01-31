@@ -39,7 +39,8 @@ type Metadata struct {
 
 // Spec contains things like taints
 type Spec struct {
-	Taints []Taint `json:"taints"`
+	Taints        []Taint `json:"taints"`
+	Unschedulable bool    `json:"unschedulable"`
 }
 
 // Taint defines a Node Taint
@@ -135,7 +136,7 @@ func GetByRegexAsync(regex string) GetNodesResult {
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
 	for _, condition := range n.Status.Conditions {
-		if condition.Type == "Ready" && condition.Status == "True" {
+		if condition.Type == "Ready" && condition.Status == "True" && !n.Spec.Unschedulable {
 			return true
 		}
 	}
