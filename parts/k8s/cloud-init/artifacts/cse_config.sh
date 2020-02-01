@@ -23,9 +23,16 @@ systemctlEnableAndStart() {
     fi
 }
 
+configureAdminUser(){
+    chage -E -1 -I -1 -m 0 -M 99999 "${ADMINUSER}"
+    chage -l "${ADMINUSER}"
+}
+
 configureEtcdUser(){
-    useradd -U "etcd"
-    id "etcd"
+    useradd -U etcd
+    chage -E -1 -I -1 -m 0 -M 99999 etcd
+    chage -l etcd
+    id etcd
 }
 
 configureSecrets(){
