@@ -65,8 +65,8 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
-		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
+		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
