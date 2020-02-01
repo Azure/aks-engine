@@ -58,13 +58,14 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterProfile := cs.Properties.MasterProfile
 	profiles := cs.Properties.AgentPoolProfiles
 
-	var useManagedIdentity, userAssignedID, userAssignedClientID bool
+	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
@@ -485,7 +486,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["windowsCustomScriptSuffix"] = " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; Copy-Item $inputFile $outputFile ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; "
 	}
 
-	if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms) {
+	if enableEncryptionWithExternalKms {
 		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
 	} else {
 		masterVars["clusterKeyVaultName"] = ""
