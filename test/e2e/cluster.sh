@@ -172,7 +172,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo "${API_MODEL_INPUT}" | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -284,7 +284,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
