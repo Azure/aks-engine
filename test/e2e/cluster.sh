@@ -232,7 +232,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e REGION=$REGION \
       -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
-      /bin/bash -c "chmod -R 766 _output/" || exit 1
+      /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
