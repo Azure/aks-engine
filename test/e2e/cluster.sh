@@ -97,16 +97,14 @@ docker run --rm \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  # shellcheck disable=SC2012
+  RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    -e REGION=$REGION \
-    -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
     ${DEV_IMAGE} \
     /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
-  # shellcheck disable=SC2012
-  RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
@@ -229,7 +227,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
-      -e REGION=$REGION \
       -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
       /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
@@ -237,8 +234,6 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
-      -e REGION=$REGION \
-      -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
       /bin/bash -c "mv _output/$RESOURCE_GROUP/apimodel-upgrade.json _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
