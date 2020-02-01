@@ -223,6 +223,22 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
       /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e REGION=$REGION \
+      -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
+      ${DEV_IMAGE} \
+      /bin/bash -c "chmod -R 766 _output/" || exit 1
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e REGION=$REGION \
+      -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
+      ${DEV_IMAGE} \
+      /bin/bash -c "mv _output/$RESOURCE_GROUP/apimodel-upgrade.json _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -232,7 +248,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --api-model _output/$RESOURCE_GROUP/apimodel-upgrade.json \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
