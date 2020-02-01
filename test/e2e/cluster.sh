@@ -116,6 +116,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
   git pull
+  git log -1
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
