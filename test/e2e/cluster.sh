@@ -7,6 +7,7 @@ TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
+mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -97,6 +98,12 @@ docker run --rm \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    ${DEV_IMAGE} \
+    /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP" || exit 1
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   # shellcheck disable=SC2012
@@ -225,12 +232,6 @@ fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   # modify the master VM SKU to simulate vertical vm scaling via upgrade
-  docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -w ${WORK_DIR} \
-    -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    ${DEV_IMAGE} \
-    /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
