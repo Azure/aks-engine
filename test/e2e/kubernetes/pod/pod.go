@@ -340,7 +340,7 @@ func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool,
 			case <-ctx.Done():
 				return
 			default:
-				ch <- RunLinuxAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
+				ch <- RunLinuxAsyncDeleteIfExists(image, name, namespace, command, printOutput, sleep, timeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -385,7 +385,7 @@ func RunWindowsWithRetry(image, name, namespace, command string, printOutput boo
 			case <-ctx.Done():
 				return
 			default:
-				ch <- RunWindowsAsync(image, name, namespace, command, printOutput, sleep, timeout, timeout)
+				ch <- RunWindowsAsyncDeleteIfExists(image, name, namespace, command, printOutput, sleep, timeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
@@ -441,11 +441,55 @@ func RunLinuxAsync(image, name, namespace, command string, printOutput bool, sle
 	}
 }
 
+// RunLinuxAsyncDeleteIfExists wraps RunLinuxPod with a struct response for goroutine + channel usage
+// If a pod with the name already exists, we delete it first and create a new one
+func RunLinuxAsyncDeleteIfExists(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+	p, err := Get(name, namespace, 3)
+	if err == nil {
+		log.Printf("pod %s in namespace %s already exists, will delete\n", name, namespace)
+		err := p.Delete(3)
+		if err != nil {
+			log.Printf("unable to delete pod %s in namespace %s\n", name, namespace)
+			return GetResult{
+				pod: p,
+				err: err,
+			}
+		}
+	}
+	p, err = RunLinuxPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
+	return GetResult{
+		pod: p,
+		err: err,
+	}
+}
+
 // RunWindowsAsync wraps RunWindowsPod with a struct response for goroutine + channel usage
 func RunWindowsAsync(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
 	pod, err := RunWindowsPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
 	return GetResult{
 		pod: pod,
+		err: err,
+	}
+}
+
+// RunWindowsAsyncDeleteIfExists wraps RunWindowsPod with a struct response for goroutine + channel usage
+// If a pod with the name already exists, we delete it first and create a new one
+func RunWindowsAsyncDeleteIfExists(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) GetResult {
+	p, err := Get(name, namespace, 3)
+	if err == nil {
+		log.Printf("pod %s in namespace %s already exists, will delete\n", name, namespace)
+		err := p.Delete(3)
+		if err != nil {
+			log.Printf("unable to delete pod %s in namespace %s\n", name, namespace)
+			return GetResult{
+				pod: p,
+				err: err,
+			}
+		}
+	}
+	p, err = RunWindowsPod(image, name, namespace, command, printOutput, sleep, commandTimeout, podGetTimeout)
+	return GetResult{
+		pod: p,
 		err: err,
 	}
 }
