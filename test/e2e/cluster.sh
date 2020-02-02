@@ -7,6 +7,7 @@ TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
+mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -99,6 +100,12 @@ docker run --rm \
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    ${DEV_IMAGE} \
+    /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
@@ -111,11 +118,13 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
     done
   fi
   git reset --hard
+  git remote rm $UPGRADE_FORK
   git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
-  git fetch $UPGRADE_FORK
+  git fetch --prune $UPGRADE_FORK
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
   git pull
+  git log -1
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
@@ -164,13 +173,13 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e SKIP_LOGS_COLLECTION=true \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
-    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo "${API_MODEL_INPUT}" | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -219,10 +228,15 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
-      -e REGION=$REGION \
       -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
       ${DEV_IMAGE} \
       /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      ${DEV_IMAGE} \
+      /bin/bash -c "mv _output/$RESOURCE_GROUP/apimodel-upgrade.json _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -232,7 +246,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
-      --api-model _output/$RESOURCE_GROUP/apimodel-upgrade.json \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
       --upgrade-version $ver_target \
@@ -266,7 +280,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
@@ -304,7 +318,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
-    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi

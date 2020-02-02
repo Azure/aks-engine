@@ -39,7 +39,8 @@ type Metadata struct {
 
 // Spec contains things like taints
 type Spec struct {
-	Taints []Taint `json:"taints"`
+	Taints        []Taint `json:"taints"`
+	Unschedulable bool    `json:"unschedulable"`
 }
 
 // Taint defines a Node Taint
@@ -106,6 +107,20 @@ func GetNodesAsync() GetNodesResult {
 	}
 }
 
+// GetReadyNodesAsync wraps Get with a struct response for goroutine + channel usage
+func GetReadyNodesAsync() GetNodesResult {
+	list, err := GetReady()
+	if list == nil {
+		list = &List{
+			Nodes: []Node{},
+		}
+	}
+	return GetNodesResult{
+		Nodes: list.Nodes,
+		Err:   err,
+	}
+}
+
 // GetByRegexAsync wraps GetByRegex with a struct response for goroutine + channel usage
 func GetByRegexAsync(regex string) GetNodesResult {
 	nodes, err := GetByRegex(regex)
@@ -120,6 +135,9 @@ func GetByRegexAsync(regex string) GetNodesResult {
 
 // IsReady returns if the node is in a Ready state
 func (n *Node) IsReady() bool {
+	if n.Spec.Unschedulable {
+		return false
+	}
 	for _, condition := range n.Status.Conditions {
 		if condition.Type == "Ready" && condition.Status == "True" {
 			return true
@@ -369,6 +387,40 @@ func Get() (*List, error) {
 	return &nl, nil
 }
 
+// GetReadyWithRetry gets nodes, allowing for retries
+func GetReadyWithRetry(sleep, timeout time.Duration) ([]Node, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetNodesResult)
+	var mostRecentGetReadyWithRetryError error
+	var nodes []Node
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetReadyNodesAsync()
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetReadyWithRetryError = result.Err
+			nodes = result.Nodes
+			if mostRecentGetReadyWithRetryError == nil {
+				if len(nodes) > 0 {
+					return nodes, nil
+				}
+			}
+		case <-ctx.Done():
+			return nil, errors.Errorf("GetReadyWithRetry timed out: %s\n", mostRecentGetReadyWithRetryError)
+		}
+	}
+}
+
 // GetWithRetry gets nodes, allowing for retries
 func GetWithRetry(sleep, timeout time.Duration) ([]Node, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -449,6 +501,8 @@ func GetReady() (*List, error) {
 	for _, node := range l.Nodes {
 		if node.IsReady() {
 			nl.Nodes = append(nl.Nodes, node)
+		} else {
+			log.Printf("found an unready node!")
 		}
 	}
 	return nl, nil
