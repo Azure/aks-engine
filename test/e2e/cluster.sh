@@ -176,8 +176,8 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    -e HOST_USER=${USER} \
-    -e HOST_GROUP=${USER} \
+    -e HOST_USER=$(id -u ${USER}) \
+    -e HOST_GROUP=:$(id -g ${USER}) \
     ${DEV_IMAGE} \
     /bin/bash -c "chown $HOST_USER:$HOST_USER _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
