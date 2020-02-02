@@ -103,7 +103,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     ${DEV_IMAGE} \
-    /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP" || exit 1
+    /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP" || exit 1
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   # shellcheck disable=SC2012
@@ -184,7 +184,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     ${DEV_IMAGE} \
-    /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
+    /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -291,7 +291,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     ${DEV_IMAGE} \
-    /bin/bash -c "chmod -R 766 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
+    /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
