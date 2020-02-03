@@ -1,5 +1,8 @@
 {
-	"env": {},
+	"env": {
+		"SCALE_CLUSTER": true,
+		"UPGRADE_CLUSTER": true
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
