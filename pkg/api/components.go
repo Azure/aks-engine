@@ -121,9 +121,9 @@ func getComponentsIndexByName(components []KubernetesComponent, name string) int
 }
 
 // assignDefaultComponentVals will assign default values to component from defaults, for each property in component that has a zero value
-func assignDefaultComponentVals(component, defaults KubernetesComponent, isUpgrade bool) KubernetesComponent {
+func assignDefaultComponentVals(component, defaultComponent KubernetesComponent, isUpgrade bool) KubernetesComponent {
 	if component.Enabled == nil {
-		component.Enabled = defaults.Enabled
+		component.Enabled = defaultComponent.Enabled
 	}
 	if !to.Bool(component.Enabled) {
 		return KubernetesComponent{
@@ -138,29 +138,29 @@ func assignDefaultComponentVals(component, defaults KubernetesComponent, isUpgra
 			Data:    component.Data,
 		}
 	}
-	for i := range defaults.Containers {
-		c := component.GetContainersIndexByName(defaults.Containers[i].Name)
+	for i := range defaultComponent.Containers {
+		c := component.GetContainersIndexByName(defaultComponent.Containers[i].Name)
 		if c < 0 {
-			component.Containers = append(component.Containers, defaults.Containers[i])
+			component.Containers = append(component.Containers, defaultComponent.Containers[i])
 		} else {
 			if component.Containers[c].Image == "" || isUpgrade {
-				component.Containers[c].Image = defaults.Containers[i].Image
+				component.Containers[c].Image = defaultComponent.Containers[i].Image
 			}
 			if component.Containers[c].CPURequests == "" {
-				component.Containers[c].CPURequests = defaults.Containers[i].CPURequests
+				component.Containers[c].CPURequests = defaultComponent.Containers[i].CPURequests
 			}
 			if component.Containers[c].MemoryRequests == "" {
-				component.Containers[c].MemoryRequests = defaults.Containers[i].MemoryRequests
+				component.Containers[c].MemoryRequests = defaultComponent.Containers[i].MemoryRequests
 			}
 			if component.Containers[c].CPULimits == "" {
-				component.Containers[c].CPULimits = defaults.Containers[i].CPULimits
+				component.Containers[c].CPULimits = defaultComponent.Containers[i].CPULimits
 			}
 			if component.Containers[c].MemoryLimits == "" {
-				component.Containers[c].MemoryLimits = defaults.Containers[i].MemoryLimits
+				component.Containers[c].MemoryLimits = defaultComponent.Containers[i].MemoryLimits
 			}
 		}
 	}
-	for key, val := range defaults.Config {
+	for key, val := range defaultComponent.Config {
 		if component.Config == nil {
 			component.Config = make(map[string]string)
 		}
@@ -171,10 +171,10 @@ func assignDefaultComponentVals(component, defaults KubernetesComponent, isUpgra
 	return component
 }
 
-func synthesizeComponentsConfig(components []KubernetesComponent, component KubernetesComponent, isUpgrade bool) {
-	i := getComponentsIndexByName(components, component.Name)
+func synthesizeComponentsConfig(components []KubernetesComponent, defaultComponent KubernetesComponent, isUpgrade bool) {
+	i := getComponentsIndexByName(components, defaultComponent.Name)
 	if i >= 0 {
-		components[i] = assignDefaultComponentVals(components[i], component, isUpgrade)
+		components[i] = assignDefaultComponentVals(components[i], defaultComponent, isUpgrade)
 	}
 }
 

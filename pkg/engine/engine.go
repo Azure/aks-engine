@@ -688,32 +688,6 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
-		"GetComponentImageReference": func(name string) string {
-			k := cs.Properties.OrchestratorProfile.KubernetesConfig
-			switch name {
-			case "kube-apiserver":
-				if k.CustomKubeAPIServerImage != "" {
-					return k.CustomKubeAPIServerImage
-				}
-			case "kube-controller-manager":
-				if k.CustomKubeControllerManagerImage != "" {
-					return k.CustomKubeControllerManagerImage
-				}
-			case "kube-scheduler":
-				if k.CustomKubeSchedulerImage != "" {
-					return k.CustomKubeSchedulerImage
-				}
-			}
-			kubernetesImageBase := k.KubernetesImageBase
-			if cs.Properties.IsAzureStackCloud() {
-				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-			}
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			return kubernetesImageBase + k8sComponents[name]
-		},
-		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
-			return common.GetOrderedEscapedKeyValsString(config)
-		},
 		"IsKubernetesVersionGe": func(version string) bool {
 			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
@@ -883,7 +857,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 
 	for _, componentName := range componentNames {
 		setting := settingsMap[componentName]
-		if cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(componentName) {
+		if component, isEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(componentName); isEnabled {
 			var input string
 			if setting.base64Data != "" {
 				var err error
@@ -894,12 +868,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 			} else {
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
-				component := orchProfile.KubernetesConfig.GetComponentByName(componentName)
-				var templ *template.Template
-				switch componentName {
-				default:
-					templ = template.New("component resolver template").Funcs(getComponentFuncMap(component, cs))
-				}
+				templ := template.New("component resolver template").Funcs(getComponentFuncMap(component, cs))
 				componentFile := getCustomDataFilePath(setting.sourceFile, sourcePath, versions[0]+"."+versions[1])
 				componentFileBytes, err := Asset(componentFile)
 				if err != nil {

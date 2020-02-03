@@ -699,29 +699,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
-		"GetComponentImageReference": func(name string) string {
-			k := cs.Properties.OrchestratorProfile.KubernetesConfig
-			switch name {
-			case "kube-apiserver":
-				if k.CustomKubeAPIServerImage != "" {
-					return k.CustomKubeAPIServerImage
-				}
-			case "kube-controller-manager":
-				if k.CustomKubeControllerManagerImage != "" {
-					return k.CustomKubeControllerManagerImage
-				}
-			case "kube-scheduler":
-				if k.CustomKubeSchedulerImage != "" {
-					return k.CustomKubeSchedulerImage
-				}
-			}
-			kubernetesImageBase := k.KubernetesImageBase
-			if cs.Properties.IsAzureStackCloud() {
-				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-			}
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			return kubernetesImageBase + k8sComponents[name]
-		},
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]

@@ -1895,16 +1895,9 @@ func (k *KubernetesConfig) GetComponentData(componentName string) string {
 
 // IsComponentEnabled checks whether a component with name "componentName" is enabled or not based on the Enabled field of KubernetesComponent.
 // If the value of Enabled is nil, the "defaultValue" is returned.
-func (k *KubernetesConfig) IsComponentEnabled(componentName string) bool {
+func (k *KubernetesConfig) IsComponentEnabled(componentName string) (KubernetesComponent, bool) {
 	component := k.GetComponentByName(componentName)
-	return component.IsEnabled()
-}
-
-// IsComponentDisabled checks whether a component with name "componentName" is explicitly disabled based on the Enabled field of KubernetesComponent.
-// If the value of Enabled is nil, we return false (not explicitly disabled)
-func (k *KubernetesConfig) IsComponentDisabled(componentName string) bool {
-	component := k.GetComponentByName(componentName)
-	return component.IsDisabled()
+	return component, component.IsEnabled()
 }
 
 // IsRBACEnabled checks if RBAC is enabled
