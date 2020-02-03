@@ -165,7 +165,7 @@ stage ("discover tests") {
 					echo("${jobName} is limted to '${jobCfg.options?.allowedOrchestratorVersions}'; running for ${version}")
 				}
 
-				if(params.UPGRADE_CLUSTER) {
+				if(params.UPGRADE_CLUSTER || jobCfg.env["UPGRADE_CLUSTER"])  {
 					// we are upgrading, so we need to determine the next logical version to upgrade
 					tasks = tasks + tasksForUpgradeJob(jobCfg, aksEngineAllVersions, jobName, version)
 				} else {
