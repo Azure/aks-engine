@@ -13,7 +13,7 @@ items:
     - port: 80
       targetPort: 8080
     type: ClusterIP
-- apiVersion: apps/v1beta2
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: deck
