@@ -688,20 +688,34 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
-		"GetHyperkubeImageReference": func() string {
-			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+		"GetComponentImageReference": func(name string) string {
+			k := cs.Properties.OrchestratorProfile.KubernetesConfig
+			switch name {
+			case "kube-apiserver":
+				if k.CustomKubeAPIServerImage != "" {
+					return k.CustomKubeAPIServerImage
+				}
+			case "kube-controller-manager":
+				if k.CustomKubeControllerManagerImage != "" {
+					return k.CustomKubeControllerManagerImage
+				}
+			case "kube-scheduler":
+				if k.CustomKubeSchedulerImage != "" {
+					return k.CustomKubeSchedulerImage
+				}
+			}
+			kubernetesImageBase := k.KubernetesImageBase
 			if cs.Properties.IsAzureStackCloud() {
-				hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
+				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
 			}
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
-				hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
-			}
-			return hyperkubeImage
+			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+			return kubernetesImageBase + k8sComponents[name]
 		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
+		},
+		"IsKubernetesVersionGe": func(version string) bool {
+			return cs.Properties.OrchestratorProfile.IsKubernetes() && common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 	}
 	if component.Name == common.APIServerComponentName {
@@ -717,6 +731,11 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 	if component.Name == common.SchedulerComponentName {
 		ret["GetSchedulerArgs"] = func() string {
 			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig)
+		}
+	}
+	if component.Name == common.CloudControllerManagerComponentName {
+		ret["GetCloudControllerManagerArgs"] = func() string {
+			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig)
 		}
 	}
 	return ret

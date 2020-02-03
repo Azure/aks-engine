@@ -734,22 +734,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return hyperkubeImage
 		},
-		"GetCCMImageReference": func() string {
-			kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			if cs.Properties.IsAzureStackCloud() {
-				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-			}
-			controllerManagerBase := kubernetesImageBase
-			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-				controllerManagerBase = cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase
-			}
-			ccmImage := controllerManagerBase + k8sComponents["ccm"]
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage != "" {
-				ccmImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage
-			}
-			return ccmImage
-		},
 		"GetTargetEnvironment": func() string {
 			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 		},

@@ -14,28 +14,47 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	hyperkubeImageBase := specConfig.KubernetesImageBase
-	hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
-	if cs.Properties.IsAzureStackCloud() {
-		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
-	}
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
-		hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
-	}
 
 	defaultSchedulerComponentConfig := KubernetesComponent{
 		Name:    common.SchedulerComponentName,
 		Enabled: to.BoolPtr(true),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.SchedulerComponentName,
+				Image: getContainerImage(common.SchedulerComponentName, cs),
+			},
+		},
+		Config: map[string]string{
+			"command": getSchedulerDefaultCommandString(cs),
+		},
 	}
 
 	defaultControllerManagerComponentConfig := KubernetesComponent{
 		Name:    common.ControllerManagerComponentName,
 		Enabled: to.BoolPtr(true),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.ControllerManagerComponentName,
+				Image: getContainerImage(common.ControllerManagerComponentName, cs),
+			},
+		},
+		Config: map[string]string{
+			"command": getControllerManagerDefaultCommandString(cs),
+		},
 	}
 
 	defaultCloudControllerManagerComponentConfig := KubernetesComponent{
 		Name:    common.CloudControllerManagerComponentName,
 		Enabled: to.BoolPtr(to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.CloudControllerManagerComponentName,
+				Image: getContainerImage(common.CloudControllerManagerComponentName, cs),
+			},
+		},
+		Config: map[string]string{
+			"command": "\"cloud-controller-manager\"",
+		},
 	}
 
 	defaultAPIServerComponentConfig := KubernetesComponent{
@@ -44,11 +63,11 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.APIServerComponentName,
-				Image: hyperkubeImage,
+				Image: getContainerImage(common.APIServerComponentName, cs),
 			},
 		},
 		Config: map[string]string{
-			"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+			"command": getAPIServerDefaultCommandString(cs),
 		},
 	}
 
@@ -156,5 +175,81 @@ func synthesizeComponentsConfig(components []KubernetesComponent, component Kube
 	i := getComponentsIndexByName(components, component.Name)
 	if i >= 0 {
 		components[i] = assignDefaultComponentVals(components[i], component, isUpgrade)
+	}
+}
+
+func getAPIServerDefaultCommandString(cs *ContainerService) string {
+	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+		return fmt.Sprintf("\"kube-apiserver\"")
+	} else {
+		return fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\"")
+	}
+}
+
+func getControllerManagerDefaultCommandString(cs *ContainerService) string {
+	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+		return fmt.Sprintf("\"kube-controller-manager\"")
+	} else {
+		return fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\"")
+	}
+}
+
+func getSchedulerDefaultCommandString(cs *ContainerService) string {
+	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+		return fmt.Sprintf("\"kube-scheduler\"")
+	} else {
+		return fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\"")
+	}
+}
+
+func getContainerImage(component string, cs *ContainerService) string {
+	o := cs.Properties.OrchestratorProfile
+	cloudSpecConfig := cs.GetCloudSpecConfig()
+	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
+	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	hyperkubeImageBase := specConfig.KubernetesImageBase
+	hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+	kubernetesImageBase := o.KubernetesConfig.KubernetesImageBase
+	if cs.Properties.IsAzureStackCloud() {
+		kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
+	}
+	if cs.Properties.IsAzureStackCloud() {
+		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
+	}
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
+		hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+	}
+	controllerManagerBase := kubernetesImageBase
+	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+		controllerManagerBase = cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase
+	}
+	ccmImage := controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage != "" {
+		ccmImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage
+	}
+
+	switch component {
+	case common.APIServerComponentName:
+		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+			return kubernetesImageBase + k8sComponents[common.APIServerComponentName]
+		} else {
+			return hyperkubeImage
+		}
+	case common.ControllerManagerComponentName:
+		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+			return kubernetesImageBase + k8sComponents[common.ControllerManagerComponentName]
+		} else {
+			return hyperkubeImage
+		}
+	case common.CloudControllerManagerComponentName:
+		return ccmImage
+	case common.SchedulerComponentName:
+		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName]
+		} else {
+			return hyperkubeImage
+		}
+	default:
+		return ""
 	}
 }

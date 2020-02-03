@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/telemetry"
 
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -166,7 +167,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedHasCustomNodesDNS             bool
 		expectedGetComponentImageReference    map[string]string
 		expectedGetHyperkubeImageReference    string
-		expectedGetCCMImageReference          string
 		expectedGetTargetEnvironment          string
 		expectedIsNSeriesSKU                  bool
 		expectedIsKataContainerRuntime        bool
@@ -200,13 +200,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -237,13 +236,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.16.1",
-			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.1",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -274,13 +272,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "kube-apiserver:v1.17.0-beta.1",
-				"kube-controller-manager": "kube-controller-manager:v1.17.0-beta.1",
-				"kube-scheduler":          "kube-scheduler:v1.17.0-beta.1",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "kube-apiserver:v1.17.0-beta.1",
+				"kube-controller-manager":        "kube-controller-manager:v1.17.0-beta.1",
+				"kube-scheduler":                 "kube-scheduler:v1.17.0-beta.1",
 			},
 			expectedGetHyperkubeImageReference: "",
-			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.1",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -318,13 +315,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "baz",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -360,13 +356,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            true,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -393,13 +388,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "example.azurecr.io/kube-apiserver-amd64:tag",
-				"kube-controller-manager": "example.azurecr.io/kube-controller-manager-amd64:tag",
-				"kube-scheduler":          "example.azurecr.io/kube-scheduler-amd64:tag",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "example.azurecr.io/kube-apiserver-amd64:tag",
+				"kube-controller-manager":        "example.azurecr.io/kube-controller-manager-amd64:tag",
+				"kube-scheduler":                 "example.azurecr.io/kube-scheduler-amd64:tag",
 			},
 			expectedGetHyperkubeImageReference: "",
-			expectedGetCCMImageReference:       "oss/kubernetes/azure-cloud-controller-manager:v0.4.1",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -431,13 +425,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzureChinaCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -469,13 +462,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzureGermanCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -507,7 +499,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:         "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:         "AzureUSGovernmentCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
@@ -546,7 +537,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				common.AddonManagerComponentName: "azurestack/kube-addon-manager-amd64:v9.0.2",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4-azs",
-			expectedGetCCMImageReference:       "azurestack/cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzureStackCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsDockerContainerRuntime:   true,
@@ -578,13 +568,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               true,
 			expectedIsDockerContainerRuntime:   true,
@@ -615,13 +604,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference: "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:       "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:       "AzurePublicCloud",
 			expectedIsNSeriesSKU:               false,
 			expectedIsKataContainerRuntime:     true,
@@ -653,13 +641,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSearchDomainRealmPassword: "",
 			expectedHasCustomNodesDNS:            false,
 			expectedGetComponentImageReference: map[string]string{
-				common.AddonManagerComponentName:            "kube-addon-manager-amd64:v9.0.2",
-				"kube-apiserver":          "",
-				"kube-controller-manager": "",
-				"kube-scheduler":          "",
+				common.AddonManagerComponentName: "kube-addon-manager-amd64:v9.0.2",
+				"kube-apiserver":                 "",
+				"kube-controller-manager":        "",
+				"kube-scheduler":                 "",
 			},
 			expectedGetHyperkubeImageReference:    "hyperkube-amd64:v1.15.4",
-			expectedGetCCMImageReference:          "cloud-controller-manager-amd64:v1.15.4",
 			expectedGetTargetEnvironment:          "AzurePublicCloud",
 			expectedIsNSeriesSKU:                  false,
 			expectedIsDockerContainerRuntime:      true,
@@ -699,11 +686,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetHyperkubeImageReference {
 				t.Errorf("expected funcMap invocation of GetHyperkubeImageReference to return %s, instead got %s", c.expectedGetHyperkubeImageReference, ret[0].Interface())
-			}
-			v = reflect.ValueOf(funcMap["GetCCMImageReference"])
-			ret = v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != c.expectedGetCCMImageReference {
-				t.Errorf("expected funcMap invocation of GetCCMImageReference to return %s, instead got %s", c.expectedGetCCMImageReference, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["HasCustomNodesDNS"])
 			ret = v.Call(make([]reflect.Value, 0))

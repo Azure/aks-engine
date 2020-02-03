@@ -24,7 +24,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"kube-controller-manager":                         "kube-controller-manager:v1.18.0",
 		"kube-apiserver":                                  "kube-apiserver:v1.18.0",
 		common.KubeProxyAddonName:                         "kube-proxy:v1.18.0",
-		"ccm":                                             azureCloudControllerManagerImageReference,
+		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		"windowszip":                                      "v1.18.0/windowszip/v1.18.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
@@ -109,7 +109,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"kube-controller-manager":                         "kube-controller-manager:v1.17.0",
 		"kube-apiserver":                                  "kube-apiserver:v1.17.0",
 		common.KubeProxyAddonName:                         "kube-proxy:v1.17.0",
-		"ccm":                                             azureCloudControllerManagerImageReference,
+		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		"windowszip":                                      "v1.17.0/windowszip/v1.17.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
@@ -119,7 +119,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -190,9 +190,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.16"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.16.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.16.0",
-		"ccm":                                             azureCloudControllerManagerImageReference,
+		"hyperkube":               "hyperkube-amd64:v1.16.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.16.0",
+		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		"windowszip":                                      "v1.16.0/windowszip/v1.16.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
@@ -202,7 +202,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -273,9 +273,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.15"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.15.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.15.0",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.15.0",
+		"hyperkube":               "hyperkube-amd64:v1.15.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.15.0",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.15.0",
 		"windowszip":                                      "v1.15.0/windowszip/v1.15.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -284,7 +284,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -355,9 +355,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.14"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.14.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.14.0",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.14.0",
+		"hyperkube":               "hyperkube-amd64:v1.14.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.14.0",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.14.0",
 		"windowszip":                                      "v1.14.0/windowszip/v1.14.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -366,7 +366,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -437,9 +437,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.13"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.13.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.13.0",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.13.0",
+		"hyperkube":               "hyperkube-amd64:v1.13.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.13.0",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.13.0",
 		"windowszip":                                      "v1.13.0/windowszip/v1.13.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -448,7 +448,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -519,9 +519,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.12"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.12.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.12.0",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.12.0",
+		"hyperkube":               "hyperkube-amd64:v1.12.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.12.0",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.12.0",
 		"windowszip":                                      "v1.12.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -530,7 +530,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -592,9 +592,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.11"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.11.0-alpha.1",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.11.0-alpha.1",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.11.0-alpha.1",
+		"hyperkube":               "hyperkube-amd64:v1.11.0-alpha.1",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.11.0-alpha.1",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.11.0-alpha.1",
 		"windowszip":                                      "v1.11.0-alpha.1-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -602,7 +602,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                                        heapsterImageReference,
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -664,9 +664,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.10"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.10.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.10.0",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.10.0",
+		"hyperkube":               "hyperkube-amd64:v1.10.0",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.10.0",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.10.0",
 		"windowszip":                                      "v1.10.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -674,7 +674,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                                        heapsterImageReference,
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -736,9 +736,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.9.3",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.9.3",
+		"hyperkube":               "hyperkube-amd64:v1.9.3",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.9.3",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                                      "v1.9.3-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -746,7 +746,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                                        heapsterImageReference,
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -807,9 +807,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.8"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.8.8",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.8.8",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.8.8",
+		"hyperkube":               "hyperkube-amd64:v1.8.8",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.8.8",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.8.8",
 		"windowszip":                                      "v1.8.8-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -817,7 +817,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                                        k8sComponent["heapster"],
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		"kube-dns":                                        k8sComponent["kube-dns"],
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         k8sComponent["dnsmasq"],
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
@@ -883,7 +883,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                             k8sComponent["heapster"],
 		common.MetricsServerAddonName:          k8sComponent["metrics-server"],
 		"kube-dns":                             k8sComponent["kube-dns"],
-		common.AddonManagerComponentName:                         k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:       k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                              k8sComponent["dnsmasq"],
 		"pause":                                pauseImageReference,
 		common.TillerAddonName:                 tillerImageReference,
@@ -914,9 +914,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":                                       "hyperkube-amd64:v1.9.3",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
-		"ccm":                                             "cloud-controller-manager-amd64:v1.9.3",
+		"hyperkube":               "hyperkube-amd64:v1.9.3",
+		common.KubeProxyAddonName: "hyperkube-amd64:v1.9.3",
+		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                                      "v1.9.3-2int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -924,7 +924,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"heapster":                                        heapsterImageReference,
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		"kube-dns":                                        kubeDNSImageReference,
-		common.AddonManagerComponentName:                                    k8sComponent[common.AddonManagerComponentName],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,

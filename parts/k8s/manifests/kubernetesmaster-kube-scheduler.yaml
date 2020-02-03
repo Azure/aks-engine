@@ -11,9 +11,9 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-scheduler"]
+      command: [{{ContainerConfig "command"}}]
       args: [{{GetSchedulerArgs}}]
       volumeMounts:
         - name: etc-kubernetes

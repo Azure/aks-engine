@@ -203,12 +203,6 @@
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
 // ../../parts/k8s/kuberneteswindowssetup.ps1
-// ../../parts/k8s/manifests/1.17/kubernetesmaster-kube-apiserver.yaml
-// ../../parts/k8s/manifests/1.17/kubernetesmaster-kube-controller-manager.yaml
-// ../../parts/k8s/manifests/1.17/kubernetesmaster-kube-scheduler.yaml
-// ../../parts/k8s/manifests/1.18/kubernetesmaster-kube-apiserver.yaml
-// ../../parts/k8s/manifests/1.18/kubernetesmaster-kube-controller-manager.yaml
-// ../../parts/k8s/manifests/1.18/kubernetesmaster-kube-scheduler.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-addon-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
@@ -39673,350 +39667,6 @@ func k8sKuberneteswindowssetupPs1() (*asset, error) {
 	return a, nil
 }
 
-var _k8sManifests117KubernetesmasterKubeApiserverYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-apiserver
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-apiserver
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-apiserver
-      image: {{GetComponentImageReference "kube-apiserver"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-apiserver"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-        - name: sock
-          mountPath: /opt
-        - name: auditlog
-          mountPath: /var/log/kubeaudit
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-    - name: sock
-      hostPath:
-        path: /opt
-    - name: auditlog
-      hostPath:
-        path: /var/log/kubeaudit
-`)
-
-func k8sManifests117KubernetesmasterKubeApiserverYamlBytes() ([]byte, error) {
-	return _k8sManifests117KubernetesmasterKubeApiserverYaml, nil
-}
-
-func k8sManifests117KubernetesmasterKubeApiserverYaml() (*asset, error) {
-	bytes, err := k8sManifests117KubernetesmasterKubeApiserverYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.17/kubernetesmaster-kube-apiserver.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifests117KubernetesmasterKubeControllerManagerYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-controller-manager
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-controller-manager
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-controller-manager
-      image: {{GetComponentImageReference "kube-controller-manager"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: etc-ssl
-          mountPath: /etc/ssl
-          readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: etc-ssl
-      hostPath:
-        path: /etc/ssl
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-`)
-
-func k8sManifests117KubernetesmasterKubeControllerManagerYamlBytes() ([]byte, error) {
-	return _k8sManifests117KubernetesmasterKubeControllerManagerYaml, nil
-}
-
-func k8sManifests117KubernetesmasterKubeControllerManagerYaml() (*asset, error) {
-	bytes, err := k8sManifests117KubernetesmasterKubeControllerManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.17/kubernetesmaster-kube-controller-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifests117KubernetesmasterKubeSchedulerYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-scheduler
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-scheduler
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-scheduler
-      image: {{GetComponentImageReference "kube-scheduler"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-scheduler"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-`)
-
-func k8sManifests117KubernetesmasterKubeSchedulerYamlBytes() ([]byte, error) {
-	return _k8sManifests117KubernetesmasterKubeSchedulerYaml, nil
-}
-
-func k8sManifests117KubernetesmasterKubeSchedulerYaml() (*asset, error) {
-	bytes, err := k8sManifests117KubernetesmasterKubeSchedulerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.17/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifests118KubernetesmasterKubeApiserverYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-apiserver
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-apiserver
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-apiserver
-      image: {{GetComponentImageReference "kube-apiserver"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-apiserver"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-        - name: sock
-          mountPath: /opt
-        - name: auditlog
-          mountPath: /var/log/kubeaudit
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-    - name: sock
-      hostPath:
-        path: /opt
-    - name: auditlog
-      hostPath:
-        path: /var/log/kubeaudit
-`)
-
-func k8sManifests118KubernetesmasterKubeApiserverYamlBytes() ([]byte, error) {
-	return _k8sManifests118KubernetesmasterKubeApiserverYaml, nil
-}
-
-func k8sManifests118KubernetesmasterKubeApiserverYaml() (*asset, error) {
-	bytes, err := k8sManifests118KubernetesmasterKubeApiserverYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.18/kubernetesmaster-kube-apiserver.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifests118KubernetesmasterKubeControllerManagerYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-controller-manager
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-controller-manager
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-controller-manager
-      image: {{GetComponentImageReference "kube-controller-manager"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: etc-ssl
-          mountPath: /etc/ssl
-          readOnly: true
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: etc-ssl
-      hostPath:
-        path: /etc/ssl
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-`)
-
-func k8sManifests118KubernetesmasterKubeControllerManagerYamlBytes() ([]byte, error) {
-	return _k8sManifests118KubernetesmasterKubeControllerManagerYaml, nil
-}
-
-func k8sManifests118KubernetesmasterKubeControllerManagerYaml() (*asset, error) {
-	bytes, err := k8sManifests118KubernetesmasterKubeControllerManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.18/kubernetesmaster-kube-controller-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sManifests118KubernetesmasterKubeSchedulerYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-scheduler
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-scheduler
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-scheduler
-      image: {{GetComponentImageReference "kube-scheduler"}}
-      imagePullPolicy: IfNotPresent
-      command: ["kube-scheduler"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-`)
-
-func k8sManifests118KubernetesmasterKubeSchedulerYamlBytes() ([]byte, error) {
-	return _k8sManifests118KubernetesmasterKubeSchedulerYaml, nil
-}
-
-func k8sManifests118KubernetesmasterKubeSchedulerYaml() (*asset, error) {
-	bytes, err := k8sManifests118KubernetesmasterKubeSchedulerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/1.18/kubernetesmaster-kube-scheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sManifestsKubernetesmasterCloudControllerManagerYaml = []byte(`apiVersion: v1
 kind: Pod
 metadata:
@@ -40030,10 +39680,10 @@ spec:
   hostNetwork: true
   containers:
     - name: cloud-controller-manager
-      image: {{GetCCMImageReference}}
+      image: {{ContainerImage "cloud-controller-manager"}}
       imagePullPolicy: IfNotPresent
-      command: ["cloud-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.CloudControllerManagerConfig}}]
+      command: [{{ContainerConfig "command"}}]
+      args: [{{GetCloudControllerManagerArgs}}]
       resources:
         requests:
           cpu: 100m
@@ -40205,9 +39855,9 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-controller-manager"]
+      command: [{{ContainerConfig "command"}}]
       args: [{{GetControllerManagerArgs}}]
 {{- if IsAzureStackCloud}}
       env:
@@ -40217,6 +39867,11 @@ spec:
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+{{- if IsKubernetesVersionGe "1.17.0"}}
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
+{{end}}
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
@@ -40229,6 +39884,11 @@ spec:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
+{{- if IsKubernetesVersionGe "1.17.0"}}
+    - name: etc-ssl
+      hostPath:
+        path: /etc/ssl
+{{end}}
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet
@@ -40268,9 +39928,9 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-scheduler
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-scheduler"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-scheduler"]
+      command: [{{ContainerConfig "command"}}]
       args: [{{GetSchedulerArgs}}]
       volumeMounts:
         - name: etc-kubernetes
@@ -45239,12 +44899,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/kubernetesparams.t":                                                  k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                      k8sKuberneteswindowsfunctionsPs1,
 	"k8s/kuberneteswindowssetup.ps1":                                          k8sKuberneteswindowssetupPs1,
-	"k8s/manifests/1.17/kubernetesmaster-kube-apiserver.yaml":                 k8sManifests117KubernetesmasterKubeApiserverYaml,
-	"k8s/manifests/1.17/kubernetesmaster-kube-controller-manager.yaml":        k8sManifests117KubernetesmasterKubeControllerManagerYaml,
-	"k8s/manifests/1.17/kubernetesmaster-kube-scheduler.yaml":                 k8sManifests117KubernetesmasterKubeSchedulerYaml,
-	"k8s/manifests/1.18/kubernetesmaster-kube-apiserver.yaml":                 k8sManifests118KubernetesmasterKubeApiserverYaml,
-	"k8s/manifests/1.18/kubernetesmaster-kube-controller-manager.yaml":        k8sManifests118KubernetesmasterKubeControllerManagerYaml,
-	"k8s/manifests/1.18/kubernetesmaster-kube-scheduler.yaml":                 k8sManifests118KubernetesmasterKubeSchedulerYaml,
 	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":            k8sManifestsKubernetesmasterCloudControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":                  k8sManifestsKubernetesmasterKubeAddonManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                      k8sManifestsKubernetesmasterKubeApiserverYaml,
@@ -45557,16 +45211,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},
 		"kuberneteswindowssetup.ps1":     {k8sKuberneteswindowssetupPs1, map[string]*bintree{}},
 		"manifests": {nil, map[string]*bintree{
-			"1.17": {nil, map[string]*bintree{
-				"kubernetesmaster-kube-apiserver.yaml":          {k8sManifests117KubernetesmasterKubeApiserverYaml, map[string]*bintree{}},
-				"kubernetesmaster-kube-controller-manager.yaml": {k8sManifests117KubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
-				"kubernetesmaster-kube-scheduler.yaml":          {k8sManifests117KubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
-			}},
-			"1.18": {nil, map[string]*bintree{
-				"kubernetesmaster-kube-apiserver.yaml":          {k8sManifests118KubernetesmasterKubeApiserverYaml, map[string]*bintree{}},
-				"kubernetesmaster-kube-controller-manager.yaml": {k8sManifests118KubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
-				"kubernetesmaster-kube-scheduler.yaml":          {k8sManifests118KubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
-			}},
 			"kubernetesmaster-cloud-controller-manager.yaml": {k8sManifestsKubernetesmasterCloudControllerManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-addon-manager.yaml":       {k8sManifestsKubernetesmasterKubeAddonManagerYaml, map[string]*bintree{}},
 			"kubernetesmaster-kube-apiserver.yaml":           {k8sManifestsKubernetesmasterKubeApiserverYaml, map[string]*bintree{}},
