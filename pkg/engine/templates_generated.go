@@ -35531,11 +35531,18 @@ removeEtcd() {
 }
 
 removeMoby() {
-    apt-get purge -y moby-engine moby-cli
+    if apt list --installed | grep 'moby-engine'; then
+      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
+    fi
+    if apt list --installed | grep 'moby-cli'; then
+      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
+    fi
 }
 
 removeContainerd() {
-    apt-get purge -y moby-containerd moby-runc
+    if apt list --installed | grep 'moby-containerd'; then
+      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
+    fi
 }
 
 installEtcd() {
@@ -35660,6 +35667,7 @@ installContainerRuntime() {
 }
 
 installMoby() {
+    removeContainerd
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
     if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
         echo "dockerd $MOBY_VERSION is already installed"
@@ -35802,6 +35810,7 @@ installAzureCNI() {
 }
 
 installContainerd() {
+    removeMoby
     CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
     if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
         echo "containerd is already installed"
