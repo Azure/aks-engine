@@ -2167,25 +2167,38 @@ func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
 }
 
+// ProvisionScriptParametersInput is the struct used to pass in Azure environment variables and secrets
+// as either values or ARM template variables when generating provision script parameters.
+type ProvisionScriptParametersInput struct {
+	Location             string
+	ResourceGroup        string
+	TenantID             string
+	SubscriptionID       string
+	ClientID             string
+	ClientSecret         string
+	APIServerCertificate string
+	KubeletPrivateKey    string
+	ClusterKeyVaultName  string
+}
+
 // GetProvisionScriptParametersCommon returns the environment variables needed to run the Linux bootstrap scripts
 // Ensure that the clientSecret parameter is surrounded by single quotes to protect against special characters
-func (cs *ContainerService) GetProvisionScriptParametersCommon(location, resourceGroup, tenantID, subscriptionID, clientID, clientSecret, apiServerCertificate, kubeletPrivateKey, clusterKeyVaultName string) string {
+func (cs *ContainerService) GetProvisionScriptParametersCommon(env ProvisionScriptParametersInput) string {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
-
 	provisionScriptParametersCommonString := "" +
 		"ADMINUSER=" + cs.Properties.LinuxProfile.AdminUsername +
 		" ETCD_DOWNLOAD_URL=" + cloudSpecConfig.KubernetesSpecConfig.EtcdDownloadURLBase +
 		" ETCD_VERSION=" + kubernetesConfig.EtcdVersion +
 		" CONTAINERD_VERSION=" + kubernetesConfig.ContainerdVersion +
 		" MOBY_VERSION=" + kubernetesConfig.MobyVersion +
-		" TENANT_ID=" + tenantID +
+		" TENANT_ID=" + env.TenantID +
 		" KUBERNETES_VERSION=" + cs.Properties.GetKubernetesVersion() +
 		" HYPERKUBE_URL=" + cs.Properties.GetKubernetesHyperkubeSpec() +
-		" APISERVER_PUBLIC_KEY=" + apiServerCertificate +
-		" SUBSCRIPTION_ID=" + subscriptionID +
-		" RESOURCE_GROUP=" + resourceGroup +
-		" LOCATION=" + location +
+		" APISERVER_PUBLIC_KEY=" + env.APIServerCertificate +
+		" SUBSCRIPTION_ID=" + env.SubscriptionID +
+		" RESOURCE_GROUP=" + env.ResourceGroup +
+		" LOCATION=" + env.Location +
 		" VM_TYPE=" + cs.Properties.GetVMType() +
 		" SUBNET=" + cs.Properties.GetSubnetName() +
 		" NETWORK_SECURITY_GROUP=" + cs.Properties.GetNSGName() +
@@ -2194,9 +2207,9 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(location, resourc
 		" ROUTE_TABLE=" + cs.Properties.GetRouteTableName() +
 		" PRIMARY_AVAILABILITY_SET=" + cs.Properties.GetPrimaryAvailabilitySetName() +
 		" PRIMARY_SCALE_SET=" + cs.Properties.GetPrimaryScaleSetName() +
-		" SERVICE_PRINCIPAL_CLIENT_ID=" + clientID +
-		" SERVICE_PRINCIPAL_CLIENT_SECRET=" + clientSecret +
-		" KUBELET_PRIVATE_KEY=" + kubeletPrivateKey +
+		" SERVICE_PRINCIPAL_CLIENT_ID=" + env.ClientID +
+		" SERVICE_PRINCIPAL_CLIENT_SECRET=" + env.ClientSecret +
+		" KUBELET_PRIVATE_KEY=" + env.KubeletPrivateKey +
 		" NETWORK_PLUGIN=" + kubernetesConfig.NetworkPlugin +
 		" NETWORK_POLICY=" + kubernetesConfig.NetworkPolicy +
 		" VNET_CNI_PLUGINS_URL=" + kubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig) +
@@ -2220,7 +2233,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(location, resourc
 		" MAXIMUM_LOADBALANCER_RULE_COUNT=" + strconv.Itoa(kubernetesConfig.MaximumLoadBalancerRuleCount) +
 		" CONTAINER_RUNTIME=" + kubernetesConfig.ContainerRuntime +
 		" CONTAINERD_DOWNLOAD_URL_BASE=" + cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase +
-		" KMS_PROVIDER_VAULT_NAME=" + clusterKeyVaultName +
+		" KMS_PROVIDER_VAULT_NAME=" + env.ClusterKeyVaultName +
 		" IS_HOSTED_MASTER=" + strconv.FormatBool(cs.Properties.IsHostedMasterProfile()) +
 		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=" + strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")) +
 		" AUTHENTICATION_METHOD=" + cs.Properties.GetCustomCloudAuthenticationMethod() +

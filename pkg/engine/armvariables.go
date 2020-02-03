@@ -78,6 +78,17 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
+	scriptParamsInput := api.ProvisionScriptParametersInput{
+		Location:             common.WrapAsARMVariable("location"),
+		ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
+		TenantID:             common.WrapAsARMVariable("tenantID"),
+		SubscriptionID:       common.WrapAsARMVariable("subscriptionId"),
+		ClientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
+		ClientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+		APIServerCertificate: common.WrapAsParameter("apiServerCertificate"),
+		KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
+		ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyVaultName"),
+	}
 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
@@ -108,7 +119,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"routeTableID":                              "[resourceId('Microsoft.Network/routeTables', variables('routeTableName'))]",
 		"sshNatPorts":                               []int{22, 2201, 2202, 2203, 2204},
 		"sshKeyPath":                                "[concat('/home/',parameters('linuxAdminUsername'),'/.ssh/authorized_keys')]",
-		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(common.WrapAsARMVariable("location"), common.WrapAsARMVariable("resourceGroup"), common.WrapAsARMVariable("tenantID"), common.WrapAsARMVariable("subscriptionId"), common.WrapAsARMVariable("servicePrincipalClientId"), common.WrapAsARMVariable("singleQuote")+common.WrapAsARMVariable("servicePrincipalClientSecret")+common.WrapAsARMVariable("singleQuote"), common.WrapAsParameter("apiServerCertificate"), common.WrapAsParameter("clientPrivateKey"), common.WrapAsARMVariable("clusterKeyVaultName")) + "')]",
+		"provisionScriptParametersCommon":           "[concat('" + cs.GetProvisionScriptParametersCommon(scriptParamsInput) + "')]",
 		"orchestratorNameVersionTag":                fmt.Sprintf("%s:%s", orchProfile.OrchestratorType, orchProfile.OrchestratorVersion),
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,

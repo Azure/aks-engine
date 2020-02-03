@@ -7157,31 +7157,25 @@ func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
 
 func TestGetProvisionScriptParametersCommon(t *testing.T) {
 	cases := []struct {
-		name                 string
-		cs                   *ContainerService
-		location             string
-		resourceGroup        string
-		tenantID             string
-		subscriptionID       string
-		clientID             string
-		clientSecret         string
-		apiServerCertificate string
-		kubeletPrivateKey    string
-		clusterKeyvaultName  string
-		expected             string
+		name     string
+		cs       *ContainerService
+		input    ProvisionScriptParametersInput
+		expected string
 	}{
 		{
-			name:                 "Default container service with no ARM variables",
-			cs:                   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
-			location:             "westus",
-			resourceGroup:        "fakerg",
-			tenantID:             "faketenantID",
-			subscriptionID:       "fakesubID",
-			clientID:             "fakeclientID",
-			clientSecret:         "fakeclientSecret",
-			apiServerCertificate: "fakecert",
-			kubeletPrivateKey:    "fakekubeletkey",
-			clusterKeyvaultName:  "",
+			name: "Default container service with no ARM variables",
+			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			input: ProvisionScriptParametersInput{
+				Location:             "westus",
+				ResourceGroup:        "fakerg",
+				TenantID:             "faketenantID",
+				SubscriptionID:       "fakesubID",
+				ClientID:             "fakeclientID",
+				ClientSecret:         "fakeclientSecret",
+				APIServerCertificate: "fakecert",
+				KubeletPrivateKey:    "fakekubeletkey",
+				ClusterKeyVaultName:  "",
+			},
 			expected: "ADMINUSER=azureuser ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" +
 				DefaultEtcdVersion + " CONTAINERD_VERSION=" + DefaultContainerdVersion + " MOBY_VERSION=" + DefaultMobyVersion +
 				" TENANT_ID=faketenantID KUBERNETES_VERSION=1.16.6 HYPERKUBE_URL=hyperkube-amd64:v1.16.6 APISERVER_PUBLIC_KEY=fakecert" +
@@ -7202,17 +7196,19 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				" NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= KUBE_BINARY_URL=",
 		},
 		{
-			name:                 "With ARM variables",
-			cs:                   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
-			location:             common.WrapAsARMVariable("location"),
-			resourceGroup:        common.WrapAsARMVariable("resourceGroup"),
-			tenantID:             common.WrapAsARMVariable("tenantID"),
-			subscriptionID:       common.WrapAsARMVariable("subscriptionId"),
-			clientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
-			clientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
-			apiServerCertificate: common.WrapAsParameter("apiServerCertificate"),
-			kubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
-			clusterKeyvaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
+			name: "With ARM variables",
+			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			input: ProvisionScriptParametersInput{
+				Location:             common.WrapAsARMVariable("location"),
+				ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
+				TenantID:             common.WrapAsARMVariable("tenantID"),
+				SubscriptionID:       common.WrapAsARMVariable("subscriptionId"),
+				ClientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
+				ClientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+				APIServerCertificate: common.WrapAsParameter("apiServerCertificate"),
+				KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
+				ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
+			},
 			expected: "ADMINUSER=azureuser ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" +
 				DefaultEtcdVersion + " CONTAINERD_VERSION=" + DefaultContainerdVersion + " MOBY_VERSION=" + DefaultMobyVersion +
 				" TENANT_ID=',variables('tenantID'),' KUBERNETES_VERSION=1.16.6 HYPERKUBE_URL=hyperkube-amd64:v1.16.6" +
@@ -7239,7 +7235,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			actual := c.cs.GetProvisionScriptParametersCommon(c.location, c.resourceGroup, c.tenantID, c.subscriptionID, c.clientID, c.clientSecret, c.apiServerCertificate, c.kubeletPrivateKey, c.clusterKeyvaultName)
+			actual := c.cs.GetProvisionScriptParametersCommon(c.env)
 			if actual != c.expected {
 				t.Fatalf("expected cs.GetProvisionScriptParametersCommon() to return %s but instead returned %s", c.expected, actual)
 			}
