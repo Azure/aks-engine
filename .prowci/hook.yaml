@@ -17,7 +17,7 @@ items:
     ports:
     - port: 8888
     type: ClusterIP
-- apiVersion: apps/v1beta2
+- apiVersion: apps/v1
   kind: Deployment
   metadata:
     name: hook
