@@ -212,7 +212,6 @@
 // ../../parts/k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-addon-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-apiserver.yaml
-// ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-controller-manager.yaml
 // ../../parts/k8s/manifests/kubernetesmaster-kube-scheduler.yaml
 // ../../parts/k8s/windowsazurecnifunc.ps1
@@ -40193,63 +40192,6 @@ func k8sManifestsKubernetesmasterKubeApiserverYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: kube-controller-manager
-  namespace: kube-system
-  labels:
-    tier: control-plane
-    component: kube-controller-manager
-spec:
-  priorityClassName: system-node-critical
-  hostNetwork: true
-  containers:
-    - name: kube-controller-manager
-      image: {{GetHyperkubeImageReference}}
-      imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
-      env:
-      - name: AZURE_ENVIRONMENT_FILEPATH
-        value: "/etc/kubernetes/azurestackcloud.json"
-      volumeMounts:
-        - name: etc-kubernetes
-          mountPath: /etc/kubernetes
-        - name: var-lib-kubelet
-          mountPath: /var/lib/kubelet
-        - name: msi
-          mountPath: /var/lib/waagent/ManagedIdentity-Settings
-          readOnly: true
-        <volumeMountssl>
-  volumes:
-    - name: etc-kubernetes
-      hostPath:
-        path: /etc/kubernetes
-    - name: var-lib-kubelet
-      hostPath:
-        path: /var/lib/kubelet
-    - name: msi
-      hostPath:
-        path: /var/lib/waagent/ManagedIdentity-Settings
-    <volumessl>
-`)
-
-func k8sManifestsKubernetesmasterKubeControllerManagerCustomYamlBytes() ([]byte, error) {
-	return _k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml, nil
-}
-
-func k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml() (*asset, error) {
-	bytes, err := k8sManifestsKubernetesmasterKubeControllerManagerCustomYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sManifestsKubernetesmasterKubeControllerManagerYaml = []byte(`apiVersion: v1
 kind: Pod
 metadata:
@@ -40267,6 +40209,11 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [{{GetControllerManagerArgs}}]
+{{- if IsAzureStackCloud}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -40275,6 +40222,9 @@ spec:
         - name: msi
           mountPath: /var/lib/waagent/ManagedIdentity-Settings
           readOnly: true
+{{- if IsAzureStackCloud}}
+        <volumeMountssl>
+{{end}}
   volumes:
     - name: etc-kubernetes
       hostPath:
@@ -40285,6 +40235,9 @@ spec:
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
+{{- if IsAzureStackCloud}}
+    <volumessl>
+{{end}}
 `)
 
 func k8sManifestsKubernetesmasterKubeControllerManagerYamlBytes() ([]byte, error) {
@@ -45295,7 +45248,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":            k8sManifestsKubernetesmasterCloudControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":                  k8sManifestsKubernetesmasterKubeAddonManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                      k8sManifestsKubernetesmasterKubeApiserverYaml,
-	"k8s/manifests/kubernetesmaster-kube-controller-manager-custom.yaml":      k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml,
 	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":             k8sManifestsKubernetesmasterKubeControllerManagerYaml,
 	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                      k8sManifestsKubernetesmasterKubeSchedulerYaml,
 	"k8s/windowsazurecnifunc.ps1":                                             k8sWindowsazurecnifuncPs1,
@@ -45615,12 +45567,11 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmaster-kube-controller-manager.yaml": {k8sManifests118KubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
 				"kubernetesmaster-kube-scheduler.yaml":          {k8sManifests118KubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 			}},
-			"kubernetesmaster-cloud-controller-manager.yaml":       {k8sManifestsKubernetesmasterCloudControllerManagerYaml, map[string]*bintree{}},
-			"kubernetesmaster-kube-addon-manager.yaml":             {k8sManifestsKubernetesmasterKubeAddonManagerYaml, map[string]*bintree{}},
-			"kubernetesmaster-kube-apiserver.yaml":                 {k8sManifestsKubernetesmasterKubeApiserverYaml, map[string]*bintree{}},
-			"kubernetesmaster-kube-controller-manager-custom.yaml": {k8sManifestsKubernetesmasterKubeControllerManagerCustomYaml, map[string]*bintree{}},
-			"kubernetesmaster-kube-controller-manager.yaml":        {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
-			"kubernetesmaster-kube-scheduler.yaml":                 {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
+			"kubernetesmaster-cloud-controller-manager.yaml": {k8sManifestsKubernetesmasterCloudControllerManagerYaml, map[string]*bintree{}},
+			"kubernetesmaster-kube-addon-manager.yaml":       {k8sManifestsKubernetesmasterKubeAddonManagerYaml, map[string]*bintree{}},
+			"kubernetesmaster-kube-apiserver.yaml":           {k8sManifestsKubernetesmasterKubeApiserverYaml, map[string]*bintree{}},
+			"kubernetesmaster-kube-controller-manager.yaml":  {k8sManifestsKubernetesmasterKubeControllerManagerYaml, map[string]*bintree{}},
+			"kubernetesmaster-kube-scheduler.yaml":           {k8sManifestsKubernetesmasterKubeSchedulerYaml, map[string]*bintree{}},
 		}},
 		"windowsazurecnifunc.ps1":       {k8sWindowsazurecnifuncPs1, map[string]*bintree{}},
 		"windowsazurecnifunc.tests.ps1": {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},

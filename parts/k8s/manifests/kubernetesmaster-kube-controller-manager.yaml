@@ -15,6 +15,11 @@ spec:
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
       args: [{{GetControllerManagerArgs}}]
+{{- if IsAzureStackCloud}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -23,6 +28,9 @@ spec:
         - name: msi
           mountPath: /var/lib/waagent/ManagedIdentity-Settings
           readOnly: true
+{{- if IsAzureStackCloud}}
+        <volumeMountssl>
+{{end}}
   volumes:
     - name: etc-kubernetes
       hostPath:
@@ -33,3 +41,6 @@ spec:
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
+{{- if IsAzureStackCloud}}
+    <volumessl>
+{{end}}
