@@ -2183,7 +2183,7 @@ type ProvisionScriptParametersInput struct {
 
 // GetProvisionScriptParametersCommon returns the environment variables needed to run the Linux bootstrap scripts
 // Ensure that the clientSecret parameter is surrounded by single quotes to protect against special characters
-func (cs *ContainerService) GetProvisionScriptParametersCommon(env ProvisionScriptParametersInput) string {
+func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionScriptParametersInput) string {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	provisionScriptParametersCommonString := "" +
@@ -2192,13 +2192,13 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(env ProvisionScri
 		" ETCD_VERSION=" + kubernetesConfig.EtcdVersion +
 		" CONTAINERD_VERSION=" + kubernetesConfig.ContainerdVersion +
 		" MOBY_VERSION=" + kubernetesConfig.MobyVersion +
-		" TENANT_ID=" + env.TenantID +
+		" TENANT_ID=" + input.TenantID +
 		" KUBERNETES_VERSION=" + cs.Properties.GetKubernetesVersion() +
 		" HYPERKUBE_URL=" + cs.Properties.GetKubernetesHyperkubeSpec() +
-		" APISERVER_PUBLIC_KEY=" + env.APIServerCertificate +
-		" SUBSCRIPTION_ID=" + env.SubscriptionID +
-		" RESOURCE_GROUP=" + env.ResourceGroup +
-		" LOCATION=" + env.Location +
+		" APISERVER_PUBLIC_KEY=" + input.APIServerCertificate +
+		" SUBSCRIPTION_ID=" + input.SubscriptionID +
+		" RESOURCE_GROUP=" + input.ResourceGroup +
+		" LOCATION=" + input.Location +
 		" VM_TYPE=" + cs.Properties.GetVMType() +
 		" SUBNET=" + cs.Properties.GetSubnetName() +
 		" NETWORK_SECURITY_GROUP=" + cs.Properties.GetNSGName() +
@@ -2207,9 +2207,9 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(env ProvisionScri
 		" ROUTE_TABLE=" + cs.Properties.GetRouteTableName() +
 		" PRIMARY_AVAILABILITY_SET=" + cs.Properties.GetPrimaryAvailabilitySetName() +
 		" PRIMARY_SCALE_SET=" + cs.Properties.GetPrimaryScaleSetName() +
-		" SERVICE_PRINCIPAL_CLIENT_ID=" + env.ClientID +
-		" SERVICE_PRINCIPAL_CLIENT_SECRET=" + env.ClientSecret +
-		" KUBELET_PRIVATE_KEY=" + env.KubeletPrivateKey +
+		" SERVICE_PRINCIPAL_CLIENT_ID=" + input.ClientID +
+		" SERVICE_PRINCIPAL_CLIENT_SECRET=" + input.ClientSecret +
+		" KUBELET_PRIVATE_KEY=" + input.KubeletPrivateKey +
 		" NETWORK_PLUGIN=" + kubernetesConfig.NetworkPlugin +
 		" NETWORK_POLICY=" + kubernetesConfig.NetworkPolicy +
 		" VNET_CNI_PLUGINS_URL=" + kubernetesConfig.GetAzureCNIURLLinux(cloudSpecConfig) +
@@ -2233,7 +2233,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(env ProvisionScri
 		" MAXIMUM_LOADBALANCER_RULE_COUNT=" + strconv.Itoa(kubernetesConfig.MaximumLoadBalancerRuleCount) +
 		" CONTAINER_RUNTIME=" + kubernetesConfig.ContainerRuntime +
 		" CONTAINERD_DOWNLOAD_URL_BASE=" + cloudSpecConfig.KubernetesSpecConfig.ContainerdDownloadURLBase +
-		" KMS_PROVIDER_VAULT_NAME=" + env.ClusterKeyVaultName +
+		" KMS_PROVIDER_VAULT_NAME=" + input.ClusterKeyVaultName +
 		" IS_HOSTED_MASTER=" + strconv.FormatBool(cs.Properties.IsHostedMasterProfile()) +
 		" IS_IPV6_DUALSTACK_FEATURE_ENABLED=" + strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")) +
 		" AUTHENTICATION_METHOD=" + cs.Properties.GetCustomCloudAuthenticationMethod() +

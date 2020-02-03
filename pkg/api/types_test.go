@@ -7235,7 +7235,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			actual := c.cs.GetProvisionScriptParametersCommon(c.env)
+			actual := c.cs.GetProvisionScriptParametersCommon(c.input)
 			if actual != c.expected {
 				t.Fatalf("expected cs.GetProvisionScriptParametersCommon() to return %s but instead returned %s", c.expected, actual)
 			}
