@@ -709,6 +709,16 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig)
 		}
 	}
+	if component.Name == common.ControllerManagerComponentName {
+		ret["GetControllerManagerArgs"] = func() string {
+			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig)
+		}
+	}
+	if component.Name == common.SchedulerComponentName {
+		ret["GetSchedulerArgs"] = func() string {
+			return common.GetOrderedEscapedKeyValsString(cs.Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig)
+		}
+	}
 	return ret
 }
 

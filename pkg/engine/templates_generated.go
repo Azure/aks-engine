@@ -40266,7 +40266,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
+      args: [{{GetControllerManagerArgs}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
@@ -40318,7 +40318,7 @@ spec:
       image: {{GetHyperkubeImageReference}}
       imagePullPolicy: IfNotPresent
       command: ["/hyperkube", "kube-scheduler"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.SchedulerConfig}}]
+      args: [{{GetSchedulerArgs}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
