@@ -2,7 +2,11 @@
   "apiVersion": "vlabs",
   "properties": {
     "orchestratorProfile": {
-      "orchestratorType": "Kubernetes"
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "containerRuntime": "containerd",
+        "networkPlugin": "azure"
+      }
     },
     "masterProfile": {
       "count": 1,
