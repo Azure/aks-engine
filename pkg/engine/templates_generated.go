@@ -42822,7 +42822,7 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "upstream.azurecr.io/oss/kubernetes/pause:1.3.0-alpha4"
+    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
 
     switch ($computerInfo.WindowsVersion) {
         "1803" { 
