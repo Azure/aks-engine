@@ -133,6 +133,14 @@ func Test_WindowsVMNameParts(t *testing.T) {
 	}
 }
 
+func Test_GetVMNameIndexUnknown(t *testing.T) {
+	var ostype compute.OperatingSystemTypes
+	_, err := GetVMNameIndex(ostype, "k8s-agentpool1-38988164-65")
+	if err == nil {
+		t.Fatalf("unexpected error but got none")
+	}
+}
+
 func Test_GetVMNameIndexLinux(t *testing.T) {
 	expectedAgentIndex := 65
 
