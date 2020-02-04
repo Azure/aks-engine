@@ -40386,12 +40386,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       },
       "type": "string"
     },
-    "kubernetesHyperkubeSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -40420,12 +40414,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
         "description": "ACI Connector Status"
       },
       "type": "bool"
-    },
-    "kubernetesPodInfraContainerSpec": {
-      "metadata": {
-        "description": "The container spec for pod infra."
-      },
-      "type": "string"
     },
     "cloudproviderConfig": {
       "type": "object",

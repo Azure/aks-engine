@@ -265,6 +265,8 @@ const (
 
 	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
 	MaxAzureStackManagedDiskSize = "1023"
+	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
+	AzureStackSuffix = "-azs"
 )
 
 const (
