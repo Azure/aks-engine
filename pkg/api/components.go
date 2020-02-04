@@ -10,11 +10,10 @@ import (
 )
 
 func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
-	o := cs.Properties.OrchestratorProfile
-	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
-	specConfig := cloudSpecConfig.KubernetesSpecConfig
-
+	if cs == nil || cs.Properties == nil || cs.Properties.OrchestratorProfile == nil || cs.Properties.OrchestratorProfile.KubernetesConfig == nil {
+		return
+	}
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	defaultSchedulerComponentConfig := KubernetesComponent{
 		Name:    common.SchedulerComponentName,
 		Enabled: to.BoolPtr(true),
@@ -45,7 +44,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 
 	defaultCloudControllerManagerComponentConfig := KubernetesComponent{
 		Name:    common.CloudControllerManagerComponentName,
-		Enabled: to.BoolPtr(to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(to.Bool(kubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CloudControllerManagerComponentName,
@@ -77,7 +76,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.AddonManagerComponentName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.AddonManagerComponentName],
+				Image: getContainerImage(common.AddonManagerComponentName, cs),
 			},
 		},
 	}
@@ -90,16 +89,16 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		defaultAddonManagerComponentConfig,
 	}
 	// Add default component specification, if no user-provided spec exists
-	if o.KubernetesConfig.Components == nil {
-		o.KubernetesConfig.Components = defaultComponents
+	if kubernetesConfig.Components == nil {
+		kubernetesConfig.Components = defaultComponents
 	} else {
 		for _, component := range defaultComponents {
-			o.KubernetesConfig.Components = appendComponentIfNotPresent(o.KubernetesConfig.Components, component)
+			kubernetesConfig.Components = appendComponentIfNotPresent(kubernetesConfig.Components, component)
 		}
 	}
 
 	for _, component := range defaultComponents {
-		synthesizeComponentsConfig(o.KubernetesConfig.Components, component, isUpgrade)
+		synthesizeComponentsConfig(kubernetesConfig.Components, component, isUpgrade)
 	}
 }
 
@@ -203,13 +202,16 @@ func getSchedulerDefaultCommandString(cs *ContainerService) string {
 }
 
 func getContainerImage(component string, cs *ContainerService) string {
-	o := cs.Properties.OrchestratorProfile
+	if cs == nil || cs.Properties == nil || cs.Properties.OrchestratorProfile == nil || cs.Properties.OrchestratorProfile.KubernetesConfig == nil {
+		return ""
+	}
+	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
+	k8sComponents := K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	hyperkubeImageBase := specConfig.KubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
-	kubernetesImageBase := o.KubernetesConfig.KubernetesImageBase
+	kubernetesImageBase := kubernetesConfig.KubernetesImageBase
 	if cs.Properties.IsAzureStackCloud() {
 		kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
 	}
@@ -249,6 +251,8 @@ func getContainerImage(component string, cs *ContainerService) string {
 		} else {
 			return hyperkubeImage
 		}
+	case common.AddonManagerComponentName:
+		return kubernetesImageBase + k8sComponents[common.AddonManagerComponentName]
 	default:
 		return ""
 	}
