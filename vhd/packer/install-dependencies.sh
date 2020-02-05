@@ -54,6 +54,9 @@ apmz_version="v0.4.0"
 ensureAPMZ "${apmz_version}"
 echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 
+installBpftrace
+echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
+
 MOBY_VERSION="3.0.10"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -64,6 +67,12 @@ ETCD_VERSION="3.3.18"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
+
+installBcc
+cat << EOF >> ${VHD_LOGS_FILEPATH}
+  - bcc-tools
+  - libbcc-examples
+EOF
 
 VNET_CNI_VERSIONS="
 1.0.30
