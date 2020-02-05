@@ -103,9 +103,11 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 }
 
 func appendComponentIfNotPresent(components []KubernetesComponent, component KubernetesComponent) []KubernetesComponent {
-	i := getComponentsIndexByName(components, component.Name)
-	if i < 0 {
-		return append(components, component)
+	if component.Name != "" {
+		i := getComponentsIndexByName(components, component.Name)
+		if i < 0 {
+			return append(components, component)
+		}
 	}
 	return components
 }
@@ -121,6 +123,9 @@ func getComponentsIndexByName(components []KubernetesComponent, name string) int
 
 // assignDefaultComponentVals will assign default values to component from defaults, for each property in component that has a zero value
 func assignDefaultComponentVals(component, defaultComponent KubernetesComponent, isUpgrade bool) KubernetesComponent {
+	if component.Name == "" {
+		component.Name = defaultComponent.Name
+	}
 	if component.Enabled == nil {
 		component.Enabled = defaultComponent.Enabled
 	}
