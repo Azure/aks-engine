@@ -131,16 +131,6 @@ const (
 	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
 )
 
-// Kubernetes manifests file references
-const (
-	kubeSchedulerManifestFilename               = "kubernetesmaster-kube-scheduler.yaml"
-	kubeControllerManagerManifestFilename       = "kubernetesmaster-kube-controller-manager.yaml"
-	kubeControllerManagerCustomManifestFilename = "kubernetesmaster-kube-controller-manager-custom.yaml"
-	ccmManifestFilename                         = "kubernetesmaster-cloud-controller-manager.yaml"
-	kubeAPIServerManifestFilename               = "kubernetesmaster-kube-apiserver.yaml"
-	kubeAddonManagerManifestFilename            = "kubernetesmaster-kube-addon-manager.yaml"
-)
-
 const (
 	dcosCustomData188       = "dcos/dcoscustomdata188.t"
 	dcosCustomData190       = "dcos/dcoscustomdata190.t"

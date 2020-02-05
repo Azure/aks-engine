@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license.
+
 package api
 
 import (
@@ -1114,7 +1117,7 @@ func overwriteDefaultComponents(components []KubernetesComponent, cs *ContainerS
 
 func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 	return map[string]KubernetesComponent{
-		"user-configured kube-scheduler component": KubernetesComponent{
+		"user-configured kube-scheduler component": {
 			Name:    common.SchedulerComponentName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -1128,7 +1131,7 @@ func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 				"foo":     "bar",
 			},
 		},
-		"user-configured controller-manager component": KubernetesComponent{
+		"user-configured controller-manager component": {
 			Name:    common.ControllerManagerComponentName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -1142,7 +1145,7 @@ func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 				"foo":     "bar",
 			},
 		},
-		"user-configured cloud-controller-manager component": KubernetesComponent{
+		"user-configured cloud-controller-manager component": {
 			Name:    common.CloudControllerManagerComponentName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -1156,7 +1159,7 @@ func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 				"foo":     "bar",
 			},
 		},
-		"user-configured kube-apiserver component": KubernetesComponent{
+		"user-configured kube-apiserver component": {
 			Name:    common.APIServerComponentName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -1170,7 +1173,7 @@ func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 				"foo":     "bar",
 			},
 		},
-		"user-configured kube-addon-manager component": KubernetesComponent{
+		"user-configured kube-addon-manager component": {
 			Name:    common.AddonManagerComponentName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -1190,7 +1193,7 @@ func getUserConfiguredComponentMap() map[string]KubernetesComponent {
 func getContainerServicesMap() map[string]*ContainerService {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	return map[string]*ContainerService{
-		"1.13": &ContainerService{
+		"1.13": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
@@ -1201,7 +1204,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.13 user-configured": &ContainerService{
+		"1.13 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
@@ -1219,7 +1222,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.13 + CCM": &ContainerService{
+		"1.13 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
@@ -1231,7 +1234,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.14": &ContainerService{
+		"1.14": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
@@ -1242,7 +1245,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.14 user-configured": &ContainerService{
+		"1.14 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
@@ -1260,7 +1263,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.14 + CCM": &ContainerService{
+		"1.14 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
@@ -1272,7 +1275,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.15": &ContainerService{
+		"1.15": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
@@ -1283,7 +1286,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.15 user-configured": &ContainerService{
+		"1.15 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
@@ -1301,7 +1304,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.15 + CCM": &ContainerService{
+		"1.15 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
@@ -1313,7 +1316,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.16": &ContainerService{
+		"1.16": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
@@ -1324,7 +1327,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.16 user-configured": &ContainerService{
+		"1.16 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
@@ -1342,7 +1345,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.16 + CCM": &ContainerService{
+		"1.16 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
@@ -1354,7 +1357,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.17": &ContainerService{
+		"1.17": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
@@ -1365,7 +1368,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.17 user-configured": &ContainerService{
+		"1.17 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
@@ -1383,7 +1386,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.17 + CCM": &ContainerService{
+		"1.17 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
@@ -1395,7 +1398,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.18": &ContainerService{
+		"1.18": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0-alpha.1",
@@ -1406,7 +1409,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.18 user-configured": &ContainerService{
+		"1.18 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0-alpha.1",
@@ -1424,7 +1427,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 				},
 			},
 		},
-		"1.18 + CCM": &ContainerService{
+		"1.18 + CCM": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0-alpha.1",

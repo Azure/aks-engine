@@ -5,6 +5,7 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -185,25 +186,22 @@ func synthesizeComponentsConfig(components []KubernetesComponent, defaultCompone
 func getAPIServerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 		return fmt.Sprintf("\"kube-apiserver\"")
-	} else {
-		return fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\"")
 	}
+	return fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\"")
 }
 
 func getControllerManagerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 		return fmt.Sprintf("\"kube-controller-manager\"")
-	} else {
-		return fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\"")
 	}
+	return fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\"")
 }
 
 func getSchedulerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 		return fmt.Sprintf("\"kube-scheduler\"")
-	} else {
-		return fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\"")
 	}
+	return fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\"")
 }
 
 func getComponentDefaultContainerImage(component string, cs *ContainerService) string {
@@ -239,23 +237,20 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	case common.APIServerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 			return kubernetesImageBase + k8sComponents[common.APIServerComponentName]
-		} else {
-			return hyperkubeImage
 		}
+		return hyperkubeImage
 	case common.ControllerManagerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 			return kubernetesImageBase + k8sComponents[common.ControllerManagerComponentName]
-		} else {
-			return hyperkubeImage
 		}
+		return hyperkubeImage
 	case common.CloudControllerManagerComponentName:
 		return ccmImage
 	case common.SchedulerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName]
-		} else {
-			return hyperkubeImage
 		}
+		return hyperkubeImage
 	case common.AddonManagerComponentName:
 		return kubernetesImageBase + k8sComponents[common.AddonManagerComponentName]
 	default:
