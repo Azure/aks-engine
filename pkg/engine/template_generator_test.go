@@ -11,7 +11,6 @@ import (
 	"text/template"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/telemetry"
 
 	"github.com/Azure/go-autorest/autorest/azure"

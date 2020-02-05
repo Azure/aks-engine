@@ -34,7 +34,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.MetricsServerAddonName:                     k8sComponent["metrics-server"],
 		common.CoreDNSAddonName:                           coreDNSImageReference,
 		"kube-dns":                                        kubeDNSImageReference,
-		"addonmanager":                                    k8sComponent["addon-manager"],
+		common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 		"dnsmasq":                                         kubeDNSMasqNannyImageReference,
 		"pause":                                           pauseImageReference,
 		common.TillerAddonName:                            tillerImageReference,
