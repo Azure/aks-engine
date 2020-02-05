@@ -16,11 +16,12 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 // DistroValues is a list of currently supported distros
@@ -774,7 +775,7 @@ func (p *Properties) setTelemetryProfileDefaults() {
 	}
 
 	if len(p.TelemetryProfile.ApplicationInsightsKey) == 0 {
-		p.TelemetryProfile.ApplicationInsightsKey = DefaultApplicationInsightsKey
+		p.TelemetryProfile.ApplicationInsightsKey = ""
 	}
 }
 

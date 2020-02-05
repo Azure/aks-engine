@@ -20,6 +20,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/telemetry"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -785,11 +787,25 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
-		"GetApplicationInsightsTelemetryKey": func() string {
-			if cs.Properties.TelemetryProfile == nil {
-				return ""
+		"GetApplicationInsightsTelemetryKeys": func() string {
+			userSuppliedAIKey := ""
+			if cs.Properties.TelemetryProfile != nil {
+				userSuppliedAIKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
 			}
-			return cs.Properties.TelemetryProfile.ApplicationInsightsKey
+
+			possibleKeys := []string{
+				telemetry.AKSEngineAppInsightsKey,
+				userSuppliedAIKey,
+			}
+
+			var keys []string
+			for _, key := range possibleKeys {
+				if key != "" {
+					keys = append(keys, key)
+				}
+			}
+
+			return strings.Join(keys, ",")
 		},
 		"GetLinuxDefaultTelemetryTags": func() string {
 			tags := map[string]string{
