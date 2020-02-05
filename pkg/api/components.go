@@ -20,7 +20,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.SchedulerComponentName,
-				Image: getContainerImage(common.SchedulerComponentName, cs),
+				Image: getComponentDefaultContainerImage(common.SchedulerComponentName, cs),
 			},
 		},
 		Config: map[string]string{
@@ -34,7 +34,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.ControllerManagerComponentName,
-				Image: getContainerImage(common.ControllerManagerComponentName, cs),
+				Image: getComponentDefaultContainerImage(common.ControllerManagerComponentName, cs),
 			},
 		},
 		Config: map[string]string{
@@ -48,7 +48,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CloudControllerManagerComponentName,
-				Image: getContainerImage(common.CloudControllerManagerComponentName, cs),
+				Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, cs),
 			},
 		},
 		Config: map[string]string{
@@ -62,7 +62,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.APIServerComponentName,
-				Image: getContainerImage(common.APIServerComponentName, cs),
+				Image: getComponentDefaultContainerImage(common.APIServerComponentName, cs),
 			},
 		},
 		Config: map[string]string{
@@ -76,7 +76,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.AddonManagerComponentName,
-				Image: getContainerImage(common.AddonManagerComponentName, cs),
+				Image: getComponentDefaultContainerImage(common.AddonManagerComponentName, cs),
 			},
 		},
 	}
@@ -206,7 +206,7 @@ func getSchedulerDefaultCommandString(cs *ContainerService) string {
 	}
 }
 
-func getContainerImage(component string, cs *ContainerService) string {
+func getComponentDefaultContainerImage(component string, cs *ContainerService) string {
 	if cs == nil || cs.Properties == nil || cs.Properties.OrchestratorProfile == nil || cs.Properties.OrchestratorProfile.KubernetesConfig == nil {
 		return ""
 	}

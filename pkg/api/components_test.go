@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -47,7 +48,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.13 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.13 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -84,7 +85,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.14 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.14 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -121,7 +122,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.15 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.15 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -158,7 +159,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.16 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.16 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -195,7 +196,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.17 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.17 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -232,7 +233,7 @@ func TestSetComponentsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: getContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.18 + CCM"]),
+							Image: getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, containerServiceMap["1.18 + CCM"]),
 						},
 					},
 					Config: map[string]string{
@@ -468,7 +469,7 @@ func TestAssignDefaultComponentVals(t *testing.T) {
 				Containers: []KubernetesContainerSpec{
 					{
 						Name:  common.ControllerManagerComponentName,
-						Image: getContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
+						Image: getComponentDefaultContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
 					},
 				},
 				Config: map[string]string{
@@ -487,7 +488,7 @@ func TestAssignDefaultComponentVals(t *testing.T) {
 				Containers: []KubernetesContainerSpec{
 					{
 						Name:  common.ControllerManagerComponentName,
-						Image: getContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
+						Image: getComponentDefaultContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
 					},
 				},
 				Config: map[string]string{
@@ -608,7 +609,7 @@ func TestAssignDefaultComponentVals(t *testing.T) {
 				Containers: []KubernetesContainerSpec{
 					{
 						Name:           common.ControllerManagerComponentName,
-						Image:          getContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
+						Image:          getComponentDefaultContainerImage(common.ControllerManagerComponentName, containerServiceMap["1.15"]),
 						CPURequests:    "1",
 						MemoryRequests: "200m",
 						CPULimits:      "2",
@@ -769,39 +770,70 @@ func TestGetDefaultCommandStrings(t *testing.T) {
 
 func TestGetContainerImages(t *testing.T) {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
-	azureStackCloudSpec := AzureEnvironmentSpecConfig{
-		CloudName: "AzureStackCloud",
-		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "KubernetesImageBase",
-			TillerImageBase:                  "TillerImageBase",
-			ACIConnectorImageBase:            "ACIConnectorImageBase",
-			NVIDIAImageBase:                  "NVIDIAImageBase",
-			AzureCNIImageBase:                "AzureCNIImageBase",
-			CalicoImageBase:                  "CalicoImageBase",
-			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
-		},
-		EndpointConfig: AzureEndpointConfig{
-			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
+	specConfigAzureStack := AzureCloudSpecEnvMap["AzureStackCloud"].KubernetesSpecConfig
+	csOneDotThirteen := getContainerServicesMap()["1.13"]
+	csOneDotThirteenCustomImages := getContainerServicesMap()["1.13"]
+	csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "my-custom-hyperkube-image"
+	csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotThirteenAzureStack := getContainerServicesMap()["1.13"]
+	csOneDotThirteenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
 		},
 	}
-	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
-	csOneDotThirteen := getContainerServicesMap()["1.13"]
 	orchestratorVersionOneDotThirteen := csOneDotThirteen.Properties.OrchestratorProfile.OrchestratorVersion
 	csOneDotFourteen := getContainerServicesMap()["1.14"]
+	csOneDotFourteenCustomImages := getContainerServicesMap()["1.14"]
+	csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "my-custom-hyperkube-image"
+	csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotFourteenAzureStack := getContainerServicesMap()["1.14"]
+	csOneDotFourteenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
+		},
+	}
 	orchestratorVersionOneDotFourteen := csOneDotFourteen.Properties.OrchestratorProfile.OrchestratorVersion
 	csOneDotFifteen := getContainerServicesMap()["1.15"]
+	csOneDotFifteenCustomImages := getContainerServicesMap()["1.15"]
+	csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "my-custom-hyperkube-image"
+	csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotFifteenAzureStack := getContainerServicesMap()["1.15"]
+	csOneDotFifteenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
+		},
+	}
 	orchestratorVersionOneDotFifteen := csOneDotFifteen.Properties.OrchestratorProfile.OrchestratorVersion
 	csOneDotSixteen := getContainerServicesMap()["1.16"]
+	csOneDotSixteenCustomImages := getContainerServicesMap()["1.16"]
+	csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "my-custom-hyperkube-image"
+	csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotSixteenAzureStack := getContainerServicesMap()["1.16"]
+	csOneDotSixteenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
+		},
+	}
 	orchestratorVersionOneDotSixteen := csOneDotSixteen.Properties.OrchestratorProfile.OrchestratorVersion
 	csOneDotSeventeen := getContainerServicesMap()["1.17"]
+	csOneDotSeventeenCustomImages := getContainerServicesMap()["1.17"]
+	csOneDotSeventeenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotSeventeenAzureStack := getContainerServicesMap()["1.17"]
+	csOneDotSeventeenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
+		},
+	}
 	orchestratorVersionOneDotSeventeen := csOneDotSeventeen.Properties.OrchestratorProfile.OrchestratorVersion
 	csOneDotEighteen := getContainerServicesMap()["1.18"]
+	csOneDotEighteenCustomImages := getContainerServicesMap()["1.18"]
+	csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage = "my-custom-ccm-image"
+	csOneDotEighteenAzureStack := getContainerServicesMap()["1.18"]
+	csOneDotEighteenAzureStack.Properties.CustomCloudProfile = &CustomCloudProfile{
+		Environment: &azure.Environment{
+			Name: "AzureStackCloud",
+		},
+	}
 	orchestratorVersionOneDotEighteen := csOneDotEighteen.Properties.OrchestratorProfile.OrchestratorVersion
 	cases := []struct {
 		name                                      string
@@ -814,57 +846,165 @@ func TestGetContainerImages(t *testing.T) {
 	}{
 		{
 			name:                                 "1.13",
-			cs:                                   getContainerServicesMap()["1.13"],
+			cs:                                   csOneDotThirteen,
 			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
 			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
-			expectedCloudControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotThirteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.CloudControllerManagerComponentName],
 			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.AddonManagerComponentName],
+			expectedAddonManagerImageString:           csOneDotThirteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.13 custom images in ContainerService",
+			cs:                                   csOneDotThirteenCustomImages,
+			expectedAPIServerImageString:         csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedControllerManagerImageString: csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedCloudControllerManagerImageString: csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedAddonManagerImageString:           csOneDotThirteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.13 Azure Stack",
+			cs:                                   csOneDotThirteenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedCloudControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.AddonManagerComponentName],
 		},
 		{
 			name:                                 "1.14",
 			cs:                                   csOneDotFourteen,
 			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
 			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
-			expectedCloudControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotFourteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.CloudControllerManagerComponentName],
 			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.AddonManagerComponentName],
+			expectedAddonManagerImageString:           csOneDotFourteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.14 custom images in ContainerService",
+			cs:                                   csOneDotFourteenCustomImages,
+			expectedAPIServerImageString:         csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedControllerManagerImageString: csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedCloudControllerManagerImageString: csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedAddonManagerImageString:           csOneDotFourteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.14 Azure Stack",
+			cs:                                   csOneDotFourteenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedCloudControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.AddonManagerComponentName],
 		},
 		{
 			name:                                 "1.15",
 			cs:                                   csOneDotFifteen,
 			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
 			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
-			expectedCloudControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotFifteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.CloudControllerManagerComponentName],
 			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.AddonManagerComponentName],
+			expectedAddonManagerImageString:           csOneDotFifteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.15 custom images in ContainerService",
+			cs:                                   csOneDotFifteenCustomImages,
+			expectedAPIServerImageString:         csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedControllerManagerImageString: csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedCloudControllerManagerImageString: csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedAddonManagerImageString:           csOneDotFifteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.15 Azure Stack",
+			cs:                                   csOneDotFifteenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedCloudControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.AddonManagerComponentName],
 		},
 		{
 			name:                                 "1.16",
 			cs:                                   csOneDotSixteen,
 			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
 			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
-			expectedCloudControllerManagerImageString: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotSixteen.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.CloudControllerManagerComponentName],
 			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.AddonManagerComponentName],
+			expectedAddonManagerImageString:           csOneDotSixteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.16 custom images in ContainerService",
+			cs:                                   csOneDotSixteenCustomImages,
+			expectedAPIServerImageString:         csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedControllerManagerImageString: csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedCloudControllerManagerImageString: csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage,
+			expectedAddonManagerImageString:           csOneDotSixteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.16 Azure Stack",
+			cs:                                   csOneDotSixteenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedCloudControllerManagerImageString: csOneDotSixteenAzureStack.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.AddonManagerComponentName],
 		},
 		{
 			name:                                 "1.17",
 			cs:                                   csOneDotSeventeen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.APIServerComponentName],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.ControllerManagerComponentName],
-			expectedCloudControllerManagerImageString: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.SchedulerComponentName],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.AddonManagerComponentName],
+			expectedAPIServerImageString:         csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.APIServerComponentName],
+			expectedControllerManagerImageString: csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.17 custom images in ContainerService",
+			cs:                                   csOneDotSeventeenCustomImages,
+			expectedAPIServerImageString:         csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.APIServerComponentName],
+			expectedControllerManagerImageString: csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotSeventeenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           csOneDotSeventeen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.17 Azure Stack",
+			cs:                                   csOneDotSeventeenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.APIServerComponentName],
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotSeventeenAzureStack.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotSeventeen][common.AddonManagerComponentName],
 		},
 		{
 			name:                                 "1.18",
 			cs:                                   csOneDotEighteen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.APIServerComponentName],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.ControllerManagerComponentName],
-			expectedCloudControllerManagerImageString: specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.SchedulerComponentName],
-			expectedAddonManagerImageString:           specConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.AddonManagerComponentName],
+			expectedAPIServerImageString:         csOneDotEighteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.APIServerComponentName],
+			expectedControllerManagerImageString: csOneDotEighteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotEighteen.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              csOneDotEighteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           csOneDotEighteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.18 custom images in ContainerService",
+			cs:                                   csOneDotEighteenCustomImages,
+			expectedAPIServerImageString:         csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.APIServerComponentName],
+			expectedControllerManagerImageString: csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage,
+			expectedSchedulerImageString:              csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           csOneDotEighteenCustomImages.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.AddonManagerComponentName],
+		},
+		{
+			name:                                 "1.18 Azure Stack",
+			cs:                                   csOneDotEighteenAzureStack,
+			expectedAPIServerImageString:         specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.APIServerComponentName],
+			expectedControllerManagerImageString: specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.ControllerManagerComponentName],
+			expectedCloudControllerManagerImageString: csOneDotEighteenAzureStack.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.CloudControllerManagerComponentName],
+			expectedSchedulerImageString:              specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.SchedulerComponentName],
+			expectedAddonManagerImageString:           specConfigAzureStack.KubernetesImageBase + K8sComponentsByVersionMap[orchestratorVersionOneDotEighteen][common.AddonManagerComponentName],
 		},
 	}
 
@@ -872,25 +1012,25 @@ func TestGetContainerImages(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			apiServerImageString := getContainerImage(common.APIServerComponentName, c.cs)
+			apiServerImageString := getComponentDefaultContainerImage(common.APIServerComponentName, c.cs)
 			if apiServerImageString != c.expectedAPIServerImageString {
-				t.Fatalf("expected getContainerImage(%s, cs) result %s to be equal to %s", common.APIServerComponentName, apiServerImageString, c.expectedAPIServerImageString)
+				t.Fatalf("expected getComponentDefaultContainerImage(%s, cs) result %s to be equal to %s", common.APIServerComponentName, apiServerImageString, c.expectedAPIServerImageString)
 			}
-			controllerManagerImageString := getContainerImage(common.ControllerManagerComponentName, c.cs)
+			controllerManagerImageString := getComponentDefaultContainerImage(common.ControllerManagerComponentName, c.cs)
 			if controllerManagerImageString != c.expectedControllerManagerImageString {
-				t.Fatalf("expected getContainerImage(%s, cs) result %s to be equal to %s", common.ControllerManagerComponentName, controllerManagerImageString, c.expectedControllerManagerImageString)
+				t.Fatalf("expected getComponentDefaultContainerImage(%s, cs) result %s to be equal to %s", common.ControllerManagerComponentName, controllerManagerImageString, c.expectedControllerManagerImageString)
 			}
-			cloudControllerManagerImageString := getContainerImage(common.CloudControllerManagerComponentName, c.cs)
+			cloudControllerManagerImageString := getComponentDefaultContainerImage(common.CloudControllerManagerComponentName, c.cs)
 			if cloudControllerManagerImageString != c.expectedCloudControllerManagerImageString {
-				t.Fatalf("expected getContainerImage(%s, cs) result %s to be equal to %s", common.CloudControllerManagerComponentName, cloudControllerManagerImageString, c.expectedCloudControllerManagerImageString)
+				t.Fatalf("expected getComponentDefaultContainerImage(%s, cs) result %s to be equal to %s", common.CloudControllerManagerComponentName, cloudControllerManagerImageString, c.expectedCloudControllerManagerImageString)
 			}
-			schedulerImageString := getContainerImage(common.SchedulerComponentName, c.cs)
+			schedulerImageString := getComponentDefaultContainerImage(common.SchedulerComponentName, c.cs)
 			if schedulerImageString != c.expectedSchedulerImageString {
-				t.Fatalf("expected getContainerImage(%s, cs) result %s to be equal to %s", common.SchedulerComponentName, schedulerImageString, c.expectedSchedulerImageString)
+				t.Fatalf("expected getComponentDefaultContainerImage(%s, cs) result %s to be equal to %s", common.SchedulerComponentName, schedulerImageString, c.expectedSchedulerImageString)
 			}
-			addonManagerImageString := getContainerImage(common.AddonManagerComponentName, c.cs)
+			addonManagerImageString := getComponentDefaultContainerImage(common.AddonManagerComponentName, c.cs)
 			if addonManagerImageString != c.expectedAddonManagerImageString {
-				t.Fatalf("expected getContainerImage(%s, cs) result %s to be equal to %s", common.AddonManagerComponentName, addonManagerImageString, c.expectedAddonManagerImageString)
+				t.Fatalf("expected getComponentDefaultContainerImage(%s, cs) result %s to be equal to %s", common.AddonManagerComponentName, addonManagerImageString, c.expectedAddonManagerImageString)
 			}
 		})
 	}
@@ -904,7 +1044,7 @@ func getDefaultComponents(cs *ContainerService) []KubernetesComponent {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.SchedulerComponentName,
-					Image: getContainerImage(common.SchedulerComponentName, cs),
+					Image: getComponentDefaultContainerImage(common.SchedulerComponentName, cs),
 				},
 			},
 			Config: map[string]string{
@@ -917,7 +1057,7 @@ func getDefaultComponents(cs *ContainerService) []KubernetesComponent {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.ControllerManagerComponentName,
-					Image: getContainerImage(common.ControllerManagerComponentName, cs),
+					Image: getComponentDefaultContainerImage(common.ControllerManagerComponentName, cs),
 				},
 			},
 			Config: map[string]string{
@@ -930,7 +1070,7 @@ func getDefaultComponents(cs *ContainerService) []KubernetesComponent {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.APIServerComponentName,
-					Image: getContainerImage(common.APIServerComponentName, cs),
+					Image: getComponentDefaultContainerImage(common.APIServerComponentName, cs),
 				},
 			},
 			Config: map[string]string{
@@ -943,7 +1083,7 @@ func getDefaultComponents(cs *ContainerService) []KubernetesComponent {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.AddonManagerComponentName,
-					Image: getContainerImage(common.AddonManagerComponentName, cs),
+					Image: getComponentDefaultContainerImage(common.AddonManagerComponentName, cs),
 				},
 			},
 		},
