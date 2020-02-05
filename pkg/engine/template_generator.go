@@ -702,7 +702,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+			hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
 			if cs.Properties.IsAzureStackCloud() {
 				hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 			}

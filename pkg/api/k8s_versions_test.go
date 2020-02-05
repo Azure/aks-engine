@@ -190,8 +190,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.16"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.16.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.16.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.16.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.16.0",
 		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		"windowszip":                                      "v1.16.0/windowszip/v1.16.0-1int.zip",
@@ -273,9 +273,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.15"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.15.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.15.0",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.15.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.15.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.15.0",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.15.0",
 		"windowszip":                                      "v1.15.0/windowszip/v1.15.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -355,9 +355,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.14"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.14.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.14.0",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.14.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.14.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.14.0",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.14.0",
 		"windowszip":                                      "v1.14.0/windowszip/v1.14.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -437,9 +437,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.13"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.13.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.13.0",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.13.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.13.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.13.0",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.13.0",
 		"windowszip":                                      "v1.13.0/windowszip/v1.13.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -519,9 +519,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.12"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.12.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.12.0",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.12.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.12.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.12.0",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.12.0",
 		"windowszip":                                      "v1.12.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -592,9 +592,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.11"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.11.0-alpha.1",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.11.0-alpha.1",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.11.0-alpha.1",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.11.0-alpha.1",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.11.0-alpha.1",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.11.0-alpha.1",
 		"windowszip":                                      "v1.11.0-alpha.1-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -664,9 +664,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.10"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.10.0",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.10.0",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.10.0",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.10.0",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.10.0",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.10.0",
 		"windowszip":                                      "v1.10.0-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -736,9 +736,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.9.3",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.9.3",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.9.3",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.9.3",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                                      "v1.9.3-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -807,9 +807,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.8"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.8.8",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.8.8",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.8.8",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.8.8",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.8.8",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.8.8",
 		"windowszip":                                      "v1.8.8-1int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,
@@ -875,7 +875,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.7"]
 	expected = map[string]string{
-		"hyperkube":                            "hyperkube-amd64:v1.7.13",
+		common.Hyperkube:                       "hyperkube-amd64:v1.7.13",
 		common.KubeProxyAddonName:              "hyperkube-amd64:v1.7.13",
 		common.DashboardAddonName:              k8sComponent["dashboard"],
 		"exechealthz":                          execHealthZImageReference,
@@ -914,9 +914,9 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	k8sComponent = k8sComponentVersions["1.9"]
 	expected = map[string]string{
-		"hyperkube":               "hyperkube-amd64:v1.9.3",
-		common.KubeProxyAddonName: "hyperkube-amd64:v1.9.3",
-		common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v1.9.3",
+		common.Hyperkube:                                  "hyperkube-amd64:v1.9.3",
+		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
+		common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v1.9.3",
 		"windowszip":                                      "v1.9.3-2int.zip",
 		common.DashboardAddonName:                         dashboardImageReference,
 		"exechealthz":                                     execHealthZImageReference,

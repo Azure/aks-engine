@@ -210,6 +210,8 @@ const (
 	CSIAzureFileContainerName = "azurefile-csi"
 	// AzureStorageClassesAddonName is the name of the azure storage classes addon
 	AzureStorageClassesAddonName = "azure-storage-classes"
+	// Hyperkube is the common "hyperkube" string reference
+	Hyperkube = "hyperkube"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
 	KubeDNSAddonName = "kube-dns"
 	// CoreDNSAddonName is the name of the coredns addon

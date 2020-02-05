@@ -387,8 +387,8 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.16":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
@@ -464,9 +464,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.15":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -540,9 +540,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.14":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -616,9 +616,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.13":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -692,9 +692,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.12":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -759,9 +759,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.11":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -825,9 +825,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.10":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -891,9 +891,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.9":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -956,9 +956,9 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.8":
 		ret = map[string]string{
-			"hyperkube":               "hyperkube-amd64:v" + version,
-			common.KubeProxyAddonName: "hyperkube-amd64:v" + version,
-			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64:v" + version,
+			common.Hyperkube:                                  "hyperkube-amd64:v" + version,
+			common.KubeProxyAddonName:                         "hyperkube-amd64:v" + version,
+			common.CloudControllerManagerComponentName:        "cloud-controller-manager-amd64:v" + version,
 			"windowszip":                                      "v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
 			"exechealthz":                                     execHealthZImageReference,
@@ -1018,7 +1018,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.7":
 		ret = map[string]string{
-			"hyperkube":                            "hyperkube-amd64:v" + version,
+			common.Hyperkube:                       "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:              "hyperkube-amd64:v" + version,
 			common.DashboardAddonName:              k8sComponent["dashboard"],
 			"exechealthz":                          execHealthZImageReference,
@@ -1051,7 +1051,7 @@ func getK8sVersionComponents(version string, overrides map[string]string) map[st
 		}
 	case "1.6":
 		ret = map[string]string{
-			"hyperkube":                            "hyperkube-amd64:v" + version,
+			common.Hyperkube:                       "hyperkube-amd64:v" + version,
 			common.KubeProxyAddonName:              "hyperkube-amd64:v" + version,
 			common.DashboardAddonName:              k8sComponent["dashboard"],
 			"exechealthz":                          execHealthZImageReference,
