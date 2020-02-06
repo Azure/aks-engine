@@ -94,7 +94,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addValue(parametersMap, "enableAggregatedAPIs", kubernetesConfig.EnableAggregatedAPIs)
 
 			if properties.HasWindows() {
-				// Kubernetes packages as zip file as created by scripts/build-windows-k8s.sh
+				// Kubernetes packages as zip file as created by Azure Pipelines
 				// will be removed in future release as if gets phased out (https://github.com/Azure/aks-engine/issues/3851)
 				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
 				if kubeBinariesSASURL == "" {

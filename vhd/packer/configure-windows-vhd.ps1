@@ -71,18 +71,16 @@ function Get-FilesToCacheOnVHD
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.8-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.5-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.9-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.14.8-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.5-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.9-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.4-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.6-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.17.1-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.17.2-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.7/windowszip/v1.14.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.8/windowszip/v1.14.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.7/windowszip/v1.15.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.9/windowszip/v1.15.9-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.4/windowszip/v1.16.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.6/windowszip/v1.16.6-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.1/windowszip/v1.17.1-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.2/windowszip/v1.17.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.28/binaries/azure-vnet-cni-windows-amd64-v1.0.28.zip",

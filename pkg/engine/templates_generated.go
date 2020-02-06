@@ -42883,14 +42883,14 @@ New-InfraContainer {
     $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
 
     switch ($computerInfo.WindowsVersion) {
-        "1803" { 
+        "1803" {
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
         }
-        "1809" { 
+        "1809" {
             $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
             if (-not $imageList) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
@@ -42923,7 +42923,7 @@ Test-ContainerImageExists {
 
 
 # TODO: Deprecate this and replace with methods that get individual components instead of zip containing everything
-# This expects the ZIP file to be created by scripts/build-windows-k8s.sh
+# This expects the ZIP file created by Azure Pipelines.
 function
 Get-KubePackage {
     Param(
@@ -46661,7 +46661,7 @@ func swarmSwarmwinagentresourcesvmssT() (*asset, error) {
 var _windowsparamsT = []byte(` {{if IsKubernetes}}
     "kubeBinariesSASURL": {
       "metadata": {
-        "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
+        "description": "The download url for kubernetes windows binaries package"
       },
       "type": "string"
     },
