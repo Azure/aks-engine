@@ -80,6 +80,32 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 
+configure_prerequisites() {
+    if which apt > /dev/null; then
+        # Install required packages; only for apt-based systems
+        apt update -qq
+        apt install -y curl gpg jq nfs-common
+    fi
+
+    modprobe br_netfilter overlay
+    check_and_fix_kernel_parameter /proc/sys/net/ipv4/ip_forward net.ipv4.ip_forward 1
+}
+
+check_and_fix_kernel_parameter() {
+    if [[ -z "${3}" ]]; then
+        echo "${0} requires 3 parameters"
+        return
+    fi
+    proc_path=${1}
+    sysctl_option=${2}
+    desired_value=${3}
+    if ! egrep -q "^${desired_value}$" ${proc_path}; then
+        echo "Set ${proc_path} to ${desired_value}"
+        echo "${desired_value}" > ${proc_path}
+        sed -i "s|#*\s*\(${sysctl_option}\)=.*|\1=${desired_value}|g" /etc/sysctl.conf
+    fi
+}
+
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
     retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \

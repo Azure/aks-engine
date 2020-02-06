@@ -1,0 +1,54 @@
+{
+    "apiVersion": "vlabs",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "kubernetesConfig": {
+                "networkPlugin": "kubenet",
+                "containerRuntime": "containerd"
+            }
+        },
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "",
+            "vmSize": "Standard_D2_v3",
+            "imageReference": {
+                "name": "IMAGE_NAME",
+                "resourceGroup": "GALLERY_RG",
+                "subscriptionId": "GALLERY_SUBSCRIPTION",
+                "gallery": "GALLERY_NAME",
+                "version": "IMAGE_VERSION"
+            },
+            "OSDiskSizeGB": 30
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "agentpool1",
+                "count": 1,
+                "vmSize": "Standard_D2_v3",
+                "imageReference": {
+                    "name": "IMAGE_NAME",
+                    "resourceGroup": "GALLERY_RG",
+                    "subscriptionId": "GALLERY_SUBSCRIPTION",
+                    "gallery": "GALLERY_NAME",
+                    "version": "IMAGE_VERSION"
+                },
+                "OSDiskSizeGB": 30
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "",
+                "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": ""
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientId": "",
+            "secret": ""
+        }
+    }
+   }

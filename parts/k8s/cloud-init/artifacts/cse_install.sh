@@ -43,7 +43,11 @@ installEtcd() {
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
         else
-            img unpack -o "$path" ${CONTAINER_IMAGE}
+            # img unpack requires a non-existent dirctory
+            tmpdir=/root/etcd${RANDOM}
+            img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl /usr/bin
+            rm -rf ${tmpdir}
         fi
         chmod a+x "$path/etcd" "$path/etcdctl"
     fi

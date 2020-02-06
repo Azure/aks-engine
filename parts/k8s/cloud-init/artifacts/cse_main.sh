@@ -16,6 +16,7 @@ for i in $(seq 1 3600); do
 done
 sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
 source {{GetCSEHelpersScriptFilepath}}
+configure_prerequisites
 
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
@@ -94,22 +95,24 @@ fi
 time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
+{{- if NeedsContainerd}}
+time_metric "InstallContainerd" installContainerd
+{{end}}
+
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     {{- if IsDockerContainerRuntime}}
     CLI_TOOL="docker"
     {{else}}
     CLI_TOOL="img"
+    # This codepath requires img, which is not installed until
+    # installKubeletAndKubectl; which is too late.
+    installImg
     {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
 # this will capture the amount of time to install of the network plugin during cse
 time_metric "InstallNetworkPlugin" installNetworkPlugin
-
-
-{{- if NeedsContainerd}}
-time_metric "InstallContainerd" installContainerd
-{{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then

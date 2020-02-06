@@ -34595,19 +34595,27 @@ configureEtcd() {
         exit $RET
     fi
 
+    if [[ -z "${ETCDCTL_ENDPOINTS}" ]]; then
+        # Variables necessary for etcdctl are not present
+        # Must pull them from /etc/environment
+        for entry in $(cat /etc/environment); do
+            export ${entry}
+        done
+    fi
+
     MOUNT_ETCD_FILE=/opt/azure/containers/mountetcd.sh
     wait_for_file 1200 1 $MOUNT_ETCD_FILE || exit $ERR_ETCD_CONFIG_FAIL
     $MOUNT_ETCD_FILE || exit $ERR_ETCD_VOL_MOUNT_FAIL
     systemctlEnableAndStart etcd || exit $ERR_ETCD_START_TIMEOUT
     for i in $(seq 1 600); do
-        MEMBER="$(sudo etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
+        MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
         if [ "$MEMBER" != "" ]; then
             break
         else
             sleep 1
         fi
     done
-    retrycmd_if_failure 120 5 25 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
+    retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
 ensureRPC() {
@@ -35272,6 +35280,32 @@ NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 
+configure_prerequisites() {
+    if which apt > /dev/null; then
+        # Install required packages; only for apt-based systems
+        apt update -qq
+        apt install -y curl gpg jq nfs-common
+    fi
+
+    modprobe br_netfilter overlay
+    check_and_fix_kernel_parameter /proc/sys/net/ipv4/ip_forward net.ipv4.ip_forward 1
+}
+
+check_and_fix_kernel_parameter() {
+    if [[ -z "${3}" ]]; then
+        echo "${0} requires 3 parameters"
+        return
+    fi
+    proc_path=${1}
+    sysctl_option=${2}
+    desired_value=${3}
+    if ! egrep -q "^${desired_value}$" ${proc_path}; then
+        echo "Set ${proc_path} to ${desired_value}"
+        echo "${desired_value}" > ${proc_path}
+        sed -i "s|#*\s*\(${sysctl_option}\)=.*|\1=${desired_value}|g" /etc/sysctl.conf
+    fi
+}
+
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
     retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
@@ -35528,7 +35562,11 @@ installEtcd() {
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
         else
-            img unpack -o "$path" ${CONTAINER_IMAGE}
+            # img unpack requires a non-existent dirctory
+            tmpdir=/root/etcd${RANDOM}
+            img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl /usr/bin
+            rm -rf ${tmpdir}
         fi
         chmod a+x "$path/etcd" "$path/etcdctl"
     fi
@@ -35915,6 +35953,7 @@ for i in $(seq 1 3600); do
 done
 sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
 source {{GetCSEHelpersScriptFilepath}}
+configure_prerequisites
 
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
@@ -35993,22 +36032,24 @@ fi
 time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
+{{- if NeedsContainerd}}
+time_metric "InstallContainerd" installContainerd
+{{end}}
+
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     {{- if IsDockerContainerRuntime}}
     CLI_TOOL="docker"
     {{else}}
     CLI_TOOL="img"
+    # This codepath requires img, which is not installed until
+    # installKubeletAndKubectl; which is too late.
+    installImg
     {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
 # this will capture the amount of time to install of the network plugin during cse
 time_metric "InstallNetworkPlugin" installNetworkPlugin
-
-
-{{- if NeedsContainerd}}
-time_metric "InstallContainerd" installContainerd
-{{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
@@ -37923,6 +37964,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -x
+    if [[ ! -s /etc/environment ]]; then
+        # /etc/environment is empty, which will break subsequent sed commands"
+        # Append a blank line...
+        echo "" >> /etc/environment
+    fi
   {{if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
