@@ -365,6 +365,7 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
+        Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
 
         if (Test-Path $CacheDir)
