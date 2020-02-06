@@ -641,7 +641,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			},
 		},
 		{
-			name: "no addons in ContainerService object",
+			name: "no addons in Properties object",
 			p:    &api.Properties{},
 			expectedHeapster: kubernetesComponentFileSpec{
 				sourceFile:      heapsterAddonSourceFilename,
@@ -1147,6 +1147,226 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedFlannel.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedFlannel.destinationFile)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestKubernetesComponentSettingsInit(t *testing.T) {
+	/*
+		$ echo "Hello, World\!" | base64
+		SGVsbG8sIFdvcmxkXCEK
+	*/
+	const base64Data = "SGVsbG8sIFdvcmxkXCEK"
+	cases := []struct {
+		name                           string
+		p                              *api.Properties
+		expectedScheduler              kubernetesComponentFileSpec
+		expectedControllerManager      kubernetesComponentFileSpec
+		expectedCloudControllerManager kubernetesComponentFileSpec
+		expectedAPIServer              kubernetesComponentFileSpec
+		expectedAddonManager           kubernetesComponentFileSpec
+	}{
+		{
+			name: "components with data",
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.16.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						Components: []api.KubernetesComponent{
+							{
+								Name: common.SchedulerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ControllerManagerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.CloudControllerManagerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.APIServerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.AddonManagerComponentName,
+								Data: base64Data,
+							},
+						},
+					},
+				},
+			},
+			expectedScheduler: kubernetesComponentFileSpec{
+				sourceFile:      schedulerComponentSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: schedulerComponentDestinationFilename,
+			},
+			expectedControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      controllerManagerComponentSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: controllerManagerComponentDestinationFilename,
+			},
+			expectedCloudControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudControllerManagerComponentSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: cloudControllerManagerComponentDestinationFilename,
+			},
+			expectedAPIServer: kubernetesComponentFileSpec{
+				sourceFile:      apiServerComponentSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: apiServerComponentDestinationFilename,
+			},
+			expectedAddonManager: kubernetesComponentFileSpec{
+				sourceFile:      addonManagerComponentSourceFilename,
+				base64Data:      base64Data,
+				destinationFile: addonManagerComponentDestinationFilename,
+			},
+		},
+		{
+			name: "components with no data",
+			p: &api.Properties{
+				OrchestratorProfile: &api.OrchestratorProfile{
+					OrchestratorType:    Kubernetes,
+					OrchestratorVersion: "1.16.1",
+					KubernetesConfig: &api.KubernetesConfig{
+						Components: []api.KubernetesComponent{
+							{
+								Name: common.SchedulerComponentName,
+							},
+							{
+								Name: common.ControllerManagerComponentName,
+							},
+							{
+								Name: common.CloudControllerManagerComponentName,
+							},
+							{
+								Name: common.APIServerComponentName,
+							},
+							{
+								Name: common.AddonManagerComponentName,
+							},
+						},
+					},
+				},
+			},
+			expectedScheduler: kubernetesComponentFileSpec{
+				sourceFile:      schedulerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: schedulerComponentDestinationFilename,
+			},
+			expectedControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      controllerManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: controllerManagerComponentDestinationFilename,
+			},
+			expectedCloudControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudControllerManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudControllerManagerComponentDestinationFilename,
+			},
+			expectedAPIServer: kubernetesComponentFileSpec{
+				sourceFile:      apiServerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: apiServerComponentDestinationFilename,
+			},
+			expectedAddonManager: kubernetesComponentFileSpec{
+				sourceFile:      addonManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: addonManagerComponentDestinationFilename,
+			},
+		},
+		{
+			name: "no components in Properties object",
+			p:    &api.Properties{},
+			expectedScheduler: kubernetesComponentFileSpec{
+				sourceFile:      schedulerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: schedulerComponentDestinationFilename,
+			},
+			expectedControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      controllerManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: controllerManagerComponentDestinationFilename,
+			},
+			expectedCloudControllerManager: kubernetesComponentFileSpec{
+				sourceFile:      cloudControllerManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: cloudControllerManagerComponentDestinationFilename,
+			},
+			expectedAPIServer: kubernetesComponentFileSpec{
+				sourceFile:      apiServerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: apiServerComponentDestinationFilename,
+			},
+			expectedAddonManager: kubernetesComponentFileSpec{
+				sourceFile:      addonManagerComponentSourceFilename,
+				base64Data:      "",
+				destinationFile: addonManagerComponentDestinationFilename,
+			},
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			componentFileSpec := kubernetesComponentSettingsInit(c.p)
+			for component := range componentFileSpec {
+				switch component {
+				case common.SchedulerComponentName:
+					if c.expectedScheduler.sourceFile != componentFileSpec[component].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].sourceFile, c.expectedScheduler.sourceFile)
+					}
+					if c.expectedScheduler.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedScheduler.base64Data)
+					}
+					if c.expectedScheduler.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedScheduler.destinationFile)
+					}
+				case common.ControllerManagerComponentName:
+					if c.expectedControllerManager.sourceFile != componentFileSpec[component].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].sourceFile, c.expectedControllerManager.sourceFile)
+					}
+					if c.expectedControllerManager.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedControllerManager.base64Data)
+					}
+					if c.expectedControllerManager.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedControllerManager.destinationFile)
+					}
+				case common.CloudControllerManagerComponentName:
+					if c.expectedCloudControllerManager.sourceFile != componentFileSpec[component].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].sourceFile, c.expectedCloudControllerManager.sourceFile)
+					}
+					if c.expectedCloudControllerManager.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedCloudControllerManager.base64Data)
+					}
+					if c.expectedCloudControllerManager.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedCloudControllerManager.destinationFile)
+					}
+				case common.APIServerComponentName:
+					if c.expectedAPIServer.sourceFile != componentFileSpec[component].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].sourceFile, c.expectedAPIServer.sourceFile)
+					}
+					if c.expectedAPIServer.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedAPIServer.base64Data)
+					}
+					if c.expectedAPIServer.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedAPIServer.destinationFile)
+					}
+				case common.AddonManagerComponentName:
+					if c.expectedAddonManager.sourceFile != componentFileSpec[component].sourceFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].sourceFile, c.expectedAddonManager.sourceFile)
+					}
+					if c.expectedAddonManager.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedAddonManager.base64Data)
+					}
+					if c.expectedAddonManager.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedAddonManager.destinationFile)
 					}
 				}
 			}

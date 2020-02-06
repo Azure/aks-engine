@@ -25,8 +25,7 @@ func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesCom
 	if p.OrchestratorProfile.KubernetesConfig == nil {
 		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
 	}
-	o := p.OrchestratorProfile
-	k := o.KubernetesConfig
+	k := p.OrchestratorProfile.KubernetesConfig
 	return map[string]kubernetesComponentFileSpec{
 		common.SchedulerComponentName: {
 			sourceFile:      schedulerComponentSourceFilename,
