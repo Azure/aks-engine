@@ -13,13 +13,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jarcoal/httpmock"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -3893,14 +3894,14 @@ func TestSetTelemetryProfileDefaults(t *testing.T) {
 			name:             "default",
 			telemetryProfile: nil,
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{
 			name:             "key not set",
 			telemetryProfile: &TelemetryProfile{},
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{

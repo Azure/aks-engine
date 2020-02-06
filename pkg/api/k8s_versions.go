@@ -39,11 +39,11 @@ const (
 	ciliumCleanStateImageReference                    string = "docker.io/cilium/cilium-init:2018-10-16"
 	ciliumOperatorImageReference                      string = "docker.io/cilium/operator:v1.4"
 	ciliumEtcdOperatorImageReference                  string = "docker.io/cilium/cilium-etcd-operator:v2.0.5"
-	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.2.0"
+	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.3.0"
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.31"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.32"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"

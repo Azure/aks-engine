@@ -27668,9 +27668,9 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antreaagentinfos.clusterinformation.crd.antrea.io
+  name: antreaagentinfos.clusterinformation.antrea.tanzu.vmware.com
 spec:
-  group: clusterinformation.crd.antrea.io
+  group: clusterinformation.antrea.tanzu.vmware.com
   names:
     kind: AntreaAgentInfo
     plural: antreaagentinfos
@@ -27689,9 +27689,9 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
-  name: antreacontrollerinfos.clusterinformation.crd.antrea.io
+  name: antreacontrollerinfos.clusterinformation.antrea.tanzu.vmware.com
 spec:
-  group: clusterinformation.crd.antrea.io
+  group: clusterinformation.antrea.tanzu.vmware.com
   names:
     kind: AntreaControllerInfo
     plural: antreacontrollerinfos
@@ -27703,6 +27703,15 @@ spec:
   - name: v1beta1
     served: true
     storage: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antctl
+  namespace: kube-system
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -27728,6 +27737,20 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antctl
+rules:
+- nonResourceURLs:
+  - /apis/system.antrea.tanzu.vmware.com
+  - /apis/system.antrea.tanzu.vmware.com/*
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: antrea-agent
 rules:
 - apiGroups:
@@ -27740,7 +27763,7 @@ rules:
   - watch
   - list
 - apiGroups:
-  - clusterinformation.crd.antrea.io
+  - clusterinformation.antrea.tanzu.vmware.com
   resources:
   - antreaagentinfos
   verbs:
@@ -27749,7 +27772,7 @@ rules:
   - update
   - delete
 - apiGroups:
-  - networkpolicy.antrea.io
+  - networking.antrea.tanzu.vmware.com
   resources:
   - networkpolicies
   - appliedtogroups
@@ -27786,7 +27809,7 @@ rules:
   - watch
   - list
 - apiGroups:
-  - clusterinformation.crd.antrea.io
+  - clusterinformation.antrea.tanzu.vmware.com
   resources:
   - antreacontrollerinfos
   verbs:
@@ -27795,7 +27818,7 @@ rules:
   - update
   - delete
 - apiGroups:
-  - clusterinformation.crd.antrea.io
+  - clusterinformation.antrea.tanzu.vmware.com
   resources:
   - antreaagentinfos
   verbs:
@@ -27813,6 +27836,23 @@ rules:
   - subjectaccessreviews
   verbs:
   - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antctl
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: antctl
+subjects:
+- kind: ServiceAccount
+  name: antctl
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -27893,6 +27933,9 @@ data:
     # overhead.
     #defaultMTU: 1450
 
+    # Whether or not to enable IPSec encryption of tunnel traffic. IPSec encryption is supported for
+    # only the GRE tunnel type.
+    #enableIPSecTunnel: false
     # CIDR Range for services in cluster. It's required to support egress network policy, should
     # be set to the same value as the one specified by --service-cluster-ip-range for kube-apiserver.
     serviceCIDR: {{ContainerConfig "serviceCidr"}}
@@ -27912,7 +27955,7 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-48gttf992h
+  name: antrea-config-476k567258
   namespace: kube-system
 ---
 apiVersion: v1
@@ -27996,8 +28039,25 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-48gttf992h
+          name: antrea-config-476k567258
         name: antrea-config
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: v1beta1.system.antrea.tanzu.vmware.com
+spec:
+  group: system.antrea.tanzu.vmware.com
+  groupPriorityMinimum: 100
+  insecureSkipTLSVerify: true
+  service:
+    name: antrea
+    namespace: kube-system
+  version: v1beta1
+  versionPriority: 100
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -28072,6 +28132,8 @@ spec:
           mountPropagation: HostToContainer
           name: host-var-run-netns
           readOnly: true
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
       - command:
         - start_ovs
         image: {{ContainerImage "antrea-ovs"}}
@@ -28134,7 +28196,7 @@ spec:
         operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-48gttf992h
+          name: antrea-config-476k567258
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d
@@ -28162,6 +28224,10 @@ spec:
       - hostPath:
           path: /sbin/depmod
         name: host-depmod
+      - hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+        name: xtables-lock
   updateStrategy:
     type: RollingUpdate
 `)
@@ -37588,9 +37654,9 @@ source {{GetCSEHelpersScriptFilepath}}
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
 
-ensureAPMZ "v0.4.0"
+ensureAPMZ "v0.5.1"
 {{- if HasTelemetryEnabled }}
-eval "$(apmz bash -n "cse" -t "{{GetLinuxDefaultTelemetryTags}}" --api-key "{{GetApplicationInsightsTelemetryKey}}")"
+eval "$(apmz bash -n "cse" -t "{{GetLinuxDefaultTelemetryTags}}" --api-keys "{{GetApplicationInsightsTelemetryKeys}}")"
 {{else}}
 eval "$(apmz bash -d)"
 {{end}}
@@ -39512,7 +39578,9 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
+{{- if not (IsKubernetesVersionGe "1.17.0")}}
     KUBELET_IMAGE={{GetHyperkubeImageReference}}
+{{end}}
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
 {{else}}
@@ -40052,8 +40120,10 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-    KUBELET_IMAGE={{GetHyperkubeImageReference}}
     KUBELET_REGISTER_SCHEDULABLE=true
+{{- if not (IsKubernetesVersionGe "1.17.0")}}
+    KUBELET_IMAGE={{GetHyperkubeImageReference}}
+{{end}}
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 {{else}}
@@ -40382,12 +40452,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       },
       "type": "string"
     },
-    "kubernetesHyperkubeSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -40416,12 +40480,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
         "description": "ACI Connector Status"
       },
       "type": "bool"
-    },
-    "kubernetesPodInfraContainerSpec": {
-      "metadata": {
-        "description": "The container spec for pod infra."
-      },
-      "type": "string"
     },
     "cloudproviderConfig": {
       "type": "object",
