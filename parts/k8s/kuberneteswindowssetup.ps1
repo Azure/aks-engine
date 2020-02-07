@@ -193,6 +193,11 @@ try
         }
         $global:AppInsightsClient.Context.Properties["vhd_id"] = $vhdId
 
+        $imdsProperties = Get-InstanceMetadataServiceTelemetry
+        foreach ($key in $imdsProperties.keys) {
+            $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
+        }
+
         $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
 
         # Install OpenSSH if SSH enabled
