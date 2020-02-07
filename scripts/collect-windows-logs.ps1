@@ -1,3 +1,5 @@
+$ProgressPreference="SilentlyContinue"
+
 $lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "containerd.err.log", "containerd.log", "azure-vnet-telemetry.log", "azure-vnet.log"
 
 $timeStamp = get-date -format 'yyyyMMdd-hhmmss'
