@@ -35272,6 +35272,7 @@ OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a)
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
+DEBIAN_OS_NAME="DEBIAN"
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 GPU_DV=418.40.04
@@ -35281,28 +35282,14 @@ DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 
 configure_prerequisites() {
-    if which apt > /dev/null; then
-        # Install required packages; only for apt-based systems
-        apt update -qq
-        apt install -y curl gpg jq nfs-common
+    ip_forward_path=/proc/sys/net/ipv4/ip_forward
+    ip_forward_setting="net.ipv4.ip_forward=0"
+    sysctl_conf=/etc/sysctl.conf
+    if ! egrep -q "^1$" ${ip_forward_path}; then
+        echo 1 > ${ip_forward_path}
     fi
-
-    modprobe br_netfilter overlay
-    check_and_fix_kernel_parameter /proc/sys/net/ipv4/ip_forward net.ipv4.ip_forward 1
-}
-
-check_and_fix_kernel_parameter() {
-    if [[ -z "${3}" ]]; then
-        echo "${0} requires 3 parameters"
-        return
-    fi
-    proc_path=${1}
-    sysctl_option=${2}
-    desired_value=${3}
-    if ! egrep -q "^${desired_value}$" ${proc_path}; then
-        echo "Set ${proc_path} to ${desired_value}"
-        echo "${desired_value}" > ${proc_path}
-        sed -i "s|#*\s*\(${sysctl_option}\)=.*|\1=${desired_value}|g" /etc/sysctl.conf
+    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+        sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
     fi
 }
 
@@ -35565,7 +35552,7 @@ installEtcd() {
             # img unpack requires a non-existent dirctory
             tmpdir=/root/etcd${RANDOM}
             img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
-            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl /usr/bin
+            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
             rm -rf ${tmpdir}
         fi
         chmod a+x "$path/etcd" "$path/etcdctl"
@@ -35578,7 +35565,7 @@ installDeps() {
     aptmarkWALinuxAgent hold
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
+    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client gpg htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
@@ -36013,7 +36000,7 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
+if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
     time_metric "InstallBcc" installBcc
 else
@@ -36041,8 +36028,6 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     CLI_TOOL="docker"
     {{else}}
     CLI_TOOL="img"
-    # This codepath requires img, which is not installed until
-    # installKubeletAndKubectl; which is too late.
     installImg
     {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
@@ -37965,8 +37950,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     set -x
     if [[ ! -s /etc/environment ]]; then
-        # /etc/environment is empty, which will break subsequent sed commands"
-        # Append a blank line...
+        {{- /* /etc/environment is empty, which will break subsequent sed commands
+               Append a blank line... */}}
         echo "" >> /etc/environment
     fi
   {{if IsMasterVirtualMachineScaleSets}}

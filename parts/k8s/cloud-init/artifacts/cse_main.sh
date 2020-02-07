@@ -76,7 +76,7 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
+if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
     time_metric "InstallBcc" installBcc
 else
@@ -104,8 +104,6 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     CLI_TOOL="docker"
     {{else}}
     CLI_TOOL="img"
-    # This codepath requires img, which is not installed until
-    # installKubeletAndKubectl; which is too late.
     installImg
     {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL

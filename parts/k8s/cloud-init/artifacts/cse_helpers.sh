@@ -72,6 +72,7 @@ OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a)
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
+DEBIAN_OS_NAME="DEBIAN"
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 GPU_DV=418.40.04
@@ -81,28 +82,14 @@ DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 
 configure_prerequisites() {
-    if which apt > /dev/null; then
-        # Install required packages; only for apt-based systems
-        apt update -qq
-        apt install -y curl gpg jq nfs-common
+    ip_forward_path=/proc/sys/net/ipv4/ip_forward
+    ip_forward_setting="net.ipv4.ip_forward=0"
+    sysctl_conf=/etc/sysctl.conf
+    if ! egrep -q "^1$" ${ip_forward_path}; then
+        echo 1 > ${ip_forward_path}
     fi
-
-    modprobe br_netfilter overlay
-    check_and_fix_kernel_parameter /proc/sys/net/ipv4/ip_forward net.ipv4.ip_forward 1
-}
-
-check_and_fix_kernel_parameter() {
-    if [[ -z "${3}" ]]; then
-        echo "${0} requires 3 parameters"
-        return
-    fi
-    proc_path=${1}
-    sysctl_option=${2}
-    desired_value=${3}
-    if ! egrep -q "^${desired_value}$" ${proc_path}; then
-        echo "Set ${proc_path} to ${desired_value}"
-        echo "${desired_value}" > ${proc_path}
-        sed -i "s|#*\s*\(${sysctl_option}\)=.*|\1=${desired_value}|g" /etc/sysctl.conf
+    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+        sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
     fi
 }
 

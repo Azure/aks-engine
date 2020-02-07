@@ -427,8 +427,8 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     set -x
     if [[ ! -s /etc/environment ]]; then
-        # /etc/environment is empty, which will break subsequent sed commands"
-        # Append a blank line...
+        {{- /* /etc/environment is empty, which will break subsequent sed commands
+               Append a blank line... */}}
         echo "" >> /etc/environment
     fi
   {{if IsMasterVirtualMachineScaleSets}}
