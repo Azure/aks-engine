@@ -41379,6 +41379,7 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
+        Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
 
         if (Test-Path $CacheDir)
@@ -42626,7 +42627,16 @@ function Adjust-PageFileSize()
 {
     wmic pagefileset set InitialSize=8096,MaximumSize=8096
 }
-`)
+
+function Adjust-DynamicPortRange()
+{
+    # Kube-proxy reserves 63 ports per service which limits clusters with Windows nodes
+    # to ~225 services if default port reservations are used.
+    # https://docs.microsoft.com/en-us/virtualization/windowscontainers/kubernetes/common-problems#load-balancers-are-plumbed-inconsistently-across-the-cluster-nodes
+    # Kube-proxy load balancing should be set to DSR mode when it releases with future versions of the OS
+
+    Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "16385", "49151")
+}`)
 
 func k8sWindowsconfigfuncPs1Bytes() ([]byte, error) {
 	return _k8sWindowsconfigfuncPs1, nil
