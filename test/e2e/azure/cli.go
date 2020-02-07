@@ -474,11 +474,17 @@ func (a *Account) UpdateRouteTables(subnet, vnet string) error {
 
 // GetHosts will get a list of vms in the resource group
 func (a *Account) GetHosts(name string) ([]VM, error) {
+	v := []VM{{}}
 	var resourceGroup string
 	if name != "" {
 		resourceGroup = name
 	} else {
 		resourceGroup = a.ResourceGroup.Name
+	}
+	err := a.ShowGroupWithRetry(resourceGroup, 3*time.Second, 10*time.Second)
+	if err != nil {
+		log.Printf("Unabled to validate that resource group %s already exists\n", resourceGroup)
+		return v, nil
 	}
 	var cmd *exec.Cmd
 	if a.TimeoutCommands {
@@ -492,7 +498,6 @@ func (a *Account) GetHosts(name string) ([]VM, error) {
 		log.Printf("Error while trying to get vm list:%s\n", out)
 		return nil, err
 	}
-	v := []VM{{}}
 	err = json.Unmarshal(out, &v)
 	if err != nil {
 		log.Printf("Error unmarshalling VM json:%s\n", err)
