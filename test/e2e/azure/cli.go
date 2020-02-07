@@ -481,7 +481,7 @@ func (a *Account) GetHosts(name string) ([]VM, error) {
 	} else {
 		resourceGroup = a.ResourceGroup.Name
 	}
-	err = cli.Account.ShowGroupWithRetry(resourceGroup, 3*time.Second, 10*time.Second)
+	err := a.ShowGroupWithRetry(resourceGroup, 3*time.Second, 10*time.Second)
 	if err != nil {
 		log.Printf("Unabled to validate that resource group %s already exists\n", resourceGroup)
 		return v, nil
