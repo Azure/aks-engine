@@ -933,9 +933,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
+			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
 			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
 			successes, err := pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+
+			// Use curl to test responsive DNS lookup + TCP 443 connectivity
+			name = fmt.Sprintf("alpine-%s", cfg.Name)
+			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
