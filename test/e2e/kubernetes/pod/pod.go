@@ -915,8 +915,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 						return false, err
 					}
 					duration := t2.Sub(t1)
-					if duration > containerExecutionTimeout {
-						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration, containerExecutionTimeout)
+					if duration >= containerExecutionTimeout {
+						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration.String(), containerExecutionTimeout.String())
 					}
 					return true, nil
 				}
