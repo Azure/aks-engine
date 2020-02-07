@@ -168,8 +168,15 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if config.LinuxNodeImageName != "" && config.LinuxNodeImageResourceGroup != "" {
+		prop.MasterProfile.ImageRef = &vlabs.ImageReference{
+			Name:          config.LinuxNodeImageName,
+			ResourceGroup: config.LinuxNodeImageResourceGroup,
+		}
+		prop.MasterProfile.ImageRef.Gallery = config.LinuxNodeImageGallery
+		prop.MasterProfile.ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
+		prop.MasterProfile.ImageRef.Version = config.LinuxNodeImageVersion
 		if len(prop.AgentPoolProfiles) == 1 {
-			prop.AgentPoolProfiles[0].ImageRef = vlabs.ImageReference{
+			prop.AgentPoolProfiles[0].ImageRef = &vlabs.ImageReference{
 				Name:          config.LinuxNodeImageName,
 				ResourceGroup: config.LinuxNodeImageResourceGroup,
 			}
@@ -179,13 +186,6 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.AgentPoolProfiles[0].ImageRef.Version = config.LinuxNodeImageVersion
 			}
 		}
-		prop.MasterProfile.ImageRef = vlabs.ImageReference{
-			Name:          config.LinuxNodeImageName,
-			ResourceGroup: config.LinuxNodeImageResourceGroup,
-		}
-		prop.MasterProfile.ImageRef.Gallery = config.LinuxNodeImageGallery
-		prop.MasterProfile.ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
-		prop.MasterProfile.ImageRef.Version = config.LinuxNodeImageVersion
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
