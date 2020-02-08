@@ -50,7 +50,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-MOBY_VERSION="3.0.8"
+MOBY_VERSION="3.0.10"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
@@ -145,8 +145,6 @@ done
 
 METRICS_SERVER_VERSIONS="
 0.3.5
-0.3.4
-0.2.1
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
