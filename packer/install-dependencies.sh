@@ -157,22 +157,6 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-KUBE_ADDON_MANAGER_VERSIONS="
-9.0.2
-9.0.1
-9.0
-8.9.1
-8.9
-8.8
-8.7
-8.6
-"
-for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 KUBE_DNS_MASQ_VERSIONS="
 1.15.4
 1.15.0
@@ -212,44 +196,6 @@ TILLER_VERSIONS="
 "
 for TILLER_VERSION in ${TILLER_VERSIONS}; do
     CONTAINER_IMAGE="gcr.io/kubernetes-helm/tiller:v${TILLER_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-CLUSTER_AUTOSCALER_VERSIONS="
-1.17.0
-1.16.2
-1.16.1
-1.16.0
-1.15.3
-1.15.2
-1.15.1
-1.15.0
-1.14.6
-1.14.5
-1.14.4
-1.14.2
-1.14.0
-1.13.7
-1.13.6
-1.13.4
-1.13.2
-1.13.1
-1.12.8
-1.12.7
-1.12.5
-1.12.3
-1.12.2
-1.3.9
-1.3.8
-1.3.7
-1.3.4
-1.3.3
-1.2.5
-1.2.2
-"
-for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
