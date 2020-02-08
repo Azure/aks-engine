@@ -256,7 +256,6 @@ done
 
 K8S_DNS_SIDECAR_VERSIONS="
 1.14.10
-1.14.8
 "
 for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
@@ -266,11 +265,9 @@ done
 
 CORE_DNS_VERSIONS="
 1.6.5
-1.6.2
 1.5.0
 1.3.1
 1.2.6
-1.2.2
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
@@ -297,8 +294,7 @@ done
 
 AZURE_CNIIMAGEBASE="mcr.microsoft.com/containernetworking"
 AZURE_CNI_NETWORKMONITOR_VERSIONS="
-0.0.6
-0.0.5
+0.0.7
 "
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
@@ -307,8 +303,8 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
-1.0.29
-1.0.28
+1.0.31
+1.0.30
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
@@ -317,8 +313,7 @@ for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
 done
 
 AZURE_VNET_TELEMETRY_VERSIONS="
-1.0.29
-1.0.28
+1.0.30
 "
 for AZURE_VNET_TELEMETRY_VERSION in ${AZURE_VNET_TELEMETRY_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-vnet-telemetry:v${AZURE_VNET_TELEMETRY_VERSION}"
@@ -343,9 +338,39 @@ for TUNNELFRONT_VERSION in ${TUNNELFRONT_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-KUBE_SVC_REDIRECT_VERSIONS="1.0.2"
+KUBE_SVC_REDIRECT_VERSIONS="1.0.7"
 for KUBE_SVC_REDIRECT_VERSION in ${KUBE_SVC_REDIRECT_VERSIONS}; do
     CONTAINER_IMAGE="docker.io/deis/kube-svc-redirect:v${KUBE_SVC_REDIRECT_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+# oms agent used by AKS
+OMS_AGENT_IMAGES="ciprod01072020"
+for OMS_AGENT_IMAGE in ${OMS_AGENT_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/azuremonitor/containerinsights/ciprod:${OMS_AGENT_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+# calico images used by AKS
+CALICO_CNI_IMAGES="v3.5.0"
+for CALICO_CNI_IMAGE in ${CALICO_CNI_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/cni:${CALICO_CNI_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CALICO_NODE_IMAGES="v3.5.0"
+for CALICO_NODE_IMAGE in ${CALICO_NODE_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/node:${CALICO_NODE_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CALICO_TYPHA_IMAGES="v3.5.0"
+for CALICO_TYPHA_IMAGE in ${CALICO_TYPHA_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/typha:${CALICO_TYPHA_IMAGE}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -365,8 +390,6 @@ for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
 done
 
 IP_MASQ_AGENT_VERSIONS="
-2.5.0
-2.3.0
 2.0.0
 "
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
@@ -379,6 +402,17 @@ for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
+
+# this is the patched images which AKS are using.
+AKS_IP_MASQ_AGENT_VERSIONS="
+2.0.0_v0.0.5
+"
+for IP_MASQ_AGENT_VERSION in ${AKS_IP_MASQ_AGENT_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v${IP_MASQ_AGENT_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 
 NGINX_VERSIONS="1.13.12-alpine"
 for NGINX_VERSION in ${NGINX_VERSIONS}; do
@@ -394,25 +428,13 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-FLANNEL_VERSIONS="
-0.10.0
-0.8.0
-"
-for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
-    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}-amd64"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.17.0
 1.16.4
-1.16.2
 1.16.1
-1.16.1-azs
 1.15.7
 1.15.5
 1.15.4
@@ -446,6 +468,28 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   fi
+done
+
+# pull patched hyperkube image for AKS
+# this is used by kube-proxy
+PATCHED_HYPERKUBE_IMAGES="
+v1.12.8_v0.0.5
+v1.13.10_v0.0.5
+v1.13.11_v0.0.5
+v1.13.12_f0.0.2
+v1.14.6_v0.0.5
+v1.14.7_v0.0.5
+v1.14.8_f0.0.4
+v1.15.3_v0.0.5
+v1.15.4_v0.0.5
+v1.15.5_f0.0.2
+v1.15.7_f0.0.2
+v1.16.0_v0.0.5
+"
+for KUBERNETES_VERSION in ${PATCHED_HYPERKUBE_IMAGES}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/hyperkube:${KUBERNETES_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 CLOUD_MANAGER_VERSIONS="
