@@ -104,6 +104,20 @@ for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+NEW_DASHBOARD_VERSIONS="2.0.0-beta8"
+for DASHBOARD_VERSION in ${NEW_DASHBOARD_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetesui/dashboard:v${DASHBOARD_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS="1.0.2"
+for DASHBOARD_VERSION in ${NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetesui/metrics-scraper:v${DASHBOARD_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 EXECHEALTHZ_VERSIONS="1.2"
 for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/exechealthz-amd64:${EXECHEALTHZ_VERSION}"
