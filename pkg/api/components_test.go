@@ -4,7 +4,6 @@
 package api
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -710,44 +709,44 @@ func TestGetDefaultCommandStrings(t *testing.T) {
 		{
 			name:                                   "1.13",
 			cs:                                     getContainerServicesMap()["1.13"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"/hyperkube\", \"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"/hyperkube\", \"kube-scheduler\"",
 		},
 		{
 			name:                                   "1.14",
 			cs:                                     getContainerServicesMap()["1.14"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"/hyperkube\", \"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"/hyperkube\", \"kube-scheduler\"",
 		},
 		{
 			name:                                   "1.15",
 			cs:                                     getContainerServicesMap()["1.15"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"/hyperkube\", \"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"/hyperkube\", \"kube-scheduler\"",
 		},
 		{
 			name:                                   "1.16",
 			cs:                                     getContainerServicesMap()["1.16"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"/hyperkube\", \"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"/hyperkube\", \"kube-scheduler\"",
 		},
 		{
 			name:                                   "1.17",
 			cs:                                     getContainerServicesMap()["1.17"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"kube-scheduler\"",
 		},
 		{
 			name:                                   "1.18",
 			cs:                                     getContainerServicesMap()["1.18"],
-			expectedAPIServerCommandString:         fmt.Sprintf("\"kube-apiserver\""),
-			expectedControllerManagerCommandString: fmt.Sprintf("\"kube-controller-manager\""),
-			expectedSchedulerCommandString:         fmt.Sprintf("\"kube-scheduler\""),
+			expectedAPIServerCommandString:         "\"kube-apiserver\"",
+			expectedControllerManagerCommandString: "\"kube-controller-manager\"",
+			expectedSchedulerCommandString:         "\"kube-scheduler\"",
 		},
 	}
 

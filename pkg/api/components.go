@@ -4,8 +4,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 )
@@ -185,23 +183,23 @@ func synthesizeComponentsConfig(components []KubernetesComponent, defaultCompone
 
 func getAPIServerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-		return fmt.Sprintf("\"kube-apiserver\"")
+		return "\"kube-apiserver\""
 	}
-	return fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\"")
+	return "\"/hyperkube\", \"kube-apiserver\""
 }
 
 func getControllerManagerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-		return fmt.Sprintf("\"kube-controller-manager\"")
+		return "\"kube-controller-manager\""
 	}
-	return fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\"")
+	return "\"/hyperkube\", \"kube-controller-manager\""
 }
 
 func getSchedulerDefaultCommandString(cs *ContainerService) string {
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-		return fmt.Sprintf("\"kube-scheduler\"")
+		return "\"kube-scheduler\""
 	}
-	return fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\"")
+	return "\"/hyperkube\", \"kube-scheduler\""
 }
 
 func getComponentDefaultContainerImage(component string, cs *ContainerService) string {
