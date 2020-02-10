@@ -1807,7 +1807,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:     "override",
+				WindowsSku:       "override",
 			},
 			WindowsProfile{
 				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
