@@ -39240,7 +39240,7 @@ function Register-LogsCleanupScriptTask {
 }
 
 function Register-NodeResetScriptTask {
-    Write-Log "Creatingg a startup task to run windowsnodereset.ps1"
+    Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
@@ -41738,12 +41738,10 @@ Stop-Service kubelet
 
 $hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
 if ($hnsNetwork) {
-    Write-Log "Cleaning up HNS network 'azure'..."
-
     Write-Log "Cleaning up containers"
     docker ps -q | ForEach-Object { docker rm $_ -f }
 
-    Write-Log "Removing old HNS network"
+    Write-Log "Removing old HNS network 'azure'"
     Remove-HnsNetwork $hnsNetwork
 
     taskkill /IM azure-vnet.exe /f
@@ -41764,15 +41762,17 @@ if ($hnsNetwork) {
     }
 }
 
-#
-# Create required networks
-#
-
 Write-Log "Cleaning up persisted HNS policy lists"
 # Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
+#
+# Create required networks
+#
+
+# If using kubenet create the HSN network here.
+# (The kubelet creates the HSN network when using azure-cni + azure cloud provider)
 if ($global:NetworkPlugin -eq 'kubenet') {
     Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
     $podCIDR = Get-PodCIDR
@@ -41780,7 +41780,6 @@ if ($global:NetworkPlugin -eq 'kubenet') {
     New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
     Start-sleep 10
 }
-
 
 #
 # Start Services

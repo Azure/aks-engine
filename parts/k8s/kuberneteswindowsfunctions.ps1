@@ -206,7 +206,7 @@ function Register-LogsCleanupScriptTask {
 }
 
 function Register-NodeResetScriptTask {
-    Write-Log "Creatingg a startup task to run windowsnodereset.ps1"
+    Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
