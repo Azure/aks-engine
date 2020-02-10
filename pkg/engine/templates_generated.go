@@ -35273,6 +35273,9 @@ UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
 DEBIAN_OS_NAME="DEBIAN"
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+    OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+fi
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 GPU_DV=418.40.04
@@ -35560,25 +35563,25 @@ installEtcd() {
 }
 
 installDeps() {
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
-    retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
-    aptmarkWALinuxAgent hold
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils ebtables fuse git gpg init-system-helpers iproute2 iptables jq mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
+        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
+        retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
+        aptmarkWALinuxAgent hold
+        packages+=" cgroup-lite"
+    elif [[ $OS == $DEBIAN_OS_NAME ]]; then
+        packages+=" gpg cgroup-bin"
+    fi
+
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
+
+    for apt_package in ${packages}; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
       fi
     done
-    if [[ $OS == $DEBIAN_OS_NAME ]]; then
-      for apt_package in gpg; do
-        if ! apt_get_install 30 1 600 $apt_package; then
-          journalctl --no-pager -u $apt_package
-          exit $ERR_APT_INSTALL_TIMEOUT
-        fi
-      done
-    fi
     if [[ "${AUDITD_ENABLED}" == true ]]; then
       if ! apt_get_install 30 1 600 auditd; then
         journalctl --no-pager -u auditd
