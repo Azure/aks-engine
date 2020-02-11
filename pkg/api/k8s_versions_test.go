@@ -14,11 +14,11 @@ import (
 func TestGetK8sVersionComponents(t *testing.T) {
 	g := NewGomegaWithT(t)
 
-	oneDotEighteenDotZero := getK8sVersionComponents("1.18.0", nil)
+	oneDotEighteenDotZero := getK8sVersionComponentsGCR("1.18.0", nil)
 	if oneDotEighteenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent := k8sComponentVersions["1.18"]
+	k8sComponent := k8sComponentVersionsGCR["1.18"]
 	expected := map[string]string{
 		"kube-scheduler":                                  "kube-scheduler:v1.18.0",
 		"kube-controller-manager":                         "kube-controller-manager:v1.18.0",
@@ -99,11 +99,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotEighteenDotZero).To(Equal(expected))
 
-	oneDotSeventeenDotZero := getK8sVersionComponents("1.17.0", nil)
+	oneDotSeventeenDotZero := getK8sVersionComponentsGCR("1.17.0", nil)
 	if oneDotSeventeenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.17"]
+	k8sComponent = k8sComponentVersionsGCR["1.17"]
 	expected = map[string]string{
 		"kube-scheduler":                                  "kube-scheduler:v1.17.0",
 		"kube-controller-manager":                         "kube-controller-manager:v1.17.0",
@@ -184,11 +184,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotSeventeenDotZero).To(Equal(expected))
 
-	oneDotSixteenDotZero := getK8sVersionComponents("1.16.0", nil)
+	oneDotSixteenDotZero := getK8sVersionComponentsGCR("1.16.0", nil)
 	if oneDotSixteenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.16"]
+	k8sComponent = k8sComponentVersionsGCR["1.16"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.16.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.16.0",
@@ -267,11 +267,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotSixteenDotZero).To(Equal(expected))
 
-	oneDotFifteenDotZero := getK8sVersionComponents("1.15.0", nil)
+	oneDotFifteenDotZero := getK8sVersionComponentsGCR("1.15.0", nil)
 	if oneDotFifteenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.15"]
+	k8sComponent = k8sComponentVersionsGCR["1.15"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.15.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.15.0",
@@ -349,11 +349,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotFifteenDotZero).To(Equal(expected))
 
-	oneDotFourteenDotZero := getK8sVersionComponents("1.14.0", nil)
+	oneDotFourteenDotZero := getK8sVersionComponentsGCR("1.14.0", nil)
 	if oneDotFourteenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.14"]
+	k8sComponent = k8sComponentVersionsGCR["1.14"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.14.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.14.0",
@@ -431,11 +431,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotFourteenDotZero).To(Equal(expected))
 
-	oneDotThirteenDotZero := getK8sVersionComponents("1.13.0", nil)
+	oneDotThirteenDotZero := getK8sVersionComponentsGCR("1.13.0", nil)
 	if oneDotThirteenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.13"]
+	k8sComponent = k8sComponentVersionsGCR["1.13"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.13.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.13.0",
@@ -513,11 +513,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotThirteenDotZero).To(Equal(expected))
 
-	oneDotTwelveDotZero := getK8sVersionComponents("1.12.0", nil)
+	oneDotTwelveDotZero := getK8sVersionComponentsGCR("1.12.0", nil)
 	if oneDotTwelveDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.12"]
+	k8sComponent = k8sComponentVersionsGCR["1.12"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.12.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.12.0",
@@ -586,11 +586,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotTwelveDotZero).To(Equal(expected))
 
-	oneDotElevenDotZero := getK8sVersionComponents("1.11.0-alpha.1", nil)
+	oneDotElevenDotZero := getK8sVersionComponentsGCR("1.11.0-alpha.1", nil)
 	if oneDotElevenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.11"]
+	k8sComponent = k8sComponentVersionsGCR["1.11"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.11.0-alpha.1",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.11.0-alpha.1",
@@ -658,11 +658,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotElevenDotZero).To(Equal(expected))
 
-	oneDotTenDotZero := getK8sVersionComponents("1.10.0", nil)
+	oneDotTenDotZero := getK8sVersionComponentsGCR("1.10.0", nil)
 	if oneDotTenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.10"]
+	k8sComponent = k8sComponentVersionsGCR["1.10"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.10.0",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.10.0",
@@ -730,11 +730,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotTenDotZero).To(Equal(expected))
 
-	oneDotNineDotThree := getK8sVersionComponents("1.9.3", nil)
+	oneDotNineDotThree := getK8sVersionComponentsGCR("1.9.3", nil)
 	if oneDotNineDotThree == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.9"]
+	k8sComponent = k8sComponentVersionsGCR["1.9"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.9.3",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
@@ -801,11 +801,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotNineDotThree).To(Equal(expected))
 
-	oneDotEightDotEight := getK8sVersionComponents("1.8.8", nil)
+	oneDotEightDotEight := getK8sVersionComponentsGCR("1.8.8", nil)
 	if oneDotEightDotEight == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.8"]
+	k8sComponent = k8sComponentVersionsGCR["1.8"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.8.8",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.8.8",
@@ -869,11 +869,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotEightDotEight).To(Equal(expected))
 
-	oneDotSevenDotZero := getK8sVersionComponents("1.7.13", nil)
+	oneDotSevenDotZero := getK8sVersionComponentsGCR("1.7.13", nil)
 	if oneDotSevenDotZero == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.7"]
+	k8sComponent = k8sComponentVersionsGCR["1.7"]
 	expected = map[string]string{
 		common.Hyperkube:                       "hyperkube-amd64:v1.7.13",
 		common.KubeProxyAddonName:              "hyperkube-amd64:v1.7.13",
@@ -908,11 +908,11 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(oneDotSevenDotZero).To(Equal(expected))
 
-	override := getK8sVersionComponents("1.9.3", map[string]string{"windowszip": "v1.9.3-2int.zip"})
+	override := getK8sVersionComponentsGCR("1.9.3", map[string]string{"windowszip": "v1.9.3-2int.zip"})
 	if override == nil {
-		t.Fatalf("getK8sVersionComponents() should not return nil for valid version")
+		t.Fatalf("getK8sVersionComponentsGCR() should not return nil for valid version")
 	}
-	k8sComponent = k8sComponentVersions["1.9"]
+	k8sComponent = k8sComponentVersionsGCR["1.9"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.9.3",
 		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.9.3",
@@ -979,8 +979,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	}
 	g.Expect(override).To(Equal(expected))
 
-	unknown := getK8sVersionComponents("1.0.0", nil)
+	unknown := getK8sVersionComponentsGCR("1.0.0", nil)
 	if unknown != nil {
-		t.Fatalf("getK8sVersionComponents() should return nil for unknown k8s version")
+		t.Fatalf("getK8sVersionComponentsGCR() should return nil for unknown k8s version")
 	}
 }

@@ -22,7 +22,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
 	var workspaceDomain string

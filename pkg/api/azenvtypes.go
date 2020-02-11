@@ -36,10 +36,12 @@ type DCOSSpecConfig struct {
 
 //KubernetesSpecConfig is the kubernetes container images used.
 type KubernetesSpecConfig struct {
-	AzureTelemetryPID                string `json:"azureTelemetryPID,omitempty"`
-	KubernetesImageBase              string `json:"kubernetesImageBase,omitempty"`
-	TillerImageBase                  string `json:"tillerImageBase,omitempty"`
-	ACIConnectorImageBase            string `json:"aciConnectorImageBase,omitempty"`
+	AzureTelemetryPID string `json:"azureTelemetryPID,omitempty"`
+	// KubernetesImageBase defines a base image URL substring to source images that originate from upstream k8s.gcr.io
+	KubernetesImageBase   string `json:"kubernetesImageBase,omitempty"`
+	TillerImageBase       string `json:"tillerImageBase,omitempty"`
+	ACIConnectorImageBase string `json:"aciConnectorImageBase,omitempty"`
+	// MCRKubernetesImageBase defines a base image URL substring to source MS-curated images that originate from MCR
 	MCRKubernetesImageBase           string `json:"mcrKubernetesImageBase,omitempty"`
 	NVIDIAImageBase                  string `json:"nvidiaImageBase,omitempty"`
 	AzureCNIImageBase                string `json:"azureCNIImageBase,omitempty"`

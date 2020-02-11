@@ -196,7 +196,7 @@ func TestAddonsIndexByName(t *testing.T) {
 
 func TestAssignDefaultAddonImages(t *testing.T) {
 	kubernetesVersion := "1.13.11"
-	k8sComponents := K8sComponentsByVersionMap[kubernetesVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{

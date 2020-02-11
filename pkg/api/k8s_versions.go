@@ -66,9 +66,9 @@ const (
 	ScheduledMaintenanceManagerImageReference         string = "quay.io/awesomenix/drainsafe-manager:latest"
 )
 
-// k8sComponentVersions is a convenience map to make UT maintenance easier,
-// at the expense of some add'l indirection in getK8sVersionComponents below
-var k8sComponentVersions = map[string]map[string]string{
+// k8sComponentVersionsGCR is a convenience map to make UT maintenance easier,
+// at the expense of some add'l indirection in getK8sVersionComponentsGCR below
+var k8sComponentVersionsGCR = map[string]map[string]string{
 	"1.18": {
 		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
@@ -165,17 +165,21 @@ var k8sComponentVersions = map[string]map[string]string{
 	},
 }
 
-// K8sComponentsByVersionMap represents Docker images used for Kubernetes components based on Kubernetes versions (major.minor.patch)
-var K8sComponentsByVersionMap map[string]map[string]string
+type getK8sVersionComponents func(string, map[string]string) map[string]string
 
-func init() {
-	K8sComponentsByVersionMap = getKubeConfigs()
-}
-
-func getKubeConfigs() map[string]map[string]string {
+func GetK8sComponentsByVersionMap(k *KubernetesConfig) map[string]map[string]string {
+	var getter getK8sVersionComponents
+	switch k.KubernetesImageBaseType {
+	case common.KubernetesImageBaseTypeGCR:
+		getter = getK8sVersionComponentsGCR
+	case common.KubernetesImageBaseTypeMCR:
+		getter = getK8sVersionComponentsMCR
+	default:
+		getter = getK8sVersionComponentsGCR
+	}
 	ret := make(map[string]map[string]string)
 	for _, version := range common.GetAllSupportedKubernetesVersions(true, false) {
-		ret[version] = getK8sVersionComponents(version, getVersionOverrides(version))
+		ret[version] = getter(version, getVersionOverrides(version))
 	}
 	return ret
 }
@@ -221,11 +225,15 @@ func getVersionOverrides(v string) map[string]string {
 	}
 }
 
-func getK8sVersionComponents(version string, overrides map[string]string) map[string]string {
+func getK8sVersionComponentsMCR(version string, overrides map[string]string) map[string]string {
+	return map[string]string{}
+}
+
+func getK8sVersionComponentsGCR(version string, overrides map[string]string) map[string]string {
 	s := strings.Split(version, ".")
 	majorMinor := strings.Join(s[:2], ".")
 	var ret map[string]string
-	k8sComponent := k8sComponentVersions[majorMinor]
+	k8sComponent := k8sComponentVersionsGCR[majorMinor]
 	switch majorMinor {
 	case "1.18":
 		ret = map[string]string{

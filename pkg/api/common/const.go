@@ -270,3 +270,8 @@ const (
 	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
 	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
 )
+
+const (
+	KubernetesImageBaseTypeGCR = "gcr"
+	KubernetesImageBaseTypeMCR = "mcr"
+)

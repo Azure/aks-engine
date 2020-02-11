@@ -203,6 +203,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		},
 	}
 	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	tests := []struct {
 		name           string
 		cs             *ContainerService
@@ -266,7 +267,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.15.4"][common.TillerAddonName],
+							Image:          specConfig.TillerImageBase + k8sComponentsByVersionMap["1.15.4"][common.TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -317,7 +318,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
+							Image:          specConfig.ACIConnectorImageBase + k8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
 						},
 					},
 				},
@@ -410,7 +411,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -507,7 +508,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -622,7 +623,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -741,7 +742,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -915,7 +916,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1089,7 +1090,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1213,7 +1214,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1337,7 +1338,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1379,7 +1380,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.SMBFlexVolumeAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.SMBFlexVolumeAddonName],
 						},
 					},
 				},
@@ -1421,7 +1422,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "10m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
 						},
 					},
 				},
@@ -1462,7 +1463,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
+							Image:          specConfig.NVIDIAImageBase + k8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
 						},
 					},
 				},
@@ -1544,7 +1545,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "100m",
@@ -1576,11 +1577,11 @@ func TestSetAddonsConfig(t *testing.T) {
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.AzureNetworkPolicyAddonName,
-											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+											Image: k8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 										},
 										{
 											Name:  common.AzureVnetTelemetryContainerName,
-											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureVnetTelemetryContainerName],
+											Image: k8sComponentsByVersionMap["1.16.0"][common.AzureVnetTelemetryContainerName],
 										},
 									},
 								},
@@ -1597,7 +1598,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "100m",
@@ -1639,7 +1640,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.DNSAutoscalerAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
+							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
 							CPURequests:    "20m",
 							MemoryRequests: "100Mi",
 						},
@@ -1674,23 +1675,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-typha"],
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-cni"],
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-node"],
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
 						},
 					},
 				},
@@ -1751,23 +1752,23 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-typha"],
 						},
 						{
 							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-cni"],
 						},
 						{
 							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-node"],
 						},
 						{
 							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
 						},
 						{
 							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
 						},
 					},
 				},
@@ -1805,7 +1806,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.NMIContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.NMIContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.NMIContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
@@ -1813,7 +1814,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.MICContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.MICContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.MICContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
@@ -1859,7 +1860,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzurePolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzurePolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.AzurePolicyAddonName],
 							CPURequests:    "30m",
 							MemoryRequests: "50Mi",
 							CPULimits:      "100m",
@@ -1867,7 +1868,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.GatekeeperContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "256Mi",
 							CPULimits:      "100m",
@@ -1904,19 +1905,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CiliumAgentContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
 						},
 						{
 							Name:  common.CiliumCleanStateContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
 						},
 						{
 							Name:  common.CiliumOperatorContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
 						},
 						{
 							Name:  common.CiliumEtcdOperatorContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
 						},
 					},
 				},
@@ -1962,7 +1963,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
+							Image:          "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -1972,7 +1973,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
+							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -1986,7 +1987,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
+							Image:          "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2001,7 +2002,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: "AzureCNIImageBase" + K8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							Image: "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2015,7 +2016,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
 						},
 					},
 				},
@@ -2030,7 +2031,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName],
+							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -2090,7 +2091,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2098,7 +2099,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2106,7 +2107,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2114,7 +2115,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2122,7 +2123,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2130,7 +2131,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2144,7 +2145,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2152,7 +2153,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2160,7 +2161,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2168,7 +2169,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2176,7 +2177,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2184,7 +2185,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2192,7 +2193,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2200,7 +2201,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2237,7 +2238,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2245,7 +2246,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2253,7 +2254,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2261,7 +2262,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2269,7 +2270,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2277,7 +2278,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2291,7 +2292,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2299,7 +2300,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2307,7 +2308,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2315,7 +2316,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2323,7 +2324,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2331,7 +2332,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2339,7 +2340,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2347,7 +2348,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2388,7 +2389,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2396,7 +2397,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2404,7 +2405,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2412,7 +2413,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2420,7 +2421,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2428,7 +2429,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2442,7 +2443,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2450,7 +2451,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2458,7 +2459,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2466,7 +2467,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2474,7 +2475,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2482,7 +2483,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2490,7 +2491,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2498,7 +2499,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2553,7 +2554,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2561,7 +2562,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2569,7 +2570,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2577,7 +2578,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2585,7 +2586,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2593,7 +2594,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2607,7 +2608,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2615,7 +2616,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2623,7 +2624,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2631,7 +2632,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2639,7 +2640,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2647,7 +2648,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2655,7 +2656,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2663,7 +2664,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2718,7 +2719,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2726,7 +2727,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2734,7 +2735,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2742,7 +2743,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2750,7 +2751,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2758,7 +2759,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2772,7 +2773,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2780,7 +2781,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2788,7 +2789,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2796,7 +2797,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2804,7 +2805,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2812,7 +2813,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2820,7 +2821,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2828,7 +2829,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -2900,15 +2901,15 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  "dnsmasq",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["dnsmasq"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"]["dnsmasq"],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["k8s-dns-sidecar"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"]["k8s-dns-sidecar"],
 						},
 					},
 				},
@@ -2977,15 +2978,15 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  "dnsmasq",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["dnsmasq"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"]["dnsmasq"],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["k8s-dns-sidecar"],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"]["k8s-dns-sidecar"],
 						},
 					},
 				},
@@ -3137,7 +3138,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.NodeProblemDetectorAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.NodeProblemDetectorAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.NodeProblemDetectorAddonName],
 							CPURequests:    "20m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -3558,6 +3559,7 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 
 func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
 		name                string
 		addon               KubernetesAddon
@@ -3581,7 +3583,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -3638,7 +3640,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -3707,7 +3709,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -3799,6 +3801,7 @@ func isInStrSlice(name string, names []string) bool {
 
 func getDefaultAddons(version string) []KubernetesAddon {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	addons := []KubernetesAddon{
 		{
 			Name:    common.BlobfuseFlexVolumeAddonName,
@@ -3810,7 +3813,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "100Mi",
 					CPULimits:      "50m",
 					MemoryLimits:   "100Mi",
-					Image:          K8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
+					Image:          k8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
 				},
 			},
 		},
@@ -3824,7 +3827,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "100Mi",
 					CPULimits:      "50m",
 					MemoryLimits:   "100Mi",
-					Image:          K8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
 				},
 			},
 		},
@@ -3838,7 +3841,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "150Mi",
 					CPULimits:      "300m",
 					MemoryLimits:   "150Mi",
-					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.DashboardAddonName],
+					Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap[version][common.DashboardAddonName],
 				},
 			},
 		},
@@ -3848,7 +3851,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.MetricsServerAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.MetricsServerAddonName],
+					Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
 				},
 			},
 		},
@@ -3862,7 +3865,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "50Mi",
 					CPULimits:      "50m",
 					MemoryLimits:   "250Mi",
-					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.IPMASQAgentAddonName],
+					Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap[version][common.IPMASQAgentAddonName],
 				},
 			},
 			Config: map[string]string{
@@ -3877,7 +3880,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.AzureCNINetworkMonitorAddonName,
-					Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					Image: specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
 				},
 			},
 		},
@@ -3899,7 +3902,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.CoreDNSAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.CoreDNSAddonName],
+					Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[version][common.CoreDNSAddonName],
 				},
 			},
 		},
@@ -3914,7 +3917,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.KubeProxyAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.KubeProxyAddonName],
+					Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[version][common.KubeProxyAddonName],
 				},
 			},
 		},

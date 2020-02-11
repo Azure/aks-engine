@@ -79,10 +79,10 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
 		"--network-plugin":                    "cni",
-		"--pod-infra-container-image":         o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["pause"],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
-		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
+		"--node-status-update-frequency":      GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["nodestatusfreq"],
 		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,

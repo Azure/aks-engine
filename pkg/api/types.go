@@ -418,6 +418,7 @@ const (
 // Kubernetes specific configuration
 type KubernetesConfig struct {
 	KubernetesImageBase               string                `json:"kubernetesImageBase,omitempty"`
+	KubernetesImageBaseType           string                `json:"kubernetesImageBaseType,omitempty"`
 	MCRKubernetesImageBase            string                `json:"mcrKubernetesImageBase,omitempty"`
 	ClusterSubnet                     string                `json:"clusterSubnet,omitempty"`
 	NetworkPolicy                     string                `json:"networkPolicy,omitempty"`
@@ -1790,7 +1791,7 @@ func (o *OrchestratorProfile) IsPrivateCluster() bool {
 
 // GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
 func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
-	return o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"]
+	return o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["pause"]
 }
 
 // HasAadProfile returns true if the has aad profile
@@ -2018,7 +2019,7 @@ func (p *Properties) GetKubernetesVersion() string {
 // GetKubernetesHyperkubeSpec returns the string to use for the Kubernetes hyperkube image.
 func (p *Properties) GetKubernetesHyperkubeSpec() string {
 	var kubernetesHyperkubeSpec string
-	k8sComponents := K8sComponentsByVersionMap[p.OrchestratorProfile.OrchestratorVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(p.OrchestratorProfile.KubernetesConfig)[p.OrchestratorProfile.OrchestratorVersion]
 	kubernetesHyperkubeSpec = p.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponents["hyperkube"]
 	if p.IsAzureStackCloud() {
 		kubernetesHyperkubeSpec = kubernetesHyperkubeSpec + AzureStackSuffix

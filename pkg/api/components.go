@@ -208,7 +208,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	}
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(cs.Properties.OrchestratorProfile.KubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
 	hyperkubeImageBase := specConfig.KubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
