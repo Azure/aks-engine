@@ -330,6 +330,17 @@ for CALICO_TYPHA_IMAGE in ${CALICO_TYPHA_IMAGES}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+# Cluster Proportional Autoscaler
+CPA_IMAGES="
+1.3.0
+1.3.0_v0.0.5
+"
+for CPA_IMAGE in ${CPA_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CALICO_TYPHA_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 KV_FLEXVOLUME_VERSIONS="0.0.13"
 for KV_FLEXVOLUME_VERSION in ${KV_FLEXVOLUME_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v${KV_FLEXVOLUME_VERSION}"
