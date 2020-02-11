@@ -37,6 +37,7 @@ $ aks-engine get-versions
 | Name                             | Required                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | -------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | addons                           | no                        | Configure various Kubernetes addons configuration. See `addons` configuration [below](#addons)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| components                           | no                        | Configure core Kubernetes components. See `components` configuration [below](#components)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | apiServerConfig                  | no                        | Configure various runtime configuration for apiserver. See `apiServerConfig` [below](#feat-apiserver-config)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | cloudControllerManagerConfig     | no                        | Configure various runtime configuration for cloud-controller-manager. See `cloudControllerManagerConfig` [below](#feat-cloud-controller-manager-config)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | clusterSubnet                    | no                        | The IP subnet used for allocating IP addresses for pod network interfaces. The subnet must be in the VNET address space. With Azure CNI enabled, the default value is 10.240.0.0/12. Without Azure CNI, the default value is 10.244.0.0/16.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -227,6 +228,106 @@ Additionally above, we specified a custom docker image for tiller, let's say we 
 ```
 
 The reason for the unsightly base64-encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
+
+#### components
+
+`components` is an interface to allow for user-configurable core Kubernetes component implementations. Normally, you won't need to modify this configuration, as AKS Engine will use the best, known-working component implementations validated against Azure for all supported versions of Kubernetes. To support the rapid development of Azure + Kubernetes (e.g., Azure cloudprovider), this configuration vector may be useful for validating a custom build or configuration of the various core components on a running Azure Kubernetes cluster. Again, as with addons, this configurable vector is designed for *cluster creation only*. Using `aks-engine upgrade` on a cluster will override the original, user-configured settings during the upgrade operation, rendering an upgraded cluster with the AKS Engine defaults for `kube-controller-manager`, `cloud-controller-manager`, `kube-apiserver`, `kube-scheduler`, and `kube-addon-manager`.
+
+`components` is a child property of `kubernetesConfig`. Below is a list of `components` you may provide.:
+
+| Name of addon                                                                                             | Enabled by default?                                                                  | How many pods                   | Description                                                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| kube-controller-manager | true | 1 per master node | The Kubernetes controller manager is a daemon that embeds the core control loops shipped with Kubernetes. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-controller-manager/). |
+| cloud-controller-manager | false | 1 per master node | The Cloud controller manager is a daemon that embeds the cloud specific control loops shipped with Kubernetes. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/cloud-controller-manager/). |
+| kube-apiserver | true | 1 per master node | The Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others. The API Server services REST operations and provides the frontend to the cluster’s shared state through which all other components interact. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/). |
+| kube-scheduler | true | 1 per master node | The Kubernetes scheduler is a policy-rich, topology-aware, workload-specific function that significantly impacts availability, performance, and capacity. The scheduler needs to take into account individual and collective resource requirements, quality of service requirements, hardware/software/policy constraints, affinity and anti-affinity specifications, data locality, inter-workload interference, deadlines, and so on. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/). |
+| kube-addon-manager | true | 1 per master node | Addon manager provides a standard way to deliver additional Kubernetes componentry. The addons supported by AKS Engine (documented [above](#addons)) are installed into the cluster using Addon manager. Official docs [here](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/addon-manager). |
+
+To give a bit more info on the `components` property: Currently, there are two configuration vectors available for use. Firstly, you have the option to pass in a custom image reference for the container that the AKS Engine-provided specs implement (all components are implemented as single-container Pod resources); in addition you may provide an alternate command string to execute inside the container. E.g.:
+
+```json
+"kubernetesConfig": {
+    "components": [
+        {
+            "name": "kube-controller-manager",
+            "enabled" : true,
+            "containers": [
+                {
+                    "name": "kube-controller-manager",
+                    "image": "myDockerHubUser/custom-controller-manager-build:v1.17.2-dirty",
+                }
+            ],
+            "config": {
+                "command": "kube-controller-manager-custom"
+            }
+        }
+    ]
+}
+```
+
+In addition, a component may be disabled by setting `"enabled": false`. This only makes practical sense for `cloud-controller-manager`, which is an optional Kubernetes control plane implementation that runs the Azure-specific control plane runtime in a separate pod from `kube-controller-manager`. For all other components, if they are disabled, then AKS Engine will not by itself create a functional Kubernetes cluster. This configuration is made available for development purposes only, and is not recommended for users building functional Kubernetes clusters using AKS Engine.
+
+Note: `kube-addon-manager` does not support a command string, as that configuration isn't appropriate for Addon Manager, which only defines a container image as configurable input.
+
+For each Kubernetes component (with the exception of `kube-addon-manager`), the args to the command are provided via the equivalent "`<component>`Config" property. E.g.:
+
+- `kube-controller-manager`
+  - Command arguments map to [controllerManagerConfig](#feat-controller-manager-config) key=val pairs
+- `cloud-controller-manager`
+  - Command arguments map to [cloudControllerManagerConfig](#feat-cloud-controller-manager-config) key=val pairs
+- `kube-apiserver`
+  - Command arguments map to [apiServerConfig](#feat-apiserver-config) key=val pairs
+- `kube-scheduler`
+  - Command arguments map to [schedulerConfig](#feat-scheduler-config) key=val pairs
+
+See https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/ for more on Kubernetes resource limits.
+
+As with addons, you may include an entirely custom component spec as a base64-encoded string of a Kubernetes yaml manifest. E.g.,
+
+```json
+"kubernetesConfig": {
+    "components": [
+        {
+            "name": "kube-controller-manager",
+            "enabled": true,
+            "data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGt1YmUtY29udHJvbGxl
+ci1tYW5hZ2VyCiAgbmFtZXNwYWNlOiBrdWJlLXN5c3RlbQogIGxhYmVsczoKICAgIHRpZXI6IGNv
+bnRyb2wtcGxhbmUKICAgIGNvbXBvbmVudDoga3ViZS1jb250cm9sbGVyLW1hbmFnZXIKc3BlYzoK
+ICBwcmlvcml0eUNsYXNzTmFtZTogc3lzdGVtLW5vZGUtY3JpdGljYWwKICBob3N0TmV0d29yazog
+dHJ1ZQogIGNvbnRhaW5lcnM6CiAgICAtIG5hbWU6IGt1YmUtY29udHJvbGxlci1tYW5hZ2VyCiAg
+ICAgIGltYWdlOiBrOHMuZ2NyLmlvL2h5cGVya3ViZS1hbWQ2NDp2MS4xNi42CiAgICAgIGltYWdl
+UHVsbFBvbGljeTogSWZOb3RQcmVzZW50CiAgICAgIGNvbW1hbmQ6IFsiL2h5cGVya3ViZSIsICJr
+dWJlLWNvbnRyb2xsZXItbWFuYWdlciJdCiAgICAgIGFyZ3M6IFsiLS1hbGxvY2F0ZS1ub2RlLWNp
+ZHJzPWZhbHNlIiwgIi0tY2xvdWQtY29uZmlnPS9ldGMva3ViZXJuZXRlcy9henVyZS5qc29uIiwg
+Ii0tY2xvdWQtcHJvdmlkZXI9YXp1cmUiLCAiLS1jbHVzdGVyLWNpZHI9MTAuMjQwLjAuMC8xMiIs
+ICItLWNsdXN0ZXItbmFtZT1rdWJlcm5ldGVzLXdlc3R1czItMzMyODEiLCAiLS1jbHVzdGVyLXNp
+Z25pbmctY2VydC1maWxlPS9ldGMva3ViZXJuZXRlcy9jZXJ0cy9jYS5jcnQiLCAiLS1jbHVzdGVy
+LXNpZ25pbmcta2V5LWZpbGU9L2V0Yy9rdWJlcm5ldGVzL2NlcnRzL2NhLmtleSIsICItLWNvbmZp
+Z3VyZS1jbG91ZC1yb3V0ZXM9ZmFsc2UiLCAiLS1jb250cm9sbGVycz0qLGJvb3RzdHJhcHNpZ25l
+cix0b2tlbmNsZWFuZXIiLCAiLS1mZWF0dXJlLWdhdGVzPUxvY2FsU3RvcmFnZUNhcGFjaXR5SXNv
+bGF0aW9uPXRydWUsU2VydmljZU5vZGVFeGNsdXNpb249dHJ1ZSIsICItLWhvcml6b250YWwtcG9k
+LWF1dG9zY2FsZXItY3B1LWluaXRpYWxpemF0aW9uLXBlcmlvZD0zMHMiLCAiLS1ob3Jpem9udGFs
+LXBvZC1hdXRvc2NhbGVyLWRvd25zY2FsZS1zdGFiaWxpemF0aW9uPTMwcyIsICItLWt1YmVjb25m
+aWc9L3Zhci9saWIva3ViZWxldC9rdWJlY29uZmlnIiwgIi0tbGVhZGVyLWVsZWN0PXRydWUiLCAi
+LS1ub2RlLW1vbml0b3ItZ3JhY2UtcGVyaW9kPTQwcyIsICItLXBvZC1ldmljdGlvbi10aW1lb3V0
+PTVtMHMiLCAiLS1wcm9maWxpbmc9ZmFsc2UiLCAiLS1yb290LWNhLWZpbGU9L2V0Yy9rdWJlcm5l
+dGVzL2NlcnRzL2NhLmNydCIsICItLXJvdXRlLXJlY29uY2lsaWF0aW9uLXBlcmlvZD0xMHMiLCAi
+LS1zZXJ2aWNlLWFjY291bnQtcHJpdmF0ZS1rZXktZmlsZT0vZXRjL2t1YmVybmV0ZXMvY2VydHMv
+YXBpc2VydmVyLmtleSIsICItLXRlcm1pbmF0ZWQtcG9kLWdjLXRocmVzaG9sZD01MDAwIiwgIi0t
+dXNlLXNlcnZpY2UtYWNjb3VudC1jcmVkZW50aWFscz10cnVlIiwgIi0tdj0yIl0KICAgICAgdm9s
+dW1lTW91bnRzOgogICAgICAgIC0gbmFtZTogZXRjLWt1YmVybmV0ZXMKICAgICAgICAgIG1vdW50
+UGF0aDogL2V0Yy9rdWJlcm5ldGVzCiAgICAgICAgLSBuYW1lOiB2YXItbGliLWt1YmVsZXQKICAg
+ICAgICAgIG1vdW50UGF0aDogL3Zhci9saWIva3ViZWxldAogICAgICAgIC0gbmFtZTogbXNpCiAg
+ICAgICAgICBtb3VudFBhdGg6IC92YXIvbGliL3dhYWdlbnQvTWFuYWdlZElkZW50aXR5LVNldHRp
+bmdzCiAgICAgICAgICByZWFkT25seTogdHJ1ZQogIHZvbHVtZXM6CiAgICAtIG5hbWU6IGV0Yy1r
+dWJlcm5ldGVzCiAgICAgIGhvc3RQYXRoOgogICAgICAgIHBhdGg6IC9ldGMva3ViZXJuZXRlcwog
+ICAgLSBuYW1lOiB2YXItbGliLWt1YmVsZXQKICAgICAgaG9zdFBhdGg6CiAgICAgICAgcGF0aDog
+L3Zhci9saWIva3ViZWxldAogICAgLSBuYW1lOiBtc2kKICAgICAgaG9zdFBhdGg6CiAgICAgICAg
+cGF0aDogL3Zhci9saWIvd2FhZ2VudC9NYW5hZ2VkSWRlbnRpdHktU2V0dGluZ3MK"
+        }
+    ]
+}
+```
 
 <a name="feat-kubelet-config"></a>
 

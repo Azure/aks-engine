@@ -332,6 +332,7 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.PrivateAzureRegistryServer = vlabs.PrivateAzureRegistryServer
 	api.OutboundRuleIdleTimeoutInMinutes = vlabs.OutboundRuleIdleTimeoutInMinutes
 	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
+	convertComponentsToAPI(vlabs, api)
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
@@ -369,6 +370,33 @@ func setVlabsKubernetesDefaults(vp *vlabs.Properties, api *OrchestratorProfile) 
 				api.KubernetesConfig.NetworkPlugin = NetworkPluginFlannel
 			} else {
 				api.KubernetesConfig.NetworkPlugin = vlabs.DefaultNetworkPlugin
+			}
+		}
+	}
+}
+
+func convertComponentsToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
+	a.Components = []KubernetesComponent{}
+	for i := range v.Components {
+		a.Components = append(a.Components, KubernetesComponent{
+			Name:    v.Components[i].Name,
+			Enabled: v.Components[i].Enabled,
+			Config:  map[string]string{},
+			Data:    v.Components[i].Data,
+		})
+		for j := range v.Components[i].Containers {
+			a.Components[i].Containers = append(a.Components[i].Containers, KubernetesContainerSpec{
+				Name:           v.Components[i].Containers[j].Name,
+				Image:          v.Components[i].Containers[j].Image,
+				CPURequests:    v.Components[i].Containers[j].CPURequests,
+				MemoryRequests: v.Components[i].Containers[j].MemoryRequests,
+				CPULimits:      v.Components[i].Containers[j].CPULimits,
+				MemoryLimits:   v.Components[i].Containers[j].MemoryLimits,
+			})
+		}
+		if v.Components[i].Config != nil {
+			for key, val := range v.Components[i].Config {
+				a.Components[i].Config[key] = val
 			}
 		}
 	}

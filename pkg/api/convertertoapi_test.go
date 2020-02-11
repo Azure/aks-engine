@@ -1147,3 +1147,107 @@ func TestConvertVlabsPlatformUpdateDomain(t *testing.T) {
 		t.Errorf("expected the agent pool profile platform FD to be 3")
 	}
 }
+
+func TestConvertComponentsToAPI(t *testing.T) {
+	vk := &vlabs.KubernetesConfig{
+		Components: []vlabs.KubernetesComponent{
+			{
+				Name:    "component-0",
+				Enabled: to.BoolPtr(true),
+				Containers: []vlabs.KubernetesContainerSpec{
+					{
+						Name:           "component-0-container-0",
+						Image:          "baz",
+						CPURequests:    "1",
+						MemoryRequests: "200m",
+						CPULimits:      "2",
+						MemoryLimits:   "400m",
+					},
+					{
+						Name:           "component-0-container-1",
+						Image:          "baz-1",
+						CPURequests:    "1-1",
+						MemoryRequests: "200m-1",
+						CPULimits:      "2-1",
+						MemoryLimits:   "400m-1",
+					},
+				},
+				Config: map[string]string{
+					"foo":     "bar",
+					"command": "my-command",
+				},
+				Data: "my-data",
+			},
+			{
+				Name:    "component-1",
+				Enabled: to.BoolPtr(false),
+				Containers: []vlabs.KubernetesContainerSpec{
+					{
+						Name:           "component-1-container-0",
+						Image:          "baz",
+						CPURequests:    "1",
+						MemoryRequests: "200m",
+						CPULimits:      "2",
+						MemoryLimits:   "400m",
+					},
+					{
+						Name:           "component-1-container-1",
+						Image:          "baz-1",
+						CPURequests:    "1-1",
+						MemoryRequests: "200m-1",
+						CPULimits:      "2-1",
+						MemoryLimits:   "400m-1",
+					},
+				},
+				Config: map[string]string{
+					"foo":     "bar",
+					"command": "my-command",
+				},
+				Data: "my-data",
+			},
+		},
+	}
+	k := &KubernetesConfig{}
+	convertComponentsToAPI(vk, k)
+	for i, component := range vk.Components {
+		if k.Components[i].Name != component.Name {
+			t.Errorf("unexpected Component.Name property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Name, component.Name)
+		}
+		if to.Bool(k.Components[i].Enabled) != to.Bool(component.Enabled) {
+			t.Errorf("unexpected Component.Enabled property %t after convertComponentsToVlabs conversion, expected %t", to.Bool(k.Components[i].Enabled), to.Bool(component.Enabled))
+		}
+		if k.Components[i].Data != component.Data {
+			t.Errorf("unexpected Component.Data property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Data, component.Data)
+		}
+		for j, container := range component.Containers {
+			if k.Components[i].Containers[j].Name != container.Name {
+				t.Errorf("unexpected Container.Name property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].Name, container.Name)
+			}
+			if k.Components[i].Containers[j].Image != container.Image {
+				t.Errorf("unexpected Container.Image property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].Image, container.Image)
+			}
+			if k.Components[i].Containers[j].CPURequests != container.CPURequests {
+				t.Errorf("unexpected Container.CPURequests property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].CPURequests, container.CPURequests)
+			}
+			if k.Components[i].Containers[j].MemoryRequests != container.MemoryRequests {
+				t.Errorf("unexpected Container.MemoryRequests property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].MemoryRequests, container.MemoryRequests)
+			}
+			if k.Components[i].Containers[j].CPULimits != container.CPULimits {
+				t.Errorf("unexpected Container.CPULimits property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].CPULimits, container.CPULimits)
+			}
+			if k.Components[i].Containers[j].MemoryLimits != container.MemoryLimits {
+				t.Errorf("unexpected Container.MemoryLimits property %s after convertComponentsToVlabs conversion, expected %s", k.Components[i].Containers[j].MemoryLimits, container.MemoryLimits)
+			}
+		}
+		for key, val := range component.Config {
+			if k.Components[i].Config[key] != val {
+				t.Errorf("unexpected Component.Config %s=%s after convertComponentsToVlabs conversion, expected %s=%s", key, k.Components[i].Config[key], key, val)
+			}
+		}
+		for key, val := range k.Components[i].Config {
+			if component.Config[key] != val {
+				t.Errorf("unexpected Component.Config %s=%s after convertComponentsToVlabs conversion, expected %s=%s", key, component.Config[key], key, val)
+			}
+		}
+	}
+}

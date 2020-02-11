@@ -6581,6 +6581,184 @@ func TestKubernetesConfigIsAddonDisabled(t *testing.T) {
 	}
 }
 
+func TestKubernetesComponentIsEnabled(t *testing.T) {
+	cases := []struct {
+		c        *KubernetesComponent
+		expected bool
+	}{
+		{
+			c:        &KubernetesComponent{},
+			expected: false,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(false),
+			},
+			expected: false,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(true),
+			},
+			expected: true,
+		},
+	}
+
+	for _, c := range cases {
+		if c.c.IsEnabled() != c.expected {
+			t.Fatalf("expected IsEnabled() to return %t but instead returned %t", c.expected, c.c.IsEnabled())
+		}
+	}
+}
+
+func TestKubernetesComponentIsDisabled(t *testing.T) {
+	cases := []struct {
+		c        *KubernetesComponent
+		expected bool
+	}{
+		{
+			c:        &KubernetesComponent{},
+			expected: false,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(false),
+			},
+			expected: true,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(true),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.c.IsDisabled() != c.expected {
+			t.Fatalf("expected IsDisabled() to return %t but instead returned %t", c.expected, c.c.IsDisabled())
+		}
+	}
+}
+
+func TestKubernetesConfigIsComponentEnabled(t *testing.T) {
+	cases := []struct {
+		k             *KubernetesConfig
+		componentName string
+		expected      bool
+	}{
+		{
+			k:             &KubernetesConfig{},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      true,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "bar",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+	}
+
+	for _, c := range cases {
+		component, isEnabled := c.k.IsComponentEnabled(c.componentName)
+		if isEnabled != c.expected {
+			t.Fatalf("expected KubernetesConfig.IsComponentEnabled(%s) to return %t but instead returned %t", c.componentName, c.expected, isEnabled)
+		}
+		if !reflect.DeepEqual(component, c.k.GetComponentByName(c.componentName)) {
+			t.Fatalf("expected result component %v to be equal to %v", component, c.k.GetComponentByName(c.componentName))
+		}
+	}
+}
+
+func TestKubernetesConfigComponentGetters(t *testing.T) {
+	cases := []struct {
+		k            *KubernetesConfig
+		expectedData string
+	}{
+		{
+			k:            &KubernetesConfig{},
+			expectedData: "",
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name: "foo",
+						Data: "bar",
+					},
+				},
+			},
+			expectedData: "bar",
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expectedData: "",
+		},
+	}
+
+	for _, c := range cases {
+		for _, component := range c.k.Components {
+			got := c.k.GetComponentByName(component.Name)
+			if !reflect.DeepEqual(got, component) {
+				t.Fatalf("expected result component %v to be equal to %v", got, component)
+			}
+			data := c.k.GetComponentData(component.Name)
+			if data != c.expectedData {
+				t.Fatalf("expected KubernetesConfig.GetComponentData(%s) to return %s but instead returned %s", component.Name, c.expectedData, data)
+			}
+		}
+	}
+}
+
 func TestHasVMASAgentPool(t *testing.T) {
 	tests := []struct {
 		name     string

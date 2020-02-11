@@ -75,15 +75,6 @@ const (
 )
 
 const (
-	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
-	AzureStackSuffix = "-azs"
-	// AzureStackPrefix is appended to windows binary version for Azure Stack instances
-	AzureStackPrefix = "azs-"
-	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
-	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
-)
-
-const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
 	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
@@ -138,16 +129,6 @@ const (
 	customSearchDomainsCSEScriptFilepath = "/opt/azure/containers/setup-custom-search-domains.sh"
 	dhcpV6ServiceCSEScriptFilepath       = "/etc/systemd/system/dhcpv6.service"
 	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
-)
-
-// Kubernetes manifests file references
-const (
-	kubeSchedulerManifestFilename               = "kubernetesmaster-kube-scheduler.yaml"
-	kubeControllerManagerManifestFilename       = "kubernetesmaster-kube-controller-manager.yaml"
-	kubeControllerManagerCustomManifestFilename = "kubernetesmaster-kube-controller-manager-custom.yaml"
-	ccmManifestFilename                         = "kubernetesmaster-cloud-controller-manager.yaml"
-	kubeAPIServerManifestFilename               = "kubernetesmaster-kube-apiserver.yaml"
-	kubeAddonManagerManifestFilename            = "kubernetesmaster-kube-addon-manager.yaml"
 )
 
 const (
@@ -277,4 +258,18 @@ const (
 	flannelAddonDestinationFilename                string = "flannel-daemonset.yaml"
 	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
+)
+
+// components source and destination file references
+const (
+	schedulerComponentSourceFilename                   string = "kubernetesmaster-kube-scheduler.yaml"
+	schedulerComponentDestinationFilename              string = "kube-scheduler.yaml"
+	controllerManagerComponentSourceFilename           string = "kubernetesmaster-kube-controller-manager.yaml"
+	controllerManagerComponentDestinationFilename      string = "kube-controller-manager.yaml"
+	cloudControllerManagerComponentSourceFilename      string = "kubernetesmaster-cloud-controller-manager.yaml"
+	cloudControllerManagerComponentDestinationFilename string = "cloud-controller-manager.yaml"
+	apiServerComponentSourceFilename                   string = "kubernetesmaster-kube-apiserver.yaml"
+	apiServerComponentDestinationFilename              string = "kube-apiserver.yaml"
+	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
+	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
 )

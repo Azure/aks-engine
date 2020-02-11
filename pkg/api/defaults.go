@@ -526,6 +526,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		cs.setAPIServerConfig()
 		// Configure scheduler
 		cs.setSchedulerConfig()
+		// Configure components
+		cs.setComponentsConfig(isUpgrade)
 
 	case DCOS:
 		if o.DcosConfig == nil {

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/leonelquinteros/gotext"
@@ -2904,6 +2905,480 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetZones {
 				t.Errorf("expected funcMap invocation of GetZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
+			}
+		})
+	}
+}
+
+func TestGetComponentFuncMap(t *testing.T) {
+	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	//specConfigAzureStack := api.AzureCloudSpecEnvMap["AzureStackCloud"].KubernetesSpecConfig
+	cases := []struct {
+		name                                              string
+		components                                        []api.KubernetesComponent
+		cs                                                *api.ContainerService
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedIsAzureStackCloud                         bool
+		expectedIsKubernetesVersionGeOneDotFifteenDotZero bool
+		expectedAPIServerImage                            string
+		expectedAPIServerCommand                          string
+		expectedAPIServerArgs                             string
+		expectedControllerManagerImage                    string
+		expectedControllerManagerCommand                  string
+		expectedControllerManagerArgs                     string
+		expectedCloudControllerManagerImage               string
+		expectedCloudControllerManagerCommand             string
+		expectedCloudControllerManagerArgs                string
+		expectedSchedulerImage                            string
+		expectedSchedulerCommand                          string
+		expectedSchedulerArgs                             string
+		expectedAddonManagerImage                         string
+	}{
+		{
+			name: "1.15",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: false,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
+			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+		{
+			name: "Azure Stack",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+					CustomCloudProfile: &api.CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: "AzureStackCloud",
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: true,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
+			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+		{
+			name: "1.14",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.14.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: false,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: false,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
+			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			for _, component := range c.components {
+				funcMap := getComponentFuncMap(component, c.cs)
+				v := reflect.ValueOf(funcMap["ContainerCPUReqs"])
+				ret := v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedCPUReqs {
+					t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCPUReqs, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerCPULimits"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedCPULimits {
+					t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCPULimits, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerMemReqs"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedMemReqs {
+					t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", component.Containers[0].Name, c.expectedMemReqs, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerMemLimits"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedMemLimits {
+					t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", component.Containers[0].Name, c.expectedMemLimits, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["IsAzureStackCloud"])
+				ret = v.Call(make([]reflect.Value, 0))
+				if ret[0].Interface() != c.expectedIsAzureStackCloud {
+					t.Errorf("expected funcMap invocation of IsAzureStackCloud to return %t, instead got %t", c.expectedIsAzureStackCloud, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf("1.15.0")})
+				if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotFifteenDotZero {
+					t.Errorf("expected funcMap invocation of IsKubernetesVersionGe %s to return %t, instead got %t", c.cs.Properties.OrchestratorProfile.OrchestratorVersion, c.expectedIsKubernetesVersionGeOneDotFifteenDotZero, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerConfig"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf("command")})
+				command := ret[0].Interface()
+				v = reflect.ValueOf(funcMap["ContainerImage"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				image := ret[0].Interface()
+				if component.Name == common.APIServerComponentName {
+					if command != c.expectedAPIServerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedAPIServerCommand, ret[0].Interface())
+					}
+					if image != c.expectedAPIServerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedAPIServerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetAPIServerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedAPIServerArgs {
+						t.Errorf("expected funcMap invocation of GetAPIServerArgs to return %s, instead got %s", c.expectedAPIServerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.ControllerManagerComponentName {
+					if command != c.expectedControllerManagerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedControllerManagerCommand, ret[0].Interface())
+					}
+					if image != c.expectedControllerManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedControllerManagerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetControllerManagerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedControllerManagerArgs {
+						t.Errorf("expected funcMap invocation of GetControllerManagerArgs to return %s, instead got %s", c.expectedControllerManagerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.CloudControllerManagerComponentName {
+					if command != c.expectedCloudControllerManagerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedCloudControllerManagerCommand, ret[0].Interface())
+					}
+					if image != c.expectedCloudControllerManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCloudControllerManagerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetCloudControllerManagerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedCloudControllerManagerArgs {
+						t.Errorf("expected funcMap invocation of GetCloudControllerManagerArgs to return %s, instead got %s", c.expectedCloudControllerManagerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.SchedulerComponentName {
+					if command != c.expectedSchedulerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedSchedulerCommand, ret[0].Interface())
+					}
+					if image != c.expectedSchedulerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedSchedulerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetSchedulerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedSchedulerArgs {
+						t.Errorf("expected funcMap invocation of GetSchedulerArgs to return %s, instead got %s", c.expectedSchedulerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.AddonManagerComponentName {
+					if image != c.expectedAddonManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedAddonManagerImage, ret[0].Interface())
+					}
+				}
 			}
 		})
 	}
