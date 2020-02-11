@@ -393,20 +393,14 @@ K8S_VERSIONS="
 1.15.7
 1.15.5
 1.15.4
-1.15.4-azs
 1.14.8
 1.14.7
-1.14.7-azs
 1.13.12
 1.13.11
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    fi
+    HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
