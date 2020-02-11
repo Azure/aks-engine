@@ -3,7 +3,8 @@
 		"CREATE_VNET": true,
 		"REGION_OPTIONS": "eastus,westeurope,westus2",
 		"GINKGO_SKIP": "should report all nodes in a Ready state",
-		"TEST_PVC": true
+		"TEST_PVC": true,
+		"LB_TEST_TIMEOUT": "10m"
 	},
 	"options": {
 		"allowedOrchestratorVersions": [
@@ -75,7 +76,7 @@
 			"agentPoolProfiles": [
 				{
 					"name": "pool1",
-					"count": 2,
+					"count": 10,
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
