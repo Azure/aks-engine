@@ -164,6 +164,9 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
+	if e := a.validateAzureStackSupport(); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -1793,4 +1796,27 @@ func validateDependenciesLocation(dependenciesLocation DependenciesLocation, dep
 		}
 	}
 	return false
+}
+
+// validateAzureStackSupport logs a warning if apimodel contains preview features and returns an error if a property is not supported on Azure Stack clouds
+func (a *Properties) validateAzureStackSupport() error {
+	if a.OrchestratorProfile.OrchestratorType == Kubernetes && a.IsAzureStackCloud() {
+		networkPlugin := a.OrchestratorProfile.KubernetesConfig.NetworkPlugin
+		if networkPlugin == "azure" || networkPlugin == "" {
+			log.Warnf("NetworkPlugin 'azure' is a private preview feature on Azure Stack clouds")
+		}
+		if networkPlugin != "azure" && networkPlugin != "kubenet" && networkPlugin != "" {
+			return errors.Errorf("kubernetesConfig.networkPlugin '%s' is not supported on Azure Stack clouds", networkPlugin)
+		}
+		if a.MasterProfile.AvailabilityProfile != AvailabilitySet {
+			return errors.Errorf("masterProfile.availabilityProfile should be set to '%s' on Azure Stack clouds", AvailabilitySet)
+		}
+		for _, agentPool := range a.AgentPoolProfiles {
+			pool := agentPool
+			if pool.AvailabilityProfile != AvailabilitySet {
+				return errors.Errorf("agentPoolProfiles[%s].availabilityProfile should be set to '%s' on Azure Stack clouds", pool.Name, AvailabilitySet)
+			}
+		}
+	}
+	return nil
 }

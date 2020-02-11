@@ -4440,3 +4440,78 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAzureStackSupport(t *testing.T) {
+	tests := []struct {
+		name               string
+		networkPlugin      string
+		masterAvailability string
+		agentAvailability  string
+		expectedErr        error
+	}{
+		{
+			name:               "AzureStack supports the kubenet network plugin",
+			networkPlugin:      "kubenet",
+			masterAvailability: AvailabilitySet,
+			agentAvailability:  AvailabilitySet,
+			expectedErr:        nil,
+		},
+		{
+			name:               "AzureStack supports for the azure network plugin is in preview",
+			networkPlugin:      "azure",
+			masterAvailability: AvailabilitySet,
+			agentAvailability:  AvailabilitySet,
+			expectedErr:        nil,
+		},
+		{
+			name:               "AzureStack only supports kubenet and azure network plugins",
+			networkPlugin:      NetworkPluginFlannel,
+			masterAvailability: AvailabilitySet,
+			agentAvailability:  AvailabilitySet,
+			expectedErr:        errors.New("kubernetesConfig.networkPlugin 'flannel' is not supported on Azure Stack clouds"),
+		},
+		{
+			name:               "AzureStack does not support VMSS on the master pool",
+			networkPlugin:      "",
+			masterAvailability: VirtualMachineScaleSets,
+			agentAvailability:  VirtualMachineScaleSets,
+			expectedErr:        errors.New("masterProfile.availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds"),
+		},
+		{
+			name:               "AzureStack does not support VMSS on the agent pools",
+			networkPlugin:      "kubenet",
+			masterAvailability: AvailabilitySet,
+			agentAvailability:  VirtualMachineScaleSets,
+			expectedErr:        errors.New("agentPoolProfiles[agentpool].availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds"),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(false)
+			cs.Properties.CustomCloudProfile = &CustomCloudProfile{
+				PortalURL: "https://portal.westus.contoso.com",
+			}
+			cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+			if test.networkPlugin != "" {
+				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = test.networkPlugin
+			}
+			if test.masterAvailability != "" {
+				cs.Properties.MasterProfile.AvailabilityProfile = test.masterAvailability
+			}
+			if test.agentAvailability != "" {
+				for _, agentPool := range cs.Properties.AgentPoolProfiles {
+					pool := agentPool
+					pool.AvailabilityProfile = test.agentAvailability
+					break
+				}
+			}
+			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
+				t.Logf("scenario %q", test.name)
+				t.Errorf("expected error: %v, got: %v", test.expectedErr, err)
+			}
+		})
+	}
+}
