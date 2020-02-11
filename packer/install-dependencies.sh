@@ -50,7 +50,7 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-MOBY_VERSION="3.0.10"
+MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
@@ -101,14 +101,14 @@ done
 
 NEW_DASHBOARD_VERSIONS="2.0.0-beta8"
 for DASHBOARD_VERSION in ${NEW_DASHBOARD_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetesui/dashboard:v${DASHBOARD_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS="1.0.2"
 for DASHBOARD_VERSION in ${NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetesui/metrics-scraper:v${DASHBOARD_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-scraper:v${DASHBOARD_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
