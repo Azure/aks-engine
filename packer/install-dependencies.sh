@@ -50,11 +50,6 @@ if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-ETCD_VERSION="3.3.15"
-ETCD_DOWNLOAD_URL="https://acs-mirror.azureedge.net/github-coreos"
-installEtcd
-echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
-
 MOBY_VERSION="3.0.8"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -104,6 +99,20 @@ for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
+NEW_DASHBOARD_VERSIONS="2.0.0-beta8"
+for DASHBOARD_VERSION in ${NEW_DASHBOARD_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS="1.0.2"
+for DASHBOARD_VERSION in ${NEW_DASHBOARD_METRICS_SGRAPER_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-scraper:v${DASHBOARD_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 EXECHEALTHZ_VERSIONS="1.2"
 for EXECHEALTHZ_VERSION in ${EXECHEALTHZ_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/exechealthz-amd64:${EXECHEALTHZ_VERSION}"
@@ -136,8 +145,6 @@ done
 
 METRICS_SERVER_VERSIONS="
 0.3.5
-0.3.4
-0.2.1
 "
 for METRICS_SERVER_VERSION in ${METRICS_SERVER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/metrics-server-amd64:v${METRICS_SERVER_VERSION}"
@@ -153,22 +160,6 @@ KUBE_DNS_VERSIONS="
 "
 for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-kube-dns-amd64:${KUBE_DNS_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
-KUBE_ADDON_MANAGER_VERSIONS="
-9.0.2
-9.0.1
-9.0
-8.9.1
-8.9
-8.8
-8.7
-8.6
-"
-for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -216,47 +207,8 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-CLUSTER_AUTOSCALER_VERSIONS="
-1.17.0
-1.16.2
-1.16.1
-1.16.0
-1.15.3
-1.15.2
-1.15.1
-1.15.0
-1.14.6
-1.14.5
-1.14.4
-1.14.2
-1.14.0
-1.13.7
-1.13.6
-1.13.4
-1.13.2
-1.13.1
-1.12.8
-1.12.7
-1.12.5
-1.12.3
-1.12.2
-1.3.9
-1.3.8
-1.3.7
-1.3.4
-1.3.3
-1.2.5
-1.2.2
-"
-for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 K8S_DNS_SIDECAR_VERSIONS="
 1.14.10
-1.14.8
 "
 for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/k8s-dns-sidecar-amd64:${K8S_DNS_SIDECAR_VERSION}"
@@ -265,12 +217,11 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
 done
 
 CORE_DNS_VERSIONS="
+1.6.6
 1.6.5
-1.6.2
 1.5.0
 1.3.1
 1.2.6
-1.2.2
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
@@ -297,8 +248,8 @@ done
 
 AZURE_CNIIMAGEBASE="mcr.microsoft.com/containernetworking"
 AZURE_CNI_NETWORKMONITOR_VERSIONS="
+0.0.7
 0.0.6
-0.0.5
 "
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
@@ -307,8 +258,8 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
-1.0.29
-1.0.28
+1.0.31
+1.0.30
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
@@ -317,8 +268,7 @@ for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
 done
 
 AZURE_VNET_TELEMETRY_VERSIONS="
-1.0.29
-1.0.28
+1.0.30
 "
 for AZURE_VNET_TELEMETRY_VERSION in ${AZURE_VNET_TELEMETRY_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-vnet-telemetry:v${AZURE_VNET_TELEMETRY_VERSION}"
@@ -336,16 +286,57 @@ for NVIDIA_DEVICE_PLUGIN_VERSION in ${NVIDIA_DEVICE_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-TUNNELFRONT_VERSIONS="v1.9.2-v4.0.4"
+TUNNELFRONT_VERSIONS="v1.9.2-v3.0.11 v1.9.2-v4.0.11"
 for TUNNELFRONT_VERSION in ${TUNNELFRONT_VERSIONS}; do
     CONTAINER_IMAGE="docker.io/deis/hcp-tunnel-front:${TUNNELFRONT_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-KUBE_SVC_REDIRECT_VERSIONS="1.0.2"
+KUBE_SVC_REDIRECT_VERSIONS="1.0.7"
 for KUBE_SVC_REDIRECT_VERSION in ${KUBE_SVC_REDIRECT_VERSIONS}; do
     CONTAINER_IMAGE="docker.io/deis/kube-svc-redirect:v${KUBE_SVC_REDIRECT_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+# oms agent used by AKS
+OMS_AGENT_IMAGES="ciprod01072020"
+for OMS_AGENT_IMAGE in ${OMS_AGENT_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/azuremonitor/containerinsights/ciprod:${OMS_AGENT_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+# calico images used by AKS
+CALICO_CNI_IMAGES="v3.5.0"
+for CALICO_CNI_IMAGE in ${CALICO_CNI_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/cni:${CALICO_CNI_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CALICO_NODE_IMAGES="v3.5.0"
+for CALICO_NODE_IMAGE in ${CALICO_NODE_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/node:${CALICO_NODE_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CALICO_TYPHA_IMAGES="v3.5.0"
+for CALICO_TYPHA_IMAGE in ${CALICO_TYPHA_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/calico/typha:${CALICO_TYPHA_IMAGE}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+# Cluster Proportional Autoscaler
+CPA_IMAGES="
+1.3.0
+1.3.0_v0.0.5
+"
+for CPA_IMAGE in ${CPA_IMAGES}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CALICO_TYPHA_IMAGE}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -365,8 +356,6 @@ for BLOBFUSE_FLEXVOLUME_VERSION in ${BLOBFUSE_FLEXVOLUME_VERSIONS}; do
 done
 
 IP_MASQ_AGENT_VERSIONS="
-2.5.0
-2.3.0
 2.0.0
 "
 for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
@@ -379,6 +368,17 @@ for IP_MASQ_AGENT_VERSION in ${IP_MASQ_AGENT_VERSIONS}; do
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
+
+# this is the patched images which AKS are using.
+AKS_IP_MASQ_AGENT_VERSIONS="
+2.0.0_v0.0.5
+"
+for IP_MASQ_AGENT_VERSION in ${AKS_IP_MASQ_AGENT_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v${IP_MASQ_AGENT_VERSION}"
+    pullContainerImage "docker" ${CONTAINER_IMAGE}
+    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 
 NGINX_VERSIONS="1.13.12-alpine"
 for NGINX_VERSION in ${NGINX_VERSIONS}; do
@@ -394,42 +394,24 @@ for KMS_PLUGIN_VERSION in ${KMS_PLUGIN_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-FLANNEL_VERSIONS="
-0.10.0
-0.8.0
-"
-for FLANNEL_VERSION in ${FLANNEL_VERSIONS}; do
-    CONTAINER_IMAGE="quay.io/coreos/flannel:v${FLANNEL_VERSION}-amd64"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.17.0
 1.16.4
-1.16.2
 1.16.1
-1.16.1-azs
 1.15.7
 1.15.5
 1.15.4
-1.15.4-azs
 1.14.8
 1.14.7
-1.14.7-azs
 1.13.12
 1.13.11
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    fi
+    HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
@@ -441,11 +423,33 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     KUBE_BINARY_URL="https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"
     extractKubeBinaries
   fi
-  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
+  if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) ]]; then
     CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   fi
+done
+
+# pull patched hyperkube image for AKS
+# this is used by kube-proxy
+PATCHED_HYPERKUBE_IMAGES="
+v1.12.8_v0.0.5
+v1.13.10_v0.0.5
+v1.13.11_v0.0.5
+v1.13.12_f0.0.2
+v1.14.6_v0.0.5
+v1.14.7_v0.0.5
+v1.14.8_f0.0.4
+v1.15.3_v0.0.5
+v1.15.4_v0.0.5
+v1.15.5_f0.0.2
+v1.15.7_f0.0.2
+v1.16.0_v0.0.5
+"
+for KUBERNETES_VERSION in ${PATCHED_HYPERKUBE_IMAGES}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/hyperkube:${KUBERNETES_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
 CLOUD_MANAGER_VERSIONS="
