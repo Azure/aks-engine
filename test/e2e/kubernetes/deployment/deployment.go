@@ -117,7 +117,9 @@ func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, er
 	var commandTimeout time.Duration
 	var cmd *exec.Cmd
 	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
-	if miscOpts != "" {
+	if miscOpts == "1.16+" {
+		cmd = exec.Command("k", "create", "deployment", name, "-n", namespace, "--image", image)
+	} else if miscOpts != "" {
 		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides, miscOpts)
 	} else {
 		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides)

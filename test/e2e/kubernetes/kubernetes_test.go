@@ -617,7 +617,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Creating a Linux nginx deployment")
 				deploymentPrefix := "portforwardlinux"
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", cfg.Timeout)
+				miscOpts := ""
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					miscOpts = "1.16+"
+				}
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, miscOpts, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				testPortForward(deploymentName)
 				err = deploy.Delete(util.DefaultDeleteRetries)
