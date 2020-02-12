@@ -297,7 +297,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1903",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1903"}, nil
 	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
-		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-10.0.14393.1944",
 			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1803",
