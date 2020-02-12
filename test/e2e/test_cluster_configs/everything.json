@@ -1,10 +1,19 @@
 {
 	"env": {
 		"CREATE_VNET": true,
-		"REGION_OPTIONS": "eastus,westeurope,southeastasia,uksouth"
+		"REGION_OPTIONS": "eastus,westeurope,westus2",
+		"GINKGO_SKIP": "should report all nodes in a Ready state",
+		"TEST_PVC": true,
+		"LB_TEST_TIMEOUT": "10m"
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16", "1.17"]
+		"allowedOrchestratorVersions": [
+			"1.14",
+			"1.15",
+			"1.16",
+			"1.17",
+			"1.18"
+		]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -12,6 +21,7 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
+					"etcdVersion": "3.3.15",
 					"clusterSubnet": "10.239.0.0/16",
 					"addons": [
 						{
@@ -20,7 +30,21 @@
 						},
 						{
 							"name": "cluster-autoscaler",
-							"enabled": true
+							"enabled": true,
+							"pools": [
+								{
+									"name": "pool1",
+									"config": {
+										"min-nodes": "1",
+										"max-nodes": "9"
+									}
+								}
+							],
+							"config": {
+								"scan-interval": "1m",
+								"scale-down-delay-after-add": "1m0s",
+								"scale-down-unneeded-time": "2m0s"
+							}
 						},
 						{
 							"name": "tiller",
@@ -47,29 +71,48 @@
 				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 				"firstConsecutiveStaticIP": "10.239.255.239",
 				"vnetCidr": "10.239.0.0/16",
-				"availabilityZones": [
-					"1"
-				],
 				"auditDEnabled": true
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "pool1",
-					"count": 4,
+					"count": 10,
+					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
 					"diskSizesGB": [
 						128
 					],
-					"availabilityProfile": "VirtualMachineScaleSets",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-					"availabilityZones": [
-						"1",
-						"2"
-					],
-					"scaleSetPriority": "Low",
+					"scalesetPriority": "Spot",
 					"auditDEnabled": true
+				},
+				{
+					"name": "poolgpu",
+					"count": 1,
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"vmSize": "Standard_NC6",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+				},
+				{
+					"name": "poolbigsku",
+					"count": 1,
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"vmSize": "Standard_D16_v3",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+					"scalesetPriority": "Spot",
+					"distro": "ubuntu"
+				},
+				{
+					"name": "poolwin",
+					"count": 2,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows",
+					"OSDiskSizeGB": 200,
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Spot",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
 			],
 			"linuxProfile": {
@@ -81,6 +124,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",

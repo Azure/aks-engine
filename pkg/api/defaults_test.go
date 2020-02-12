@@ -13,13 +13,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jarcoal/httpmock"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -209,7 +210,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
 		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019",
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
 		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
 		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
@@ -910,7 +911,7 @@ func TestNetworkPluginDefaults(t *testing.T) {
 
 func TestContainerRuntime(t *testing.T) {
 
-	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8"} {
+	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10"} {
 		mockCS := getMockBaseContainerService("1.10.13")
 		properties := mockCS.Properties
 		properties.OrchestratorProfile.OrchestratorType = Kubernetes
@@ -1483,6 +1484,31 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
 			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
 	}
+	properties.AgentPoolProfiles[0].ScaleSetPriority = ScaleSetPrioritySpot
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy != ScaleSetEvictionPolicyDelete {
+		t.Fatalf("AgentPoolProfile[0].ScaleSetEvictionPolicy did not have the expected configuration, got %s, expected %s",
+			properties.AgentPoolProfiles[0].ScaleSetEvictionPolicy, ScaleSetEvictionPolicyDelete)
+	}
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(-1) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(-1))
+	}
+
+	properties.AgentPoolProfiles[0].SpotMaxPrice = to.Float64Ptr(float64(88))
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if *properties.AgentPoolProfiles[0].SpotMaxPrice != float64(88) {
+		t.Fatalf("AgentPoolProfile[0].SpotMaxPrice did not have the expected value, got %g, expected %g",
+			*properties.AgentPoolProfiles[0].SpotMaxPrice, float64(88))
+	}
 }
 
 // TestDistroDefaults covers tests for setMasterProfileDefaults and setAgentProfileDefaults
@@ -1669,9 +1695,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		windowsProfile         WindowsProfile
 		expectedWindowsProfile WindowsProfile
 		isAzureStack           bool
+		isUpgrade              bool
+		isScale                bool
 	}{
 		{
-			"defaults",
+			"defaults in creating",
 			WindowsProfile{},
 			WindowsProfile{
 				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
@@ -1685,13 +1713,14 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"aks vhd current version",
+			"aks vhd current version and ImageSku in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
 			},
 			WindowsProfile{
 				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
@@ -1705,13 +1734,36 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"aks vhd specific version",
+			"aks vhd override sku in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
+				WindowsSku:       "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "latest",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"aks vhd override version in creating",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
@@ -1726,13 +1778,14 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"vanilla vhd current version",
+			"vanilla vhd version and ImageSku in creating",
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
 			},
 			WindowsProfile{
 				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
@@ -1746,9 +1799,55 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"vanilla vhd spepcific version",
+			"vanilla vhd override sku in creating",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "latest",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"vanilla vhd override version in creating",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"vanilla vhd spepcific version in creating",
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
@@ -1767,9 +1866,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"user overrides latest version",
+			"user overrides latest version in creating",
 			WindowsProfile{
 				WindowsPublisher: "override",
 				WindowsOffer:     "override",
@@ -1787,9 +1888,11 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
 		},
 		{
-			"user overrides specific version",
+			"user overrides specific version in creating",
 			WindowsProfile{
 				WindowsPublisher: "override",
 				WindowsOffer:     "override",
@@ -1808,6 +1911,169 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				SSHEnabled:            false,
 			},
 			false,
+			false,
+			false,
+		},
+		{
+			"aks-engine sets default WindowsSku and ImageVersion when they are empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            AKSWindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          AKSWindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not set default WindowsSku and ImageVersion when they are not empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine sets default vanilla WindowsSku and ImageVersion when they are empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          WindowsServer2019OSImageConfig.ImageVersion,
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not set vanilla default WindowsSku and ImageVersion when they are not empty in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not override version when WindowsPublisher does not match in upgrading",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+				ImageVersion:     "",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not override version when WindowsOffer does not match in upgrading",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			true,
+			false,
+		},
+		{
+			"aks-engine does not change any value in scaling",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "",
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "",
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            false,
+			},
+			false,
+			false,
+			true,
 		},
 	}
 
@@ -1821,7 +2087,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			if test.isAzureStack {
 				mockAPI.CustomCloudProfile = &CustomCloudProfile{}
 			}
-			mockAPI.setWindowsProfileDefaults(false, false)
+			mockAPI.setWindowsProfileDefaults(test.isUpgrade, test.isScale)
 
 			actual := mockAPI.WindowsProfile
 			expected := &test.expectedWindowsProfile
@@ -3691,14 +3957,14 @@ func TestSetTelemetryProfileDefaults(t *testing.T) {
 			name:             "default",
 			telemetryProfile: nil,
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{
 			name:             "key not set",
 			telemetryProfile: &TelemetryProfile{},
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{

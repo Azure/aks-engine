@@ -48,7 +48,7 @@
             },
             "cniPluginsURL": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.1.tgz"
+                "value": "https://kubernetesartifacts.azureedge.net/cni-plugins/v0.7.6/binaries/cni-plugins-amd64-v0.7.6.tgz"
             },
             "containerRuntime": {
                 "type": "String",
@@ -87,7 +87,7 @@
             },
             "etcdDownloadURLBase": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/github-coreos"
+                "value": "mcr.microsoft.com/oss/etcd-io/"
             },
             "etcdEncryptionKey": {
                 "type": "String",
@@ -318,11 +318,11 @@
             },
             "vnetCniLinuxPluginsURL": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v1.0.17.tgz"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-linux-amd64-v1.0.17.zip"
             },
             "vnetCniWindowsPluginsURL": {
                 "type": "String",
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.17.zip"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-windows-amd64-v1.0.17.zip"
             }
         },
         "mode": "Incremental",

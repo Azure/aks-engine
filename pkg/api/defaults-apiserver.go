@@ -109,6 +109,12 @@ func (cs *ContainerService) setAPIServerConfig() {
 	admissionControlKey, admissionControlValues := getDefaultAdmissionControls(cs)
 	defaultAPIServerConfig[admissionControlKey] = admissionControlValues
 
+	// Enable VolumeSnapshotDataSource feature gate for Azure Disk CSI Driver
+	// which is disabled from 1.13 to 1.16 by default
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0") {
+		addDefaultFeatureGates(defaultAPIServerConfig, o.OrchestratorVersion, "1.13.0", "VolumeSnapshotDataSource=true")
+	}
+
 	// If no user-configurable apiserver config values exists, use the defaults
 	if o.KubernetesConfig.APIServerConfig == nil {
 		o.KubernetesConfig.APIServerConfig = defaultAPIServerConfig

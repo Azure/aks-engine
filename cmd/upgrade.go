@@ -13,6 +13,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -286,6 +287,8 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	upgradeCluster.IsVMSSToBeUpgraded = isVMSSNameInAgentPoolsArray
+
 	if err = upgradeCluster.UpgradeCluster(uc.client, kubeConfig, BuildTag); err != nil {
 		return errors.Wrap(err, "upgrading cluster")
 	}
@@ -308,4 +311,15 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 	dir, file := filepath.Split(uc.apiModelPath)
 	return f.SaveFile(dir, file, b)
+}
+
+func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
+	for _, pool := range cs.Properties.AgentPoolProfiles {
+		if pool.AvailabilityProfile == api.VirtualMachineScaleSets {
+			if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
+				return true
+			}
+		}
+	}
+	return false
 }

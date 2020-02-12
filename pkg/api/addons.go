@@ -24,18 +24,18 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	k8sComponents := K8sComponentsByVersionMap[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod11012019"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
 	var workspaceDomain string
 	if cs.Properties.IsCustomCloudProfile() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod11012019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod11012019"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -261,7 +261,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "7.0.0-6",
+			"dockerProviderVersion": "8.0.0-2",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -269,10 +269,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           "omsagent",
-				CPURequests:    "110m",
+				CPURequests:    "150m",
 				MemoryRequests: "250Mi",
-				CPULimits:      "150m",
-				MemoryLimits:   "600Mi",
+				CPULimits:      "1",
+				MemoryLimits:   "750Mi",
 				Image:          omsagentImage,
 			},
 		},
@@ -319,8 +319,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			{
 				Name:           common.AzureNetworkPolicyAddonName,
 				Image:          k8sComponents[common.AzureNetworkPolicyAddonName],
+				CPURequests:    "10m",
 				MemoryRequests: "20Mi",
-				MemoryLimits:   "2Gi",
+				CPULimits:      "100m",
+				MemoryLimits:   "200Mi",
 			},
 		},
 	}
@@ -512,59 +514,123 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.CSIProvisionerContainerName,
-				Image: k8sComponents[common.CSIProvisionerContainerName],
+				Name:           common.CSIProvisionerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIAttacherContainerName,
-				Image: k8sComponents[common.CSIAttacherContainerName],
+				Name:           common.CSIAttacherContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIClusterDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				Name:           common.CSIClusterDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSILivenessProbeContainerName,
-				Image: k8sComponents[common.CSILivenessProbeContainerName],
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSINodeDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIAzureDiskContainerName,
-				Image: k8sComponents[common.CSIAzureDiskContainerName],
+				Name:           common.CSISnapshotterContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISnapshotterContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSIResizerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIResizerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSIAzureDiskContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureDiskContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 		},
 	}
 
 	defaultAzureFileCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureFileCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.CSIProvisionerContainerName,
-				Image: k8sComponents[common.CSIProvisionerContainerName],
+				Name:           common.CSIProvisionerContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIProvisionerContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIAttacherContainerName,
-				Image: k8sComponents[common.CSIAttacherContainerName],
+				Name:           common.CSIAttacherContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAttacherContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIClusterDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				Name:           common.CSIClusterDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIClusterDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSILivenessProbeContainerName,
-				Image: k8sComponents[common.CSILivenessProbeContainerName],
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSINodeDriverRegistrarContainerName,
-				Image: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  common.CSIAzureFileContainerName,
-				Image: k8sComponents[common.CSIAzureFileContainerName],
+				Name:           common.CSIAzureFileContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSIAzureFileContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 		},
 	}

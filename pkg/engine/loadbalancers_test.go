@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-func TestCreateLoadBalancer(t *testing.T) {
+func TestCreateMasterLoadBalancer(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			MasterProfile: &api.MasterProfile{
@@ -27,7 +27,7 @@ func TestCreateLoadBalancer(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, false)
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -118,6 +118,87 @@ func TestCreateLoadBalancer(t *testing.T) {
 
 }
 
+func TestCreateMasterLoadBalancerPrivate(t *testing.T) {
+	cs := &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.16.4",
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku: BasicLoadBalancerSku,
+					PrivateCluster: &api.PrivateCluster{
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+		},
+	}
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
+
+	expected := LoadBalancerARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+			DependsOn: []string{
+				"[concat('Microsoft.Network/publicIPAddresses/', variables('masterPublicIPAddressName'))]",
+			},
+		},
+		LoadBalancer: network.LoadBalancer{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('masterLbName')]"),
+			LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
+				BackendAddressPools: &[]network.BackendAddressPool{
+					{
+						Name: to.StringPtr("[variables('masterLbBackendPoolName')]"),
+					},
+				},
+				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
+					{
+						Name: to.StringPtr("[variables('masterLbIPConfigName')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('masterPublicIPAddressName'))]"),
+							},
+						},
+					},
+				},
+				OutboundRules: &[]network.OutboundRule{
+					{
+						Name: to.StringPtr("LBOutboundRule"),
+						OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+							FrontendIPConfigurations: &[]network.SubResource{
+								{
+									ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+								},
+							},
+							BackendAddressPool: &network.SubResource{
+								ID: to.StringPtr("[concat(variables('masterLbID'), '/backendAddressPools/', variables('masterLbBackendPoolName'))]"),
+							},
+							Protocol:               network.Protocol1All,
+							IdleTimeoutInMinutes:   to.Int32Ptr(0),
+							AllocatedOutboundPorts: to.Int32Ptr(0),
+							EnableTCPReset:         to.BoolPtr(true),
+						},
+					},
+				},
+			},
+			Sku: &network.LoadBalancerSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/loadBalancers"),
+		},
+	}
+
+	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
+	}
+
+}
+
 func TestCreateLoadBalancerStandard(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
@@ -131,7 +212,7 @@ func TestCreateLoadBalancerStandard(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, false)
+	actual := CreateMasterLoadBalancer(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -255,7 +336,7 @@ func TestCreateLoadBalancerVMSS(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateLoadBalancer(cs.Properties, true)
+	actual := CreateMasterLoadBalancer(cs.Properties, true)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -637,7 +718,7 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 			},
 		},
 	}
-	actual := CreateAgentLoadBalancer(cs.Properties, false)
+	actual := CreateStandardLoadBalancerForNodePools(cs.Properties, false)
 
 	expected := LoadBalancerARM{
 		ARMResource: ARMResource{
@@ -677,9 +758,10 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 							BackendAddressPool: &network.SubResource{
 								ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 							},
-							Protocol:             network.Protocol1All,
-							IdleTimeoutInMinutes: to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-							EnableTCPReset:       to.BoolPtr(true),
+							Protocol:               network.Protocol1All,
+							IdleTimeoutInMinutes:   to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+							EnableTCPReset:         to.BoolPtr(true),
+							AllocatedOutboundPorts: to.Int32Ptr(0),
 						},
 					},
 				},

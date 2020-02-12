@@ -29,7 +29,7 @@ var (
 	labelValueRegex          *regexp.Regexp
 	labelKeyRegex            *regexp.Regexp
 	diskEncryptionSetIDRegex *regexp.Regexp
-	// Any version has to be mirrored in https://acs-mirror.azureedge.net/github-coreos/etcd-v[Version]-linux-amd64.tar.gz
+	// Any version has to be available in a container image from mcr.microsoft.com/oss/etcd-io/etcd:v[Version]
 	etcdValidVersions = [...]string{"2.2.5", "2.3.0", "2.3.1", "2.3.2", "2.3.3", "2.3.4", "2.3.5", "2.3.6", "2.3.7", "2.3.8",
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
@@ -709,7 +709,7 @@ func (a *Properties) validateAddons() error {
 					if len(addon.Config["appgw-subnet"]) == 0 {
 						return errors.New("appgw-ingress add-ons requires 'appgw-subnet' in the Config. It is used to provision the subnet for Application Gateway in the vnet")
 					}
-				case "azuredisk-csi-driver", "azurefile-csi-driver":
+				case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
 					}

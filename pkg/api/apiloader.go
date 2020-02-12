@@ -309,3 +309,24 @@ func (a *Apiloader) serializeHostedContainerService(containerService *ContainerS
 		return nil, a.Translator.Errorf("invalid version %s for conversion back from unversioned object", version)
 	}
 }
+
+// LoadAgentpoolProfileFromFile loads an an AgentPoolProfile object from a JSON file
+func (a *Apiloader) LoadAgentpoolProfileFromFile(jsonFile string) (*AgentPoolProfile, error) {
+	contents, e := ioutil.ReadFile(jsonFile)
+	if e != nil {
+		return nil, a.Translator.Errorf("error reading file %s: %s", jsonFile, e.Error())
+	}
+	return a.LoadAgentPoolProfile(contents)
+}
+
+// LoadAgentPoolProfile marshalls raw data into a strongly typed AgentPoolProfile return object
+func (a *Apiloader) LoadAgentPoolProfile(contents []byte) (*AgentPoolProfile, error) {
+	agentPoolProfile := &AgentPoolProfile{}
+	if e := json.Unmarshal(contents, &agentPoolProfile); e != nil {
+		return nil, e
+	}
+	if e := checkJSONKeys(contents, reflect.TypeOf(*agentPoolProfile), reflect.TypeOf(TypeMeta{})); e != nil {
+		return nil, e
+	}
+	return agentPoolProfile, nil
+}

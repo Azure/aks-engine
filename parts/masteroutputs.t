@@ -6,7 +6,7 @@
       "value": ""
 {{end}}
     }
-{{if AnyAgentUsesAvailabilitySets}}
+{{if HasVMASAgentPool}}
     ,
     "agentStorageAccountSuffix": {
       "type": "string",

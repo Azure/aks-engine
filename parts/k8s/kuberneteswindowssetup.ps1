@@ -51,8 +51,6 @@ param(
     $TargetEnvironment
 )
 
-
-
 # These globals will not change between nodes in the same cluster, so they are not
 # passed as powershell parameters
 
@@ -129,6 +127,10 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 
+# Telemetry settings
+$global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
+$global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -161,6 +163,43 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        # Get app insights binaries and set up app insights client
+        mkdir c:\k\appinsights
+        DownloadFileOverHttp -Url "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg" -DestinationPath "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip"
+        Expand-Archive -Path "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip" -DestinationPath "c:\k\appinsights"
+        $appInsightsDll = "c:\k\appinsights\lib\net46\Microsoft.ApplicationInsights.dll"
+        [Reflection.Assembly]::LoadFile($appInsightsDll)
+        $conf = New-Object "Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration"
+        $conf.DisableTelemetry = -not $global:enableTelemetry
+        $conf.InstrumentationKey = $global:TelemetryKey
+        $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
+
+        $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
+        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
+        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
+        $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
+        $global:AppInsightsClient.Context.Properties["location"] = $Location
+        $global:AppInsightsClient.Context.Properties["os_type"] = "windows"
+        $global:AppInsightsClient.Context.Properties["os_version"] = Get-WindowsVersion
+        $global:AppInsightsClient.Context.Properties["network_plugin"] = $global:NetworkPlugin
+        $global:AppInsightsClient.Context.Properties["network_plugin_version"] = Get-CniVersion
+        $global:AppInsightsClient.Context.Properties["network_mode"] = $global:NetworkMode
+        $global:AppInsightsClient.Context.Properties["subscription_id"] = $global:SubscriptionId
+
+        $vhdId = ""
+        if (Test-Path "c:\vhd-id.txt") {
+            $vhdId = Get-Content "c:\vhd-id.txt"
+        }
+        $global:AppInsightsClient.Context.Properties["vhd_id"] = $vhdId
+
+        $imdsProperties = Get-InstanceMetadataServiceTelemetry
+        foreach ($key in $imdsProperties.keys) {
+            $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
+        }
+
+        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
@@ -172,7 +211,10 @@ try
         Set-TelemetrySetting -WindowsTelemetryGUID $global:WindowsTelemetryGUID
 
         Write-Log "Resize os drive if possible"
+        $resizeTimer = [System.Diagnostics.Stopwatch]::StartNew()
         Resize-OSDrive
+        $resizeTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Resize-OSDrive", $resizeTimer.Elapsed.TotalSeconds)
 
         Write-Log "Initialize data disks"
         Initialize-DataDisks
@@ -181,8 +223,11 @@ try
         Initialize-DataDirectories
 
         Write-Log "Install docker"
+        $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
         Install-Docker -DockerVersion $global:DockerVersion
         Set-DockerLogFileOptions
+        $dockerTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
@@ -238,7 +283,10 @@ try
             -AgentCertificate $global:AgentCertificate
 
         Write-Log "Create the Pause Container kubletwin/pause"
+        $infraContainerTimer = [System.Diagnostics.Stopwatch]::StartNew()
         New-InfraContainer -KubeDir $global:KubeDir
+        $infraContainerTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("New-InfraContainer", $infraContainerTimer.Elapsed.TotalSeconds)
 
         if (-not (Test-ContainerImageExists -Image "kubletwin/pause")) {
             Write-Log "Could not find container with name kubletwin/pause"
@@ -308,7 +356,7 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
 
-        Get-NetworkLogCollectionScripts
+        Get-LogCollectionScripts
 
         Write-Log "Disable Internet Explorer compat mode and set homepage"
         Set-Explorer
@@ -322,6 +370,7 @@ try
         Write-Log "Update service failure actions"
         Update-ServiceFailureActions
 
+        Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
 
         if (Test-Path $CacheDir)
@@ -329,6 +378,10 @@ try
             Write-Log "Removing aks-engine bits cache directory"
             Remove-Item $CacheDir -Recurse -Force
         }
+
+        $global:globalTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("TotalDuration", $global:globalTimer.Elapsed.TotalSeconds)
+        $global:AppInsightsClient.Flush()
 
         Write-Log "Setup Complete, reboot computer"
         Restart-Computer
@@ -341,6 +394,11 @@ try
 }
 catch
 {
+    $exceptionTelemtry = New-Object "Microsoft.ApplicationInsights.DataContracts.ExceptionTelemetry"
+    $exceptionTelemtry.Exception = $_.Exception
+    $global:AppInsightsClient.TrackException($exceptionTelemtry)
+    $global:AppInsightsClient.Flush()
+
     Write-Error $_
     exit 1
 }

@@ -98,6 +98,8 @@ const (
 	ScaleSetPriorityRegular = "Regular"
 	// ScaleSetPriorityLow means the ScaleSet will use Low-priority VMs
 	ScaleSetPriorityLow = "Low"
+	// ScaleSetPrioritySpot means the ScaleSet will use Spot VMs
+	ScaleSetPrioritySpot = "Spot"
 	// ScaleSetEvictionPolicyDelete is the default Eviction Policy for Low-priority VM ScaleSets
 	ScaleSetEvictionPolicyDelete = "Delete"
 	// ScaleSetEvictionPolicyDeallocate means a Low-priority VM ScaleSet will deallocate, rather than delete, VMs.
@@ -232,6 +234,22 @@ const (
 	AddonModeEnsureExists = "EnsureExists"
 	// AddonModeReconcile
 	AddonModeReconcile = "Reconcile"
+	// VMSSVMType is the string const for the vmss VM Type
+	VMSSVMType = "vmss"
+	// StandardVMType is the string const for the standard VM Type
+	StandardVMType = "standard"
+)
+
+// Azure API Versions
+const (
+	APIVersionAuthorizationUser   = "2018-09-01-preview"
+	APIVersionAuthorizationSystem = "2018-01-01-preview"
+	APIVersionCompute             = "2019-07-01"
+	APIVersionDeployments         = "2018-06-01"
+	APIVersionKeyVault            = "2018-02-14"
+	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionNetwork             = "2018-08-01"
+	APIVersionStorage             = "2018-07-01"
 )
 
 // AzureStackCloud Specific Defaults
@@ -247,6 +265,8 @@ const (
 
 	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
 	MaxAzureStackManagedDiskSize = "1023"
+	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
+	AzureStackSuffix = "-azs"
 )
 
 const (
@@ -297,11 +317,11 @@ const (
 const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
-	// to https://acs-mirror.azureedge.net/cni
+	// to https://kubernetesartifacts.azureedge.net/azure-cni
 	AzureCniPluginVerLinux = "v1.0.30"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
-	// to https://acs-mirror.azureedge.net/cni
+	// to https://kubernetesartifacts.azureedge.net/azure-cni
 	AzureCniPluginVerWindows = "v1.0.30"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
@@ -424,7 +444,7 @@ const (
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.8"
+	DefaultMobyVersion = "3.0.10"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.1.5"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
@@ -493,7 +513,3 @@ const TLSStrongCipherSuitesAPIServer = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS
 
 // TLSStrongCipherSuitesKubelet is a kube-bench-recommended allowed cipher suites for kubelet
 const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256"
-
-// Default instrmentation key used for routing Application Insights data
-// NOTE! this is in a test sub and needs to be switched to a production sub before collecting user data!
-const DefaultApplicationInsightsKey = "c92d8284-b550-4b06-b7ba-e80fd7178faa"

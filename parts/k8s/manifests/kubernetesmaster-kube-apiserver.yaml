@@ -11,10 +11,10 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-apiserver
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-apiserver"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-apiserver"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig}}]
+      command: [{{ContainerConfig "command"}}]
+      args: [{{GetAPIServerArgs}}]
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes

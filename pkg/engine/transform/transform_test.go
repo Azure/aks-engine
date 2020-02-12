@@ -148,6 +148,23 @@ func TestNormalizeForK8sSLBScalingOrUpgradeVMSS(t *testing.T) {
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sSLBScalingOrUpgradeVMSS")
 }
 
+func TestRemoveJumpboxResourcesFromTemplate(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "RemoveJumpboxResourcesFromTemplate")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template_jumpbox.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_upgrade_template_jumpbox.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	json.Unmarshal([]byte(templateJSON), &template)
+	templateMap := template.(map[string]interface{})
+	transformer := Transformer{}
+	e = transformer.RemoveJumpboxResourcesFromTemplate(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "TestRemoveJumpboxResourcesFromTemplate")
+}
+
 func TestNormalizeForK8sVMASScalingUp_ShouldRemoveVMAS(t *testing.T) {
 	RegisterTestingT(t)
 	logger := logrus.New().WithField("testName", "TestNormalizeForK8sVMASScalingUp")

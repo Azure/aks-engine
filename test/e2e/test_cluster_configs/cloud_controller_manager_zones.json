@@ -1,0 +1,68 @@
+{
+    "options": {
+        "allowedOrchestratorVersions": [
+            "1.14",
+            "1.15",
+            "1.16",
+            "1.17"
+        ]
+    },
+    "env": {
+        "REGION_OPTIONS": "eastus,westeurope,southeastasia,uksouth"
+    },
+    "apiModel": {
+        "apiVersion": "vlabs",
+        "properties": {
+            "orchestratorProfile": {
+                "orchestratorType": "Kubernetes",
+                "kubernetesConfig": {
+                    "useCloudControllerManager": true,
+                    "addons": [
+                        {
+                            "name": "azuredisk-csi-driver",
+                            "enabled": true
+                        },
+                        {
+                            "name": "azurefile-csi-driver",
+                            "enabled": true
+                        }
+                    ]
+                }
+            },
+            "masterProfile": {
+                "count": 1,
+                "dnsPrefix": "",
+                "vmSize": "Standard_D2_v3",
+                "availabilityZones": [
+                    "1"
+                ]
+            },
+            "agentPoolProfiles": [
+                {
+                    "name": "agentpool1",
+                    "count": 4,
+                    "vmSize": "Standard_D2_v3",
+                    "availabilityProfile": "VirtualMachineScaleSets",
+                    "availabilityZones": [
+                        "1",
+                        "2"
+                    ]
+                }
+            ],
+            "linuxProfile": {
+                "adminUsername": "azureuser",
+                "ssh": {
+                    "publicKeys": [
+                        {
+                            "keyData": ""
+                        }
+                    ]
+                }
+            },
+            "servicePrincipalProfile": {
+                "clientId": "",
+                "secret": ""
+            }
+        }
+    }
+}

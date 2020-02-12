@@ -71,6 +71,7 @@ var (
 	firstMasterRegexp               *regexp.Regexp
 	masterNodes                     []node.Node
 	clusterAutoscalerEngaged        bool
+	clusterAutoscalerAddon          api.KubernetesAddon
 )
 
 var _ = BeforeSuite(func() {
@@ -127,6 +128,7 @@ var _ = BeforeSuite(func() {
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
 		if hasAddon, addon := eng.HasAddon("cluster-autoscaler"); hasAddon {
+			clusterAutoscalerAddon = addon
 			if len(addon.Pools) > 0 {
 				for _, pool := range addon.Pools {
 					p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
@@ -167,8 +169,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				var nodes []node.Node
 				var err error
-				if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-					nodes, err = node.GetWithRetry(1*time.Second, cfg.Timeout)
+				if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+					nodes, err = node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				} else {
 					nodes = masterNodes
 				}
@@ -177,8 +179,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sshConn.CopyTo(hostOSDNSValidateScript)
 				Expect(err).NotTo(HaveOccurred())
 				envString := "NODE_HOSTNAMES='"
-				for _, node := range nodes {
-					envString += fmt.Sprintf("%s ", node.Metadata.Name)
+				for _, n := range nodes {
+					envString += fmt.Sprintf("%s ", n.Metadata.Name)
 				}
 				lookupRetries := 3
 				envString += fmt.Sprintf("' LOOKUP_RETRIES=%d", lookupRetries)
@@ -196,11 +198,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(success).To(BeTrue())
 				hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
-				for _, node := range nodes {
-					if node.IsLinux() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+				for _, n := range nodes {
+					if n.IsLinux() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -210,8 +212,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate cloudprovider config", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
 				err = sshConn.CopyTo(cloudproviderConfigValidateScript)
@@ -221,11 +223,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				cloudproviderConfigValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, cloudproviderConfigValidateScript)
 				err = sshConn.Execute(cloudproviderConfigValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript)
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, cloudproviderConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, cloudproviderConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -236,10 +238,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have the expected k8s version", func() {
 			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(node.Version()))
+				for _, n := range nodes {
+					err := n.Describe()
+					if err != nil {
+						log.Printf("Unable to describe node %s: %s", n.Metadata.Name, err)
+					}
+					Expect("v" + eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion).To(Equal(n.Version()))
 				}
 			} else {
 				Skip("This is a cluster built from source")
@@ -264,19 +270,19 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should display the installed docker runtime on all nodes", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
-					for _, node := range nodes {
-						if node.IsWindows() {
+					for _, n := range nodes {
+						if n.IsWindows() {
 							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
-								log.Printf("Can't ssh into Windows node %s because there is no SSH listener", node.Metadata.Name)
+								log.Printf("Can't ssh into Windows node %s because there is no SSH listener", n.Metadata.Name)
 								continue
 							}
 						}
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, dockerVersionCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, dockerVersionCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				} else {
@@ -290,14 +296,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate that every linux node has a root password", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					rootPasswdCmd := fmt.Sprintf("\"sudo grep '^root:[!*]:' /etc/shadow\" && exit 1 || exit 0")
-					for _, node := range nodes {
-						if node.IsUbuntu() {
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, rootPasswdCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+					for _, n := range nodes {
+						if n.IsUbuntu() {
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, rootPasswdCmd, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -312,7 +318,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
 					var largeSKUPrefixes []string
 					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
@@ -325,21 +331,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-"+profile.Name)
 						}
 					}
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					netConfigValidateScript := "net-config-validate.sh"
 					err = sshConn.CopyTo(netConfigValidateScript)
 					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodes {
+					for _, n := range nodes {
 						var gt8CoreSKU string
-						if node.HasSubstring(largeSKUPrefixes) && node.IsUbuntu() {
+						if n.HasSubstring(largeSKUPrefixes) && n.IsUbuntu() {
 							gt8CoreSKU = "true"
 						}
 						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
-						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+netConfigValidateScript)
+						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+netConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -354,9 +360,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate all CIS VHD-paved files", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					CISFilesValidateScript := "CIS-files-validate.sh"
 					err = sshConn.CopyTo(CISFilesValidateScript)
@@ -364,11 +370,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					CISValidationCommand := fmt.Sprintf("\"/tmp/%s\"", CISFilesValidateScript)
 					err = sshConn.Execute(CISValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodes {
-						if !firstMasterRegexp.MatchString(node.Metadata.Name) {
-							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+					for _, n := range nodes {
+						if !firstMasterRegexp.MatchString(n.Metadata.Name) {
+							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+CISFilesValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, CISValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, CISValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							fmt.Println(err)
 						}
@@ -384,9 +390,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate kernel module configuration", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					modprobeConfigValidateScript := "modprobe-config-validate.sh"
 					err = sshConn.CopyTo(modprobeConfigValidateScript)
@@ -394,11 +400,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					netConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", modprobeConfigValidateScript)
 					err = sshConn.Execute(netConfigValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodes {
-						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+					for _, n := range nodes {
+						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -413,8 +419,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate installed software packages", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				installedPackagesValidateScript := "ubuntu-installed-packages-validate.sh"
 				err = sshConn.CopyTo(installedPackagesValidateScript)
@@ -422,11 +428,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				installedPackagesValidationCommand := fmt.Sprintf("\"/tmp/%s\"", installedPackagesValidateScript)
 				err = sshConn.Execute(installedPackagesValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, installedPackagesValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, installedPackagesValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -438,9 +444,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate that every linux node has the right sshd config", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					sshdConfigValidateScript := "sshd-config-validate.sh"
 					err = sshConn.CopyTo(sshdConfigValidateScript)
@@ -448,11 +454,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					sshdConfigValidationCommand := fmt.Sprintf("\"/tmp/%s\"", sshdConfigValidateScript)
 					err = sshConn.Execute(sshdConfigValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodes {
-						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
+					for _, n := range nodes {
+						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, sshdConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, sshdConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -467,9 +473,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should validate password enforcement configuration", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.ExpandedDefinition.Properties.IsVHDDistroForAllNodes() {
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					pwQualityValidateScript := "pwquality-validate.sh"
 					err = sshConn.CopyTo(pwQualityValidateScript)
@@ -477,11 +483,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					pwQualityValidationCommand := fmt.Sprintf("\"/tmp/%s\"", pwQualityValidateScript)
 					err = sshConn.Execute(pwQualityValidationCommand, false)
 					Expect(err).NotTo(HaveOccurred())
-					for _, node := range nodes {
-						if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-							err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+					for _, n := range nodes {
+						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+pwQualityValidateScript)
 							Expect(err).NotTo(HaveOccurred())
-							err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, pwQualityValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, pwQualityValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
 					}
@@ -498,34 +504,34 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("SSH port is blocked")
 			} else {
 				var auditDNodePrefixes []string
-				var lowPriVMSSPrefixes []string
+				var nonRegularPriVMSSPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
-					if profile.IsLowPriorityScaleSet() {
-						lowPriVMSSPrefixes = append(lowPriVMSSPrefixes, "k8s-"+profile.Name)
+					if profile.IsLowPriorityScaleSet() || profile.IsSpotScaleSet() {
+						nonRegularPriVMSSPrefixes = append(nonRegularPriVMSSPrefixes, "k8s-"+profile.Name)
 					} else if to.Bool(profile.AuditDEnabled) {
 						auditDNodePrefixes = append(auditDNodePrefixes, profile.Name)
 					}
 				}
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				auditdValidateScript := "auditd-validate.sh"
 				err = sshConn.CopyTo(auditdValidateScript)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					if !node.HasSubstring(lowPriVMSSPrefixes) && node.IsUbuntu() {
+				for _, n := range nodes {
+					if !n.HasSubstring(nonRegularPriVMSSPrefixes) && n.IsUbuntu() {
 						var enabled bool
-						if node.HasSubstring(auditDNodePrefixes) {
+						if n.HasSubstring(auditDNodePrefixes) {
 							enabled = true
 						}
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+auditdValidateScript)
+						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+auditdValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -638,7 +644,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				!clusterAutoscalerEngaged &&
+				cfg.AddNodePoolInput == "" {
 				expectedReadyNodes = eng.NodeCount()
 				log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 			} else {
@@ -652,7 +660,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels and annotations", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				totalNodeCount := eng.NodeCount()
 				nodes := totalNodeCount - len(masterNodes)
 				nodeList, err := node.GetByLabel("foo")
@@ -667,21 +676,22 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have node labels specific to masters or agents", func() {
-			nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
 				Expect(len(nodes)).To(Equal(eng.NodeCount()))
 			}
-			for _, node := range nodes {
+			for _, n := range nodes {
 				role := "master"
-				if !strings.HasPrefix(node.Metadata.Name, "k8s-master-") {
-					if eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
+					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 						continue
 					} else {
 						role = "agent"
 					}
 				}
-				labels := node.Metadata.Labels
+				labels := n.Metadata.Labels
 				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
 				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
 				if role == "master" && common.IsKubernetesVersionGe(
@@ -718,9 +728,14 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have core kube-system componentry running", func() {
 			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
-			if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
-				to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
-				coreComponents = append(coreComponents, "cloud-controller-manager", "cloud-node-manager", "csi-azuredisk-controller", "csi-azurefile-controller")
+			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
+				coreComponents = append(coreComponents, "cloud-controller-manager")
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
+					coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node", "csi-azurefile-controller", "csi-azurefile-node")
+				}
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					coreComponents = append(coreComponents, "cloud-node-manager")
+				}
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
@@ -918,9 +933,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
+			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
 			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
 			successes, err := pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+
+			// Use curl to test responsive DNS lookup + TCP 443 connectivity
+			name = fmt.Sprintf("alpine-%s", cfg.Name)
+			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
@@ -1007,19 +1030,19 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
 					dashboardPort := 443
 					port := s.GetNodePort(dashboardPort)
-					nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					var success bool
-					for _, node := range nodes {
+					for _, n := range nodes {
 						if success {
 							break
 						}
-						if node.IsLinux() {
+						if n.IsLinux() {
 							// Allow 3 retries for each node
 							for i := 0; i < 3; i++ {
-								address := node.Status.GetAddressByType("InternalIP")
+								address := n.Status.GetAddressByType("InternalIP")
 								if address == nil {
-									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", node.Metadata.Name)
+									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", n.Metadata.Name)
 								}
 								Expect(address).NotTo(BeNil())
 								dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
@@ -1039,25 +1062,75 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			}
 		})
+
+		It("should have the correct storage classes deployed", func() {
+			if util.IsUsingEphemeralDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("no storage class is deployed when ephemeral disk is used, will not test")
+			}
+			var azureDiskProvisioner, azureFileProvisioner string
+			isUsingCSIDrivers := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
+				common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0")
+			if isUsingCSIDrivers {
+				azureDiskProvisioner = "disk.csi.azure.com"
+				azureFileProvisioner = "file.csi.azure.com"
+			} else {
+				azureDiskProvisioner = "kubernetes.io/azure-disk"
+				azureFileProvisioner = "kubernetes.io/azure-file"
+			}
+
+			azureDiskStorageClasses := []string{"default"}
+			// CSI driver uses managed disk by default
+			if isUsingCSIDrivers || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "managed-premium", "managed-standard")
+			} else {
+				azureDiskStorageClasses = append(azureDiskStorageClasses, "unmanaged-premium", "unmanaged-standard")
+			}
+			for _, azureDiskStorageClass := range azureDiskStorageClasses {
+				sc, err := storageclass.Get(azureDiskStorageClass)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
+				if isUsingCSIDrivers && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
+					Expect(sc.VolumeBindingMode).To(Equal("WaitForFirstConsumer"))
+					Expect(len(sc.AllowedTopologies)).To(Equal(1))
+					Expect(len(sc.AllowedTopologies[0].MatchLabelExpressions)).To(Equal(1))
+					Expect(sc.AllowedTopologies[0].MatchLabelExpressions[0].Key).To(Equal("topology.disk.csi.azure.com/zone"))
+					for _, zone := range eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].AvailabilityZones {
+						Expect(sc.AllowedTopologies[0].MatchLabelExpressions[0].Values).To(ContainElement(eng.ExpandedDefinition.Location + "-" + zone))
+					}
+				} else {
+					Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+				}
+				if isUsingCSIDrivers && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					Expect(sc.AllowVolumeExpansion).To(BeTrue())
+				}
+			}
+
+			for _, azureFileStorageClass := range []string{"azurefile"} {
+				sc, err := storageclass.Get(azureFileStorageClass)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(sc.Provisioner).To(Equal(azureFileProvisioner))
+				Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+			}
+		})
 	})
 
 	Describe("with a windows agent pool", func() {
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
 					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
-						nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
 						err = sshConn.CopyTo(simulateDockerdCrashScript)
 						Expect(err).NotTo(HaveOccurred())
-						for _, node := range nodes {
-							if node.IsWindows() {
-								By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", node.Metadata.Name))
-								err = sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+						for _, n := range nodes {
+							if n.IsWindows() {
+								By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", n.Metadata.Name))
+								err = sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
 								Expect(err).NotTo(HaveOccurred())
 								simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
-								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, simulateDockerCrashCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+								err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, simulateDockerCrashCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
@@ -1065,17 +1138,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						log.Print("Waiting 1 minute to allow nodes to report not ready state after the crash occurred\n")
 						time.Sleep(1 * time.Minute)
 
-						for _, node := range nodes {
-							if node.IsWindows() {
-								By(fmt.Sprintf("restarting kubelet service on node: %s", node.Metadata.Name))
+						for _, n := range nodes {
+							if n.IsWindows() {
+								By(fmt.Sprintf("restarting kubelet service on node: %s", n.Metadata.Name))
 								restartKubeletCommand := fmt.Sprintf("\"Powershell Start-Service kubelet\"")
-								err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, restartKubeletCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+								err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, restartKubeletCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 							}
 						}
 
 						var expectedReadyNodes int
-						if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() && !clusterAutoscalerEngaged {
+						if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() && !clusterAutoscalerEngaged {
 							expectedReadyNodes = len(nodes)
 							log.Printf("Checking for %d Ready nodes\n", expectedReadyNodes)
 						} else {
@@ -1115,7 +1188,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ILB service attachment")
 				sILB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-ilb.yaml"), serviceName+"-ilb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				err = sILB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sILB.WaitForIngress(cfg.LBTimeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create a curl pod to connect to the service")
@@ -1124,7 +1197,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
-				err = sELB.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = sELB.WaitForIngress(cfg.LBTimeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can connect to the ELB service on the service IP")
@@ -1192,40 +1265,96 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			err = p.Delete(util.DefaultDeleteRetries)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("should create a pv by deploying a pod that consumes a pvc", func() {
+			if !util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+				Skip("Skip PV test for clusters using unmanaged disks")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.TestPVC {
+				By("Creating a persistent volume claim")
+				pvcName := "azure-disk" // should be the same as in pvc-azuredisk.yaml
+				pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-azuredisk.yaml"), pvcName, "default")
+				Expect(err).NotTo(HaveOccurred())
+				// Azure Disk CSI driver in zone-enabled clusters uses 'WaitForFirstConsumer' volume binding mode
+				// thus, pvc won't be available until a pod consumes it
+				isUsingAzureDiskCSIDriver, _ := eng.HasAddon("azuredisk-csi-driver")
+				if !(isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools()) {
+					ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ready).To(Equal(true))
+				}
+
+				By("Launching a pod using the volume claim")
+				podName := "pv-pod" // should be the same as in pod-pvc.yaml
+				testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+
+				By("Checking that the pod can access volume")
+				valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
+				Expect(valid).To(BeTrue())
+				Expect(err).NotTo(HaveOccurred())
+
+				// Skip label validation for Azure Disk CSI driver since it currently doesn't apply any label to PV
+				if !isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
+					pvList, err := persistentvolume.Get()
+					Expect(err).NotTo(HaveOccurred())
+					pvZone := ""
+					for _, pv := range pvList.PersistentVolumes {
+						By("Ensuring that we get zones for the pv")
+						// zone is chosen by round-robin across all zones
+						pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						fmt.Printf("pvZone: %s\n", pvZone)
+						contains := strings.Contains(pvZone, "-")
+						Expect(contains).To(Equal(true))
+						// VolumeScheduling feature gate is set to true by default starting v1.10+
+						for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
+							if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
+								By("Ensuring that we get nodeAffinity for each pv")
+								value := expression.Values[0]
+								fmt.Printf("NodeAffinity value: %s\n", value)
+								contains := strings.Contains(value, "-")
+								Expect(contains).To(Equal(true))
+							}
+						}
+					}
+
+					By("Ensuring that attached volume pv has the same zone as the zone of the node")
+					nodeName := testPod.Spec.NodeName
+					nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+					fmt.Printf("pvZone: %s\n", pvZone)
+					fmt.Printf("nodeZone: %s\n", nodeZone)
+					Expect(nodeZone == pvZone).To(Equal(true))
+				}
+
+				By("Cleaning up after ourselves")
+				err = testPod.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+				err = pvc.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
 	})
 
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
 			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
-				version := common.RationalizeReleaseAndVersion(
-					common.Kubernetes,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorRelease,
-					eng.ClusterDefinition.Properties.OrchestratorProfile.OrchestratorVersion,
-					false,
-					eng.HasWindowsAgents())
-				if common.IsKubernetesVersionGe(version, "1.10.0") {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
-				} else {
-					j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "nvidia-smi.yaml"), "nvidia-smi", "default", 3*time.Second, cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-					delErr := j.Delete(util.DefaultDeleteRetries)
-					if delErr != nil {
-						fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-						fmt.Println(delErr)
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(ready).To(Equal(true))
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
 				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
 			} else {
 				Skip("This is not a GPU-enabled cluster")
 			}
@@ -1254,13 +1383,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with zoned master profile", func() {
 		It("should be labeled with zones for each masternode", func() {
 			if eng.ExpandedDefinition.Properties.MasterProfile.HasAvailabilityZones() {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					role := node.Metadata.Labels["kubernetes.io/role"]
+				for _, n := range nodes {
+					role := n.Metadata.Labels["kubernetes.io/role"]
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
-						zones := node.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
 						contains := strings.Contains(zones, "-")
 						Expect(contains).To(Equal(true))
 					}
@@ -1274,13 +1403,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 	Describe("with all zoned agent pools", func() {
 		It("should be labeled with zones for each node", func() {
 			if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					role := node.Metadata.Labels["kubernetes.io/role"]
+				for _, n := range nodes {
+					role := n.Metadata.Labels["kubernetes.io/role"]
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
-						zones := node.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
+						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
 						contains := strings.Contains(zones, "-")
 						Expect(contains).To(Equal(true))
 					}
@@ -1289,85 +1418,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("Availability zones was not configured for this Cluster Definition")
 			}
 		})
-
-		It("should create pv with zone labels and node affinity", func() {
-			if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				if eng.ExpandedDefinition.Properties.HasZonesForAllAgentPools() {
-					if !(common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") &&
-						to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)) {
-						By("Creating a persistent volume claim")
-						pvcName := "azure-managed-disk" // should be the same as in pvc-standard.yaml
-						pvc, err := persistentvolumeclaims.CreatePersistentVolumeClaimsFromFile(filepath.Join(WorkloadDir, "pvc-standard.yaml"), pvcName, "default")
-						Expect(err).NotTo(HaveOccurred())
-						ready, err := pvc.WaitOnReady("default", 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(ready).To(Equal(true))
-
-						pvList, err := persistentvolume.Get()
-						Expect(err).NotTo(HaveOccurred())
-						pvZone := ""
-						for _, pv := range pvList.PersistentVolumes {
-							By("Ensuring that we get zones for the pv")
-							// zone is chosen by round-robin across all zones
-							pvZone = pv.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-							fmt.Printf("pvZone: %s\n", pvZone)
-							contains := strings.Contains(pvZone, "-")
-							Expect(contains).To(Equal(true))
-							// VolumeScheduling feature gate is set to true by default starting v1.10+
-							for _, expression := range pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions {
-								if expression.Key == "failure-domain.beta.kubernetes.io/zone" {
-									By("Ensuring that we get nodeAffinity for each pv")
-									value := expression.Values[0]
-									fmt.Printf("NodeAffinity value: %s\n", value)
-									contains := strings.Contains(value, "-")
-									Expect(contains).To(Equal(true))
-								}
-							}
-						}
-
-						By("Launching a pod using the volume claim")
-						podName := "zone-pv-pod" // should be the same as in pod-pvc.yaml
-						testPod, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "pod-pvc.yaml"), podName, "default", 1*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						ready, err = testPod.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(ready).To(Equal(true))
-
-						By("Checking that the pod can access volume")
-						valid, err := testPod.ValidatePVC("/mnt/azure", 10, 10*time.Second)
-						Expect(valid).To(BeTrue())
-						Expect(err).NotTo(HaveOccurred())
-
-						By("Ensuring that attached volume pv has the same zone as the zone of the node")
-						nodeName := testPod.Spec.NodeName
-						nodeList, err := node.GetByRegexWithRetry(nodeName, 3*time.Minute, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						nodeZone := nodeList[0].Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
-						fmt.Printf("pvZone: %s\n", pvZone)
-						fmt.Printf("nodeZone: %s\n", nodeZone)
-						Expect(nodeZone == pvZone).To(Equal(true))
-
-						By("Cleaning up after ourselves")
-						err = testPod.Delete(util.DefaultDeleteRetries)
-						Expect(err).NotTo(HaveOccurred())
-						err = pvc.Delete(util.DefaultDeleteRetries)
-						Expect(err).NotTo(HaveOccurred())
-					} else {
-						Skip("Zones aren't yet supported in CSI disk driver")
-					}
-				} else {
-					Skip("Availability zones was not configured for this Cluster Definition")
-				}
-			} else {
-				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
-			}
-		})
 	})
 
 	Describe("with NetworkPolicy enabled", func() {
 		It("should apply various network policies and enforce access to nginx pod", func() {
-			if (eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
-                            eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea")) {
+			if eng.HasNetworkPolicy("calico") || eng.HasNetworkPolicy("azure") ||
+				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
 				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
@@ -1616,7 +1672,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				iisService, err := service.Get(deploymentName, "default")
 				Expect(err).NotTo(HaveOccurred())
-				err = iisService.WaitForIngress(cfg.Timeout, 5*time.Second)
+				err = iisService.WaitForIngress(cfg.LBTimeout, 5*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying that the service is reachable and returns the default IIS start page")
@@ -1881,8 +1937,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have healthy time synchronization", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
-			} else if !eng.ExpandedDefinition.Properties.HasLowPriorityScaleset() {
-				nodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				timeSyncValidateScript := "time-sync-validate.sh"
 				err = sshConn.CopyTo(timeSyncValidateScript)
@@ -1890,11 +1946,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				timeSyncValidationCommand := fmt.Sprintf("\"/tmp/%s\"", timeSyncValidateScript)
 				err = sshConn.Execute(timeSyncValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
-				for _, node := range nodes {
-					if node.IsUbuntu() && !firstMasterRegexp.MatchString(node.Metadata.Name) {
-						err := sshConn.CopyToRemote(node.Metadata.Name, "/tmp/"+timeSyncValidateScript)
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+timeSyncValidateScript)
 						Expect(err).NotTo(HaveOccurred())
-						err = sshConn.ExecuteRemoteWithRetry(node.Metadata.Name, timeSyncValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, timeSyncValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 					}
 				}
@@ -1937,8 +1993,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						// TODO enable cluster-autoscaler tests for Windows
 						if profile.IsLinux() {
-							maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
-							totalMaxPods += (profile.Count * maxPods)
+							for _, pool := range clusterAutoscalerAddon.Pools {
+								if pool.Name == profile.Name {
+									maxPods, _ := strconv.Atoi(profile.KubernetesConfig.KubeletConfig["--max-pods"])
+									totalMaxPods += (profile.Count * maxPods)
+								}
+							}
 						}
 					}
 					maxPods, _ := strconv.Atoi(eng.ExpandedDefinition.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--max-pods"])

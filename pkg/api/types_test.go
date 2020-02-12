@@ -1314,6 +1314,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 		name           string
 		p              Properties
 		expectedISVMSS bool
+		expectedIsVMAS bool
 	}{
 		{
 			name: "zero value master profile",
@@ -1321,6 +1322,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				MasterProfile: &MasterProfile{},
 			},
 			expectedISVMSS: false,
+			expectedIsVMAS: false,
 		},
 		{
 			name: "master profile w/ AS",
@@ -1330,6 +1332,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				},
 			},
 			expectedISVMSS: false,
+			expectedIsVMAS: true,
 		},
 		{
 			name: "master profile w/ VMSS",
@@ -1339,6 +1342,7 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 				},
 			},
 			expectedISVMSS: true,
+			expectedIsVMAS: false,
 		},
 	}
 
@@ -1348,6 +1352,9 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 			t.Parallel()
 			if c.p.MasterProfile.IsVirtualMachineScaleSets() != c.expectedISVMSS {
 				t.Fatalf("expected MasterProfile.IsVirtualMachineScaleSets() to return %t but instead returned %t", c.expectedISVMSS, c.p.MasterProfile.IsVirtualMachineScaleSets())
+			}
+			if c.p.MasterProfile.IsAvailabilitySet() != c.expectedIsVMAS {
+				t.Fatalf("expected MasterProfile.IsAvailabilitySet() to return %t but instead returned %t", c.expectedIsVMAS, c.p.MasterProfile.IsAvailabilitySet())
 			}
 		})
 	}
@@ -1359,7 +1366,25 @@ func TestAvailabilityProfile(t *testing.T) {
 		expectedISVMSS  bool
 		expectedIsAS    bool
 		expectedLowPri  bool
+		expectedSpot    bool
+		expectedVMType  string
 	}{
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPrioritySpot,
+					},
+				},
+			},
+			expectedHasVMSS: true,
+			expectedISVMSS:  true,
+			expectedIsAS:    false,
+			expectedLowPri:  false,
+			expectedSpot:    true,
+			expectedVMType:  VMSSVMType,
+		},
 		{
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -1373,6 +1398,8 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  true,
 			expectedIsAS:    false,
 			expectedLowPri:  true,
+			expectedSpot:    false,
+			expectedVMType:  VMSSVMType,
 		},
 		{
 			p: Properties{
@@ -1390,6 +1417,8 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  true,
 			expectedIsAS:    false,
 			expectedLowPri:  false,
+			expectedSpot:    false,
+			expectedVMType:  VMSSVMType,
 		},
 		{
 			p: Properties{
@@ -1403,6 +1432,8 @@ func TestAvailabilityProfile(t *testing.T) {
 			expectedISVMSS:  false,
 			expectedIsAS:    true,
 			expectedLowPri:  false,
+			expectedSpot:    false,
+			expectedVMType:  StandardVMType,
 		},
 	}
 
@@ -1418,6 +1449,12 @@ func TestAvailabilityProfile(t *testing.T) {
 		}
 		if c.p.AgentPoolProfiles[0].IsLowPriorityScaleSet() != c.expectedLowPri {
 			t.Fatalf("expected IsLowPriorityScaleSet() to return %t but instead returned %t", c.expectedLowPri, c.p.AgentPoolProfiles[0].IsLowPriorityScaleSet())
+		}
+		if c.p.AgentPoolProfiles[0].IsSpotScaleSet() != c.expectedSpot {
+			t.Fatalf("expected IsSpotScaleSet() to return %t but instead returned %t", c.expectedSpot, c.p.AgentPoolProfiles[0].IsSpotScaleSet())
+		}
+		if c.p.GetVMType() != c.expectedVMType {
+			t.Fatalf("expected GetVMType() to return %s but instead returned %s", c.expectedVMType, c.p.GetVMType())
 		}
 	}
 }
@@ -1617,7 +1654,7 @@ func TestHasAvailabilityZones(t *testing.T) {
 	}
 }
 
-func TestHasLowPriorityScaleset(t *testing.T) {
+func TestHasNonRegularPriorityScaleset(t *testing.T) {
 	cases := []struct {
 		p        Properties
 		expected bool
@@ -1678,6 +1715,40 @@ func TestHasLowPriorityScaleset(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPrioritySpot,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
+						ScaleSetPriority:    ScaleSetPriorityRegular,
+					},
+					{
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count: 1,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						AvailabilityProfile: VirtualMachineScaleSets,
 					},
 				},
 			},
@@ -1723,8 +1794,8 @@ func TestHasLowPriorityScaleset(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.HasLowPriorityScaleset() != c.expected {
-			t.Fatalf("expected HasLowPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasLowPriorityScaleset())
+		if c.p.HasNonRegularPriorityScaleset() != c.expected {
+			t.Fatalf("expected HasNonRegularPriorityScaleset() to return %t but instead returned %t", c.expected, c.p.HasNonRegularPriorityScaleset())
 		}
 	}
 }
@@ -4478,27 +4549,97 @@ func TestCloudProviderDefaults(t *testing.T) {
 
 }
 
-func getMockAddon(name string) KubernetesAddon {
-	return KubernetesAddon{
-		Name: name,
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           name,
-				CPURequests:    "50m",
-				MemoryRequests: "150Mi",
-				CPULimits:      "50m",
-				MemoryLimits:   "150Mi",
-			},
+func TestGetKubernetesVersion(t *testing.T) {
+	K8s1dot13dot11 := getMockAPIProperties("1.13.11")
+	K8s1dot15dot6 := getMockAPIProperties("1.15.5")
+	azureStackProperties := GetMockPropertiesWithCustomCloudProfile(AzureStackCloud, true, true, true)
+	azureStackProperties.OrchestratorProfile = K8s1dot13dot11.OrchestratorProfile
+	tests := []struct {
+		name               string
+		properties         *Properties
+		expectedK8sVersion string
+	}{
+		{
+			name:               "1.13.11 not Azure Stack",
+			properties:         &K8s1dot13dot11,
+			expectedK8sVersion: "1.13.11",
 		},
-		Pools: []AddonNodePoolsConfig{
-			{
-				Name: "pool1",
-				Config: map[string]string{
-					"min-nodes": "3",
-					"max-nodes": "3",
-				},
-			},
+		{
+			name:               "1.15.5 not Azure Stack",
+			properties:         &K8s1dot15dot6,
+			expectedK8sVersion: "1.15.5",
 		},
+		{
+			name:               "Azure Stack",
+			properties:         &azureStackProperties,
+			expectedK8sVersion: "1.13.11" + AzureStackSuffix,
+		},
+	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubernetesVersion()
+			if actual != test.expectedK8sVersion {
+				t.Errorf("expected k8s version string \"%s\", but got \"%s\"", test.expectedK8sVersion, actual)
+			}
+		})
+	}
+}
+
+func TestGetKubernetesHyperkubeSpec(t *testing.T) {
+	mock1dot13dot11 := getMockAPIProperties("1.13.11")
+	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot16dot3 := getMockAPIProperties("1.16.0")
+	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStack", true, true, true)
+	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
+		OrchestratorType:    Kubernetes,
+		OrchestratorVersion: "1.15.4",
+		KubernetesConfig: &KubernetesConfig{
+			KubernetesImageBase: "mcr.io/",
+		},
+	}
+	mockcustomproperties := getMockAPIProperties("1.16.0")
+	mockcustomproperties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mockcustomproperties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "mcr.io/my-custom-image"
+
+	tests := []struct {
+		name                  string
+		properties            *Properties
+		expectedHyperkubeSpec string
+	}{
+		{
+			name:                  "1.13.11 Azure public cloud",
+			properties:            &mock1dot13dot11,
+			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.13.11",
+		},
+		{
+			name:                  "1.16.0 Azure public cloud",
+			properties:            &mock1dot16dot3,
+			expectedHyperkubeSpec: "k8s.gcr.io/hyperkube-amd64:v1.16.0",
+		},
+		{
+			name:                  "1.15.4 Azure Stack",
+			properties:            &mock1dot15dot4azs,
+			expectedHyperkubeSpec: "mcr.io/hyperkube-amd64:v1.15.4-azs",
+		},
+		{
+			name:                  "Custom image",
+			properties:            &mockcustomproperties,
+			expectedHyperkubeSpec: "mcr.io/my-custom-image",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.GetKubernetesHyperkubeSpec()
+			if actual != test.expectedHyperkubeSpec {
+				t.Errorf("expected Hyperkube Spec %s, but got %s", test.expectedHyperkubeSpec, actual)
+			}
+		})
 	}
 }
 
@@ -4865,6 +5006,29 @@ func TestGetSubnetName(t *testing.T) {
 				},
 			},
 			expectedSubnetName: "BazAgentSubnet",
+		},
+		{
+			name: "Cluster with VMSS MasterProfile",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					Count:               1,
+					DNSPrefix:           "foo",
+					VMSize:              "Standard_DS2_v2",
+					AvailabilityProfile: VirtualMachineScaleSets,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: VirtualMachineScaleSets,
+					},
+				},
+			},
+			expectedSubnetName: "subnetmaster",
 		},
 	}
 
@@ -5412,7 +5576,9 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanycentral.cloudapp.microsoftazure.de",
 		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanynortheast.cloudapp.microsoftazure.de",
 		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
@@ -5435,22 +5601,15 @@ func TestFormatAzureProdFQDN(t *testing.T) {
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
 		"santest.usdodeast.cloudapp.usgovcloudapi.net",
+		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
+		"santest.usgoviowa.cloudapp.usgovcloudapi.net",
+		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
+		"santest.usgovvirginia.cloudapp.usgovcloudapi.net",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
-		"santest.chinaeast.cloudapp.chinacloudapi.cn",
-		"santest.chinanorth.cloudapp.chinacloudapi.cn",
-		"santest.chinanorth2.cloudapp.chinacloudapi.cn",
-		"santest.chinaeast2.cloudapp.chinacloudapi.cn",
-		"santest.germanycentral.cloudapp.microsoftazure.de",
-		"santest.germanynortheast.cloudapp.microsoftazure.de",
-		"santest.usgovvirginia.cloudapp.usgovcloudapi.net",
-		"santest.usgoviowa.cloudapp.usgovcloudapi.net",
-		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
-		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
-		"santest.francecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -5490,7 +5649,9 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.eastus2euap.cloudapp.azure.com",
 		"santest.francecentral.cloudapp.azure.com",
 		"santest.francesouth.cloudapp.azure.com",
+		"santest.germanycentral.cloudapp.microsoftazure.de",
 		"santest.germanynorth.cloudapp.azure.com",
+		"santest.germanynortheast.cloudapp.microsoftazure.de",
 		"santest.germanywestcentral.cloudapp.azure.com",
 		"santest.japaneast.cloudapp.azure.com",
 		"santest.japanwest.cloudapp.azure.com",
@@ -5513,22 +5674,15 @@ func TestFormatProdFQDNByLocation(t *testing.T) {
 		"santest.ukwest.cloudapp.azure.com",
 		"santest.usdodcentral.cloudapp.usgovcloudapi.net",
 		"santest.usdodeast.cloudapp.usgovcloudapi.net",
+		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
+		"santest.usgoviowa.cloudapp.usgovcloudapi.net",
+		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
+		"santest.usgovvirginia.cloudapp.usgovcloudapi.net",
 		"santest.westcentralus.cloudapp.azure.com",
 		"santest.westeurope.cloudapp.azure.com",
 		"santest.westindia.cloudapp.azure.com",
 		"santest.westus.cloudapp.azure.com",
 		"santest.westus2.cloudapp.azure.com",
-		"santest.chinaeast.cloudapp.chinacloudapi.cn",
-		"santest.chinanorth.cloudapp.chinacloudapi.cn",
-		"santest.chinanorth2.cloudapp.chinacloudapi.cn",
-		"santest.chinaeast2.cloudapp.chinacloudapi.cn",
-		"santest.germanycentral.cloudapp.microsoftazure.de",
-		"santest.germanynortheast.cloudapp.microsoftazure.de",
-		"santest.usgovvirginia.cloudapp.usgovcloudapi.net",
-		"santest.usgoviowa.cloudapp.usgovcloudapi.net",
-		"santest.usgovarizona.cloudapp.usgovcloudapi.net",
-		"santest.usgovtexas.cloudapp.usgovcloudapi.net",
-		"santest.francecentral.cloudapp.azure.com",
 	}
 
 	if !reflect.DeepEqual(actual, expected) {
@@ -5776,6 +5930,34 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	}
 }
 
+func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
+	k := KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "",
+	}
+	if !k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be true when UseManagedIdentity is true and UserAssignedID is empty")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "foo",
+	}
+
+	if k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be true when UseManagedIdentity is true and UserAssignedID is non-empty")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: false,
+		UserAssignedID:     "",
+	}
+
+	if k.SystemAssignedIDEnabled() {
+		t.Errorf("expected SystemAssignedIDEnabled to be false when UseManagedIdentity is set to false")
+	}
+}
+
 func TestKubernetesConfig_UserAssignedClientIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
 		UseManagedIdentity:   true,
@@ -6004,7 +6186,9 @@ func TestGetLocations(t *testing.T) {
 		"eastus2euap",
 		"francecentral",
 		"francesouth",
+		"germanycentral",
 		"germanynorth",
+		"germanynortheast",
 		"germanywestcentral",
 		"japaneast",
 		"japanwest",
@@ -6027,22 +6211,15 @@ func TestGetLocations(t *testing.T) {
 		"ukwest",
 		"usdodcentral",
 		"usdodeast",
+		"usgovarizona",
+		"usgoviowa",
+		"usgovtexas",
+		"usgovvirginia",
 		"westcentralus",
 		"westeurope",
 		"westindia",
 		"westus",
 		"westus2",
-		"chinaeast",
-		"chinanorth",
-		"chinanorth2",
-		"chinaeast2",
-		"germanycentral",
-		"germanynortheast",
-		"usgovvirginia",
-		"usgoviowa",
-		"usgovarizona",
-		"usgovtexas",
-		"francecentral",
 	}
 	actual := mockCSDefault.GetLocations()
 	if !reflect.DeepEqual(expected, actual) {
@@ -6052,9 +6229,10 @@ func TestGetLocations(t *testing.T) {
 
 func TestGetMasterFQDN(t *testing.T) {
 	tests := []struct {
-		name         string
-		properties   *Properties
-		expectedFQDN string
+		name              string
+		properties        *Properties
+		expectedFQDN      string
+		expectedDNSPrefix string
 	}{
 		{
 			name: "From Master Profile",
@@ -6069,7 +6247,8 @@ func TestGetMasterFQDN(t *testing.T) {
 					},
 				},
 			},
-			expectedFQDN: "FQDNFromMasterProfile",
+			expectedFQDN:      "FQDNFromMasterProfile",
+			expectedDNSPrefix: "foo_master",
 		},
 		{
 			name: "From Hosted Master Profile",
@@ -6084,7 +6263,8 @@ func TestGetMasterFQDN(t *testing.T) {
 					},
 				},
 			},
-			expectedFQDN: "FQDNFromHostedMasterProfile",
+			expectedFQDN:      "FQDNFromHostedMasterProfile",
+			expectedDNSPrefix: "foo_hosted_master",
 		},
 	}
 
@@ -6092,10 +6272,13 @@ func TestGetMasterFQDN(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			actual := test.properties.GetMasterFQDN()
-
-			if actual != test.expectedFQDN {
-				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actual)
+			actualFQDN := test.properties.GetMasterFQDN()
+			if actualFQDN != test.expectedFQDN {
+				t.Errorf("expected fqdn %s, but got %s", test.expectedFQDN, actualFQDN)
+			}
+			actualDNSPrefix := test.properties.GetDNSPrefix()
+			if actualDNSPrefix != test.expectedDNSPrefix {
+				t.Errorf("expected DNS prefix %s, but got %s", test.expectedDNSPrefix, actualDNSPrefix)
 			}
 		})
 	}
@@ -6461,97 +6644,185 @@ func TestKubernetesConfigIsAddonDisabled(t *testing.T) {
 	}
 }
 
-func TestAnyAgentUsesAvailabilitySets(t *testing.T) {
-	tests := []struct {
-		name     string
-		p        *Properties
+func TestKubernetesComponentIsEnabled(t *testing.T) {
+	cases := []struct {
+		c        *KubernetesComponent
 		expected bool
 	}{
 		{
-			name: "one agent pool w/ AvailabilitySet",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               2,
-						AvailabilityProfile: AvailabilitySet,
-					},
-				},
-			},
-			expected: true,
+			c:        &KubernetesComponent{},
+			expected: false,
 		},
 		{
-			name: "two agent pools, one w/ AvailabilitySet",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               2,
-						AvailabilityProfile: AvailabilitySet,
-					},
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  100,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			name: "two agent pools",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  2,
-					},
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  100,
-					},
-				},
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(false),
 			},
 			expected: false,
 		},
 		{
-			name: "two agent pools, one w/ VirtualMachineScaleSets",
-			p: &Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Name:   "agentpool1",
-						VMSize: "Standard_D2_v2",
-						Count:  2,
-					},
-					{
-						Name:                "agentpool1",
-						VMSize:              "Standard_D2_v2",
-						Count:               100,
-						AvailabilityProfile: VirtualMachineScaleSets,
-					},
-				},
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(true),
 			},
-			expected: false,
+			expected: true,
 		},
 	}
 
-	for _, test := range tests {
-		test := test
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-			ret := test.p.AnyAgentUsesAvailabilitySets()
-			if test.expected != ret {
-				t.Errorf("expected %t, instead got : %t", test.expected, ret)
-			}
-		})
+	for _, c := range cases {
+		if c.c.IsEnabled() != c.expected {
+			t.Fatalf("expected IsEnabled() to return %t but instead returned %t", c.expected, c.c.IsEnabled())
+		}
 	}
 }
 
-func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
+func TestKubernetesComponentIsDisabled(t *testing.T) {
+	cases := []struct {
+		c        *KubernetesComponent
+		expected bool
+	}{
+		{
+			c:        &KubernetesComponent{},
+			expected: false,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(false),
+			},
+			expected: true,
+		},
+		{
+			c: &KubernetesComponent{
+				Enabled: to.BoolPtr(true),
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.c.IsDisabled() != c.expected {
+			t.Fatalf("expected IsDisabled() to return %t but instead returned %t", c.expected, c.c.IsDisabled())
+		}
+	}
+}
+
+func TestKubernetesConfigIsComponentEnabled(t *testing.T) {
+	cases := []struct {
+		k             *KubernetesConfig
+		componentName string
+		expected      bool
+	}{
+		{
+			k:             &KubernetesConfig{},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name: "foo",
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      true,
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "bar",
+						Enabled: to.BoolPtr(true),
+					},
+				},
+			},
+			componentName: "foo",
+			expected:      false,
+		},
+	}
+
+	for _, c := range cases {
+		component, isEnabled := c.k.IsComponentEnabled(c.componentName)
+		if isEnabled != c.expected {
+			t.Fatalf("expected KubernetesConfig.IsComponentEnabled(%s) to return %t but instead returned %t", c.componentName, c.expected, isEnabled)
+		}
+		if !reflect.DeepEqual(component, c.k.GetComponentByName(c.componentName)) {
+			t.Fatalf("expected result component %v to be equal to %v", component, c.k.GetComponentByName(c.componentName))
+		}
+	}
+}
+
+func TestKubernetesConfigComponentGetters(t *testing.T) {
+	cases := []struct {
+		k            *KubernetesConfig
+		expectedData string
+	}{
+		{
+			k:            &KubernetesConfig{},
+			expectedData: "",
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name: "foo",
+						Data: "bar",
+					},
+				},
+			},
+			expectedData: "bar",
+		},
+		{
+			k: &KubernetesConfig{
+				Components: []KubernetesComponent{
+					{
+						Name:    "foo",
+						Enabled: to.BoolPtr(false),
+					},
+				},
+			},
+			expectedData: "",
+		},
+	}
+
+	for _, c := range cases {
+		for _, component := range c.k.Components {
+			got := c.k.GetComponentByName(component.Name)
+			if !reflect.DeepEqual(got, component) {
+				t.Fatalf("expected result component %v to be equal to %v", got, component)
+			}
+			data := c.k.GetComponentData(component.Name)
+			if data != c.expectedData {
+				t.Fatalf("expected KubernetesConfig.GetComponentData(%s) to return %s but instead returned %s", component.Name, c.expectedData, data)
+			}
+		}
+	}
+}
+
+func TestHasVMASAgentPool(t *testing.T) {
 	tests := []struct {
 		name     string
 		p        *Properties
@@ -6569,7 +6840,7 @@ func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
 					},
 				},
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "two agent pools, one w/ AvailabilitySet",
@@ -6588,7 +6859,7 @@ func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
 					},
 				},
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "two agent pools",
@@ -6625,7 +6896,7 @@ func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
 					},
 				},
 			},
-			expected: true,
+			expected: false,
 		},
 	}
 
@@ -6633,7 +6904,7 @@ func TestAnyAgentUsesVirtualMachineScaleSets(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ret := test.p.AnyAgentUsesVirtualMachineScaleSets()
+			ret := test.p.HasVMASAgentPool()
 			if test.expected != ret {
 				t.Errorf("expected %t, instead got : %t", test.expected, ret)
 			}
@@ -7105,6 +7376,59 @@ func TestKubernetesConfigIsIPMasqAgentDisabled(t *testing.T) {
 			t.Parallel()
 			if c.k.IsIPMasqAgentDisabled() != c.expectedDisabled {
 				t.Fatalf("expected KubernetesConfig.IsIPMasqAgentDisabled() to return %t but instead returned %t", c.expectedDisabled, c.k.IsIPMasqAgentDisabled())
+			}
+		})
+	}
+}
+
+func TestGetProvisionScriptParametersCommon(t *testing.T) {
+	cases := []struct {
+		name     string
+		cs       *ContainerService
+		input    ProvisionScriptParametersInput
+		expected string
+	}{
+		{
+			name: "Default container service with no ARM variables",
+			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			input: ProvisionScriptParametersInput{
+				Location:             "westus",
+				ResourceGroup:        "fakerg",
+				TenantID:             "faketenantID",
+				SubscriptionID:       "fakesubID",
+				ClientID:             "fakeclientID",
+				ClientSecret:         "fakeclientSecret",
+				APIServerCertificate: "fakecert",
+				KubeletPrivateKey:    "fakekubeletkey",
+				ClusterKeyVaultName:  "",
+			},
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.6 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.6 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+		},
+		{
+			name: "With ARM variables",
+			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			input: ProvisionScriptParametersInput{
+				Location:             common.WrapAsARMVariable("location"),
+				ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
+				TenantID:             common.WrapAsARMVariable("tenantID"),
+				SubscriptionID:       common.WrapAsARMVariable("subscriptionId"),
+				ClientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
+				ClientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+				APIServerCertificate: common.WrapAsParameter("apiServerCertificate"),
+				KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
+				ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
+			},
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.6 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.6 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.cs.GetProvisionScriptParametersCommon(c.input)
+			if actual != c.expected {
+				t.Fatalf("expected cs.GetProvisionScriptParametersCommon() to return %s but instead returned %s", c.expected, actual)
 			}
 		})
 	}

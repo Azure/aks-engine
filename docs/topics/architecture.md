@@ -35,7 +35,7 @@ Once the input is validated, the template generator is invoked which will conver
     {{if .HasWindows}}
       "kubeBinariesSASURL": {
         "metadata": {
-          "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
+          "description": "The download url for kubernetes windows binaries package"
         },
         "type": "string"
       },

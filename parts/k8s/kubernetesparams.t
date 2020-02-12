@@ -181,12 +181,6 @@
       },
       "type": "string"
     },
-    "kubernetesHyperkubeSpec": {
-      "metadata": {
-        "description": "The container spec for hyperkube."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -216,12 +210,6 @@
       },
       "type": "bool"
     },
-    "kubernetesPodInfraContainerSpec": {
-      "metadata": {
-        "description": "The container spec for pod infra."
-      },
-      "type": "string"
-    },
     "cloudproviderConfig": {
       "type": "object",
       "defaultValue": {
@@ -240,7 +228,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.8",
+      "defaultValue": "3.0.10",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -252,7 +240,8 @@
          "3.0.5",
          "3.0.6",
          "3.0.7",
-         "3.0.8"
+         "3.0.8",
+         "3.0.10"
        ],
       "type": "string"
     },
@@ -326,15 +315,15 @@
       "type": "string"
     },
     "cniPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-latest.tgz",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/cni-plugins/v0.7.6/binaries/cni-plugins-amd64-v0.7.6.tgz",
       "type": "string"
     },
     "vnetCniLinuxPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-latest.tgz",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-linux-amd64-v1.0.30.tgz",
       "type": "string"
     },
     "vnetCniWindowsPluginsURL": {
-      "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-latest.zip",
+      "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip",
       "type": "string"
     },
     "maxPods": {

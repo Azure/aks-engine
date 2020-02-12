@@ -6,6 +6,8 @@ TMP_DIR=$(mktemp -d "$(pwd)/XXXXXXXXXXXX")
 TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
+MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
+mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
 if [ "${BUILD_AKS_ENGINE}" = "true" ]; then
@@ -19,14 +21,26 @@ cat > ${TMP_DIR}/apimodel-input.json <<END
 ${API_MODEL_INPUT}
 END
 
+# Jenkinsfile will yield a null $ADD_NODE_POOL_INPUT if not set in the test job config
+if [ "$ADD_NODE_POOL_INPUT" == "null" ]; then
+  ADD_NODE_POOL_INPUT=""
+fi
+if [ "$LB_TEST_TIMEOUT" == "" ]; then
+  LB_TEST_TIMEOUT="${E2E_TEST_TIMEOUT}"
+fi
+
+if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  cat > ${TMP_DIR}/addpool-input.json <<END
+${ADD_NODE_POOL_INPUT}
+END
+fi
+
 echo "Running E2E tests against a cluster built with the following API model:"
 cat ${TMP_DIR}/apimodel-input.json
 
 CLEANUP_AFTER_DEPLOYMENT=${CLEANUP_ON_EXIT}
-if [ "${UPGRADE_CLUSTER}" = "true" ]; then
-  CLEANUP_AFTER_DEPLOYMENT="false";
-elif [ "${SCALE_CLUSTER}" = "true" ]; then
-  CLEANUP_AFTER_DEPLOYMENT="false";
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  CLEANUP_AFTER_DEPLOYMENT="false"
 fi
 
 if [ -n "${GINKGO_SKIP}" ]; then
@@ -69,6 +83,7 @@ docker run --rm \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
+-e LB_TIMEOUT="${LB_TEST_TIMEOUT}" \
 -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
 -e SKIP_LOGS_COLLECTION="${SKIP_LOGS_COLLECTION}" \
 -e REGIONS="${REGION_OPTIONS}" \
@@ -86,9 +101,15 @@ docker run --rm \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
-if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    ${DEV_IMAGE} \
+    /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
@@ -101,11 +122,13 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
     done
   fi
   git reset --hard
+  git remote rm $UPGRADE_FORK
   git remote add $UPGRADE_FORK https://github.com/$UPGRADE_FORK/aks-engine.git
-  git fetch $UPGRADE_FORK
+  git fetch --prune $UPGRADE_FORK
   git branch -D $UPGRADE_FORK/$UPGRADE_BRANCH
   git checkout -b $UPGRADE_FORK/$UPGRADE_BRANCH --track $UPGRADE_FORK/$UPGRADE_BRANCH
   git pull
+  git log -1
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
@@ -114,8 +137,54 @@ else
   exit 0
 fi
 
+if [ -n "$ADD_NODE_POOL_INPUT" ]; then
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    -e REGION=$REGION \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine addpool \
+    --subscription-id ${AZURE_SUBSCRIPTION_ID} \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
+    --node-pool ${TMP_BASENAME}/addpool-input.json \
+    --location $REGION \
+    --resource-group $RESOURCE_GROUP \
+    --auth-method client_secret \
+    --client-id ${AZURE_CLIENT_ID} \
+    --client-secret ${AZURE_CLIENT_SECRET} || exit 1
+
+  CLEANUP_AFTER_ADD_NODE_POOL=${CLEANUP_ON_EXIT}
+  if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ]; then
+    CLEANUP_AFTER_ADD_NODE_POOL="false"
+  fi
+
+  docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e CLIENT_ID=${AZURE_CLIENT_ID} \
+    -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
+    -e CLIENT_OBJECTID=${CLIENT_OBJECTID} \
+    -e TENANT_ID=${AZURE_TENANT_ID} \
+    -e SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID} \
+    -e INFRA_RESOURCE_GROUP="${INFRA_RESOURCE_GROUP}" \
+    -e ORCHESTRATOR=kubernetes \
+    -e NAME=$RESOURCE_GROUP \
+    -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
+    -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_ADD_NODE_POOL} \
+    -e REGIONS=$REGION \
+    -e IS_JENKINS=${IS_JENKINS} \
+    -e SKIP_LOGS_COLLECTION=true \
+    -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
+    -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
+    -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
+    ${DEV_IMAGE} make test-kubernetes || exit 1
+fi
+
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo "${API_MODEL_INPUT}" | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
       -w ${WORK_DIR} \
@@ -147,6 +216,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e CLEANUP_ON_EXIT=false \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
@@ -154,10 +224,25 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
 if [ "${UPGRADE_CLUSTER}" = "true" ]; then
+  # modify the master VM SKU to simulate vertical vm scaling via upgrade
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e MASTER_VM_UPGRADE_SKU=$MASTER_VM_UPGRADE_SKU \
+      ${DEV_IMAGE} \
+      /bin/bash -c "jq --arg sku \"$MASTER_VM_UPGRADE_SKU\" '. | .properties.masterProfile.vmSize = \$sku' < _output/$RESOURCE_GROUP/apimodel.json > _output/$RESOURCE_GROUP/apimodel-upgrade.json" || exit 1
+  docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      ${DEV_IMAGE} \
+      /bin/bash -c "mv _output/$RESOURCE_GROUP/apimodel-upgrade.json _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -188,6 +273,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ORCHESTRATOR=kubernetes \
       -e NAME=$RESOURCE_GROUP \
       -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+      -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
       -e CLEANUP_ON_EXIT=false \
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
@@ -195,12 +281,13 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
+      -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
       ${DEV_IMAGE} make test-kubernetes || exit 1
   done
 fi
 
 if [ "${SCALE_CLUSTER}" = "true" ]; then
-  for nodepool in $(echo ${API_MODEL_INPUT} | jq -r '.properties.agentPoolProfiles[].name'); do
+  for nodepool in $(jq -r '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
     -w ${WORK_DIR} \
@@ -232,12 +319,14 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
     -e CLEANUP_ON_EXIT=${CLEANUP_ON_EXIT} \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
-    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
+    -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
+    -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi

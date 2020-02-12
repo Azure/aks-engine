@@ -105,7 +105,7 @@
                     "type": "object"
                 },
                 "cniPluginsURL": {
-                    "defaultValue": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-latest.tgz",
+                    "defaultValue": "https://kubernetesartifacts.azureedge.net/cni-plugins/v0.7.6/binaries/cni-plugins-amd64-v0.7.6.tgz",
                     "type": "string"
                 },
                 "containerRuntime": {
@@ -1007,11 +1007,11 @@
                     "type": "string"
                 },
                 "vnetCniLinuxPluginsURL": {
-                    "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-latest.tgz",
+                    "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-linux-amd64-v1.0.30.tgz",
                     "type": "string"
                 },
                 "vnetCniWindowsPluginsURL": {
-                    "defaultValue": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-latest.zip",
+                    "defaultValue": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip",
                     "type": "string"
                 }
             },
@@ -1665,7 +1665,7 @@
                 }
             },
             "cniPluginsURL": {
-                "value": "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-v0.7.1.tgz"
+                "value": "https://kubernetesartifacts.azureedge.net/cni-plugins/v0.7.6/binaries/cni-plugins-amd64-v0.7.6.tgz"
             },
             "containerRuntime": {
                 "value": "docker"
@@ -1692,7 +1692,7 @@
                 "value": "512"
             },
             "etcdDownloadURLBase": {
-                "value": "https://acs-mirror.azureedge.net/github-coreos"
+                "value": "mcr.microsoft.com/oss/etcd-io/"
             },
             "etcdEncryptionKey": {
                 "value": ""
@@ -1836,10 +1836,10 @@
                 "value": "AzureStackCloud"
             },
             "vnetCniLinuxPluginsURL": {
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-v1.0.17.tgz"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-linux-amd64-v1.0.17.zip"
             },
             "vnetCniWindowsPluginsURL": {
-                "value": "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-windows-amd64-v1.0.17.zip"
+                "value": "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.17/binaries/azure-vnet-cni-windows-amd64-v1.0.17.zip"
             }
         },
         "mode": "Incremental"

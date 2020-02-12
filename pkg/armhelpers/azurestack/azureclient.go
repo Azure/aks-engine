@@ -66,6 +66,7 @@ type AzureClient struct {
 	disksClient                     compute.DisksClient
 	availabilitySetsClient          compute.AvailabilitySetsClient
 	workspacesClient                operationalinsights.WorkspacesClient
+	virtualMachineImagesClient      compute.VirtualMachineImagesClient
 
 	applicationsClient      graphrbac.ApplicationsClient
 	servicePrincipalsClient graphrbac.ServicePrincipalsClient
@@ -218,6 +219,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		disksClient:                     compute.NewDisksClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		availabilitySetsClient:          compute.NewAvailabilitySetsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		workspacesClient:                operationalinsights.NewWorkspacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		virtualMachineImagesClient:      compute.NewVirtualMachineImagesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 
 		applicationsClient:      graphrbac.NewApplicationsClientWithBaseURI(env.GraphEndpoint, tenantID),
 		servicePrincipalsClient: graphrbac.NewServicePrincipalsClientWithBaseURI(env.GraphEndpoint, tenantID),
@@ -238,6 +240,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.disksClient.Authorizer = armAuthorizer
 	c.availabilitySetsClient.Authorizer = armAuthorizer
 	c.workspacesClient.Authorizer = armAuthorizer
+	c.virtualMachineImagesClient.Authorizer = armAuthorizer
 
 	c.deploymentsClient.PollingDelay = time.Second * 5
 	c.resourcesClient.PollingDelay = time.Second * 5

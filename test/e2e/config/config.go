@@ -37,6 +37,7 @@ type Config struct {
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
+	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`
@@ -45,6 +46,8 @@ type Config struct {
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
+	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
+	TestPVC             bool   `envconfig:"TEST_PVC" default:"false"`
 }
 
 // CustomCloudConfig holds configurations for custom clould

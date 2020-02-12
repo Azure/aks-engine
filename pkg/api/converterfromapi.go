@@ -319,6 +319,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.PrivateAzureRegistryServer = apiCfg.PrivateAzureRegistryServer
 	vlabsCfg.OutboundRuleIdleTimeoutInMinutes = apiCfg.OutboundRuleIdleTimeoutInMinutes
 	vlabsCfg.CloudProviderDisableOutboundSNAT = apiCfg.CloudProviderDisableOutboundSNAT
+	convertComponentsToVlabs(apiCfg, vlabsCfg)
 	convertAddonsToVlabs(apiCfg, vlabsCfg)
 	convertKubeletConfigToVlabs(apiCfg, vlabsCfg)
 	convertControllerManagerConfigToVlabs(apiCfg, vlabsCfg)
@@ -401,6 +402,33 @@ func convertPrivateJumpboxProfileToVlabs(api *PrivateJumpboxProfile, vlabsProfil
 	vlabsProfile.PublicKey = api.PublicKey
 	vlabsProfile.Username = api.Username
 	vlabsProfile.StorageProfile = api.StorageProfile
+}
+
+func convertComponentsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
+	v.Components = []vlabs.KubernetesComponent{}
+	for i := range a.Components {
+		v.Components = append(v.Components, vlabs.KubernetesComponent{
+			Name:    a.Components[i].Name,
+			Enabled: a.Components[i].Enabled,
+			Config:  map[string]string{},
+			Data:    a.Components[i].Data,
+		})
+		for j := range a.Components[i].Containers {
+			v.Components[i].Containers = append(v.Components[i].Containers, vlabs.KubernetesContainerSpec{
+				Name:           a.Components[i].Containers[j].Name,
+				Image:          a.Components[i].Containers[j].Image,
+				CPURequests:    a.Components[i].Containers[j].CPURequests,
+				MemoryRequests: a.Components[i].Containers[j].MemoryRequests,
+				CPULimits:      a.Components[i].Containers[j].CPULimits,
+				MemoryLimits:   a.Components[i].Containers[j].MemoryLimits,
+			})
+		}
+		if a.Components[i].Config != nil {
+			for key, val := range a.Components[i].Config {
+				v.Components[i].Config[key] = val
+			}
+		}
+	}
 }
 
 func convertAddonsToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
@@ -516,6 +544,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.AvailabilityProfile = api.AvailabilityProfile
 	p.ScaleSetPriority = api.ScaleSetPriority
 	p.ScaleSetEvictionPolicy = api.ScaleSetEvictionPolicy
+	p.SpotMaxPrice = api.SpotMaxPrice
 	p.StorageProfile = api.StorageProfile
 	p.DiskSizesGB = []int{}
 	p.DiskSizesGB = append(p.DiskSizesGB, api.DiskSizesGB...)

@@ -1,5 +1,8 @@
 {
-	"env": {},
+	"env": {
+		"SCALE_CLUSTER": true,
+		"UPGRADE_CLUSTER": true
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -14,10 +17,8 @@
 			"agentPoolProfiles": [
 				{
 					"name": "agentpool1",
-					"count": 2,
-					"vmSize": "Standard_D2_v3",
-					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Low"
+					"count": 1,
+					"vmSize": "Standard_D2_v3"
 				}
 			],
 			"linuxProfile": {
@@ -35,5 +36,11 @@
 				"secret": ""
 			}
 		}
+	},
+	"addNodePool": {
+		"name": "pooladded",
+		"count": 1,
+		"vmSize": "Standard_D2_v3",
+		"availabilityProfile": "VirtualMachineScaleSets"
 	}
 }

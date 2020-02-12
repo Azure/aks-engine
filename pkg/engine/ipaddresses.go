@@ -12,12 +12,15 @@ import (
 // When it's for master, this public ip address is created and added to the loadbalancer's frontendIPConfigurations
 // and it's created with the fqdn as name.
 // When it's for agent, this public ip address is created and added to the loadbalancer's frontendIPConfigurations.
-func CreatePublicIPAddress(isForMaster bool) PublicIPAddressARM {
+func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
 	var dnsSettings *network.PublicIPAddressDNSSettings
 	name := "agentPublicIPAddressName"
 
 	if isForMaster {
 		name = "masterPublicIPAddressName"
+	}
+
+	if includeDNS {
 		dnsSettings = &network.PublicIPAddressDNSSettings{
 			DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
 		}

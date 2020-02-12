@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
+	"github.com/Azure/aks-engine/pkg/telemetry"
+
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -180,12 +183,8 @@ func (t *TemplateGenerator) GetMasterCustomDataJSONObject(cs *api.ContainerServi
 		panic(e)
 	}
 	// add manifests
-	str = substituteConfigString(str,
-		kubernetesManifestSettingsInit(profile),
-		"k8s/manifests",
-		"/etc/kubernetes/manifests",
-		"MASTER_MANIFESTS_CONFIG_PLACEHOLDER",
-		profile.OrchestratorProfile.OrchestratorVersion, cs)
+	componentStr := getComponentsString(cs, "k8s/manifests")
+	str = strings.Replace(str, "MASTER_MANIFESTS_CONFIG_PLACEHOLDER", componentStr, -1)
 
 	// add custom files
 	customFilesReader, err := customfilesIntoReaders(masterCustomFiles(profile))
@@ -531,8 +530,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"WrapAsVerbatim": func(s string) string {
 			return common.WrapAsVerbatim(s)
 		},
-		"AnyAgentUsesAvailabilitySets": func() bool {
-			return cs.Properties.AnyAgentUsesAvailabilitySets()
+		"HasVMASAgentPool": func() bool {
+			return cs.Properties.HasVMASAgentPool()
 		},
 		"AnyAgentIsLinux": func() bool {
 			return cs.Properties.AnyAgentIsLinux()
@@ -703,56 +702,17 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
-		"GetComponentImageReference": func(name string) string {
-			k := cs.Properties.OrchestratorProfile.KubernetesConfig
-			switch name {
-			case "kube-apiserver":
-				if k.CustomKubeAPIServerImage != "" {
-					return k.CustomKubeAPIServerImage
-				}
-			case "kube-controller-manager":
-				if k.CustomKubeControllerManagerImage != "" {
-					return k.CustomKubeControllerManagerImage
-				}
-			case "kube-scheduler":
-				if k.CustomKubeSchedulerImage != "" {
-					return k.CustomKubeSchedulerImage
-				}
-			}
-			kubernetesImageBase := k.KubernetesImageBase
-			if cs.Properties.IsAzureStackCloud() {
-				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-			}
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			return kubernetesImageBase + k8sComponents[name]
-		},
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			hyperkubeImage := hyperkubeImageBase + k8sComponents["hyperkube"]
+			hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
 			if cs.Properties.IsAzureStackCloud() {
-				hyperkubeImage = hyperkubeImage + AzureStackSuffix
+				hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 			}
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
 				hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
 			}
 			return hyperkubeImage
-		},
-		"GetCCMImageReference": func() string {
-			kubernetesImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
-			k8sComponents := api.K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]
-			if cs.Properties.IsAzureStackCloud() {
-				kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-			}
-			controllerManagerBase := kubernetesImageBase
-			if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-				controllerManagerBase = cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase
-			}
-			ccmImage := controllerManagerBase + k8sComponents["ccm"]
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage != "" {
-				ccmImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage
-			}
-			return ccmImage
 		},
 		"GetTargetEnvironment": func() string {
 			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
@@ -787,8 +747,47 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
-		"GetApplicationInsightsTelemetryKey": func() string {
-			return cs.Properties.TelemetryProfile.ApplicationInsightsKey
+		"GetApplicationInsightsTelemetryKeys": func() string {
+			userSuppliedAIKey := ""
+			if cs.Properties.TelemetryProfile != nil {
+				userSuppliedAIKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
+			}
+
+			possibleKeys := []string{
+				telemetry.AKSEngineAppInsightsKey,
+				userSuppliedAIKey,
+			}
+
+			var keys []string
+			for _, key := range possibleKeys {
+				if key != "" {
+					keys = append(keys, key)
+				}
+			}
+
+			return strings.Join(keys, ",")
+		},
+		"GetLinuxDefaultTelemetryTags": func() string {
+			tags := map[string]string{
+				"k8s_version":    cs.Properties.OrchestratorProfile.OrchestratorVersion,
+				"network_plugin": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin,
+				"network_policy": cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy,
+				"network_mode":   cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkMode,
+				"cri":            cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime,
+				"cri_version":    cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion,
+				"distro":         string(cs.Properties.LinuxProfile.Distro),
+				"os_image_sku":   cs.GetCloudSpecConfig().OSImageConfig[cs.Properties.LinuxProfile.Distro].ImageSku,
+				"os_type":        "linux",
+			}
+
+			var kvs []string
+			for k, v := range tags {
+				if v != "" {
+					kvs = append(kvs, fmt.Sprintf("%s=%s", k, v))
+				}
+			}
+			sort.Strings(kvs)
+			return strings.Join(kvs, ",")
 		},
 		"OpenBraces": func() string {
 			return "{{"

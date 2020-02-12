@@ -196,6 +196,10 @@ const (
 	CSIClusterDriverRegistrarContainerName = "csi-cluster-driver-registrar"
 	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSILivenessProbeContainerName = "livenessprobe"
+	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver addon
+	CSISnapshotterContainerName = "csi-snapshotter"
+	// CSIResizerContainerName is the name of the csi-resizer container in the azuredisk-csi-driver addon
+	CSIResizerContainerName = "csi-resizer"
 	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSINodeDriverRegistrarContainerName = "csi-node-driver-registrar"
 	// CSIAzureDiskContainerName is the name of the azuredisk-csi container in the azuredisk-csi-driver and azurefile-csi-driver addons
@@ -206,6 +210,8 @@ const (
 	CSIAzureFileContainerName = "azurefile-csi"
 	// AzureStorageClassesAddonName is the name of the azure storage classes addon
 	AzureStorageClassesAddonName = "azure-storage-classes"
+	// Hyperkube is the common "hyperkube" string reference
+	Hyperkube = "hyperkube"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
 	KubeDNSAddonName = "kube-dns"
 	// CoreDNSAddonName is the name of the coredns addon
@@ -240,4 +246,27 @@ const (
 	PodSecurityPolicyAddonName = "pod-security-policy"
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
+)
+
+// Component name consts
+const (
+	// SchedulerComponentName is the name of the kube-scheduler component
+	SchedulerComponentName = "kube-scheduler"
+	// ControllerManagerComponentName is the name of the kube-controller-manager component
+	ControllerManagerComponentName = "kube-controller-manager"
+	// CloudControllerManagerComponentName is the name of the cloud-controller-manager component
+	CloudControllerManagerComponentName = "cloud-controller-manager"
+	// APIServerComponentName is the name of the kube-apiserver component
+	APIServerComponentName = "kube-apiserver"
+	// AddonManagerComponentName is the name of the kube-addon-manager component
+	AddonManagerComponentName = "kube-addon-manager"
+)
+
+const (
+	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
+	AzureStackSuffix = "-azs"
+	// AzureStackPrefix is prepended to windows binary version for Azure Stack instances
+	AzureStackPrefix = "azs-"
+	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
+	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
 )

@@ -1,0 +1,39 @@
+trigger: none
+pr: none
+
+jobs:
+- job: create_marketplace_sku
+  pool:
+    name: $(BUILD_POOL)
+  steps:
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make bootstrap
+    displayName: Update tools
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e AZURE_TENANT_ID=${AZURE_TENANT_ID} \
+      -e AZURE_CLIENT_ID=${AZURE_CLIENT_ID} \
+      -e AZURE_CLIENT_SECRET="$(AZURE_CLIENT_SECRET)" \
+      -e SKU_PREFIX=${SKU_PREFIX} \
+      -e SKU_TEMPLATE_FILE=${SKU_TEMPLATE_FILE} \
+      -e PUBLISHER=${PUBLISHER} \
+      -e OFFER=${OFFER} \
+      ${DEIS_GO_DEV_IMAGE} ./vhd/publishing/new-windows-sku.sh
+    displayName: Create a new marketplace SKU
+  - task: PublishPipelineArtifact@1
+    inputs:
+      artifact: 'sku_info'
+      path: 'sku-publishing-info.json'
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      ${DEIS_GO_DEV_IMAGE} make tools-clean
+    displayName: cleanup - clean hack/tools/bin
+    condition: always()
+

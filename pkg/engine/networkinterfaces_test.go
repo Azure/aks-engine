@@ -49,7 +49,7 @@ func TestCreateNIC(t *testing.T) {
 		},
 	}
 
-	nic := CreateNetworkInterfaces(cs)
+	nic := CreateMasterVMNetworkInterfaces(cs)
 
 	expected := NetworkInterfaceARM{
 
@@ -154,7 +154,7 @@ func TestCreateNIC(t *testing.T) {
 		ID: to.StringPtr("[variables('nsgID')]"),
 	}
 
-	nic = CreateNetworkInterfaces(cs)
+	nic = CreateMasterVMNetworkInterfaces(cs)
 
 	diff = cmp.Diff(nic, expected)
 
@@ -166,7 +166,7 @@ func TestCreateNIC(t *testing.T) {
 
 	cs.Properties.MasterProfile.Count = 3
 
-	nic = CreateNetworkInterfaces(cs)
+	nic = CreateMasterVMNetworkInterfaces(cs)
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
@@ -252,7 +252,7 @@ func TestCreateNIC(t *testing.T) {
 	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
 	cs.Properties.MasterProfile.Count = 3
 
-	nic = CreateNetworkInterfaces(cs)
+	nic = CreateMasterVMNetworkInterfaces(cs)
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
 		"[variables('masterInternalLbName')]",
@@ -273,7 +273,7 @@ func TestCreateNIC(t *testing.T) {
 			DNSServer: "barServer",
 		},
 	}
-	nic = CreateNetworkInterfaces(cs)
+	nic = CreateMasterVMNetworkInterfaces(cs)
 	expected.Interface.DNSSettings = &network.InterfaceDNSSettings{
 		DNSServers: &[]string{
 			"[parameters('dnsServer')]",
@@ -319,9 +319,7 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 		},
 	}
 
-	var lbBackendAddressPools []network.BackendAddressPool
-
-	actual := createPrivateClusterNetworkInterface(cs)
+	actual := createPrivateClusterMasterVMNetworkInterface(cs)
 
 	expected := NetworkInterfaceARM{
 		ARMResource: ARMResource{
@@ -342,11 +340,9 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 					{
 						Name: to.StringPtr("ipconfig1"),
 						InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
-							LoadBalancerBackendAddressPools: &lbBackendAddressPools,
-							LoadBalancerInboundNatRules:     &[]network.InboundNatRule{},
-							PrivateIPAddress:                to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
-							Primary:                         to.BoolPtr(true),
-							PrivateIPAllocationMethod:       network.Static,
+							PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
+							Primary:                   to.BoolPtr(true),
+							PrivateIPAllocationMethod: network.Static,
 							Subnet: &network.Subnet{
 								ID: to.StringPtr("[variables('vnetSubnetID')]"),
 							},
@@ -409,7 +405,7 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 	cs.Properties.MasterProfile.VnetSubnetID = "fooSubnet"
 	cs.Properties.MasterProfile.Count = 3
 
-	actual = createPrivateClusterNetworkInterface(cs)
+	actual = createPrivateClusterMasterVMNetworkInterface(cs)
 
 	expected.DependsOn = []string{
 		"[variables('nsgID')]",
@@ -494,7 +490,7 @@ func TestCreatePrivateClusterNetworkInterface(t *testing.T) {
 			DNSServer: "barServer",
 		},
 	}
-	actual = createPrivateClusterNetworkInterface(cs)
+	actual = createPrivateClusterMasterVMNetworkInterface(cs)
 	expected.EnableIPForwarding = to.BoolPtr(true)
 	expected.IPConfigurations = &[]network.InterfaceIPConfiguration{
 		{
@@ -983,7 +979,7 @@ func TestCreateNICWithIPv6DualStackFeature(t *testing.T) {
 		},
 	}
 
-	nic := CreateNetworkInterfaces(cs)
+	nic := CreateMasterVMNetworkInterfaces(cs)
 	expected := NetworkInterfaceARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",

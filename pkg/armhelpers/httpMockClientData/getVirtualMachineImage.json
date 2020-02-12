@@ -1,0 +1,11 @@
+{
+    "id": "/Subscriptions/14faff93-96b5-428e-8eaa-868d3c7b9397/Providers/Microsoft.Compute/Locations/redmond/Publishers/microsoft-aks/ArtifactTypes/VMImage/Offers/aks/Skus/aks-ubuntu-1604-201910/Versions/2019.10.24",
+    "location": "redmond",
+    "name": "2019.10.24",
+    "properties": {
+        "osDiskImage": {
+            "operatingSystem": "Linux"
+        },
+        "dataDiskImages": []
+    }
+}
