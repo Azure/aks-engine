@@ -617,7 +617,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Creating a Linux nginx deployment")
 				deploymentPrefix := "portforwardlinux"
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", cfg.Timeout)
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", "", cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				testPortForward(deploymentName)
 				err = deploy.Delete(util.DefaultDeleteRetries)
@@ -630,7 +630,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					deploymentPrefix := "portforwardwindows"
 					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-					deploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "", cfg.Timeout)
+					deploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "", "", cfg.Timeout)
 					Expect(err).NotTo(HaveOccurred())
 					testPortForward(deploymentName)
 					err = deploy.Delete(util.DefaultDeleteRetries)
@@ -910,7 +910,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
 			By("Creating a php-apache deployment")
-			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
+			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Ensuring that php-apache pod is running")
@@ -1182,7 +1182,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				serviceName := "ingress-nginx"
 				deploymentPrefix := fmt.Sprintf("%s-%s", serviceName, cfg.Name)
 				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
-				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", "--labels=app="+serviceName, cfg.Timeout)
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, "default", serviceName, "", cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring we can create an ILB service attachment")
@@ -1441,16 +1441,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				randInt := r.Intn(99999)
 				frontendProdDeploymentName := fmt.Sprintf("frontend-prod-%s-%v", cfg.Name, randInt)
-				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "--labels=app=webapp,role=frontend")
+				frontendProdDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendProdDeploymentName, nsProd, "webapp", "frontend")
 				Expect(err).NotTo(HaveOccurred())
 				frontendDevDeploymentName := fmt.Sprintf("frontend-dev-%s-%v", cfg.Name, randInt+100000)
-				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "--labels=app=webapp,role=frontend")
+				frontendDevDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", frontendDevDeploymentName, nsDev, "webapp", "frontend")
 				Expect(err).NotTo(HaveOccurred())
 				backendDeploymentName := fmt.Sprintf("backend-%s-%v", cfg.Name, randInt+200000)
-				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "--labels=app=webapp,role=backend")
+				backendDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", backendDeploymentName, nsDev, "webapp", "backend")
 				Expect(err).NotTo(HaveOccurred())
 				nwpolicyDeploymentName := fmt.Sprintf("network-policy-%s-%v", cfg.Name, randInt+300000)
-				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "")
+				nwpolicyDeployment, err := deployment.CreateLinuxDeploy("library/nginx:latest", nwpolicyDeploymentName, nsDev, "", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
@@ -1768,7 +1768,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				deploymentPrefix = fmt.Sprintf("nginx-dns-%s", cfg.Name)
 				nginxDeploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
 				By("Creating a nginx deployment")
-				linuxNginxDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", nginxDeploymentName, "default", "", cfg.Timeout)
+				linuxNginxDeploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", nginxDeploymentName, "default", "", "", cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a Running nginx pod")
@@ -1964,7 +1964,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "--requests=cpu=10m,memory=10M")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensuring that the php-apache pod is running")
