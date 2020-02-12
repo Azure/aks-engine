@@ -336,7 +336,7 @@ CPA_IMAGES="
 1.3.0_v0.0.5
 "
 for CPA_IMAGE in ${CPA_IMAGES}; do
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CALICO_TYPHA_IMAGE}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CPA_IMAGE}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
