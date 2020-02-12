@@ -647,6 +647,11 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
+	Upgrade                             *PoolUpgradeSettings `json:"upgrade,omitempty"`
+}
+
+type PoolUpgradeSettings struct {
+	MaxSurge string `json:"maxSurge,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
