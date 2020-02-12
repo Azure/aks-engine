@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
@@ -133,7 +134,7 @@ func TestDeleteAllPods(t *testing.T) {
 		Items: []v1.Pod{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-dns",
+					Name:      common.KubeDNSAddonName,
 					Namespace: "kube-system",
 				},
 			},
@@ -220,7 +221,7 @@ func TestDeleteServiceAccounts(t *testing.T) {
 		Items: []v1.ServiceAccount{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-dns",
+					Name:      common.KubeDNSAddonName,
 					Namespace: "kube-system",
 				},
 			},

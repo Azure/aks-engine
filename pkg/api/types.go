@@ -1791,7 +1791,7 @@ func (o *OrchestratorProfile) IsPrivateCluster() bool {
 
 // GetPodInfraContainerSpec returns the sandbox image as a string (ex: k8s.gcr.io/pause-amd64:3.1)
 func (o *OrchestratorProfile) GetPodInfraContainerSpec() string {
-	return o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["pause"]
+	return o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion][common.PauseComponentName]
 }
 
 // HasAadProfile returns true if the has aad profile

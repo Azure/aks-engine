@@ -2451,7 +2451,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    "kube-dns",
+				Name:    common.KubeDNSAddonName,
 				Enabled: to.BoolPtr(true),
 			},
 			{

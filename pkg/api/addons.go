@@ -45,7 +45,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.HeapsterAddonName,
-				Image:          specConfig.KubernetesImageBase + k8sComponents["heapster"],
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -53,7 +53,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           "heapster-nanny",
-				Image:          specConfig.KubernetesImageBase + k8sComponents["addonresizer"],
+				Image:          specConfig.KubernetesImageBase + k8sComponents[common.AddonResizerComponentName],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -357,24 +357,24 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "calico-typha",
-				Image: specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+				Name:  common.CalicoTyphaComponentName,
+				Image: specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 			},
 			{
-				Name:  "calico-cni",
-				Image: specConfig.CalicoImageBase + k8sComponents["calico-cni"],
+				Name:  common.CalicoCNIComponentName,
+				Image: specConfig.CalicoImageBase + k8sComponents[common.CalicoCNIComponentName],
 			},
 			{
-				Name:  "calico-node",
-				Image: specConfig.CalicoImageBase + k8sComponents["calico-node"],
+				Name:  common.CalicoNodeComponentName,
+				Image: specConfig.CalicoImageBase + k8sComponents[common.CalicoNodeComponentName],
 			},
 			{
-				Name:  "calico-pod2daemon",
-				Image: specConfig.CalicoImageBase + k8sComponents["calico-pod2daemon"],
+				Name:  common.CalicoPod2DaemonComponentName,
+				Image: specConfig.CalicoImageBase + k8sComponents[common.CalicoPod2DaemonComponentName],
 			},
 			{
-				Name:  "calico-cluster-proportional-autoscaler",
-				Image: specConfig.KubernetesImageBase + k8sComponents["calico-cluster-proportional-autoscaler"],
+				Name:  common.CalicoClusterAutoscalerComponentName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.CalicoClusterAutoscalerComponentName],
 			},
 		},
 	}
@@ -645,15 +645,15 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "kubedns",
-				Image: specConfig.KubernetesImageBase + k8sComponents["kube-dns"],
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
 			},
 			{
-				Name:  "dnsmasq",
-				Image: specConfig.KubernetesImageBase + k8sComponents["dnsmasq"],
+				Name:  common.DNSMasqComponentName,
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.DNSMasqComponentName],
 			},
 			{
 				Name:  "sidecar",
-				Image: specConfig.KubernetesImageBase + k8sComponents["k8s-dns-sidecar"],
+				Image: specConfig.KubernetesImageBase + k8sComponents[common.DNSSidecarComponentName],
 			},
 		},
 	}

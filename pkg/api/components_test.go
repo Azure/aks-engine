@@ -1198,8 +1198,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1209,8 +1210,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1228,6 +1230,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},
@@ -1239,8 +1242,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1250,8 +1254,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1269,6 +1274,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.14.7",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},
@@ -1280,8 +1286,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1291,8 +1298,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1310,6 +1318,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.15.9",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},
@@ -1321,8 +1330,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1332,8 +1342,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1351,6 +1362,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.16.6",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},
@@ -1362,8 +1374,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1373,8 +1386,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1392,6 +1406,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.17.2",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},
@@ -1403,8 +1418,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0-alpha.1",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
 			},
@@ -1414,8 +1430,9 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0-alpha.1",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:    specConfig.KubernetesImageBase,
-						MCRKubernetesImageBase: specConfig.MCRKubernetesImageBase,
+						KubernetesImageBase:     specConfig.KubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
 							getUserConfiguredComponentMap()["user-configured controller-manager component"],
@@ -1433,6 +1450,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 					OrchestratorVersion: "1.18.0-alpha.1",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:       specConfig.KubernetesImageBase,
+						KubernetesImageBaseType:   common.KubernetesImageBaseTypeGCR,
 						MCRKubernetesImageBase:    specConfig.MCRKubernetesImageBase,
 						UseCloudControllerManager: to.BoolPtr(true),
 					},

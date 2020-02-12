@@ -757,7 +757,7 @@ func (a *Properties) validateAddons() error {
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
 					}
-				case "kube-dns":
+				case common.KubeDNSAddonName:
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
