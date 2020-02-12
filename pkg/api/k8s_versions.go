@@ -166,25 +166,34 @@ var k8sComponentVersionsGCR = map[string]map[string]string{
 }
 
 type getK8sVersionComponents func(string, map[string]string) map[string]string
+type getK8sVersionComponentsOverrides func(string) map[string]string
 
 func GetK8sComponentsByVersionMap(k *KubernetesConfig) map[string]map[string]string {
 	var getter getK8sVersionComponents
+	var overrides getK8sVersionComponentsOverrides
 	switch k.KubernetesImageBaseType {
 	case common.KubernetesImageBaseTypeGCR:
 		getter = getK8sVersionComponentsGCR
+		overrides = getVersionOverridesGCR
 	case common.KubernetesImageBaseTypeMCR:
 		getter = getK8sVersionComponentsMCR
+		overrides = getVersionOverridesMCR
 	default:
 		getter = getK8sVersionComponentsGCR
+		overrides = getVersionOverridesGCR
 	}
 	ret := make(map[string]map[string]string)
 	for _, version := range common.GetAllSupportedKubernetesVersions(true, false) {
-		ret[version] = getter(version, getVersionOverrides(version))
+		ret[version] = getter(version, overrides(version))
 	}
 	return ret
 }
 
-func getVersionOverrides(v string) map[string]string {
+func getVersionOverridesMCR(v string) map[string]string {
+	return nil
+}
+
+func getVersionOverridesGCR(v string) map[string]string {
 	switch v {
 	case "1.8.11":
 		return map[string]string{"kube-dns": "k8s-dns-kube-dns-amd64:1.14.9"}
