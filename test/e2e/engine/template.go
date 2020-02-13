@@ -134,6 +134,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+	}
+
 	if prop.LinuxProfile != nil {
 		if config.PublicSSHKey != "" {
 			prop.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey
