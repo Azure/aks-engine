@@ -208,27 +208,30 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	}
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := GetK8sComponentsByVersionMap(cs.Properties.OrchestratorProfile.KubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	hyperkubeImageBase := specConfig.KubernetesImageBase
-	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
-	kubernetesImageBase := kubernetesConfig.KubernetesImageBase
+	kubernetesImageBase := specConfig.KubernetesImageBase
+	if kubernetesConfig.KubernetesImageBase != "" {
+		kubernetesImageBase = kubernetesConfig.KubernetesImageBase
+	}
 	if cs.Properties.IsAzureStackCloud() {
 		kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
 	}
+	k8sComponents := GetK8sComponentsByVersionMap(kubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
+	hyperkubeImageBase := kubernetesImageBase
+	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
 	if cs.Properties.IsAzureStackCloud() {
 		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 	}
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage != "" {
-		hyperkubeImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage
+	if kubernetesConfig.CustomHyperkubeImage != "" {
+		hyperkubeImage = kubernetesConfig.CustomHyperkubeImage
 	}
 	controllerManagerBase := kubernetesImageBase
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-		controllerManagerBase = cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase
+		controllerManagerBase = kubernetesConfig.MCRKubernetesImageBase
 	}
 	ccmImage := controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
-	if cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage != "" {
-		ccmImage = cs.Properties.OrchestratorProfile.KubernetesConfig.CustomCcmImage
+	if kubernetesConfig.CustomCcmImage != "" {
+		ccmImage = kubernetesConfig.CustomCcmImage
 	}
 
 	switch component {

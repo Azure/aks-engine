@@ -56,6 +56,8 @@ type Config struct {
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE"`
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
+	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
+	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -139,6 +141,13 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
 			}
 		}
+	}
+
+	if config.KubernetesImageBase != "" {
+		prop.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = config.KubernetesImageBase
+	}
+	if config.KubernetesImageBaseType != "" {
+		prop.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = config.KubernetesImageBaseType
 	}
 
 	if config.WindowsAdminPasssword != "" {
