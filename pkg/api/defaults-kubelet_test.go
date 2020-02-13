@@ -23,6 +23,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	winProfile.OSType = Windows
 	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
 	cs.setKubeletConfig(false)
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
 	expected := map[string]string{
 		"--address":                           "0.0.0.0",
@@ -47,10 +48,10 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--network-plugin":                    NetworkPluginKubenet,
-		"--node-status-update-frequency":      K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
+		"--node-status-update-frequency":      k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
-		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
 		"--rotate-certificates":               "true",

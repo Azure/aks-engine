@@ -196,7 +196,7 @@ func TestAddonsIndexByName(t *testing.T) {
 
 func TestAssignDefaultAddonImages(t *testing.T) {
 	kubernetesVersion := "1.13.11"
-	k8sComponents := K8sComponentsByVersionMap[kubernetesVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
@@ -215,7 +215,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
 		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
 		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
-		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
 		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
@@ -285,7 +285,7 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 			containerName = "omsagent"
 		}
 		if addonName == common.CalicoAddonName {
-			containerName = "calico-typha"
+			containerName = common.CalicoTyphaComponentName
 		}
 		if addonName == common.AADPodIdentityAddonName {
 			containerName = "nmi"

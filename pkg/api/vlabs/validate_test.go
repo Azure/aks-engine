@@ -2451,7 +2451,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
 		Addons: []KubernetesAddon{
 			{
-				Name:    "kube-dns",
+				Name:    common.KubeDNSAddonName,
 				Enabled: to.BoolPtr(true),
 			},
 			{
@@ -4511,6 +4511,47 @@ func TestValidateAzureStackSupport(t *testing.T) {
 			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, err)
+			}
+		})
+	}
+}
+
+func TestValidateKubernetesImageBaseType(t *testing.T) {
+	tests := map[string]struct {
+		k             *KubernetesConfig
+		expectedError error
+	}{
+		"should not error for zero-value kubernetesImageBaseType value": {
+			k:             &KubernetesConfig{},
+			expectedError: nil,
+		},
+		"should not error for empty kubernetesImageBaseType value": {
+			k: &KubernetesConfig{
+				KubernetesImageBaseType: "",
+			},
+			expectedError: nil,
+		},
+		"should not error for valid kubernetesImageBaseType value": {
+			k: &KubernetesConfig{
+				KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+			},
+			expectedError: nil,
+		},
+		"should error on unknown kubernetesImageBaseType value": {
+			k: &KubernetesConfig{
+				KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR, // TODO change this to "should not error" when MCR type is enabled
+			},
+			expectedError: errors.Errorf("Invalid kubernetesImageBaseType value \"%s\", please use one of the following versions: %s", "mcr", kubernetesImageBaseTypeValidVersions),
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.k.validateKubernetesImageBaseType()
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
 			}
 		})
 	}

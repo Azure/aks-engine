@@ -138,8 +138,12 @@ const (
 	DashboardAddonName = "kubernetes-dashboard"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
 	ReschedulerAddonName = "rescheduler"
+	// ExecHealthZComponentName is the name of the exechealthz component
+	ExecHealthZComponentName = "exechealthz"
 	// MetricsServerAddonName is the name of the kubernetes metrics server addon deployment
 	MetricsServerAddonName = "metrics-server"
+	// AddonResizerComponentName is the name of the kubernetes addon-resizer component
+	AddonResizerComponentName = "addon-resizer"
 	// NVIDIADevicePluginAddonName is the name of the NVIDIA device plugin addon deployment
 	NVIDIADevicePluginAddonName = "nvidia-device-plugin"
 	// ContainerMonitoringAddonName is the name of the kubernetes Container Monitoring addon deployment
@@ -180,6 +184,16 @@ const (
 	DNSAutoscalerAddonName = "dns-autoscaler"
 	// CalicoAddonName is the name of calico daemonset addon
 	CalicoAddonName = "calico-daemonset"
+	// CalicoTyphaComponentName is the name of calico-typha component
+	CalicoTyphaComponentName = "calico-typha"
+	// CalicoCNIComponentName is the name of calico-cni component
+	CalicoCNIComponentName = "calico-cni"
+	// CalicoNodeComponentName is the name of calico-node component
+	CalicoNodeComponentName = "calico-node"
+	// CalicoPod2DaemonComponentName is the name of calico-pod2daemon component
+	CalicoPod2DaemonComponentName = "calico-pod2daemon"
+	// CalicoClusterAutoscalerComponentName is the name of calico-cluster-proportional-autoscaler component
+	CalicoClusterAutoscalerComponentName = "calico-cluster-proportional-autoscaler"
 	// AADPodIdentityAddonName is the name of the aad-pod-identity addon deployment
 	AADPodIdentityAddonName = "aad-pod-identity"
 	// AzurePolicyAddonName is the name of the Azure Policy addon
@@ -214,6 +228,12 @@ const (
 	Hyperkube = "hyperkube"
 	// KubeDNSAddonName is the name of the kube-dns-deployment addon
 	KubeDNSAddonName = "kube-dns"
+	// DNSMasqComponentName is the name of the dnsmasq component
+	DNSMasqComponentName = "dnsmasq"
+	// DNSSidecarComponentName is the name of the dnsmasq component
+	DNSSidecarComponentName = "k8s-dns-sidecar"
+	// PauseComponentName is the name of the pause component
+	PauseComponentName = "pause"
 	// CoreDNSAddonName is the name of the coredns addon
 	CoreDNSAddonName = "coredns"
 	// KubeProxyAddonName is the name of the kube-proxy config addon
@@ -262,6 +282,8 @@ const (
 	AddonManagerComponentName = "kube-addon-manager"
 )
 
+const WindowsArtifactComponentName = "windowszip"
+
 const (
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
@@ -269,4 +291,9 @@ const (
 	AzureStackPrefix = "azs-"
 	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
 	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
+)
+
+const (
+	KubernetesImageBaseTypeGCR = "gcr"
+	KubernetesImageBaseTypeMCR = "mcr"
 )

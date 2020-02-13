@@ -1791,6 +1791,7 @@ func TestWrapAsVariableObject(t *testing.T) {
 
 func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
 		name                       string
 		addon                      api.KubernetesAddon
@@ -1828,7 +1829,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1866,7 +1867,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1899,7 +1900,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1949,7 +1950,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1982,7 +1983,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -2016,7 +2017,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2049,7 +2050,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2098,7 +2099,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2131,7 +2132,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2181,7 +2182,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "chinanorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2214,7 +2215,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2264,7 +2265,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "germanynortheast",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2297,7 +2298,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2347,7 +2348,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "usgovnorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2456,6 +2457,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 
 func TestGetAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
 		name                                      string
 		addon                                     api.KubernetesAddon
@@ -2489,7 +2491,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2514,7 +2516,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2531,7 +2533,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
@@ -2560,7 +2562,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2585,7 +2587,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2606,7 +2608,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
@@ -2635,7 +2637,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2660,7 +2662,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2677,7 +2679,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
@@ -2706,7 +2708,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2732,7 +2734,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2749,7 +2751,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
@@ -2778,7 +2780,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2805,7 +2807,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2826,7 +2828,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
@@ -2912,6 +2914,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 
 func TestGetComponentFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	//specConfigAzureStack := api.AzureCloudSpecEnvMap["AzureStackCloud"].KubernetesSpecConfig
 	cases := []struct {
 		name                                              string
@@ -2946,7 +2949,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.APIServerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -2959,7 +2962,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.ControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -2972,7 +2975,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 						},
 					},
 					Config: map[string]string{
@@ -2985,7 +2988,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.SchedulerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -2998,7 +3001,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.AddonManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 						},
 					},
 				},
@@ -3035,19 +3038,19 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedMemLimits:         "",
 			expectedIsAzureStackCloud: false,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
-			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
 			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
-			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
 			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
-			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
 			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
-			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
 			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
-			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 		{
 			name: "Azure Stack",
@@ -3058,7 +3061,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.APIServerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 						},
 					},
 					Config: map[string]string{
@@ -3071,7 +3074,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.ControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 						},
 					},
 					Config: map[string]string{
@@ -3084,7 +3087,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 						},
 					},
 					Config: map[string]string{
@@ -3097,7 +3100,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.SchedulerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 						},
 					},
 					Config: map[string]string{
@@ -3110,7 +3113,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.AddonManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 						},
 					},
 				},
@@ -3152,19 +3155,19 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedMemLimits:         "",
 			expectedIsAzureStackCloud: true,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
-			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
 			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
-			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
 			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
-			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
 			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
-			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
 			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
 			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
-			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 		{
 			name: "1.14",
@@ -3175,7 +3178,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.APIServerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -3188,7 +3191,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.ControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -3201,7 +3204,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.CloudControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 						},
 					},
 					Config: map[string]string{
@@ -3214,7 +3217,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.SchedulerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 						},
 					},
 					Config: map[string]string{
@@ -3227,7 +3230,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 					Containers: []api.KubernetesContainerSpec{
 						{
 							Name:  common.AddonManagerComponentName,
-							Image: specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 						},
 					},
 				},
@@ -3264,19 +3267,19 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedMemLimits:         "",
 			expectedIsAzureStackCloud: false,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: false,
-			expectedAPIServerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
 			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
-			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
 			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
-			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
 			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
 			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
-			expectedSchedulerImage:                            specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
 			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
 			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
-			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 	}
 

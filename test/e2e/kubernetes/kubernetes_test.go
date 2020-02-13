@@ -156,7 +156,7 @@ var _ = AfterSuite(func() {
 		pod.PrintPodsLogs("kube-addon-manager", "kube-system", 5*time.Second, 1*time.Minute)
 		pod.PrintPodsLogs("kube-proxy", "kube-system", 5*time.Second, 1*time.Minute)
 		pod.PrintPodsLogs("kube-scheduler", "kube-system", 5*time.Second, 1*time.Minute)
-		pod.PrintPodsLogs("kube-apiserver", "kube-system", 5*time.Second, 1*time.Minute)
+		pod.PrintPodsLogs(common.APIServerComponentName, "kube-system", 5*time.Second, 1*time.Minute)
 		pod.PrintPodsLogs("kube-controller-manager", "kube-system", 5*time.Second, 1*time.Minute)
 	}
 })
@@ -714,9 +714,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have DNS pod running", func() {
 			var err error
 			var running bool
-			if hasAddon, _ := eng.HasAddon("kube-dns"); hasAddon {
+			if hasAddon, _ := eng.HasAddon(common.KubeDNSAddonName); hasAddon {
 				By("Ensuring that kube-dns is running")
-				running, err = pod.WaitOnSuccesses("kube-dns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				running, err = pod.WaitOnSuccesses(common.KubeDNSAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			}
 			if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
 				By("Ensuring that coredns is running")
@@ -727,7 +727,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have core kube-system componentry running", func() {
-			coreComponents := []string{"kube-proxy", "kube-addon-manager", "kube-apiserver", "kube-controller-manager", "kube-scheduler"}
+			coreComponents := []string{"kube-proxy", "kube-addon-manager", common.APIServerComponentName, "kube-controller-manager", "kube-scheduler"}
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, "cloud-controller-manager")
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") {
@@ -767,7 +767,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct IP address for the apiserver", func() {
-			pods, err := pod.GetAllRunningByPrefixWithRetry("kube-apiserver", "kube-system", 3*time.Second, cfg.Timeout)
+			pods, err := pod.GetAllRunningByPrefixWithRetry(common.APIServerComponentName, "kube-system", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			By("Ensuring that the correct IP address has been applied to the apiserver")
 			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
