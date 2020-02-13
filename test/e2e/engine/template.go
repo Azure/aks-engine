@@ -135,7 +135,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if prop.OrchestratorProfile.KubernetesConfig == nil {
-		prop.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
 	}
 
 	if prop.LinuxProfile != nil {
