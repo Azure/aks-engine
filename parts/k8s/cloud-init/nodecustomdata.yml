@@ -65,6 +65,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+- path: {{GetNTPConfigFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "ntpConfig"}}
+
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
 - path: /opt/bin/health-monitor.sh

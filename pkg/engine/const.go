@@ -118,6 +118,7 @@ const (
 	// scripts and service for enabling ipv6 dual stack
 	dhcpv6SystemdService      = "k8s/cloud-init/artifacts/dhcpv6.service"
 	dhcpv6ConfigurationScript = "k8s/cloud-init/artifacts/enable-dhcpv6.sh"
+	ntpConfigSourceFile       = "k8s/cloud-init/artifacts/timesyncd.conf"
 )
 
 // cloud-init destination file references
@@ -129,7 +130,10 @@ const (
 	customSearchDomainsCSEScriptFilepath = "/opt/azure/containers/setup-custom-search-domains.sh"
 	dhcpV6ServiceCSEScriptFilepath       = "/etc/systemd/system/dhcpv6.service"
 	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
+	systemDTimesyncdFilepath             = "/etc/systemd/timesyncd.conf"
 )
+
+const defaultTimeServer = "time.windows.com"
 
 const (
 	dcosCustomData188       = "dcos/dcoscustomdata188.t"

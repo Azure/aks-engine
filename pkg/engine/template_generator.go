@@ -735,6 +735,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetDHCPv6ConfigCSEScriptFilepath": func() string {
 			return dhcpV6ConfigCSEScriptFilepath
 		},
+		"GetNTPConfigFilepath": func() string {
+			return systemDTimesyncdFilepath
+		},
+		"GetTimeServers": func() string {
+			return defaultTimeServer
+		},
 		"HasPrivateAzureRegistryServer": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer != ""
 		},

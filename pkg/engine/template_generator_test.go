@@ -654,6 +654,16 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			if ret[0].Interface() != dhcpV6ConfigCSEScriptFilepath {
 				t.Errorf("expected funcMap invocation of GetDHCPv6ConfigCSEScriptFilepath to return %s, instead got %s", dhcpV6ConfigCSEScriptFilepath, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["GetNTPConfigFilepath"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != systemDTimesyncdFilepath {
+				t.Errorf("expected funcMap invocation of GetNTPConfigFilepath to return %s, instead got %s", systemDTimesyncdFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetTimeServers"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != defaultTimeServer {
+				t.Errorf("expected funcMap invocation of GetTimeServers to return %s, instead got %s", defaultTimeServer, ret[0].Interface())
+			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])
 				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})

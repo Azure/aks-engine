@@ -196,6 +196,7 @@
 // ../../parts/k8s/cloud-init/artifacts/sshd_config_1604
 // ../../parts/k8s/cloud-init/artifacts/sys-fs-bpf.mount
 // ../../parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf
+// ../../parts/k8s/cloud-init/artifacts/timesyncd.conf
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
@@ -37398,6 +37399,43 @@ func k8sCloudInitArtifactsSysctlD60CisConf() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsTimesyncdConf = []byte(`#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+#
+# Entries in this file show the compile time defaults.
+# You can change settings by editing this file.
+# Defaults can be restored by simply deleting this file.
+#
+# See timesyncd.conf(5) for details.
+
+[Time]
+{{- if IsAzureStackCloud}}
+#NTP=
+{{else}}
+NTP={{GetTimeServers}}
+{{end}}
+#FallbackNTP=ntp.ubuntu.com
+`)
+
+func k8sCloudInitArtifactsTimesyncdConfBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsTimesyncdConf, nil
+}
+
+func k8sCloudInitArtifactsTimesyncdConf() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsTimesyncdConfBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/timesyncd.conf", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitJumpboxcustomdataYml = []byte(`#cloud-config
 
 write_files:
@@ -37507,6 +37545,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
+
+- path: {{GetNTPConfigFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "ntpConfig"}}
 
 {{if not .MasterProfile.IsVHDDistro}}
     {{if .MasterProfile.IsCoreOS}}
@@ -38094,6 +38139,13 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
+
+- path: {{GetNTPConfigFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "ntpConfig"}}
 
 {{if not .IsVHDDistro}}
     {{if .IsCoreOS}}
@@ -44892,6 +44944,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/sshd_config_1604":                               k8sCloudInitArtifactsSshd_config_1604,
 	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                               k8sCloudInitArtifactsSysFsBpfMount,
 	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                           k8sCloudInitArtifactsSysctlD60CisConf,
+	"k8s/cloud-init/artifacts/timesyncd.conf":                                 k8sCloudInitArtifactsTimesyncdConf,
 	"k8s/cloud-init/jumpboxcustomdata.yml":                                    k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                                 k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                       k8sCloudInitNodecustomdataYml,
@@ -45201,6 +45254,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"sshd_config_1604":                          {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
 				"sys-fs-bpf.mount":                          {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
 				"sysctl-d-60-CIS.conf":                      {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
+				"timesyncd.conf":                            {k8sCloudInitArtifactsTimesyncdConf, map[string]*bintree{}},
 			}},
 			"jumpboxcustomdata.yml":    {k8sCloudInitJumpboxcustomdataYml, map[string]*bintree{}},
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},
