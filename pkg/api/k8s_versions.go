@@ -240,9 +240,10 @@ func getVersionOverridesGCR(v string) map[string]string {
 	}
 }
 
+/*
 func getK8sVersionComponentsMCR(version string, overrides map[string]string) map[string]string {
 	return map[string]string{}
-}
+}*/
 
 func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides map[string]string) map[string]string {
 	s := strings.Split(version, ".")
