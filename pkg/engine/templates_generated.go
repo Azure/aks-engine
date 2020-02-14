@@ -35570,7 +35570,7 @@ installDeps() {
       CEPH_COMMON=""
       GLUSTERFS_CLIENT=""
     fi
-    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT gpg htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
     if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
         retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
