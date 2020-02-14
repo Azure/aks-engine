@@ -61,7 +61,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	// Data Encryption at REST configuration conditions
 	if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) || to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
-		staticAPIServerConfig["--experimental-encryption-provider-config"] = "/etc/kubernetes/encryption-config.yaml"
+		staticAPIServerConfig["--encryption-provider-config"] = "/etc/kubernetes/encryption-config.yaml"
 	}
 
 	// Aggregated API configuration

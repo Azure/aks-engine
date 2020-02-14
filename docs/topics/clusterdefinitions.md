@@ -543,8 +543,8 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 | "--service-cluster-ip-range"                | _see serviceCIDR_                                                                       |
 | "--storage-backend"                         | _calculated value that represents etcd version_                                         |
 | "--v"                                       | "4"                                                                                     |
-| "--experimental-encryption-provider-config" | "/etc/kubernetes/encryption-config.yaml" (_if enableDataEncryptionAtRest is true_)      |
-| "--experimental-encryption-provider-config" | "/etc/kubernetes/encryption-config.yaml" (_if enableEncryptionWithExternalKms is true_) |
+| "--encryption-provider-config"              | "/etc/kubernetes/encryption-config.yaml" (_if enableDataEncryptionAtRest is true_)      |
+| "--encryption-provider-config"              | "/etc/kubernetes/encryption-config.yaml" (_if enableEncryptionWithExternalKms is true_) |
 | "--requestheader-client-ca-file"            | "/etc/kubernetes/certs/proxy-ca.crt" (_if enableAggregatedAPIs is true_)                |
 | "--proxy-client-cert-file"                  | "/etc/kubernetes/certs/proxy.crt" (_if enableAggregatedAPIs is true_)                   |
 | "--proxy-client-key-file"                   | "/etc/kubernetes/certs/proxy.key" (_if enableAggregatedAPIs is true_)                   |

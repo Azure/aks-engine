@@ -21,9 +21,9 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableDataEncryptionAtRest=true: %s",
-			a["--experimental-encryption-provider-config"])
+	if a["--encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableDataEncryptionAtRest=true: %s",
+			a["--encryption-provider-config"])
 	}
 
 	// Test EnableDataEncryptionAtRest = false
@@ -31,9 +31,9 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--experimental-encryption-provider-config"]; ok {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableDataEncryptionAtRest=false: %s",
-			a["--experimental-encryption-provider-config"])
+	if _, ok := a["--encryption-provider-config"]; ok {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableDataEncryptionAtRest=false: %s",
+			a["--encryption-provider-config"])
 	}
 }
 
@@ -43,9 +43,9 @@ func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=true: %s",
-			a["--experimental-encryption-provider-config"])
+	if a["--encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=true: %s",
+			a["--encryption-provider-config"])
 	}
 
 	// Test EnableEncryptionWithExternalKms = false
@@ -53,9 +53,9 @@ func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--experimental-encryption-provider-config"]; ok {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=false: %s",
-			a["--experimental-encryption-provider-config"])
+	if _, ok := a["--encryption-provider-config"]; ok {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=false: %s",
+			a["--encryption-provider-config"])
 	}
 }
 
