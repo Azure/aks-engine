@@ -36012,7 +36012,12 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
-    time_metric "InstallBcc" installBcc
+    if [[ ( $OS == $UBUNTU_OS_NAME ]]; then
+        time_metric "InstallBcc" installBcc
+    fi
+    {{- if not IsDockerContainerRuntime}}
+    time_metric "InstallImg" installImg
+    {{end}}
 else
     echo "Golden image; skipping dependencies installation"
 fi
@@ -36038,7 +36043,6 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     CLI_TOOL="docker"
     {{else}}
     CLI_TOOL="img"
-    installImg
     {{end}}
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
