@@ -22,9 +22,9 @@ ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_max_syn_backlog=16384
 ExecStartPre=/sbin/sysctl -w net.core.message_cost=40
 ExecStartPre=/sbin/sysctl -w net.core.message_burst=80
 
-ExecStartPre=/bin/bash -c "if [ $(nproc) -gt 8 ]; then /sbin/sysctl -w net.ipv4.neigh.default.gc_thresh1=4096; fi"
-ExecStartPre=/bin/bash -c "if [ $(nproc) -gt 8 ]; then /sbin/sysctl -w net.ipv4.neigh.default.gc_thresh2=8192; fi"
-ExecStartPre=/bin/bash -c "if [ $(nproc) -gt 8 ]; then /sbin/sysctl -w net.ipv4.neigh.default.gc_thresh3=16384; fi"
+ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
+ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh2=8192
+ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh3=16384
 
 ExecStartPre=-/sbin/ebtables -t nat --list
 ExecStartPre=-/sbin/iptables -t nat --numeric --list
