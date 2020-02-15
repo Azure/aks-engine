@@ -49,7 +49,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip

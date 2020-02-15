@@ -747,6 +747,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsCustomCloudProfile": func() bool {
 			return cs.Properties.IsCustomCloudProfile()
 		},
+		"GetCustomCloudRootCertificate": func() string {
+			return cs.Properties.GetCustomCloudRootCertificate()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},

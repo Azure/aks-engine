@@ -43,6 +43,7 @@ func TestGetTemplateFuncMap(t *testing.T) {
 	}
 	cases := []string{
 		"IsCustomCloudProfile",
+		"GetCustomCloudRootCertificate",
 		"IsAzureStackCloud",
 		"IsMultiMasterCluster",
 		"IsMasterVirtualMachineScaleSets",

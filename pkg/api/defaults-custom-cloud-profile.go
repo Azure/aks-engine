@@ -75,7 +75,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 			}
 
 			metadataURL := fmt.Sprintf("%s/metadata/endpoints?api-version=1.0", strings.TrimSuffix(env.ResourceManagerEndpoint, "/"))
-			
+
 			// Retrieve the metadata
 			httpClient := &http.Client{
 				Timeout: 30 * time.Second,
@@ -111,13 +111,13 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 
 			env.ManagementPortalURL = endpoints.PortalEndpoint
 
-			if (p.IsAzureStackCloud()) {
+			if p.IsAzureStackCloud() {
 				azsFQDNSuffix := getAzureStackFQDNSuffix(p.CustomCloudProfile.PortalURL, cs.Location)
 				env.ResourceManagerVMDNSSuffix = fmt.Sprintf("cloudapp.%s", azsFQDNSuffix)
 				env.StorageEndpointSuffix = fmt.Sprintf("%s.%s", cs.Location, azsFQDNSuffix)
 				env.KeyVaultDNSSuffix = fmt.Sprintf("vault.%s.%s", cs.Location, azsFQDNSuffix)
-			} else if (env.ResourceManagerVMDNSSuffix == "" || env.StorageEndpointSuffix == "" || env.KeyVaultDNSSuffix == "") {
-				// Non-AzureStack CustomCloud MUST provide suffixes			
+			} else if env.ResourceManagerVMDNSSuffix == "" || env.StorageEndpointSuffix == "" || env.KeyVaultDNSSuffix == "" {
+				// Non-AzureStack CustomCloud MUST provide suffixes
 				return fmt.Errorf("Non-AzureStack CustomCloudProfile MUST provide ResourceManagerVMDNSSuffix, StorageEndpointSuffix, KeyVaultDNSSuffix")
 			}
 		}
@@ -154,7 +154,7 @@ func (p *Properties) SetCustomCloudSpec(params AzureCustomCloudSpecParams) error
 
 		azureCustomCloudSpec.EndpointConfig.ResourceManagerVMDNSSuffix = p.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix
 
-		if (p.CustomCloudProfile.Environment.Name == "" || p.IsAzureStackCloud()) {
+		if p.CustomCloudProfile.Environment.Name == "" || p.IsAzureStackCloud() {
 			azureCustomCloudSpec.CloudName = AzureStackCloud
 		} else {
 			azureCustomCloudSpec.CloudName = p.CustomCloudProfile.Environment.Name

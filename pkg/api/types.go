@@ -815,6 +815,7 @@ type CustomCloudProfile struct {
 	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
 	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
 	PortalURL                  string                      `json:"portalURL,omitempty"`
+	CustomCloudRootCertificate string                      `json:"customCloudRootCertificate,omitempty"`
 }
 
 // TelemetryProfile contains settings for collecting telemtry.
@@ -2007,9 +2008,17 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
-// IsCustomCloudProfile return true if user has provided a custom cloud profile
+// IsCustomCloudProfile returns true if user has provided a custom cloud profile
 func (p *Properties) IsCustomCloudProfile() bool {
 	return p.CustomCloudProfile != nil
+}
+
+// GetCustomCloudRootCertificate returns user-provided CustomCloudRootCertificate
+func (p *Properties) GetCustomCloudRootCertificate() string {
+	if p.CustomCloudProfile != nil {
+		return p.CustomCloudProfile.CustomCloudRootCertificate
+	}
+	return ""
 }
 
 // GetKubernetesVersion returns the cluster Kubernetes version, with the Azure Stack suffix if Azure Stack Cloud.

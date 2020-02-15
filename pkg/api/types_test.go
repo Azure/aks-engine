@@ -4592,7 +4592,7 @@ func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
 	mock1dot16dot3 := getMockAPIProperties("1.16.0")
 	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
-	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStack", true, true, true)
+	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
 	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
 		OrchestratorVersion: "1.15.4",

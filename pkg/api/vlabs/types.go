@@ -575,6 +575,7 @@ type CustomCloudProfile struct {
 	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
 	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
 	PortalURL                  string                      `json:"portalURL,omitempty"`
+	CustomCloudRootCertificate string                      `json:"customCloudRootCertificate,omitempty"`
 }
 
 // TelemetryProfile contains settings for collecting telemtry.
@@ -620,6 +621,14 @@ func (p *Properties) HasAvailabilityZones() bool {
 // IsCustomCloudProfile return true if user has provided a custom cloud profile
 func (p *Properties) IsCustomCloudProfile() bool {
 	return p.CustomCloudProfile != nil
+}
+
+// GetCustomCloudRootCertificate returns user-provided CustomCloudRootCertificate
+func (p *Properties) GetCustomCloudRootCertificate() string {
+	if p.CustomCloudProfile != nil {
+		return p.CustomCloudProfile.CustomCloudRootCertificate
+	}
+	return ""
 }
 
 // IsAzureStackCloud return true if the cloud is AzureStack

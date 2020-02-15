@@ -181,10 +181,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			masterVars["apiVersionStorage"] = "2017-10-01"
 			masterVars["apiVersionNetwork"] = "2017-10-01"
 			masterVars["apiVersionKeyVault"] = "2016-10-01"
-
-			masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs)
 		}
 
+		masterVars["provisionConfigsCustomCloud"] = getBase64EncodedGzippedCustomScript(kubernetesCSECustomCloud, cs)
 		environmentJSON, err := cs.Properties.GetCustomEnvironmentJSON(false)
 		if err != nil {
 			return masterVars, err

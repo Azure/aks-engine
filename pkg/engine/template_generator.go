@@ -248,6 +248,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsCustomCloudProfile": func() bool {
 			return cs.Properties.IsCustomCloudProfile()
 		},
+		"GetCustomCloudRootCertificate": func() string {
+			return cs.Properties.GetCustomCloudRootCertificate()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ensureCertificates() {
+ensureAzureStackCertificates() {
     AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
     AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d "\"")
     AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
     curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
     CURL_RETURNCODE=$?
-    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
+
     if [ $CURL_RETURNCODE != 0 ]; then
         # Replace placeholder for ssl binding
         if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
@@ -27,14 +27,41 @@ ensureCertificates() {
         fi
     fi
 
-    # ensureCertificates will be retried if the exit code is not 0
+    # ensureAzureStackCertificates will be retried if the exit code is not 0
     curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
     exit $?
 }
 
+ensureCustomCloudRootCertificate() {
+    CUSTOM_CLOUD_ROOT_CERTIFICATE='{{GetCustomCloudRootCertificate}}'
+
+    echo "Setting up custom cloud root certificate: '$CUSTOM_CLOUD_ROOT_CERTIFICATE', kube_controller_manger_file: $KUBE_CONTROLLER_MANAGER_FILE"
+
+    if [ ! -z $CUSTOM_CLOUD_ROOT_CERTIFICATE ]; then
+        # Replace placeholder for ssl binding
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
+
+        # CUSTOM_CLOUD_ROOT_CERTIFICATE MUST be base64 encoded
+        echo $CUSTOM_CLOUD_ROOT_CERTIFICATE | base64 -d > "/usr/local/share/ca-certificates/customCloudRootCertificate.crt"
+        update-ca-certificates
+    else
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            # remove the placeholder for ssl binding
+            sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
+    fi
+}
+
 configureK8sCustomCloud() {
-    export -f ensureCertificates
-    retrycmd_if_failure 60 10 30 bash -c ensureCertificates
+    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
+
+    {{- if IsAzureStackCloud}}
+    export -f ensureAzureStackCertificates
+    retrycmd_if_failure 60 10 30 bash -c ensureAzureStackCertificates
     set +x
     # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut,
     # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
@@ -78,6 +105,9 @@ configureK8sCustomCloud() {
     ifconfig eth0 mtu 1350
 
     set -x
+    {{else}}
+    ensureCustomCloudRootCertificate
+    {{end}}
 }
 
 configureAzureStackInterfaces() {
