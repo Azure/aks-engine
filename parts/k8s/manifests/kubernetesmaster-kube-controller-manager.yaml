@@ -13,8 +13,6 @@ spec:
     - name: kube-controller-manager
       image: {{ContainerImage "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
       command: [{{ContainerConfig "command"}}]
       args: [{{GetControllerManagerArgs}}]
 {{- if IsCustomCloudProfile}}
