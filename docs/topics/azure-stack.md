@@ -1,4 +1,4 @@
-# AKS Engine on Azure Stack - Public Preview
+# AKS Engine on Azure Stack
 
 * [Introduction](#introduction)
 * [Marketplace Prerequisites](#marketplace-prerequisites)
@@ -159,7 +159,7 @@ Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Az
 
 ## Known Issues and Limitations
 
-This section lists all known issues you may find when you use the public preview version.
+This section lists all known issues you may find when you use the GA version.
 
 ### Unsupported Addons
 
