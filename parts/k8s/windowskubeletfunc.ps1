@@ -274,7 +274,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
     & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_AUTO_START
+    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
     & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS
     & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500
@@ -294,7 +294,7 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy
     & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet
     & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy
-    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_AUTO_START
+    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START
     & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem
     & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS
     & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500
