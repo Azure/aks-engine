@@ -78,7 +78,7 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
-    if [[ ( $OS == $UBUNTU_OS_NAME ]]; then
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
         time_metric "InstallBcc" installBcc
     fi
     {{- if not IsDockerContainerRuntime}}
