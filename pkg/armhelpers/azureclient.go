@@ -60,6 +60,7 @@ type AzureClient struct {
 	deploymentOperationsClient      resources.DeploymentOperationsClient
 	msiClient                       msi.UserAssignedIdentitiesClient
 	resourcesClient                 apimanagement.GroupClient
+	resourceSkusClient              compute.ResourceSkusClient
 	storageAccountsClient           storage.AccountsClient
 	interfacesClient                network.InterfacesClient
 	groupsClient                    resources.GroupsClient
@@ -345,6 +346,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		deploymentOperationsClient:      resources.NewDeploymentOperationsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		msiClient:                       msi.NewUserAssignedIdentitiesClient(subscriptionID),
 		resourcesClient:                 apimanagement.NewGroupClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		resourceSkusClient:              compute.NewResourceSkusClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		storageAccountsClient:           storage.NewAccountsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		interfacesClient:                network.NewInterfacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		groupsClient:                    resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
@@ -373,6 +375,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.msiClient.Authorizer = armAuthorizer
 	c.providersClient.Authorizer = armAuthorizer
 	c.resourcesClient.Authorizer = armAuthorizer
+	c.resourceSkusClient.Authorizer = armAuthorizer
 	c.storageAccountsClient.Authorizer = armAuthorizer
 	c.subscriptionsClient.Authorizer = armAuthorizer
 	c.virtualMachineExtensionsClient.Authorizer = armAuthorizer
@@ -401,6 +404,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.msiClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
 	c.resourcesClient.PollingDuration = DefaultARMOperationTimeout
+	c.resourceSkusClient.PollingDuration = DefaultARMOperationTimeout
 	c.servicePrincipalsClient.PollingDuration = DefaultARMOperationTimeout
 	c.storageAccountsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineExtensionsClient.PollingDuration = DefaultARMOperationTimeout
@@ -478,6 +482,7 @@ func parseRsaPrivateKey(path string) (*rsa.PrivateKey, error) {
 // AddAcceptLanguages sets the list of languages to accept on this request
 func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.acceptLanguages = languages
+
 	az.applicationsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.authorizationClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.availabilitySetsClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -489,6 +494,7 @@ func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.msiClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.providersClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.resourceSkusClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.servicePrincipalsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.subscriptionsClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -557,6 +563,7 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.msiClient.Client.RequestInspector = requestWithTokens
 	az.providersClient.Client.RequestInspector = requestWithTokens
 	az.resourcesClient.Client.RequestInspector = requestWithTokens
+	az.resourceSkusClient.Client.RequestInspector = requestWithTokens
 	az.servicePrincipalsClient.Client.RequestInspector = requestWithTokens
 	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
 	az.subscriptionsClient.Client.RequestInspector = requestWithTokens

@@ -21,6 +21,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// ResourceSkusResultPage
+type ResourceSkusResultPage interface {
+	Next() error
+	NextWithContext(ctx context.Context) (err error)
+	NotDone() bool
+	Response() compute.ResourceSkusResult
+	Values() []compute.ResourceSku
+}
+
 // VirtualMachineListResultPage is an interface for compute.VirtualMachineListResultPage to aid in mocking
 type VirtualMachineListResultPage interface {
 	Next() error
