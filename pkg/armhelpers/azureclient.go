@@ -361,43 +361,48 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	}
 
 	c.authorizationClient.Authorizer = armAuthorizer
-	c.deploymentsClient.Authorizer = armAuthorizer
+	c.availabilitySetsClient.Authorizer = armAuthorizer
 	c.deploymentOperationsClient.Authorizer = armAuthorizer
+	c.deploymentsClient.Authorizer = armAuthorizer
+	c.disksClient.Authorizer = armAuthorizer
+	c.groupsClient.Authorizer = armAuthorizer
+	c.interfacesClient.Authorizer = armAuthorizer
 	c.msiClient.Authorizer = armAuthorizer
+	c.providersClient.Authorizer = armAuthorizer
 	c.resourcesClient.Authorizer = armAuthorizer
 	c.storageAccountsClient.Authorizer = armAuthorizer
-	c.interfacesClient.Authorizer = armAuthorizer
-	c.groupsClient.Authorizer = armAuthorizer
-	c.providersClient.Authorizer = armAuthorizer
-	c.virtualMachinesClient.Authorizer = armAuthorizer
+	c.virtualMachineExtensionsClient.Authorizer = armAuthorizer
+	c.virtualMachineImagesClient.Authorizer = armAuthorizer
 	c.virtualMachineScaleSetsClient.Authorizer = armAuthorizer
 	c.virtualMachineScaleSetVMsClient.Authorizer = armAuthorizer
-	c.disksClient.Authorizer = armAuthorizer
-	c.availabilitySetsClient.Authorizer = armAuthorizer
+	c.virtualMachinesClient.Authorizer = armAuthorizer
 	c.workspacesClient.Authorizer = armAuthorizer
-	c.virtualMachineImagesClient.Authorizer = armAuthorizer
+
+	c.applicationsClient.Authorizer = graphAuthorizer
+	c.servicePrincipalsClient.Authorizer = graphAuthorizer
 
 	c.deploymentsClient.PollingDelay = time.Second * 5
 	c.resourcesClient.PollingDelay = time.Second * 5
 
 	// Set permissive timeouts to accommodate long-running operations
-	c.deploymentsClient.PollingDuration = DefaultARMOperationTimeout
-	c.deploymentOperationsClient.PollingDuration = DefaultARMOperationTimeout
 	c.applicationsClient.PollingDuration = DefaultARMOperationTimeout
 	c.authorizationClient.PollingDuration = DefaultARMOperationTimeout
+	c.availabilitySetsClient.PollingDuration = DefaultARMOperationTimeout
+	c.deploymentOperationsClient.PollingDuration = DefaultARMOperationTimeout
+	c.deploymentsClient.PollingDuration = DefaultARMOperationTimeout
 	c.disksClient.PollingDuration = DefaultARMOperationTimeout
 	c.groupsClient.PollingDuration = DefaultARMOperationTimeout
 	c.interfacesClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
 	c.resourcesClient.PollingDuration = DefaultARMOperationTimeout
+	c.servicePrincipalsClient.PollingDuration = DefaultARMOperationTimeout
 	c.storageAccountsClient.PollingDuration = DefaultARMOperationTimeout
+	c.virtualMachineExtensionsClient.PollingDuration = DefaultARMOperationTimeout
+	c.virtualMachineImagesClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineScaleSetsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineScaleSetVMsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachinesClient.PollingDuration = DefaultARMOperationTimeout
-	c.availabilitySetsClient.PollingDuration = DefaultARMOperationTimeout
-
-	c.applicationsClient.Authorizer = graphAuthorizer
-	c.servicePrincipalsClient.Authorizer = graphAuthorizer
+	c.workspacesClient.PollingDuration = DefaultARMOperationTimeout
 
 	return c
 }
@@ -464,24 +469,27 @@ func parseRsaPrivateKey(path string) (*rsa.PrivateKey, error) {
 	return nil, errors.Errorf("failed to parse private key as Pkcs#1 or Pkcs#8. (%s). (%s)", errPkcs1, errPkcs8)
 }
 
-//AddAcceptLanguages sets the list of languages to accept on this request
+// AddAcceptLanguages sets the list of languages to accept on this request
 func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.acceptLanguages = languages
+	az.applicationsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.authorizationClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.availabilitySetsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.deploymentOperationsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.deploymentsClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.deploymentOperationsClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.interfacesClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.groupsClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.providersClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.virtualMachinesClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.virtualMachineScaleSetsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.disksClient.Client.RequestInspector = az.addAcceptLanguages()
-
-	az.applicationsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.groupsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.interfacesClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.providersClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.servicePrincipalsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.virtualMachineExtensionsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.virtualMachineImagesClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.virtualMachineScaleSetsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.virtualMachineScaleSetVMsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.virtualMachinesClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.workspacesClient.Client.RequestInspector = az.addAcceptLanguages()
 }
 
 func (az *AzureClient) addAcceptLanguages() autorest.PrepareDecorator {
@@ -530,19 +538,21 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.auxiliaryTokens = tokens
 	requestWithTokens := az.setAuxiliaryTokens()
 
+	az.applicationsClient.Client.RequestInspector = requestWithTokens
 	az.authorizationClient.Client.RequestInspector = requestWithTokens
+	az.availabilitySetsClient.Client.RequestInspector = requestWithTokens
 	az.deploymentOperationsClient.Client.RequestInspector = requestWithTokens
 	az.deploymentsClient.Client.RequestInspector = requestWithTokens
-	az.deploymentOperationsClient.Client.RequestInspector = requestWithTokens
-	az.resourcesClient.Client.RequestInspector = requestWithTokens
-	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
-	az.interfacesClient.Client.RequestInspector = requestWithTokens
-	az.groupsClient.Client.RequestInspector = requestWithTokens
-	az.providersClient.Client.RequestInspector = requestWithTokens
-	az.virtualMachinesClient.Client.RequestInspector = requestWithTokens
-	az.virtualMachineScaleSetsClient.Client.RequestInspector = requestWithTokens
 	az.disksClient.Client.RequestInspector = requestWithTokens
-
-	az.applicationsClient.Client.RequestInspector = requestWithTokens
+	az.groupsClient.Client.RequestInspector = requestWithTokens
+	az.interfacesClient.Client.RequestInspector = requestWithTokens
+	az.providersClient.Client.RequestInspector = requestWithTokens
+	az.resourcesClient.Client.RequestInspector = requestWithTokens
 	az.servicePrincipalsClient.Client.RequestInspector = requestWithTokens
+	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
+	az.virtualMachineExtensionsClient.Client.RequestInspector = requestWithTokens
+	az.virtualMachineScaleSetsClient.Client.RequestInspector = requestWithTokens
+	az.virtualMachineScaleSetVMsClient.Client.RequestInspector = requestWithTokens
+	az.virtualMachinesClient.Client.RequestInspector = requestWithTokens
+	az.workspacesClient.Client.RequestInspector = requestWithTokens
 }
