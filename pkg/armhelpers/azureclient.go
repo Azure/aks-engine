@@ -393,6 +393,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.disksClient.PollingDuration = DefaultARMOperationTimeout
 	c.groupsClient.PollingDuration = DefaultARMOperationTimeout
 	c.interfacesClient.PollingDuration = DefaultARMOperationTimeout
+	c.msiClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
 	c.resourcesClient.PollingDuration = DefaultARMOperationTimeout
 	c.servicePrincipalsClient.PollingDuration = DefaultARMOperationTimeout
@@ -480,6 +481,7 @@ func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.disksClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.groupsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.interfacesClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.msiClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.providersClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.servicePrincipalsClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -546,6 +548,7 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.disksClient.Client.RequestInspector = requestWithTokens
 	az.groupsClient.Client.RequestInspector = requestWithTokens
 	az.interfacesClient.Client.RequestInspector = requestWithTokens
+	az.msiClient.Client.RequestInspector = requestWithTokens
 	az.providersClient.Client.RequestInspector = requestWithTokens
 	az.resourcesClient.Client.RequestInspector = requestWithTokens
 	az.servicePrincipalsClient.Client.RequestInspector = requestWithTokens
