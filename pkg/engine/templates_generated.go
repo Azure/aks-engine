@@ -34597,8 +34597,8 @@ configureEtcd() {
     fi
 
     if [[ -z "${ETCDCTL_ENDPOINTS}" ]]; then
-        # Variables necessary for etcdctl are not present
-        # Must pull them from /etc/environment
+        {{/* Variables necessary for etcdctl are not present */}}
+        {{/* Must pull them from /etc/environment */}}
         for entry in $(cat /etc/environment); do
             export ${entry}
         done
@@ -35537,7 +35537,7 @@ removeMoby() {
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
-        echo "etcd version ${ETCD_VERSION} is already installed, skipping download"
+        echo "etcd version ${ETCD_VERSION} is already installed"
     else
         CLI_TOOL=$1
         if [[ $OS == $COREOS_OS_NAME ]]; then
@@ -35553,7 +35553,6 @@ installEtcd() {
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
         else
-            # img unpack requires a non-existent dirctory
             tmpdir=/root/etcd${RANDOM}
             img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
             mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
@@ -35621,7 +35620,6 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    echo "Installing SGX driver"
     local VERSION
     VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
     case $VERSION in
@@ -35632,7 +35630,7 @@ installSGXDrivers() {
         SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.2/linux/dcap_installers/ubuntuServer16.04/sgx_linux_x64_driver_1.12_c110012.bin"
         ;;
     "*")
-        echo "Version $VERSION is not supported"
+        echo "$VERSION is not supported"
         exit 1
         ;;
     esac
@@ -35660,7 +35658,7 @@ installContainerRuntime() {
 installMoby() {
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
     if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed, skipping Moby download"
+        echo "dockerd $MOBY_VERSION is already installed"
     else
         removeMoby
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
@@ -35677,7 +35675,6 @@ installMoby() {
 }
 
 installKataContainersRuntime() {
-    echo "Adding Kata Containers repository key..."
     ARCH=$(arch)
     BRANCH=stable-1.7
     KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
@@ -35685,9 +35682,7 @@ installKataContainersRuntime() {
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
     wait_for_apt_locks
     retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
-    echo "Adding Kata Containers repository..."
     echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
-    echo "Installing Kata Containers runtime..."
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
 }
@@ -35701,7 +35696,6 @@ installNetworkPlugin() {
 }
 
 installBcc() {
-    echo "Installing BCC tools..."
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $IOVISOR_URL > $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT
@@ -35806,7 +35800,7 @@ installAzureCNI() {
 installContainerd() {
     CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
     if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
-        echo "containerd is already installed, skipping install"
+        echo "containerd is already installed"
     else
         CONTAINERD_TGZ_TMP="cri-containerd-${CONTAINERD_VERSION}.linux-amd64.tar.gz"
         rm -Rf /usr/bin/containerd
@@ -35817,7 +35811,6 @@ installContainerd() {
         fi
         tar -xzf "$CONTAINERD_DOWNLOADS_DIR/$CONTAINERD_TGZ_TMP" -C /
         sed -i '/\[Service\]/a ExecStartPost=\/sbin\/iptables -P FORWARD ACCEPT -w' /etc/systemd/system/containerd.service
-        echo "Successfully installed cri-containerd..."
     fi
     rm -Rf $CONTAINERD_DOWNLOADS_DIR &
 }
@@ -35895,7 +35888,7 @@ cleanUpContainerImages() {
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
     docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${ETCD_VERSION}$" | grep 'etcd') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
-        echo "Cleaning up AKS container images, not an AKS cluster"
+        echo "Cleaning up AKS container images"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &

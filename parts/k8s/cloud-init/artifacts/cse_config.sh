@@ -103,8 +103,8 @@ configureEtcd() {
     fi
 
     if [[ -z "${ETCDCTL_ENDPOINTS}" ]]; then
-        # Variables necessary for etcdctl are not present
-        # Must pull them from /etc/environment
+        {{/* Variables necessary for etcdctl are not present */}}
+        {{/* Must pull them from /etc/environment */}}
         for entry in $(cat /etc/environment); do
             export ${entry}
         done

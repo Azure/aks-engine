@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -39,13 +40,14 @@ type Config struct {
 	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
 	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
 	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" deault:""`
+	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
 	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
 	LinuxNodeImageGallery          string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
 	LinuxNodeImageName             string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
 	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
 	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" deault:""`
+	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
+	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
 	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
@@ -184,6 +186,15 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.AgentPoolProfiles[0].ImageRef.Gallery = config.LinuxNodeImageGallery
 				prop.AgentPoolProfiles[0].ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
 				prop.AgentPoolProfiles[0].ImageRef.Version = config.LinuxNodeImageVersion
+			}
+		}
+	}
+
+	if config.OSDiskSizeGB != "" {
+		if osDiskSizeGB, err := strconv.Atoi(config.OSDiskSizeGB); err == nil {
+			prop.MasterProfile.OSDiskSizeGB = osDiskSizeGB
+			for _, pool := range prop.AgentPoolProfiles {
+				pool.OSDiskSizeGB = osDiskSizeGB
 			}
 		}
 	}
