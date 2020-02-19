@@ -102,19 +102,27 @@ configureEtcd() {
         exit $RET
     fi
 
+    if [[ -z "${ETCDCTL_ENDPOINTS}" ]]; then
+        # Variables necessary for etcdctl are not present
+        # Must pull them from /etc/environment
+        for entry in $(cat /etc/environment); do
+            export ${entry}
+        done
+    fi
+
     MOUNT_ETCD_FILE=/opt/azure/containers/mountetcd.sh
     wait_for_file 1200 1 $MOUNT_ETCD_FILE || exit $ERR_ETCD_CONFIG_FAIL
     $MOUNT_ETCD_FILE || exit $ERR_ETCD_VOL_MOUNT_FAIL
     systemctlEnableAndStart etcd || exit $ERR_ETCD_START_TIMEOUT
     for i in $(seq 1 600); do
-        MEMBER="$(sudo etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
+        MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
         if [ "$MEMBER" != "" ]; then
             break
         else
             sleep 1
         fi
     done
-    retrycmd_if_failure 120 5 25 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
+    retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
 ensureRPC() {

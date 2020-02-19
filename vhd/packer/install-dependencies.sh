@@ -25,6 +25,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - cifs-utils
   - conntrack
   - cracklib-runtime
+  - dbus
   - ebtables
   - ethtool
   - fuse

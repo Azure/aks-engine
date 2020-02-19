@@ -16,6 +16,7 @@ for i in $(seq 1 3600); do
 done
 sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
 source {{GetCSEHelpersScriptFilepath}}
+configure_prerequisites
 
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
@@ -75,9 +76,14 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
+if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
-    time_metric "InstallBcc" installBcc
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        time_metric "InstallBcc" installBcc
+    fi
+    {{- if not IsDockerContainerRuntime}}
+    time_metric "InstallImg" installImg
+    {{end}}
 else
     echo "Golden image; skipping dependencies installation"
 fi
@@ -94,6 +100,10 @@ fi
 time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
+{{- if NeedsContainerd}}
+time_metric "InstallContainerd" installContainerd
+{{end}}
+
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     {{- if IsDockerContainerRuntime}}
     CLI_TOOL="docker"
@@ -105,11 +115,6 @@ fi
 
 # this will capture the amount of time to install of the network plugin during cse
 time_metric "InstallNetworkPlugin" installNetworkPlugin
-
-
-{{- if NeedsContainerd}}
-time_metric "InstallContainerd" installContainerd
-{{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then

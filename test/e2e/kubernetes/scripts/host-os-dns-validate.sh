@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-ifconfig -a -v || exit 1
+sudo ifconfig -a -v || exit 1
 cat /etc/resolv.conf || exit 1
 set +x
 # validate that all node vms can resolve DNS to all other node vms, including themselves

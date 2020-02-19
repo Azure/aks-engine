@@ -72,6 +72,10 @@ OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a)
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
+DEBIAN_OS_NAME="DEBIAN"
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+    OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+fi
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 GPU_DV=418.40.04
@@ -79,6 +83,18 @@ GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+
+configure_prerequisites() {
+    ip_forward_path=/proc/sys/net/ipv4/ip_forward
+    ip_forward_setting="net.ipv4.ip_forward=0"
+    sysctl_conf=/etc/sysctl.conf
+    if ! egrep -q "^1$" ${ip_forward_path}; then
+        echo 1 > ${ip_forward_path}
+    fi
+    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+        sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
+    fi
+}
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks

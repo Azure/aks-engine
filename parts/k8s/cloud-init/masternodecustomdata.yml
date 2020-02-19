@@ -426,6 +426,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -x
+    if [[ ! -s /etc/environment ]]; then
+        {{- /* /etc/environment is empty, which will break subsequent sed commands
+               Append a blank line... */}}
+        echo "" >> /etc/environment
+    fi
   {{if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")

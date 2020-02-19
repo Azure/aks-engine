@@ -34596,19 +34596,27 @@ configureEtcd() {
         exit $RET
     fi
 
+    if [[ -z "${ETCDCTL_ENDPOINTS}" ]]; then
+        # Variables necessary for etcdctl are not present
+        # Must pull them from /etc/environment
+        for entry in $(cat /etc/environment); do
+            export ${entry}
+        done
+    fi
+
     MOUNT_ETCD_FILE=/opt/azure/containers/mountetcd.sh
     wait_for_file 1200 1 $MOUNT_ETCD_FILE || exit $ERR_ETCD_CONFIG_FAIL
     $MOUNT_ETCD_FILE || exit $ERR_ETCD_VOL_MOUNT_FAIL
     systemctlEnableAndStart etcd || exit $ERR_ETCD_START_TIMEOUT
     for i in $(seq 1 600); do
-        MEMBER="$(sudo etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
+        MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
         if [ "$MEMBER" != "" ]; then
             break
         else
             sleep 1
         fi
     done
-    retrycmd_if_failure 120 5 25 sudo etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
+    retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
 ensureRPC() {
@@ -35265,6 +35273,10 @@ OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a)
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
+DEBIAN_OS_NAME="DEBIAN"
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+    OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+fi
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 GPU_DV=418.40.04
@@ -35272,6 +35284,18 @@ GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+
+configure_prerequisites() {
+    ip_forward_path=/proc/sys/net/ipv4/ip_forward
+    ip_forward_setting="net.ipv4.ip_forward=0"
+    sysctl_conf=/etc/sysctl.conf
+    if ! egrep -q "^1$" ${ip_forward_path}; then
+        echo 1 > ${ip_forward_path}
+    fi
+    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+        sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
+    fi
+}
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
@@ -35529,19 +35553,38 @@ installEtcd() {
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
         else
-            img unpack -o "$path" ${CONTAINER_IMAGE}
+            # img unpack requires a non-existent dirctory
+            tmpdir=/root/etcd${RANDOM}
+            img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
+            rm -rf ${tmpdir}
         fi
         chmod a+x "$path/etcd" "$path/etcdctl"
     fi
 }
 
 installDeps() {
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
-    retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
-    aptmarkWALinuxAgent hold
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      CEPH_COMMON="ceph-common"
+      GLUSTERFS_CLIENT="glusterfs-client"
+    else
+      CEPH_COMMON=""
+      GLUSTERFS_CLIENT=""
+    fi
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
+        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
+        retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
+        aptmarkWALinuxAgent hold
+        packages+=" cgroup-lite"
+    elif [[ $OS == $DEBIAN_OS_NAME ]]; then
+        packages+=" gpg cgroup-bin"
+    fi
+
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
+
+    for apt_package in ${packages}; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
@@ -35831,7 +35874,6 @@ installKubeletAndKubectl() {
             if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
                 extractHyperkube "docker"
             else
-                installImg
                 extractHyperkube "img"
             fi
         fi
@@ -35916,6 +35958,7 @@ for i in $(seq 1 3600); do
 done
 sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
 source {{GetCSEHelpersScriptFilepath}}
+configure_prerequisites
 
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
@@ -35975,9 +36018,14 @@ else
     FULL_INSTALL_REQUIRED=true
 fi
 
-if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
+if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
-    time_metric "InstallBcc" installBcc
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+        time_metric "InstallBcc" installBcc
+    fi
+    {{- if not IsDockerContainerRuntime}}
+    time_metric "InstallImg" installImg
+    {{end}}
 else
     echo "Golden image; skipping dependencies installation"
 fi
@@ -35994,6 +36042,10 @@ fi
 time_metric "InstallContainerRuntime" installContainerRuntime
 {{end}}
 
+{{- if NeedsContainerd}}
+time_metric "InstallContainerd" installContainerd
+{{end}}
+
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     {{- if IsDockerContainerRuntime}}
     CLI_TOOL="docker"
@@ -36005,11 +36057,6 @@ fi
 
 # this will capture the amount of time to install of the network plugin during cse
 time_metric "InstallNetworkPlugin" installNetworkPlugin
-
-
-{{- if NeedsContainerd}}
-time_metric "InstallContainerd" installContainerd
-{{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
@@ -37924,6 +37971,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -x
+    if [[ ! -s /etc/environment ]]; then
+        {{- /* /etc/environment is empty, which will break subsequent sed commands
+               Append a blank line... */}}
+        echo "" >> /etc/environment
+    fi
   {{if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")

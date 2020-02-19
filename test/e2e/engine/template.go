@@ -41,6 +41,11 @@ type Config struct {
 	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
 	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" deault:""`
 	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	LinuxNodeImageGallery          string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
+	LinuxNodeImageName             string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
+	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" deault:""`
 	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
@@ -160,6 +165,27 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.WindowsProfile.ImageRef.Version = config.WindowsNodeImageVersion
 		}
 		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
+	}
+
+	if config.LinuxNodeImageName != "" && config.LinuxNodeImageResourceGroup != "" {
+		prop.MasterProfile.ImageRef = &vlabs.ImageReference{
+			Name:          config.LinuxNodeImageName,
+			ResourceGroup: config.LinuxNodeImageResourceGroup,
+		}
+		prop.MasterProfile.ImageRef.Gallery = config.LinuxNodeImageGallery
+		prop.MasterProfile.ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
+		prop.MasterProfile.ImageRef.Version = config.LinuxNodeImageVersion
+		if len(prop.AgentPoolProfiles) == 1 {
+			prop.AgentPoolProfiles[0].ImageRef = &vlabs.ImageReference{
+				Name:          config.LinuxNodeImageName,
+				ResourceGroup: config.LinuxNodeImageResourceGroup,
+			}
+			if config.LinuxNodeImageGallery != "" && config.LinuxNodeImageSubscriptionID != "" && config.LinuxNodeImageVersion != "" {
+				prop.AgentPoolProfiles[0].ImageRef.Gallery = config.LinuxNodeImageGallery
+				prop.AgentPoolProfiles[0].ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
+				prop.AgentPoolProfiles[0].ImageRef.Version = config.LinuxNodeImageVersion
+			}
+		}
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion

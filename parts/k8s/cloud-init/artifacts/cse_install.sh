@@ -43,19 +43,38 @@ installEtcd() {
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcd > "$path/etcd"
             docker run --rm --entrypoint cat ${CONTAINER_IMAGE} /usr/local/bin/etcdctl > "$path/etcdctl"
         else
-            img unpack -o "$path" ${CONTAINER_IMAGE}
+            # img unpack requires a non-existent dirctory
+            tmpdir=/root/etcd${RANDOM}
+            img unpack -o ${tmpdir} ${CONTAINER_IMAGE}
+            mv ${tmpdir}/usr/local/bin/etcd ${tmpdir}/usr/local/bin/etcdctl ${path}
+            rm -rf ${tmpdir}
         fi
         chmod a+x "$path/etcd" "$path/etcdctl"
     fi
 }
 
 installDeps() {
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
-    retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
-    aptmarkWALinuxAgent hold
+    if [[ $OS == $UBUNTU_OS_NAME ]]; then
+      CEPH_COMMON="ceph-common"
+      GLUSTERFS_CLIENT="glusterfs-client"
+    else
+      CEPH_COMMON=""
+      GLUSTERFS_CLIENT=""
+    fi
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
+        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
+        retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
+        aptmarkWALinuxAgent hold
+        packages+=" cgroup-lite"
+    elif [[ $OS == $DEBIAN_OS_NAME ]]; then
+        packages+=" gpg cgroup-bin"
+    fi
+
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
-    for apt_package in apache2-utils apt-transport-https blobfuse ca-certificates ceph-common cgroup-lite cifs-utils conntrack cracklib-runtime ebtables ethtool fuse git glusterfs-client htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip; do
+
+    for apt_package in ${packages}; do
       if ! apt_get_install 30 1 600 $apt_package; then
         journalctl --no-pager -u $apt_package
         exit $ERR_APT_INSTALL_TIMEOUT
@@ -345,7 +364,6 @@ installKubeletAndKubectl() {
             if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
                 extractHyperkube "docker"
             else
-                installImg
                 extractHyperkube "img"
             fi
         fi
