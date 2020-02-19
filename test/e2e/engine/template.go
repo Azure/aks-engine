@@ -46,6 +46,7 @@ type Config struct {
 	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
 	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
 	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" deault:""`
+	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" deault:""`
 	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
@@ -184,6 +185,15 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.AgentPoolProfiles[0].ImageRef.Gallery = config.LinuxNodeImageGallery
 				prop.AgentPoolProfiles[0].ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
 				prop.AgentPoolProfiles[0].ImageRef.Version = config.LinuxNodeImageVersion
+			}
+		}
+	}
+
+	if config.OSDiskSizeGB != "" {
+		if osDiskSizeGB, err = strconv.Atoi(config.OSDiskSizeGB); err != nil {
+			prop.MasterProfile.OSDiskSizeGB = osDiskSizeGB
+			for _, pool := range prop.AgentPoolProfiles {
+				pool.OSDiskSizeGB = osDiskSizeGB
 			}
 		}
 	}
