@@ -42,7 +42,6 @@ function Get-ContainerImages
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/k8s/core/pause:1.2.0",
         "mcr.microsoft.com/oss/kubernetes/pause:1.3.0")
 
     foreach ($image in $imagesToPull) {
