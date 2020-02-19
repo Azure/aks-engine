@@ -4590,14 +4590,17 @@ func TestGetKubernetesVersion(t *testing.T) {
 func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 	mock1dot13dot11 := getMockAPIProperties("1.13.11")
 	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot13dot11.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
 	mock1dot16dot3 := getMockAPIProperties("1.16.0")
 	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
+	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
 	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStack", true, true, true)
 	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
 		OrchestratorVersion: "1.15.4",
 		KubernetesConfig: &KubernetesConfig{
-			KubernetesImageBase: "mcr.io/",
+			KubernetesImageBase:     "mcr.io/",
+			KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 		},
 	}
 	mockcustomproperties := getMockAPIProperties("1.16.0")
@@ -4622,7 +4625,7 @@ func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 		{
 			name:                  "1.15.4 Azure Stack",
 			properties:            &mock1dot15dot4azs,
-			expectedHyperkubeSpec: "mcr.io/hyperkube-amd64:v1.15.4-azs",
+			expectedHyperkubeSpec: "mcr.io/oss/kubernetes/hyperkube:v1.15.4-azs",
 		},
 		{
 			name:                  "Custom image",

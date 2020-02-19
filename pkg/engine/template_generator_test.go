@@ -11,6 +11,7 @@ import (
 	"text/template"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/telemetry"
 
 	"github.com/Azure/go-autorest/autorest/azure"
@@ -180,7 +181,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -210,7 +212,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -240,7 +243,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.17.0-beta.1",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -270,7 +274,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -307,7 +312,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -346,6 +352,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 							CustomKubeAPIServerImage:         "example.azurecr.io/kube-apiserver-amd64:tag",
 							CustomKubeControllerManagerImage: "example.azurecr.io/kube-controller-manager-amd64:tag",
 							CustomKubeSchedulerImage:         "example.azurecr.io/kube-scheduler-amd64:tag",
+							KubernetesImageBaseType:          common.KubernetesImageBaseTypeGCR,
 						},
 					},
 				},
@@ -369,7 +376,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -400,7 +408,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -431,7 +440,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -466,7 +476,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -496,7 +507,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.Docker,
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -527,7 +539,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						OrchestratorType:    api.Kubernetes,
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime: api.KataContainers,
+							ContainerRuntime:        api.KataContainers,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -559,6 +572,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 						KubernetesConfig: &api.KubernetesConfig{
 							ContainerRuntime:           api.Docker,
 							PrivateAzureRegistryServer: "my-server",
+							KubernetesImageBaseType:    common.KubernetesImageBaseTypeGCR,
 						},
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{
