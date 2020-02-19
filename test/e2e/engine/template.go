@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -190,7 +191,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	}
 
 	if config.OSDiskSizeGB != "" {
-		if osDiskSizeGB, err = strconv.Atoi(config.OSDiskSizeGB); err != nil {
+		if osDiskSizeGB, err := strconv.Atoi(config.OSDiskSizeGB); err != nil {
 			prop.MasterProfile.OSDiskSizeGB = osDiskSizeGB
 			for _, pool := range prop.AgentPoolProfiles {
 				pool.OSDiskSizeGB = osDiskSizeGB
