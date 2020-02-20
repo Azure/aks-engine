@@ -2,7 +2,7 @@
 
 ## Motivation
 
-People new to Kubernetes (or Linux) may find challenging the retrieval of relevant logs to troubleshoot a AKS Engine operation failures.
+People new to Kubernetes (or Linux) may find challenging the retrieval of relevant logs to troubleshoot an AKS Engine operation failure.
 
 Hence, it would be convenient to that audience to embedded the log collection inside AKS Engine itself.
 
@@ -19,15 +19,16 @@ aks-engine get-logs
     --client-id ${AZURE_CLIENT_ID}
     --client-secret ${AZURE_CLIENT_SECRET}
     --subscription-id ${AZURE_CLIENT_SUBSCRIPTION}
-    --private-key ~/.ssh/id_rsa
+    --ssh-private-key ~/.ssh/id_rsa
     --apiserver prefix.location.cloudapp.azure.com
 ```
 
-After a successful execution, the output directory could contain this non-exhaustive list of files:
+After a successful execution, the output directory could contain this (non-exhaustive) list of files:
 
 - Output of kubectl cluster-info dump
 - State of the Azure resources in the resource group    
 - For each host
+  - Files in directory /var/log
   - Files in directory /var/log/azure
   - Files in directory /etc/kubernetes/manifests
   - Files in directory /etc/kubernetes/addons
@@ -37,11 +38,11 @@ After a successful execution, the output directory could contain this non-exhaus
   - container runtime journal
   - etcd journal
   - test DNS resolution
-  - test metadata endpoint response
+  - test metadata endpoint response  
 
 ## Implementation
 
-Just like `rotate-cert`, this new command would SSH into each cluster hosts (linux and/or windows) and execute a “collect-logs” script. Additionally, we will have to write a small function that downloads a tar/zip that contains the files produced by the log collection script (SCP).
+Just like `rotate-cert`, this new command would SSH into each cluster hosts (Linux and/or Windows) and execute a “collect-logs” script. Additionally, we will have to write a small function that downloads a tar/zip that contains the files produced by the log collection script (SCP).
 
 Because this would be expected to work on an air-gapped environment, we should either:
 
