@@ -48,6 +48,7 @@ type Config struct {
 	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
 	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
 	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
+	ContainerRuntime               string `envconfig:"CONTAINER_RUNTIME" default:""`
 	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
@@ -210,6 +211,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				pool.OSDiskSizeGB = osDiskSizeGB
 			}
 		}
+	}
+
+	if config.ContainerRuntime != "" {
+		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
