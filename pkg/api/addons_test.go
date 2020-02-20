@@ -299,7 +299,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"max-history": strconv.Itoa(0),
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "ACI Connector addon enabled",
@@ -348,7 +348,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled",
@@ -442,7 +442,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled - update",
@@ -540,7 +540,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled on cluster with multiple pools",
@@ -656,7 +656,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled on cluster with multiple pools - update",
@@ -776,7 +776,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with configuration",
@@ -951,7 +951,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with configuration - update",
@@ -1126,7 +1126,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with mixed configuration plus defaults",
@@ -1251,7 +1251,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cluster-autoscaler addon enabled with mixed configuration plus defaults - update",
@@ -1376,7 +1376,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "smb-flexvolume addon enabled",
@@ -1419,7 +1419,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "rescheduler addon enabled",
@@ -1462,7 +1462,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "nvidia addon enabled",
@@ -1504,7 +1504,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "container-monitoring addon enabled",
@@ -1554,7 +1554,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "Azure Network Policy addon enabled",
@@ -1592,7 +1592,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "Azure Network Policy addon enabled - 1.16 upgrade",
@@ -1646,7 +1646,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.16.0", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.16.0", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "dns-autoscaler addon enabled",
@@ -1687,7 +1687,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "calico addon enabled",
@@ -1737,7 +1737,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "calico addon back-compat",
@@ -1815,7 +1815,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "aad-pod-identity enabled",
@@ -1866,7 +1866,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "azure-policy addon enabled",
@@ -1921,7 +1921,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "cilium networkPolicy",
@@ -1967,7 +1967,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "Azure Stack addons",
@@ -2258,7 +2258,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16 and useCloudControllerManager is true",
@@ -2410,7 +2410,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(true),
 				},
-			}, "1.16.1", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.16.1", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.17.0 and useCloudControllerManager is true",
@@ -2562,7 +2562,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(true),
 				},
-			}, "1.17.0", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.17.0", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s >= 1.17.0 - upgrade",
@@ -2728,7 +2728,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(true),
 				},
-			}, "1.17.0", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.17.0", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16.1 upgrade",
@@ -2894,7 +2894,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CloudNodeManagerAddonName,
 					Enabled: to.BoolPtr(true),
 				},
-			}, "1.16.1", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.16.1", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "upgrade w/ no kube-dns or coredns specified", // back-compat support for clusters configured prior to user-configurable coredns and kube-dns addons
@@ -2968,7 +2968,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.13.11", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.13.11", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "upgrade w/ manual coredns enabled",
@@ -3047,7 +3047,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "coredns enabled",
@@ -3207,7 +3207,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "pod-security-policy upgrade to 1.15",
@@ -3346,7 +3346,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"adminGroupID": "7d04bcd3-3c48-49ab-a064-c0b7d69896da",
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "antrea addon enabled",
@@ -3376,7 +3376,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"serviceCidr": DefaultKubernetesServiceCIDR,
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4", common.KubernetesImageBaseTypeGCR),
 		},
 	}
 
@@ -3826,8 +3826,8 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 	}
 }
 
-func concatenateDefaultAddons(addons []KubernetesAddon, version, kubernetesImageBase, kubernetesImageBaseType string) []KubernetesAddon {
-	defaults := getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType)
+func concatenateDefaultAddons(addons []KubernetesAddon, version, kubernetesImageBaseType string) []KubernetesAddon {
+	defaults := getDefaultAddons(version, "", kubernetesImageBaseType)
 	defaults = append(defaults, addons...)
 	return defaults
 }
