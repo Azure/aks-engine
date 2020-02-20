@@ -42898,25 +42898,19 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/k8s/core/pause:1.2.0"
+    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
 
-    switch ($computerInfo.WindowsVersion) {
-        "1803" {
-            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
-            if (-not $imageList) {
-                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
-            }
-            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
+    $pauseImageVersions = @("1803", "1809", "1903", "1909")
+
+    if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
+        $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
+        if (-not $imageList) {
+            Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
         }
-        "1809" {
-            $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
-            if (-not $imageList) {
-                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
-            }
-            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
-        }
-        "1903" { Build-PauseContainer -WindowsBase "mcr.microsoft.com/windows/nanoserver:1903" -DestinationTag $DestinationTag}
-        default { Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag}
+        Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
+    }
+    else {
+        Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag
     }
 }
 
