@@ -762,6 +762,11 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
+		if windowsProfile.SSHEnabled == nil {
+			sshEnabled := DefaultWindowsSshEnabled
+			windowsProfile.SSHEnabled = &sshEnabled
+		}
+
 		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
 		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
 		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {

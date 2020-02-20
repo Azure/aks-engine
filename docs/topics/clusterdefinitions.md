@@ -869,7 +869,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | imageReference.subscriptionId | no       | ID of subscription containing a Shared Image Gallery.                                                                                                                                                                                           |
 | imageReference.gallery        | no       | Name of a Shared Image Gallery.                                                                                                                                                                                                                 |
 | imageReference.version        | no       | Version of an Image from a Shared Image Gallery.                                                                                                                                                                                                |
-| sshEnabled                    | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
+| sshEnabled                    | yes      | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later** . The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile) |
 
 #### Windows Images
 
