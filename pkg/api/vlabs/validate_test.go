@@ -71,7 +71,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
 		},
 		"should error when KubernetesConfig has invalid containerd version for kata-containers runtime": {
 			properties: &Properties{
@@ -83,7 +83,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.1.5 1.1.6 1.2.4]",
+			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
 		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
