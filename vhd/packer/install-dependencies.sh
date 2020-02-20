@@ -97,17 +97,6 @@ for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     echo "  - CNI plugin version ${CNI_PLUGIN_VERSION}" >> ${VHD_LOGS_FILEPATH}
 done
 
-CONTAINERD_VERSIONS="
-1.2.4
-1.1.6
-1.1.5
-"
-CONTAINERD_DOWNLOAD_URL_BASE="https://storage.googleapis.com/cri-containerd-release/"
-for CONTAINERD_VERSION in ${CONTAINERD_VERSIONS}; do
-    downloadContainerd
-    echo "  - containerd version ${CONTAINERD_VERSION}" >> ${VHD_LOGS_FILEPATH}
-done
-
 installImg
 echo "  - img" >> ${VHD_LOGS_FILEPATH}
 

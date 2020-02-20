@@ -246,14 +246,12 @@
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.1.5",
+      "defaultValue": "1.3.2",
       "metadata": {
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "1.1.5",
-         "1.1.6",
-         "1.2.4"
+         "1.3.2"
        ],
       "type": "string"
     },
