@@ -909,6 +909,17 @@ func TestNetworkPluginDefaults(t *testing.T) {
 	}
 }
 
+func TestKubernetesImageBaseAppendSlash(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com"
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "mcr.microsoft.com/" {
+		t.Fatalf("defaults flow did not add a trailing '/' to KubernetesImageBase")
+	}
+}
+
 func TestContainerRuntime(t *testing.T) {
 
 	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10"} {

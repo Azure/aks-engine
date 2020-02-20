@@ -7,6 +7,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 // CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
@@ -88,6 +90,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		LoadBalancerSku:         DefaultLoadBalancerSku,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
+		KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 	}
 
 	cs.Properties.CertificateProfile = &CertificateProfile{}

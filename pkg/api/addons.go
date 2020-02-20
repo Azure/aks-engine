@@ -22,8 +22,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		clusterDNSPrefix = cs.Properties.MasterProfile.DNSPrefix
 	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
+	kubernetesImageBase := specConfig.KubernetesImageBase
+	if o.KubernetesConfig.KubernetesImageBase != "" {
+		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
+	}
+	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
 	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
@@ -45,7 +49,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.HeapsterAddonName,
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.HeapsterAddonName],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -53,7 +57,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           "heapster-nanny",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.AddonResizerComponentName],
+				Image:          kubernetesImageBase + k8sComponents[common.AddonResizerComponentName],
 				CPURequests:    "88m",
 				MemoryRequests: "204Mi",
 				CPULimits:      "88m",
@@ -148,7 +152,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "300Mi",
 				CPULimits:      "100m",
 				MemoryLimits:   "300Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
 			},
 		},
 		Pools: makeDefaultClusterAutoscalerAddonPoolsConfig(cs),
@@ -209,7 +213,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.DashboardAddonName],
 			},
 		},
 	}
@@ -224,7 +228,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "100Mi",
 				CPULimits:      "10m",
 				MemoryLimits:   "100Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
 			},
 		},
 	}
@@ -235,7 +239,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+				Image: kubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 			},
 		},
 	}
@@ -290,7 +294,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "50Mi",
 				CPULimits:      "50m",
 				MemoryLimits:   "250Mi",
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 			},
 		},
 		Config: map[string]string{
@@ -345,7 +349,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.DNSAutoscalerAddonName,
-				Image:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
+				Image:          kubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
 				CPURequests:    "20m",
 				MemoryRequests: "100Mi",
 			},
@@ -374,7 +378,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:  common.CalicoClusterAutoscalerComponentName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.CalicoClusterAutoscalerComponentName],
+				Image: kubernetesImageBase + k8sComponents[common.CalicoClusterAutoscalerComponentName],
 			},
 		},
 	}
@@ -645,15 +649,15 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  "kubedns",
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+				Image: kubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
 			},
 			{
 				Name:  common.DNSMasqComponentName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.DNSMasqComponentName],
+				Image: kubernetesImageBase + k8sComponents[common.DNSMasqComponentName],
 			},
 			{
 				Name:  "sidecar",
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.DNSSidecarComponentName],
+				Image: kubernetesImageBase + k8sComponents[common.DNSSidecarComponentName],
 			},
 		},
 	}
@@ -668,7 +672,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CoreDNSAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+				Image: kubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 			},
 		},
 	}
@@ -692,7 +696,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.KubeProxyAddonName,
-				Image: specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 			},
 		},
 	}

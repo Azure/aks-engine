@@ -4531,17 +4531,23 @@ func TestValidateKubernetesImageBaseType(t *testing.T) {
 			},
 			expectedError: nil,
 		},
-		"should not error for valid kubernetesImageBaseType value": {
+		"should not error for valid kubernetesImageBaseType value 'gcr'": {
 			k: &KubernetesConfig{
 				KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 			},
 			expectedError: nil,
 		},
+		"should not error for valid kubernetesImageBaseType value 'mcr'": {
+			k: &KubernetesConfig{
+				KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+			},
+			expectedError: nil,
+		},
 		"should error on unknown kubernetesImageBaseType value": {
 			k: &KubernetesConfig{
-				KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR, // TODO change this to "should not error" when MCR type is enabled
+				KubernetesImageBaseType: "quay",
 			},
-			expectedError: errors.Errorf("Invalid kubernetesImageBaseType value \"%s\", please use one of the following versions: %s", "mcr", kubernetesImageBaseTypeValidVersions),
+			expectedError: errors.Errorf("Invalid kubernetesImageBaseType value \"%s\", please use one of the following versions: %s", "quay", kubernetesImageBaseTypeValidVersions),
 		},
 	}
 

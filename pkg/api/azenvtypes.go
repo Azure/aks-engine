@@ -86,7 +86,7 @@ var (
 	//DefaultKubernetesSpecConfig is the default Docker image source of Kubernetes
 	DefaultKubernetesSpecConfig = KubernetesSpecConfig{
 		KubernetesImageBase:              "k8s.gcr.io/",
-		TillerImageBase:                  "gcr.io/kubernetes-helm/",
+		TillerImageBase:                  "mcr.microsoft.com/",
 		ACIConnectorImageBase:            "microsoft/",
 		NVIDIAImageBase:                  "nvidia/",
 		CalicoImageBase:                  "calico/",
@@ -270,7 +270,7 @@ var (
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
-			TillerImageBase:                  "gcr.azk8s.cn/kubernetes-helm/",
+			TillerImageBase:                  "mcr.microsoft.com/",
 			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
 			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
 			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
