@@ -38,7 +38,7 @@ type Config struct {
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
-	DNSTimeout          time.Duration `envconfig:"DNS_TIMEOUT" default:"2m"`
+	DNSTimeout          time.Duration `envconfig:"DNS_TIMEOUT" default:"5m"`
 	CurrentWorkingDir   string
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`

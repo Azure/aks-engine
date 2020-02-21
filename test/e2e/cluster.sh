@@ -29,7 +29,7 @@ if [ "$LB_TEST_TIMEOUT" == "" ]; then
   LB_TEST_TIMEOUT="${E2E_TEST_TIMEOUT}"
 fi
 if [ "$DNS_TEST_TIMEOUT" == "" ]; then
-  DNS_TEST_TIMEOUT="2m"
+  DNS_TEST_TIMEOUT="5m"
 fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
