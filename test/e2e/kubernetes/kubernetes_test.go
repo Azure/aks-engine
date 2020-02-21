@@ -55,7 +55,6 @@ const (
 	stabilityCommandTimeout                   = 3 * time.Second
 	windowsCommandTimeout                     = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
-	validateDNSTimeout                        = 2 * time.Minute
 	firstMasterRegexStr                       = "^k8s-master-"
 	podLookupRetries                          = 5
 )
@@ -980,7 +979,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.DNSTimeout)
 			if err != nil {
 				pod.PrintPodsLogs("validate-dns-linux", "default", 5*time.Second, 1*time.Minute)
 			}
