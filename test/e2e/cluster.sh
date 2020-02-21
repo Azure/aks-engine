@@ -28,6 +28,9 @@ fi
 if [ "$LB_TEST_TIMEOUT" == "" ]; then
   LB_TEST_TIMEOUT="${E2E_TEST_TIMEOUT}"
 fi
+if [ "$DNS_TEST_TIMEOUT" == "" ]; then
+  DNS_TEST_TIMEOUT="2m"
+fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   cat > ${TMP_DIR}/addpool-input.json <<END
