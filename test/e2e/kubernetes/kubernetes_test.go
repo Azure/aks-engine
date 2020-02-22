@@ -940,7 +940,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
 			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to resolve externally", command)
+			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect externally against known listeners", command)
 			// Ensure across all nodes
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -953,7 +953,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			// Use curl to test responsive DNS lookup + TCP 443 connectivity
 			name = fmt.Sprintf("alpine-%s", cfg.Name)
 			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
-			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally", command)
+			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally against known endpoints", command)
 			// Ensure across all nodes
 			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -980,12 +980,29 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have stable pod-to-pod networking", func() {
 			if eng.AnyAgentIsLinux() {
-				By("Creating a test php-apache deployment")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				By("Creating a php-apache deployment")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring that php-apache pod is running")
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				By("Ensuring that the php-apache pod has outbound internet access")
+				pods, err := phpApacheDeploy.PodsRunning()
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(outboundErr).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+				By("Exposing TCP 80 internally on the php-apache deployment")
+				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
 				By("Creating another pod that will connect to the php-apache pod")
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				commandString := fmt.Sprintf("nc -vz %s.default.svc.cluster.local 80", longRunningApacheDeploymentName)
 				consumerPodName := fmt.Sprintf("consumer-pod-%s-%v", cfg.Name, r.Intn(99999))
-				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", commandString)
+				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect to in-cluster web listener", commandString)
 				// Ensure across all nodes
 				successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "busybox", consumerPodName, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -1037,7 +1054,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
 			command := fmt.Sprintf("nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
+			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to make external connections or resolve dns", command)
 			// Ensure across all nodes
 			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
