@@ -298,8 +298,16 @@ installContainerd() {
     if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
         echo "containerd is already installed"
     else
+        os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
+        if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
+            url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
+        elif [[ "${OS}" == "${DEBIAN_OS_NAME}" ]]; then
+            url_path="${os_lower}/${UBUNTU_RELEASE}/prod"
+        else
+            exit $ERR_MOBY_APT_LIST_TIMEOUT
+        fi
         removeContainerd
-        echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/ubuntu/${UBUNTU_RELEASE}/multiarch/prod testing main" > /tmp/microsoft-prod-testing.list
+        echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" > /tmp/microsoft-prod-testing.list
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
