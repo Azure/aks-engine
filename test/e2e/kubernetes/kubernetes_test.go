@@ -1018,16 +1018,23 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should have functional container networking DNS", func() {
 			By("Ensuring that we have functional DNS resolution from a linux container")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-linux.yaml"), "validate-dns-linux", "default", 3*time.Second, cfg.Timeout)
+			validateDNSLinuxName := "validate-dns-linux"
+			validateDNSLinuxNamespace := "default"
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, 10*time.Second) //validateDNSTimeout
 			if err != nil {
-				pod.PrintPodsLogs("validate-dns-linux", "default", 5*time.Second, 1*time.Minute)
-			}
-			delErr := j.Delete(util.DefaultDeleteRetries)
-			if delErr != nil {
-				fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-				fmt.Println(delErr)
+				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
+				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					out, err := p.Exec("cat", "/etc/resolv.conf")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+					out, err = p.Exec("ifconfig")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
 			}
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ready).To(Equal(true))
@@ -1041,11 +1048,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				ready, err = j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				if err != nil {
 					pod.PrintPodsLogs("validate-dns-windows", "default", 5*time.Second, 1*time.Minute)
-				}
-				delErr = j.Delete(util.DefaultDeleteRetries)
-				if delErr != nil {
-					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
-					fmt.Println(delErr)
 				}
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ready).To(Equal(true))
