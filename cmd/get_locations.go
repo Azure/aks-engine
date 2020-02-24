@@ -113,7 +113,7 @@ func (glc *locationsCmd) run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if glc.client, err = glc.getAuthArgs().getClient(); err != nil {
+	if glc.client, err = glc.authProvider.getClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 
@@ -250,14 +250,6 @@ func (glc *locationsCmd) run(cmd *cobra.Command, args []string) error {
 	})
 
 	switch glc.output {
-	case "human":
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
-		fmt.Fprintln(w, "Location\tName\tLatitude\tLongitude")
-		for _, location := range locations {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-				*location.Name, *location.DisplayName, *location.Latitude, *location.Longitude)
-		}
-		w.Flush()
 	case "json":
 		data, jsonErr := helpers.JSONMarshalIndent(locations, "", "  ", false)
 		if jsonErr != nil {
@@ -285,8 +277,15 @@ func GetAzureLocations() []string {
 		}
 		b.WriteString("\t}\n}")
 		fmt.Println(b.String())
+	case "human":
 	default:
-		log.Errorf("unsupported format: %s", glc.output)
+		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
+		fmt.Fprintln(w, "Location\tName\tLatitude\tLongitude")
+		for _, location := range locations {
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
+				*location.Name, *location.DisplayName, *location.Latitude, *location.Longitude)
+		}
+		w.Flush()
 	}
 
 	log.Debugf("Done listing Azure locations")

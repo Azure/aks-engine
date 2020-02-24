@@ -24,6 +24,7 @@ const (
 	deploymentAPIVersion                       = "2018-05-01"
 	resourceGroupAPIVersion                    = "2018-05-01"
 	logAnalyticsAPIVersion                     = "2015-11-01-preview"
+	subscriptionsAPIVersion                    = "2016-06-01"
 	deploymentName                             = "testDeplomentName"
 	deploymentStatus                           = "08586474508192185203"
 	virtualMachineScaleSetName                 = "vmscalesetName"
@@ -46,6 +47,7 @@ const (
 	offer                                      = "DefaultOffer"
 	version                                    = "DefaultVersion"
 	filePathTokenResponse                      = "httpMockClientData/tokenResponse.json"
+	filePathListLocations                      = "httpMockClientData/ListLocations.json"
 	filePathListVirtualMachineScaleSets        = "httpMockClientData/listVirtualMachineScaleSets.json"
 	filePathListVirtualMachineScaleSetVMs      = "httpMockClientData/listVirtualMachineScaleSetVMs.json"
 	filePathListVirtualMachines                = "httpMockClientData/listVirtualMachines.json"
@@ -74,6 +76,7 @@ type HTTPMockClient struct {
 	NetworkAPIVersion                          string
 	DeploymentAPIVersion                       string
 	LogAnalyticsAPIVersion                     string
+	SubscriptionsAPIVersion                    string
 	DeploymentName                             string
 	DeploymentStatus                           string
 	VirtualMachineScaleSetName                 string
@@ -95,6 +98,7 @@ type HTTPMockClient struct {
 	Sku                                        string
 	Offer                                      string
 	Version                                    string
+	ResponseListLocations                      string
 	ResponseListVirtualMachineScaleSets        string
 	ResponseListVirtualMachineScaleSetVMs      string
 	ResponseListVirtualMachines                string
@@ -142,6 +146,7 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		LogAnalyticsAPIVersion:              logAnalyticsAPIVersion,
 		NetworkAPIVersion:                   networkAPIVersion,
 		DeploymentAPIVersion:                deploymentAPIVersion,
+		SubscriptionsAPIVersion:             subscriptionsAPIVersion,
 		DeploymentName:                      deploymentName,
 		DeploymentStatus:                    deploymentStatus,
 		VirtualMachineScaleSetName:          virtualMachineScaleSetName,
@@ -229,6 +234,11 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 	}
 
 	client.ResponseListVirtualMachineImages, err = readFromFile(filePathListVirtualMachineImages)
+	if err != nil {
+		return client, err
+	}
+
+	client.ResponseListLocations, err = readFromFile(filePathListLocations)
 	if err != nil {
 		return client, err
 	}
@@ -325,6 +335,18 @@ func (mc HTTPMockClient) RegisterListVirtualMachines() {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			_, _ = fmt.Fprint(w, mc.ResponseListVirtualMachines)
+		}
+	})
+}
+
+// RegisterListLocations registers the mock response for ListVirtualMachines
+func (mc HTTPMockClient) RegisterListLocations() {
+	pattern := fmt.Sprintf("/subscriptions/%s/locations", mc.SubscriptionID)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.SubscriptionsAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseListLocations)
 		}
 	})
 }
