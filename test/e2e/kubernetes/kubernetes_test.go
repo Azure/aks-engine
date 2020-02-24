@@ -1022,7 +1022,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			validateDNSLinuxNamespace := "default"
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, 10*time.Second) //validateDNSTimeout
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
 			if err != nil {
 				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
 				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
