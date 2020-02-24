@@ -36123,9 +36123,11 @@ time_metric "ConfigureK8sCustomCloud" configureK8sCustomCloud
 
 time_metric "ConfigureCNI" configureCNI
 
+{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 if [[ -n "${MASTER_NODE}" ]]; then
     time_metric "ConfigAddons" configAddons
 fi
+{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "EnsureContainerd" ensureContainerd
