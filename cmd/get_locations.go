@@ -259,9 +259,9 @@ func (glc *locationsCmd) run(cmd *cobra.Command, args []string) error {
 		}
 		w.Flush()
 	case "json":
-		data, err := helpers.JSONMarshalIndent(locations, "", "  ", false)
-		if err != nil {
-			return err
+		data, jsonErr := helpers.JSONMarshalIndent(locations, "", "  ", false)
+		if jsonErr != nil {
+			return jsonErr
 		}
 		fmt.Println(string(data))
 	case "code":
