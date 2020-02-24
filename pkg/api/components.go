@@ -213,9 +213,6 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	if kubernetesConfig.KubernetesImageBase != "" {
 		kubernetesImageBase = kubernetesConfig.KubernetesImageBase
 	}
-	if cs.Properties.IsAzureStackCloud() {
-		kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-	}
 	k8sComponents := GetK8sComponentsByVersionMap(kubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	hyperkubeImageBase := kubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
