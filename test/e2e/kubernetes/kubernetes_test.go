@@ -1028,10 +1028,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, p := range pods {
-					out, err := p.Exec("cat", "/etc/resolv.conf")
+					out, err := p.Exec("--", "cat", "/etc/resolv.conf")
 					log.Printf("%s\n", string(out))
 					Expect(err).NotTo(HaveOccurred())
-					out, err = p.Exec("ifconfig")
+					out, err = p.Exec("--", "ifconfig")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+					out, err = p.Exec("--", "nc", "-v", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, "53")
 					log.Printf("%s\n", string(out))
 					Expect(err).NotTo(HaveOccurred())
 				}
