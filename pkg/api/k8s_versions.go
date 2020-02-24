@@ -14,7 +14,7 @@ const (
 	pauseImageReference                               string = "k8s/core/pause:1.2.0"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
 	smbFlexVolumeImageReference                       string = "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2"
-	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13"
+	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16"
 	calicoTyphaImageReference                         string = "typha:v3.8.0"
 	calicoCNIImageReference                           string = "cni:v3.8.0"
 	calicoNodeImageReference                          string = "node:v3.8.0"
