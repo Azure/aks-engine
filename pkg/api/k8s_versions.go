@@ -117,13 +117,13 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.4",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.3",
+			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "metrics-server-amd64:v0.2.1",
 			common.AddonManagerComponentName:           "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName:          "cluster-autoscaler:v1.15.4",
+			common.ClusterAutoscalerAddonName:          "cluster-autoscaler:v1.15.5",
 			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64",
 		},
 		"1.14": {
