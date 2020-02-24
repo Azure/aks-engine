@@ -37887,7 +37887,7 @@ write_files:
         - kms:
             name: azurekmsprovider
             endpoint: unix:///opt/azurekms.socket
-            cachesize: 0
+            cachesize: 1000
         - identity: {}
 {{end}}
 
