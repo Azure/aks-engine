@@ -1034,7 +1034,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					out, err = p.Exec("--", "ifconfig")
 					log.Printf("%s\n", string(out))
 					Expect(err).NotTo(HaveOccurred())
-					out, err = p.Exec("--", "nc", "-v", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, "53")
+					out, err = p.Exec("--", "nc", "-vz", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, "53")
 					log.Printf("%s\n", string(out))
 					Expect(err).NotTo(HaveOccurred())
 				}
