@@ -159,7 +159,7 @@ var VMSkus = []VMSku{
 		for _, s := range skus {
 			b.WriteString(fmt.Sprintf(formatStr, s.Name, s.StorageAccountType, s.AcceleratedNetworking))
 		}
-		b.WriteString("}\n")
+		b.WriteString("}")
 		fmt.Println(b.String())
 	default:
 		log.Errorf("unsupported format: %s", vmc.output)
