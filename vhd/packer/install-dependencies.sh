@@ -210,7 +210,6 @@ done
 
 CORE_DNS_VERSIONS="
 1.6.7
-1.6.6
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
