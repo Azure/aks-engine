@@ -294,7 +294,7 @@ func GetAll(namespace string) (*List, error) {
 }
 
 // GetWithRetry gets a pod, allowing for retries
-func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+func GetWithRetry(podName, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -306,7 +306,7 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 			case <-ctx.Done():
 				return
 			default:
-				ch <- GetAsync(podPrefix, namespace)
+				ch <- GetAsync(podName, namespace)
 				time.Sleep(sleep)
 			}
 		}
