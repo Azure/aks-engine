@@ -73,6 +73,7 @@ var (
 	clusterAutoscalerEngaged        bool
 	clusterAutoscalerAddon          api.KubernetesAddon
 	deploymentReplicasCount         int
+	dnsAddonName                    string
 )
 
 var _ = BeforeSuite(func() {
@@ -147,6 +148,13 @@ var _ = BeforeSuite(func() {
 			}
 		}
 	}
+	if hasAddon, _ := eng.HasAddon(common.KubeDNSAddonName); hasAddon {
+		dnsAddonName = common.KubeDNSAddonName
+	}
+	if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
+		dnsAddonName = common.CoreDNSAddonName
+	}
+	Expect(dnsAddonName).NotTo(Equal(""))
 })
 
 var _ = AfterSuite(func() {
@@ -542,110 +550,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should be able to kubectl port-forward to a running pod", func() {
-			deploymentNamespace := "default"
-			testPortForward := func(deploymentName string) {
-				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(podWaitErr).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				d, err := deployment.GetWithRetry(deploymentName, deploymentNamespace, 5*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				pods, err := d.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(pods)).To(Equal(1))
-				for _, p := range pods {
-					func() {
-						By("Ensuring that the pod is running")
-						var running bool
-						running, err = p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						Expect(running).To(Equal(true))
-						By("Running kubectl port-forward")
-						var proxyCmd *exec.Cmd
-						var proxyStdout, proxyStderr io.ReadCloser
-						var proxyStdoutReader, proxyStderrReader *bufio.Reader
-						success := false
-						for i := 0; i < 5; i++ {
-							if i > 1 {
-								log.Printf("Waiting for retry...\n")
-								time.Sleep(10 * time.Second)
-							}
-							proxyCmd = exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
-							proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-							proxyStdout, err = proxyCmd.StdoutPipe()
-							Expect(err).NotTo(HaveOccurred())
-							proxyStderr, err = proxyCmd.StderrPipe()
-							Expect(err).NotTo(HaveOccurred())
-							util.PrintCommand(proxyCmd)
-							err = proxyCmd.Start()
-							if err != nil {
-								log.Printf("kubectl port-forward start error: %v\n", err)
-								continue
-							}
-							proxyStdoutReader = bufio.NewReader(proxyStdout)
-							proxyStderrReader = bufio.NewReader(proxyStderr)
-							proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
-							log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
-							if outErr != nil {
-								proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
-								log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
-								continue
-							}
-							defer func() {
-								syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
-								_, waiterr := proxyCmd.Process.Wait()
-								if waiterr != nil {
-									log.Printf("kubectl port-forward - no wait error\n")
-								} else {
-									log.Printf("kubectl port-forward - wait returned err: %v\n", waiterr)
-								}
-							}()
-							log.Printf("kubectl port-forward running as pid: %d\n", proxyCmd.Process.Pid)
-							success = true
-							break
-						}
-						Expect(success).To(Equal(true))
-						By("Running curl to access the forwarded port")
-						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
-						cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
-						util.PrintCommand(cmd)
-						var out []byte
-						out, err = cmd.CombinedOutput()
-						log.Printf("%s\n", out)
-						Expect(err).NotTo(HaveOccurred())
-					}()
-				}
-			}
-			r := rand.New(rand.NewSource(time.Now().UnixNano()))
-			if eng.AnyAgentIsLinux() {
-				By("Creating a Linux nginx deployment")
-				deploymentPrefix := "portforwardlinux"
-				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", "", cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				testPortForward(deploymentName)
-				err = deploy.Delete(util.DefaultDeleteRetries)
-				Expect(err).NotTo(HaveOccurred())
-			}
-			if eng.HasWindowsAgents() {
-				By("Creating a Windows IIS deployment")
-				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
-					windowsImages, err := eng.GetWindowsTestImages()
-					Expect(err).NotTo(HaveOccurred())
-					deploymentPrefix := "portforwardwindows"
-					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
-					deploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "", "", cfg.Timeout)
-					Expect(err).NotTo(HaveOccurred())
-					testPortForward(deploymentName)
-					err = deploy.Delete(util.DefaultDeleteRetries)
-					Expect(err).NotTo(HaveOccurred())
-				} else {
-					Skip("kubectl port-forward only works on Windows nodes with Kubernetes 1.15+")
-					// Reference: https://github.com/kubernetes/kubernetes/pull/75479
-				}
-			}
-		})
-
 		It("should report all nodes in a Ready state", func() {
 			var expectedReadyNodes int
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
@@ -663,7 +567,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(ready).To(Equal(true))
 		})
 
-		It("should have node labels and annotations", func() {
+		It("should have node labels and annotations added by E2E test runner", func() {
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
 				cfg.AddNodePoolInput == "" {
 				totalNodeCount := eng.NodeCount()
@@ -706,28 +610,26 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should print cluster resources", func() {
-			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
-			out, err := cmd.CombinedOutput()
-			log.Printf("%s\n", out)
-			if err != nil {
-				log.Printf("Error: Unable to print all cluster resources\n")
-			}
-		})
-
-		It("should have DNS pod running", func() {
-			var err error
-			var running bool
-			if hasAddon, _ := eng.HasAddon(common.KubeDNSAddonName); hasAddon {
-				By("Ensuring that kube-dns is running")
-				running, err = pod.WaitOnSuccesses(common.KubeDNSAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			}
-			if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
-				By("Ensuring that coredns is running")
-				running, err = pod.WaitOnSuccesses("coredns", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			}
+		It("should have the correct IP address for the apiserver", func() {
+			running, err := pod.WaitOnSuccesses(common.APIServerComponentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(running).To(Equal(true))
+			pods, err := pod.GetAllRunningByPrefixWithRetry(common.APIServerComponentName, "kube-system", 3*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			By("Ensuring that the correct IP address has been applied to the apiserver")
+			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
+			if eng.ExpandedDefinition.Properties.MasterProfile.HasMultipleNodes() {
+				firstMasterIP := net.ParseIP(eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
+				expectedIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(common.DefaultInternalLbStaticIPOffset)}
+				if eng.ExpandedDefinition.Properties.MasterProfile.IsVirtualMachineScaleSets() {
+					expectedIP = net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(common.DefaultInternalLbStaticIPOffset)}
+				}
+				expectedIPAddress = expectedIP.String()
+			}
+
+			actualIPAddress, err := pods[0].Spec.Containers[0].GetArg("--advertise-address")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actualIPAddress).To(Equal(expectedIPAddress))
 		})
 
 		It("should have core kube-system componentry running", func() {
@@ -770,23 +672,186 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have the correct IP address for the apiserver", func() {
-			pods, err := pod.GetAllRunningByPrefixWithRetry(common.APIServerComponentName, "kube-system", 3*time.Second, cfg.Timeout)
+		It("should print cluster resources", func() {
+			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
+			out, err := cmd.CombinedOutput()
+			log.Printf("%s\n", out)
+			if err != nil {
+				log.Printf("Error: Unable to print all cluster resources\n")
+			}
+		})
+
+		It("should have DNS pod running", func() {
+			By(fmt.Sprintf("Ensuring that %s is running", dnsAddonName))
+			running, err := pod.WaitOnSuccesses(dnsAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			pod.PrintPodsLogs(dnsAddonName, "kube-system", 5*time.Second, 1*time.Minute)
 			Expect(err).NotTo(HaveOccurred())
-			By("Ensuring that the correct IP address has been applied to the apiserver")
-			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
-			if eng.ExpandedDefinition.Properties.MasterProfile.HasMultipleNodes() {
-				firstMasterIP := net.ParseIP(eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
-				expectedIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(common.DefaultInternalLbStaticIPOffset)}
-				if eng.ExpandedDefinition.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-					expectedIP = net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(common.DefaultInternalLbStaticIPOffset)}
+			Expect(running).To(Equal(true))
+		})
+
+		It("should have functional container networking DNS", func() {
+			By("Ensuring that we have functional DNS resolution from a linux container")
+			validateDNSLinuxName := "validate-dns-linux"
+			validateDNSLinuxNamespace := "default"
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			if err != nil {
+				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
+				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					out, err := p.Exec("--", "cat", "/etc/resolv.conf")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+					out, err = p.Exec("--", "ifconfig")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+					out, err = p.Exec("--", "nc", "-vz", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, "53")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
 				}
-				expectedIPAddress = expectedIP.String()
+			}
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+
+			if eng.HasWindowsAgents() {
+				By("Ensuring that we have functional DNS resolution from a windows container")
+				windowsImages, imgErr := eng.GetWindowsTestImages()
+				Expect(imgErr).NotTo(HaveOccurred())
+				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages, 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err = j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				if err != nil {
+					pod.PrintPodsLogs("validate-dns-windows", "default", 5*time.Second, 1*time.Minute)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
 			}
 
-			actualIPAddress, err := pods[0].Spec.Containers[0].GetArg("--advertise-address")
+			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
+			name := fmt.Sprintf("alpine-%s", cfg.Name)
+			command := fmt.Sprintf("nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
+			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to make external connections or resolve dns", command)
+			// Ensure across all nodes
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(actualIPAddress).To(Equal(expectedIPAddress))
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+		})
+
+		It("should be able to launch a long-running container networking DNS liveness pod", func() {
+			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+		})
+
+		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
+			By("Creating a php-apache deployment")
+			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Ensuring that php-apache pod is running")
+			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(running).To(Equal(true))
+
+			By("Ensuring that the php-apache pod has outbound internet access")
+			pods, err := phpApacheDeploy.PodsRunning()
+			Expect(err).NotTo(HaveOccurred())
+			for _, p := range pods {
+				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+				Expect(outboundErr).NotTo(HaveOccurred())
+				Expect(pass).To(BeTrue())
+			}
+
+			By("Exposing TCP 80 internally on the php-apache deployment")
+			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should have stable external container networking as we recycle a bunch of pods", func() {
+			// Test for basic UDP networking
+			name := fmt.Sprintf("alpine-%s", cfg.Name)
+			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
+			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect externally against known listeners", command)
+			// Ensure across all nodes
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+			// Ensure responsiveness
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+
+			// Use curl to test responsive DNS lookup + TCP 443 connectivity
+			name = fmt.Sprintf("alpine-%s", cfg.Name)
+			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
+			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally against known endpoints", command)
+			// Ensure across all nodes
+			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+			// Ensure responsiveness
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+		})
+
+		It("should have stable internal container networking as we recycle a bunch of pods", func() {
+			name := fmt.Sprintf("alpine-%s", cfg.Name)
+			command := fmt.Sprintf("nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443")
+			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
+			// Ensure across all nodes
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+			// Ensure responsiveness
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(successes).To(Equal(cfg.StabilityIterations))
+		})
+
+		It("should have stable pod-to-pod networking", func() {
+			if eng.AnyAgentIsLinux() {
+				By("Creating a php-apache deployment")
+				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
+				Expect(err).NotTo(HaveOccurred())
+				By("Ensuring that php-apache pod is running")
+				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				By("Ensuring that the php-apache pod has outbound internet access")
+				pods, err := phpApacheDeploy.PodsRunning()
+				Expect(err).NotTo(HaveOccurred())
+				for _, p := range pods {
+					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+					Expect(outboundErr).NotTo(HaveOccurred())
+					Expect(pass).To(BeTrue())
+				}
+				By("Exposing TCP 80 internally on the php-apache deployment")
+				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
+				By("Creating another pod that will connect to the php-apache pod")
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				commandString := fmt.Sprintf("nc -vz %s.default.svc.cluster.local 80", longRunningApacheDeploymentName)
+				consumerPodName := fmt.Sprintf("consumer-pod-%s-%v", cfg.Name, r.Intn(99999))
+				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect to in-cluster web listener", commandString)
+				// Ensure across all nodes
+				successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "busybox", consumerPodName, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(successes).To(Equal(cfg.StabilityIterations))
+				// Ensure responsiveness
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(successes).To(Equal(cfg.StabilityIterations))
+			} else {
+				Skip("Pod-to-pod network tests only valid on Linux clusters")
+			}
 		})
 
 		It("should have addons running", func() {
@@ -904,171 +969,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should be able to launch a long-running container networking DNS liveness pod", func() {
-			p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, "dns-liveness.yaml"), "dns-liveness", "default", 1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-		})
-
-		It("should be able to launch a long running HTTP listener and svc endpoint", func() {
-			By("Creating a php-apache deployment")
-			phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Ensuring that php-apache pod is running")
-			running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-
-			By("Ensuring that the php-apache pod has outbound internet access")
-			pods, err := phpApacheDeploy.PodsRunning()
-			Expect(err).NotTo(HaveOccurred())
-			for _, p := range pods {
-				pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-				Expect(outboundErr).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
-			}
-
-			By("Exposing TCP 80 internally on the php-apache deployment")
-			err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should have stable external container networking as we recycle a bunch of pods", func() {
-			// Test for basic UDP networking
-			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect externally against known listeners", command)
-			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-
-			// Use curl to test responsive DNS lookup + TCP 443 connectivity
-			name = fmt.Sprintf("alpine-%s", cfg.Name)
-			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
-			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally against known endpoints", command)
-			// Ensure across all nodes
-			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-		})
-
-		It("should have stable internal container networking as we recycle a bunch of pods", func() {
-			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
-			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-		})
-
-		It("should have stable pod-to-pod networking", func() {
-			if eng.AnyAgentIsLinux() {
-				By("Creating a php-apache deployment")
-				phpApacheDeploy, err := deployment.CreateLinuxDeployIfNotExist("deis/hpa-example", longRunningApacheDeploymentName, "default", "", "")
-				Expect(err).NotTo(HaveOccurred())
-				By("Ensuring that php-apache pod is running")
-				running, err := pod.WaitOnSuccesses(longRunningApacheDeploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
-				By("Ensuring that the php-apache pod has outbound internet access")
-				pods, err := phpApacheDeploy.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				for _, p := range pods {
-					pass, outboundErr := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-					Expect(outboundErr).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
-				By("Exposing TCP 80 internally on the php-apache deployment")
-				err = phpApacheDeploy.ExposeIfNotExist("ClusterIP", 80, 80)
-				Expect(err).NotTo(HaveOccurred())
-				By("Creating another pod that will connect to the php-apache pod")
-				r := rand.New(rand.NewSource(time.Now().UnixNano()))
-				commandString := fmt.Sprintf("nc -vz %s.default.svc.cluster.local 80", longRunningApacheDeploymentName)
-				consumerPodName := fmt.Sprintf("consumer-pod-%s-%v", cfg.Name, r.Intn(99999))
-				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect to in-cluster web listener", commandString)
-				// Ensure across all nodes
-				successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "busybox", consumerPodName, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
-				// Ensure responsiveness
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(successes).To(Equal(cfg.StabilityIterations))
-			} else {
-				Skip("Pod-to-pod network tests only valid on Linux clusters")
-			}
-		})
-
-		It("should have functional container networking DNS", func() {
-			By("Ensuring that we have functional DNS resolution from a linux container")
-			validateDNSLinuxName := "validate-dns-linux"
-			validateDNSLinuxNamespace := "default"
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
-			if err != nil {
-				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
-				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				for _, p := range pods {
-					out, err := p.Exec("--", "cat", "/etc/resolv.conf")
-					log.Printf("%s\n", string(out))
-					Expect(err).NotTo(HaveOccurred())
-					out, err = p.Exec("--", "ifconfig")
-					log.Printf("%s\n", string(out))
-					Expect(err).NotTo(HaveOccurred())
-					out, err = p.Exec("--", "nc", "-vz", eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, "53")
-					log.Printf("%s\n", string(out))
-					Expect(err).NotTo(HaveOccurred())
-				}
-			}
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
-
-			if eng.HasWindowsAgents() {
-				By("Ensuring that we have functional DNS resolution from a windows container")
-				windowsImages, imgErr := eng.GetWindowsTestImages()
-				Expect(imgErr).NotTo(HaveOccurred())
-				j, err = job.CreateWindowsJobFromTemplateDeleteIfExists(filepath.Join(WorkloadDir, "validate-dns-windows.yaml"), "validate-dns-windows", "default", windowsImages, 3*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				ready, err = j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				if err != nil {
-					pod.PrintPodsLogs("validate-dns-windows", "default", 5*time.Second, 1*time.Minute)
-				}
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ready).To(Equal(true))
-			}
-
-			By("Ensuring that we have stable external DNS resolution as we recycle a bunch of pods")
-			name := fmt.Sprintf("alpine-%s", cfg.Name)
-			command := fmt.Sprintf("nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
-			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to make external connections or resolve dns", command)
-			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(successes).To(Equal(cfg.StabilityIterations))
-		})
-
 		It("should be able to access the dashboard", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
@@ -1160,6 +1060,110 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureFileProvisioner))
 				Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+			}
+		})
+
+		It("should be able to kubectl port-forward to a running pod", func() {
+			deploymentNamespace := "default"
+			testPortForward := func(deploymentName string) {
+				running, podWaitErr := pod.WaitOnSuccesses(deploymentName, deploymentNamespace, 3, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(podWaitErr).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+				d, err := deployment.GetWithRetry(deploymentName, deploymentNamespace, 5*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				pods, err := d.PodsRunning()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pods)).To(Equal(1))
+				for _, p := range pods {
+					func() {
+						By("Ensuring that the pod is running")
+						var running bool
+						running, err = p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(running).To(Equal(true))
+						By("Running kubectl port-forward")
+						var proxyCmd *exec.Cmd
+						var proxyStdout, proxyStderr io.ReadCloser
+						var proxyStdoutReader, proxyStderrReader *bufio.Reader
+						success := false
+						for i := 0; i < 5; i++ {
+							if i > 1 {
+								log.Printf("Waiting for retry...\n")
+								time.Sleep(10 * time.Second)
+							}
+							proxyCmd = exec.Command("k", "port-forward", p.Metadata.Name, "8123:80")
+							proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+							proxyStdout, err = proxyCmd.StdoutPipe()
+							Expect(err).NotTo(HaveOccurred())
+							proxyStderr, err = proxyCmd.StderrPipe()
+							Expect(err).NotTo(HaveOccurred())
+							util.PrintCommand(proxyCmd)
+							err = proxyCmd.Start()
+							if err != nil {
+								log.Printf("kubectl port-forward start error: %v\n", err)
+								continue
+							}
+							proxyStdoutReader = bufio.NewReader(proxyStdout)
+							proxyStderrReader = bufio.NewReader(proxyStderr)
+							proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+							log.Printf("kubectl port-forward stdout: %s\n", proxyOutStr)
+							if outErr != nil {
+								proxyErrStr, _ := proxyStderrReader.ReadString('\n') // returns EOF error, ignore it
+								log.Printf("kubectl port-forward stderr: %s\n", proxyErrStr)
+								continue
+							}
+							defer func() {
+								syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
+								_, waiterr := proxyCmd.Process.Wait()
+								if waiterr != nil {
+									log.Printf("kubectl port-forward - no wait error\n")
+								} else {
+									log.Printf("kubectl port-forward - wait returned err: %v\n", waiterr)
+								}
+							}()
+							log.Printf("kubectl port-forward running as pid: %d\n", proxyCmd.Process.Pid)
+							success = true
+							break
+						}
+						Expect(success).To(Equal(true))
+						By("Running curl to access the forwarded port")
+						url := fmt.Sprintf("http://%s:%v", "localhost", 8123)
+						cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
+						util.PrintCommand(cmd)
+						var out []byte
+						out, err = cmd.CombinedOutput()
+						log.Printf("%s\n", out)
+						Expect(err).NotTo(HaveOccurred())
+					}()
+				}
+			}
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Linux nginx deployment")
+				deploymentPrefix := "portforwardlinux"
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+				deploy, err := deployment.CreateLinuxDeployDeleteIfExists(deploymentPrefix, "library/nginx:latest", deploymentName, deploymentNamespace, "", "", cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				testPortForward(deploymentName)
+				err = deploy.Delete(util.DefaultDeleteRetries)
+				Expect(err).NotTo(HaveOccurred())
+			}
+			if eng.HasWindowsAgents() {
+				By("Creating a Windows IIS deployment")
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
+					windowsImages, err := eng.GetWindowsTestImages()
+					Expect(err).NotTo(HaveOccurred())
+					deploymentPrefix := "portforwardwindows"
+					deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(9999))
+					deploy, err := deployment.CreateWindowsDeployDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, deploymentNamespace, "", "", cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					testPortForward(deploymentName)
+					err = deploy.Delete(util.DefaultDeleteRetries)
+					Expect(err).NotTo(HaveOccurred())
+				} else {
+					Skip("kubectl port-forward only works on Windows nodes with Kubernetes 1.15+")
+					// Reference: https://github.com/kubernetes/kubernetes/pull/75479
+				}
 			}
 		})
 	})
