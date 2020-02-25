@@ -64,13 +64,24 @@ func (vmc *skusCmd) run(cmd *cobra.Command, args []string) error {
 
 	var err error
 
-	// TODO: validate --output flag value before making API call
+	// validate --output flag value before making API call
+	outputFlagValid := false
+	for _, opt := range skusOutputFormatOptions {
+		if vmc.output == opt {
+			outputFlagValid = true
+			break
+		}
+	}
+	if !outputFlagValid {
+		return errors.New(fmt.Sprintf("invalid output format: \"%s\". Allowed values: %s.\n",
+			vmc.output, strings.Join(skusOutputFormatOptions, ", ")))
+	}
 
 	if err = vmc.getAuthArgs().validateAuthArgs(); err != nil {
 		return err
 	}
 
-	if vmc.client, err = vmc.getAuthArgs().getClient(); err != nil {
+	if vmc.client, err = vmc.authProvider.getClient(); err != nil {
 		return errors.Wrap(err, "failed to get client")
 	}
 
@@ -120,13 +131,6 @@ func (vmc *skusCmd) run(cmd *cobra.Command, args []string) error {
 	})
 
 	switch vmc.output {
-	case "human":
-		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
-		fmt.Fprintln(w, "Name\tStorage Account Type\tAccelerated Networking Support")
-		for _, sku := range skus {
-			fmt.Fprintf(w, "%s\t%s\t%t\n", sku.Name, sku.StorageAccountType, sku.AcceleratedNetworking)
-		}
-		w.Flush()
 	case "json":
 		data, jsonErr := helpers.JSONMarshalIndent(skus, "", "  ", false)
 		if jsonErr != nil {
@@ -161,8 +165,13 @@ var VMSkus = []VMSku{
 		}
 		b.WriteString("}")
 		fmt.Println(b.String())
-	default:
-		log.Errorf("unsupported format: %s", vmc.output)
+	case "human":
+		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
+		fmt.Fprintln(w, "Name\tStorage Account Type\tAccelerated Networking Support")
+		for _, sku := range skus {
+			fmt.Fprintf(w, "%s\t%s\t%t\n", sku.Name, sku.StorageAccountType, sku.AcceleratedNetworking)
+		}
+		w.Flush()
 	}
 
 	log.Debugf("Done listing VM SKUs")
