@@ -28,6 +28,42 @@ func TestGetLocationsCmd(t *testing.T) {
 	g.Expect(err).To(HaveOccurred())
 }
 
+func TestlocationsCmd_run(t *testing.T) {
+	d := &locationsCmd{
+		client: &armhelpers.MockAKSEngineClient{},
+		authProvider: &mockAuthProvider{
+			authArgs:      &authArgs{},
+			getClientMock: &armhelpers.MockAKSEngineClient{},
+		},
+	}
+
+	r := &cobra.Command{}
+	f := r.Flags()
+
+	addAuthFlags(d.getAuthArgs(), f)
+
+	fakeRawSubscriptionID := "6dc93fae-9a76-421f-bbe5-cc6460ea81cb"
+	fakeSubscriptionID, err := uuid.Parse(fakeRawSubscriptionID)
+	if err != nil {
+		t.Fatalf("Invalid SubscriptionId in Test: %s", err)
+	}
+	fakeClientID := "b829b379-ca1f-4f1d-91a2-0d26b244680d"
+	fakeClientSecret := "0se43bie-3zs5-303e-aav5-dcf231vb82ds"
+
+	d.getAuthArgs().SubscriptionID = fakeSubscriptionID
+	d.getAuthArgs().rawSubscriptionID = fakeRawSubscriptionID
+	d.getAuthArgs().rawClientID = fakeClientID
+	d.getAuthArgs().ClientSecret = fakeClientSecret
+
+	args := []string{}
+
+	d.output = "human"
+	err = d.run(r, args)
+	if err != nil {
+		t.Fatalf("Failed to call get-locations:` %s", err)
+	}
+}
+
 func ExamplelocationsCmd_run_humanOutput() {
 	d := &locationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
