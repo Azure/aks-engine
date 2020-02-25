@@ -37748,28 +37748,40 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
+    version = 2
     subreaper = false
     oom_score = 0
-    [plugins.cri]
-    sandbox_image = "{{GetPodInfraContainerSpec}}"
-    [plugins.cri.containerd.untrusted_workload_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    [plugins.cri.containerd.default_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    {{if IsKubenet }}
-    [plugins.cri.cni]
-    conf_template = "/etc/containerd/kubenet_template.conf"
 
+    [plugins]
+      [plugins."io.containerd.grpc.v1.cri"]
+        sandbox_image = "{{GetPodInfraContainerSpec}}"
+        [plugins."io.containerd.grpc.v1.cri".cni]
+          {{if IsKubenet}}
+          conf_template = "/etc/containerd/kubenet_template.conf"
+          {{end}}
+        [plugins."io.containerd.grpc.v1.cri".containerd]
+          {{if IsKataContainerRuntime }}
+          default_runtime_name = "kata"
+          {{else}}
+          default_runtime_name = "runc"
+          {{end}}
+         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+            {{if IsKataContainerRuntime }}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+              runtime_type = "io.containerd.kata.v2"
+            {{end}}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
+              {{if IsKataContainerRuntime }}
+              runtime_engine = "/usr/bin/kata-runtime"
+              runtime_type = "io.containerd.kata.v2"
+              {{else}}
+              {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
+              runtime_type = "io.containerd.runc.v2"
+              {{end}}
+
+  {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
   owner: root
