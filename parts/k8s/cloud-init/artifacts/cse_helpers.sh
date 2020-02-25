@@ -62,11 +62,11 @@ ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 {{/* Error fetching the network co
 ERR_AZURE_STACK_GET_SUBNET_PREFIX=122 {{/* Error fetching the subnet address prefix for a subnet ID */}}
 
 {{/* BCC/BPF-related error codes */}}
-ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT=126 {{/* Timeout waiting to download IOVisor repo key */}}
-ERR_IOVISOR_APT_KEY_TIMEOUT=127 {{/* Timeout waiting for IOVisor apt-key */}}
-ERR_BCC_INSTALL_TIMEOUT=128 {{/* Timeout waiting for bcc install */}}
-ERR_BPFTRACE_BIN_DOWNLOAD_FAIL=129 {{/* Failed to download bpftrace binary */}}
-ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL=130 {{/* Failed to download bpftrace default programs */}}
+ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT=132 {{/* Timeout waiting to download IOVisor repo key */}}
+ERR_IOVISOR_APT_KEY_TIMEOUT=132 {{/* Timeout waiting for IOVisor apt-key */}}
+ERR_BCC_INSTALL_TIMEOUT=133 {{/* Timeout waiting for bcc install */}}
+ERR_BPFTRACE_BIN_DOWNLOAD_FAIL=134 {{/* Failed to download bpftrace binary */}}
+ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL=135 {{/* Failed to download bpftrace default programs */}}
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
