@@ -47,7 +47,7 @@ const (
 	offer                                      = "DefaultOffer"
 	version                                    = "DefaultVersion"
 	filePathTokenResponse                      = "httpMockClientData/tokenResponse.json"
-	filePathListLocations                      = "httpMockClientData/ListLocations.json"
+	filePathListLocations                      = "httpMockClientData/listLocations.json"
 	filePathListVirtualMachineScaleSets        = "httpMockClientData/listVirtualMachineScaleSets.json"
 	filePathListVirtualMachineScaleSetVMs      = "httpMockClientData/listVirtualMachineScaleSetVMs.json"
 	filePathListVirtualMachines                = "httpMockClientData/listVirtualMachines.json"
