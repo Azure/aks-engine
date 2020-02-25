@@ -113,7 +113,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip

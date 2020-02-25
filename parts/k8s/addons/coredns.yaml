@@ -206,6 +206,9 @@ spec:
             - all
           readOnlyRootFilesystem: true
       dnsPolicy: Default
+      {{- if ContainerConfig "use-host-network"}}
+      hostNetwork: {{ContainerConfig "use-host-network"}}
+      {{end -}}
       volumes:
         - name: config-volume
           configMap:
