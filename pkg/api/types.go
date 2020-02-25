@@ -210,6 +210,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername             string            `json:"adminUsername"`
 	AdminPassword             string            `json:"adminPassword" conform:"redact"`
+	CsiProxyURL               string            `json:"csiProxyUrl,omitempty"`
+	EnableCsiProxy            *bool             `json:"enableCsiProxy,omitempty"`
 	ImageRef                  *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion              string            `json:"imageVersion"`
 	WindowsImageSourceURL     string            `json:"windowsImageSourceURL"`
@@ -1700,6 +1702,14 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 		buf.WriteString(fmt.Sprintf(",%s=%s", key, a.CustomNodeLabels[key]))
 	}
 	return buf.String()
+}
+
+// IsCsiProxyEnabled returns true if csi proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCsiProxyEnabled() bool {
+	if w.EnableCsiProxy != nil {
+		return *w.EnableCsiProxy
+	}
+	return DefaultEnableCsiProxyWindows
 }
 
 // HasSecrets returns true if the customer specified secrets to install
