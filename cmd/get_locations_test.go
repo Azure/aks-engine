@@ -28,7 +28,7 @@ func TestGetLocationsCmd(t *testing.T) {
 	g.Expect(err).To(HaveOccurred())
 }
 
-func TestlocationsCmd_run(t *testing.T) {
+func TestLocationsCmd_run(t *testing.T) {
 	d := &locationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
