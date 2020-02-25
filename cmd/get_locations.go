@@ -278,7 +278,6 @@ func GetAzureLocations() []string {
 		b.WriteString("\t}\n}")
 		fmt.Println(b.String())
 	case "human":
-	default:
 		w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', tabwriter.FilterHTML)
 		fmt.Fprintln(w, "Location\tName\tLatitude\tLongitude")
 		for _, location := range locations {
