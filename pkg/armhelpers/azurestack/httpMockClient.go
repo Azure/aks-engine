@@ -320,10 +320,6 @@ func (mc HTTPMockClient) RegisterListLocations() {
 	pattern := fmt.Sprintf("/subscriptions/%s/locations", mc.SubscriptionID)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.SubscriptionsAPIVersion {
-			a := r.URL.Query().Get("api-version")
-			b := mc.SubscriptionsAPIVersion
-			fmt.Println(a)
-			fmt.Println(b)
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			_, _ = fmt.Fprint(w, mc.ResponseListLocations)

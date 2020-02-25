@@ -28,7 +28,7 @@ func TestGetLocationsCmd(t *testing.T) {
 	g.Expect(err).To(HaveOccurred())
 }
 
-func ExampleGetLocationsCmd_RunHumanOutput() {
+func ExamplelocationsCmd_run_humanOutput() {
 	d := &locationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
@@ -75,7 +75,7 @@ func ExampleGetLocationsCmd_RunHumanOutput() {
 	// usgovvirginia     US Gov Virginia           N/A       N/A
 }
 
-func ExampleGetLocationsCmd_RunJsonOutput() {
+func ExamplelocationsCmd_run_jsonOutput() {
 	d := &locationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
@@ -207,7 +207,7 @@ func ExampleGetLocationsCmd_RunJsonOutput() {
 	// ]
 }
 
-func ExampleGetLocationsCmd_RunCodeOutput() {
+func ExamplelocationsCmd_run_codeOutput() {
 	d := &locationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
