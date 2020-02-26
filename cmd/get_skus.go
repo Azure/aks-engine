@@ -27,7 +27,7 @@ const (
 
 var skusOutputFormatOptions = append(outputFormatOptions, "code")
 
-type skusCmd struct {
+type SkusCmd struct {
 	authProvider
 
 	// user input
@@ -38,7 +38,7 @@ type skusCmd struct {
 }
 
 func newGetSkusCmd() *cobra.Command {
-	vmc := skusCmd{
+	vmc := SkusCmd{
 		authProvider: &authArgs{},
 	}
 
@@ -59,7 +59,7 @@ func newGetSkusCmd() *cobra.Command {
 	return command
 }
 
-func (vmc *skusCmd) run(cmd *cobra.Command, args []string) error {
+func (vmc *SkusCmd) run(cmd *cobra.Command, args []string) error {
 	log.Debugf("Start listing VM SKUs")
 
 	var err error
@@ -93,35 +93,37 @@ func (vmc *skusCmd) run(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, "failed to list resource SKUs")
 	}
 	skus := helpers.VMSkus
-	for _, r := range page.Values() {
-		name := *r.Name
-		if !strings.HasPrefix(name, "Standard_") || strings.HasSuffix(name, "_Promo") {
-			continue
-		}
-		// Add to the list if the SKU isn't already present
-		found := false
-		for _, s := range skus {
-			if name == s.Name {
-				found = true
-				break
+	if page != nil {
+		for _, r := range page.Values() {
+			name := *r.Name
+			if !strings.HasPrefix(name, "Standard_") || strings.HasSuffix(name, "_Promo") {
+				continue
 			}
-		}
-		if !found {
-			acceleratedNetworking := false
-			if r.Capabilities != nil {
-				for _, c := range *r.Capabilities {
-					if c.Name != nil && *c.Name == "AcceleratedNetworkingEnabled" {
-						if c.Value != nil && strings.EqualFold(*c.Value, "True") {
-							acceleratedNetworking = true
+			// Add to the list if the SKU isn't already present
+			found := false
+			for _, s := range skus {
+				if name == s.Name {
+					found = true
+					break
+				}
+			}
+			if !found {
+				acceleratedNetworking := false
+				if r.Capabilities != nil {
+					for _, c := range *r.Capabilities {
+						if c.Name != nil && *c.Name == "AcceleratedNetworkingEnabled" {
+							if c.Value != nil && strings.EqualFold(*c.Value, "True") {
+								acceleratedNetworking = true
+							}
 						}
 					}
 				}
+				skus = append(skus, helpers.VMSku{
+					Name:                  name,
+					AcceleratedNetworking: acceleratedNetworking,
+					StorageAccountType:    storageAccountType(name),
+				})
 			}
-			skus = append(skus, helpers.VMSku{
-				Name:                  name,
-				AcceleratedNetworking: acceleratedNetworking,
-				StorageAccountType:    storageAccountType(name),
-			})
 		}
 	}
 
