@@ -165,18 +165,20 @@ configureK8s() {
     chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
     chown root:root "${APISERVER_PUBLIC_KEY_PATH}"
 
-    AZURE_JSON_PATH="/etc/kubernetes/azure.json"
-    touch "${AZURE_JSON_PATH}"
-    chmod 0600 "${AZURE_JSON_PATH}"
-    chown root:root "${AZURE_JSON_PATH}"
-
-    set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
     {{/* Perform the required JSON escaping */}}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
-    cat << EOF > "${AZURE_JSON_PATH}"
+
+    if [[ -n "${MASTER_NODE}" ]]; then
+        AZURE_JSON_PATH="/etc/kubernetes/azure.json"
+        touch "${AZURE_JSON_PATH}"
+        chmod 0600 "${AZURE_JSON_PATH}"
+        chown root:root "${AZURE_JSON_PATH}"
+
+        set +x
+        cat << EOF > "${AZURE_JSON_PATH}"
 {
     "cloud":"{{GetTargetEnvironment}}",
     "tenantId": "${TENANT_ID}",
@@ -216,12 +218,11 @@ configureK8s() {
     "providerKeyVersion": ""
 }
 EOF
-    set -x
-    if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
-        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
-        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
-    fi
-    if [[ -n "${MASTER_NODE}" ]]; then
+        set -x
+        if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
+            sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
+            sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+        fi
         if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
             generateAggregatedAPICerts
         fi
