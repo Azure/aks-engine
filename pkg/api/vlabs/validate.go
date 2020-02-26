@@ -1267,7 +1267,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		if sv.LT(minVersion) {
 			return errors.Errorf("IPv6 single stack not available in kubernetes version %s", k8sVersion)
 		}
-		// singel stack IPv6 feature is currently only supported with kubenet
+		// single stack IPv6 feature is currently only supported with kubenet
 		if k.NetworkPlugin != "kubenet" {
 			return errors.Errorf("OrchestratorProfile.KubernetesConfig.NetworkPlugin '%s' is invalid. IPv6 single stack supported only with kubenet.", k.NetworkPlugin)
 		}

@@ -11,13 +11,13 @@ data:
     mode: "{{ContainerConfig "proxy-mode"}}"
     {{- if ContainerConfig "bind-address"}}
     bindAddress: "{{ContainerConfig "bind-address"}}"
-    {{end -}}
+    {{end}}
     {{- if ContainerConfig "healthz-bind-address"}}
     healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
-    {{end -}}
+    {{end}}
     {{- if ContainerConfig "metrics-bind-address"}}
     metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
-    {{end -}}
+    {{end}}
     featureGates:
       {{ContainerConfig "featureGates"}}
 metadata:
