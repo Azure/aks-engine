@@ -125,6 +125,9 @@ type AKSEngineClient interface {
 	//
 	// COMPUTE
 
+	// ListResourceSkus lists Microsoft.Compute SKUs available for a subscription
+	ListResourceSkus(ctx context.Context, filter string) (ResourceSkusResultPage, error)
+
 	// ListVirtualMachines lists VM resources
 	ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error)
 

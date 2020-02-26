@@ -3362,7 +3362,7 @@ func ExampleSkusCmd_run_codeOutput() {
 	// }
 }
 
-func TestGetLocationsCmd_ShouldErrorIfInvalidOption(t *testing.T) {
+func TestGetSkusCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 	t.Parallel()
 
 	command := &SkusCmd{
