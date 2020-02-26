@@ -29,7 +29,7 @@ func TestGetLocationsCmd(t *testing.T) {
 }
 
 func TestLocationsCmd_run(t *testing.T) {
-	d := &locationsCmd{
+	d := &LocationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs:      &authArgs{},
@@ -64,8 +64,8 @@ func TestLocationsCmd_run(t *testing.T) {
 	}
 }
 
-func ExamplelocationsCmd_run_humanOutput() {
-	d := &locationsCmd{
+func ExampleLocationsCmd_run_humanOutput() {
+	d := &LocationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs:      &authArgs{},
@@ -92,7 +92,6 @@ func ExamplelocationsCmd_run_humanOutput() {
 
 	d.output = "human"
 	d.run(r, args)
-
 	// Output:
 	// Location          Name                      Latitude  Longitude
 	// centraluseuap     Central US EUAP (Canary)  N/A       N/A
@@ -111,8 +110,8 @@ func ExamplelocationsCmd_run_humanOutput() {
 	// usgovvirginia     US Gov Virginia           N/A       N/A
 }
 
-func ExamplelocationsCmd_run_jsonOutput() {
-	d := &locationsCmd{
+func ExampleLocationsCmd_run_jsonOutput() {
+	d := &LocationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs:      &authArgs{},
@@ -243,8 +242,8 @@ func ExamplelocationsCmd_run_jsonOutput() {
 	// ]
 }
 
-func ExamplelocationsCmd_run_codeOutput() {
-	d := &locationsCmd{
+func ExampleLocationsCmd_run_codeOutput() {
+	d := &LocationsCmd{
 		client: &armhelpers.MockAKSEngineClient{},
 		authProvider: &mockAuthProvider{
 			authArgs:      &authArgs{},
@@ -307,7 +306,7 @@ func ExamplelocationsCmd_run_codeOutput() {
 func TestGetLocationsCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 	t.Parallel()
 
-	command := &locationsCmd{
+	command := &LocationsCmd{
 		output: "yaml",
 	}
 	err := command.run(nil, nil)

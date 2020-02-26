@@ -59,7 +59,7 @@ var (
 
 var locationsOutputFormatOptions = append(outputFormatOptions, "code")
 
-type locationsCmd struct {
+type LocationsCmd struct {
 	authProvider
 
 	// user input
@@ -70,7 +70,7 @@ type locationsCmd struct {
 }
 
 func newGetLocationsCmd() *cobra.Command {
-	glc := locationsCmd{
+	glc := LocationsCmd{
 		authProvider: &authArgs{},
 	}
 
@@ -91,7 +91,7 @@ func newGetLocationsCmd() *cobra.Command {
 	return command
 }
 
-func (glc *locationsCmd) run(cmd *cobra.Command, args []string) error {
+func (glc *LocationsCmd) run(cmd *cobra.Command, args []string) error {
 	log.Debugf("Start listing Azure locations")
 
 	var err error
