@@ -774,6 +774,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		It("should be able to schedule a pod to a master node", func() {
+			By("Creating a Job with master nodeSelector")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+		})
+
+		It("should be able to schedule a pod to an agent node", func() {
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Job with agent nodeSelector")
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("agent nodeSelector test Job is currently Linux-only")
+			}
+		})
+
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
 			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
@@ -1297,24 +1319,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(success).To(BeTrue())
 			}
-		})
-
-		It("should be able to schedule a pod to a master node", func() {
-			By("Creating a Job with master nodeSelector")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
-		})
-
-		It("should be able to schedule a pod to an agent node", func() {
-			By("Creating a Job with master nodeSelector")
-			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ready).To(Equal(true))
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
