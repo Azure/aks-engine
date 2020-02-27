@@ -1300,24 +1300,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to schedule a pod to a master node", func() {
-			By("Creating a pod with master nodeSelector")
-			p, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 1*time.Second, cfg.Timeout)
-			if err != nil {
-				p, err = pod.Get("nginx-master", "default", podLookupRetries)
-				Expect(err).NotTo(HaveOccurred())
-			}
-			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			By("Creating a Job with master nodeSelector")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
+			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+		})
 
-			By("validating that master-scheduled pod has outbound internet connectivity")
-			pass, err := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
+		It("should be able to schedule a pod to an agent node", func() {
+			By("Creating a Job with master nodeSelector")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(pass).To(BeTrue())
-
-			By("Cleaning up after ourselves")
-			err = p.Delete(util.DefaultDeleteRetries)
+			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
