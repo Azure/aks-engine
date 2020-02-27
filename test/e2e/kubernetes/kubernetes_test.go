@@ -774,6 +774,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 		})
 
+		It("should be able to schedule a pod to a master node", func() {
+			By("Creating a Job with master nodeSelector")
+			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-master.yaml"), "busybox-master", "default", 3*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ready).To(Equal(true))
+		})
+
+		It("should be able to schedule a pod to an agent node", func() {
+			if eng.AnyAgentIsLinux() {
+				By("Creating a Job with agent nodeSelector")
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "busybox-agent.yaml"), "busybox-agent", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("agent nodeSelector test Job is currently Linux-only")
+			}
+		})
+
 		It("should have stable external container networking as we recycle a bunch of pods", func() {
 			// Test for basic UDP networking
 			name := fmt.Sprintf("alpine-%s", cfg.Name)
@@ -1297,27 +1319,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 				Expect(success).To(BeTrue())
 			}
-		})
-
-		It("should be able to schedule a pod to a master node", func() {
-			By("Creating a pod with master nodeSelector")
-			p, err := pod.CreatePodFromFile(filepath.Join(WorkloadDir, "nginx-master.yaml"), "nginx-master", "default", 1*time.Second, cfg.Timeout)
-			if err != nil {
-				p, err = pod.Get("nginx-master", "default", podLookupRetries)
-				Expect(err).NotTo(HaveOccurred())
-			}
-			running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-
-			By("validating that master-scheduled pod has outbound internet connectivity")
-			pass, err := p.CheckLinuxOutboundConnection(5*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pass).To(BeTrue())
-
-			By("Cleaning up after ourselves")
-			err = p.Delete(util.DefaultDeleteRetries)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
