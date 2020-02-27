@@ -397,6 +397,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
 					// When VNET integration is enabled, all masters, agents and pods share the same large subnet.
 					cs.Properties.MasterProfile.Subnet = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
+					cs.Properties.MasterProfile.SubnetIPv6 = DefaultKubernetesMasterSubnetIPv6
 					// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 					if !isUpgrade || len(cs.Properties.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 						if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
@@ -511,6 +512,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
 				}
 			}
+			fmt.Println("Set ipaddrcount")
+			cs.Properties.MasterProfile.IPAddressCount = 1
 		}
 		// Pool-specific defaults that depend upon kubelet defaults
 		for _, profile := range cs.Properties.AgentPoolProfiles {
@@ -524,6 +527,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					profile.IPAddressCount += agentPoolMaxPods
 				}
 			}
+			profile.IPAddressCount = 1
 		}
 
 		// Configure controller-manager

@@ -1304,6 +1304,10 @@ func (p *Properties) GetNonMasqueradeCIDR() string {
 func (p *Properties) GetSecondaryNonMasqueradeCIDR() string {
 	var nonMasqCidr string
 	if !p.IsHostedMasterProfile() {
+		if p.OrchestratorProfile.IsAzureCNI() {
+			return ""
+		}
+
 		if p.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 			cidr := strings.Split(p.OrchestratorProfile.KubernetesConfig.ClusterSubnet, ",")[1]
 			_, ipnet, _ := net.ParseCIDR(cidr)
