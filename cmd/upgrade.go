@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -167,6 +168,15 @@ func (uc *upgradeCmd) loadCluster() error {
 			IsScale:   false,
 		}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
+		}
+
+		// Azure Stack's custom hyperkube image is now hosted along with MS' images
+		// Override KubernetesImageBase/KubernetesImageBaseType if apimodel is set to the deprecated KubernetesImageBase
+		deprecatedAzureStackImageBase := "mcr.microsoft.com/k8s/azurestack/core/"
+		k8sConfig := uc.containerService.Properties.OrchestratorProfile.KubernetesConfig
+		if strings.EqualFold(k8sConfig.KubernetesImageBase, deprecatedAzureStackImageBase) {
+			k8sConfig.KubernetesImageBase = "mcr.microsoft.com/"
+			k8sConfig.KubernetesImageBaseType = "mcr"
 		}
 	}
 
