@@ -128,7 +128,7 @@ function Install-WindowsPatches
     # Windows Server 2019 update history can be found at https://support.microsoft.com/en-us/help/4464619
     # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
-    $patchUrls = @()
+    $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/updt/2020/02/windows10.0-kb4537818-x64_b8b65276fc7b9694b9c2350c3c3fd4fa60cd682b.msu")
 
     foreach ($patchUrl in $patchUrls)
     {
