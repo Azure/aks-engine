@@ -162,22 +162,13 @@ func (uc *upgradeCmd) loadCluster() error {
 
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(uc.containerService)
-
 		if err = uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
 		}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
-
-		// Azure Stack's custom hyperkube image is now hosted along with MS' images
-		// Override KubernetesImageBase/KubernetesImageBaseType if apimodel is set to the deprecated KubernetesImageBase
-		deprecatedAzureStackImageBase := "mcr.microsoft.com/k8s/azurestack/core/"
-		k8sConfig := uc.containerService.Properties.OrchestratorProfile.KubernetesConfig
-		if strings.EqualFold(k8sConfig.KubernetesImageBase, deprecatedAzureStackImageBase) {
-			k8sConfig.KubernetesImageBase = "mcr.microsoft.com/"
-			k8sConfig.KubernetesImageBaseType = "mcr"
-		}
+		azureStackImageBaseOverrides(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig)
 	}
 
 	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
@@ -332,4 +323,14 @@ func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 		}
 	}
 	return false
+}
+
+func azureStackImageBaseOverrides(kc *api.KubernetesConfig) {
+	// Azure Stack's custom hyperkube image is now hosted along with MS' images
+	// Override KubernetesImageBase/KubernetesImageBaseType if apimodel is set to the deprecated KubernetesImageBase
+	deprecatedAzureStackImageBase := "mcr.microsoft.com/k8s/azurestack/core/"
+	if strings.EqualFold(kc.KubernetesImageBase, deprecatedAzureStackImageBase) {
+		kc.KubernetesImageBase = "mcr.microsoft.com/"
+		kc.KubernetesImageBaseType = "mcr"
+	}
 }
