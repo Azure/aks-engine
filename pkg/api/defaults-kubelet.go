@@ -87,8 +87,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--cloud-provider":                    "azure",
-		"--cloud-config":                      "/etc/kubernetes/azure.json",
-		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--event-qps":                         DefaultKubeletEventQPS,
 		"--cadvisor-port":                     DefaultKubeletCadvisorPort,
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
