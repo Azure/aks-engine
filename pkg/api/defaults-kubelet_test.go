@@ -30,7 +30,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
 		"--anonymous-auth":                    "false",
 		"--authorization-mode":                "Webhook",
-		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+//		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
 		"--cgroups-per-qos":                   "true",
 		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
