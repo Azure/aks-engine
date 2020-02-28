@@ -888,6 +888,14 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 	return false
 }
 
+// IsCsiProxyEnabled returns true if csi proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCsiProxyEnabled() bool {
+	if w.EnableCsiProxy != nil {
+		return *w.EnableCsiProxy
+	}
+	return false // DO NOT HARDCODE
+}
+
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
 func (o *OrchestratorProfile) IsSwarmMode() bool {
 	return o.OrchestratorType == SwarmMode

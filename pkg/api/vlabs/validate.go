@@ -1101,6 +1101,28 @@ func (a *AgentPoolProfile) validateWindows(o *OrchestratorProfile, w *WindowsPro
 	return nil
 }
 
+func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) error {
+	if w.IsCsiProxyEnabled() {
+		k8sSemVer, err := semver.Make(k8sVersion)
+		if err != nil {
+			return errors.Errorf("could not validate orchestrator version %s", k8sVersion)
+		}
+		minSemVer, err := semver.Make("1.18.0")
+		if err != nil {
+			return errors.New("could not validate orchestrator version 1.18.0")
+		}
+
+		if k8sSemVer.LT(minSemVer) {
+			return errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater")
+		}
+
+		if len(w.CsiProxyURL) == 0 {
+			return errors.New("windowsProfile.csiProxyUrl must be specified if enableCsiProxy is set")
+		}
+	}
+	return nil
+}
+
 func (a *AgentPoolProfile) validateOrchestratorSpecificProperties(orchestratorType string) error {
 
 	// for Kubernetes, we don't support AgentPoolProfile.DNSPrefix
