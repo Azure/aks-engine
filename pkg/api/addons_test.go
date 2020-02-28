@@ -6,6 +6,7 @@ package api
 import (
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -2078,7 +2079,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName],
+							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
 						},
 					},
 				},
@@ -4002,4 +4003,51 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 	}
 
 	return addons
+}
+
+func TestKubeProxyImageSuffix(t *testing.T) {
+	cases := []struct {
+		name       string
+		cs         ContainerService
+		azurestack bool
+		expected   string
+	}{
+		{
+			name:       "return empty string if target cloud is NOT Azure Stack",
+			cs:         getMockBaseContainerService("1.16.0"),
+			azurestack: false,
+			expected:   "",
+		},
+		{
+			name:       "return empty string if target cloud is NOT Azure Stack",
+			cs:         getMockBaseContainerService("1.17.0"),
+			azurestack: false,
+			expected:   "",
+		},
+		{
+			name:       "return empty string if target version is v1.17 or greater",
+			cs:         getMockBaseContainerService("1.17.0"),
+			azurestack: true,
+			expected:   "",
+		},
+		{
+			name:       "return '-azs' if target cloud is Azure Stack and K8s version lower than v1.17",
+			cs:         getMockBaseContainerService("1.16.0"),
+			azurestack: true,
+			expected:   common.AzureStackSuffix,
+		},
+	}
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.azurestack {
+				c.cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
+			}
+			actual := kubeProxyImageSuffix(c.cs)
+			if !strings.EqualFold(actual, c.expected) {
+				t.Errorf("expected %s to be %s", actual, c.expected)
+			}
+		})
+	}
 }
