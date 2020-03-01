@@ -920,6 +920,23 @@ func TestKubernetesImageBaseAppendSlash(t *testing.T) {
 	}
 }
 
+func TestKubernetesImageBaseAzureStack(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = "gcr"
+	properties.CustomCloudProfile = &CustomCloudProfile{}
+	properties.CustomCloudProfile.Environment = &azure.Environment{}
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "mcr.microsoft.com/" {
+		t.Fatalf("defaults flow did not set Azure Stack's KubernetesImageBase")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != "mcr" {
+		t.Fatalf("defaults flow did not set Azure Stack's KubernetesImageBaseType")
+	}
+}
+
 func TestContainerRuntime(t *testing.T) {
 
 	for _, mobyVersion := range []string{"3.0.1", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.10"} {

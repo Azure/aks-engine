@@ -4,7 +4,6 @@
 package cmd
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -498,47 +497,6 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 			ret := isVMSSNameInAgentPoolsArray(c.vmssName, c.cs)
 			if ret != c.expected {
 				t.Errorf("expected %t to be %t", ret, c.expected)
-			}
-		})
-	}
-}
-
-func TestUpgradeMCROverridesAzureStack(t *testing.T) {
-	cases := []struct {
-		name         string
-		kc           *api.KubernetesConfig
-		expectedBase string
-		expectedType string
-	}{
-		{
-			name: "override image base if apimodel references deprecated mcr repo",
-			kc: &api.KubernetesConfig{
-				KubernetesImageBase:     "mcr.microsoft.com/k8s/azurestack/core/",
-				KubernetesImageBaseType: "",
-			},
-			expectedBase: "mcr.microsoft.com/",
-			expectedType: "mcr",
-		},
-		{
-			name: "do not override image base if apimodel does not reference deprecated mcr repo",
-			kc: &api.KubernetesConfig{
-				KubernetesImageBase:     "example.com/",
-				KubernetesImageBaseType: "gcr",
-			},
-			expectedBase: "example.com/",
-			expectedType: "gcr",
-		},
-	}
-	for _, tc := range cases {
-		c := tc
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-			azureStackImageBaseOverrides(c.kc)
-			if !strings.EqualFold(c.kc.KubernetesImageBase, c.expectedBase) {
-				t.Errorf("expected %s to be %s", c.kc.KubernetesImageBase, c.expectedBase)
-			}
-			if !strings.EqualFold(c.kc.KubernetesImageBaseType, c.expectedType) {
-				t.Errorf("expected %s to be %s", c.kc.KubernetesImageBaseType, c.expectedType)
 			}
 		})
 	}

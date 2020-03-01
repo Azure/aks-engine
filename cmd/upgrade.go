@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -168,7 +167,6 @@ func (uc *upgradeCmd) loadCluster() error {
 		}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
-		azureStackImageBaseOverrides(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig)
 	}
 
 	if err = uc.getAuthArgs().validateAuthArgs(); err != nil {
@@ -323,14 +321,4 @@ func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 		}
 	}
 	return false
-}
-
-func azureStackImageBaseOverrides(kc *api.KubernetesConfig) {
-	// Azure Stack's custom hyperkube image is now hosted along with MS' images
-	// Override KubernetesImageBase/KubernetesImageBaseType if apimodel is set to the deprecated KubernetesImageBase
-	deprecatedAzureStackImageBase := "mcr.microsoft.com/k8s/azurestack/core/"
-	if strings.EqualFold(kc.KubernetesImageBase, deprecatedAzureStackImageBase) {
-		kc.KubernetesImageBase = "mcr.microsoft.com/"
-		kc.KubernetesImageBaseType = "mcr"
-	}
 }

@@ -351,7 +351,7 @@ K8S_VERSIONS="
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
     if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/k8s/azurestack/core/hyperkube-amd64:v${KUBERNETES_VERSION}"
+      HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
     else
       HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
     fi

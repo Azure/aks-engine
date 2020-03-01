@@ -123,6 +123,20 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
 		}
 
+		if a.IsAzureStackCloud() {
+			// Azure Stack's custom hyperkube image is now hosted along with MCR images.
+			// Forcing KubernetesImageBase/KubernetesImageBaseType.
+			mcrKubernetesImageBase := cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
+			if !strings.EqualFold(o.KubernetesConfig.KubernetesImageBase, mcrKubernetesImageBase) {
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.kubernetesImageBase forced to \"%s\"\n", mcrKubernetesImageBase)
+			}
+			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
+			if !strings.EqualFold(o.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR) {
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.KubernetesImageBaseType forced to \"%s\"\n", common.KubernetesImageBaseTypeMCR)
+			}
+			o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+		}
+
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		} else {
@@ -149,7 +163,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 				}
 			}
-
 		}
 
 		if a.HasWindows() {
