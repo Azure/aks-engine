@@ -34638,6 +34638,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+ensureNTP() {
+    systemctlEnableAndStart ntp || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
@@ -35227,7 +35231,7 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
-{{/* ERR_SYSTEMCTL_ENABLE_FAIL=3 Service could not be enabled by systemctl -- DEPRECATED */}}
+ERR_SYSTEMCTL_STOP_FAIL=3 {{/* Service could not be stopped by systemctl */}}
 ERR_SYSTEMCTL_START_FAIL=4 {{/* Service could not be started or enabled by systemctl */}}
 ERR_CLOUD_INIT_TIMEOUT=5 {{/* Timeout waiting for cloud-init runcmd to complete */}}
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
@@ -35549,6 +35553,9 @@ APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
 BPFTRACE_DOWNLOADS_DIR="/opt/bpftrace/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
+if [[ $OS == $UBUNTU_OS_NAME ]]; then
+    UBUNTU_VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
+fi
 
 removeEtcd() {
     if [[ $OS == $COREOS_OS_NAME ]]; then
@@ -35606,6 +35613,11 @@ installDeps() {
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+            retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+            packages+=" ntp"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi
@@ -35614,16 +35626,16 @@ installDeps() {
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
 
     for apt_package in ${packages}; do
-      if ! apt_get_install 30 1 600 $apt_package; then
-        journalctl --no-pager -u $apt_package
-        exit $ERR_APT_INSTALL_TIMEOUT
-      fi
+        if ! apt_get_install 30 1 600 $apt_package; then
+            journalctl --no-pager -u $apt_package
+            exit $ERR_APT_INSTALL_TIMEOUT
+        fi
     done
     if [[ "${AUDITD_ENABLED}" == true ]]; then
-      if ! apt_get_install 30 1 600 auditd; then
-        journalctl --no-pager -u auditd
-        exit $ERR_APT_INSTALL_TIMEOUT
-      fi
+        if ! apt_get_install 30 1 600 auditd; then
+            journalctl --no-pager -u auditd
+            exit $ERR_APT_INSTALL_TIMEOUT
+        fi
     fi
 }
 
@@ -36056,6 +36068,10 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{end}}
 else
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    time_metric "EnsureNTP" ensureNTP
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then

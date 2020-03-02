@@ -96,6 +96,10 @@ else
     echo "Golden image; skipping dependencies installation"
 fi
 
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    time_metric "EnsureNTP" ensureNTP
+fi
+
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "EnsureAuditD" ensureAuditD
 fi
