@@ -67,14 +67,14 @@ To test node-problem-detector in a running cluster, you can inject messages into
 | customPluginMonitor | no       | Comma-separated list of custom plugin monitor config files | /config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json             |
 | systemLogMonitor    | no       | Comma-separated list of system log monitor config files    | /config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json |
 | systemStatsMonitor  | no       | Comma-separated list of system stats monitor config files  | /config/system-stats-monitor.json                                                    |
-| versionLabel        | no       | Version label used as DaemonSet selector                   | v0.8.0                                                                               |
+| versionLabel        | no       | Version label used as DaemonSet selector                   | v0.8.1                                                                               |
 
 ### Node Problem Detector
 
 | Name           | Required | Description                       | Default Value                             |
 | -------------- | -------- | --------------------------------- | ----------------------------------------- |
 | name           | no       | container name                    | "node-problem-detector"                   |
-| image          | no       | image                             | "k8s.gcr.io/node-problem-detector:v0.8.0" |
+| image          | no       | image                             | "k8s.gcr.io/node-problem-detector:v0.8.1" |
 | cpuRequests    | no       | cpu requests for the container    | "20m"                                     |
 | memoryRequests | no       | memory requests for the container | "20Mi"                                    |
 | cpuLimits      | no       | cpu limits for the container      | "200m"                                    |
