@@ -85,7 +85,10 @@ generate: bootstrap
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
-	python pkg/helpers/generate_azure_constants.py
+	aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	  > pkg/helpers/azure_locations.go
+	aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	  > pkg/helpers/azure_skus_const.go
 
 .PHONY: build
 build: generate go-build
