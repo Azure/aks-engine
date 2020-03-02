@@ -600,7 +600,8 @@ func TestAssignDefaultComponentVals(t *testing.T) {
 					},
 				},
 				Config: map[string]string{
-					"foo": "bar",
+					"foo":     "bar",
+					"command": "/bin/custom-command/overwrite-me",
 				},
 			},
 			defaultComponent: controllerManagerComponent,
