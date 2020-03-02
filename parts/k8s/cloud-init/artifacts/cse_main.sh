@@ -97,7 +97,9 @@ else
 fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
-    time_metric "EnsureNTP" ensureNTP
+    if apt list --installed | grep 'ntp'; then
+        time_metric "EnsureNTP" ensureNTP
+    fi
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
