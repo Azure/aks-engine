@@ -11,9 +11,6 @@ APMZ_DOWNLOADS_DIR="/opt/apmz/downloads"
 BPFTRACE_DOWNLOADS_DIR="/opt/bpftrace/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
-if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    UBUNTU_VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
-fi
 
 removeEtcd() {
     if [[ $OS == $COREOS_OS_NAME ]]; then
