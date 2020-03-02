@@ -163,9 +163,12 @@ func assignDefaultComponentVals(component, defaultComponent KubernetesComponent,
 			}
 		}
 	}
+	if component.Config == nil {
+		component.Config = make(map[string]string)
+	}
 	for key, val := range defaultComponent.Config {
-		if component.Config == nil {
-			component.Config = make(map[string]string)
+		if key == "command" && isUpgrade {
+			component.Config[key] = val
 		}
 		if v, ok := component.Config[key]; !ok || v == "" {
 			component.Config[key] = val
