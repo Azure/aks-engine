@@ -1403,6 +1403,11 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NV16as_v4",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_NV24",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: false,
@@ -1423,7 +1428,17 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_NV32as_v4",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_NV48s_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_NV4as_v4",
 		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
 	},
@@ -1439,6 +1454,11 @@ var VMSkus = []VMSku{
 	},
 	{
 		Name:                  "Standard_NV6s_v2",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_NV8as_v4",
 		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
 	},
