@@ -567,6 +567,7 @@ type MasterProfile struct {
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
+	EnableVMSSDiskEncryption  *bool             `json:"enableVMSSDiskEncryption,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
@@ -649,6 +650,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
+	EnableVMSSDiskEncryption            *bool                `json:"enableVMSSDiskEncryption,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -2107,6 +2109,43 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 // IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
 func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 	return p.HasNSeriesSKU()
+}
+
+func (p *MasterProfile) IsVMSSDiskEncryptionEnabled() bool {
+	return p != nil && p.IsVirtualMachineScaleSets() && to.Bool(p.EnableVMSSDiskEncryption)
+}
+
+func (p *AgentPoolProfile) IsVMSSDiskEncryptionEnabled() bool {
+	return p != nil && p.IsVirtualMachineScaleSets() && to.Bool(p.EnableVMSSDiskEncryption)
+}
+
+func (p *Properties) IsVMSSDiskEncryptionEnabled() bool {
+	masterProfile := p.MasterProfile
+	profiles := p.AgentPoolProfiles
+
+	if masterProfile.IsVMSSDiskEncryptionEnabled() {
+		return true
+	}
+
+	if profiles != nil && p.HasVMSSAgentPool() {
+		for _, profile := range profiles {
+			if profile.IsVMSSDiskEncryptionEnabled() {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (p *Properties) ShouldCreateKeyVault() bool {
+	kubernetesConfig := p.OrchestratorProfile.KubernetesConfig
+
+	if kubernetesConfig != nil && to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms) {
+		return true
+	}
+
+	return p.IsVMSSDiskEncryptionEnabled()
 }
 
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config

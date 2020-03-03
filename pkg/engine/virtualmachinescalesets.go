@@ -14,6 +14,35 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
+func createDiskEncryptionExtensionProperties(isLinux bool) *compute.VirtualMachineScaleSetExtensionProperties {
+	var extensionType, version, volumeType string
+  if isLinux {
+		extensionType = "AzureDiskEncryptionForLinux"
+		version = "1.1"
+		volumeType = "Data" // as of 3/3/2020, OS volume encryption in Linux is not supported
+	} else {
+		extensionType = "AzureDiskEncryption"
+		version = "2.2"
+		volumeType = "ALL"
+	}
+
+	return &compute.VirtualMachineScaleSetExtensionProperties{
+		Publisher:               to.StringPtr("Microsoft.Azure.Security"),
+		Type:                    to.StringPtr(extensionType),
+		TypeHandlerVersion:      to.StringPtr(version),
+		AutoUpgradeMinorVersion: to.BoolPtr(true),
+		Settings:                &map[string]interface{}{
+			"VolumeType": volumeType,
+			"EncryptionOperation": "EnableEncryption",
+			"KeyVaultURL": "[reference(concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))).vaultUri]",
+			"KeyVaultResourceId": "[resourceId('Microsoft.KeyVault/vaults', variables('clusterKeyVaultName'))]",
+			"KekVaultResourceId": "",
+			"KeyEncryptionKeyURL": "",
+			"KeyEncryptionAlgorithm": "",
+		},
+	}
+}
+
 func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 
 	masterProfile := cs.Properties.MasterProfile
@@ -318,6 +347,14 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 			},
 		}
 		extensions = append(extensions, aksBillingExtension)
+	}
+
+	if masterProfile.IsVMSSDiskEncryptionEnabled() {
+		diskEncryptionExtension := compute.VirtualMachineScaleSetExtension{
+			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-encryption')]"),
+			VirtualMachineScaleSetExtensionProperties: createDiskEncryptionExtensionProperties(true),
+		}
+		extensions = append(extensions, diskEncryptionExtension)
 	}
 
 	extensionProfile := compute.VirtualMachineScaleSetExtensionProfile{
@@ -790,6 +827,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 
 		vmssExtensions = append(vmssExtensions, aksBillingExtension)
+	}
+
+	if profile.IsVMSSDiskEncryptionEnabled() {
+		diskEncryptionExtension := compute.VirtualMachineScaleSetExtension{
+			Name: to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), '-encryption')]", profile.Name)),
+			VirtualMachineScaleSetExtensionProperties: createDiskEncryptionExtensionProperties(profile.IsLinux()),
+		}
+		vmssExtensions = append(vmssExtensions, diskEncryptionExtension)
 	}
 
 	vmssVMProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{

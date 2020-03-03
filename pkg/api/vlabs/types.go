@@ -431,6 +431,7 @@ type MasterProfile struct {
 	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
+	EnableVMSSDiskEncryption  *bool             `json:"enableVMSSDiskEncryption,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -515,6 +516,7 @@ type AgentPoolProfile struct {
 	AvailabilityZones                 []string          `json:"availabilityZones,omitempty"`
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
+	EnableVMSSDiskEncryption          *bool             `json:"enableVMSSDiskEncryption,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

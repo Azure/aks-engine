@@ -60,7 +60,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterProfile := cs.Properties.MasterProfile
 	profiles := cs.Properties.AgentPoolProfiles
 
-	var useManagedIdentity, userAssignedID, userAssignedClientID, enableEncryptionWithExternalKms bool
+	var useManagedIdentity, userAssignedID, userAssignedClientID, createKeyVault bool
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
@@ -68,7 +68,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
-		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
+		createKeyVault = cs.Properties.ShouldCreateKeyVault()
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
@@ -499,7 +499,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["windowsCustomScriptSuffix"] = " $inputFile = '%SYSTEMDRIVE%\\AzureData\\CustomData.bin' ; $outputFile = '%SYSTEMDRIVE%\\AzureData\\CustomDataSetupScript.ps1' ; Copy-Item $inputFile $outputFile ; Invoke-Expression('{0} {1}' -f $outputFile, $arguments) ; "
 	}
 
-	if enableEncryptionWithExternalKms {
+	if createKeyVault {
 		masterVars["clusterKeyVaultName"] = "[take(concat('kv', tolower(uniqueString(concat(variables('masterFqdnPrefix'),variables('location'),parameters('nameSuffix'))))), 22)]"
 	} else {
 		masterVars["clusterKeyVaultName"] = ""

@@ -421,6 +421,10 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
 
+	if to.Bool(m.EnableVMSSDiskEncryption) && m.AvailabilityProfile != VirtualMachineScaleSets {
+		return errors.New("You have enabled VMSS disk encryption for the master profile, but you did not specify VMSS")
+	}
+
 	distroValues := DistroValues
 	if isUpdate {
 		distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
@@ -498,6 +502,12 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if to.Bool(agentPoolProfile.EnableVMSSNodePublicIP) {
 			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
 				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
+			}
+		}
+
+		if to.Bool(agentPoolProfile.EnableVMSSDiskEncryption) {
+			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
+				return errors.Errorf("You have enabled VMSS disk encryption in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
 			}
 		}
 

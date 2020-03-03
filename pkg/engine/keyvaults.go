@@ -9,6 +9,14 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 )
 
+func getAzureDiskEncryptionValue(cs *api.ContainerService) string {
+	if cs.Properties.IsVMSSDiskEncryptionEnabled() {
+		return "true"
+	}
+
+	return "false"
+}
+
 func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 	keyVaultMap := map[string]interface{}{
 		"type":       "Microsoft.KeyVault/vaults",
@@ -35,9 +43,10 @@ func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 		keyVaultMap["dependsOn"] = dependencies
 	}
 
+	enabledForDiskEncryption := getAzureDiskEncryptionValue(cs)
 	keyVaultProps := map[string]interface{}{
 		"enabledForDeployment":         "false",
-		"enabledForDiskEncryption":     "false",
+		"enabledForDiskEncryption":     enabledForDiskEncryption,
 		"enabledForTemplateDeployment": "false",
 		"tenantId":                     "[variables('tenantID')]",
 		"sku": map[string]interface{}{
@@ -111,9 +120,7 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 		},
 	}
 	if useManagedIdentity {
-		dependencies := []string{
-			"[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('masterVMNamePrefix'), 'vmss')]",
-		}
+		dependencies := []string{}
 		if userAssignedIDEnabled {
 			dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
 			accessPolicy["objectId"] = "[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"
@@ -121,9 +128,10 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 		keyVaultMap["dependsOn"] = dependencies
 	}
 
+  enabledForDiskEncryption := getAzureDiskEncryptionValue(cs)
 	keyVaultProps := map[string]interface{}{
 		"enabledForDeployment":         "false",
-		"enabledForDiskEncryption":     "false",
+		"enabledForDiskEncryption":     enabledForDiskEncryption,
 		"enabledForTemplateDeployment": "false",
 		"tenantId":                     "[variables('tenantID')]",
 		"sku": map[string]interface{}{

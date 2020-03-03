@@ -5,7 +5,6 @@ package engine
 
 import (
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{} {
@@ -88,12 +87,9 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, internalLB)
 	}
 
-	var isKMSEnabled bool
-	if kubernetesConfig != nil {
-		isKMSEnabled = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
-	}
+	shouldCreateKeyVault := cs.Properties.ShouldCreateKeyVault()
 
-	if isKMSEnabled {
+	if shouldCreateKeyVault {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMAS(cs)
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)
@@ -122,7 +118,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	}
 
 	masterCSE := CreateCustomScriptExtension(cs)
-	if isKMSEnabled {
+	if shouldCreateKeyVault {
 		masterCSE.ARMResource.DependsOn = append(masterCSE.ARMResource.DependsOn, "[concat('Microsoft.KeyVault/vaults/', variables('clusterKeyVaultName'))]")
 	}
 
@@ -186,14 +182,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	loadBalancer := CreateMasterLoadBalancer(cs.Properties, true)
 	masterResources = append(masterResources, publicIPAddress, loadBalancer)
 
-	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
-
-	var isKMSEnabled bool
-	if kubernetesConfig != nil {
-		isKMSEnabled = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
-	}
-
-	if isKMSEnabled {
+	if cs.Properties.ShouldCreateKeyVault() {
 		keyVaultStorageAccount := createKeyVaultStorageAccount()
 		keyVault := CreateKeyVaultVMSS(cs)
 		masterResources = append(masterResources, keyVaultStorageAccount, keyVault)

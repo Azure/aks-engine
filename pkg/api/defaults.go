@@ -643,6 +643,14 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.PlatformUpdateDomainCount == nil {
 		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 	}
+
+	if p.MasterProfile.EnableVMSSDiskEncryption == nil {
+		if p.MasterProfile.IsVirtualMachineScaleSets() {
+			p.MasterProfile.EnableVMSSDiskEncryption = to.BoolPtr(DefaultEnableVMSSDiskEncryption)
+		} else {
+			p.MasterProfile.EnableVMSSDiskEncryption = to.BoolPtr(false)
+		}
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
@@ -714,6 +722,14 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if profile.EnableVMSSNodePublicIP == nil {
 			profile.EnableVMSSNodePublicIP = to.BoolPtr(DefaultEnableVMSSNodePublicIP)
+		}
+
+		if profile.EnableVMSSDiskEncryption == nil {
+			if profile.IsVirtualMachineScaleSets() {
+				profile.EnableVMSSDiskEncryption = to.BoolPtr(DefaultEnableVMSSDiskEncryption)
+			} else {
+				profile.EnableVMSSDiskEncryption = to.BoolPtr(false)
+			}
 		}
 
 		if !p.OrchestratorProfile.IsKubernetes() {
