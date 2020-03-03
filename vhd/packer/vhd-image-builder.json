@@ -193,6 +193,11 @@
         },
         {
             "type": "file",
+            "source": "scripts/collect-logs.sh",
+            "destination": "/home/packer/collect-logs.sh"
+        },
+        {
+            "type": "file",
             "source": "vhd/notice/notice.txt",
             "destination": "/home/packer/NOTICE.txt"
         },
