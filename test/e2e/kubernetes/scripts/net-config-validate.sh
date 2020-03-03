@@ -15,9 +15,9 @@ SOMAXCONN=16384
 TCP_MAX_SYN_BACKLOG=16384
 MESSAGE_COST=40
 MESSAGE_BURST=80
-GT_8_CORES_GC_THRESH1=4096
-GT_8_CORES_GC_THRESH2=8192
-GT_8_CORES_GC_THRESH3=16384
+IPV4_NEIGH_GC_THRESH1=4096
+IPV4_NEIGH_GC_THRESH2=8192
+IPV4_NEIGH_GC_THRESH3=16384
 
 set -x
 grep $IPV4_SEND_REDIRECTS_VALUE /proc/sys/net/ipv4/conf/all/send_redirects || exit 1
@@ -46,8 +46,6 @@ grep $TCP_MAX_SYN_BACKLOG /proc/sys/net/ipv4/tcp_max_syn_backlog || exit 1
 grep $MESSAGE_COST /proc/sys/net/core/message_cost || exit 1
 grep $MESSAGE_BURST /proc/sys/net/core/message_burst || exit 1
 
-if [[ "${GT_8_CORE_SKU}" == "true" ]]; then
-    grep $GT_8_CORES_GC_THRESH1 /proc/sys/net/ipv4/neigh/default/gc_thresh1 || exit 1
-    grep $GT_8_CORES_GC_THRESH2 /proc/sys/net/ipv4/neigh/default/gc_thresh2 || exit 1
-    grep $GT_8_CORES_GC_THRESH3 /proc/sys/net/ipv4/neigh/default/gc_thresh3 || exit 1
-fi
+grep $IPV4_NEIGH_GC_THRESH1 /proc/sys/net/ipv4/neigh/default/gc_thresh1 || exit 1
+grep $IPV4_NEIGH_GC_THRESH2 /proc/sys/net/ipv4/neigh/default/gc_thresh2 || exit 1
+grep $IPV4_NEIGH_GC_THRESH3 /proc/sys/net/ipv4/neigh/default/gc_thresh3 || exit 1
