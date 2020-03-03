@@ -645,6 +645,16 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
 		}
 	}
+
+	// Tests that apply to single stack IPv6 with 1.18 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0-alpha.4", true, true) {
+		c := KubernetesConfig{
+			NetworkPlugin: "azure",
+		}
+		if err := c.Validate(k8sVersion, false, false, true); err == nil {
+			t.Error("should error when network plugin is not kubenet for single stack IPv6")
+		}
+	}
 }
 
 func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {

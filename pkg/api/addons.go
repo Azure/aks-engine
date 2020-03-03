@@ -301,7 +301,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"non-masquerade-cidr":           cs.Properties.GetNonMasqueradeCIDR(),
 			"non-masq-cni-cidr":             cs.Properties.GetAzureCNICidr(),
 			"secondary-non-masquerade-cidr": cs.Properties.GetSecondaryNonMasqueradeCIDR(),
-			"enable-ipv6":                   strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
+			"enable-ipv6": strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+				cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")),
 		},
 	}
 

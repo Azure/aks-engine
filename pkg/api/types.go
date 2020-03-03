@@ -2335,7 +2335,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"KMS_PROVIDER_VAULT_NAME":              input.ClusterKeyVaultName,
 		"IS_HOSTED_MASTER":                     strconv.FormatBool(cs.Properties.IsHostedMasterProfile()),
 		"IS_IPV6_DUALSTACK_FEATURE_ENABLED":    strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
-		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")),
+		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"IDENTITY_SYSTEM":                      cs.Properties.GetCustomCloudIdentitySystem(),
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
