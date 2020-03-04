@@ -90,7 +90,7 @@ CNI_PLUGIN_VERSIONS="
 0.8.5
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
-    CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-amd64-linux-v${CNI_PLUGIN_VERSION}.tgz"
+    CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-linux-amd64-v${CNI_PLUGIN_VERSION}.tgz"
     downloadCNI
     echo "  - CNI plugin version ${CNI_PLUGIN_VERSION}" >> ${VHD_LOGS_FILEPATH}
 done
