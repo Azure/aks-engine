@@ -40,11 +40,21 @@ func (cs *ContainerService) setControllerManagerConfig() {
 		staticControllerManagerConfig["--cloud-provider"] = "external"
 	}
 
+	ctrlMgrNodeMonitorGracePeriod := DefaultKubernetesCtrlMgrNodeMonitorGracePeriod
+	ctrlMgrPodEvictionTimeout := DefaultKubernetesCtrlMgrPodEvictionTimeout
+	ctrlMgrRouteReconciliationPeriod := DefaultKubernetesCtrlMgrRouteReconciliationPeriod
+
+	if cs.Properties.IsAzureStackCloud() {
+		ctrlMgrNodeMonitorGracePeriod = DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod
+		ctrlMgrPodEvictionTimeout = DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout
+		ctrlMgrRouteReconciliationPeriod = DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod
+	}
+
 	// Default controller-manager config
 	defaultControllerManagerConfig := map[string]string{
-		"--node-monitor-grace-period":       DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
-		"--pod-eviction-timeout":            DefaultKubernetesCtrlMgrPodEvictionTimeout,
-		"--route-reconciliation-period":     DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+		"--node-monitor-grace-period":       ctrlMgrNodeMonitorGracePeriod,
+		"--pod-eviction-timeout":            ctrlMgrPodEvictionTimeout,
+		"--route-reconciliation-period":     ctrlMgrRouteReconciliationPeriod,
 		"--terminated-pod-gc-threshold":     DefaultKubernetesCtrlMgrTerminatedPodGcThreshold,
 		"--use-service-account-credentials": DefaultKubernetesCtrlMgrUseSvcAccountCreds,
 		"--profiling":                       DefaultKubernetesCtrMgrEnableProfiling,

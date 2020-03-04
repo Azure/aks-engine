@@ -3985,7 +3985,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o := p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCases := []struct {
@@ -4044,6 +4044,76 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
+	// Test cloudprovider Azure Stack defaults when no user-provided values
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		CustomCloudProfile: &CustomCloudProfile{},
+	}
+	o = p.OrchestratorProfile
+	p.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCases = []struct {
+		defaultVal  int
+		computedVal int
+	}{
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitBucket,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
+		},
+	}
+
+	for _, c := range intCases {
+		if c.computedVal != c.defaultVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect Azure Stack default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.defaultVal, c.computedVal)
+		}
+	}
+
+	floatCases = []struct {
+		defaultVal  float64
+		computedVal float64
+	}{
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitQPS,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
+	}
+
+	for _, c := range floatCases {
+		if c.computedVal != c.defaultVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect Azure Stack default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.defaultVal, c.computedVal)
+		}
+	}
+
 	customCloudProviderBackoffDuration := 99
 	customCloudProviderBackoffExponent := 10.0
 	customCloudProviderBackoffJitter := 11.9
@@ -4072,7 +4142,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesCustom := []struct {
@@ -4145,7 +4215,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed := []struct {
@@ -4203,7 +4273,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4275,7 +4345,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4344,7 +4414,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4410,7 +4480,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4479,7 +4549,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4542,7 +4612,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 
 	floatCasesMixed = []struct {
 		expectedVal float64
@@ -4563,7 +4633,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 			t.Fatalf("KubernetesConfig cloudprovider backoff v2 configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
 		}
 	}
-
 }
 
 func TestGetKubernetesVersion(t *testing.T) {

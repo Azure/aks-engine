@@ -267,7 +267,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// Enforce sane cloudprovider backoff defaults.
-		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+		a.SetCloudProviderBackoffDefaults()
 
 		if o.KubernetesConfig.CloudProviderRateLimit == nil {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)

@@ -139,3 +139,34 @@ func TestControllerManagerConfigHostedMasterProfile(t *testing.T) {
 		t.Fatalf("expected controller-manager to have cluster-name foodns when using HostedMasterProfile")
 	}
 }
+
+func TestControllerManagerDefaultConfig(t *testing.T) {
+	// Azure defaults
+	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.setControllerManagerConfig()
+	cm := cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--node-monitor-grace-period"] != string(DefaultKubernetesCtrlMgrNodeMonitorGracePeriod) {
+		t.Fatalf("expected controller-manager to have node-monitor-grace-period set to its default value")
+	}
+	if cm["--pod-eviction-timeout"] != string(DefaultKubernetesCtrlMgrPodEvictionTimeout) {
+		t.Fatalf("expected controller-manager to have pod-eviction-timeout set to its default value")
+	}
+	if cm["--route-reconciliation-period"] != string(DefaultKubernetesCtrlMgrRouteReconciliationPeriod) {
+		t.Fatalf("expected controller-manager to have route-reconciliation-period set to its default value")
+	}
+
+	// Azure Stack defaults
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
+	cs.setControllerManagerConfig()
+	cm = cs.Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig
+	if cm["--node-monitor-grace-period"] != string(DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod) {
+		t.Fatalf("expected controller-manager to have node-monitor-grace-period set to its default value")
+	}
+	if cm["--pod-eviction-timeout"] != string(DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout) {
+		t.Fatalf("expected controller-manager to have pod-eviction-timeout set to its default value")
+	}
+	if cm["--route-reconciliation-period"] != string(DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod) {
+		t.Fatalf("expected controller-manager to have route-reconciliation-period set to its default value")
+	}
+}
