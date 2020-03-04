@@ -349,14 +349,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		extensions = append(extensions, aksBillingExtension)
 	}
 
-	if masterProfile.IsVMSSDiskEncryptionEnabled() {
-		diskEncryptionExtension := compute.VirtualMachineScaleSetExtension{
-			Name: to.StringPtr("[concat(variables('masterVMNamePrefix'), 'vmss-encryption')]"),
-			VirtualMachineScaleSetExtensionProperties: createDiskEncryptionExtensionProperties(true),
-		}
-		extensions = append(extensions, diskEncryptionExtension)
-	}
-
 	extensionProfile := compute.VirtualMachineScaleSetExtensionProfile{
 		Extensions: &extensions,
 	}

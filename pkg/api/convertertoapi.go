@@ -574,7 +574,6 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
-	api.EnableVMSSDiskEncryption = vlabs.EnableVMSSDiskEncryption
 	convertCustomFilesToAPI(vlabs, api)
 }
 

@@ -421,10 +421,6 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
 
-	if to.Bool(m.EnableVMSSDiskEncryption) && m.AvailabilityProfile != VirtualMachineScaleSets {
-		return errors.New("You have enabled VMSS disk encryption for the master profile, but you did not specify VMSS")
-	}
-
 	distroValues := DistroValues
 	if isUpdate {
 		distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
