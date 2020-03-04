@@ -51,6 +51,11 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 		k8sVars[k] = v
 	}
 
+	windowsProfileVars := getWindowsProfileVars(cs)
+	for k, v := range windowsProfileVars {
+		k8sVars[k] = v
+	}
+
 	return k8sVars, nil
 }
 
@@ -604,6 +609,14 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	return telemetryVars
+}
+
+func getWindowsProfileVars(cs *api.ContainerService) map[string]interface{} {
+	vars := map[string]interface{}{
+		"windowsEnableCsiProxy": cs.Properties.WindowsProfile.IsCsiProxyEnabled(),
+		"windowsCsiProxyUrl":    cs.Properties.WindowsProfile.CsiProxyURL,
+	}
+	return vars
 }
 
 func getSizeMap() map[string]interface{} {
