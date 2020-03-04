@@ -30,12 +30,12 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
 		"--anonymous-auth":                    "false",
 		"--authorization-mode":                "Webhook",
-//		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
 		"--cgroups-per-qos":                   "true",
 		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
 		"--cloud-provider":                    "azure",
-//		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
 		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
 		"--cluster-domain":                    "cluster.local",
 		"--enforce-node-allocatable":          "pods",
@@ -211,8 +211,8 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 
 }
 
- func TestKubeletConfigCloudConfig(t *testing.T) {
-// Test default value and custom value for --cloud-config
+func TestKubeletConfigCloudConfig(t *testing.T) {
+	// Test default value and custom value for --cloud-config
 	// cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	// cs.setKubeletConfig(false)
 	// k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
@@ -231,15 +231,15 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 	}
 }
 
- func TestKubeletConfigAzureContainerRegistryConfig(t *testing.T) {
-//  Test default value and custom value for --azure-container-registry-config
-// 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-// 	cs.setKubeletConfig(false)
-// 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-// 	if k["--azure-container-registry-config"] != "/etc/kubernetes/azure.json" {
-// 		t.Fatalf("got unexpected '--azure-container-registry-config' kubelet config default value: %s",
-// 			k["--azure-container-registry-config"])
-// 	}
+func TestKubeletConfigAzureContainerRegistryConfig(t *testing.T) {
+	//  Test default value and custom value for --azure-container-registry-config
+	// 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	// 	cs.setKubeletConfig(false)
+	// 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	// 	if k["--azure-container-registry-config"] != "/etc/kubernetes/azure.json" {
+	// 		t.Fatalf("got unexpected '--azure-container-registry-config' kubelet config default value: %s",
+	// 			k["--azure-container-registry-config"])
+	// 	}
 
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--azure-container-registry-config"] = "custom.json"

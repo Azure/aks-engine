@@ -87,6 +87,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--event-qps":                         DefaultKubeletEventQPS,
 		"--cadvisor-port":                     DefaultKubeletCadvisorPort,
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
@@ -212,6 +214,9 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		setMissingKubeletValues(profile.KubernetesConfig, o.KubernetesConfig.KubeletConfig)
+		profile.KubernetesConfig.KubeletConfig["--cloud-provider"] = ""
+		profile.KubernetesConfig.KubeletConfig["--cloud-config"] = ""
+		profile.KubernetesConfig.KubeletConfig["--azure-container-registry-config"] = ""
 
 		if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
 			hasSupportPodPidsLimitFeatureGate := strings.Contains(profile.KubernetesConfig.KubeletConfig["--feature-gates"], "SupportPodPidsLimit=true")
