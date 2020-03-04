@@ -2118,12 +2118,18 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = agentPoolProfilesCount * common.MaxAgentCount
 		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultAzureStackKubernetesCloudProviderRateLimitBucket
+		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
 		if (DefaultKubernetesCloudProviderRateLimitQPS / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)) < common.MinCloudProviderQPSToBucketFactor {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket) * common.MinCloudProviderQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
+		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultAzureStackKubernetesCloudProviderRateLimitQPS
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
@@ -2133,12 +2139,18 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = agentPoolProfilesCount * common.MaxAgentCount
 		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite
+		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite == 0 {
 		if (DefaultKubernetesCloudProviderRateLimitQPSWrite / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite)) < common.MinCloudProviderQPSToBucketFactor {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite) * common.MinCloudProviderQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = DefaultKubernetesCloudProviderRateLimitQPSWrite
+		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite
 		}
 	}
 }
@@ -2167,19 +2179,32 @@ func (k *KubernetesConfig) RequiresDocker() bool {
 }
 
 // SetCloudProviderBackoffDefaults sets default cloudprovider backoff config
-func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
+func (p *Properties) SetCloudProviderBackoffDefaults() {
+	k := p.OrchestratorProfile.KubernetesConfig
 	if k.CloudProviderBackoffDuration == 0 {
 		k.CloudProviderBackoffDuration = DefaultKubernetesCloudProviderBackoffDuration
+		if p.IsAzureStackCloud() {
+			k.CloudProviderBackoffDuration = DefaultAzureStackKubernetesCloudProviderBackoffDuration
+		}
 	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
+		if p.IsAzureStackCloud() {
+			k.CloudProviderBackoffRetries = DefaultAzureStackKubernetesCloudProviderBackoffRetries
+		}
 	}
 	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
 		if k.CloudProviderBackoffExponent == 0 {
 			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
+			if p.IsAzureStackCloud() {
+				k.CloudProviderBackoffExponent = DefaultAzureStackKubernetesCloudProviderBackoffExponent
+			}
 		}
 		if k.CloudProviderBackoffJitter == 0 {
 			k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
+			if p.IsAzureStackCloud() {
+				k.CloudProviderBackoffJitter = DefaultAzureStackKubernetesCloudProviderBackoffJitter
+			}
 		}
 	}
 }

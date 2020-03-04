@@ -75,6 +75,11 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
 
+	nodeStatusUpdateFrequency := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["nodestatusfreq"]
+	if cs.Properties.IsAzureStackCloud() {
+		nodeStatusUpdateFrequency = DefaultAzureStackKubernetesNodeStatusUpdateFrequency
+	}
+
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
@@ -82,7 +87,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--pod-infra-container-image":         o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion][common.PauseComponentName],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
-		"--node-status-update-frequency":      GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["nodestatusfreq"],
+		"--node-status-update-frequency":      nodeStatusUpdateFrequency,
 		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,

@@ -306,6 +306,22 @@ const (
 	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
+// Azure Stack configures all clusters as if they were large clusters.
+const (
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 6
+	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 5
+	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
+	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "1m"
+)
+
 const (
 	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
 	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
