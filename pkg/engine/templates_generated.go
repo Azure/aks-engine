@@ -37546,28 +37546,13 @@ extractHyperkube() {
     fi
 }
 
-extractKubeBinaries() {
-    KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
-    # Split by "/" and get the last element
-    K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
-    mkdir -p "${K8S_DOWNLOADS_DIR}"
-    retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
-    tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
-        --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
-    rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
-}
-
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
-            extractKubeBinaries
+        if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
+            extractHyperkube "docker"
         else
-            if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-                extractHyperkube "docker"
-            else
-                installImg
-                extractHyperkube "img"
-            fi
+            installImg
+            extractHyperkube "img"
         fi
     fi
     mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
