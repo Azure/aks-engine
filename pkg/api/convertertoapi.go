@@ -310,6 +310,8 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.UseCloudControllerManager = vlabs.UseCloudControllerManager
 	api.CustomWindowsPackageURL = vlabs.CustomWindowsPackageURL
 	api.WindowsNodeBinariesURL = vlabs.WindowsNodeBinariesURL
+	api.WindowsContainerdURL = vlabs.WindowsContainerdURL
+	api.WindowsSdnPluginURL = vlabs.WindowsSdnPluginURL
 	api.UseInstanceMetadata = vlabs.UseInstanceMetadata
 	api.LoadBalancerSku = vlabs.LoadBalancerSku
 	api.ExcludeMasterFromStandardLB = vlabs.ExcludeMasterFromStandardLB
