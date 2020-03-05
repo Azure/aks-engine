@@ -34903,6 +34903,7 @@ users:
     client-key-data: \"$KUBECONFIG_KEY\"
 " > $KUBECONFIGFILE
     set -x
+    KUBECTL="$KUBECTL --kubeconfig=$KUBECONFIGFILE"
 }
 
 configClusterAutoscalerAddon() {
