@@ -220,3 +220,14 @@ function Register-NodeResetScriptTask {
     $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
+
+function Assert-FileExists {
+    Param(
+        [Parameter(Mandatory=$true,Position=0)][string]
+        $Filename
+    )
+    
+    if (-Not (Test-Path $Filename)) {
+        throw "$Filename does not exist"
+    }
+}
