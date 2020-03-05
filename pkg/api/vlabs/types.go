@@ -343,7 +343,7 @@ type KubernetesConfig struct {
 	EnablePodSecurityPolicy           *bool                 `json:"enablePodSecurityPolicy,omitempty"`
 	Addons                            []KubernetesAddon     `json:"addons,omitempty"`
 	Components                        []KubernetesComponent `json:"components,omitempty"`
-	KubeletConfig                     map[string]string     `json:"kubeletConfig,omitempty"`
+	KubeletConfig                     map[string]string     `json:"kubeletConfig"`
 	ControllerManagerConfig           map[string]string     `json:"controllerManagerConfig,omitempty"`
 	CloudControllerManagerConfig      map[string]string     `json:"cloudControllerManagerConfig,omitempty"`
 	APIServerConfig                   map[string]string     `json:"apiServerConfig,omitempty"`

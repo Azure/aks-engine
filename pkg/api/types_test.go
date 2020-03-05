@@ -409,6 +409,91 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 	}
 }
 
+func TestRequiresCloudproviderConfig(t *testing.T) {
+	cases := []struct {
+		name     string
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			name:     "nil",
+			ap:       AgentPoolProfile{},
+			expected: true,
+		},
+		{
+			name: "default",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--cloud-provider provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "azure",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--cloud-config provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "/etc/kubernetes/azure.json",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--azure-container-registry-config provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "/etc/kubernetes/azure.json",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "all 3 flags set explicitly to empty string",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.RequiresCloudproviderConfig() {
+				t.Fatalf("Got unexpected AgentPoolProfile.RequiresCloudproviderConfig() result. Expected: %t. Got: %t.", c.expected, c.ap.RequiresCloudproviderConfig())
+			}
+		})
+	}
+}
+
 func TestMasterProfileIsVHDDistro(t *testing.T) {
 	cases := []struct {
 		name     string
