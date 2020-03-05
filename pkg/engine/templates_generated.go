@@ -34659,6 +34659,7 @@ configureK8s() {
     chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
     chown root:root "${APISERVER_PUBLIC_KEY_PATH}"
 
+    set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
     {{/* Perform the required JSON escaping */}}
@@ -34670,8 +34671,6 @@ configureK8s() {
         touch "${AZURE_JSON_PATH}"
         chmod 0600 "${AZURE_JSON_PATH}"
         chown root:root "${AZURE_JSON_PATH}"
-
-        set +x
         cat << EOF > "${AZURE_JSON_PATH}"
 {
     "cloud":"{{GetTargetEnvironment}}",

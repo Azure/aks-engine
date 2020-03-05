@@ -212,15 +212,6 @@ func TestKubeletConfigUseCloudControllerManager(t *testing.T) {
 }
 
 func TestKubeletConfigCloudConfig(t *testing.T) {
-	// Test default value and custom value for --cloud-config
-	// cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	// cs.setKubeletConfig(false)
-	// k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	// if k["--cloud-config"] != "/etc/kubernetes/azure.json" {
-	// 	t.Fatalf("got unexpected '--cloud-config' kubelet config default value: %s",
-	// 		k["--cloud-config"])
-	// }
-
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--cloud-config"] = "custom.json"
 	cs.setKubeletConfig(false)
@@ -232,15 +223,6 @@ func TestKubeletConfigCloudConfig(t *testing.T) {
 }
 
 func TestKubeletConfigAzureContainerRegistryConfig(t *testing.T) {
-	//  Test default value and custom value for --azure-container-registry-config
-	// 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
-	// 	cs.setKubeletConfig(false)
-	// 	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	// 	if k["--azure-container-registry-config"] != "/etc/kubernetes/azure.json" {
-	// 		t.Fatalf("got unexpected '--azure-container-registry-config' kubelet config default value: %s",
-	// 			k["--azure-container-registry-config"])
-	// 	}
-
 	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig["--azure-container-registry-config"] = "custom.json"
 	cs.setKubeletConfig(false)
@@ -700,10 +682,10 @@ func TestStaticWindowsConfig(t *testing.T) {
 
 	// Add Windows-specific overrides
 	// Eventually paths should not be hardcoded here. They should be relative to $global:KubeDir in the PowerShell script
-	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--azure-container-registry-config"] = ""
 	expected["--pod-infra-container-image"] = "kubletwin/pause"
 	expected["--kubeconfig"] = "c:\\k\\config"
-	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cloud-config"] = ""
 	expected["--cgroups-per-qos"] = "false"
 	expected["--enforce-node-allocatable"] = "\"\"\"\""
 	expected["--system-reserved"] = "memory=2Gi"
