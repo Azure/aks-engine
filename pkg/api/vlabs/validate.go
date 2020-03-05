@@ -1577,8 +1577,21 @@ func (a *Properties) validateContainerRuntime() error {
 	}
 
 	// Make sure we don't use unsupported container runtimes on windows.
-	if (containerRuntime == KataContainers || containerRuntime == Containerd) && a.HasWindows() {
+	if (containerRuntime == KataContainers) && a.HasWindows() {
 		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
+	}
+
+	// TODO: These validations should be relaxed once ContainerD and CNI plugins are more readily available
+	if containerRuntime == Containerd && a.HasWindows() {
+		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin != "kubenet" {
+			return errors.Errorf("Windows only supports kubenet with containerd runtime. %q is not supported", a.OrchestratorProfile.KubernetesConfig.NetworkPlugin)
+		}
+		if a.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
+			return errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd")
+		}
+		if a.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
+			return errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd")
+		}
 	}
 
 	return nil

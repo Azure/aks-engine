@@ -410,6 +410,8 @@ type KubernetesConfig struct {
 	UseCloudControllerManager         *bool             `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL           string            `json:"customWindowsPackageURL,omitempty"`
 	WindowsNodeBinariesURL            string            `json:"windowsNodeBinariesURL,omitempty"`
+	WindowsContainerdURL              string                `json:"windowsContainerdURL,omitempty"`
+	WindowsSdnPluginURL               string                `json:"windowsSdnPluginURL,omitempty"`
 	UseInstanceMetadata               *bool             `json:"useInstanceMetadata,omitempty"`
 	EnableRbac                        *bool             `json:"enableRbac,omitempty"`
 	EnableSecureKubelet               *bool             `json:"enableSecureKubelet,omitempty"`
