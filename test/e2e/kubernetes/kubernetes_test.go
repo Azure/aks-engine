@@ -225,6 +225,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
 			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				var cloudproviderEnabledPrefixes []string
+				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-master-")
+				}
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if profile.RequiresCloudproviderConfig() {
+						cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-"+profile.Name)
+					}
+				}
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
@@ -236,7 +245,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sshConn.Execute(cloudproviderConfigValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) && n.HasSubstring(cloudproviderEnabledPrefixes) {
 						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript)
 						Expect(err).NotTo(HaveOccurred())
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, cloudproviderConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
