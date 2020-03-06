@@ -190,6 +190,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv6 only cluster
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+					o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnetIPv6
+				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
@@ -224,12 +228,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if o.KubernetesConfig.DNSServiceIP == "" {
 			o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIP
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIPv6
+			}
 		}
 		if o.KubernetesConfig.DockerBridgeSubnet == "" {
 			o.KubernetesConfig.DockerBridgeSubnet = DefaultDockerBridgeSubnet
 		}
 		if o.KubernetesConfig.ServiceCIDR == "" {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDRIPv6
+			}
 		}
 
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {

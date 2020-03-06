@@ -654,6 +654,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsIPv6DualStackFeatureEnabled": func() bool {
 			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
 		},
+		"IsIPv6Enabled": func() bool {
+			return cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")
+		},
 		"GetBase64EncodedEnvironmentJSON": func() string {
 			customEnvironmentJSON, _ := cs.Properties.GetCustomEnvironmentJSON(false)
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
