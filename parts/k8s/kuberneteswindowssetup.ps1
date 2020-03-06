@@ -153,6 +153,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 
@@ -381,6 +382,10 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels `
             -UseContainerD $useContainerD
+
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
 
         Get-LogCollectionScripts
 

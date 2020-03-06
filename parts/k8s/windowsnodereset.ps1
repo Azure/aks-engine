@@ -8,6 +8,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
+$global:CsiProxyEnabled = $true
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
@@ -30,6 +31,12 @@ Stop-Service kubeproxy
 
 Write-Log "Stopping kubelet service"
 Stop-Service kubelet
+
+if ($global:CsiProxyEnabled)
+{
+    Write-Log "Stopping csi-proxy-server service"
+    Stop-Service csi-proxy-server
+}
 
 #
 # Perform cleanup
@@ -83,6 +90,13 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 #
 # Start Services
 #
+
+if ($global:CsiProxyEnabled)
+{
+    Write-Log "Starting csi-proxy-server service"
+    Start-Service csi-proxy-server
+}
+
 Write-Log "Starting kubelet service"
 Start-Service kubelet
 
