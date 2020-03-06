@@ -8,7 +8,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
-$global:CsiProxyEnabled = $true
+$global:CsiProxyEnabled = "{{CsiProxyEnabled}}"
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
