@@ -162,6 +162,14 @@ func (cs *ContainerService) setAPIServerConfig() {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
 	}
+	// Set bind address to prefer IPv6 address for single stack IPv6 cluster
+	// Remove --advertise-address so that --bind-address will be used
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		o.KubernetesConfig.APIServerConfig["--bind-address"] = "::"
+		for _, key := range []string{"--advertise-address"} {
+			delete(o.KubernetesConfig.APIServerConfig, key)
+		}
+	}
 }
 
 func getDefaultAdmissionControls(cs *ContainerService) (string, string) {

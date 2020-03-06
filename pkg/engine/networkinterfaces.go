@@ -88,7 +88,7 @@ func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceA
 	}
 
 	// add ipv6 nic config for dual stack
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		ipv6Config := network.InterfaceIPConfiguration{
 			Name: to.StringPtr("ipconfigv6"),
 			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{
@@ -374,7 +374,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 			}
 		}
 
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != api.StandardLoadBalancerSku {
 				var backendPools []network.BackendAddressPool
 				if ipConfig.LoadBalancerBackendAddressPools != nil {
@@ -390,7 +390,7 @@ func createAgentVMASNetworkInterface(cs *api.ContainerService, profile *api.Agen
 	}
 
 	// add ipv6 nic config for dual stack
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		ipv6Config := network.InterfaceIPConfiguration{
 			Name: to.StringPtr("ipconfigv6"),
 			InterfaceIPConfigurationPropertiesFormat: &network.InterfaceIPConfigurationPropertiesFormat{

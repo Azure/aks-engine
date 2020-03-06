@@ -24338,6 +24338,15 @@ data:
       kubeconfig: /var/lib/kubelet/kubeconfig
     clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
     mode: "{{ContainerConfig "proxy-mode"}}"
+    {{- if ContainerConfig "bind-address"}}
+    bindAddress: "{{ContainerConfig "bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "healthz-bind-address"}}
+    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "metrics-bind-address"}}
+    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
+    {{end}}
     featureGates:
       {{ContainerConfig "featureGates"}}
 metadata:
@@ -27316,6 +27325,9 @@ spec:
           effect: NoSchedule
       nodeSelector:
         beta.kubernetes.io/os: linux
+        {{- if ContainerConfig "use-host-network"}}
+        kubernetes.azure.com/role: agent
+        {{end}}
       containers:
       - name: coredns
         image: {{ContainerImage "coredns"}}
@@ -27367,6 +27379,9 @@ spec:
             - all
           readOnlyRootFilesystem: true
       dnsPolicy: Default
+      {{- if ContainerConfig "use-host-network"}}
+      hostNetwork: {{ContainerConfig "use-host-network"}}
+      {{end}}
       volumes:
         - name: config-volume
           configMap:
@@ -34798,7 +34813,7 @@ ensureKMS() {
 }
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 ensureDHCPv6() {
     wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
@@ -36149,8 +36164,8 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
 fi
 {{end}}
 
-{{/* configure and enable dhcpv6 for dual stack feature */}}
-{{- if IsIPv6DualStackFeatureEnabled}}
+{{/* configure and enable dhcpv6 for ipv6 features */}}
+{{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
@@ -37680,7 +37695,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -38270,7 +38285,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
