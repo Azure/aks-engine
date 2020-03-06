@@ -36,7 +36,7 @@
 									"name": "pool1",
 									"config": {
 										"min-nodes": "1",
-										"max-nodes": "20"
+										"max-nodes": "9"
 									}
 								}
 							],
@@ -86,14 +86,7 @@
 					],
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
-					"auditDEnabled": true,
-					"kubernetesConfig": {
-						"kubeletConfig": {
-							"--cloud-provider": "",
-							"--cloud-config": "",
-							"--azure-container-registry-config": ""
-						}
-					}
+					"auditDEnabled": true
 				},
 				{
 					"name": "poolgpu",
