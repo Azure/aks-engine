@@ -385,6 +385,7 @@ try
 
         if ($global:EnableCsiProxy) {
             New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+            # TODO: make kubelet depeond on csi-server-proxy service if enabled
         }
 
         Get-LogCollectionScripts
