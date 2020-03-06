@@ -39361,6 +39361,7 @@ function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
+    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy}
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
     Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
     Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
@@ -41967,7 +41968,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
-$global:CsiProxyEnabled = $true
+$global:CsiProxyEnabled = "{{CsiProxyEnabled}}"
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
