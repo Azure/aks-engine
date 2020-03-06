@@ -40,6 +40,7 @@ Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/Microsoft/S
 & 'c:\k\debug\collectlogs.ps1' | write-Host
 $netLogs = Get-ChildItem (Get-ChildItem -Path c:\k\debug -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName | Select-Object -ExpandProperty FullName
 $paths += $netLogs
+$paths += "c:\AzureData\CustomDataSetupScript.log"
 Write-Host Compressing all logs to $zipName
 $paths | Format-Table FullName, Length -AutoSize
 Compress-Archive -LiteralPath $paths -DestinationPath $zipName
