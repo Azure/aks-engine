@@ -37872,8 +37872,8 @@ write_files:
   permissions: "0600"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
           - secrets
@@ -37890,8 +37890,8 @@ write_files:
   permissions: "0444"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
         - secrets
