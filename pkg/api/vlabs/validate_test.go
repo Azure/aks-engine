@@ -654,6 +654,9 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		if err := c.Validate(k8sVersion, false, false, true); err == nil {
 			t.Error("should error when network plugin is not kubenet for single stack IPv6")
 		}
+		if err := c.Validate(k8sVersion, false, true, true); err == nil {
+			t.Error("should error when dual stack and single stack IPv6 enabled simultaneously")
+		}
 	}
 }
 

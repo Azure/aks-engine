@@ -27325,7 +27325,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
         {{- if ContainerConfig "use-host-network"}}
-        kubernetes.io/role: agent
+        kubernetes.azure.com/role: agent
         {{end}}
       containers:
       - name: coredns

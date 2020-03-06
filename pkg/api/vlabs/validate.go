@@ -1237,6 +1237,11 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// number of minimum retries allowed for kubelet to post node status
 	const minKubeletRetries = 4
 
+	// enableIPv6DualStack and enableIPv6Only are mutually exclusive feature flags
+	if ipv6DualStackEnabled && isIPv6 {
+		return errors.Errorf("featureFlags.EnableIPv6DualStack and featureFlags.EnableIPv6Only can't be enabled at the same time.")
+	}
+
 	if ipv6DualStackEnabled {
 		sv, err := semver.Make(k8sVersion)
 		if err != nil {
