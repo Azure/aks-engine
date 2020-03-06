@@ -32860,7 +32860,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
-    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "namespaces", "services"]
+    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions", "apps"]
     resources: ["replicasets"]
@@ -32906,6 +32906,7 @@ data:
      tag oms.containerinsights.KubePodInventory
      run_interval 60
      log_level debug
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
     </source>
 
      #Kubernetes events
@@ -32940,7 +32941,7 @@ data:
      log_level debug
     </source>
 
-    <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
+    <filter mdm.kubenodeinventory**>
      type filter_inventory2mdm
      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
      log_level info
@@ -33061,7 +33062,7 @@ data:
      retry_limit 10
      retry_wait 5s
      max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
+     retry_mdm_post_wait_minutes 30
     </match>
 
     <match oms.api.wincadvisorperf**>
@@ -33092,7 +33093,7 @@ data:
      retry_limit 10
      retry_wait 5s
      max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
+     retry_mdm_post_wait_minutes 30
     </match>
 
     <match kubehealth.Signals**>
@@ -33102,6 +33103,21 @@ data:
      buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
+     buffer_queue_limit 20
+     buffer_queue_full_action drop_oldest_chunk
+     flush_interval 20s
+     retry_limit 10
+     retry_wait 5s
+     max_retry_wait 5m
+    </match>
+
+    <match oms.api.InsightsMetrics**>
+     type out_oms
+     log_level debug
+     num_threads 5
+     buffer_chunk_limit 4m
+     buffer_type file
+     buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
@@ -33165,6 +33181,9 @@ spec:
               value: "DaemonSet"
             - name: ISTEST
               value: "true"
+            # Update this with the user assigned msi client id for omsagent addon (if exists)
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           livenessProbe:
             exec:
               command:
@@ -33294,6 +33313,9 @@ spec:
               value: "ReplicaSet"
             - name: ISTEST
               value: "true"
+            # Update this with the user assigned msi client id for omsagent addon (if exists)
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
