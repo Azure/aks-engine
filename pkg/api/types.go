@@ -2100,6 +2100,12 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 	return p.HasNSeriesSKU()
 }
 
+func (p *Properties) IsAzureCNIDualStack() bool {
+	o := p.OrchestratorProfile
+	f := p.FeatureFlags
+	return o.IsAzureCNI() && f.IsFeatureEnabled("EnableIPv6DualStack")
+}
+
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
 func (p *Properties) SetCloudProviderRateLimitDefaults() {
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket == 0 {

@@ -35,7 +35,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	masterNsg := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNsg)
 
-	if cs.Properties.OrchestratorProfile.RequireRouteTable() {
+	if cs.Properties.OrchestratorProfile.RequireRouteTable() || cs.Properties.IsAzureCNIDualStack() {
 		masterResources = append(masterResources, createRouteTable())
 	}
 
@@ -167,7 +167,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	masterNSG := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNSG)
 
-	if cs.Properties.OrchestratorProfile.RequireRouteTable() {
+	if cs.Properties.OrchestratorProfile.RequireRouteTable() || cs.Properties.IsAzureCNIDualStack() {
 		masterResources = append(masterResources, createRouteTable())
 	}
 	if !cs.Properties.MasterProfile.IsCustomVNET() {

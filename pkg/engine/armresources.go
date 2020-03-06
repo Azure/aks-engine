@@ -86,6 +86,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
 
 	if isHostedMaster {
 		if !isCustomVnet {
@@ -93,7 +94,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 			armResources = append(armResources, hostedMasterVnet)
 		}
 
-		if !isAzureCNI {
+		if !isAzureCNI || isAzureCNIDualStack {
 			armResources = append(armResources, createRouteTable())
 		}
 
