@@ -39415,7 +39415,7 @@ function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
-    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy} |
+    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy } |
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
     Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
     Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
@@ -39594,7 +39594,7 @@ $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
 # CSI Proxy settings
-$global:EnableCsiProxy = "{{WrapAsVariable "windowsEnableCsiProxy" }}";
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCsiProxy" }}");
 $global:CsiProxyUrl = "{{WrapAsVariable "windowsCsiProxyUrl" }}";
 
 # Base64 representation of ZIP archive
@@ -42026,7 +42026,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
-$global:CsiProxyEnabled = "{{CsiProxyEnabled}}"
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean("{{CsiProxyEnabled}}")
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
@@ -42050,8 +42050,7 @@ Stop-Service kubeproxy
 Write-Log "Stopping kubelet service"
 Stop-Service kubelet
 
-if ($global:CsiProxyEnabled)
-{
+if ($global:CsiProxyEnabled) {
     Write-Log "Stopping csi-proxy-server service"
     Stop-Service csi-proxy-server
 }
@@ -42109,8 +42108,7 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 # Start Services
 #
 
-if ($global:CsiProxyEnabled)
-{
+if ($global:CsiProxyEnabled) {
     Write-Log "Starting csi-proxy-server service"
     Start-Service csi-proxy-server
 }
