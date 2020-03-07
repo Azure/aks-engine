@@ -137,7 +137,7 @@ $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
 # CSI Proxy settings
-$global:EnableCsiProxy = "{{WrapAsVariable "windowsEnableCsiProxy" }}";
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCsiProxy" }}");
 $global:CsiProxyUrl = "{{WrapAsVariable "windowsCsiProxyUrl" }}";
 
 # Base64 representation of ZIP archive
