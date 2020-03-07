@@ -1,6 +1,14 @@
 #cloud-config
 
 write_files:
+{{- if .RequiresCloudproviderConfig}}
+- path: /etc/kubernetes/azure.json
+  permissions: "0600"
+  owner: root
+  content: |
+    #EOF
+{{end}}
+
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip

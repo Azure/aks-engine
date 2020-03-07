@@ -12,6 +12,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
@@ -2165,4 +2166,78 @@ func TestReadOnlyPort(t *testing.T) {
 		})
 	}
 
+}
+
+func TestRemoveKubeletFlags(t *testing.T) {
+	cases := []struct {
+		name          string
+		kubeletConfig map[string]string
+		version       string
+		expected      map[string]string
+	}{
+		{
+			name: "v1.17.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids": "100",
+			},
+			version: "1.17.0",
+		},
+		{
+			name: "v1.9.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			version: "1.9.0",
+		},
+		{
+			name: "v1.14.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids":     "100",
+				"--allow-privileged": "true",
+			},
+			version: "1.14.0",
+		},
+		{
+			name: "v1.11.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			version: "1.11.0",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			removeKubeletFlags(c.kubeletConfig, c.version)
+			diff := cmp.Diff(c.kubeletConfig, c.expected)
+			if diff != "" {
+				t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+			}
+		})
+	}
 }

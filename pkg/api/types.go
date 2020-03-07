@@ -1641,6 +1641,36 @@ func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 	return a.IsUbuntu() && !a.IsVHDDistro()
 }
 
+// RequiresCloudproviderConfig returns true if the azure.json cloudprovider config should be delivered to the nodes in this pool
+func (a *AgentPoolProfile) RequiresCloudproviderConfig() bool {
+	if a.KubernetesConfig != nil && a.KubernetesConfig.KubeletConfig != nil {
+		if v, ok := a.KubernetesConfig.KubeletConfig["--cloud-provider"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+		if v, ok := a.KubernetesConfig.KubeletConfig["--cloud-config"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+		if v, ok := a.KubernetesConfig.KubeletConfig["--azure-container-registry-config"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+	} else {
+		return true
+	}
+	return false
+}
+
 // GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
 func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) string {
 	var buf bytes.Buffer
