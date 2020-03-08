@@ -24,8 +24,8 @@
                     "--node-monitor-grace-period": "5m",
                     "--pod-eviction-timeout": "5m",
                     "--route-reconciliation-period": "1m"
-				}
-			}
+                }
+            }
         },
         "customCloudProfile": {
             "portalURL": "",
