@@ -319,7 +319,7 @@ const (
 	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
 	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
 	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
-	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "5m"
 )
 
 const (
