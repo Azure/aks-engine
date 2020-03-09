@@ -196,7 +196,7 @@
             "containers": [
               {
                 "name": "omsagent",
-                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
+                "image": "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
                 "cpuRequests": "150m",
                 "memoryRequests": "250Mi",
                 "cpuLimits": "1",
@@ -204,7 +204,7 @@
               }
             ],
             "config": {
-              "dockerProviderVersion": "8.0.0-2",
+              "dockerProviderVersion": "8.0.0-3",
               "omsAgentVersion": "1.10.0.1"
             }
           },
