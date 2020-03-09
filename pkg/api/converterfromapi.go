@@ -297,6 +297,8 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.UseCloudControllerManager = apiCfg.UseCloudControllerManager
 	vlabsCfg.CustomWindowsPackageURL = apiCfg.CustomWindowsPackageURL
 	vlabsCfg.WindowsNodeBinariesURL = apiCfg.WindowsNodeBinariesURL
+	vlabsCfg.WindowsContainerdURL = apiCfg.WindowsContainerdURL
+	vlabsCfg.WindowsSdnPluginURL = apiCfg.WindowsSdnPluginURL
 	vlabsCfg.UseInstanceMetadata = apiCfg.UseInstanceMetadata
 	vlabsCfg.LoadBalancerSku = apiCfg.LoadBalancerSku
 	vlabsCfg.ExcludeMasterFromStandardLB = apiCfg.ExcludeMasterFromStandardLB
@@ -639,6 +641,7 @@ func convertFeatureFlagsToVLabs(api *FeatureFlags, vlabs *vlabs.FeatureFlags) {
 	vlabs.BlockOutboundInternet = api.BlockOutboundInternet
 	vlabs.EnableIPv6DualStack = api.EnableIPv6DualStack
 	vlabs.EnableTelemetry = api.EnableTelemetry
+	vlabs.EnableIPv6Only = api.EnableIPv6Only
 }
 
 func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomCloudProfile) {

@@ -47,7 +47,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.2"
+	KubernetesWindowsDockerVersion = "19.03.5"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -306,6 +306,22 @@ const (
 	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
+// Azure Stack configures all clusters as if they were large clusters.
+const (
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 6
+	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 5
+	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
+	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "1m"
+)
+
 const (
 	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
 	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
@@ -318,14 +334,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.0.30"
+	AzureCniPluginVerLinux = "v1.0.33"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.0.30"
+	AzureCniPluginVerWindows = "v1.0.33"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.6"
+	CNIPluginVer = "v0.8.5"
 )
 
 const (
@@ -438,11 +454,15 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fc00::/8"
+	DefaultKubernetesClusterSubnetIPv6 = "fc00::/48"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultKubernetesServiceCIDRIPv6 specifies the IPv6 subnet that kubernetes will create Service IPs within.
+	DefaultKubernetesServiceCIDRIPv6 = "fd00::/108"
+	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
+	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
 	DefaultMobyVersion = "3.0.10"
 	// DefaultContainerdVersion specifies the default containerd version to install.

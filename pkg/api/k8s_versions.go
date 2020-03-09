@@ -14,7 +14,7 @@ const (
 	pauseImageReference                               string = "k8s/core/pause:1.2.0"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
 	smbFlexVolumeImageReference                       string = "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2"
-	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13"
+	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16"
 	calicoTyphaImageReference                         string = "typha:v3.8.0"
 	calicoCNIImageReference                           string = "cni:v3.8.0"
 	calicoNodeImageReference                          string = "node:v3.8.0"
@@ -28,12 +28,12 @@ const (
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.32"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.33"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"
 	gatekeeperImageReference                          string = "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2"
-	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.0"
+	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.1"
 	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.4.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
 	csiClusterDriverRegistrarImageReference           string = "oss/kubernetes-csi/csi-cluster-driver-registrar:v1.0.1"
@@ -60,7 +60,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DashboardAddonName:             "kubernetes-dashboard-amd64:v1.10.1",
 		common.ExecHealthZComponentName:       "exechealthz-amd64:1.2",
 		common.HeapsterAddonName:              "heapster-amd64:v1.5.4",
-		common.CoreDNSAddonName:               "coredns:1.6.6",
+		common.CoreDNSAddonName:               "coredns:1.6.7",
 		common.KubeDNSAddonName:               "k8s-dns-kube-dns-amd64:1.15.4",
 		common.DNSMasqComponentName:           "k8s-dns-dnsmasq-nanny-amd64:1.15.4",
 		common.DNSSidecarComponentName:        "k8s-dns-sidecar-amd64:1.14.10",
@@ -77,7 +77,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DashboardAddonName:             "oss/kubernetes/kubernetes-dashboard:v1.10.1",
 		common.ExecHealthZComponentName:       "oss/kubernetes/exechealthz:1.2",
 		common.HeapsterAddonName:              "oss/kubernetes/heapster:v1.5.4",
-		common.CoreDNSAddonName:               "oss/kubernetes/coredns:1.6.6",
+		common.CoreDNSAddonName:               "oss/kubernetes/coredns:1.6.7",
 		common.KubeDNSAddonName:               "oss/kubernetes/k8s-dns-kube-dns:1.15.4",
 		common.DNSMasqComponentName:           "oss/kubernetes/k8s-dns-dnsmasq-nanny:1.15.4",
 		common.DNSSidecarComponentName:        "oss/kubernetes/k8s-dns-sidecar:1.14.10",
@@ -117,13 +117,13 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.4",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.3",
+			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.16.4",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "metrics-server-amd64:v0.2.1",
 			common.AddonManagerComponentName:           "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName:          "cluster-autoscaler:v1.15.4",
+			common.ClusterAutoscalerAddonName:          "cluster-autoscaler:v1.15.5",
 			common.CloudControllerManagerComponentName: "cloud-controller-manager-amd64",
 		},
 		"1.14": {

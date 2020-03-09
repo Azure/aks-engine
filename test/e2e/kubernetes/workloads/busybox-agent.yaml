@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: busybox-agent
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: init-resolver
+        image: busybox:1.31.1
+        command: ['sh', '-c', 'until nc -nvz $(grep nameserver /etc/resolv.conf | cut -d" " -f2) 53; do echo waiting for container DNS resolver access; sleep 3; done;']
+      - name: init-dns
+        image: busybox:1.31.1
+        command: ['sh', '-c', 'until nslookup mcr.microsoft.com; do echo waiting for successful container DNS resolution; sleep 3; done;']
+      - name: init-kubernetes-net
+        image: busybox:1.31.1
+        command: ['sh', '-c', 'until nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443; do echo waiting for successful connection to apiserver endpoint; sleep 3; done;']
+      - name: init-outbound
+        image: busybox:1.31.1
+        command: ['sh', '-c', 'until nc -vz 8.8.8.8 53 || 8.8.4.4 53; do echo waiting for outbound internet connectivity; sleep 3; done;']
+      containers:
+      - image: busybox:1.31.1
+        name: busybox-agent
+        command: ['sh', '-c', '[ $(echo "Hello, World!" | sha256sum | cut -d" " -f1) = "c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31" ]']
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/role: agent
+        beta.kubernetes.io/os: linux
+  backoffLimit: 0

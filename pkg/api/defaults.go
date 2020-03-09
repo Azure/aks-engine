@@ -123,6 +123,20 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
 		}
 
+		if a.IsAzureStackCloud() {
+			// Azure Stack's custom hyperkube image is now hosted along with MCR images.
+			// Forcing KubernetesImageBase/KubernetesImageBaseType.
+			mcrKubernetesImageBase := cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
+			if !strings.EqualFold(o.KubernetesConfig.KubernetesImageBase, mcrKubernetesImageBase) {
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.kubernetesImageBase forced to \"%s\"\n", mcrKubernetesImageBase)
+			}
+			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
+			if !strings.EqualFold(o.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR) {
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.KubernetesImageBaseType forced to \"%s\"\n", common.KubernetesImageBaseTypeMCR)
+			}
+			o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+		}
+
 		if o.KubernetesConfig.KubernetesImageBase == "" {
 			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
 		} else {
@@ -149,7 +163,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					o.KubernetesConfig.EtcdVersion = DefaultEtcdVersion
 				}
 			}
-
 		}
 
 		if a.HasWindows() {
@@ -202,6 +215,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv6 only cluster
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+					o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnetIPv6
+				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
 					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
@@ -240,12 +257,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if o.KubernetesConfig.DNSServiceIP == "" {
 			o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIP
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIPv6
+			}
 		}
 		if o.KubernetesConfig.DockerBridgeSubnet == "" {
 			o.KubernetesConfig.DockerBridgeSubnet = DefaultDockerBridgeSubnet
 		}
 		if o.KubernetesConfig.ServiceCIDR == "" {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDRIPv6
+			}
 		}
 
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
@@ -261,7 +284,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// Enforce sane cloudprovider backoff defaults.
-		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+		a.SetCloudProviderBackoffDefaults()
 
 		if o.KubernetesConfig.CloudProviderRateLimit == nil {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)

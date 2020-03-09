@@ -301,7 +301,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"non-masquerade-cidr":           cs.Properties.GetNonMasqueradeCIDR(),
 			"non-masq-cni-cidr":             cs.Properties.GetAzureCNICidr(),
 			"secondary-non-masquerade-cidr": cs.Properties.GetSecondaryNonMasqueradeCIDR(),
-			"enable-ipv6":                   strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
+			"enable-ipv6": strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+				cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")),
 		},
 	}
 
@@ -489,7 +490,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
 			"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
 			"systemStatsMonitor":  "/config/system-stats-monitor.json",
-			"versionLabel":        "v0.8.0",
+			"versionLabel":        "v0.8.1",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -677,6 +678,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// set host network to true for single stack IPv6 as the the nameserver is currently
+	// IPv4 only. By setting it to host network, we can leverage the host routes to successfully
+	// resolve dns.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		defaultCorednsAddonsConfig.Config["use-host-network"] = "true"
+	}
+
 	// If we have any explicit coredns or kube-dns configuration in the addons array
 	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName) != -1 {
 		// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
@@ -696,9 +704,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.KubeProxyAddonName,
-				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName] + kubeProxyImageSuffix(*cs),
 			},
 		},
+	}
+
+	// set bind address, healthz and metric bind address to :: explicitly for
+	// single stack IPv6 cluster as it is single stack IPv6 on dual stack host
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		defaultKubeProxyAddonsConfig.Config["bind-address"] = "::"
+		defaultKubeProxyAddonsConfig.Config["healthz-bind-address"] = "::"
+		defaultKubeProxyAddonsConfig.Config["metrics-bind-address"] = "::1"
 	}
 
 	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
@@ -1050,4 +1066,16 @@ func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService
 		ret = strings.TrimRight(ret, "\n")
 	}
 	return ret
+}
+
+// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack and Kubernetes version is lower than v1.17.0.
+// Otherwise, it returns empty string.
+// Azure Stack needs the '-azs' suffix so kube-proxy's manifests uses the custom hyperkube image present in the VHD
+func kubeProxyImageSuffix(cs ContainerService) string {
+	if cs.Properties.IsAzureStackCloud() {
+		if !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+			return common.AzureStackSuffix
+		}
+	}
+	return ""
 }

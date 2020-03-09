@@ -24,6 +24,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationalinsights/mgmt/2015-11-01-preview/operationalinsights"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2018-02-01/storage"
 	"github.com/Azure/go-autorest/autorest"
@@ -62,6 +63,7 @@ type AzureClient struct {
 	storageAccountsClient           storage.AccountsClient
 	interfacesClient                network.InterfacesClient
 	groupsClient                    resources.GroupsClient
+	subscriptionsClient             subscriptions.Client
 	providersClient                 resources.ProvidersClient
 	virtualMachinesClient           compute.VirtualMachinesClient
 	virtualMachineScaleSetsClient   compute.VirtualMachineScaleSetsClient
@@ -346,6 +348,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		storageAccountsClient:           storage.NewAccountsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		interfacesClient:                network.NewInterfacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		groupsClient:                    resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
+		subscriptionsClient:             subscriptions.NewClientWithBaseURI(env.ResourceManagerEndpoint),
 		providersClient:                 resources.NewProvidersClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		virtualMachinesClient:           compute.NewVirtualMachinesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		virtualMachineScaleSetsClient:   compute.NewVirtualMachineScaleSetsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
@@ -371,6 +374,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.providersClient.Authorizer = armAuthorizer
 	c.resourcesClient.Authorizer = armAuthorizer
 	c.storageAccountsClient.Authorizer = armAuthorizer
+	c.subscriptionsClient.Authorizer = armAuthorizer
 	c.virtualMachineExtensionsClient.Authorizer = armAuthorizer
 	c.virtualMachineImagesClient.Authorizer = armAuthorizer
 	c.virtualMachineScaleSetsClient.Authorizer = armAuthorizer
@@ -392,6 +396,7 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.deploymentsClient.PollingDuration = DefaultARMOperationTimeout
 	c.disksClient.PollingDuration = DefaultARMOperationTimeout
 	c.groupsClient.PollingDuration = DefaultARMOperationTimeout
+	c.subscriptionsClient.PollingDuration = DefaultARMOperationTimeout
 	c.interfacesClient.PollingDuration = DefaultARMOperationTimeout
 	c.msiClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
@@ -486,6 +491,7 @@ func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.servicePrincipalsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
+	az.subscriptionsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.virtualMachineExtensionsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.virtualMachineImagesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.virtualMachineScaleSetsClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -553,6 +559,7 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.resourcesClient.Client.RequestInspector = requestWithTokens
 	az.servicePrincipalsClient.Client.RequestInspector = requestWithTokens
 	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
+	az.subscriptionsClient.Client.RequestInspector = requestWithTokens
 	az.virtualMachineExtensionsClient.Client.RequestInspector = requestWithTokens
 	az.virtualMachineScaleSetsClient.Client.RequestInspector = requestWithTokens
 	az.virtualMachineScaleSetVMsClient.Client.RequestInspector = requestWithTokens
