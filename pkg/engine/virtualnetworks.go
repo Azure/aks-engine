@@ -193,7 +193,8 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 	}
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
-	if !isAzureCNI {
+	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
+	if !isAzureCNI || isAzureCNIDualStack {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
 
@@ -216,7 +217,7 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 		subnet.AddressPrefixes = &masterAddressPrefixes
 	}
 
-	if !isAzureCNI {
+	if !isAzureCNI || isAzureCNIDualStack {
 		subnet.RouteTable = &network.RouteTable{
 			ID: to.StringPtr("[variables('routeTableID')]"),
 		}
