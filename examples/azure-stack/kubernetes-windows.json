@@ -6,9 +6,25 @@
             "orchestratorType": "Kubernetes",
             "orchestratorRelease": "1.14",
             "kubernetesConfig": {
+                "cloudProviderBackoff": true,
+                "cloudProviderBackoffRetries": 1,
+                "cloudProviderBackoffDuration": 30,
+                "cloudProviderRateLimit": true,
+                "cloudProviderRateLimitQPS": 3,
+                "cloudProviderRateLimitBucket": 10,
+                "cloudProviderRateLimitQPSWrite": 3,
+                "cloudProviderRateLimitBucketWrite": 10,
                 "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
-                "networkPlugin": "azure"
+                "networkPlugin": "azure",
+                "kubeletConfig": {
+                    "--node-status-update-frequency": "1m"
+                },
+                "controllerManagerConfig": {
+                    "--node-monitor-grace-period": "5m",
+                    "--pod-eviction-timeout": "5m",
+                    "--route-reconciliation-period": "1m"
+                }
             }
         },
         "customCloudProfile": {

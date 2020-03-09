@@ -308,9 +308,9 @@ const (
 
 // Azure Stack configures all clusters as if they were large clusters.
 const (
-	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 6
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 1
 	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
-	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 5
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
 	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
 	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
 	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
@@ -319,7 +319,7 @@ const (
 	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
 	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
 	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
-	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "5m"
 )
 
 const (
