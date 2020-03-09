@@ -584,6 +584,7 @@ type MasterProfile struct {
 	CosmosEtcd                *bool             `json:"cosmosEtcd,omitempty"`
 	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
 	ProximityPlacementGroupID string            `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCachingType         string            `json:"osDiskCachingType,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -664,6 +665,8 @@ type AgentPoolProfile struct {
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCachingType                   string               `json:"osDiskCachingType,omitempty"`
+	DataDiskCachingType                 string               `json:"dataDiskCachingType,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

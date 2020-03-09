@@ -455,6 +455,7 @@ type MasterProfile struct {
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd                *bool  `json:"cosmosEtcd,omitempty"`
 	ProximityPlacementGroupID string `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCachingType         string `json:"osDiskCachingType,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -529,6 +530,8 @@ type AgentPoolProfile struct {
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 	SysctlDConfig                     map[string]string `json:"sysctldConfig,omitempty"`
 	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
+	OSDiskCachingType                 string            `json:"osDiskCachingType,omitempty"`
+	DataDiskCachingType               string            `json:"dataDiskCachingType,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

@@ -15,6 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
@@ -38,6 +39,7 @@ var (
 		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13", "3.3.15", "3.3.18", "3.3.19"}
 	containerdValidVersions              = [...]string{"1.3.2"}
 	kubernetesImageBaseTypeValidVersions = [...]string{"", common.KubernetesImageBaseTypeGCR, common.KubernetesImageBaseTypeMCR}
+	cachingTypesValidValues              = [...]string{"", string(compute.CachingTypesNone), string(compute.CachingTypesReadWrite), string(compute.CachingTypesReadOnly)}
 	networkPluginPlusPolicyAllowed       = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -456,6 +458,16 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		}
 	}
 
+	var validOSDiskCachingType bool
+	for _, valid := range cachingTypesValidValues {
+		if valid == m.OSDiskCachingType {
+			validOSDiskCachingType = true
+		}
+	}
+	if !validOSDiskCachingType {
+		return errors.Errorf("Invalid masterProfile osDiskCachingType value \"%s\", please use one of the following versions: %s", m.OSDiskCachingType, cachingTypesValidValues)
+	}
+
 	return common.ValidateDNSPrefix(m.DNSPrefix)
 }
 
@@ -578,6 +590,21 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		if e := validateProximityPlacementGroupID(agentPoolProfile.ProximityPlacementGroupID); e != nil {
 			return e
+		}
+		var validOSDiskCachingType, validDataDiskCachingType bool
+		for _, valid := range cachingTypesValidValues {
+			if valid == agentPoolProfile.OSDiskCachingType {
+				validOSDiskCachingType = true
+			}
+			if valid == agentPoolProfile.DataDiskCachingType {
+				validDataDiskCachingType = true
+			}
+		}
+		if !validOSDiskCachingType {
+			return errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", agentPoolProfile.OSDiskCachingType, agentPoolProfile.Name, cachingTypesValidValues)
+		}
+		if !validDataDiskCachingType {
+			return errors.Errorf("Invalid dataDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", agentPoolProfile.DataDiskCachingType, agentPoolProfile.Name, cachingTypesValidValues)
 		}
 	}
 
