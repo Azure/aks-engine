@@ -524,7 +524,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					cs.Properties.MasterProfile.IPAddressCount += masterMaxPods
 				}
 			}
-			cs.Properties.MasterProfile.IPAddressCount = 1
 		}
 		// Pool-specific defaults that depend upon kubelet defaults
 		for _, profile := range cs.Properties.AgentPoolProfiles {
@@ -538,7 +537,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					profile.IPAddressCount += agentPoolMaxPods
 				}
 			}
-			profile.IPAddressCount = 1
 		}
 
 		// Configure controller-manager
