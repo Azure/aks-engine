@@ -427,7 +427,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
 					// When VNET integration is enabled, all masters, agents and pods share the same large subnet.
 					cs.Properties.MasterProfile.Subnet = o.KubernetesConfig.ClusterSubnet
-					o := cs.Properties.OrchestratorProfile
 					clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
 					if cs.Properties.IsAzureCNIDualStack() && len(clusterSubnets) > 1 {
 						cs.Properties.MasterProfile.Subnet = clusterSubnets[0]
