@@ -34795,7 +34795,9 @@ configureCNIIPTables() {
 
 {{if NeedsContainerd}}
 ensureContainerd() {
-    echo "Starting cri-containerd service..."
+    wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 1200 1 /etc/sysctl.d/11-containerd.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 1200 1 /etc/containerd/config.toml || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 {{end}}
@@ -37782,6 +37784,21 @@ write_files:
 {{end}}
 
 {{if NeedsContainerd}}
+- path: /etc/sysctl.d/11-containerd.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    net.ipv4.ip_forward = 1
+    #EOF
+
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
@@ -37818,6 +37835,7 @@ write_files:
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
               {{end}}
+    #EOF
 
   {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
@@ -38387,32 +38405,60 @@ write_files:
 {{end}}
 
 {{if NeedsContainerd}}
+- path: /etc/sysctl.d/11-containerd.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    net.ipv4.ip_forward = 1
+    #EOF
+
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
   content: |
+    version = 2
     subreaper = false
     oom_score = 0
-    [plugins.cri]
-    sandbox_image = "{{GetPodInfraContainerSpec}}"
-    [plugins.cri.containerd.untrusted_workload_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    [plugins.cri.containerd.default_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    {{if IsKubenet }}
-    [plugins.cri.cni]
-    conf_template = "/etc/containerd/kubenet_template.conf"
 
+    [plugins]
+      [plugins."io.containerd.grpc.v1.cri"]
+        sandbox_image = "{{GetPodInfraContainerSpec}}"
+        [plugins."io.containerd.grpc.v1.cri".cni]
+          {{if IsKubenet}}
+          conf_template = "/etc/containerd/kubenet_template.conf"
+          {{end}}
+        [plugins."io.containerd.grpc.v1.cri".containerd]
+          {{if IsKataContainerRuntime }}
+          default_runtime_name = "kata"
+          {{else}}
+          default_runtime_name = "runc"
+          {{end}}
+         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+            {{if IsKataContainerRuntime }}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+              runtime_type = "io.containerd.kata.v2"
+            {{end}}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
+              {{if IsKataContainerRuntime }}
+              runtime_engine = "/usr/bin/kata-runtime"
+              runtime_type = "io.containerd.kata.v2"
+              {{else}}
+              {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
+              runtime_type = "io.containerd.runc.v2"
+              {{end}}
+    #EOF
+
+  {{if IsKubenet }}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
   owner: root
@@ -38435,7 +38481,7 @@ write_files:
             }
           }]
       }
-    {{end}}
+  {{end}}
 {{end}}
 
 {{if IsNSeriesSKU .}}
