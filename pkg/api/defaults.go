@@ -599,6 +599,9 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
+		if p.IsAzureStackCloud() {
+			p.MasterProfile.AvailabilityProfile = DefaultAzureStackAvailabilityProfile
+		}
 	}
 
 	if p.MasterProfile.IsVirtualMachineScaleSets() {

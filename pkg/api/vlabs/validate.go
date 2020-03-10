@@ -1857,7 +1857,7 @@ func (a *Properties) validateAzureStackSupport() error {
 		if networkPlugin != "azure" && networkPlugin != "kubenet" && networkPlugin != "" {
 			return errors.Errorf("kubernetesConfig.networkPlugin '%s' is not supported on Azure Stack clouds", networkPlugin)
 		}
-		if a.MasterProfile.AvailabilityProfile != AvailabilitySet {
+		if a.MasterProfile.AvailabilityProfile == VirtualMachineScaleSets {
 			return errors.Errorf("masterProfile.availabilityProfile should be set to '%s' on Azure Stack clouds", AvailabilitySet)
 		}
 		for _, agentPool := range a.AgentPoolProfiles {
