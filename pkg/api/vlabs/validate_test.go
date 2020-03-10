@@ -4500,6 +4500,13 @@ func TestValidateAzureStackSupport(t *testing.T) {
 			agentAvailability:  VirtualMachineScaleSets,
 			expectedErr:        errors.New("agentPoolProfiles[agentpool].availabilityProfile should be set to 'AvailabilitySet' on Azure Stack clouds"),
 		},
+		{
+			name:               "AzureStack defaults masterAvailabilityProfile to 'AvailabilitySet'",
+			networkPlugin:      "kubenet",
+			masterAvailability: "",
+			agentAvailability:  AvailabilitySet,
+			expectedErr:        nil,
+		},
 	}
 
 	for _, test := range tests {

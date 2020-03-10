@@ -256,13 +256,11 @@ const (
 const (
 	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
 	DefaultAzureStackUseInstanceMetadata = false
-
 	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
 	DefaultAzureStackAcceleratedNetworking = false
-
+	DefaultAzureStackAvailabilityProfile   = AvailabilitySet
 	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
 	DefaultAzureStackFaultDomainCount = 3
-
 	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
