@@ -193,6 +193,21 @@ write_files:
 {{end}}
 
 {{if NeedsContainerd}}
+- path: /etc/sysctl.d/11-containerd.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    net.ipv4.ip_forward = 1
+    #EOF
+
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
@@ -229,6 +244,7 @@ write_files:
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
               {{end}}
+    #EOF
 
   {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
