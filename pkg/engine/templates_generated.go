@@ -35948,6 +35948,11 @@ var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
+if [ -f /opt/azure/containers/provision.complete ]; then
+      echo "Already ran to success exiting..."
+      exit 0
+fi
+
 echo $(date),$(hostname), startcustomscript>>/opt/m
 
 for i in $(seq 1 3600); do
