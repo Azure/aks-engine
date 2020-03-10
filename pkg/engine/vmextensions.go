@@ -86,6 +86,7 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 			AutoUpgradeMinorVersion: to.BoolPtr(true),
 			Settings:                &map[string]interface{}{},
 			ProtectedSettings: &map[string]interface{}{
+				//note that any change to this property will trigger a CSE rerun on upgrade as well as reimage.
 				"commandToExecute": fmt.Sprintf("[concat('echo $(date),$(hostname); "+outBoundCmd+" for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,variables('provisionScriptParametersMaster'), ' IS_VHD=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1\"')]", generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD),
 			},
 		},
