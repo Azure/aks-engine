@@ -592,33 +592,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have node labels specific to masters or agents", func() {
-			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
-				cfg.AddNodePoolInput == "" {
-				Expect(len(nodes)).To(Equal(eng.NodeCount()))
-			}
-			for _, n := range nodes {
-				role := "master"
-				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
-					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-						continue
-					} else {
-						role = "agent"
-					}
-				}
-				labels := n.Metadata.Labels
-				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
-				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
-				if role == "master" && common.IsKubernetesVersionGe(
-					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
-					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-from-external-load-balancers", "true"))
-					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
-				}
-			}
-		})
-
 		It("should have the correct IP address for the apiserver", func() {
 			running, err := pod.WaitOnSuccesses(common.APIServerComponentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
@@ -2151,6 +2124,33 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Keep long-running php-apache workloads running for soak clusters")
+			}
+		})
+
+		It("should have node labels specific to masters or agents", func() {
+			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
+				cfg.AddNodePoolInput == "" {
+				Expect(len(nodes)).To(Equal(eng.NodeCount()))
+			}
+			for _, n := range nodes {
+				role := "master"
+				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
+					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+						continue
+					} else {
+						role = "agent"
+					}
+				}
+				labels := n.Metadata.Labels
+				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
+				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
+				if role == "master" && common.IsKubernetesVersionGe(
+					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-from-external-load-balancers", "true"))
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
+				}
 			}
 		})
 	})
