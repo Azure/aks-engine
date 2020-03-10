@@ -1,13 +1,13 @@
 #!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
-ERR_ALREADY_RUN=116 {{/*Have already run and not sure if idempotent*/}
 
 set -x
-echo $(date),$(hostname), startcustomscript>>/opt/m
-if [ -s /opt/azure/containers/provision.complete ]; then
-      exit $ERR_ALREADY_RUN
+if [ -f /opt/azure/containers/provision.complete ]; then
+      echo "Already ran to success exiting..."
+      exit 0
 fi
 
+echo $(date),$(hostname), startcustomscript>>/opt/m
 
 for i in $(seq 1 3600); do
     if [ -s {{GetCSEHelpersScriptFilepath}} ]; then
