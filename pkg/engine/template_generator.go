@@ -684,6 +684,16 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
 		},
+		"GetIptablesForwardingInterface": func() string {
+			var iptablesForwardingInterface string
+			switch cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin {
+			case NetworkPluginKubenet:
+				iptablesForwardingInterface = "cbr0"
+			case NetworkPluginAzure:
+				iptablesForwardingInterface = "azure0"
+			}
+			return iptablesForwardingInterface
+		},
 		"HasNSeriesSKU": func() bool {
 			return cs.Properties.HasNSeriesSKU()
 		},

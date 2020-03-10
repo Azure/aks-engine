@@ -37752,13 +37752,13 @@ write_files:
   content: |
     [Service]
     ExecStart=
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} -o {{GetIptablesForwardingInterface}} -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} ! -o {{GetIptablesForwardingInterface}} -j ACCEPT
     {{if .MasterProfile.IsCoreOS}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
-    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
-    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/docker/daemon.json
@@ -37797,8 +37797,8 @@ write_files:
   owner: root
   content: |
     [Service]
-    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
-    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} -o {{GetIptablesForwardingInterface}} -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} ! -o {{GetIptablesForwardingInterface}} -j ACCEPT
     #EOF
 
 - path: /etc/containerd/config.toml
@@ -38368,13 +38368,13 @@ write_files:
   content: |
     [Service]
     ExecStart=
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} -o {{GetIptablesForwardingInterface}} -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} ! -o {{GetIptablesForwardingInterface}} -j ACCEPT
     {{if .IsCoreOS}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
-    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
-    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/docker/daemon.json
@@ -38420,8 +38420,8 @@ write_files:
   owner: root
   content: |
     [Service]
-    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
-    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} -o {{GetIptablesForwardingInterface}} -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i {{GetIptablesForwardingInterface}} ! -o {{GetIptablesForwardingInterface}} -j ACCEPT
     #EOF
 
 - path: /etc/containerd/config.toml
