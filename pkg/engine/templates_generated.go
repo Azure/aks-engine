@@ -37757,7 +37757,8 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
-    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
+    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/docker/daemon.json
@@ -37796,7 +37797,8 @@ write_files:
   owner: root
   content: |
     [Service]
-    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/containerd/config.toml
@@ -38371,7 +38373,8 @@ write_files:
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
     {{end}}
-    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
+    ExecStartPost=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/docker/daemon.json
@@ -38417,7 +38420,8 @@ write_files:
   owner: root
   content: |
     [Service]
-    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 -o azure0 -j ACCEPT
+    ExecStartPre=/sbin/iptables -A FORWARD -i azure0 ! -o azure0 -j ACCEPT
     #EOF
 
 - path: /etc/containerd/config.toml
