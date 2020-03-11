@@ -218,8 +218,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-					defaultKubernetesClusterSubnetIPv6 := cs.getDefaultKubernetesClusterSubnetIPv6()
-					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, defaultKubernetesClusterSubnetIPv6}, ",")
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, cs.getDefaultKubernetesClusterSubnetIPv6()}, ",")
 				}
 			}
 		} else {
@@ -1086,5 +1085,5 @@ func (cs *ContainerService) getDefaultKubernetesClusterSubnetIPv6() string {
 	}
 	// In 1.16, the default mask size for IPv6 is /24 which forces the cluster
 	// subnet mask size to be strictly >= /8
-	return "fd00::/8"
+	return "fc00::/8"
 }
