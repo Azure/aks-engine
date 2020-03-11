@@ -560,7 +560,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		// Configure components
 		cs.setComponentsConfig(isUpgrade)
 		// Configure Linux kernel runtime values via sysctl.d
-		cs.setSysctlDConfig(isUpgrade)
+		cs.setSysctlDConfig()
 
 	case DCOS:
 		if o.DcosConfig == nil {

@@ -3,7 +3,7 @@
 
 package api
 
-func (cs *ContainerService) setSysctlDConfig(isUpgrade bool) {
+func (cs *ContainerService) setSysctlDConfig() {
 	// Default aks-engine-provided sysctl.d config
 	defaultSysctlDConfig := map[string]string{
 		"net.ipv4.tcp_retries2":             "8",
@@ -41,16 +41,12 @@ func (cs *ContainerService) setSysctlDConfig(isUpgrade bool) {
 	}
 }
 
-func setMissingSysctlDConfigValues(p map[string]string, d map[string]string) {
-	if p == nil {
-		p = d
-	} else {
-		for key, val := range d {
-			// If we don't have a user-configurable value for each option
-			if _, ok := p[key]; !ok {
-				// then assign the default value
-				p[key] = val
-			}
+func setMissingSysctlDConfigValues(sysctlDConfig map[string]string, defaults map[string]string) {
+	for key, val := range defaults {
+		// If we don't have a user-configurable value for each option
+		if _, ok := sysctlDConfig[key]; !ok {
+			// then assign the default value
+			sysctlDConfig[key] = val
 		}
 	}
 }

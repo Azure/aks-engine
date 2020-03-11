@@ -53,7 +53,7 @@ const (
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
 	stabilityCommandTimeout                   = 3 * time.Second
-	windowsCommandTimeout                     = 1 * time.Minute
+	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
 	firstMasterRegexStr                       = "^k8s-master-"
@@ -330,6 +330,35 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					}
 				} else {
 					Skip("This config is only available on VHD")
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
+		It("should validate aks-engine-provided sysctl configuration", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				for key, val := range eng.ExpandedDefinition.Properties.MasterProfile.SysctlDConfig {
+					for _, n := range nodes {
+						if n.HasSubstring([]string{"k8s-master"}) && n.IsUbuntu() {
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+				}
+				for _, pool := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					for key, val := range pool.SysctlDConfig {
+						for _, n := range nodes {
+							if n.HasSubstring([]string{pool.Name}) && n.IsUbuntu() {
+								err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
+								Expect(err).NotTo(HaveOccurred())
+							}
+						}
+					}
 				}
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
@@ -1833,21 +1862,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Windows from Linux deployment")
 				name = fmt.Sprintf("linux-2-windows-%s", cfg.Name)
 				command = fmt.Sprintf("wget %s", windowsService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 

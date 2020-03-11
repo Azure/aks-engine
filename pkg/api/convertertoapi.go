@@ -492,13 +492,6 @@ func convertSchedulerConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig)
 	}
 }
 
-func convertSysctlDConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
-	a.KubeletConfig = map[string]string{}
-	for key, val := range v.KubeletConfig {
-		a.KubeletConfig[key] = val
-	}
-}
-
 func convertPodSecurityPolicyConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 	a.PodSecurityPolicyConfig = map[string]string{}
 	for key, val := range v.PodSecurityPolicyConfig {
