@@ -326,7 +326,7 @@ func GetOrderedNewlinedKeyValsStringForCloudInit(config map[string]string) strin
 	for _, key := range keys {
 		buf.WriteString(fmt.Sprintf("%s = %s\n%4s", key, config[key], " "))
 	}
-	return buf.String()
+	return strings.TrimSuffix(buf.String(), fmt.Sprintf("\n%4s", " "))
 }
 
 // SliceIntIsNonEmpty is a simple convenience to determine if a []int is non-empty

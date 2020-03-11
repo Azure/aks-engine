@@ -224,6 +224,49 @@ func TestGetOrderedEscapedKeyValsString(t *testing.T) {
 	}
 }
 
+func TestGetOrderedNewlinedKeyValsStringForCloudInit(t *testing.T) {
+	alphabetizedString := `foo = bar
+    yes = please`
+	cases := []struct {
+		name     string
+		input    map[string]string
+		expected string
+	}{
+		{
+			name:     "nil input",
+			input:    map[string]string{},
+			expected: "",
+		},
+		{
+			name: "valid input",
+			input: map[string]string{
+				"foo": "bar",
+				"yes": "please",
+			},
+			expected: alphabetizedString,
+		},
+		{
+			name: "valid input re-ordered",
+			input: map[string]string{
+				"yes": "please",
+				"foo": "bar",
+			},
+			expected: alphabetizedString,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			ret := GetOrderedNewlinedKeyValsStringForCloudInit(c.input)
+			if ret != c.expected {
+				t.Fatalf("expected GetOrderedNewlinedKeyValsStringForCloudInit(%s) to return %s, but instead got %s", c.input, c.expected, ret)
+			}
+		})
+	}
+}
+
 func TestGetStorageAccountType(t *testing.T) {
 	validPremiumVMSize := "Standard_DS2_v2"
 	validStandardVMSize := "Standard_D2_v2"
