@@ -2130,10 +2130,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("should have node labels specific to masters or agents", func() {
 			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
-				cfg.AddNodePoolInput == "" {
-				Expect(len(nodes)).To(Equal(eng.NodeCount()))
-			}
 			for _, n := range nodes {
 				role := "master"
 				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
