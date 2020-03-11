@@ -492,6 +492,13 @@ func convertSchedulerConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig)
 	}
 }
 
+func convertSysctlDConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
+	a.KubeletConfig = map[string]string{}
+	for key, val := range v.KubeletConfig {
+		a.KubeletConfig[key] = val
+	}
+}
+
 func convertPodSecurityPolicyConfigToAPI(v *vlabs.KubernetesConfig, a *KubernetesConfig) {
 	a.PodSecurityPolicyConfig = map[string]string{}
 	for key, val := range v.PodSecurityPolicyConfig {
@@ -578,6 +585,10 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	convertCustomFilesToAPI(vlabs, api)
+	api.SysctlDConfig = map[string]string{}
+	for key, val := range vlabs.SysctlDConfig {
+		api.SysctlDConfig[key] = val
+	}
 }
 
 func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolProfile) {
@@ -644,6 +655,10 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 		api.ImageRef.Version = vlabs.ImageRef.Version
 	}
 	api.Role = AgentPoolProfileRole(vlabs.Role)
+	api.SysctlDConfig = map[string]string{}
+	for key, val := range vlabs.SysctlDConfig {
+		api.SysctlDConfig[key] = val
+	}
 }
 
 func convertVLabsKeyVaultSecrets(vlabs *vlabs.KeyVaultSecrets, api *KeyVaultSecrets) {

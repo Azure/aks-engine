@@ -521,6 +521,10 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
 	convertCustomFilesToVlabs(api, vlabsProfile)
+	vlabsProfile.SysctlDConfig = map[string]string{}
+	for key, val := range api.SysctlDConfig {
+		vlabsProfile.SysctlDConfig[key] = val
+	}
 }
 
 func convertKeyVaultSecretsToVlabs(api *KeyVaultSecrets, vlabsSecrets *vlabs.KeyVaultSecrets) {
@@ -597,6 +601,10 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 		p.ImageRef.Version = api.ImageRef.Version
 	}
 	p.Role = vlabs.AgentPoolProfileRole(api.Role)
+	p.SysctlDConfig = map[string]string{}
+	for key, val := range api.SysctlDConfig {
+		p.SysctlDConfig[key] = val
+	}
 }
 
 func convertServicePrincipalProfileToVLabs(api *ServicePrincipalProfile, v *vlabs.ServicePrincipalProfile) {

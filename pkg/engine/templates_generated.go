@@ -34796,7 +34796,6 @@ configureCNIIPTables() {
 {{if NeedsContainerd}}
 ensureContainerd() {
     wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit $ERR_FILE_WATCH_TIMEOUT
-    wait_for_file 1200 1 /etc/sysctl.d/11-containerd.conf || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 1200 1 /etc/containerd/config.toml || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
@@ -34846,6 +34845,7 @@ ensureDHCPv6() {
 {{end}}
 
 ensureKubelet() {
+    wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit $ERR_FILE_WATCH_TIMEOUT
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     KUBECONFIG_FILE=/var/lib/kubelet/kubeconfig
@@ -36806,15 +36806,6 @@ ExecStartPre=/bin/bash -c "if [ $(mount | grep \"/var/lib/kubelet\" | wc -l) -le
 ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
 {{/* This is a partial workaround to this upstream Kubernetes issue: */}}
 {{/* https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731 */}}
-ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_retries2=8
-ExecStartPre=/sbin/sysctl -w net.core.somaxconn=16384
-ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_max_syn_backlog=16384
-ExecStartPre=/sbin/sysctl -w net.core.message_cost=40
-ExecStartPre=/sbin/sysctl -w net.core.message_burst=80
-
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh2=8192
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh3=16384
 
 ExecStartPre=-/sbin/ebtables -t nat --list
 ExecStartPre=-/sbin/iptables -t nat --numeric --list
@@ -37788,14 +37779,14 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
-{{if NeedsContainerd}}
-- path: /etc/sysctl.d/11-containerd.conf
+- path: /etc/sysctl.d/11-aks-engine.conf
   permissions: "0644"
   owner: root
   content: |
-    net.ipv4.ip_forward = 1
+    {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
     #EOF
 
+{{if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root
@@ -38409,14 +38400,14 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
-{{if NeedsContainerd}}
-- path: /etc/sysctl.d/11-containerd.conf
+- path: /etc/sysctl.d/11-aks-engine.conf
   permissions: "0644"
   owner: root
   content: |
-    net.ipv4.ip_forward = 1
+    {{GetSysctlDConfigKeyVals .SysctlDConfig}}
     #EOF
 
+{{if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root

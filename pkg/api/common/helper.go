@@ -315,6 +315,20 @@ func GetOrderedEscapedKeyValsString(config map[string]string) string {
 	return strings.TrimSuffix(buf.String(), ", ")
 }
 
+// GetOrderedNewlinedKeyValsString returns an ordered string of key = val, separated by newlines
+func GetOrderedNewlinedKeyValsString(config map[string]string) string {
+	keys := []string{}
+	for key := range config {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("%s = %s\n", key, config[key]))
+	}
+	return buf.String()
+}
+
 // SliceIntIsNonEmpty is a simple convenience to determine if a []int is non-empty
 func SliceIntIsNonEmpty(s []int) bool {
 	return len(s) > 0

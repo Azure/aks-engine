@@ -193,14 +193,14 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
-{{if NeedsContainerd}}
-- path: /etc/sysctl.d/11-containerd.conf
+- path: /etc/sysctl.d/11-aks-engine.conf
   permissions: "0644"
   owner: root
   content: |
-    net.ipv4.ip_forward = 1
+    {{GetSysctlDConfigKeyVals .SysctlDConfig}}
     #EOF
 
+{{if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root
