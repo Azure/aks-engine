@@ -793,7 +793,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return strings.Join(kvs, ",")
 		},
 		"GetSysctlDConfigKeyVals": func(sysctlDConfig map[string]string) string {
-			return common.GetOrderedNewlinedKeyValsString(sysctlDConfig)
+			return common.GetOrderedNewlinedKeyValsStringForCloudInit(sysctlDConfig)
 		},
 		"OpenBraces": func() string {
 			return "{{"

@@ -315,8 +315,8 @@ func GetOrderedEscapedKeyValsString(config map[string]string) string {
 	return strings.TrimSuffix(buf.String(), ", ")
 }
 
-// GetOrderedNewlinedKeyValsString returns an ordered string of key = val, separated by newlines
-func GetOrderedNewlinedKeyValsString(config map[string]string) string {
+// GetOrderedNewlinedKeyValsStringForCloudInit returns an ordered string of key = val, separated by newlines
+func GetOrderedNewlinedKeyValsStringForCloudInit(config map[string]string) string {
 	keys := []string{}
 	for key := range config {
 		keys = append(keys, key)
@@ -324,7 +324,7 @@ func GetOrderedNewlinedKeyValsString(config map[string]string) string {
 	sort.Strings(keys)
 	var buf bytes.Buffer
 	for _, key := range keys {
-		buf.WriteString(fmt.Sprintf("%s = %s\n", key, config[key]))
+		buf.WriteString(fmt.Sprintf("%s = %s\n%4s", key, config[key], " "))
 	}
 	return buf.String()
 }
