@@ -4,7 +4,6 @@ metadata:
   name: backend-deny-egress
   namespace: development
 spec:
-  podSelector:
-    matchLabels: {}
-    policyTypes:
+  podSelector: {}
+  policyTypes:
       - Egress
