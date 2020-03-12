@@ -264,7 +264,6 @@ configureCNIIPTables() {
 {{if NeedsContainerd}}
 ensureContainerd() {
     wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit $ERR_FILE_WATCH_TIMEOUT
-    wait_for_file 1200 1 /etc/sysctl.d/11-containerd.conf || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 1200 1 /etc/containerd/config.toml || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
@@ -314,6 +313,8 @@ ensureDHCPv6() {
 {{end}}
 
 ensureKubelet() {
+    wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    sysctl_reload 10 5 120 || exit $ERR_SYSCTL_RELOAD
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     KUBECONFIG_FILE=/var/lib/kubelet/kubeconfig

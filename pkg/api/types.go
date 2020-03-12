@@ -575,7 +575,8 @@ type MasterProfile struct {
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+	CosmosEtcd    *bool             `json:"cosmosEtcd,omitempty"`
+	SysctlDConfig map[string]string `json:"sysctldConfig,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -652,6 +653,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
+	SysctlDConfig                       map[string]string    `json:"sysctldConfig,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
