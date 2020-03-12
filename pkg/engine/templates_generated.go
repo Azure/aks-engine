@@ -40870,7 +40870,7 @@ function DownloadFileOverHttp
     if ($search.Count -ne 0)
     {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
-        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+        Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
     else 
     {
