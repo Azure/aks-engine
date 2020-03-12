@@ -889,6 +889,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Honor customKubeProxyImage field
+	if o.KubernetesConfig.CustomKubeProxyImage != "" {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Containers[0].Image = o.KubernetesConfig.CustomKubeProxyImage
+		}
+	}
+
 	for _, addon := range defaultAddons {
 		synthesizeAddonsConfig(o.KubernetesConfig.Addons, addon, isUpgrade)
 	}

@@ -3537,6 +3537,45 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.18.0", "", common.KubernetesImageBaseTypeGCR)),
 		},
+		{
+			name: "kube proxy w/ customKubeProxyImage",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:        DefaultKubernetesSubnet,
+							ProxyMode:            KubeProxyModeIPTables,
+							NetworkPlugin:        NetworkPluginAzure,
+							CustomKubeProxyImage: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+		},
 	}
 
 	for _, test := range tests {
