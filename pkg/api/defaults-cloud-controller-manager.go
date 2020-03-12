@@ -22,7 +22,7 @@ func (cs *ContainerService) setCloudControllerManagerConfig() {
 	}
 	staticCloudControllerManagerConfig := map[string]string{
 		"--allocate-node-cidrs":         strconv.FormatBool(!o.IsAzureCNI() || isAzureCNIDualStack),
-		"--configure-cloud-routes":      strconv.FormatBool(o.RequireRouteTable() || isAzureCNIDualStack),
+		"--configure-cloud-routes":      strconv.FormatBool(cs.Properties.RequireRouteTable()),
 		"--cloud-provider":              "azure",
 		"--cloud-config":                "/etc/kubernetes/azure.json",
 		"--cluster-cidr":                clusterCidr,

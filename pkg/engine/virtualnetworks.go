@@ -16,9 +16,8 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
 	}
 
-	requireRouteTable := cs.Properties.OrchestratorProfile.RequireRouteTable()
-	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
-	if requireRouteTable || isAzureCNIDualStack {
+	requireRouteTable := cs.Properties.RequireRouteTable()
+	if requireRouteTable {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
 
@@ -46,7 +45,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 		subnet.AddressPrefixes = &masterAddressPrefixes
 	}
 
-	if requireRouteTable || isAzureCNIDualStack {
+	if requireRouteTable {
 		subnet.RouteTable = &network.RouteTable{
 			ID: to.StringPtr("[variables('routeTableID')]"),
 		}
@@ -97,9 +96,8 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
 	}
 
-	requireRouteTable := cs.Properties.OrchestratorProfile.RequireRouteTable()
-	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
-	if requireRouteTable || isAzureCNIDualStack {
+	requireRouteTable := cs.Properties.RequireRouteTable()
+	if requireRouteTable {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
 
@@ -126,7 +124,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		subnetMaster.AddressPrefixes = &masterAddressPrefixes
 	}
 
-	if requireRouteTable || isAzureCNIDualStack {
+	if requireRouteTable {
 		subnetMaster.RouteTable = &network.RouteTable{
 			ID: to.StringPtr("[variables('routeTableID')]"),
 		}
@@ -142,7 +140,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		},
 	}
 
-	if requireRouteTable || isAzureCNIDualStack {
+	if requireRouteTable {
 		subnetAgent.RouteTable = &network.RouteTable{
 			ID: to.StringPtr("[variables('routeTableID')]"),
 		}

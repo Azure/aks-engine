@@ -23,7 +23,7 @@ func (cs *ContainerService) setControllerManagerConfig() {
 	staticControllerManagerConfig := map[string]string{
 		"--kubeconfig":                       "/var/lib/kubelet/kubeconfig",
 		"--allocate-node-cidrs":              strconv.FormatBool(!o.IsAzureCNI() || isAzureCNIDualStack),
-		"--configure-cloud-routes":           strconv.FormatBool(o.RequireRouteTable() || isAzureCNIDualStack),
+		"--configure-cloud-routes":           strconv.FormatBool(cs.Properties.RequireRouteTable()),
 		"--cluster-cidr":                     clusterCidr,
 		"--root-ca-file":                     "/etc/kubernetes/certs/ca.crt",
 		"--cluster-signing-cert-file":        "/etc/kubernetes/certs/ca.crt",

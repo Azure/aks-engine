@@ -1807,22 +1807,6 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 	return false
 }
 
-// RequireRouteTable returns true if this deployment requires routing table
-func (o *OrchestratorProfile) RequireRouteTable() bool {
-	switch o.OrchestratorType {
-	case Kubernetes:
-		if o.IsAzureCNI() ||
-			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
-			"flannel" == o.KubernetesConfig.NetworkPlugin ||
-			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
-			return false
-		}
-		return true
-	default:
-		return false
-	}
-}
-
 // IsPrivateCluster returns true if this deployment is a private cluster
 func (o *OrchestratorProfile) IsPrivateCluster() bool {
 	if !o.IsKubernetes() {
@@ -2142,10 +2126,29 @@ func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 	return p.HasNSeriesSKU()
 }
 
+// IsAzureCNIDualStack determines if azure cni dual stack is enabled
 func (p *Properties) IsAzureCNIDualStack() bool {
 	o := p.OrchestratorProfile
 	f := p.FeatureFlags
 	return o.IsAzureCNI() && f.IsFeatureEnabled("EnableIPv6DualStack")
+}
+
+// RequireRouteTable returns true if this deployment requires routing table
+func (p *Properties) RequireRouteTable() bool {
+	o := p.OrchestratorProfile
+	f := p.FeatureFlags
+	switch o.OrchestratorType {
+	case Kubernetes:
+		if o.IsAzureCNI() && !f.IsFeatureEnabled("EnableIPv6DualStack") ||
+			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
+			"flannel" == o.KubernetesConfig.NetworkPlugin ||
+			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
+			return false
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
