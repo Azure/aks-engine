@@ -112,7 +112,7 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    local URL=""
+    local URL
     case $UBUNTU_RELEASE in
     "18.04")
         URL="https://download.01.org/intel-sgx/latest/dcap-latest/linux/distro/ubuntuServer18.04/sgx_linux_x64_driver_1.21.bin"
@@ -129,7 +129,8 @@ installSGXDrivers() {
     wait_for_apt_locks
     retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
-    local DRIVER=$(basename $URL)
+    local DRIVER
+    DRIVER=$(basename $URL)
     local OE_DIR=/opt/azure/containers/oe
     mkdir -p ${OE_DIR}
 
