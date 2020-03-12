@@ -534,6 +534,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.StorageProfile = vlabs.StorageProfile
 	api.HTTPSourceAddressPrefix = vlabs.HTTPSourceAddressPrefix
 	api.OAuthEnabled = vlabs.OAuthEnabled
+	api.SSHAlternativePort = vlabs.SSHAlternativePort
 	// by default vlabs will use managed disks as it has encryption at rest
 	if len(api.StorageProfile) == 0 {
 		api.StorageProfile = ManagedDisks

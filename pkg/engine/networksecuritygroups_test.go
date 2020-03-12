@@ -4,6 +4,8 @@
 package engine
 
 import (
+	"fmt"
+
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
@@ -81,6 +83,30 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	}
 
 	diff := cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while comparing nsgs : %s", diff)
+	}
+	// SSH alternative port
+	cs.Properties.MasterProfile = &api.MasterProfile{SSHAlternativePort: to.Int32Ptr(13579)}
+	actual = CreateNetworkSecurityGroup(cs)
+
+	*expected.SecurityRules = append(*expected.SecurityRules, network.SecurityRule{
+		Name: to.StringPtr("allow_ssh_alternative"),
+		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+			Access:                   network.SecurityRuleAccessAllow,
+			Description:              to.StringPtr("Allow SSH traffic to master from an alternative port"),
+			DestinationAddressPrefix: to.StringPtr("*"),
+			DestinationPortRange:     to.StringPtr(fmt.Sprintf("%d-%d", *cs.Properties.MasterProfile.SSHAlternativePort, *cs.Properties.MasterProfile.SSHAlternativePort)),
+			Direction:                network.SecurityRuleDirectionInbound,
+			Priority:                 to.Int32Ptr(234),
+			Protocol:                 network.SecurityRuleProtocolTCP,
+			SourceAddressPrefix:      to.StringPtr("*"),
+			SourcePortRange:          to.StringPtr("*"),
+		},
+	})
+
+	diff = cmp.Diff(actual, expected)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while comparing nsgs : %s", diff)

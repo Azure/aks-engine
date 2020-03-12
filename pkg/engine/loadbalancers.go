@@ -183,6 +183,23 @@ func CreateMasterLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM
 					},
 				},
 			}
+
+			if prop.MasterProfile != nil && prop.MasterProfile.SSHAlternativePort != nil {
+				inboundNATPools = append(inboundNATPools, network.InboundNatPool{
+					Name: to.StringPtr("ssh_alternative"),
+					InboundNatPoolPropertiesFormat: &network.InboundNatPoolPropertiesFormat{
+						FrontendIPConfiguration: &network.SubResource{
+							ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+						},
+						Protocol:               network.TransportProtocolTCP,
+						BackendPort:            prop.MasterProfile.SSHAlternativePort,
+						FrontendPortRangeStart: to.Int32Ptr(50001),
+						FrontendPortRangeEnd:   to.Int32Ptr(50119),
+						EnableFloatingIP:       to.BoolPtr(false),
+					},
+				})
+			}
+
 			loadBalancer.InboundNatPools = &inboundNATPools
 
 		} else {
@@ -209,6 +226,22 @@ func CreateMasterLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM
 				}
 				inboundNATRules = append(inboundNATRules, inboundNATRule)
 			}
+
+			if prop.MasterProfile != nil && prop.MasterProfile.SSHAlternativePort != nil {
+				inboundNATRules = append(inboundNATRules, network.InboundNatRule{
+					Name: to.StringPtr("ssh_alternative"),
+					InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+						BackendPort:      to.Int32Ptr(*prop.MasterProfile.SSHAlternativePort),
+						EnableFloatingIP: to.BoolPtr(false),
+						FrontendIPConfiguration: &network.SubResource{
+							ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+						},
+						FrontendPort: prop.MasterProfile.SSHAlternativePort,
+						Protocol:     network.TransportProtocolTCP,
+					},
+				})
+			}
+
 			loadBalancer.InboundNatRules = &inboundNATRules
 		}
 	} else {

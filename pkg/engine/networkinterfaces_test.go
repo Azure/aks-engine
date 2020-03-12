@@ -29,6 +29,7 @@ func TestCreateNIC(t *testing.T) {
 				VMSize:              "Standard_DS2_v2",
 				AvailabilityProfile: api.VirtualMachineScaleSets,
 				IPAddressCount:      5,
+				SSHAlternativePort:  to.Int32Ptr(13579),
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType:    api.Kubernetes,
@@ -80,6 +81,9 @@ func TestCreateNIC(t *testing.T) {
 							LoadBalancerInboundNatRules: &[]network.InboundNatRule{
 								{
 									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+								},
+								{
+									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/ssh_alternative')]"),
 								},
 							},
 							PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
@@ -189,6 +193,9 @@ func TestCreateNIC(t *testing.T) {
 				LoadBalancerInboundNatRules: &[]network.InboundNatRule{
 					{
 						ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
+					},
+					{
+						ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/ssh_alternative')]"),
 					},
 				},
 				PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),

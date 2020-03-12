@@ -493,4 +493,15 @@ ensureGPUDrivers() {
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
 {{end}}
+
+configureMasterSSHD() {
+    is_master=$(hostname | grep master)
+    if [ -z "${is_master}" ]; then
+        return
+    fi
+    if [ -n "${MASTER_SSH_ALTERNATIVE_PORT}" ]; then
+        sed -i "s/^Port 22$/Port 22\nPort ${MASTER_SSH_ALTERNATIVE_PORT}/1" /etc/ssh/sshd_config
+        /etc/init.d/ssh restart
+    fi
+}
 #EOF

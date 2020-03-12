@@ -14,14 +14,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 // DistroValues is a list of currently supported distros

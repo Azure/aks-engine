@@ -1,0 +1,59 @@
+{
+    "apiVersion": "vlabs",
+    "location": "",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorRelease": "1.17",
+            "kubernetesConfig": {
+                "networkPolicy": "none",
+                "cloudProviderRateLimitQPS": 6,
+                "cloudProviderRateLimitBucket": 20,
+                "controllerManagerConfig": {
+                    "--feature-gates": "CSIInlineVolume=true,LocalStorageCapacityIsolation=true,ServiceNodeExclusion=true",
+                    "--profiling": "true"
+                },
+                "apiServerConfig": {
+                    "--enable-admission-plugins": "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota,AlwaysPullImages",
+                    "--profiling": "true"
+                },
+                "schedulerConfig": {
+                    "--profiling": "true"
+                }
+            }
+        },
+        "masterProfile": {
+            "count": 1,
+            "dnsPrefix": "test-ssh",
+            "vmSize": "Standard_DS2_v2",
+            "extensions": [
+                {
+                    "name": "config-kubemark-master"
+                }
+            ],
+            "sshAlternativePort": 13579
+        },
+        "extensionProfiles": [
+            {
+                "name": "config-kubemark-master",
+                "version": "v1",
+                "extensionParameters": "parameters",
+                "rootURL": "https://raw.githubusercontent.com/nilo19/kubemark-performance-tests-on-azure/master/"
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "kubernetes",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDH0e8/PcE9DalkJe4tFvXcrwo66sAUO37v9AEJYpJxXq/fDZt1OrypyPwz9PZK9cWOVcz4ZppyjUT6K936fzpDj+hA7ibsf/dU/6oSj6VZ4O89Y/LHf7vohlpNgjviMe6e3Cq1sO5Vob/Ssr9r0U5j+H0dljTiBBWtKMyxAwkN6qENFUhszhDLH1QbourYgynjzQw8A4io4ssg5fhfKJTmXoBanp/Aoe3j5QLFzP7TGa5JcE7BdtUzhqKgKwsuQvPlAatCPeBcWLBv+8kNmm0RSXVwZyhOl+mVbfXxphOE8UmLjpkicv5EO7U212bRg3r5sZGk+IWDlydW+NZmf5RN pomelo@niqideMacBook-Pro.local"
+                    }
+                ]
+            }
+        },
+        "servicePrincipalProfile": {
+            "clientID": "672fa89a-8e10-4201-a3bd-0126f0dc8730",
+            "secret": "cf442a6e-2391-4257-9265-6222d4880977"
+        }
+    }
+}

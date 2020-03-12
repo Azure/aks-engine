@@ -34987,6 +34987,17 @@ ensureGPUDrivers() {
     systemctlEnableAndStart nvidia-modprobe || exit $ERR_GPU_DRIVERS_START_FAIL
 }
 {{end}}
+
+configureMasterSSHD() {
+    is_master=$(hostname | grep master)
+    if [ -z "${is_master}" ]; then
+        return
+    fi
+    if [ -n "${MASTER_SSH_ALTERNATIVE_PORT}" ]; then
+        sed -i "s/^Port 22$/Port 22\nPort ${MASTER_SSH_ALTERNATIVE_PORT}/1" /etc/ssh/sshd_config
+        /etc/init.d/ssh restart
+    fi
+}
 #EOF
 `)
 
@@ -36106,6 +36117,9 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
 else
     time_metric "RemoveEtcd" removeEtcd
 fi
+
+{{/* configure /etc/ssh/sshd_config on master if the ssh alternative port is enabled */}}
+time_metric "ConfigureMasterSSHD" configureMasterSSHD
 
 {{- if HasCustomSearchDomain}}
 wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
