@@ -30,6 +30,7 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
 	CoreOS            Distro = "coreos"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
@@ -99,7 +100,7 @@ var (
 	ContainerRuntimeValues = [...]string{"", Docker, KataContainers, Containerd}
 
 	// DistroValues holds the valid values for OS distros
-	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
+	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, Ubuntu1804Gen2, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
 	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
