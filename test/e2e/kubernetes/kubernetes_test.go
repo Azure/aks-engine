@@ -1594,6 +1594,27 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
+				By("Applying a network policy to deny egress access in development namespace")
+				nwpolicyName, namespace = "backend-deny-egress", nsDev
+				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-deny-egress.yaml"), nwpolicyName, namespace)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we no longer have egress access from the network-policy pods to backend pods")
+				for _, backendPod := range backendPods {
+					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
+					if err != nil {
+						e := backendPod.Describe()
+						if e != nil {
+							log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
+						}
+					}
+					Expect(err).Should(HaveOccurred())
+					Expect(pass).To(BeFalse())
+				}
+
+				By("Cleaning up after ourselves")
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
 					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
 					nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
