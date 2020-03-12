@@ -9,8 +9,8 @@
             "name": "azure-policy",
             "enabled": true,
             "config": {
-              "auditInterval": "30",
-              "constraintViolationsLimit": "20"
+              "auditInterval": "60",
+              "constraintViolationsLimit": "100"
             }
           }
         ]
