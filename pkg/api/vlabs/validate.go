@@ -1260,11 +1260,12 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		return errors.Errorf("featureFlags.EnableIPv6DualStack and featureFlags.EnableIPv6Only can't be enabled at the same time.")
 	}
 
+	sv, err := semver.Make(k8sVersion)
+	if err != nil {
+		return errors.Errorf("could not validate version %s", k8sVersion)
+	}
+
 	if ipv6DualStackEnabled {
-		sv, err := semver.Make(k8sVersion)
-		if err != nil {
-			return errors.Errorf("could not validate version %s", k8sVersion)
-		}
 		minVersion, err := semver.Make("1.16.0")
 		if err != nil {
 			return errors.New("could not validate version")
@@ -1279,10 +1280,6 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	}
 
 	if isIPv6 {
-		sv, err := semver.Make(k8sVersion)
-		if err != nil {
-			return errors.Errorf("could not validate version %s", k8sVersion)
-		}
 		minVersion, err := semver.Make("1.18.0-alpha.4")
 		if err != nil {
 			return errors.New("could not validate version")
@@ -1442,9 +1439,16 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		return errors.Errorf("Invalid KubeProxyMode %v. Allowed modes are %v and %v", k.ProxyMode, KubeProxyModeIPTables, KubeProxyModeIPVS)
 	}
 
-	// dualstack is currently supported only with ipvs proxy mode
-	if ipv6DualStackEnabled && k.ProxyMode != KubeProxyModeIPVS {
-		return errors.Errorf("Invalid KubeProxyMode %v. Dualstack supported currently only with %v mode", k.ProxyMode, KubeProxyModeIPVS)
+	// dualstack IPVS mode supported from 1.16+
+	// dualstack IPtables mode supported from 1.18+
+	if ipv6DualStackEnabled && k.ProxyMode == KubeProxyModeIPTables {
+		minVersion, err := semver.Make("1.18.0-alpha.2")
+		if err != nil {
+			return errors.New("could not validate version")
+		}
+		if sv.LT(minVersion) {
+			return errors.Errorf("KubeProxyMode %v in dualstack not supported with %s version", k.ProxyMode, k8sVersion)
+		}
 	}
 
 	// Validate that we have a valid etcd version
