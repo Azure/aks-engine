@@ -595,10 +595,11 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c = KubernetesConfig{
 			NetworkPlugin: "kubenet",
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "iptables",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
-			t.Error("should error when proxy mode is not set to ipvs")
+		if err := c.Validate(k8sVersion, false, true, false); err == nil && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0-alpha.2") {
+			t.Errorf("should error with ipv6 dual stack feature enabled as iptables mode not supported in %s", k8sVersion)
 		}
 
 		c = KubernetesConfig{
