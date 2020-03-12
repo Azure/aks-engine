@@ -3,8 +3,8 @@ ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
-      echo "Already ran to success exiting..."
-      exit 0
+    echo "Already ran to success exiting..."
+    exit 0
 fi
 
 echo $(date),$(hostname), startcustomscript>>/opt/m
@@ -118,7 +118,7 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
-# this will capture the amount of time to install of the network plugin during cse
+{{/* this will capture the amount of time to install of the network plugin during cse */}}
 time_metric "InstallNetworkPlugin" installNetworkPlugin
 
 {{- if HasNSeriesSKU}}
