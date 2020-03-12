@@ -140,7 +140,8 @@ configureK8s() {
     touch "${KUBELET_PRIVATE_KEY_PATH}"
     APISERVER_PUBLIC_KEY_PATH="/etc/kubernetes/certs/apiserver.crt"
     touch "${APISERVER_PUBLIC_KEY_PATH}"
-    chmod 0644 "${KUBELET_PRIVATE_KEY_PATH}" "${APISERVER_PUBLIC_KEY_PATH}"
+    chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
+    chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
     chown root:root "${KUBELET_PRIVATE_KEY_PATH}" "${APISERVER_PUBLIC_KEY_PATH}"
 
     set +x
