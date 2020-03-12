@@ -3131,7 +3131,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4"),
 		},
 		{
 			name: "kube-proxy disabled",
@@ -3466,7 +3466,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.18.0")),
 		},
 		{
 			name: "addons with dual stack",
@@ -3535,7 +3535,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.18.0")),
 		},
 		{
 			name: "kube proxy w/ customKubeProxyImage",
@@ -3574,7 +3574,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4"),
 		},
 	}
 
@@ -4030,14 +4030,14 @@ func concatenateDefaultAddons(addons []KubernetesAddon, version string) []Kubern
 	return defaults
 }
 
-func overwriteDefaultAddons(addons []KubernetesAddon, version, kubernetesImageBase, kubernetesImageBaseType string) []KubernetesAddon {
+func overwriteDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
 	overrideAddons := make(map[string]KubernetesAddon)
 	for _, addonOverride := range addons {
 		overrideAddons[addonOverride.Name] = addonOverride
 	}
 
 	var ret []KubernetesAddon
-	defaults := getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType)
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeGCR)
 
 	for _, addon := range defaults {
 		if _, exists := overrideAddons[addon.Name]; exists {
