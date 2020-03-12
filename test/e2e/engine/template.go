@@ -312,7 +312,9 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	if config.Distro != "" {
 		prop.MasterProfile.Distro = vlabs.Distro(config.Distro)
 		for _, pool := range prop.AgentPoolProfiles {
-			pool.Distro = vlabs.Distro(config.Distro)
+			if !pool.IsWindows() {
+				pool.Distro = vlabs.Distro(config.Distro)
+			}
 		}
 	}
 
