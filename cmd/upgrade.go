@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -53,6 +54,7 @@ type upgradeCmd struct {
 	controlPlaneOnly                         bool
 	disableClusterInitComponentDuringUpgrade bool
 	upgradeWindowsVHD                        bool
+	agentPoolToUpgrade                       string
 
 	// derived
 	containerService    *api.ContainerService
@@ -88,6 +90,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
 	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
+	f.StringVar(&uc.agentPoolToUpgrade, "node-pool", "", "upgrade a single node pool only")
 	f.BoolVarP(&uc.upgradeWindowsVHD, "upgrade-windows-vhd", "", true, "upgrade image reference of the Windows nodes")
 	addAuthFlags(uc.getAuthArgs(), f)
 
@@ -138,6 +141,10 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	if uc.apiModelPath != "" && uc.deploymentDirectory != "" {
 		_ = cmd.Usage()
 		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
+	}
+
+	if uc.controlPlaneOnly && uc.agentPoolToUpgrade != "" {
+		return errors.New("flags --control-plane-only and --node-pool are not allowed together")
 	}
 
 	return nil
@@ -223,6 +230,19 @@ func (uc *upgradeCmd) loadCluster() error {
 }
 
 func (uc *upgradeCmd) validateTargetVersion() error {
+	cpVersion := uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion
+	if uc.isSinglePoolUpgrade() {
+		// Make sure node pool is upgraded to the control plane version
+		// Is it OK for --force to be able to bypass this validation?
+		if !strings.EqualFold(uc.upgradeVersion, cpVersion) {
+			return errors.Errorf("upgrading individual node pools requires a target version equal to the control plane version (%s)", cpVersion)
+		}
+		if !common.AllKubernetesSupportedVersions[cpVersion] {
+			return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions'", cpVersion, uc.upgradeVersion)
+		}
+		return nil
+	}
+
 	// Get available upgrades for container service.
 	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows(), uc.containerService.Properties.IsAzureStackCloud())
 	if err != nil {
@@ -237,7 +257,7 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 		}
 	}
 	if !found {
-		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version %s'", uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion, uc.upgradeVersion, uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion)
+		return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version %s'", cpVersion, uc.upgradeVersion, cpVersion)
 	}
 	return nil
 }
@@ -270,9 +290,18 @@ func (uc *upgradeCmd) initialize() error {
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
 
 	uc.agentPoolsToUpgrade = make(map[string]bool)
-	uc.agentPoolsToUpgrade[kubernetesupgrade.MasterPoolName] = true
+	uc.agentPoolsToUpgrade[kubernetesupgrade.MasterPoolName] = !uc.isSinglePoolUpgrade()
 	for _, agentPool := range uc.containerService.Properties.AgentPoolProfiles {
-		uc.agentPoolsToUpgrade[agentPool.Name] = true
+		if !uc.isSinglePoolUpgrade() {
+			uc.agentPoolsToUpgrade[agentPool.Name] = true
+		} else if strings.EqualFold(uc.agentPoolToUpgrade, agentPool.Name) {
+			uc.agentPoolsToUpgrade[agentPool.Name] = true
+		} else {
+			uc.agentPoolsToUpgrade[agentPool.Name] = false
+		}
+	}
+	if _, found := uc.agentPoolsToUpgrade[uc.agentPoolToUpgrade]; !found && uc.isSinglePoolUpgrade() {
+		return errors.New("Invalid agent pool to upgrade")
 	}
 	return nil
 }
@@ -378,4 +407,8 @@ func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 		}
 	}
 	return false
+}
+
+func (uc *upgradeCmd) isSinglePoolUpgrade() bool {
+	return uc.agentPoolToUpgrade != ""
 }
