@@ -21,7 +21,7 @@ import (
 )
 
 // IsVMSSToBeUpgradedCb - Call back for checking whether the given vmss is to be upgraded or not.
-type IsVMSSToBeUpgradedCb func(vmss string, cs *api.ContainerService) bool
+type IsVMSSToBeUpgradedCb func(vmss string, cs *api.ContainerService, targetPools map[string]bool) bool
 
 // ClusterTopology contains resources of the cluster the upgrade operation
 // is targeting
@@ -195,7 +195,7 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 			return err
 		}
 		for _, vmScaleSet := range vmScaleSetPage.Values() {
-			if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel) {
+			if uc.IsVMSSToBeUpgraded != nil && !uc.IsVMSSToBeUpgraded(*vmScaleSet.Name, uc.DataModel, uc.AgentPoolsToUpgrade) {
 				continue
 			}
 			for vmScaleSetVMsPage, err := uc.Client.ListVirtualMachineScaleSetVMs(ctx, resourceGroup, *vmScaleSet.Name); vmScaleSetVMsPage.NotDone(); err = vmScaleSetVMsPage.NextWithContext(ctx) {
