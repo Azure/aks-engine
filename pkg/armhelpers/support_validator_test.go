@@ -83,13 +83,26 @@ func TestValidateRequiredImagesMissingImageCase(t *testing.T) {
 
 	masterProfile.Distro = api.AKSUbuntu1804
 
+	windowsProfile := api.WindowsProfile{
+		WindowsPublisher: api.WindowsServer2019OSImageConfig.ImagePublisher,
+		WindowsOffer:     api.WindowsServer2019OSImageConfig.ImageOffer,
+		WindowsSku:       api.WindowsServer2019OSImageConfig.ImageSku,
+	}
+
+	testProperties.WindowsProfile = &windowsProfile
+
 	profile := api.AgentPoolProfile{
 		OSType: api.Linux,
 		Distro: api.AKSUbuntu1804,
 	}
 
+	profile1 := api.AgentPoolProfile{
+		OSType: api.Windows,
+	}
+
 	agentProfiles := []*api.AgentPoolProfile{}
 	agentProfiles = append(agentProfiles, &profile)
+	agentProfiles = append(agentProfiles, &profile1)
 
 	testProperties.AgentPoolProfiles = agentProfiles
 	testProperties.MasterProfile = &masterProfile
