@@ -112,3 +112,25 @@ func TestValidateRequiredImagesMissingImageCase(t *testing.T) {
 	}
 
 }
+
+func TestToImageConfigWindows(t *testing.T) {
+
+	windowsProfile := api.WindowsProfile{
+		WindowsPublisher: api.WindowsServer2019OSImageConfig.ImagePublisher,
+		WindowsOffer:     api.WindowsServer2019OSImageConfig.ImageOffer,
+		WindowsSku:       api.WindowsServer2019OSImageConfig.ImageSku,
+	}
+	imageConfig := toImageConfigWindows(&windowsProfile)
+
+	if imageConfig.ImageOffer != api.WindowsServer2019OSImageConfig.ImageOffer {
+		t.Fatal("could not convert windows profile to image config WindowsServer2019OSImageConfig")
+	}
+
+	windowsProfile = api.WindowsProfile{}
+	imageConfig = toImageConfigWindows(&windowsProfile)
+
+	if imageConfig.ImageOffer != api.AKSWindowsServer2019OSImageConfig.ImageOffer {
+		t.Fatal("could not convert windows profile to image config AKSWindowsServer2019OSImageConfig")
+	}
+
+}
