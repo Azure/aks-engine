@@ -21,7 +21,7 @@
                 {
                     "name": "agentpool1",
                     "count": 3,
-                    "vmSize": "Standard_Ds2_v3",
+                    "vmSize": "Standard_D2s_v3",
                     "availabilityProfile": "VirtualMachineScaleSets",
                     "scalesetPriority": "Spot",
                     "distro": "ubuntu-18.04-gen2"
