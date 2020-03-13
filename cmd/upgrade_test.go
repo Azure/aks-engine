@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -100,6 +101,43 @@ func TestUpgradeCommandShouldBeValidated(t *testing.T) {
 			},
 			expectedErr: errors.New("ambiguous, please specify only one of --api-model and --deployment-dir"),
 			name:        "NeedsNonAmbiguous",
+		},
+		{
+			uc: &upgradeCmd{
+				resourceGroupName:   "test",
+				apiModelPath:        "./not/used",
+				deploymentDirectory: "",
+				upgradeVersion:      "1.9.0",
+				location:            "southcentralus",
+				controlPlaneOnly:    true,
+				agentPoolToUpgrade:  "linuxpool1",
+			},
+			expectedErr: errors.New("flags --control-plane-only and --node-pool are not allowed together"),
+			name:        "MasterAndSinglePool",
+		},
+		{
+			uc: &upgradeCmd{
+				resourceGroupName:   "test",
+				apiModelPath:        "./not/used",
+				deploymentDirectory: "",
+				upgradeVersion:      "1.9.0",
+				location:            "southcentralus",
+				agentPoolToUpgrade:  "linuxpool1",
+			},
+			expectedErr: nil,
+			name:        "SinglePool",
+		},
+		{
+			uc: &upgradeCmd{
+				resourceGroupName:   "test",
+				apiModelPath:        "./not/used",
+				deploymentDirectory: "",
+				upgradeVersion:      "1.9.0",
+				location:            "southcentralus",
+				controlPlaneOnly:    true,
+			},
+			expectedErr: nil,
+			name:        "ControlPlaneOnly",
 		},
 		{
 			uc: &upgradeCmd{
@@ -298,10 +336,11 @@ func TestUpgradeForceDowngradeShouldSetVersionOnContainerService(t *testing.T) {
 
 func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 	cases := []struct {
-		vmssName string
-		cs       *api.ContainerService
-		expected bool
-		name     string
+		vmssName       string
+		cs             *api.ContainerService
+		poolsToUpgrade map[string]bool
+		expected       bool
+		name           string
 	}{
 		{
 			vmssName: "k8s-agentpool1-41325566-vmss",
@@ -322,6 +361,10 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 						},
 					},
 				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master":     true,
+				"agentpool1": true,
 			},
 			expected: true,
 			name:     "vmss is in the api model spec",
@@ -345,6 +388,10 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 						},
 					},
 				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master":     true,
+				"agentpool1": true,
 			},
 			expected: false,
 			name:     "vmss unrecognized",
@@ -379,6 +426,12 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 					},
 				},
 			},
+			poolsToUpgrade: map[string]bool{
+				"master":       true,
+				"frontendpool": true,
+				"backendpool":  true,
+				"canary":       true,
+			},
 			expected: true,
 			name:     "multiple pools, frontendpool vmss is in spec",
 		},
@@ -411,6 +464,12 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 						},
 					},
 				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master":       true,
+				"frontendpool": true,
+				"backendpool":  true,
+				"canary":       true,
 			},
 			expected: true,
 			name:     "multiple pools, backendpool vmss is in spec",
@@ -445,6 +504,12 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 					},
 				},
 			},
+			poolsToUpgrade: map[string]bool{
+				"master":       true,
+				"frontendpool": true,
+				"backendpool":  true,
+				"canary":       true,
+			},
 			expected: true,
 			name:     "multiple pools, canary vmss is in spec",
 		},
@@ -461,6 +526,9 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 					},
 					AgentPoolProfiles: []*api.AgentPoolProfile{},
 				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master": true,
 			},
 			expected: false,
 			name:     "no pools",
@@ -485,8 +553,90 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 					},
 				},
 			},
+			poolsToUpgrade: map[string]bool{
+				"master": true,
+				"canary": true,
+			},
 			expected: false,
 			name:     "availability set",
+		},
+		{
+			vmssName: "k8s-frontendpool-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "frontendpool",
+							Count:               30,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "backendpool",
+							Count:               7,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "canary",
+							Count:               5,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master":       false,
+				"frontendpool": true,
+				"backendpool":  false,
+				"canary":       false,
+			},
+			expected: true,
+			name:     "multiple pools, input vmss is the node pool to upgrade",
+		},
+		{
+			vmssName: "k8s-frontendpool-41325566-vmss",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime: api.Docker,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "frontendpool",
+							Count:               30,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "backendpool",
+							Count:               7,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+						{
+							Name:                "canary",
+							Count:               5,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			poolsToUpgrade: map[string]bool{
+				"master":       false,
+				"frontendpool": false,
+				"backendpool":  true,
+				"canary":       false,
+			},
+			expected: false,
+			name:     "multiple pools, input vmss is NOT the node pool to upgrade",
 		},
 	}
 
@@ -494,9 +644,190 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 		c := tc
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			ret := isVMSSNameInAgentPoolsArray(c.vmssName, c.cs)
+			ret := isVMSSNameInAgentPoolsArray(c.vmssName, c.cs, c.poolsToUpgrade)
 			if ret != c.expected {
 				t.Errorf("expected %t to be %t", ret, c.expected)
+			}
+		})
+	}
+}
+
+func TestValidateSinglePoolTargetVersion(t *testing.T) {
+	cases := []struct {
+		uc            *upgradeCmd
+		cs            *api.ContainerService
+		validVersions map[string]bool
+		expected      error
+		name          string
+	}{
+		{
+			uc: &upgradeCmd{
+				upgradeVersion:     "1.15.4",
+				agentPoolToUpgrade: "linuxpool1",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType:    api.Kubernetes,
+							OrchestratorVersion: "1.15.4",
+						},
+					},
+				},
+			},
+			validVersions: map[string]bool{
+				"1.15.4": true,
+			},
+			expected: nil,
+			name:     "ValidInputForSinglePoolUpgrade",
+		},
+		{
+			uc: &upgradeCmd{
+				upgradeVersion:     "1.15.3",
+				agentPoolToUpgrade: "linuxpool1",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType:    api.Kubernetes,
+							OrchestratorVersion: "1.15.4",
+						},
+					},
+				},
+			},
+			validVersions: map[string]bool{
+				"1.15.4": true,
+			},
+			expected: errors.New("upgrading individual node pools requires a target version equal to the control plane version (1.15.4)"),
+			name:     "BlockPoolUpgradeToDifferentMasterVersion",
+		},
+		{
+			uc: &upgradeCmd{
+				upgradeVersion:     "1.15.4",
+				agentPoolToUpgrade: "linuxpool1",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType:    api.Kubernetes,
+							OrchestratorVersion: "1.15.4",
+						},
+					},
+				},
+			},
+			validVersions: map[string]bool{
+				"1.15.4": false,
+			},
+			expected: errors.New("upgrading to version 1.15.4 is not supported, use 'aks-engine get-versions' to see a list of available upgrades"),
+			name:     "BlockPoolUpgradeToUnsupportedVersion",
+		},
+	}
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			setupValidVersions(c.validVersions)
+			ret := c.uc.validateTargetVersion()
+			if ret != nil && ret.Error() != c.expected.Error() {
+				t.Errorf("expected %t to be %t", ret, c.expected)
+			}
+			resetValidVersions()
+		})
+	}
+}
+
+func TestComputeAgentPoolsToUpgrade(t *testing.T) {
+	cases := []struct {
+		uc             *upgradeCmd
+		cs             *api.ContainerService
+		expectedResult map[string]bool
+		expectedError  error
+		name           string
+	}{
+		{
+			uc: &upgradeCmd{
+				agentPoolToUpgrade: "",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType: api.Kubernetes,
+						},
+						AgentPoolProfiles: []*api.AgentPoolProfile{
+							{
+								Name: "linuxpool1",
+							},
+							{
+								Name: "linuxpool2",
+							},
+						},
+					},
+				},
+			},
+			expectedResult: map[string]bool{
+				"master":     true,
+				"linuxpool1": true,
+				"linuxpool2": true,
+			},
+			expectedError: nil,
+			name:          "UpgradeAll",
+		},
+		{
+			uc: &upgradeCmd{
+				agentPoolToUpgrade: "linuxpool1",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType: api.Kubernetes,
+						},
+						AgentPoolProfiles: []*api.AgentPoolProfile{
+							{
+								Name: "linuxpool1",
+							},
+							{
+								Name: "linuxpool2",
+							},
+						},
+					},
+				},
+			},
+			expectedResult: map[string]bool{
+				"master":     false,
+				"linuxpool1": true,
+				"linuxpool2": false,
+			},
+			expectedError: nil,
+			name:          "UpgradeSinglePool",
+		},
+		{
+			uc: &upgradeCmd{
+				agentPoolToUpgrade: "bad-pool",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType: api.Kubernetes,
+						},
+						AgentPoolProfiles: []*api.AgentPoolProfile{
+							{
+								Name: "linuxpool1",
+							},
+							{
+								Name: "linuxpool2",
+							},
+						},
+					},
+				},
+			},
+			expectedResult: nil,
+			expectedError:  errors.New("node pool bad-pool is not part of the cluster"),
+			name:           "InvalidPoolName",
+		},
+	}
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			err := c.uc.computeAgentPoolsToUpgrade()
+			actual := fmt.Sprint(c.uc.agentPoolsToUpgrade)
+			expected := fmt.Sprint(c.expectedResult)
+			if err != nil && err.Error() != c.expectedError.Error() {
+				t.Errorf("expected '%s' to be '%s'", err.Error(), c.expectedError.Error())
+			}
+			if err == nil && actual != expected {
+				t.Errorf("expected %s to be %s", expected, actual)
 			}
 		})
 	}

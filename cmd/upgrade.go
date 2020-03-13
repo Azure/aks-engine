@@ -208,7 +208,7 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 			return errors.Errorf("upgrading individual node pools requires a target version equal to the control plane version (%s)", cpVersion)
 		}
 		if !common.AllKubernetesSupportedVersions[cpVersion] {
-			return errors.Errorf("upgrading from Kubernetes version %s to version %s is not supported. To see a list of available upgrades, use 'aks-engine get-versions'", cpVersion, uc.upgradeVersion)
+			return errors.Errorf("upgrading to version %s is not supported, use 'aks-engine get-versions' to see a list of available upgrades", uc.upgradeVersion)
 		}
 		return nil
 	}
@@ -232,6 +232,24 @@ func (uc *upgradeCmd) validateTargetVersion() error {
 	return nil
 }
 
+func (uc *upgradeCmd) computeAgentPoolsToUpgrade() error {
+	uc.agentPoolsToUpgrade = make(map[string]bool)
+	uc.agentPoolsToUpgrade[kubernetesupgrade.MasterPoolName] = !uc.isSinglePoolUpgrade()
+	for _, agentPool := range uc.containerService.Properties.AgentPoolProfiles {
+		if !uc.isSinglePoolUpgrade() {
+			uc.agentPoolsToUpgrade[agentPool.Name] = true
+		} else if strings.EqualFold(uc.agentPoolToUpgrade, agentPool.Name) {
+			uc.agentPoolsToUpgrade[agentPool.Name] = true
+		} else {
+			uc.agentPoolsToUpgrade[agentPool.Name] = false
+		}
+	}
+	if _, found := uc.agentPoolsToUpgrade[uc.agentPoolToUpgrade]; !found && uc.isSinglePoolUpgrade() {
+		return errors.Errorf("node pool %s is not part of the cluster", uc.agentPoolToUpgrade)
+	}
+	return nil
+}
+
 func (uc *upgradeCmd) initialize() error {
 	if uc.containerService.Location == "" {
 		uc.containerService.Location = uc.location
@@ -249,22 +267,10 @@ func (uc *upgradeCmd) initialize() error {
 
 	//allows to identify VMs in the resource group that belong to this cluster.
 	uc.nameSuffix = uc.containerService.Properties.GetClusterID()
-
 	log.Infoln(fmt.Sprintf("Upgrading cluster with name suffix: %s", uc.nameSuffix))
 
-	uc.agentPoolsToUpgrade = make(map[string]bool)
-	uc.agentPoolsToUpgrade[kubernetesupgrade.MasterPoolName] = !uc.isSinglePoolUpgrade()
-	for _, agentPool := range uc.containerService.Properties.AgentPoolProfiles {
-		if !uc.isSinglePoolUpgrade() {
-			uc.agentPoolsToUpgrade[agentPool.Name] = true
-		} else if strings.EqualFold(uc.agentPoolToUpgrade, agentPool.Name) {
-			uc.agentPoolsToUpgrade[agentPool.Name] = true
-		} else {
-			uc.agentPoolsToUpgrade[agentPool.Name] = false
-		}
-	}
-	if _, found := uc.agentPoolsToUpgrade[uc.agentPoolToUpgrade]; !found && uc.isSinglePoolUpgrade() {
-		return errors.New("Invalid agent pool to upgrade")
+	if err := uc.computeAgentPoolsToUpgrade(); err != nil {
+		return errors.Wrap(err, "computing agent pools to upgrade")
 	}
 	return nil
 }
@@ -345,10 +351,10 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	return f.SaveFile(dir, file, b)
 }
 
-func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
+func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService, targetPools map[string]bool) bool {
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		if pool.AvailabilityProfile == api.VirtualMachineScaleSets {
-			if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
+			if poolName, _, _ := utils.VmssNameParts(vmss); targetPools[poolName] {
 				return true
 			}
 		}
