@@ -7,18 +7,17 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-
-	"github.com/google/go-cmp/cmp"
-
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestCreateMasterLoadBalancer(t *testing.T) {
 	cs := &api.ContainerService{
 		Properties: &api.Properties{
 			MasterProfile: &api.MasterProfile{
-				Count: 1,
+				Count:              1,
+				SSHAlternativePort: to.Int32Ptr(13579),
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				KubernetesConfig: &api.KubernetesConfig{
@@ -88,6 +87,18 @@ func TestCreateMasterLoadBalancer(t *testing.T) {
 							FrontendPort:     to.Int32Ptr(22),
 							BackendPort:      to.Int32Ptr(22),
 							EnableFloatingIP: to.BoolPtr(false),
+						},
+					},
+					{
+						Name: to.StringPtr("ssh_alternative"),
+						InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+							BackendPort:      to.Int32Ptr(13579),
+							EnableFloatingIP: to.BoolPtr(false),
+							FrontendIPConfiguration: &network.SubResource{
+								ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
+							},
+							FrontendPort: to.Int32Ptr(13579),
+							Protocol:     network.TransportProtocolTCP,
 						},
 					},
 				},

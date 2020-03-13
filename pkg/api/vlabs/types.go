@@ -448,6 +448,9 @@ type MasterProfile struct {
 
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
 	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+
+	// Enables an alternative SSH port in addition to port 22
+	SSHAlternativePort *int32 `json:"sshAlternativePort,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.

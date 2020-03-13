@@ -166,6 +166,9 @@ else
     time_metric "RemoveEtcd" removeEtcd
 fi
 
+{{/* configure /etc/ssh/sshd_config on master if the ssh alternative port is enabled */}}
+time_metric "ConfigureMasterSSHD" configureMasterSSHD
+
 {{- if HasCustomSearchDomain}}
 wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 {{GetCustomSearchDomainsCSEScriptFilepath}} > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
