@@ -99,6 +99,19 @@ kubectl get pods -n kube-system
 | cpuLimits      | no       | cpu limits for the container      | "1000m"                                              |
 | memoryLimits   | no       | memory limits for the container   | "512Mi"                                              |
 
+## Disable Azure Policy Add-on
+
+### Option 1
+
+- Update `apimodel.json` and set `azure-policy` addon `enabled` to `false`.
+- Run `aks-engine upgrade` with the updated `apimodel.json`
+- Run `kubectl delete deployments.apps -n kube-system gatekeeper-controller-manager azure-policy` to remove running deployments and pods
+
+### Option 2
+
+- SSH into AKS-Engine Kubernetes master node
+- Run `kubectl delete -f /etc/kubernetes/addons/azure-policy-deployment.yaml && sudo rm /etc/kubernetes/addons/azure-policy-deployment.yaml` to remove all resources created by addon
+
 ## Supported Orchestrators
 
 Kubernetes
