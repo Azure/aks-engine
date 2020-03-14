@@ -97,9 +97,9 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 	}
 
 	// Honor custom{component}Image fields
+	useHyperkube := !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
 	for _, component := range defaultComponents {
 		if i := getComponentsIndexByName(kubernetesConfig.Components, component.Name); i > -1 {
-			useHyperkube := !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
 			var customComponentImage string
 			switch component.Name {
 			case common.APIServerComponentName:
@@ -116,8 +116,6 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 				}
 			case common.CloudControllerManagerComponentName:
 				customComponentImage = kubernetesConfig.CustomCcmImage
-			case common.Hyperkube:
-				customComponentImage = kubernetesConfig.CustomHyperkubeImage
 			case common.SchedulerComponentName:
 				if useHyperkube {
 					customComponentImage = kubernetesConfig.CustomHyperkubeImage
