@@ -66,23 +66,24 @@ func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, c
 	pl := pod.List{Pods: fromPods}
 	for _, toPod := range toPods {
 		pass, err := pl.ValidateCurlConnection(toPod.Status.PodIP, 30*time.Second, cfg.Timeout)
-		if err != nil {
-			e := toPod.Describe()
-			if e != nil {
-				log.Printf("Unable to describe pod %s\n: %s", toPod.Metadata.Name, e)
-			}
-		}
-		Expect(err).NotTo(HaveOccurred())
 		if true {
+			if err != nil {
+				e := toPod.Describe()
+				if e != nil {
+					log.Printf("Unable to describe pod %s\n: %s", toPod.Metadata.Name, e)
+				}
+			}
+			Expect(err).NotTo(HaveOccurred())
 			Expect(pass).To(BeTrue())
 		} else {
+			Expect(err).Should(HaveOccurred())
 			Expect(pass).To(BeFalse())
 		}
 
 	}
 }
 
-func ApplyNetworkPolicy(nwpolicyName string, namespace string, policyName string, policyDir string) {
-	err := CreateNetworkPolicyFromFile(filepath.Join(policyDir, "backend-policy-deny-egress.yaml"), nwpolicyName, namespace)
+func ApplyNetworkPolicy(nwpolicyName string, namespace string, nwpolicyFileName string, policyDir string) {
+	err := CreateNetworkPolicyFromFile(filepath.Join(policyDir, nwpolicyFileName), nwpolicyName, namespace)
 	Expect(err).NotTo(HaveOccurred())
 }

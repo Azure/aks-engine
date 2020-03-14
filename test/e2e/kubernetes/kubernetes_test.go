@@ -704,6 +704,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			validateDNSLinuxName := "validate-dns-linux"
 			validateDNSLinuxNamespace := "default"
+			// Create a kubectl version check to avoid api version mismatch which due to deployment failure in next step
+			cmd := exec.Command("k", "version")
+			out, err := cmd.CombinedOutput()
+			if out != nil {
+				log.Printf("kubectl version is :\n %s", out)
+				util.PrintCommand(cmd)
+			}
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
@@ -1536,7 +1543,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				networkpolicy.EnsureOutboundInternetAccess(frontendProdPods, cfg)
 
 				By("Ensuring we have outbound internet access from the frontend-dev pods")
-				frontendDevPods := networkpolicy.GetRunningPodsFromDeployment(frontendProdDeployment)
+				frontendDevPods := networkpolicy.GetRunningPodsFromDeployment(frontendDevDeployment)
 				networkpolicy.EnsureOutboundInternetAccess(frontendDevPods, cfg)
 
 				By("Ensuring we have outbound internet access from the backend pods")
@@ -1558,7 +1565,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, true)
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, false)
 
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
