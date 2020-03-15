@@ -269,8 +269,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					continue
 				}
 
-				osPublisher := vm.StorageProfile.ImageReference.Publisher
-				if osPublisher != nil && (strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") || strings.EqualFold(*osPublisher, "microsoft-aks")) {
+				if vm.OsProfile != nil && vm.OsProfile.WindowsConfiguration != nil {
 					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
 				} else {
 					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
