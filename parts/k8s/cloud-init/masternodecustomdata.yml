@@ -50,13 +50,6 @@ write_files:
 {{end}}
 
 {{- if .MasterProfile.IsUbuntu1804}}
-- path: /etc/cloud/cloud.cfg.d/80_azure_net_config.cfg
-  permissions: "0644"
-  owner: root
-  content: |
-    datasource:
-      Azure:
-        apply_network_config: false
   {{- if not .MasterProfile.IsVHDDistro}}
 - path: /var/run/reboot-required
   permissions: "0644"
