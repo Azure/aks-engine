@@ -68,8 +68,17 @@ func SafelyDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.E
 		break
 	}
 	logger.Infof("Node %s has been marked unschedulable.", nodeName)
+	drainOp := &drainOperation{client: client, node: node, logger: logger, timeout: timeout}
+	return drainOp.deleteOrEvictPodsSimple()
+}
 
-	//Evict pods in node
+//no cordoning. only use after changing labels and taints rather than before delete
+// calls the eviction api ina  way that respects pod disruption budgets
+func JustDrainNodeWithClient(client armhelpers.KubernetesClient, logger *log.Entry, nodeName string, timeout time.Duration) error {
+	node, err := client.GetNode(nodeName) //needs a retry loop? redundant with SafelyDrainNodeWithClient otherwise we could reuse
+	if err != nil {
+		return err
+	}
 	drainOp := &drainOperation{client: client, node: node, logger: logger, timeout: timeout}
 	return drainOp.deleteOrEvictPodsSimple()
 }

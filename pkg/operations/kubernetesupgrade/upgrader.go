@@ -719,18 +719,10 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 
 func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
-	// are copied over from corresponding old node. So drain the new node first before copying over the node properties.
-	// Note: SafelyDrainNodeWithClient() sets the Unschedulable of the node to true, set Unschedulable to false in copyCustomNodeProperties
-	var cordonDrainTimeout time.Duration
-	if ku.cordonDrainTimeout == nil {
-		cordonDrainTimeout = defaultCordonDrainTimeout
-	} else {
-		cordonDrainTimeout = *ku.cordonDrainTimeout
-	}
-	err := operations.SafelyDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
-	if err != nil {
-		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
-	}
+	// are copied over from corresponding old node. 
+	//So drain the new node after copying over the node properties without cordoning
+	
+	
 
 	ch := make(chan struct{}, 1)
 	go func() {
@@ -763,13 +755,25 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 		select {
 		case <-ch:
 			ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
-			return nil
+			break
 		case <-time.After(nodePropertiesCopyTimeout):
 			err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
 			ku.logger.Errorf(err.Error())
 			return err
 		}
 	}
+
+	var cordonDrainTimeout time.Duration
+	if ku.cordonDrainTimeout == nil {
+		cordonDrainTimeout = defaultCordonDrainTimeout
+	} else {
+		cordonDrainTimeout = *ku.cordonDrainTimeout
+	}
+	err := operations.JustDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
+	if err != nil {
+		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
+	}
+	return nil
 }
 
 func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
@@ -807,15 +811,11 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		}
 	}
 
-	newNode, err := client.UpdateNode(newNode)
+	_, err := client.UpdateNode(newNode)
 	if err != nil {
 		ku.logger.Warningf("Failed to update the new node %s: %v", newNodeName, err)
 		return err
 	}
-
-	newNode.Spec.Unschedulable = false
-	_, err = client.UpdateNode(newNode)
-
 	return err
 }
 
