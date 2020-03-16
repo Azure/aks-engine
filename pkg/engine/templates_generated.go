@@ -35923,16 +35923,6 @@ cleanUpGPUDrivers() {
 cleanUpContainerd() {
     rm -Rf $CONTAINERD_DOWNLOADS_DIR
 }
-
-overrideNetworkConfig() {
-    CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
-    touch ${CONFIG_FILEPATH}
-    cat << EOF >> ${CONFIG_FILEPATH}
-datasource:
-    Azure:
-        apply_network_config: false
-EOF
-}
 #EOF
 `)
 
@@ -37605,6 +37595,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .MasterProfile.IsUbuntu1804}}
+- path: /etc/cloud/cloud.cfg.d/80_azure_net_config.cfg
+  permissions: "0644"
+  owner: root
+  content: |
+    datasource:
+      Azure:
+        apply_network_config: false
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
@@ -38231,6 +38231,16 @@ write_files:
   content: !!binary |
     {{CloudInitData "auditdRules"}}
   {{end}}
+{{end}}
+
+{{- if .IsUbuntu1804}}
+- path: /etc/cloud/cloud.cfg.d/80_azure_net_config.cfg
+  permissions: "0644"
+  owner: root
+  content: |
+    datasource:
+      Azure:
+        apply_network_config: false
 {{end}}
 
 {{if IsAzureStackCloud}}

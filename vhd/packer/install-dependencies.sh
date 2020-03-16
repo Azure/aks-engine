@@ -47,10 +47,6 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - zip
 EOF
 
-if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
-  overrideNetworkConfig
-fi
-
 apmz_version="v0.5.1"
 ensureAPMZ "${apmz_version}"
 echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
