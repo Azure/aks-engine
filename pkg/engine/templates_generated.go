@@ -37603,6 +37603,13 @@ write_files:
     datasource:
       Azure:
         apply_network_config: false
+  {{- if not .MasterProfile.IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
 {{end}}
 
 {{if IsAzureStackCloud}}
@@ -38241,6 +38248,13 @@ write_files:
     datasource:
       Azure:
         apply_network_config: false
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
 {{end}}
 
 {{if IsAzureStackCloud}}
