@@ -75,6 +75,12 @@
 					]
 				}
 			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
+			},
 			"servicePrincipalProfile": {
 				"clientId": "",
 				"secret": ""
