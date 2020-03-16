@@ -719,10 +719,8 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 
 func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
-	// are copied over from corresponding old node. 
+	// are copied over from corresponding old node.
 	//So drain the new node after copying over the node properties without cordoning
-	
-	
 
 	ch := make(chan struct{}, 1)
 	go func() {
@@ -751,16 +749,14 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 		}
 	}()
 
-	for {
-		select {
-		case <-ch:
-			ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
-			break
-		case <-time.After(nodePropertiesCopyTimeout):
-			err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
-			ku.logger.Errorf(err.Error())
-			return err
-		}
+	select {
+	case <-ch:
+		ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
+
+	case <-time.After(nodePropertiesCopyTimeout):
+		err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
+		ku.logger.Errorf(err.Error())
+		return err
 	}
 
 	var cordonDrainTimeout time.Duration
