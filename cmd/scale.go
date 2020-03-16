@@ -269,7 +269,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					continue
 				}
 
-				if vm.OsProfile != nil && vm.OsProfile.WindowsConfiguration != nil {
+				if sc.agentPool.OSType == api.Windows {
 					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
 				} else {
 					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
