@@ -36176,10 +36176,8 @@ if [[ -n "${MASTER_NODE}" ]]; then
     fi
     time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        if [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
-            if [[ ${UBUNTU_RELEASE} != "18.04" ]]; then
-                time_metric "EnsureEtcd" ensureEtcd
-            fi
+        if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+            time_metric "EnsureEtcd" ensureEtcd
         fi
     fi
     time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
@@ -37678,13 +37676,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "labelNodesScript"}}
 
-- path: /etc/systemd/system/label-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesSystemdService"}}
-
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -37699,6 +37690,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
+
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
 
 {{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
