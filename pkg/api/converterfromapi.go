@@ -520,6 +520,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
+	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
 	convertCustomFilesToVlabs(api, vlabsProfile)
 	vlabsProfile.SysctlDConfig = map[string]string{}
 	for key, val := range api.SysctlDConfig {

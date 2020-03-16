@@ -541,6 +541,12 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 	}
 
+	if to.Bool(profile.UltraSSDEnabled) {
+		virtualMachine.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	storageProfile.OsDisk = &osDisk
 
 	virtualMachine.StorageProfile = &storageProfile

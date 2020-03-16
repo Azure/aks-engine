@@ -688,6 +688,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 	}
 
+	if to.Bool(profile.UltraSSDEnabled) {
+		vmssProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	vmssStorageProfile.OsDisk = &osDisk
 
 	vmssVMProfile.StorageProfile = &vmssStorageProfile
