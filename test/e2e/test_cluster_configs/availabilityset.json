@@ -41,7 +41,7 @@
 			"agentPoolProfiles": [
 				{
 					"name": "agent1",
-					"count": 3,
+					"count": 2,
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
@@ -68,5 +68,12 @@
 				"secret": ""
 			}
 		}
+	},
+	"addNodePool": {
+		"name": "pooladded",
+		"count": 1,
+		"vmSize": "Standard_D2_v3",
+		"availabilityProfile": "AvailabilitySet"
+		
 	}
 }
