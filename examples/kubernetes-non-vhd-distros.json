@@ -30,7 +30,7 @@
         "distro": "ubuntu-18.04-gen2"
       },
       {
-        "name": "agentwin",
+        "name": "poolwingen2",
         "count": 1,
         "vmSize": "Standard_D2s_v3",
         "osType": "Windows"
