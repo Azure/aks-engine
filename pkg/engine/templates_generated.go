@@ -36810,6 +36810,8 @@ After=kubelet.service
 Restart=always
 RestartSec=60
 ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+[Install]
+WantedBy=multi-user.target
 #EOF
 `)
 
