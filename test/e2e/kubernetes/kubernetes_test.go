@@ -1499,10 +1499,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
-				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
+				namespaceDev, err := namespace.CreateNamespaceDeleteIfExist(nsDev)
 				Expect(err).NotTo(HaveOccurred())
 				By("Creating production namespace")
-				namespaceProd, err := namespace.CreateIfNotExist(nsProd)
+				namespaceProd, err := namespace.CreateNamespaceDeleteIfExist(nsProd)
 				Expect(err).NotTo(HaveOccurred())
 				By("Labelling development namespace")
 				err = namespaceDev.Label("purpose=development")
