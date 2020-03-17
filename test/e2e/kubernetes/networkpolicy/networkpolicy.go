@@ -31,15 +31,14 @@ func CreateNetworkPolicyFromFile(filename, name, namespace string) error {
 }
 
 // DeleteNetworkPolicy will create a NetworkPolicy from file with a name
-func DeleteNetworkPolicy(name, namespace string) error {
+func DeleteNetworkPolicy(name, namespace string) {
 	cmd := exec.Command("k", "delete", "networkpolicy", "-n", namespace, name)
 	util.PrintCommand(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("Error while trying to delete NetworkPolicy %s in namespace %s:%s\n", name, namespace, string(out))
-		return err
 	}
-	return nil
+	Expect(err).NotTo(HaveOccurred())
 }
 
 func EnsureRunningPodExists(deploymentName string, namespace string, successesNeeded int, sleepTime time.Duration, timeout time.Duration) {
@@ -79,7 +78,6 @@ func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, c
 			Expect(err).Should(HaveOccurred())
 			Expect(pass).To(BeFalse())
 		}
-
 	}
 }
 
