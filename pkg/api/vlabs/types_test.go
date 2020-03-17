@@ -518,6 +518,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: ACC1604,
 				},
 			},
@@ -528,15 +537,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: AKSUbuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
 				},
 			},
 			expected: true,
@@ -620,6 +620,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
+						Distro: Ubuntu1804Gen2,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
 						Distro: ACC1604,
 					},
 				},
@@ -632,17 +643,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: AKSUbuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
 					},
 				},
 			},
