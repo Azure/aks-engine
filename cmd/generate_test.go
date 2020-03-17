@@ -792,7 +792,7 @@ func TestExampleAPIModels(t *testing.T) {
 		},
 		{
 			name:         "ubuntu distros",
-			apiModelPath: "../examples/kubernetes-ubuntu-distros.json",
+			apiModelPath: "../examples/kubernetes-non-vhd-distros.json",
 			setArgs:      defaultSet,
 		},
 		{
