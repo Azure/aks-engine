@@ -30,7 +30,7 @@ Because Azure Stack instances do not have infinite storage available, Azure Stac
 Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
 
 - `Custom Script for Linux 2.0` virtual machine extension
-- `Ubuntu Server 16.04 LTS` or `AKS Base Image` virtual machines
+- `AKS Base Image` virtual machines
 
 The `AKS Base Image` is the only viable option if you are deploying to an [air-gapped Azure Stack instance](#disconnected-azure-stack-instances).
 
@@ -104,7 +104,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Specifies a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks-ubuntu-16.04"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks-ubuntu-16.04"` should be selected if you target a disconnected Azure Stack instance. |
+| distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
 
 ### agentPoolProfiles
 
@@ -113,7 +113,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Describes a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
-| distro                          | yes      | Specifies the masters' Linux distribution. Currently supported values are: `"ubuntu"` and `"aks-ubuntu-16.04"`. The latter is a custom image based on ubuntu-16.04 that comes with pre-installed software necessary for Kubernetes deployments. `"aks-ubuntu-16.04"` should be selected if you target a disconnected Azure Stack instance. |
+| distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
 
