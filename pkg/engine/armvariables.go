@@ -139,13 +139,13 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
-		"labelNodesSystemdService":  getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {
 		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs)
 		cloudInitFiles["kmsSystemdService"] = getBase64EncodedGzippedCustomScript(kmsSystemdService, cs)
 		cloudInitFiles["labelNodesScript"] = getBase64EncodedGzippedCustomScript(labelNodesScript, cs)
+		cloudInitFiles["labelNodesSystemdService"] = getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs)
 		cloudInitFiles["aptPreferences"] = getBase64EncodedGzippedCustomScript(aptPreferences, cs)
 		cloudInitFiles["healthMonitorScript"] = getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs)
 		cloudInitFiles["kubeletMonitorSystemdService"] = getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs)

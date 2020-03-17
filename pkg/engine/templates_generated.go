@@ -36815,8 +36815,6 @@ After=kubelet.service
 Restart=always
 RestartSec=60
 ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
-[Install]
-WantedBy=multi-user.target
 #EOF
 `)
 
@@ -37676,6 +37674,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "labelNodesScript"}}
 
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
+
 - path: /etc/systemd/system/kms.service
   permissions: "0644"
   encoding: gzip
@@ -37690,13 +37695,6 @@ write_files:
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
 {{end}}
-
-- path: /etc/systemd/system/label-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesSystemdService"}}
 
 {{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
