@@ -61,7 +61,7 @@ jobs:
 - template: e2e-job-template.yaml
   parameters:
     name: 'k8s_non_vhd_deployment'
-    apimodel: 'examples/kubernetes-ubuntu-distro.json'
+    apimodel: 'examples/kubernetes-non-vhd-distros.json'
     enableKMSEncryption: false
 
 - template: e2e-job-template.yaml

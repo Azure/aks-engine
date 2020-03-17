@@ -1163,13 +1163,13 @@ func (p *Properties) IsVHDDistroForAllNodes() bool {
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro != Ubuntu && ap.Distro != Ubuntu1804 {
+			if !ap.IsUbuntuNonVHD() {
 				return false
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return true
 }
@@ -1178,13 +1178,13 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 func (p *Properties) HasUbuntuDistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu || ap.Distro == Ubuntu1804 {
+			if ap.IsUbuntuNonVHD() {
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return false
 }
@@ -1208,13 +1208,17 @@ func (p *Properties) HasUbuntu1604DistroNodes() bool {
 func (p *Properties) HasUbuntu1804DistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu1804 {
+			switch ap.Distro {
+			case Ubuntu1804, Ubuntu1804Gen2:
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu1804
+		switch p.MasterProfile.Distro {
+		case Ubuntu1804, Ubuntu1804Gen2:
+			return true
+		}
 	}
 	return false
 }
@@ -1440,7 +1444,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKSUbuntu1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 		return true
 	default:
 		return false
@@ -1584,7 +1588,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
 		default:
 			return false

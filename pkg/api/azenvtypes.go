@@ -133,6 +133,14 @@ var (
 		ImageVersion:   "latest",
 	}
 
+	//Ubuntu1804Gen2OSImageConfig is Gen2 flavor the Ubunutu 18.04-LTS Linux distribution.
+	Ubuntu1804Gen2OSImageConfig = AzureOSImageConfig{
+		ImageOffer:     "UbuntuServer",
+		ImageSku:       "18_04-lts-gen2",
+		ImagePublisher: "Canonical",
+		ImageVersion:   "latest",
+	}
+
 	//RHELOSImageConfig is the RHEL Linux distribution.
 	RHELOSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "RHEL",
@@ -205,6 +213,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
@@ -227,6 +236,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
@@ -248,6 +258,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
@@ -295,6 +306,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,

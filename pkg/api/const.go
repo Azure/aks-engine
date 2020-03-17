@@ -27,6 +27,7 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
 	CoreOS            Distro = "coreos"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
