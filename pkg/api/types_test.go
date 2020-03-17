@@ -266,6 +266,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804Gen2,
+			},
+			expected: false,
+		},
 	}
 
 	for _, c := range cases {
@@ -393,6 +400,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 non-VHD distro",
 			ap: AgentPoolProfile{
 				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804Gen2,
 			},
 			expected: true,
 		},
@@ -535,6 +549,13 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			m: MasterProfile{
+				Distro: Ubuntu1804Gen2,
+			},
+			expected: false,
+		},
 	}
 
 	for _, c := range cases {
@@ -586,6 +607,13 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			m: MasterProfile{
+				Distro: Ubuntu1804Gen2,
 			},
 			expected: true,
 		},
@@ -1921,6 +1949,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: ACC1604,
 				},
 			},
@@ -1940,6 +1977,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: true,
@@ -2023,6 +2069,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
+						Distro: Ubuntu1804Gen2,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
 						Distro: ACC1604,
 					},
 				},
@@ -2035,17 +2092,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: AKSUbuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
 					},
 				},
 			},
@@ -2139,6 +2185,15 @@ func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: Ubuntu,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -2167,7 +2222,7 @@ func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: Ubuntu1804,
+						Distro: Ubuntu1804Gen2,
 					},
 				},
 			},
@@ -2323,7 +2378,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: Ubuntu1804,
+						Distro: Ubuntu1804Gen2,
 					},
 				},
 			},
@@ -2451,6 +2506,15 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: Ubuntu,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -2470,7 +2534,7 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: Ubuntu1804,
+					Distro: Ubuntu1804Gen2,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -2599,6 +2663,15 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: false,
@@ -2755,6 +2828,15 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: true,

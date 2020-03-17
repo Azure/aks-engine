@@ -238,6 +238,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
@@ -259,6 +260,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
@@ -306,6 +308,7 @@ var (
 		OSImageConfig: map[Distro]AzureOSImageConfig{
 			Ubuntu:            Ubuntu1604OSImageConfig,
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
+			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
 			CoreOS:            CoreOSImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,

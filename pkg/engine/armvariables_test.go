@@ -266,6 +266,21 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Test with ubuntu 18.04 gen2 distro
+	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu1804Gen2
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Test with CustomVnet enabled
 	cs.Properties.MasterProfile.VnetSubnetID = "/subscriptions/fakesubID/resourceGroups/myRG/providers/Microsoft.Network/virtualNetworks/fooSubnetID/subnets/myCustomSubnet"
 	varMap, err = GetKubernetesVariables(cs)

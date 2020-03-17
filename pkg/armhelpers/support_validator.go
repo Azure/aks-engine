@@ -78,6 +78,8 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 		return api.Ubuntu1604OSImageConfig
 	case api.Ubuntu1804:
 		return api.Ubuntu1804OSImageConfig
+	case api.Ubuntu1804Gen2:
+		return api.Ubuntu1804Gen2OSImageConfig
 	case api.RHEL:
 		return api.RHELOSImageConfig
 	case api.CoreOS:
