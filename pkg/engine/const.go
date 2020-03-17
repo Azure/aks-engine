@@ -261,6 +261,8 @@ const (
 	flannelAddonDestinationFilename                string = "flannel-daemonset.yaml"
 	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
+	secretsStoreCSIDriverAddonSourceFileName       string = "kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml"
+	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
 )
 
 // components source and destination file references

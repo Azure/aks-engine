@@ -52,6 +52,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAuditPolicy            kubernetesComponentFileSpec
 		expectedAzureCloudProvider     kubernetesComponentFileSpec
 		expectedFlannel                kubernetesComponentFileSpec
+		expectedSecretsStoreCSIDriver  kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -193,6 +194,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.FlannelAddonName,
 								Data: base64Data,
 							},
+							{
+								Name: common.SecretStoreCSIDriverAddonName,
+								Data: base64Data,
+							},
 						},
 					},
 				},
@@ -361,6 +366,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      base64Data,
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 		{
@@ -470,6 +480,9 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							{
 								Name: common.FlannelAddonName,
 							},
+							{
+								Name: common.SecretStoreCSIDriverAddonName,
+							},
 						},
 					},
 				},
@@ -638,6 +651,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      "",
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 		{
@@ -807,6 +825,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      base64Data,
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 	}

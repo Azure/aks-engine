@@ -189,8 +189,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
-		Name:    common.KeyVaultFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.IsAzureStackCloud()),
+		Name: common.KeyVaultFlexVolumeAddonName,
+		// key-vault flexvolume solution will be deprecated in favor of secrets-store-csi-driver for 1.16+
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.IsAzureStackCloud() &&
+			!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.KeyVaultFlexVolumeAddonName,
@@ -770,6 +772,29 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
+		Name:    common.SecretStoreCSIDriverAddonName,
+		Enabled: to.BoolPtr(DefaultSecretStoreCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0")),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  "livenessprobe",
+				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+			},
+			{
+				Name:  "csi-node-driver-registrar",
+				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.2.0",
+			},
+			{
+				Name:  "csi-secrets-store",
+				Image: "docker.io/deislabs/secrets-store-csi:v0.0.8",
+			},
+			{
+				Name:  "csi-secrets-store-provider-azure",
+				Image: "mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.3",
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -811,6 +836,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultsAntreaDaemonSetAddonsConfig,
 		defaultFlannelAddonsConfig,
 		defaultScheduledMaintenanceAddonsConfig,
+		defaultSecretsStoreCSIDriverAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

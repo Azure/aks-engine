@@ -3548,6 +3548,33 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.15.4"),
 		},
+		{
+			name: "csi-secrets-store addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.SecretStoreCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.15.4"),
+		},
 	}
 
 	for _, test := range tests {
