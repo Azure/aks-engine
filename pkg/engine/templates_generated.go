@@ -36036,6 +36036,9 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
+    if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+        overrideNetworkConfig
+    fi
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         time_metric "InstallBcc" installBcc
     fi
@@ -36173,7 +36176,9 @@ if [[ -n "${MASTER_NODE}" ]]; then
     fi
     time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        time_metric "EnsureEtcd" ensureEtcd
+        if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+            time_metric "EnsureEtcd" ensureEtcd
+        fi
     fi
     time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
@@ -37605,6 +37610,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .MasterProfile.IsUbuntu1804}}
+  {{- if not .MasterProfile.IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
@@ -38230,6 +38245,16 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
+  {{end}}
+{{end}}
+
+{{- if .IsUbuntu1804}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
   {{end}}
 {{end}}
 
