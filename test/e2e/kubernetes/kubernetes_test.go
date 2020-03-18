@@ -704,13 +704,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			By("Ensuring that we have functional DNS resolution from a linux container")
 			validateDNSLinuxName := "validate-dns-linux"
 			validateDNSLinuxNamespace := "default"
-			// Create a kubectl version check to avoid api version mismatch which due to deployment failure in next step
-			cmd := exec.Command("k", "version")
-			out, err := cmd.CombinedOutput()
-			if out != nil {
-				log.Printf("kubectl version is :\n %s", out)
-				util.PrintCommand(cmd)
-			}
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
