@@ -26876,6 +26876,7 @@ spec:
         - --port=8443
         - --logtostderr
         - --exempt-namespace=kube-system
+        - --log-denies
         command:
         - /manager
         env:
