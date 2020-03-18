@@ -42,6 +42,7 @@ ERR_GPU_DRIVERS_START_FAIL=84 {{/* nvidia-modprobe could not be started by syste
 ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85 {{/* Timeout waiting for GPU drivers install */}}
 ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90 {{/* Timeout waiting for SGX prereqs to download */}}
 ERR_SGX_DRIVERS_START_FAIL=91 {{/* Failed to execute SGX driver binary */}}
+ERR_SGX_DRIVERS_NOT_SUPPORTED=92 {{/* SGX is not supported */}}
 ERR_APT_DAILY_TIMEOUT=98 {{/* Timeout waiting for apt daily updates */}}
 ERR_APT_UPDATE_TIMEOUT=99 {{/* Timeout waiting for apt-get update to complete */}}
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 {{/* Timeout waiting for cloud-init to place this script on the vm */}}

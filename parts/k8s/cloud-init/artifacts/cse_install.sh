@@ -112,31 +112,39 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    local URL
-    case $UBUNTU_RELEASE in
-    "18.04")
-        URL="https://download.01.org/intel-sgx/latest/dcap-latest/linux/distro/ubuntuServer18.04/sgx_linux_x64_driver_1.21.bin"
-        ;;
-    "16.04")
-        URL="https://download.01.org/intel-sgx/latest/dcap-latest/linux/distro/ubuntuServer16.04/sgx_linux_x64_driver_1.21.bin"
-        ;;
-    "*")
-        exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-        ;;
-    esac
+    [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
-    local PACKAGES="make gcc dkms"
+    local packages="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
-    local DRIVER
-    DRIVER=$(basename $URL)
-    local OE_DIR=/opt/azure/containers/oe
-    mkdir -p ${OE_DIR}
+    local oe_dir=/opt/azure/containers/oe
+    rm -rf ${oe_dir}
+    mkdir -p ${oe_dir}
+    pushd ${oe_dir} || exit
+    sgx_driver_folder_url="https://download.01.org/intel-sgx/latest/dcap-latest/linux"
+    retrycmd_if_failure 10 10 120 wget -r -l1 --no-parent -nd -A "SHA256SUM_dcap*" "${sgx_driver_folder_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap*)"
+    read -ra tmp_array <<< "$matched_line"
+    sgx_driver_sha256sum_expected="${tmp_array[0]}"
+    sgx_driver_remote_path="${tmp_array[1]}"
+    sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
+    sgx_driver=$(basename "$sgx_driver_url")
 
-    retrycmd_if_failure 120 5 25 curl -fsSL ${URL} -o ${OE_DIR}/${DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-    chmod a+x ${OE_DIR}/${DRIVER}
-    ${OE_DIR}/${DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
+    sgx_driver_sha256sum_real="${tmp_array[0]}"
+    if [ "$sgx_driver_sha256sum_real" != "$sgx_driver_sha256sum_expected" ]; then
+        echo "Downloaded SGX driver sha256sum $sgx_driver_sha256sum_real does not match the expected value $sgx_driver_sha256sum_expected"
+    fi
+
+    chmod a+x ./"${sgx_driver}"
+    if ! ./"${sgx_driver}"; then
+        popd || exit
+        exit $ERR_SGX_DRIVERS_START_FAIL
+    fi
+    popd || exit
+    rm -rf ${oe_dir}
 }
 
 installContainerRuntime() {
