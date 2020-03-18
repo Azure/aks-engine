@@ -1,6 +1,7 @@
 {
 	"env": {
-		"CREATE_VNET": true
+		"CREATE_VNET": true,
+		"SCALE_CLUSTER": true
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -43,12 +44,23 @@
 					"name": "agent1",
 					"count": 3,
 					"vmSize": "Standard_D2_v3",
+					"osType": "Linux",
 					"OSDiskSizeGB": 200,
 					"storageProfile": "ManagedDisks",
 					"diskSizesGB": [
 						128,
 						128
 					],
+					"availabilityProfile": "AvailabilitySet",
+					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+				},
+				{
+					"name": "poolwin",
+					"count": 2,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows",
+					"OSDiskSizeGB": 200,
+					"storageProfile": "ManagedDisks",
 					"availabilityProfile": "AvailabilitySet",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				}
@@ -62,6 +74,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",
