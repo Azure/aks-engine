@@ -990,7 +990,8 @@ func TestHasStorageProfile(t *testing.T) {
 					OrchestratorType: Kubernetes,
 				},
 				MasterProfile: &MasterProfile{
-					StorageProfile: ManagedDisks,
+					StorageProfile:  ManagedDisks,
+					UltraSSDEnabled: to.BoolPtr(true),
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -1028,6 +1029,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
 				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
+			}
+			if to.Bool(c.p.MasterProfile.UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.MasterProfile.UltraSSDEnabled))
 			}
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())

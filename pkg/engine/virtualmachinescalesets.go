@@ -331,6 +331,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		ExtensionProfile: &extensionProfile,
 	}
 
+	if to.Bool(masterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	virtualMachine.VirtualMachineScaleSetProperties = vmProperties
 
 	return VirtualMachineScaleSetARM{
