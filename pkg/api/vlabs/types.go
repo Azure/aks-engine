@@ -893,7 +893,7 @@ func (w *WindowsProfile) IsCSIProxyEnabled() bool {
 	if w.EnableCSIProxy != nil {
 		return *w.EnableCSIProxy
 	}
-	return false // DO NOT HARDCODE
+	return DefaultEnableCSIProxyWindows
 }
 
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
