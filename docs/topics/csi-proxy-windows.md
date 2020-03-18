@@ -25,3 +25,7 @@ Add the following fields to `windowsProfile`:
     ...
 }
 ```
+
+For testing purposes the following csi-proxy binary may be used:
+
+- https://kubernetesartifacts.azureedge.net/csi-proxy/master/binaries/csi-proxy.tar.gz

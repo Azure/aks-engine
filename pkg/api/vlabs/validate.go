@@ -1139,7 +1139,7 @@ func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) err
 		if err != nil {
 			return errors.Errorf("could not validate orchestrator version %s", k8sVersion)
 		}
-		minSemVer, err := semver.Make("1.18.0-alpha.2")
+		minSemVer, err := semver.Make("1.18.0-beta.1")
 		if err != nil {
 			return errors.New("could not validate orchestrator version 1.18.0")
 		}
