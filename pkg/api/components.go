@@ -96,6 +96,42 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Honor custom{component}Image fields
+	useHyperkube := !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+	for _, component := range defaultComponents {
+		if i := getComponentsIndexByName(kubernetesConfig.Components, component.Name); i > -1 {
+			var customComponentImage string
+			switch component.Name {
+			case common.APIServerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeAPIServerImage
+				}
+			case common.ControllerManagerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeControllerManagerImage
+				}
+			case common.CloudControllerManagerComponentName:
+				customComponentImage = kubernetesConfig.CustomCcmImage
+			case common.SchedulerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeSchedulerImage
+				}
+			}
+
+			if customComponentImage != "" {
+				// Since there is only one container for all Kubernetes components,
+				// it is safe to access index 0 of the component's containers
+				kubernetesConfig.Components[i].Containers[0].Image = customComponentImage
+			}
+		}
+	}
+
 	for _, component := range defaultComponents {
 		synthesizeComponentsConfig(kubernetesConfig.Components, component, isUpgrade)
 	}
@@ -222,16 +258,9 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	if cs.Properties.IsAzureStackCloud() {
 		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 	}
-	if kubernetesConfig.CustomHyperkubeImage != "" {
-		hyperkubeImage = kubernetesConfig.CustomHyperkubeImage
-	}
 	controllerManagerBase := kubernetesImageBase
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 		controllerManagerBase = kubernetesConfig.MCRKubernetesImageBase
-	}
-	ccmImage := controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
-	if kubernetesConfig.CustomCcmImage != "" {
-		ccmImage = kubernetesConfig.CustomCcmImage
 	}
 
 	switch component {
@@ -246,7 +275,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 		}
 		return hyperkubeImage
 	case common.CloudControllerManagerComponentName:
-		return ccmImage
+		return controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
 	case common.SchedulerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName]

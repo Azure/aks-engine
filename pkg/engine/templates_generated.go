@@ -38869,12 +38869,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       },
       "type": "string"
     },
-    "kubeProxySpec": {
-      "metadata": {
-        "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
