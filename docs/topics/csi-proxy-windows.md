@@ -20,8 +20,8 @@ Add the following fields to `windowsProfile`:
 ```json
 "windowsProfile": {
     ...
-    "enableCsiProxy": true,
-    "csiProxyUrl": "<Path to a package containing Windows csi proxy binaries>"
+    "enableCSIProxy": true,
+    "csiProxyURL": "<Path to a package containing Windows csi proxy binaries>"
     ...
 }
 ```

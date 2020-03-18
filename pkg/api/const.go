@@ -223,8 +223,8 @@ const (
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
 	DefaultEnableAutomaticUpdates = true
-	// DefaultEnableCsiProxyWindows determines if csi proxy should be enabled by default for Windows nodes
-	DefaultEnableCsiProxyWindows = false
+	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
+	DefaultEnableCSIProxyWindows = false
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
 	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP

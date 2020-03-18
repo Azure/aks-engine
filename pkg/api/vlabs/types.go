@@ -162,8 +162,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername          string            `json:"adminUsername,omitempty"`
 	AdminPassword          string            `json:"adminPassword,omitempty"`
-	CsiProxyURL            string            `json:"csiProxyUrl"`
-	EnableCsiProxy         *bool             `json:"enableCsiProxy,omitempty"`
+	CSIProxyURL            string            `json:"csiProxyURL"`
+	EnableCSIProxy         *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef               *ImageReference   `json:"imageReference,omiteempty"`
 	ImageVersion           string            `json:"imageVersion,omitempty"`
 	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
@@ -888,10 +888,10 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 	return false
 }
 
-// IsCsiProxyEnabled returns true if csi proxy service should be enable for Windows nodes
-func (w *WindowsProfile) IsCsiProxyEnabled() bool {
-	if w.EnableCsiProxy != nil {
-		return *w.EnableCsiProxy
+// IsCSIProxyEnabled returns true if CSI proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
 	}
 	return false // DO NOT HARDCODE
 }

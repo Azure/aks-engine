@@ -1116,8 +1116,8 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
-				EnableCsiProxy: &trueVar,
-				CsiProxyURL:    "http://some/url",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "http://some/url",
 			},
 			expectedError: nil,
 		},
@@ -1127,8 +1127,8 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
-				EnableCsiProxy: &trueVar,
-				CsiProxyURL:    "http://some/url",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "http://some/url",
 			},
 			expectedError: errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater"),
 		},
@@ -1138,10 +1138,10 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
-				EnableCsiProxy: &trueVar,
-				CsiProxyURL:    "",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "",
 			},
-			expectedError: errors.New("windowsProfile.csiProxyUrl must be specified if enableCsiProxy is set"),
+			expectedError: errors.New("windowsProfile.csiProxyURL must be specified if enableCSIProxy is set"),
 		},
 	}
 
