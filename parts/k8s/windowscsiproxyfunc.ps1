@@ -12,7 +12,7 @@ function New-CsiProxyService {
     DownloadFileOverHttp -Url $CsiProxyPackageUrl -DestinationPath $binaryPackage
 
     tar -xzf $binaryPackage -C $tempdir
-    cp "$tempdir\csi-proxy\server.exe" "$KubeDir\csi-proxy-server.exe"
+    cp "$tempdir\build\server.exe" "$KubeDir\csi-proxy-server.exe"
 
     del $tempdir -Recurse
 
