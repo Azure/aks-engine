@@ -35613,7 +35613,7 @@ installDeps() {
         if [[ $UBUNTU_RELEASE == "18.04" ]]; then
             systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
             retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
-            packages+=" ntp"
+            packages+=" ntp ntpstat"
         fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"

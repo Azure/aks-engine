@@ -16,7 +16,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     sudo timedatectl status | grep 'Network time on: yes' || exit 1
     sudo timedatectl status | grep 'NTP synchronized: yes' || exit 1
   elif [[ $RELEASE == "18.04" ]]; then
-    sudo timedatectl status | grep 'systemd-timesyncd.service active: yes' || exit 1
+    sudo ntpstat | grep 'synchronised to NTP server' || exit 1
     sudo timedatectl status | grep 'System clock synchronized: yes' || exit 1
   fi
 fi

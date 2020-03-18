@@ -48,6 +48,7 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   echo "  - ntp" >> ${VHD_LOGS_FILEPATH}
+  echo "  - ntpstat" >> ${VHD_LOGS_FILEPATH}
 fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
