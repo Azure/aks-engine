@@ -5,6 +5,7 @@ package transform
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"testing"
@@ -30,6 +31,23 @@ func TestNormalizeForK8sVMASScalingUp(t *testing.T) {
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
 	Expect(e).To(BeNil())
 	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sVMASScalingUp")
+}
+
+func TestNormalizeForK8sAddVMASPool(t *testing.T) {
+	RegisterTestingT(t)
+	logger := logrus.New().WithField("testName", "TestNormalizeForK8sAddVMASPool")
+	fileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_template.json")
+	Expect(e).To(BeNil())
+	expectedFileContents, e := ioutil.ReadFile("./transformtestfiles/k8s_addpool_vmas.json")
+	Expect(e).To(BeNil())
+	templateJSON := string(fileContents)
+	var template interface{}
+	json.Unmarshal([]byte(templateJSON), &template)
+	templateMap := template.(map[string]interface{})
+	transformer := Transformer{}
+	e = transformer.NormalizeForK8sAddVMASPool(logger, templateMap)
+	Expect(e).To(BeNil())
+	ValidateTemplate(templateMap, expectedFileContents, "TestNormalizeForK8sAddVMASPool")
 }
 
 func TestNormalizeMasterResourcesForScaling(t *testing.T) {
@@ -245,4 +263,76 @@ func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents [
 		ioutil.WriteFile(fmt.Sprintf("./transformtestfiles/%s.failure.json", testFileName), []byte(prettyOutput), 0600)
 	}
 	Expect(prettyOutput).To(Equal(prettyExpectedOutput))
+}
+
+func TestRemoveSingleOfType(t *testing.T) {
+	g := NewGomegaWithT(t)
+	l := logrus.New().WithField("testName", "TestRemoveSingleOfType")
+
+	cases := []struct {
+		inTypes      []string
+		toRemove     string
+		expectedDeps []string
+		expectedErr  error
+		name         string
+	}{
+		{
+			inTypes:      []string{nsgResourceType, rtResourceType, vmResourceType},
+			toRemove:     rtResourceType,
+			expectedDeps: []string{nsgResourceType, vmResourceType},
+			expectedErr:  nil,
+			name:         "SingleResourceOfTypeInTemplate",
+		},
+		{
+			inTypes:      []string{nsgResourceType, rtResourceType, vmResourceType},
+			toRemove:     vmExtensionType,
+			expectedDeps: []string{nsgResourceType, rtResourceType, vmResourceType},
+			expectedErr:  nil,
+			name:         "NoResourceOfTypeInTemplate",
+		},
+		{
+			inTypes:      []string{nsgResourceType, rtResourceType, rtResourceType},
+			toRemove:     rtResourceType,
+			expectedDeps: []string{},
+			expectedErr:  errors.New("Found at least 2 resources of type Microsoft.Network/virtualNetworks in the template but only 1 is expected"),
+			name:         "DupResourceOfTypeInTemplate",
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			var resources []interface{}
+			for _, rtype := range c.inTypes {
+				depsOn := make([]interface{}, 0)
+				for _, d := range c.inTypes {
+					depsOn = append(depsOn, d)
+				}
+				resources = append(resources, map[string]interface{}{
+					nameFieldName:      fmt.Sprintf("[variables('%s')]", rtype),
+					typeFieldName:      rtype,
+					dependsOnFieldName: depsOn,
+				})
+			}
+			template := map[string]interface{}{
+				resourcesFieldName: resources,
+			}
+
+			err := removeSingleOfType(l, template, c.toRemove)
+			if c.expectedErr == nil {
+				g.Expect(err).To(BeNil())
+				for _, r := range template[resourcesFieldName].([]interface{}) {
+					resource, _ := r.(map[string]interface{})
+					resourceType, _ := resource[typeFieldName].(string)
+					g.Expect(resourceType).To(Not(Equal(c.toRemove)))
+					deps, _ := resource[dependsOnFieldName].([]interface{})
+					g.Expect(fmt.Sprint(deps)).To(Equal(fmt.Sprint(c.expectedDeps)))
+				}
+			} else {
+				g.Expect(err.Error()).To(Equal(c.expectedErr.Error()))
+			}
+		})
+	}
 }
