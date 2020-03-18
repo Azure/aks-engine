@@ -1,68 +1,32 @@
 {
 	"env": {
-		"CREATE_VNET": true,
 		"SCALE_CLUSTER": true
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
 			"orchestratorProfile": {
-				"orchestratorType": "Kubernetes",
-				"kubernetesConfig": {
-					"clusterSubnet": "10.239.0.0/16",
-					"addons": [
-						{
-							"name": "aad-pod-identity",
-							"enabled": true
-						},
-						{
-							"name": "tiller",
-							"enabled": true
-						},
-						{
-							"name": "kubernetes-dashboard",
-							"enabled": true
-						},
-						{
-							"name": "rescheduler",
-							"enabled": true
-						}
-					]
-				}
+				"orchestratorType": "Kubernetes"
 			},
 			"masterProfile": {
 				"count": 1,
 				"dnsPrefix": "",
-				"vmSize": "Standard_D2_v3",
-				"OSDiskSizeGB": 200,
-				"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-				"firstConsecutiveStaticIP": "10.239.255.239",
-				"vnetCidr": "10.239.0.0/16"
+				"vmSize": "Standard_D2_v3"
 			},
 			"agentPoolProfiles": [
 				{
 					"name": "agent1",
-					"count": 2,
+					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Linux",
-					"OSDiskSizeGB": 200,
-					"storageProfile": "ManagedDisks",
-					"diskSizesGB": [
-						128,
-						128
-					],
-					"availabilityProfile": "AvailabilitySet",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+					"availabilityProfile": "AvailabilitySet"
 				},
 				{
 					"name": "poolwin",
-					"count": 2,
+					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows",
-					"OSDiskSizeGB": 200,
-					"storageProfile": "ManagedDisks",
-					"availabilityProfile": "AvailabilitySet",
-					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+					"availabilityProfile": "AvailabilitySet"
 				}
 			],
 			"linuxProfile": {
@@ -92,6 +56,5 @@
 		"count": 1,
 		"vmSize": "Standard_D2_v3",
 		"availabilityProfile": "AvailabilitySet"
-		
 	}
 }
