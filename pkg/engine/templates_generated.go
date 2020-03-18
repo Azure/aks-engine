@@ -35562,19 +35562,25 @@ removeEtcd() {
     fi
 }
 
-removeMoby() {
-    if apt list --installed | grep 'moby-engine'; then
-      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
-    if apt list --installed | grep 'moby-cli'; then
-      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
+removeAptPackage() {
+    if apt list --installed | grep $1; then
+        apt_get_purge 20 30 120 $1 || exit $2
     fi
 }
 
+removeMoby() {
+    local e=$ERR_MOBY_INSTALL_TIMEOUT
+    removeAptPackage moby-engine $e
+    removeAptPackage moby-cli $e
+}
+
 removeContainerd() {
-    if apt list --installed | grep 'moby-containerd'; then
-      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    removeAptPackage moby-containerd $ERR_MOBY_INSTALL_TIMEOUT
+}
+
+disableTimeSyncd() {
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $1
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $1
 }
 
 installEtcd() {
@@ -35611,8 +35617,7 @@ installDeps() {
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
         if [[ $UBUNTU_RELEASE == "18.04" ]]; then
-            systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
-            retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+            disableTimeSyncd $ERR_SYSTEMCTL_STOP_FAIL
             packages+=" ntp ntpstat"
         fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
