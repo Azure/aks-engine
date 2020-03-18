@@ -139,10 +139,10 @@ AKS引擎使用json格式的[集群定义文件](../topics/clusterdefinitions.zh
 
 # 演示
 
-这里通过部署一个kubernetes容器集群来演示如何使用`aks-engine`。kubernetes集群定义文件使用[examples/kubernetes.json](../examples/kubernetes.json)。
+这里通过部署一个kubernetes容器集群来演示如何使用`aks-engine`。kubernetes集群定义文件使用[examples/kubernetes.json](../../examples/kubernetes.json)。
 
 1. 首先需要准备一个[SSH 公钥私钥对](ssh.md#ssh-key-generation).
-2. 编辑[examples/kubernetes.json](../examples/kubernetes.json)将其需要的参数配置好.
+2. 编辑[examples/kubernetes.json](../../examples/kubernetes.json)将其需要的参数配置好.
 3. 运行`./bin/aks-engine generate examples/kubernetes.json`命令在_output/Kubernetes-UNIQUEID目录中生成对应的模板。（UNIQUEID是master节点的FQDN前缀的hash值）
 4. 按照README中指定的方式使用`azuredeploy.json`和`azuredeploy.parameters.json`部署容器集群 [deployment usage](../aksengine.md#deployment-usage).
 
