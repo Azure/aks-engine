@@ -1134,7 +1134,7 @@ func (a *Properties) validateWindowsProfile() error {
 }
 
 func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) error {
-	if w.IsCsiProxyEnabled() {
+	if w.IsCSIProxyEnabled() {
 		k8sSemVer, err := semver.Make(k8sVersion)
 		if err != nil {
 			return errors.Errorf("could not validate orchestrator version %s", k8sVersion)
@@ -1148,8 +1148,8 @@ func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) err
 			return errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater")
 		}
 
-		if len(w.CsiProxyURL) == 0 {
-			return errors.New("windowsProfile.csiProxyUrl must be specified if enableCsiProxy is set")
+		if len(w.CSIProxyURL) == 0 {
+			return errors.New("windowsProfile.csiProxyURL must be specified if enableCSIProxy is set")
 		}
 	}
 	return nil

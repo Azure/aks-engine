@@ -39540,8 +39540,8 @@ $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
 # CSI Proxy settings
-$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCsiProxy" }}");
-$global:CsiProxyUrl = "{{WrapAsVariable "windowsCsiProxyUrl" }}";
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
 
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"

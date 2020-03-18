@@ -182,8 +182,8 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"customCloudAuthenticationMethod":           cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
-		"windowsCsiProxyUrl":                        "",
-		"windowsEnableCsiProxy":                     false,
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -688,8 +688,8 @@ func TestK8sVars(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-		"windowsCsiProxyUrl":                        "",
-		"windowsEnableCsiProxy":                     false,
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -939,8 +939,8 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-		"windowsCsiProxyUrl":                        "",
-		"windowsEnableCsiProxy":                     false,
+		"windowsCSIProxyURL":                        "",
+		"windowsEnableCSIProxy":                     false,
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
@@ -960,27 +960,27 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 			name: "No windows profile",
 			wp:   nil,
 			expectedVars: map[string]interface{}{
-				"windowsEnableCsiProxy": false,
-				"windowsCsiProxyUrl":    "",
+				"windowsEnableCSIProxy": false,
+				"windowsCSIProxyURL":    "",
 			},
 		},
 		{
 			name: "Defaults",
 			wp:   &api.WindowsProfile{},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCsiProxy": false,
-				"windowsCsiProxyUrl":    "",
+				"windowsEnableCSIProxy": false,
+				"windowsCSIProxyURL":    "",
 			},
 		},
 		{
 			name: "Non-defaults",
 			wp: &api.WindowsProfile{
-				EnableCsiProxy: &trueVar,
-				CsiProxyURL:    "http://some/package.tar",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "http://some/package.tar",
 			},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCsiProxy": true,
-				"windowsCsiProxyUrl":    "http://some/package.tar",
+				"windowsEnableCSIProxy": true,
+				"windowsCSIProxyURL":    "http://some/package.tar",
 			},
 		},
 	}
