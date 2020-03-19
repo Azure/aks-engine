@@ -35,6 +35,12 @@ removeContainerd() {
     fi
 }
 
+disableTimeSyncd() {
+    local e=$ERR_SYSTEMCTL_STOP_FAIL
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $e
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $e
+}
+
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
@@ -68,6 +74,10 @@ installDeps() {
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            disableTimeSyncd
+            packages+=" ntp ntpstat"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi

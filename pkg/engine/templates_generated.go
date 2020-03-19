@@ -34638,6 +34638,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+ensureNTP() {
+    systemctlEnableAndStart ntp || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
@@ -35227,7 +35231,7 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
-{{/* ERR_SYSTEMCTL_ENABLE_FAIL=3 Service could not be enabled by systemctl -- DEPRECATED */}}
+ERR_SYSTEMCTL_STOP_FAIL=3 {{/* Service could not be stopped by systemctl */}}
 ERR_SYSTEMCTL_START_FAIL=4 {{/* Service could not be started or enabled by systemctl */}}
 ERR_CLOUD_INIT_TIMEOUT=5 {{/* Timeout waiting for cloud-init runcmd to complete */}}
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
@@ -35574,6 +35578,12 @@ removeContainerd() {
     fi
 }
 
+disableTimeSyncd() {
+    local e=$ERR_SYSTEMCTL_STOP_FAIL
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $e
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $e
+}
+
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
@@ -35607,6 +35617,10 @@ installDeps() {
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            disableTimeSyncd
+            packages+=" ntp ntpstat"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi
@@ -36057,6 +36071,12 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{end}}
 else
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    if apt list --installed | grep 'ntp'; then
+        time_metric "EnsureNTP" ensureNTP
+    fi
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then

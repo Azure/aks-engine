@@ -1,5 +1,5 @@
 #!/bin/bash
-{{/* ERR_SYSTEMCTL_ENABLE_FAIL=3 Service could not be enabled by systemctl -- DEPRECATED */}}
+ERR_SYSTEMCTL_STOP_FAIL=3 {{/* Service could not be stopped by systemctl */}}
 ERR_SYSTEMCTL_START_FAIL=4 {{/* Service could not be started or enabled by systemctl */}}
 ERR_CLOUD_INIT_TIMEOUT=5 {{/* Timeout waiting for cloud-init runcmd to complete */}}
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
