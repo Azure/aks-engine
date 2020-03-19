@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
@@ -54,17 +53,17 @@ func GetRunningPodsFromDeployment(dep *deployment.Deployment) []pod.Pod {
 	return podsRunning
 }
 
-func EnsureOutboundInternetAccess(pods []pod.Pod, cfg config.Config) {
+func EnsureOutboundInternetAccess(pods []pod.Pod, timeout time.Duration) {
 	pl := pod.List{Pods: pods}
-	pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
+	pass, err := pl.CheckOutboundConnection(5*time.Second, timeout, api.Linux)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(pass).To(BeTrue())
 }
 
-func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, cfg config.Config, true bool) {
+func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, timeout time.Duration, true bool) {
 	pl := pod.List{Pods: fromPods}
 	for _, toPod := range toPods {
-		pass, err := pl.ValidateCurlConnection(toPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+		pass, err := pl.ValidateCurlConnection(toPod.Status.PodIP, 30*time.Second, timeout)
 		if true {
 			if err != nil {
 				e := toPod.Describe()
