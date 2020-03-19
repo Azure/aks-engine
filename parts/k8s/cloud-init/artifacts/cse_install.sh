@@ -36,9 +36,8 @@ removeContainerd() {
 }
 
 disableTimeSyncd() {
-    local e=$ERR_SYSTEMCTL_STOP_FAIL
-    systemctl_stop 20 5 10 systemd-timesyncd || exit $e
-    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $e
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
 }
 
 installEtcd() {
