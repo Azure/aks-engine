@@ -157,7 +157,8 @@ func (authArgs *authArgs) validateAuthArgs() error {
 
 	authArgs.SubscriptionID, _ = uuid.Parse(authArgs.rawSubscriptionID)
 	if authArgs.SubscriptionID.String() == "00000000-0000-0000-0000-000000000000" {
-		subID, err := getSubFromAzDir(filepath.Join(helpers.GetHomeDir(), ".azure"))
+		var subID uuid.UUID
+		subID, err = getSubFromAzDir(filepath.Join(helpers.GetHomeDir(), ".azure"))
 		if err != nil || subID.String() == "00000000-0000-0000-0000-000000000000" {
 			return errors.New("--subscription-id is required (and must be a valid UUID)")
 		}
