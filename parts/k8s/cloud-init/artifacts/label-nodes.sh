@@ -8,11 +8,14 @@
 
 set -euo pipefail
 
+KUBECONFIG="$(find /home/*/.kube/config)"
+KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
+
 MASTER_SELECTOR="kubernetes.azure.com/role!=agent,kubernetes.io/role!=agent"
 MASTER_LABELS="kubernetes.azure.com/role=master kubernetes.io/role=master node-role.kubernetes.io/master="
 AGENT_SELECTOR="kubernetes.azure.com/role!=master,kubernetes.io/role!=master"
 AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role.kubernetes.io/agent="
 
-kubectl label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
-kubectl label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
+${KUBECTL} label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
+${KUBECTL} label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
 #EOF
