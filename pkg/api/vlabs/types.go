@@ -162,6 +162,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername          string            `json:"adminUsername,omitempty"`
 	AdminPassword          string            `json:"adminPassword,omitempty"`
+	CSIProxyURL            string            `json:"csiProxyURL,omitempty"`
+	EnableCSIProxy         *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef               *ImageReference   `json:"imageReference,omiteempty"`
 	ImageVersion           string            `json:"imageVersion,omitempty"`
 	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
@@ -871,6 +873,14 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 		}
 	}
 	return false
+}
+
+// IsCSIProxyEnabled returns true if CSI proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
+	}
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
