@@ -372,7 +372,7 @@ func TestValidateAuthArgs(t *testing.T) {
 			expected: errors.New(`--certificate-path and --private-key-path must be specified when --auth-method="client_certificate"`),
 		},
 		{
-			name: "ClientCertificateAuthExpectsCertificatePath",
+			name: "ValidClientCertificateAuth",
 			authArgs: authArgs{
 				rawSubscriptionID:   validID,
 				rawClientID:         validID,
