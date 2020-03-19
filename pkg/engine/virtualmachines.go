@@ -211,6 +211,12 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		osDisk.DiskSizeGB = to.Int32Ptr(int32(cs.Properties.MasterProfile.OSDiskSizeGB))
 	}
 
+	if to.Bool(cs.Properties.MasterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	storageProfile.OsDisk = osDisk
 	storageProfile.ImageReference = imgReference
 	vmProperties.StorageProfile = storageProfile
@@ -538,6 +544,12 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	if profile.DiskEncryptionSetID != "" {
 		osDisk.ManagedDisk = &compute.ManagedDiskParameters{
 			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
+		}
+	}
+
+	if to.Bool(profile.UltraSSDEnabled) {
+		virtualMachine.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
 		}
 	}
 

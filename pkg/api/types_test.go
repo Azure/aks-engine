@@ -771,16 +771,17 @@ func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
 
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
-		name              string
-		p                 Properties
-		expectedHasMD     bool
-		expectedHasSA     bool
-		expectedMasterMD  bool
-		expectedAgent0E   bool
-		expectedAgent0MD  bool
-		expectedPrivateJB bool
-		expectedHasDisks  bool
-		expectedDesID     string
+		name                    string
+		p                       Properties
+		expectedHasMD           bool
+		expectedHasSA           bool
+		expectedMasterMD        bool
+		expectedAgent0E         bool
+		expectedAgent0MD        bool
+		expectedPrivateJB       bool
+		expectedHasDisks        bool
+		expectedDesID           string
+		expectedUltraSSDEnabled bool
 	}{
 		{
 			name: "Storage Account",
@@ -982,6 +983,35 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedPrivateJB: false,
 			expectedDesID:     "DiskEncryptionSetID",
 		},
+		{
+			name: "UltraSSDEnabled setting",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile:  ManagedDisks,
+					UltraSSDEnabled: to.BoolPtr(true),
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile:  ManagedDisks,
+						UltraSSDEnabled: to.BoolPtr(true),
+					},
+					{
+						StorageProfile:  ManagedDisks,
+						UltraSSDEnabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedHasMD:           true,
+			expectedHasSA:           false,
+			expectedMasterMD:        true,
+			expectedAgent0MD:        true,
+			expectedAgent0E:         false,
+			expectedPrivateJB:       false,
+			expectedUltraSSDEnabled: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -999,6 +1029,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
 				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
+			}
+			if to.Bool(c.p.MasterProfile.UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.MasterProfile.UltraSSDEnabled))
 			}
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
@@ -1018,6 +1051,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.AgentPoolProfiles[0].DiskEncryptionSetID != c.expectedDesID {
 				t.Fatalf("expected DiskEncryptionSetID to return %s but instead returned %s", c.expectedDesID, c.p.AgentPoolProfiles[0].DiskEncryptionSetID)
+			}
+			if to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled))
 			}
 		})
 	}
