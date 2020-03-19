@@ -116,8 +116,6 @@ const (
 
 // vlabs default configuration
 const (
-	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
-	DefaultEnableCSIProxyWindows = false
 	// DefaultNetworkPlugin defines the network plugin to use by default
 	DefaultNetworkPlugin = "azure"
 	// DefaultNetworkPluginWindows defines the network plugin to use by default for clusters with Windows agent pools
