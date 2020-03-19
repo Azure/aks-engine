@@ -2503,6 +2503,31 @@ func TestCloudProviderBackoff(t *testing.T) {
 				},
 			},
 			expected: KubernetesConfig{
+				CloudProviderBackoffMode:          "v2",
+				CloudProviderBackoff:              to.BoolPtr(true),
+				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        0,
+				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      0,
+				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
+				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			},
+		},
+		{
+			name: "Kubernetes 1.13.0",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.13.0",
+						OrchestratorType:    Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: KubernetesConfig{
 				CloudProviderBackoffMode:          "v1",
 				CloudProviderBackoff:              to.BoolPtr(false),
 				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
