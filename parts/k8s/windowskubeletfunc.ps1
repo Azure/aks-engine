@@ -317,26 +317,31 @@ New-NSSMService {
         $KubeProxyStartFile
     )
 
+    $kubeletDependOnServices = "docker"
+    if ($global:EnableCsiProxy) {
+        $kubeletDependOnServices += " csi-proxy-server"
+    }
+
     # setup kubelet
-    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir
-    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
-    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
-    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START
-    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500
-    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
