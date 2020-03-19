@@ -1713,7 +1713,7 @@ func (w *WindowsProfile) IsCSIProxyEnabled() bool {
 	if w.EnableCSIProxy != nil {
 		return *w.EnableCSIProxy
 	}
-	return DefaultEnableCSIProxyWindows
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // HasSecrets returns true if the customer specified secrets to install
