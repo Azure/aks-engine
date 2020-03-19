@@ -136,6 +136,10 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
+# CSI Proxy settings
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -149,6 +153,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 
@@ -377,6 +382,11 @@ try
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels `
             -UseContainerD $useContainerD
+
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+            # TODO: make kubelet depeond on csi-server-proxy service if enabled
+        }
 
         Get-LogCollectionScripts
 
