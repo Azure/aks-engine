@@ -210,7 +210,7 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername             string            `json:"adminUsername"`
 	AdminPassword             string            `json:"adminPassword" conform:"redact"`
-	CSIProxyURL               string            `json:"csiProxyURL"`
+	CSIProxyURL               string            `json:"csiProxyURL,omitempty"`
 	EnableCSIProxy            *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef                  *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion              string            `json:"imageVersion"`
