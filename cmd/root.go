@@ -139,7 +139,11 @@ func (authArgs *authArgs) isAzureStackCloud() bool {
 func (authArgs *authArgs) validateAuthArgs() error {
 	var err error
 
-	if authArgs.AuthMethod != "" {
+	if authArgs.AuthMethod == "" {
+		return errors.New("--auth-method is a required parameter")
+	}
+
+	if authArgs.AuthMethod == "client_secret" || authArgs.AuthMethod == "client_certificate" {
 		authArgs.ClientID, err = uuid.Parse(authArgs.rawClientID)
 		if err != nil {
 			return errors.Wrap(err, "parsing --client-id")

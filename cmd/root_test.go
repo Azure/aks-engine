@@ -304,6 +304,13 @@ func TestValidateAuthArgs(t *testing.T) {
 		expected error
 	}{
 		{
+			name: "AuthMethodIsRequired",
+			authArgs: authArgs{
+				AuthMethod: "",
+			},
+			expected: errors.New("--auth-method is a required parameter"),
+		},
+		{
 			name: "AlwaysExpectValidClientID",
 			authArgs: authArgs{
 				rawSubscriptionID:   validID,
