@@ -84,10 +84,10 @@ configure_prerequisites() {
     ip_forward_path=/proc/sys/net/ipv4/ip_forward
     ip_forward_setting="net.ipv4.ip_forward=0"
     sysctl_conf=/etc/sysctl.conf
-    if ! egrep -q "^1$" ${ip_forward_path}; then
+    if ! grep -qE "^1$" ${ip_forward_path}; then
         echo 1 > ${ip_forward_path}
     fi
-    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+    if grep -qE "${ip_forward_setting}" ${sysctl_conf}; then
         sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
     fi
 }
