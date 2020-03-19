@@ -35562,20 +35562,19 @@ removeEtcd() {
     fi
 }
 
-removeAptPackage() {
-    if apt list --installed | grep $1; then
-        apt_get_purge 20 30 120 $1 || exit $2
+removeMoby() {
+    if apt list --installed | grep 'moby-engine'; then
+      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
+    fi
+    if apt list --installed | grep 'moby-cli'; then
+      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
     fi
 }
 
-removeMoby() {
-    local e=$ERR_MOBY_INSTALL_TIMEOUT
-    removeAptPackage moby-engine $e
-    removeAptPackage moby-cli $e
-}
-
 removeContainerd() {
-    removeAptPackage moby-containerd $ERR_MOBY_INSTALL_TIMEOUT
+    if apt list --installed | grep 'moby-containerd'; then
+      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
+    fi
 }
 
 disableTimeSyncd() {
@@ -35628,16 +35627,16 @@ installDeps() {
     apt_get_dist_upgrade || exit $ERR_APT_DIST_UPGRADE_TIMEOUT
 
     for apt_package in ${packages}; do
-        if ! apt_get_install 30 1 600 $apt_package; then
-            journalctl --no-pager -u $apt_package
-            exit $ERR_APT_INSTALL_TIMEOUT
-        fi
+      if ! apt_get_install 30 1 600 $apt_package; then
+        journalctl --no-pager -u $apt_package
+        exit $ERR_APT_INSTALL_TIMEOUT
+      fi
     done
     if [[ "${AUDITD_ENABLED}" == true ]]; then
-        if ! apt_get_install 30 1 600 auditd; then
-            journalctl --no-pager -u auditd
-            exit $ERR_APT_INSTALL_TIMEOUT
-        fi
+      if ! apt_get_install 30 1 600 auditd; then
+        journalctl --no-pager -u auditd
+        exit $ERR_APT_INSTALL_TIMEOUT
+      fi
     fi
 }
 

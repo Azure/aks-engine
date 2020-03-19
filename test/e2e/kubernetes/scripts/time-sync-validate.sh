@@ -26,5 +26,7 @@ if [[ $OS == $DEBIAN_OS_NAME ]]; then
 fi
 
 sudo timedatectl status | grep 'RTC in local TZ: no' || exit 1
-sudo systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
-sudo systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
+if ! { [ $OS = $UBUNTU_OS_NAME ] && [ $RELEASE = "18.04" ]; }; then
+  sudo systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
+  sudo systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
+fi
