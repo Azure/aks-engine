@@ -471,6 +471,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			var parts = []string{
 				kubernetesWindowsAgentFunctionsPS1,
 				kubernetesWindowsConfigFunctionsPS1,
+				kubernetesWindowsCsiProxyFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,

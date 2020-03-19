@@ -222,6 +222,7 @@
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
 // ../../parts/k8s/windowsconfigfunc.ps1
+// ../../parts/k8s/windowscsiproxyfunc.ps1
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
 // ../../parts/k8s/windowslogscleanup.ps1
@@ -40855,7 +40856,8 @@ func k8sKubernetesparamsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -41066,6 +41068,7 @@ function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
+    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy } |
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
     Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
     Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
@@ -41246,6 +41249,10 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
+# CSI Proxy settings
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -41259,6 +41266,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 
 function
@@ -41397,6 +41405,10 @@ try
         Write-CACert -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir
 
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
+
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir ` + "`" + `
@@ -41478,6 +41490,8 @@ try
             -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
             -HNSModule $global:HNSModule ` + "`" + `
             -KubeletNodeLabels $global:KubeletNodeLabels
+
+
 
         Get-LogCollectionScripts
 
@@ -42769,6 +42783,57 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 	return a, nil
 }
 
+var _k8sWindowscsiproxyfuncPs1 = []byte(`function New-CsiProxyService {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $CsiProxyPackageUrl,
+        [Parameter(Mandatory = $true)][string]
+        $KubeDir
+    )
+
+    $tempdir = New-TemporaryDirectory
+    $binaryPackage = "$tempdir\csiproxy.tar"
+
+    DownloadFileOverHttp -Url $CsiProxyPackageUrl -DestinationPath $binaryPackage
+
+    tar -xzf $binaryPackage -C $tempdir
+    cp "$tempdir\build\server.exe" "$KubeDir\csi-proxy-server.exe"
+
+    del $tempdir -Recurse
+
+    & "$KubeDir\nssm.exe" install csi-proxy-server "$KubeDir\csi-proxy-server.exe" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppDirectory "$KubeDir" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRestartDekay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Description csi-proxy-server | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdout "$KubeDir\csi-proxy-server.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderr "$KubeDir\csi-proxy-server.err.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateBytes 10485760 | RemoveNulls
+}`)
+
+func k8sWindowscsiproxyfuncPs1Bytes() ([]byte, error) {
+	return _k8sWindowscsiproxyfuncPs1, nil
+}
+
+func k8sWindowscsiproxyfuncPs1() (*asset, error) {
+	bytes, err := k8sWindowscsiproxyfuncPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowscsiproxyfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sWindowsinstallopensshfuncPs1 = []byte(`function
 Install-OpenSSH {
     Param(
@@ -43098,9 +43163,6 @@ Get-KubeBinaries {
     del $tempdir -Recurse
 }
 
-# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
-filter RemoveNulls { $_ -replace '\0', '' }
-
 # TODO: replace KubeletStartFile with a Kubelet config, remove NSSM, and use built-in service integration
 function
 New-NSSMService {
@@ -43116,13 +43178,18 @@ New-NSSMService {
         $KubeProxyStartFile
     )
 
+    $kubeletDependOnServices = "docker"
+    if ($global:EnableCsiProxy) {
+        $kubeletDependOnServices += " csi-proxy-server"
+    }
+
     # setup kubelet
     & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
@@ -43557,6 +43624,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean("{{CsiProxyEnabled}}")
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
@@ -43579,6 +43647,11 @@ Stop-Service kubeproxy
 
 Write-Log "Stopping kubelet service"
 Stop-Service kubelet
+
+if ($global:CsiProxyEnabled) {
+    Write-Log "Stopping csi-proxy-server service"
+    Stop-Service csi-proxy-server
+}
 
 #
 # Perform cleanup
@@ -43632,6 +43705,12 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 #
 # Start Services
 #
+
+if ($global:CsiProxyEnabled) {
+    Write-Log "Starting csi-proxy-server service"
+    Start-Service csi-proxy-server
+}
+
 Write-Log "Starting kubelet service"
 Start-Service kubelet
 
@@ -47281,6 +47360,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/windowsazurecnifunc.tests.ps1":                                       k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                                  k8sWindowscnifuncPs1,
 	"k8s/windowsconfigfunc.ps1":                                               k8sWindowsconfigfuncPs1,
+	"k8s/windowscsiproxyfunc.ps1":                                             k8sWindowscsiproxyfuncPs1,
 	"k8s/windowsinstallopensshfunc.ps1":                                       k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                              k8sWindowskubeletfuncPs1,
 	"k8s/windowslogscleanup.ps1":                                              k8sWindowslogscleanupPs1,
@@ -47609,6 +47689,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"windowsazurecnifunc.tests.ps1": {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":            {k8sWindowscnifuncPs1, map[string]*bintree{}},
 		"windowsconfigfunc.ps1":         {k8sWindowsconfigfuncPs1, map[string]*bintree{}},
+		"windowscsiproxyfunc.ps1":       {k8sWindowscsiproxyfuncPs1, map[string]*bintree{}},
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
 		"windowslogscleanup.ps1":        {k8sWindowslogscleanupPs1, map[string]*bintree{}},

@@ -169,6 +169,10 @@ func (a *Properties) validate(isUpdate bool) error {
 	if e := a.validateAzureStackSupport(); e != nil {
 		return e
 	}
+
+	if e := a.validateWindowsProfile(); e != nil {
+		return e
+	}
 	return nil
 }
 
@@ -563,10 +567,6 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 					return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 				}
 			}
-		}
-
-		if e := agentPoolProfile.validateWindows(a.OrchestratorProfile, a.WindowsProfile, isUpdate); agentPoolProfile.OSType == Windows && e != nil {
-			return e
 		}
 
 		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {
@@ -1082,30 +1082,84 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 	return nil
 }
 
-func (a *AgentPoolProfile) validateWindows(o *OrchestratorProfile, w *WindowsProfile, isUpdate bool) error {
+func (a *Properties) validateWindowsProfile() error {
+	hasWindowsAgentPools := false
+	for _, profile := range a.AgentPoolProfiles {
+		if profile.OSType == Windows {
+			hasWindowsAgentPools = true
+			break
+		}
+	}
+
+	if !hasWindowsAgentPools {
+		return nil
+	}
+
+	o := a.OrchestratorProfile
+	version := ""
+	// This logic is broken because golang cases do not fallthrough by default.
+	// I am leaving this in because I cannot get a clear answer on if we need to continue supporting Swarm + Windows and
+	// RationalizeReleaseAndVersion does not properly handle Swarm.
 	switch o.OrchestratorType {
 	case DCOS:
 	case Swarm:
 	case SwarmMode:
 	case Kubernetes:
-		version := common.RationalizeReleaseAndVersion(
+		version = common.RationalizeReleaseAndVersion(
 			o.OrchestratorType,
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
-			isUpdate,
+			false,
 			true)
+
 		if version == "" {
 			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
 		}
 	default:
-		return errors.Errorf("Orchestrator %s does not support Windows", o.OrchestratorType)
+		return errors.Errorf("Orchestrator %v does not support Windows", o.OrchestratorType)
 	}
-	if w != nil {
-		if e := w.Validate(o.OrchestratorType); e != nil {
-			return e
+
+	w := a.WindowsProfile
+	if w == nil {
+		return errors.New("WindowsProfile is required when the cluster definition contains Windows agent pools")
+	}
+	if e := validate.Var(w.AdminUsername, "required"); e != nil {
+		return errors.New("WindowsProfile.AdminUsername is required, when agent pool specifies Windows")
+	}
+	if e := validate.Var(w.AdminPassword, "required"); e != nil {
+		return errors.New("WindowsProfile.AdminPassword is required, when agent pool specifies Windows")
+	}
+	if !validatePasswordComplexity(w.AdminUsername, w.AdminPassword) {
+		return errors.New("WindowsProfile.AdminPassword complexity not met. Windows password should contain 3 of the following categories - uppercase letters(A-Z), lowercase(a-z) letters, digits(0-9), special characters (~!@#$%^&*_-+=`|\\(){}[]:;<>,.?/')")
+	}
+	if e := validateKeyVaultSecrets(w.Secrets, true); e != nil {
+		return e
+	}
+	if e := validateCsiProxyWindowsProperties(w, version); e != nil {
+		return e
+	}
+
+	return nil
+}
+
+func validateCsiProxyWindowsProperties(w *WindowsProfile, k8sVersion string) error {
+	if w.IsCSIProxyEnabled() {
+		k8sSemVer, err := semver.Make(k8sVersion)
+		if err != nil {
+			return errors.Errorf("could not validate orchestrator version %s", k8sVersion)
 		}
-	} else {
-		return errors.New("WindowsProfile is required when the cluster definition contains Windows agent pool(s)")
+		minSemVer, err := semver.Make("1.18.0-beta.1")
+		if err != nil {
+			return errors.New("could not validate orchestrator version 1.18.0")
+		}
+
+		if k8sSemVer.LT(minSemVer) {
+			return errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater")
+		}
+
+		if len(w.CSIProxyURL) == 0 {
+			return errors.New("windowsProfile.csiProxyURL must be specified if enableCSIProxy is set")
+		}
 	}
 	return nil
 }

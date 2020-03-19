@@ -131,6 +131,10 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
+# CSI Proxy settings
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -144,6 +148,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 
 function
@@ -282,6 +287,10 @@ try
         Write-CACert -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir
 
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
+
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir `
@@ -363,6 +372,8 @@ try
             -KubeServiceCIDR $global:KubeServiceCIDR `
             -HNSModule $global:HNSModule `
             -KubeletNodeLabels $global:KubeletNodeLabels
+
+
 
         Get-LogCollectionScripts
 
