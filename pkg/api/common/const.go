@@ -268,8 +268,12 @@ const (
 	PodSecurityPolicyAddonName = "pod-security-policy"
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
-	// SecretStoreCSIDriverAddonName is the name of the secrets-store-csi-driver addon
-	SecretStoreCSIDriverAddonName = "csi-secrets-store"
+	// SecretsStoreCSIDriverAddonName is the name of the secrets-store-csi-driver addon
+	SecretsStoreCSIDriverAddonName = "csi-secrets-store"
+	// CSISecretsStoreDriverContainerName is the name of the secrets-store container in the csi-secrets-store addon
+	CSISecretsStoreDriverContainerName = "secrets-store"
+	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
+	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
 )
 
 // Component name consts

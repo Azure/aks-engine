@@ -1926,14 +1926,14 @@ func TestValidateAddons(t *testing.T) {
 					KubernetesConfig: &KubernetesConfig{
 						Addons: []KubernetesAddon{
 							{
-								Name:    common.SecretStoreCSIDriverAddonName,
+								Name:    common.SecretsStoreCSIDriverAddonName,
 								Enabled: to.BoolPtr(true),
 							},
 						},
 					},
 				},
 			},
-			expectedErr: errors.Errorf("%s add-on can only be used in 1.15+", common.SecretStoreCSIDriverAddonName),
+			expectedErr: errors.Errorf("%s add-on can only be used in 1.15+", common.SecretsStoreCSIDriverAddonName),
 		},
 		{
 			name: "keyvault-flexvolume enabled with 1.16+",

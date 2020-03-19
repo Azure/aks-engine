@@ -773,26 +773,47 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
-		Name:    common.SecretStoreCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultSecretStoreCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0")),
+		Name:    common.SecretsStoreCSIDriverAddonName,
+		Enabled: to.BoolPtr(DefaultSecretStoreCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  "livenessprobe",
-				Image: "quay.io/k8scsi/livenessprobe:v1.1.0",
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-node-driver-registrar",
-				Image: "quay.io/k8scsi/csi-node-driver-registrar:v1.2.0",
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-secrets-store",
-				Image: "docker.io/deislabs/secrets-store-csi:v0.0.8",
+				Name:           common.CSISecretsStoreDriverContainerName,
+				Image:          "docker.io/deislabs/secrets-store-csi:v0.0.8",
+				CPURequests:    "50m",
+				MemoryRequests: "100Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 			{
-				Name:  "csi-secrets-store-provider-azure",
-				Image: "mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.3",
+				Name:           common.CSISecretsStoreProviderAzureContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISecretsStoreProviderAzureContainerName],
+				CPURequests:    "50m",
+				MemoryRequests: "100Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
 			},
 		},
+	}
+
+	// volume lifecycle mode needs to be explicitly set for 1.16+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultSecretsStoreCSIDriverAddonsConfig.Config = map[string]string{"volume-lifecycle-mode": "Ephemeral"}
 	}
 
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
@@ -985,6 +1006,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
 	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
+		}
+	}
+
+	// Enable keyvault flexvolume addon during upgrade for 1.16 or greater scenarios, unless explicitly disabled
+	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") && !o.KubernetesConfig.IsAddonDisabled(common.KeyVaultFlexVolumeAddonName) {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KeyVaultFlexVolumeAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}
 	}

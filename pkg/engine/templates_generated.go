@@ -34054,22 +34054,30 @@ var _k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml = []byte(
 kind: CSIDriver
 metadata:
   name: secrets-store.csi.k8s.io
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   podInfoOnMount: true
   attachRequired: false
+  {{- if ContainerConfig "volume-lifecycle-mode"}}
   volumeLifecycleModes:
   - Ephemeral
+  {{ end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: secrets-store-csi-driver
-  namespace: default
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: secretproviderclasses-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -34077,12 +34085,14 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: secrets-store-csi-driver
-  namespace: default
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: secretproviderclasses-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 rules:
 - apiGroups:
   - secrets-store.csi.x-k8s.io
@@ -34096,6 +34106,8 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   name: secretproviderclasses.secrets-store.csi.x-k8s.io
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   group: secrets-store.csi.x-k8s.io
   names:
@@ -34153,6 +34165,9 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: csi-secrets-store
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   selector:
     matchLabels:
@@ -34192,8 +34207,15 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
         - name: secrets-store
-          image: {{ContainerImage "csi-secrets-store"}}
+          image: {{ContainerImage "secrets-store"}}
           args:
             - "--debug=true"
             - "--endpoint=$(CSI_ENDPOINT)"
@@ -34230,6 +34252,13 @@ spec:
               mountPropagation: Bidirectional
             - name: providers-dir
               mountPath: /etc/kubernetes/secrets-store-csi-providers
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "secrets-store"}}
+              memory: {{ContainerMemLimits "secrets-store"}}
+            requests:
+              cpu: {{ContainerCPUReqs "secrets-store"}}
+              memory: {{ContainerMemReqs "secrets-store"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
           imagePullPolicy: Always
@@ -34240,6 +34269,13 @@ spec:
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
       volumes:
         - name: mountpoint-dir
           hostPath:
@@ -34261,9 +34297,11 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
+  name: csi-secrets-store-provider-azure
+  namespace: kube-system
   labels:
     app: csi-secrets-store-provider-azure
-  name: csi-secrets-store-provider-azure
+    addonmanager.kubernetes.io/mode: Reconcile
 spec:
   updateStrategy:
     type: RollingUpdate
@@ -34278,22 +34316,21 @@ spec:
       tolerations:
       containers:
         - name: provider-azure-installer
-          image: {{ContainerImage "csi-secrets-store-provider-azure"}}
+          image: {{ContainerImage "provider-azure-installer"}}
           imagePullPolicy: Always
-          resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
-            limits:
-              cpu: 50m
-              memory: 100Mi
           env:
-            # set TARGET_DIR env var and mount the same directory to to the container
             - name: TARGET_DIR
               value: "/etc/kubernetes/secrets-store-csi-providers"
           volumeMounts:
             - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
               name: providervol
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "provider-azure-installer"}}
+              memory: {{ContainerMemLimits "provider-azure-installer"}}
+            requests:
+              cpu: {{ContainerCPUReqs "provider-azure-installer"}}
+              memory: {{ContainerMemReqs "provider-azure-installer"}}
       volumes:
         - name: providervol
           hostPath:
@@ -45932,8 +45969,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":     k8sAddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-omsagent-daemonset.yaml":                 k8sAddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml": k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":   k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml": k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":           k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":                  k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/node-problem-detector.yaml":                                     k8sAddonsNodeProblemDetectorYaml,

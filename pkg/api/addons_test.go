@@ -3563,6 +3563,12 @@ func TestSetAddonsConfig(t *testing.T) {
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.SecretsStoreCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
 						},
 					},
 				},
@@ -3570,10 +3576,54 @@ func TestSetAddonsConfig(t *testing.T) {
 			isUpgrade: false,
 			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
-					Name:    common.SecretStoreCSIDriverAddonName,
+					Name:    common.SecretsStoreCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
 				},
 			}, "1.15.4"),
+		},
+		{
+			name: "keyvault-flexvolume enabled for k8s >= 1.16.0 - upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(false),
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KeyVaultFlexVolumeAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: true,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
+						},
+					},
+				},
+			}, "1.16.0"),
 		},
 	}
 
@@ -3611,6 +3661,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.NodeProblemDetectorAddonName,
 				common.PodSecurityPolicyAddonName,
 				common.AADAdminGroupAddonName,
+				common.SecretsStoreCSIDriverAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
@@ -4091,20 +4142,6 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			},
 		},
 		{
-			Name:    common.KeyVaultFlexVolumeAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:           common.KeyVaultFlexVolumeAddonName,
-					CPURequests:    "50m",
-					MemoryRequests: "100Mi",
-					CPULimits:      "50m",
-					MemoryLimits:   "100Mi",
-					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
-				},
-			},
-		},
-		{
 			Name:    common.DashboardAddonName,
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
@@ -4200,6 +4237,65 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		addons = append(addons, KubernetesAddon{
 			Name:    common.PodSecurityPolicyAddonName,
 			Enabled: to.BoolPtr(true),
+		})
+	}
+
+	if !common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.KeyVaultFlexVolumeAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.KeyVaultFlexVolumeAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "100Mi",
+					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+				},
+			},
+		})
+	}
+
+	if common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.SecretsStoreCSIDriverAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.CSILivenessProbeContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSILivenessProbeContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSINodeDriverRegistrarContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSINodeDriverRegistrarContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreDriverContainerName,
+					Image:          "docker.io/deislabs/secrets-store-csi:v0.0.8",
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreProviderAzureContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreProviderAzureContainerName],
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+			},
+			Config: map[string]string{"volume-lifecycle-mode": "Ephemeral"},
 		})
 	}
 

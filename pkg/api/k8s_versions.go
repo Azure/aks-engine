@@ -53,6 +53,7 @@ const (
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.6"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
+	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.3"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
@@ -457,6 +458,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		}
 	case "1.17":
 		ret = map[string]string{
@@ -535,6 +537,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		}
 	case "1.16":
 		ret = map[string]string{
@@ -611,6 +614,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		}
 	case "1.15":
 		ret = map[string]string{
@@ -686,6 +690,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
 		}
 	case "1.14":
 		ret = map[string]string{

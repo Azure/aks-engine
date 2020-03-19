@@ -166,7 +166,7 @@ const (
 	DefaultCoreDNSAddonEnabled = true
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
-	// DefaultSecretStoreCSIDriverAddonEnabled determins the aks-engine provided default for enabling secrets-store-csi-driver addon
+	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
 	DefaultSecretStoreCSIDriverAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true

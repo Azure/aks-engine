@@ -741,7 +741,7 @@ func (a *Properties) validateAddons() error {
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
-				case common.SecretStoreCSIDriverAddonName:
+				case common.SecretsStoreCSIDriverAddonName:
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
 						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.15+", addon.Name))
 					}

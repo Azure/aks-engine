@@ -195,7 +195,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.SecretStoreCSIDriverAddonName,
+								Name: common.SecretsStoreCSIDriverAddonName,
 								Data: base64Data,
 							},
 						},
@@ -481,7 +481,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.FlannelAddonName,
 							},
 							{
-								Name: common.SecretStoreCSIDriverAddonName,
+								Name: common.SecretsStoreCSIDriverAddonName,
 							},
 						},
 					},
