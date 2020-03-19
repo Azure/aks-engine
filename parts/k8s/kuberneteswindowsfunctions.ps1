@@ -1,4 +1,5 @@
-# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 

@@ -289,6 +289,10 @@ try
         Write-CACert -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir
 
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
+
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir `
@@ -383,10 +387,7 @@ try
             -KubeletNodeLabels $global:KubeletNodeLabels `
             -UseContainerD $useContainerD
 
-        if ($global:EnableCsiProxy) {
-            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
-            # TODO: make kubelet depeond on csi-server-proxy service if enabled
-        }
+
 
         Get-LogCollectionScripts
 

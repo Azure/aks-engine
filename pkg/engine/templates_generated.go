@@ -39204,7 +39204,8 @@ func k8sKubernetesparamsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -39746,6 +39747,10 @@ try
         Write-CACert -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir
 
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
+
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir ` + "`" + `
@@ -39840,10 +39845,7 @@ try
             -KubeletNodeLabels $global:KubeletNodeLabels ` + "`" + `
             -UseContainerD $useContainerD
 
-        if ($global:EnableCsiProxy) {
-            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
-            # TODO: make kubelet depeond on csi-server-proxy service if enabled
-        }
+
 
         Get-LogCollectionScripts
 
@@ -40992,22 +40994,22 @@ var _k8sWindowscsiproxyfuncPs1 = []byte(`function New-CsiProxyService {
 
     del $tempdir -Recurse
 
-    & "$KubeDir\nssm.exe" install csi-proxy-server "$KubeDir\csi-proxy-server.exe"
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppDirectory "$KubeDir"
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRestartDekay 5000
-    & "$KubeDir\nssm.exe" set csi-proxy-server Description csi-proxy-server
-    & "$KubeDir\nssm.exe" set csi-proxy-server Start SERVICE_DEMAND_START
-    & "$KubeDir\nssm.exe" set csi-proxy-server ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set csi-proxy-server Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppThrottle 1500
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdout "$KubeDir\csi-proxy-server.log"
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderr "$KubeDir\csi-proxy-server.err.log"
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdoutCreationDisposition 4
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderrCreationDisposition 4
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install csi-proxy-server "$KubeDir\csi-proxy-server.exe" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppDirectory "$KubeDir" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRestartDekay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Description csi-proxy-server | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdout "$KubeDir\csi-proxy-server.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderr "$KubeDir\csi-proxy-server.err.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateBytes 10485760 | RemoveNulls
 }`)
 
 func k8sWindowscsiproxyfuncPs1Bytes() ([]byte, error) {
@@ -41405,9 +41407,6 @@ Get-KubeBinaries {
     del $tempdir -Recurse
 }
 
-# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
-filter RemoveNulls { $_ -replace '\0', '' }
-
 # TODO: replace KubeletStartFile with a Kubelet config, remove NSSM, and use built-in service integration
 function
 New-NSSMService {
@@ -41423,13 +41422,18 @@ New-NSSMService {
         $KubeProxyStartFile
     )
 
+    $kubeletDependOnServices = "docker"
+    if ($global:EnableCsiProxy) {
+        $kubeletDependOnServices += " csi-proxy-server"
+    }
+
     # setup kubelet
     & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
