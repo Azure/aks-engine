@@ -249,7 +249,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
+    time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
 

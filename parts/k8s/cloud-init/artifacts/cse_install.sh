@@ -21,18 +21,11 @@ removeEtcd() {
 }
 
 removeMoby() {
-    if apt list --installed | grep 'moby-engine'; then
-      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
-    if apt list --installed | grep 'moby-cli'; then
-      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-engine moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 removeContainerd() {
-    if apt list --installed | grep 'moby-containerd'; then
-      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 disableTimeSyncd() {
