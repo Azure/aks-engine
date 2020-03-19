@@ -178,8 +178,6 @@ func convertVLabsLinuxProfile(vlabs *vlabs.LinuxProfile, api *LinuxProfile) {
 func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile) {
 	api.AdminUsername = vlabs.AdminUsername
 	api.AdminPassword = vlabs.AdminPassword
-	api.CSIProxyURL = vlabs.CSIProxyURL
-	api.EnableCSIProxy = vlabs.EnableCSIProxy
 	if vlabs.ImageRef != nil {
 		api.ImageRef = &ImageReference{}
 		api.ImageRef.Gallery = vlabs.ImageRef.Gallery

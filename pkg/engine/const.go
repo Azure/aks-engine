@@ -81,7 +81,6 @@ const (
 	kubernetesWindowsAgentFunctionsPS1      = "k8s/kuberneteswindowsfunctions.ps1"
 	kubernetesWindowsConfigFunctionsPS1     = "k8s/windowsconfigfunc.ps1"
 	kubernetesWindowsContainerdFunctionsPS1 = "k8s/windowscontainerdfunc.ps1"
-	kubernetesWindowsCsiProxyFunctionsPS1   = "k8s/windowscsiproxyfunc.ps1"
 	kubernetesWindowsKubeletFunctionsPS1    = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1        = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1   = "k8s/windowsazurecnifunc.ps1"
