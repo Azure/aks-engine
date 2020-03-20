@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
@@ -53,9 +54,9 @@ func GetRunningPodsFromDeployment(dep *deployment.Deployment) []pod.Pod {
 	return podsRunning
 }
 
-func EnsureOutboundInternetAccess(pods []pod.Pod, timeout time.Duration) {
+func EnsureOutboundInternetAccess(pods []pod.Pod, cfg config.Config) {
 	pl := pod.List{Pods: pods}
-	pass, err := pl.CheckOutboundConnection(5*time.Second, timeout, api.Linux)
+	pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(pass).To(BeTrue())
 }
