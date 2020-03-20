@@ -1011,7 +1011,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	// Enable keyvault flexvolume addon during upgrade for 1.16 or greater scenarios, unless explicitly disabled
-	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") && !o.KubernetesConfig.IsAddonDisabled(common.KeyVaultFlexVolumeAddonName) {
+	if isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KeyVaultFlexVolumeAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}

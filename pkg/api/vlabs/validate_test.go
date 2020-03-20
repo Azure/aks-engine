@@ -1935,23 +1935,6 @@ func TestValidateAddons(t *testing.T) {
 			},
 			expectedErr: errors.Errorf("%s add-on can only be used in 1.15+", common.SecretsStoreCSIDriverAddonName),
 		},
-		{
-			name: "keyvault-flexvolume enabled with 1.16+",
-			p: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorVersion: "1.16.0",
-					KubernetesConfig: &KubernetesConfig{
-						Addons: []KubernetesAddon{
-							{
-								Name:    common.KeyVaultFlexVolumeAddonName,
-								Enabled: to.BoolPtr(true),
-							},
-						},
-					},
-				},
-			},
-			expectedErr: errors.Errorf("%s add-on is deprecated in favor of csi-secrets-store addon", common.KeyVaultFlexVolumeAddonName),
-		},
 	}
 
 	for _, test := range tests {
