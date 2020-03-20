@@ -1900,8 +1900,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"auditInterval":             "30",
-						"constraintViolationsLimit": "20",
+						"auditInterval":             "60",
+						"constraintViolationsLimit": "100",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
@@ -1917,7 +1917,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							Image:          k8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "256Mi",
-							CPULimits:      "100m",
+							CPULimits:      "1000m",
 							MemoryLimits:   "512Mi",
 						},
 					},

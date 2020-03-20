@@ -460,8 +460,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.AzurePolicyAddonName,
 		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
-			"auditInterval":             "30",
-			"constraintViolationsLimit": "20",
+			"auditInterval":             "60",
+			"constraintViolationsLimit": "100",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -477,7 +477,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          k8sComponents[common.GatekeeperContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
-				CPULimits:      "100m",
+				CPULimits:      "1000m",
 				MemoryLimits:   "512Mi",
 			},
 		},
