@@ -35276,6 +35276,7 @@ ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85
 ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90
 ERR_SGX_DRIVERS_START_FAIL=91
 ERR_SGX_DRIVERS_NOT_SUPPORTED=92
+ERR_SGX_DRIVERS_CHECKSUM_MISMATCH=93
 ERR_APT_DAILY_TIMEOUT=98
 ERR_APT_UPDATE_TIMEOUT=99
 ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100
@@ -35669,9 +35670,11 @@ installSGXDrivers() {
     rm -rf ${oe_dir}
     mkdir -p ${oe_dir}
     pushd ${oe_dir} || exit
-    sgx_driver_folder_url="https://download.01.org/intel-sgx/latest/dcap-latest/linux"
-    retrycmd_if_failure 10 10 120 wget -r -l1 --no-parent -nd -A "SHA256SUM_dcap*" "${sgx_driver_folder_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap*)"
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
+    sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
     read -ra tmp_array <<< "$matched_line"
     sgx_driver_sha256sum_expected="${tmp_array[0]}"
     sgx_driver_remote_path="${tmp_array[1]}"
@@ -35681,9 +35684,7 @@ installSGXDrivers() {
     retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
     read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
     sgx_driver_sha256sum_real="${tmp_array[0]}"
-    if [ "$sgx_driver_sha256sum_real" != "$sgx_driver_sha256sum_expected" ]; then
-        echo "Downloaded SGX driver sha256sum $sgx_driver_sha256sum_real does not match the expected value $sgx_driver_sha256sum_expected"
-    fi
+    [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit $ERR_SGX_DRIVERS_CHECKSUM_MISMATCH
 
     chmod a+x ./"${sgx_driver}"
     if ! ./"${sgx_driver}"; then
