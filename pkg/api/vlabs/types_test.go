@@ -269,10 +269,6 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Linux after unmarshal")
 	}
 
-	if !ap.IsCoreOS() {
-		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != CoreOS after unmarshal")
-	}
-
 	if !ap.IsManagedDisks() {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.StorageProfile != ManagedDisks after unmarshal")
 	}
@@ -558,15 +554,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: CoreOS,
-				},
-			},
-			expected: false,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
 					Distro: RHEL,
 				},
 			},
@@ -660,17 +647,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				},
 			},
 			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: CoreOS,
-					},
-				},
-			},
-			expected: false,
 		},
 		{
 			p: Properties{

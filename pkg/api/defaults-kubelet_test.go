@@ -740,7 +740,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			}
 
 		// Validate that --protect-kernel-defaults is not enabled for relevant distros
-		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604, CoreOS:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
