@@ -84,21 +84,9 @@ func TestCreateMasterLoadBalancer(t *testing.T) {
 								ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
 							},
 							Protocol:         network.TransportProtocol("Tcp"),
-							FrontendPort:     to.Int32Ptr(22),
-							BackendPort:      to.Int32Ptr(22),
-							EnableFloatingIP: to.BoolPtr(false),
-						},
-					},
-					{
-						Name: to.StringPtr("ssh_alternative"),
-						InboundNatRulePropertiesFormat: &network.InboundNatRulePropertiesFormat{
+							FrontendPort:     to.Int32Ptr(13579),
 							BackendPort:      to.Int32Ptr(13579),
 							EnableFloatingIP: to.BoolPtr(false),
-							FrontendIPConfiguration: &network.SubResource{
-								ID: to.StringPtr("[variables('masterLbIPConfigID')]"),
-							},
-							FrontendPort: to.Int32Ptr(13579),
-							Protocol:     network.TransportProtocolTCP,
 						},
 					},
 				},

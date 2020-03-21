@@ -4,13 +4,11 @@
 package engine
 
 import (
-	"fmt"
+	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
-
-	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
 )
@@ -91,20 +89,36 @@ func TestCreateNetworkSecurityGroup(t *testing.T) {
 	cs.Properties.MasterProfile = &api.MasterProfile{SSHAlternativePort: to.Int32Ptr(13579)}
 	actual = CreateNetworkSecurityGroup(cs)
 
-	*expected.SecurityRules = append(*expected.SecurityRules, network.SecurityRule{
-		Name: to.StringPtr("allow_ssh_alternative"),
-		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-			Access:                   network.SecurityRuleAccessAllow,
-			Description:              to.StringPtr("Allow SSH traffic to master from an alternative port"),
-			DestinationAddressPrefix: to.StringPtr("*"),
-			DestinationPortRange:     to.StringPtr(fmt.Sprintf("%d-%d", *cs.Properties.MasterProfile.SSHAlternativePort, *cs.Properties.MasterProfile.SSHAlternativePort)),
-			Direction:                network.SecurityRuleDirectionInbound,
-			Priority:                 to.Int32Ptr(234),
-			Protocol:                 network.SecurityRuleProtocolTCP,
-			SourceAddressPrefix:      to.StringPtr("*"),
-			SourcePortRange:          to.StringPtr("*"),
+	expected.SecurityRules = &[]network.SecurityRule{
+		{
+			Name: to.StringPtr("allow_ssh"),
+			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+				Access:                   network.SecurityRuleAccessAllow,
+				Description:              to.StringPtr("Allow SSH traffic to master"),
+				DestinationAddressPrefix: to.StringPtr("*"),
+				DestinationPortRange:     to.StringPtr("13579-13579"),
+				Direction:                network.SecurityRuleDirectionInbound,
+				Priority:                 to.Int32Ptr(101),
+				Protocol:                 network.SecurityRuleProtocolTCP,
+				SourceAddressPrefix:      to.StringPtr("*"),
+				SourcePortRange:          to.StringPtr("*"),
+			},
 		},
-	})
+		{
+			Name: to.StringPtr("allow_kube_tls"),
+			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+				Access:                   network.SecurityRuleAccessAllow,
+				Description:              to.StringPtr("Allow kube-apiserver (tls) traffic to master"),
+				DestinationAddressPrefix: to.StringPtr("*"),
+				DestinationPortRange:     to.StringPtr("443-443"),
+				Direction:                network.SecurityRuleDirectionInbound,
+				Priority:                 to.Int32Ptr(100),
+				Protocol:                 network.SecurityRuleProtocolTCP,
+				SourceAddressPrefix:      to.StringPtr("*"),
+				SourcePortRange:          to.StringPtr("*"),
+			},
+		},
+	}
 
 	diff = cmp.Diff(actual, expected)
 

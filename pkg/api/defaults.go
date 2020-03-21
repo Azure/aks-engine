@@ -656,6 +656,10 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.PlatformUpdateDomainCount == nil {
 		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 	}
+
+	if p.MasterProfile.SSHAlternativePort == nil {
+		p.MasterProfile.SSHAlternativePort = to.Int32Ptr(22)
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {

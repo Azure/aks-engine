@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
@@ -16,13 +17,21 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 		APIVersion: "[variables('apiVersionNetwork')]",
 	}
 
+	var masterSSHPort string
+	if cs.Properties.MasterProfile == nil || cs.Properties.MasterProfile.SSHAlternativePort == nil {
+		masterSSHPort = "22"
+	} else {
+		masterSSHPort = strconv.FormatInt(int64(*cs.Properties.MasterProfile.SSHAlternativePort), 10)
+	}
+	allowSSHPortRangeString := fmt.Sprintf("%s-%s", masterSSHPort, masterSSHPort)
+
 	sshRule := network.SecurityRule{
 		Name: to.StringPtr("allow_ssh"),
 		SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 			Access:                   network.SecurityRuleAccessAllow,
 			Description:              to.StringPtr("Allow SSH traffic to master"),
 			DestinationAddressPrefix: to.StringPtr("*"),
-			DestinationPortRange:     to.StringPtr("22-22"),
+			DestinationPortRange:     to.StringPtr(allowSSHPortRangeString),
 			Direction:                network.SecurityRuleDirectionInbound,
 			Priority:                 to.Int32Ptr(101),
 			Protocol:                 network.SecurityRuleProtocolTCP,
@@ -54,23 +63,6 @@ func CreateNetworkSecurityGroup(cs *api.ContainerService) NetworkSecurityGroupAR
 	securityRules := []network.SecurityRule{
 		sshRule,
 		kubeTLSRule,
-	}
-
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.SSHAlternativePort != nil {
-		securityRules = append(securityRules, network.SecurityRule{
-			Name: to.StringPtr("allow_ssh_alternative"),
-			SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
-				Access:                   network.SecurityRuleAccessAllow,
-				Description:              to.StringPtr("Allow SSH traffic to master from an alternative port"),
-				DestinationAddressPrefix: to.StringPtr("*"),
-				DestinationPortRange:     to.StringPtr(fmt.Sprintf("%d-%d", *cs.Properties.MasterProfile.SSHAlternativePort, *cs.Properties.MasterProfile.SSHAlternativePort)),
-				Direction:                network.SecurityRuleDirectionInbound,
-				Priority:                 to.Int32Ptr(234),
-				Protocol:                 network.SecurityRuleProtocolTCP,
-				SourceAddressPrefix:      to.StringPtr("*"),
-				SourcePortRange:          to.StringPtr("*"),
-			},
-		})
 	}
 
 	if cs.Properties.HasWindows() {

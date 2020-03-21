@@ -82,9 +82,6 @@ func TestCreateNIC(t *testing.T) {
 								{
 									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
 								},
-								{
-									ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/ssh_alternative')]"),
-								},
 							},
 							PrivateIPAddress:          to.StringPtr("[variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))]]"),
 							Primary:                   to.BoolPtr(true),

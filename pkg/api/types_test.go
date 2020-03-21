@@ -1217,21 +1217,22 @@ func TestTotalNodes(t *testing.T) {
 	}
 }
 
-func TestGetMasterSSHAlternativePort(t *testing.T) {
+func TestGetMasterSSHPort(t *testing.T) {
 	cases := []struct {
 		name     string
 		p        *Properties
 		expected string
 	}{
 		{
-			name: "GetMasterSSHAlternativePort shall return empty string if the master profile is nil",
+			name: "GetMasterSSHPort shall return empty string if the master profile is nil",
 		},
 		{
-			name: "GetMasterSSHAlternativePort shall return empty if the ssh alternative port is set to 22",
-			p:    &Properties{MasterProfile: &MasterProfile{SSHAlternativePort: to.Int32Ptr(22)}},
+			name:     "GetMasterSSHPort shall return 22 if the ssh alternative port is nil",
+			p:        &Properties{MasterProfile: &MasterProfile{}},
+			expected: "22",
 		},
 		{
-			name:     "GetMasterSSHAlternativePort shall return the port string if the ssh alternative port is not set to 22",
+			name:     "GetMasterSSHPort shall return the port string if the ssh alternative port is not set to 22",
 			p:        &Properties{MasterProfile: &MasterProfile{SSHAlternativePort: to.Int32Ptr(54322)}},
 			expected: "54322",
 		},
@@ -1241,7 +1242,7 @@ func TestGetMasterSSHAlternativePort(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			actual := c.p.GetMasterSSHAlternativePort()
+			actual := c.p.GetMasterSSHPort()
 			if !strings.EqualFold(c.expected, actual) {
 				t.Fatalf("expected GetMasterSSHAlternativePort() to return %s but instead returned %s", c.expected, actual)
 			}

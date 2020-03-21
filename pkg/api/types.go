@@ -907,17 +907,18 @@ func (p *Properties) TotalNodes() int {
 	return totalNodes
 }
 
-// GetMasterSSHAlternativePort returns the ssh alternative port of master if it's enabled
-func (p *Properties) GetMasterSSHAlternativePort() string {
+// GetMasterSSHPort returns the ssh port of master
+func (p *Properties) GetMasterSSHPort() string {
 	if p == nil || p.MasterProfile == nil {
 		return ""
 	}
 
 	sshAlterPort := p.MasterProfile.SSHAlternativePort
-	if sshAlterPort != nil && *sshAlterPort != 22 {
+	if sshAlterPort != nil {
 		return strconv.FormatInt(int64(*sshAlterPort), 10)
 	}
-	return ""
+
+	return "22"
 }
 
 // HasVMSSAgentPool returns true if the cluster contains Virtual Machine Scale Sets agent pools
@@ -2391,7 +2392,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
-		"MASTER_SSH_ALTERNATIVE_PORT":          cs.Properties.GetMasterSSHAlternativePort(),
+		"MASTER_SSH_PORT":                      cs.Properties.GetMasterSSHPort(),
 	}
 
 	keys := make([]string, 0)

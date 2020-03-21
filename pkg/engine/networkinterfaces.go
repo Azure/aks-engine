@@ -69,10 +69,6 @@ func CreateMasterVMNetworkInterfaces(cs *api.ContainerService) NetworkInterfaceA
 			ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/SSH-',variables('masterVMNamePrefix'),copyIndex(variables('masterOffset')))]"),
 		},
 	}
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.SSHAlternativePort != nil {
-		publicNatRules = append(publicNatRules, network.InboundNatRule{ID: to.StringPtr("[concat(variables('masterLbID'),'/inboundNatRules/ssh_alternative')]")})
-	}
-
 	loadBalancerIPConfig.LoadBalancerInboundNatRules = &publicNatRules
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
