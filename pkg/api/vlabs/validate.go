@@ -604,6 +604,7 @@ func (a *Properties) validateAddons() error {
 		var IsNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
+		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -742,8 +743,9 @@ func (a *Properties) validateAddons() error {
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
 				case common.SecretsStoreCSIDriverAddonName:
-					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.15.0") {
-						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.15+", addon.Name))
+					csiSecretsStoreEnabled = true
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.16+", addon.Name))
 					}
 				}
 			} else {
@@ -761,6 +763,9 @@ func (a *Properties) validateAddons() error {
 		}
 		if kubeDNSEnabled && corednsEnabled {
 			return errors.New("Both kube-dns and coredns addons are enabled, only one of these may be enabled on a cluster")
+		}
+		if keyvaultFlexvolumeEnabled && csiSecretsStoreEnabled {
+			return errors.New("Both keyvault-flexvolume and csi-secrets-store addons are enabled, only one of these may be enabled on a cluster")
 		}
 	}
 	return nil

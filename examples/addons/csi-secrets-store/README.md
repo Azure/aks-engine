@@ -4,65 +4,7 @@
 
 With the CSI secrets store and the azure provider installed, developers can access application-specific secrets, keys, and certs stored in Azure Key Vault directly from their pods.
 
-This addon is available for 1.15+ clusters
-
 **Note** This addon is enabled by default for 1.16+ clusters
-
-To enable on 1.15 cluster, add this addon to the apimodel and also set the feature gate `CSIInlineVolume=true` for API server and kubelet config
-
-```json
-{
-  "apiVersion": "vlabs",
-  "properties": {
-    "orchestratorProfile": {
-      "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.15",
-      "kubernetesConfig": {
-        "addons": [
-          {
-            "name": "csi-secrets-store",
-            "enabled": true
-          }
-        ],
-        "apiServerConfig": {
-          "--feature-gates": "CSIInlineVolume=true"
-        },
-        "kubeletConfig": {
-          "--feature-gates": "CSIInlineVolume=true"
-        }
-      }
-    },
-    "masterProfile": {
-      "count": 1,
-      "dnsPrefix": "",
-      "vmSize": "Standard_DS2_v2"
-    },
-    "agentPoolProfiles": [
-      {
-        "name": "agentpool",
-        "count": 3,
-        "vmSize": "Standard_DS2_v2",
-        "availabilityProfile": "VirtualMachineScaleSets"
-      }
-    ],
-    "linuxProfile": {
-      "adminUsername": "azureuser",
-      "ssh": {
-        "publicKeys": [
-          {
-            "keyData": ""
-          }
-        ]
-      }
-    },
-    "servicePrincipalProfile": {
-      "clientId": "",
-      "secret": ""
-    }
-  }
-}
-
-```
 
 To validate the add-on is running as expected, run the following commands:
 

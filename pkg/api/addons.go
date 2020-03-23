@@ -190,7 +190,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
 		Name: common.KeyVaultFlexVolumeAddonName,
-		// key-vault flexvolume solution will be deprecated in favor of secrets-store-csi-driver for 1.16+
+		// keyvault-flexvolume solution will be deprecated in favor of secrets-store-csi-driver for 1.16+
 		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.IsAzureStackCloud() &&
 			!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{
@@ -816,6 +816,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultSecretsStoreCSIDriverAddonsConfig.Config = map[string]string{"volume-lifecycle-mode": "Ephemeral"}
 	}
 
+	// If we have any explicit keyvault-flexvolume or csi-secrets-store configuration in the addons array
+	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KeyVaultFlexVolumeAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.SecretsStoreCSIDriverAddonName) != -1 {
+		// Ensure we don't we don't prepare an addons spec w/ both keyvalt-flexvolume and csi-secrets-store enabled
+		if o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) {
+			defaultSecretsStoreCSIDriverAddonsConfig.Enabled = to.BoolPtr(false)
+		}
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -1006,13 +1014,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	// Enable pod-security-policy addon during upgrade to 1.15 or greater scenarios, unless explicitly disabled
 	if isUpgrade && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.15.0") && !o.KubernetesConfig.IsAddonDisabled(common.PodSecurityPolicyAddonName) {
 		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.PodSecurityPolicyAddonName); i > -1 {
-			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
-		}
-	}
-
-	// Enable keyvault flexvolume addon during upgrade for 1.16 or greater scenarios, unless explicitly disabled
-	if isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) {
-		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KeyVaultFlexVolumeAddonName); i > -1 {
 			o.KubernetesConfig.Addons[i].Enabled = to.BoolPtr(true)
 		}
 	}
