@@ -429,7 +429,8 @@ func (ku *Upgrader) upgradeAgentPools(ctx context.Context) error {
 					ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vm.name, newNodeName)
 					err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vm.name), newNodeName)
 					if err != nil {
-						ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
+						ku.logger.Errorf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vm.name, newNodeName, err)
+						return err
 					}
 				}
 			}
@@ -620,7 +621,8 @@ func (ku *Upgrader) upgradeAgentScaleSets(ctx context.Context) error {
 				ku.logger.Infof("Copying custom annotations, labels, taints from old node %s to new node %s...", vmToUpgrade.Name, newNodeName)
 				err = ku.copyCustomPropertiesToNewNode(client, strings.ToLower(vmToUpgrade.Name), strings.ToLower(newNodeName))
 				if err != nil {
-					ku.logger.Warningf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+					ku.logger.Errorf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", vmToUpgrade.Name, newNodeName, err)
+					return err
 				}
 			}
 
@@ -719,10 +721,11 @@ func (ku *Upgrader) getLastVMNameInVMSS(ctx context.Context, resourceGroup strin
 
 func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesClient, oldNodeName string, newNodeName string) error {
 	// The new node is created without any taints, Kubernetes might schedule some pods on this newly created node before the taints/annotations/labels
-	// are copied over from corresponding old node.
-	//So drain the new node after copying over the node properties without cordoning
+	// are copied over from corresponding old node.So drain the new node after copying over the node properties without cordoning
+	// We used to do this best effort but after a desing review decided to be more aggressive about failing. In aks-engine customers can set PreserveNodesProperties to false if blocked
+	// additionally only drain if we actually did something on the node.
 
-	ch := make(chan struct{}, 1)
+	ch := make(chan bool, 1)
 	go func() {
 		for {
 			oldNode, err := client.GetNode(oldNodeName)
@@ -739,24 +742,31 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 				continue
 			}
 
-			err = ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
+			didSomething, err := ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
 			if err != nil {
 				ku.logger.Debugf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", oldNodeName, newNodeName, err)
 				time.Sleep(time.Second * 5)
 			} else {
-				ch <- struct{}{}
+				ch <- didSomething
 			}
 		}
 	}()
 
-	select {
-	case <-ch:
-		ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
-
-	case <-time.After(nodePropertiesCopyTimeout):
-		err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
-		ku.logger.Errorf(err.Error())
-		return err
+	for {
+		select {
+		case didSomething := <-ch:
+			if didSomething {
+				ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
+				break
+			} else {
+				ku.logger.Infof("No annotations, labels, taints needed copying old node %s to new node %s.", oldNodeName, newNodeName)
+				return nil
+			}
+		case <-time.After(nodePropertiesCopyTimeout):
+			err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
+			ku.logger.Errorf(err.Error())
+			return err
+		}
 	}
 
 	var cordonDrainTimeout time.Duration
@@ -768,12 +778,14 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	err := operations.JustDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
 	if err != nil {
 		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
+		return err
 	}
 	return nil
 }
 
-func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
+func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) (bool, error) {
 	// copy additional custom annotations from old node to new node
+	didSomething := false
 	if oldNode.Annotations != nil {
 		if newNode.Annotations == nil {
 			newNode.Annotations = map[string]string{}
@@ -782,11 +794,13 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		for k, v := range oldNode.Annotations {
 			if _, ok := newNode.Annotations[k]; !ok {
 				newNode.Annotations[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
+				didSomething = true
 			}
 		}
 	}
 
 	// copy additional custom labels from old node to new node
+	// why just additional why not remove ones that are no longer appropriate?
 	if oldNode.Labels != nil {
 		if newNode.Labels == nil {
 			newNode.Labels = map[string]string{}
@@ -795,12 +809,15 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		for k, v := range oldNode.Labels {
 			if _, ok := newNode.Labels[k]; !ok {
 				newNode.Labels[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
+				didSomething = true
 			}
 		}
 	}
 
 	// copy Taints from old node to new node
-	if oldNode.Spec.Taints != nil {
+	if len(oldNode.Spec.Taints) > 0 {
+		//be smarter here and check
+		didSomething = true 
 		newNode.Spec.Taints = append([]v1.Taint{}, oldNode.Spec.Taints...)
 		for i := range newNode.Spec.Taints {
 			newNode.Spec.Taints[i].Value = strings.Replace(newNode.Spec.Taints[i].Value, oldNodeName, newNodeName, -1)
@@ -810,9 +827,9 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	_, err := client.UpdateNode(newNode)
 	if err != nil {
 		ku.logger.Warningf("Failed to update the new node %s: %v", newNodeName, err)
-		return err
+		return false, err
 	}
-	return err
+	return didSomething, nil
 }
 
 func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
