@@ -724,6 +724,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	// are copied over from corresponding old node.So drain the new node after copying over the node properties without cordoning
 	// We used to do this best effort but after a desing review decided to be more aggressive about failing. In aks-engine customers can set PreserveNodesProperties to false if blocked
 	// additionally only drain if we actually did something on the node.
+	// Ideally we would bring nodes up with the right taints/annotations/labels but VMSS makes that pretty hard  (doable in VMAS)
 
 	ch := make(chan bool, 1)
 	go func() {
@@ -817,7 +818,7 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	// copy Taints from old node to new node
 	if len(oldNode.Spec.Taints) > 0 {
 		//be smarter here and check
-		didSomething = true 
+		didSomething = true
 		newNode.Spec.Taints = append([]v1.Taint{}, oldNode.Spec.Taints...)
 		for i := range newNode.Spec.Taints {
 			newNode.Spec.Taints[i].Value = strings.Replace(newNode.Spec.Taints[i].Value, oldNodeName, newNodeName, -1)
