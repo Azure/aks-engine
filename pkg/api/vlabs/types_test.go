@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestOrchestratorProfile(t *testing.T) {
@@ -140,6 +141,10 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is not empty after unmarshal")
 	}
 
+	if to.Bool(ap.UltraSSDEnabled) {
+		t.Fatalf("AgentPoolProfile.UltraSSDEnabled should be false by default")
+	}
+
 	// With osType Windows
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "AvailabilitySet", "storageProfile" : "ManagedDisks", "vnetSubnetID" : "12345" }`
@@ -162,7 +167,7 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	// With osType Windows and Ephemeral disks
 	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Windows", "count": 1, "vmSize": "Standard_D2_v2",
-"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID" }`
+"availabilityProfile": "AvailabilitySet", "storageProfile" : "Ephemeral", "vnetSubnetID" : "12345", "diskEncryptionSetID": "diskEncryptionSetID", "ultraSSDEnabled": true }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -186,6 +191,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if ap.DiskEncryptionSetID == "" {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.DiskEncryptionSetID is empty after unmarshal")
+	}
+
+	if !to.Bool(ap.UltraSSDEnabled) {
+		t.Fatalf("AgentPoolProfile.UltraSSDEnabled should be true after unmarshal")
 	}
 
 	// With osType Linux and RHEL distro
@@ -222,7 +231,7 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	// With VMSS and Spot VMs
 	AgentPoolProfileText = `{"name":"linuxpool1","osType":"Linux","distro":"rhel","count":1,"vmSize":"Standard_D2_v2",
-"availabilityProfile":"VirtualMachineScaleSets","scaleSetPriority":"Spot","ScaleSetEvictionPolicy":"Delete","SpotMaxPrice":88}`
+"availabilityProfile":"VirtualMachineScaleSets","scaleSetPriority":"Spot","ScaleSetEvictionPolicy":"Delete","SpotMaxPrice":88, "ultraSSDEnabled": true}`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
 		t.Fatalf("unexpectedly detected unmarshal failure for AgentPoolProfile, %+v", e)
@@ -238,6 +247,10 @@ func TestAgentPoolProfile(t *testing.T) {
 
 	if *ap.SpotMaxPrice != float64(88) {
 		t.Fatalf("unexpectedly detected *AgentPoolProfile.SpotMaxPrice != float64(88) after unmarshal")
+	}
+
+	if !to.Bool(ap.UltraSSDEnabled) {
+		t.Fatalf("AgentPoolProfile.UltraSSDEnabled should be true after unmarshal")
 	}
 
 	// With osType Linux and coreos distro
@@ -518,6 +531,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: ACC1604,
 				},
 			},
@@ -528,15 +550,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: AKSUbuntu1804,
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Ubuntu1804,
 				},
 			},
 			expected: true,
@@ -620,6 +633,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
+						Distro: Ubuntu1804Gen2,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
 						Distro: ACC1604,
 					},
 				},
@@ -632,17 +656,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: AKSUbuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
 					},
 				},
 			},

@@ -460,8 +460,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.AzurePolicyAddonName,
 		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
-			"auditInterval":             "30",
-			"constraintViolationsLimit": "20",
+			"auditInterval":             "60",
+			"constraintViolationsLimit": "100",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -477,7 +477,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          k8sComponents[common.GatekeeperContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
-				CPULimits:      "100m",
+				CPULimits:      "1000m",
 				MemoryLimits:   "512Mi",
 			},
 		},
@@ -886,6 +886,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); j > -1 {
 				o.KubernetesConfig.Addons[j].Enabled = to.BoolPtr(false)
 			}
+		}
+	}
+
+	// Honor customKubeProxyImage field
+	if o.KubernetesConfig.CustomKubeProxyImage != "" {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Containers[0].Image = o.KubernetesConfig.CustomKubeProxyImage
 		}
 	}
 

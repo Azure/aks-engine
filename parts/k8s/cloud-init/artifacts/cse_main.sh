@@ -83,6 +83,9 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
+    if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+        overrideNetworkConfig
+    fi
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         time_metric "InstallBcc" installBcc
     fi
@@ -91,6 +94,12 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{end}}
 else
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    if apt list --installed | grep 'ntp'; then
+        time_metric "EnsureNTP" ensureNTP
+    fi
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -220,7 +229,9 @@ if [[ -n "${MASTER_NODE}" ]]; then
     fi
     time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        time_metric "EnsureEtcd" ensureEtcd
+        if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+            time_metric "EnsureEtcd" ensureEtcd
+        fi
     fi
     time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}

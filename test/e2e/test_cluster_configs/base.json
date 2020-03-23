@@ -1,7 +1,8 @@
 {
 	"env": {
 		"SCALE_CLUSTER": true,
-		"UPGRADE_CLUSTER": true
+		"UPGRADE_CLUSTER": true,
+		"GINKGO_SKIP_AFTER_SCALE_DOWN": "should report all nodes in a Ready state"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",

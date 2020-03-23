@@ -35,6 +35,11 @@ removeContainerd() {
     fi
 }
 
+disableTimeSyncd() {
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+}
+
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
@@ -68,6 +73,10 @@ installDeps() {
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            disableTimeSyncd
+            packages+=" ntp ntpstat"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi
@@ -112,31 +121,39 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    local URL
-    case $UBUNTU_RELEASE in
-    "18.04")
-        URL="https://download.01.org/intel-sgx/latest/dcap-latest/linux/distro/ubuntuServer18.04/sgx_linux_x64_driver_1.21.bin"
-        ;;
-    "16.04")
-        URL="https://download.01.org/intel-sgx/latest/dcap-latest/linux/distro/ubuntuServer16.04/sgx_linux_x64_driver_1.21.bin"
-        ;;
-    "*")
-        exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-        ;;
-    esac
+    [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
-    local PACKAGES="make gcc dkms"
+    local packages="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
-    local DRIVER
-    DRIVER=$(basename $URL)
-    local OE_DIR=/opt/azure/containers/oe
-    mkdir -p ${OE_DIR}
+    local oe_dir=/opt/azure/containers/oe
+    rm -rf ${oe_dir}
+    mkdir -p ${oe_dir}
+    pushd ${oe_dir} || exit
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
+    sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
+    read -ra tmp_array <<< "$matched_line"
+    sgx_driver_sha256sum_expected="${tmp_array[0]}"
+    sgx_driver_remote_path="${tmp_array[1]}"
+    sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
+    sgx_driver=$(basename "$sgx_driver_url")
 
-    retrycmd_if_failure 120 5 25 curl -fsSL ${URL} -o ${OE_DIR}/${DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-    chmod a+x ${OE_DIR}/${DRIVER}
-    ${OE_DIR}/${DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
+    sgx_driver_sha256sum_real="${tmp_array[0]}"
+    [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit $ERR_SGX_DRIVERS_CHECKSUM_MISMATCH
+
+    chmod a+x ./"${sgx_driver}"
+    if ! ./"${sgx_driver}"; then
+        popd || exit
+        exit $ERR_SGX_DRIVERS_START_FAIL
+    fi
+    popd || exit
+    rm -rf ${oe_dir}
 }
 
 installContainerRuntime() {

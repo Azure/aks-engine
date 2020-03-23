@@ -57,6 +57,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .IsUbuntu1804}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"

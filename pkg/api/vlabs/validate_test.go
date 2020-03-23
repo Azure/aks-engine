@@ -1075,6 +1075,94 @@ func TestProperties_ValidateLinuxProfile(t *testing.T) {
 	}
 }
 
+func TestProperties_ValidateWindowsProfile(t *testing.T) {
+	var trueVar = true
+	tests := []struct {
+		name          string
+		k8sRelease    string
+		wp            *WindowsProfile
+		expectedError error
+	}{
+		{
+			name:       "Valid WindowsProfile",
+			k8sRelease: "1.17",
+			wp: &WindowsProfile{
+				AdminUsername: "AzureUser",
+				AdminPassword: "replacePassword1234$",
+			},
+			expectedError: nil,
+		},
+		{
+			name:       "No username",
+			k8sRelease: "1.17",
+			wp: &WindowsProfile{
+				AdminUsername: "",
+				AdminPassword: "replacePassword1234$",
+			},
+			expectedError: errors.New("WindowsProfile.AdminUsername is required, when agent pool specifies Windows"),
+		},
+		{
+			name:       "No password",
+			k8sRelease: "1.17",
+			wp: &WindowsProfile{
+				AdminUsername: "AzureUser",
+				AdminPassword: "",
+			},
+			expectedError: errors.New("WindowsProfile.AdminPassword is required, when agent pool specifies Windows"),
+		},
+		{
+			name:       "CSI proxy enabled",
+			k8sRelease: "1.18",
+			wp: &WindowsProfile{
+				AdminUsername:  "AzureUser",
+				AdminPassword:  "replacePassword1234$",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "http://some/url",
+			},
+			expectedError: nil,
+		},
+		{
+			name:       "CSI Proxy unsupported version",
+			k8sRelease: "1.17",
+			wp: &WindowsProfile{
+				AdminUsername:  "AzureUser",
+				AdminPassword:  "replacePassword1234$",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "http://some/url",
+			},
+			expectedError: errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater"),
+		},
+		{
+			name:       "CSI Proxy no URL",
+			k8sRelease: "1.18",
+			wp: &WindowsProfile{
+				AdminUsername:  "AzureUser",
+				AdminPassword:  "replacePassword1234$",
+				EnableCSIProxy: &trueVar,
+				CSIProxyURL:    "",
+			},
+			expectedError: errors.New("windowsProfile.csiProxyURL must be specified if enableCSIProxy is set"),
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			k8sVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, test.k8sRelease, "", false, false)
+
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = k8sVersion
+			cs.Properties.WindowsProfile = test.wp
+			err := cs.Properties.validateWindowsProfile()
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error : '%v', but got '%v'", test.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -3696,7 +3784,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+			case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}
@@ -3719,7 +3807,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+			case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateMasterProfile(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}

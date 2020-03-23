@@ -37,12 +37,20 @@ func Create(name string) (*Namespace, error) {
 }
 
 // CreateIfNotExist a namespace with the given name if it doesn't exist already
-func CreateIfNotExist(name string) (*Namespace, error) {
+func CreateNamespaceDeleteIfExist(name string) (*Namespace, error) {
 	n, err := Get(name)
-	if err != nil {
-		return Create(name)
+	if err == nil {
+		// Delete existing namespace if exists to avoid dirty exit in last round of test
+		log.Printf("%s already exist", n)
+		cmd := exec.Command("k", "delete", "namespace", name)
+		util.PrintCommand(cmd)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Printf("Error trying to delete namespace (%s):%s\n", name, string(out))
+			return nil, err
+		}
 	}
-	return n, nil
+	return Create(name)
 }
 
 // Get returns a namespace for with a given name

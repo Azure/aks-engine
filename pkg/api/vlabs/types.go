@@ -162,6 +162,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername          string            `json:"adminUsername,omitempty"`
 	AdminPassword          string            `json:"adminPassword,omitempty"`
+	CSIProxyURL            string            `json:"csiProxyURL,omitempty"`
+	EnableCSIProxy         *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef               *ImageReference   `json:"imageReference,omiteempty"`
 	ImageVersion           string            `json:"imageVersion,omitempty"`
 	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
@@ -435,6 +437,7 @@ type MasterProfile struct {
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
+	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -505,7 +508,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
-
+	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	// subnet is internal
 	subnet string
 
@@ -699,7 +702,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKSUbuntu1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 		return true
 	default:
 		return false
@@ -852,7 +855,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
 		default:
 			return false
@@ -884,6 +887,14 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 		}
 	}
 	return false
+}
+
+// IsCSIProxyEnabled returns true if CSI proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
+	}
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
