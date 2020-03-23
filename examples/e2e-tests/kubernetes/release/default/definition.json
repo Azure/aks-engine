@@ -4,6 +4,7 @@
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
+        "customWindowsPackageURL": "https://acsengine.blob.core.windows.net/buzztest/v1.18.0-rc.1x-1int.zip",
         "clusterSubnet": "10.239.0.0/16",
         "addons": [
           {
