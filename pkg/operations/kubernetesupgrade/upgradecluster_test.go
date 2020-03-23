@@ -1053,8 +1053,9 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			return node, nil
 		}
 
-		err = u.copyCustomNodeProperties(mockClient.MockKubernetesClient, "oldnode", oldNode, "newnode", newNode)
+		didSomething, err := u.copyCustomNodeProperties(mockClient.MockKubernetesClient, "oldnode", oldNode, "newnode", newNode)
 		Expect(err).NotTo(HaveOccurred())
+		Expect(didSomething).To(BeTrue())
 		Expect(len(newNode.Annotations)).To(Equal(3))
 		Expect(newNode.Annotations["ann1"]).To(Equal("newval1"))
 		Expect(newNode.Annotations["ann2"]).To(Equal("newval2"))
