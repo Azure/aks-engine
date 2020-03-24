@@ -1361,29 +1361,32 @@ func TestMasterAvailabilityProfile(t *testing.T) {
 }
 func TestAvailabilityProfile(t *testing.T) {
 	cases := []struct {
-		p               Properties
-		expectedHasVMSS bool
-		expectedISVMSS  bool
-		expectedIsAS    bool
-		expectedLowPri  bool
-		expectedSpot    bool
-		expectedVMType  string
+		p                       Properties
+		expectedHasVMSS         bool
+		expectedISVMSS          bool
+		expectedIsAS            bool
+		expectedLowPri          bool
+		expectedSpot            bool
+		expectedVMType          string
+		expectedISVMSSEncrypted bool
 	}{
 		{
 			p: Properties{
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
-						AvailabilityProfile: VirtualMachineScaleSets,
-						ScaleSetPriority:    ScaleSetPrioritySpot,
+						AvailabilityProfile:      VirtualMachineScaleSets,
+						EnableVMSSDiskEncryption: to.BoolPtr(true),
+						ScaleSetPriority:         ScaleSetPrioritySpot,
 					},
 				},
 			},
-			expectedHasVMSS: true,
-			expectedISVMSS:  true,
-			expectedIsAS:    false,
-			expectedLowPri:  false,
-			expectedSpot:    true,
-			expectedVMType:  VMSSVMType,
+			expectedHasVMSS:         true,
+			expectedISVMSS:          true,
+			expectedIsAS:            false,
+			expectedLowPri:          false,
+			expectedSpot:            true,
+			expectedVMType:          VMSSVMType,
+			expectedISVMSSEncrypted: true,
 		},
 		{
 			p: Properties{
@@ -1394,12 +1397,13 @@ func TestAvailabilityProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedHasVMSS: true,
-			expectedISVMSS:  true,
-			expectedIsAS:    false,
-			expectedLowPri:  true,
-			expectedSpot:    false,
-			expectedVMType:  VMSSVMType,
+			expectedHasVMSS:         true,
+			expectedISVMSS:          true,
+			expectedIsAS:            false,
+			expectedLowPri:          true,
+			expectedSpot:            false,
+			expectedVMType:          VMSSVMType,
+			expectedISVMSSEncrypted: false,
 		},
 		{
 			p: Properties{
@@ -1413,12 +1417,13 @@ func TestAvailabilityProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedHasVMSS: true,
-			expectedISVMSS:  true,
-			expectedIsAS:    false,
-			expectedLowPri:  false,
-			expectedSpot:    false,
-			expectedVMType:  VMSSVMType,
+			expectedHasVMSS:         true,
+			expectedISVMSS:          true,
+			expectedIsAS:            false,
+			expectedLowPri:          false,
+			expectedSpot:            false,
+			expectedVMType:          VMSSVMType,
+			expectedISVMSSEncrypted: false,
 		},
 		{
 			p: Properties{
@@ -1428,12 +1433,13 @@ func TestAvailabilityProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedHasVMSS: false,
-			expectedISVMSS:  false,
-			expectedIsAS:    true,
-			expectedLowPri:  false,
-			expectedSpot:    false,
-			expectedVMType:  StandardVMType,
+			expectedHasVMSS:         false,
+			expectedISVMSS:          false,
+			expectedIsAS:            true,
+			expectedLowPri:          false,
+			expectedSpot:            false,
+			expectedVMType:          StandardVMType,
+			expectedISVMSSEncrypted: false,
 		},
 	}
 
@@ -1455,6 +1461,9 @@ func TestAvailabilityProfile(t *testing.T) {
 		}
 		if c.p.GetVMType() != c.expectedVMType {
 			t.Fatalf("expected GetVMType() to return %s but instead returned %s", c.expectedVMType, c.p.GetVMType())
+		}
+		if c.p.AgentPoolProfiles[0].IsVMSSDiskEncryptionEnabled() != c.expectedISVMSSEncrypted {
+			t.Fatalf("expected IsVMSSDiskEncryptionEnabled() to return %t but instead returned %t", c.expectedISVMSSEncrypted, c.p.AgentPoolProfiles[0].IsVMSSDiskEncryptionEnabled())
 		}
 	}
 }
@@ -5060,6 +5069,92 @@ func TestGetSubnetName(t *testing.T) {
 
 			if actual != test.expectedSubnetName {
 				t.Errorf("expected subnet name %s, but got %s", test.expectedSubnetName, actual)
+			}
+		})
+	}
+}
+
+func TestProperties_ShouldCreateKeyVault(t *testing.T) {
+	tests := []struct {
+		name                 string
+		properties           *Properties
+		expectedShouldCreate bool
+	}{
+		{
+			name: "ExternalKMS enabled",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						EnableEncryptionWithExternalKms: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedShouldCreate: true,
+		},
+		{
+			name: "VMSS disk encryption enabled",
+			properties: &Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                     "agentpool",
+						VMSize:                   "Standard_D2_v2",
+						Count:                    1,
+						AvailabilityProfile:      VirtualMachineScaleSets,
+						EnableVMSSDiskEncryption: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedShouldCreate: true,
+		},
+		{
+			name: "VMSS disk encryption enabled and kubernetes profile present",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						EnableEncryptionWithExternalKms: to.BoolPtr(false),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                     "agentpool",
+						VMSize:                   "Standard_D2_v2",
+						Count:                    1,
+						AvailabilityProfile:      VirtualMachineScaleSets,
+						EnableVMSSDiskEncryption: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedShouldCreate: true,
+		},
+		{
+			name: "AvailabilitSet and kubernetes profile present",
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						EnableEncryptionWithExternalKms: to.BoolPtr(false),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "agentpool",
+						VMSize:              "Standard_D2_v2",
+						Count:               1,
+						AvailabilityProfile: AvailabilitySet,
+					},
+				},
+			},
+			expectedShouldCreate: false,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			actual := test.properties.ShouldCreateKeyVault()
+
+			if actual != test.expectedShouldCreate {
+				t.Errorf("expected KeyVault creation request to be %t, but got %t", test.expectedShouldCreate, actual)
 			}
 		})
 	}

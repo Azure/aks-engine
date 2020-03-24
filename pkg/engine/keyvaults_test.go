@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func TestCreateKeyVault(t *testing.T) {
@@ -132,6 +133,11 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 			MasterProfile: &api.MasterProfile{
 				Count: 1,
 			},
+			AgentPoolProfiles: []*api.AgentPoolProfile{
+				{
+					AvailabilityProfile: "VirtualMachineScaleSets",
+				},
+			},
 		},
 	}
 
@@ -172,11 +178,7 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 		"type":       "Microsoft.KeyVault/vaults",
 		"name":       "[variables('clusterKeyVaultName')]",
 		"apiVersion": "[variables('apiVersionKeyVault')]",
-		"dependsOn": []string{
-			"[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('masterVMNamePrefix'), 'vmss')]",
-		},
-
-		"location": "[variables('location')]",
+		"location":   "[variables('location')]",
 		"properties": map[string]interface{}{
 			"accessPolicies": []interface{}{
 				map[string]interface{}{
@@ -209,7 +211,6 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 		"name":       "[variables('clusterKeyVaultName')]",
 		"apiVersion": "[variables('apiVersionKeyVault')]",
 		"dependsOn": []string{
-			"[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('masterVMNamePrefix'), 'vmss')]",
 			"[variables('userAssignedIDReference')]",
 		},
 
@@ -223,6 +224,41 @@ func TestCreateKeyVaultVMSS(t *testing.T) {
 					"tenantId": "[variables('tenantID')]"}},
 			"enabledForDeployment":         "false",
 			"enabledForDiskEncryption":     "false",
+			"enabledForTemplateDeployment": "false",
+			"sku": map[string]interface{}{
+				"family": "A",
+				"name":   "[parameters('clusterKeyVaultSku')]",
+			},
+			"tenantId": "[variables('tenantID')]"},
+	}
+
+	if diff := cmp.Diff(actual, expected); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+
+	//Test with VMSS disk encryption enabled
+	cs.Properties.AgentPoolProfiles[0].EnableVMSSDiskEncryption = to.BoolPtr(true)
+
+	actual = CreateKeyVaultVMSS(cs)
+
+	expected = map[string]interface{}{
+		"type":       "Microsoft.KeyVault/vaults",
+		"name":       "[variables('clusterKeyVaultName')]",
+		"apiVersion": "[variables('apiVersionKeyVault')]",
+		"dependsOn": []string{
+			"[variables('userAssignedIDReference')]",
+		},
+
+		"location": "[variables('location')]",
+		"properties": map[string]interface{}{
+			"accessPolicies": []interface{}{
+				map[string]interface{}{
+					"objectId": "[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]",
+					"permissions": map[string]interface{}{
+						"keys": []string{"create", "encrypt", "decrypt", "get", "list"}},
+					"tenantId": "[variables('tenantID')]"}},
+			"enabledForDeployment":         "false",
+			"enabledForDiskEncryption":     "true",
 			"enabledForTemplateDeployment": "false",
 			"sku": map[string]interface{}{
 				"family": "A",

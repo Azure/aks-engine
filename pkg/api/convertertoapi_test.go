@@ -1148,6 +1148,31 @@ func TestConvertVlabsPlatformUpdateDomain(t *testing.T) {
 	}
 }
 
+func TestConvertVlabsVMSSDiskEncryption(t *testing.T) {
+	vlabscs := &vlabs.ContainerService{
+		Properties: &vlabs.Properties{
+			OrchestratorProfile: &vlabs.OrchestratorProfile{
+				OrchestratorType: vlabs.Kubernetes,
+			},
+			AgentPoolProfiles: []*vlabs.AgentPoolProfile{
+				{
+					EnableVMSSDiskEncryption: to.BoolPtr(true),
+				},
+			},
+		},
+	}
+	cs, err := ConvertVLabsContainerService(vlabscs, false)
+	if err != nil {
+		t.Errorf("Error converting ContainerService: %s", err)
+	}
+	if cs == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *cs.Properties.AgentPoolProfiles[0].EnableVMSSDiskEncryption != true {
+		t.Errorf("expected the agent pool profile to have VMSS disk encryption enabled")
+	}
+}
+
 func TestConvertComponentsToAPI(t *testing.T) {
 	vk := &vlabs.KubernetesConfig{
 		Components: []vlabs.KubernetesComponent{

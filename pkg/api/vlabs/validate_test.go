@@ -3586,6 +3586,18 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		}
 	})
 
+	t.Run("Should fail for invalid VMSS + Disk encryption config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
+		agentPoolProfiles[0].EnableVMSSDiskEncryption = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("You have enabled VMSS disk encryption in agent pool %s, but you did not specify VMSS", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
 	t.Run("Should fail for invalid VMSS + Enable VMSS node public IP config", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)

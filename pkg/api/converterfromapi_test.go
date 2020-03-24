@@ -651,6 +651,29 @@ func TestConvertOrchestratorVersionProfileToVLabs(t *testing.T) {
 	}
 }
 
+func TestVMSSDiskEncryptionEnabledToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	cs.Properties.AgentPoolProfiles[0].EnableVMSSDiskEncryption = to.BoolPtr(true)
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if !(*vlabsCS.Properties.AgentPoolProfiles[0].EnableVMSSDiskEncryption) {
+		t.Errorf("expected the EnableVMSSDiskEncryption flag to be true")
+	}
+}
+
+func TestVMSSDiskEncryptionEnabledDefaultToVLabs(t *testing.T) {
+	cs := getDefaultContainerService()
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if *vlabsCS.Properties.AgentPoolProfiles[0].EnableVMSSDiskEncryption {
+		t.Errorf("expected the EnableVMSSDiskEncryption flag to be false")
+	}
+}
+
 func TestTelemetryEnabledToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	cs.Properties.FeatureFlags.EnableTelemetry = true
