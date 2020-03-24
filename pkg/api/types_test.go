@@ -266,6 +266,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804Gen2,
+			},
+			expected: false,
+		},
 	}
 
 	for _, c := range cases {
@@ -396,6 +403,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			},
 			expected: true,
 		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			ap: AgentPoolProfile{
+				Distro: Ubuntu1804Gen2,
+			},
+			expected: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -404,6 +418,91 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			t.Parallel()
 			if c.expected != c.ap.IsUbuntuNonVHD() {
 				t.Fatalf("Got unexpected AgentPoolProfile.IsUbuntuNonVHD() result. Expected: %t. Got: %t.", c.expected, c.ap.IsUbuntuNonVHD())
+			}
+		})
+	}
+}
+
+func TestRequiresCloudproviderConfig(t *testing.T) {
+	cases := []struct {
+		name     string
+		ap       AgentPoolProfile
+		expected bool
+	}{
+		{
+			name:     "nil",
+			ap:       AgentPoolProfile{},
+			expected: true,
+		},
+		{
+			name: "default",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--cloud-provider provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "azure",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--cloud-config provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "/etc/kubernetes/azure.json",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "--azure-container-registry-config provided",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "/etc/kubernetes/azure.json",
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "all 3 flags set explicitly to empty string",
+			ap: AgentPoolProfile{
+				KubernetesConfig: &KubernetesConfig{
+					KubeletConfig: map[string]string{
+						"--cloud-provider":                  "",
+						"--cloud-config":                    "",
+						"--azure-container-registry-config": "",
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.expected != c.ap.RequiresCloudproviderConfig() {
+				t.Fatalf("Got unexpected AgentPoolProfile.RequiresCloudproviderConfig() result. Expected: %t. Got: %t.", c.expected, c.ap.RequiresCloudproviderConfig())
 			}
 		})
 	}
@@ -447,6 +546,13 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
+			},
+			expected: false,
+		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			m: MasterProfile{
+				Distro: Ubuntu1804Gen2,
 			},
 			expected: false,
 		},
@@ -501,6 +607,13 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu1804,
+			},
+			expected: true,
+		},
+		{
+			name: "ubuntu 18.04 gen2 non-VHD distro",
+			m: MasterProfile{
+				Distro: Ubuntu1804Gen2,
 			},
 			expected: true,
 		},
@@ -658,16 +771,17 @@ func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
 
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
-		name              string
-		p                 Properties
-		expectedHasMD     bool
-		expectedHasSA     bool
-		expectedMasterMD  bool
-		expectedAgent0E   bool
-		expectedAgent0MD  bool
-		expectedPrivateJB bool
-		expectedHasDisks  bool
-		expectedDesID     string
+		name                    string
+		p                       Properties
+		expectedHasMD           bool
+		expectedHasSA           bool
+		expectedMasterMD        bool
+		expectedAgent0E         bool
+		expectedAgent0MD        bool
+		expectedPrivateJB       bool
+		expectedHasDisks        bool
+		expectedDesID           string
+		expectedUltraSSDEnabled bool
 	}{
 		{
 			name: "Storage Account",
@@ -869,6 +983,35 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedPrivateJB: false,
 			expectedDesID:     "DiskEncryptionSetID",
 		},
+		{
+			name: "UltraSSDEnabled setting",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile:  ManagedDisks,
+					UltraSSDEnabled: to.BoolPtr(true),
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile:  ManagedDisks,
+						UltraSSDEnabled: to.BoolPtr(true),
+					},
+					{
+						StorageProfile:  ManagedDisks,
+						UltraSSDEnabled: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedHasMD:           true,
+			expectedHasSA:           false,
+			expectedMasterMD:        true,
+			expectedAgent0MD:        true,
+			expectedAgent0E:         false,
+			expectedPrivateJB:       false,
+			expectedUltraSSDEnabled: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -886,6 +1029,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.MasterProfile.IsStorageAccount() == c.expectedMasterMD {
 				t.Fatalf("expected IsStorageAccount() to return %t but instead returned %t", !c.expectedMasterMD, c.p.MasterProfile.IsStorageAccount())
+			}
+			if to.Bool(c.p.MasterProfile.UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.MasterProfile.UltraSSDEnabled))
 			}
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
@@ -905,6 +1051,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if c.p.AgentPoolProfiles[0].DiskEncryptionSetID != c.expectedDesID {
 				t.Fatalf("expected DiskEncryptionSetID to return %s but instead returned %s", c.expectedDesID, c.p.AgentPoolProfiles[0].DiskEncryptionSetID)
+			}
+			if to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled) != c.expectedUltraSSDEnabled {
+				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled))
 			}
 		})
 	}
@@ -1845,6 +1994,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: ACC1604,
 				},
 			},
@@ -1864,6 +2022,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: true,
@@ -1947,6 +2114,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
+						Distro: Ubuntu1804Gen2,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
 						Distro: ACC1604,
 					},
 				},
@@ -1959,17 +2137,6 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 					{
 						Count:  1,
 						Distro: AKSUbuntu1804,
-					},
-				},
-			},
-			expected: true,
-		},
-		{
-			p: Properties{
-				AgentPoolProfiles: []*AgentPoolProfile{
-					{
-						Count:  1,
-						Distro: Ubuntu1804,
 					},
 				},
 			},
@@ -2063,6 +2230,15 @@ func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: Ubuntu,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -2091,7 +2267,7 @@ func TestIsUbuntuDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: Ubuntu1804,
+						Distro: Ubuntu1804Gen2,
 					},
 				},
 			},
@@ -2247,7 +2423,7 @@ func TestIsVHDDistroForAllNodes(t *testing.T) {
 					},
 					{
 						Count:  1,
-						Distro: Ubuntu1804,
+						Distro: Ubuntu1804Gen2,
 					},
 				},
 			},
@@ -2375,6 +2551,15 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: Ubuntu,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
@@ -2394,7 +2579,7 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: Ubuntu1804,
+					Distro: Ubuntu1804Gen2,
 				},
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
@@ -2523,6 +2708,15 @@ func TestHasUbuntu1604DistroNodes(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: false,
@@ -2679,6 +2873,15 @@ func TestHasUbuntu1804DistroNodes(t *testing.T) {
 				MasterProfile: &MasterProfile{
 					Count:  1,
 					Distro: Ubuntu1804,
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
 				},
 			},
 			expected: true,
@@ -3994,7 +4197,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o := p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCases := []struct {
@@ -4053,6 +4256,76 @@ func TestCloudProviderDefaults(t *testing.T) {
 		}
 	}
 
+	// Test cloudprovider Azure Stack defaults when no user-provided values
+	v = "1.14.0"
+	p = Properties{
+		OrchestratorProfile: &OrchestratorProfile{
+			OrchestratorType:    "Kubernetes",
+			OrchestratorVersion: v,
+			KubernetesConfig:    &KubernetesConfig{},
+		},
+		CustomCloudProfile: &CustomCloudProfile{},
+	}
+	o = p.OrchestratorProfile
+	p.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderRateLimitDefaults()
+
+	intCases = []struct {
+		defaultVal  int
+		computedVal int
+	}{
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffRetries,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffRetries,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffDuration,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffDuration,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitBucket,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucket,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitBucketWrite,
+		},
+	}
+
+	for _, c := range intCases {
+		if c.computedVal != c.defaultVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect Azure Stack default values after SetCloudProviderBackoffDefaults(), expected %d, got %d", c.defaultVal, c.computedVal)
+		}
+	}
+
+	floatCases = []struct {
+		defaultVal  float64
+		computedVal float64
+	}{
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffJitter,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffJitter,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderBackoffExponent,
+			computedVal: o.KubernetesConfig.CloudProviderBackoffExponent,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitQPS,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPS,
+		},
+		{
+			defaultVal:  DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite,
+			computedVal: o.KubernetesConfig.CloudProviderRateLimitQPSWrite,
+		},
+	}
+
+	for _, c := range floatCases {
+		if c.computedVal != c.defaultVal {
+			t.Fatalf("KubernetesConfig empty cloudprovider configs should reflect Azure Stack default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.defaultVal, c.computedVal)
+		}
+	}
+
 	customCloudProviderBackoffDuration := 99
 	customCloudProviderBackoffExponent := 10.0
 	customCloudProviderBackoffJitter := 11.9
@@ -4081,7 +4354,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesCustom := []struct {
@@ -4154,7 +4427,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed := []struct {
@@ -4212,7 +4485,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4284,7 +4557,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4353,7 +4626,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4419,7 +4692,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4488,7 +4761,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 	p.SetCloudProviderRateLimitDefaults()
 
 	intCasesMixed = []struct {
@@ -4551,7 +4824,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 		},
 	}
 	o = p.OrchestratorProfile
-	o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+	p.SetCloudProviderBackoffDefaults()
 
 	floatCasesMixed = []struct {
 		expectedVal float64
@@ -4572,7 +4845,6 @@ func TestCloudProviderDefaults(t *testing.T) {
 			t.Fatalf("KubernetesConfig cloudprovider backoff v2 configs should reflect default values after SetCloudProviderBackoffDefaults(), expected %f, got %f", c.expectedVal, c.computedVal)
 		}
 	}
-
 }
 
 func TestGetKubernetesVersion(t *testing.T) {
@@ -7442,7 +7714,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 	}{
 		{
 			name: "Default container service with no ARM variables",
-			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			cs:   CreateMockContainerService("testcluster", "1.16.8", 1, 3, true),
 			input: ProvisionScriptParametersInput{
 				Location:             "westus",
 				ResourceGroup:        "fakerg",
@@ -7454,11 +7726,11 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    "fakekubeletkey",
 				ClusterKeyVaultName:  "",
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.6 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.6 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=fakecert AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME= KUBELET_PRIVATE_KEY=fakekubeletkey KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=westus MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=fakerg ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=fakeclientID SERVICE_PRINCIPAL_CLIENT_SECRET=fakeclientSecret SUBNET=k8s-subnet SUBSCRIPTION_ID=fakesubID TENANT_ID=faketenantID USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 		{
 			name: "With ARM variables",
-			cs:   CreateMockContainerService("testcluster", "1.16.6", 1, 3, true),
+			cs:   CreateMockContainerService("testcluster", "1.16.8", 1, 3, true),
 			input: ProvisionScriptParametersInput{
 				Location:             common.WrapAsARMVariable("location"),
 				ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
@@ -7470,7 +7742,7 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 				KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
 				ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyvaultName"),
 			},
-			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.6 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.6 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
+			expected: "ADMINUSER=azureuser APISERVER_PUBLIC_KEY=',parameters('apiServerCertificate'),' AUTHENTICATION_METHOD=client_secret CLOUDPROVIDER_BACKOFF=false CLOUDPROVIDER_BACKOFF_DURATION=0 CLOUDPROVIDER_BACKOFF_EXPONENT=0 CLOUDPROVIDER_BACKOFF_JITTER=0 CLOUDPROVIDER_BACKOFF_MODE= CLOUDPROVIDER_BACKOFF_RETRIES=0 CLOUDPROVIDER_RATELIMIT=false CLOUDPROVIDER_RATELIMIT_BUCKET=0 CLOUDPROVIDER_RATELIMIT_BUCKET_WRITE=0 CLOUDPROVIDER_RATELIMIT_QPS=0 CLOUDPROVIDER_RATELIMIT_QPS_WRITE=0 CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz CONTAINERD_DOWNLOAD_URL_BASE=https://storage.googleapis.com/cri-containerd-release/ CONTAINERD_VERSION=" + DefaultContainerdVersion + " CONTAINER_RUNTIME=docker ETCD_DOWNLOAD_URL=mcr.microsoft.com/oss/etcd-io/ ETCD_VERSION=" + DefaultEtcdVersion + " EXCLUDE_MASTER_FROM_STANDARD_LB=false HYPERKUBE_URL=hyperkube-amd64:v1.16.8 IDENTITY_SYSTEM=azure_ad IS_HOSTED_MASTER=false IS_IPV6_DUALSTACK_FEATURE_ENABLED=false IS_IPV6_ENABLED=false KMS_PROVIDER_VAULT_NAME=',variables('clusterKeyvaultName'),' KUBELET_PRIVATE_KEY=',parameters('clientPrivateKey'),' KUBERNETES_VERSION=1.16.8 KUBE_BINARY_URL= LOAD_BALANCER_DISABLE_OUTBOUND_SNAT=false LOAD_BALANCER_SKU=Basic LOCATION=',variables('location'),' MAXIMUM_LOADBALANCER_RULE_COUNT=0 MOBY_VERSION=" + DefaultMobyVersion + " NETWORK_API_VERSION=2018-08-01 NETWORK_MODE= NETWORK_PLUGIN=kubenet NETWORK_POLICY= NETWORK_SECURITY_GROUP=k8s-master-22998975-nsg PRIMARY_AVAILABILITY_SET=agentpool1-availabilitySet-22998975 PRIMARY_SCALE_SET= RESOURCE_GROUP=',variables('resourceGroup'),' ROUTE_TABLE=k8s-master-22998975-routetable SERVICE_PRINCIPAL_CLIENT_ID=',variables('servicePrincipalClientId'),' SERVICE_PRINCIPAL_CLIENT_SECRET=',variables('singleQuote'),'',variables('servicePrincipalClientSecret'),'',variables('singleQuote'),' SUBNET=k8s-subnet SUBSCRIPTION_ID=',variables('subscriptionId'),' TENANT_ID=',variables('tenantID'),' USE_INSTANCE_METADATA=false USE_MANAGED_IDENTITY_EXTENSION=false VIRTUAL_NETWORK=k8s-vnet-22998975 VIRTUAL_NETWORK_RESOURCE_GROUP= VM_TYPE=standard VNET_CNI_PLUGINS_URL=https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz ",
 		},
 	}
 

@@ -21,25 +21,21 @@ removeEtcd() {
 }
 
 removeMoby() {
-    if apt list --installed | grep 'moby-engine'; then
-      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
-    if apt list --installed | grep 'moby-cli'; then
-      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-engine moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 removeContainerd() {
-    if apt list --installed | grep 'moby-containerd'; then
-      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
+}
+
+disableTimeSyncd() {
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
 }
 
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-    if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
-        echo "etcd version ${ETCD_VERSION} is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
         CLI_TOOL=$1
         if [[ $OS == $COREOS_OS_NAME ]]; then
             path="/opt/bin"
@@ -64,19 +60,16 @@ installEtcd() {
 }
 
 installDeps() {
-    if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      CEPH_COMMON="ceph-common"
-      GLUSTERFS_CLIENT="glusterfs-client"
-    else
-      CEPH_COMMON=""
-      GLUSTERFS_CLIENT=""
-    fi
-    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus ebtables ethtool fuse git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
     if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
         retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
-        packages+=" cgroup-lite"
+        packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            disableTimeSyncd
+            packages+=" ntp ntpstat"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi
@@ -121,33 +114,39 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    local VERSION
-    VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
-    case $VERSION in
-    "18.04")
-        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.2/linux/dcap_installers/ubuntuServer18.04/sgx_linux_x64_driver_1.12_c110012.bin"
-        ;;
-    "16.04")
-        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.2/linux/dcap_installers/ubuntuServer16.04/sgx_linux_x64_driver_1.12_c110012.bin"
-        ;;
-    "*")
-        echo "$VERSION is not supported"
-        exit 1
-        ;;
-    esac
+    [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
-    local PACKAGES="make gcc dkms"
+    local packages="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
-    local SGX_DRIVER
-    SGX_DRIVER=$(basename $SGX_DRIVER_URL)
-    local OE_DIR=/opt/azure/containers/oe
-    mkdir -p ${OE_DIR}
+    local oe_dir=/opt/azure/containers/oe
+    rm -rf ${oe_dir}
+    mkdir -p ${oe_dir}
+    pushd ${oe_dir} || exit
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
+    sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
+    read -ra tmp_array <<< "$matched_line"
+    sgx_driver_sha256sum_expected="${tmp_array[0]}"
+    sgx_driver_remote_path="${tmp_array[1]}"
+    sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
+    sgx_driver=$(basename "$sgx_driver_url")
 
-    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-    chmod a+x ${OE_DIR}/${SGX_DRIVER}
-    ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
+    sgx_driver_sha256sum_real="${tmp_array[0]}"
+    [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit $ERR_SGX_DRIVERS_CHECKSUM_MISMATCH
+
+    chmod a+x ./"${sgx_driver}"
+    if ! ./"${sgx_driver}"; then
+        popd || exit
+        exit $ERR_SGX_DRIVERS_START_FAIL
+    fi
+    popd || exit
+    rm -rf ${oe_dir}
 }
 
 installContainerRuntime() {
@@ -159,9 +158,7 @@ installContainerRuntime() {
 installMoby() {
     removeContainerd
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
-    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${MOBY_VERSION}" ]]; then
         removeMoby
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
@@ -210,13 +207,13 @@ installBcc() {
 
 downloadCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
-    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${CNI_PLUGINS_URL} || exit $ERR_CNI_DOWNLOAD_TIMEOUT
 }
 
 downloadAzureCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
-    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit $ERR_CNI_DOWNLOAD_TIMEOUT
 }
 
@@ -226,10 +223,8 @@ ensureAPMZ() {
     if [[ -f "$apmz_filepath" ]]; then
         installed_version=$($apmz_filepath version)
         if [[ "$version" == "$installed_version" ]]; then
-            # already installed, noop
             return
         fi
-        # linked, but not the version we expect
     fi
     install_dir="$APMZ_DOWNLOADS_DIR/$version"
     download_path="$install_dir/apmz.gz"
@@ -238,7 +233,7 @@ ensureAPMZ() {
     tar -xvf "$download_path" -C "$install_dir"
     bin_path="$install_dir/apmz_linux_amd64"
     chmod +x "$bin_path"
-    ln -Ffs "$bin_path" "$apmz_filepath" # symlink apmz into /usr/local/bin/apmz
+    ln -Ffs "$bin_path" "$apmz_filepath"
 }
 
 installBpftrace() {
@@ -270,7 +265,7 @@ installBpftrace() {
 }
 
 installCNI() {
-    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
         downloadCNI
     fi
@@ -281,7 +276,7 @@ installCNI() {
 }
 
 installAzureCNI() {
-    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
         downloadAzureCNI
     fi
@@ -295,9 +290,7 @@ installAzureCNI() {
 installContainerd() {
     removeMoby
     CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-    if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
-        echo "containerd is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${CONTAINERD_VERSION}" ]]; then
         os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
         if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
             url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
@@ -327,7 +320,6 @@ extractHyperkube() {
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
-        # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
         if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
             mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
             mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
@@ -351,7 +343,6 @@ extractHyperkube() {
 
 extractKubeBinaries() {
     KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
-    # Split by "/" and get the last element
     K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
     mkdir -p "${K8S_DOWNLOADS_DIR}"
     retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
@@ -362,7 +353,7 @@ extractKubeBinaries() {
 
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
+        if version_gte ${KUBERNETES_VERSION} 1.17; then
             extractKubeBinaries
         else
             if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
@@ -385,11 +376,10 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${ETCD_VERSION}$" | grep 'etcd') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
-        echo "Cleaning up AKS container images"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &

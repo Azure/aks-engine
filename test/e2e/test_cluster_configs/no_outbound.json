@@ -17,10 +17,16 @@
 			"agentPoolProfiles": [
 				{
 					"name": "agentpool1",
-					"count": 3,
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets"
+				},
+				{
+					"name": "agentwin",
+					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Spot"
+					"osType": "Windows"
 				}
 			],
 			"linuxProfile": {
@@ -32,6 +38,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"featureFlags": {
 				"BlockOutboundInternet": true

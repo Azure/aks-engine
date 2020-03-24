@@ -2,6 +2,11 @@
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
+if [ -f /opt/azure/containers/provision.complete ]; then
+    echo "Already ran to success exiting..."
+    exit 0
+fi
+
 echo $(date),$(hostname), startcustomscript>>/opt/m
 
 for i in $(seq 1 3600); do
@@ -78,6 +83,9 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
+    if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+        overrideNetworkConfig
+    fi
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         time_metric "InstallBcc" installBcc
     fi
@@ -86,6 +94,12 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{end}}
 else
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    if apt list --installed | grep 'ntp'; then
+        time_metric "EnsureNTP" ensureNTP
+    fi
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -113,7 +127,7 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
-# this will capture the amount of time to install of the network plugin during cse
+{{/* this will capture the amount of time to install of the network plugin during cse */}}
 time_metric "InstallNetworkPlugin" installNetworkPlugin
 
 {{- if HasNSeriesSKU}}
@@ -201,8 +215,8 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
 fi
 {{end}}
 
-{{/* configure and enable dhcpv6 for dual stack feature */}}
-{{- if IsIPv6DualStackFeatureEnabled}}
+{{/* configure and enable dhcpv6 for ipv6 features */}}
+{{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
@@ -215,7 +229,9 @@ if [[ -n "${MASTER_NODE}" ]]; then
     fi
     time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        time_metric "EnsureEtcd" ensureEtcd
+        if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+            time_metric "EnsureEtcd" ensureEtcd
+        fi
     fi
     time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
@@ -233,7 +249,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
+    time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
 

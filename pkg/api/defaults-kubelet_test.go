@@ -12,6 +12,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestKubeletConfigDefaults(t *testing.T) {
@@ -49,6 +50,146 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--network-plugin":                    NetworkPluginKubenet,
 		"--node-status-update-frequency":      k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
+		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
+		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
+		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--protect-kernel-defaults":           "true",
+		"--rotate-certificates":               "true",
+		"--streaming-connection-idle-timeout": "4h",
+		"--feature-gates":                     "RotateKubeletServerCertificate=true",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+	}
+	for key, val := range kubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+
+	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
+	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
+	expected["--pod-infra-container-image"] = "kubletwin/pause"
+	expected["--kubeconfig"] = "c:\\k\\config"
+	expected["--cloud-config"] = "c:\\k\\azure.json"
+	expected["--cgroups-per-qos"] = "false"
+	expected["--enforce-node-allocatable"] = "\"\"\"\""
+	expected["--system-reserved"] = "memory=2Gi"
+	expected["--client-ca-file"] = "c:\\k\\ca.crt"
+	expected["--hairpin-mode"] = "promiscuous-bridge"
+	expected["--image-pull-progress-deadline"] = "20m"
+	expected["--resolv-conf"] = "\"\"\"\""
+	expected["--eviction-hard"] = "\"\"\"\""
+	delete(expected, "--pod-manifest-path")
+	delete(expected, "--protect-kernel-defaults")
+	delete(expected, "--tls-cert-file")
+	delete(expected, "--tls-private-key-file")
+	for key, val := range windowsProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	// check when ip-masq-agent is explicitly disabled in kubernetes config
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.IPMASQAgentAddonName,
+			Enabled: to.BoolPtr(false),
+		},
+	}
+
+	cs.setKubeletConfig(false)
+	k := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+
+	for key, val := range map[string]string{"--non-masquerade-cidr": DefaultKubernetesSubnet} {
+		if k[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, k[key], val)
+		}
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.8.6", 3, 2, false)
+	// TODO test all default overrides
+	overrideVal := "/etc/override"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig = map[string]string{
+		"--azure-container-registry-config": overrideVal,
+	}
+	cs.setKubeletConfig(false)
+	k = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	for key, val := range map[string]string{"--azure-container-registry-config": overrideVal} {
+		if k[key] != val {
+			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
+				key, k[key], val)
+		}
+	}
+
+	cs = CreateMockContainerService("testcluster", "1.16.0", 3, 2, false)
+	cs.setKubeletConfig(false)
+	kubeletConfig = cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expectedKeys := []string{
+		"--authentication-token-webhook",
+	}
+	for _, key := range expectedKeys {
+		if _, ok := kubeletConfig[key]; !ok {
+			t.Fatalf("could not find expected kubelet config value for %s", key)
+		}
+	}
+}
+
+func TestKubeletConfigAzureStackDefaults(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
+	winProfile := &AgentPoolProfile{}
+	winProfile.Count = 1
+	winProfile.Name = "agentpool2"
+	winProfile.VMSize = "Standard_D2_v2"
+	winProfile.OSType = Windows
+	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
+	cs.setKubeletConfig(false)
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expected := map[string]string{
+		"--address":                           "0.0.0.0",
+		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
+		"--anonymous-auth":                    "false",
+		"--authorization-mode":                "Webhook",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
+		"--cgroups-per-qos":                   "true",
+		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
+		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
+		"--cluster-domain":                    "cluster.local",
+		"--enforce-node-allocatable":          "pods",
+		"--event-qps":                         DefaultKubeletEventQPS,
+		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		"--image-pull-progress-deadline":      "30m",
+		"--keep-terminated-pod-volumes":       "false",
+		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
+		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
+		"--network-plugin":                    NetworkPluginKubenet,
+		"--node-status-update-frequency":      DefaultAzureStackKubernetesNodeStatusUpdateFrequency,
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
 		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
@@ -599,7 +740,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			}
 
 		// Validate that --protect-kernel-defaults is not enabled for relevant distros
-		case Ubuntu, Ubuntu1804, ACC1604, CoreOS:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604, CoreOS:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -644,7 +785,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"
@@ -2025,4 +2166,78 @@ func TestReadOnlyPort(t *testing.T) {
 		})
 	}
 
+}
+
+func TestRemoveKubeletFlags(t *testing.T) {
+	cases := []struct {
+		name          string
+		kubeletConfig map[string]string
+		version       string
+		expected      map[string]string
+	}{
+		{
+			name: "v1.17.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids": "100",
+			},
+			version: "1.17.0",
+		},
+		{
+			name: "v1.9.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			version: "1.9.0",
+		},
+		{
+			name: "v1.14.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids":     "100",
+				"--allow-privileged": "true",
+			},
+			version: "1.14.0",
+		},
+		{
+			name: "v1.11.0",
+			kubeletConfig: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			expected: map[string]string{
+				"--pod-max-pids":     "100",
+				"--cadvisor-port":    "1234",
+				"--allow-privileged": "true",
+			},
+			version: "1.11.0",
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			removeKubeletFlags(c.kubeletConfig, c.version)
+			diff := cmp.Diff(c.kubeletConfig, c.expected)
+			if diff != "" {
+				t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+			}
+		})
+	}
 }

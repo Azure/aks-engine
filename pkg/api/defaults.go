@@ -25,7 +25,7 @@ import (
 )
 
 // DistroValues is a list of currently supported distros
-var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
+var DistroValues = []Distro{"", Ubuntu, Ubuntu1804, RHEL, CoreOS, AKSUbuntu1604, AKSUbuntu1804, Ubuntu1804Gen2, ACC1604}
 
 // PropertiesDefaultsParams is the parameters when we set the properties defaults for ContainerService.
 type PropertiesDefaultsParams struct {
@@ -212,9 +212,13 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
+				// ipv6 only cluster
+				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+					o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnetIPv6
+				}
 				// ipv4 and ipv6 subnet for dual stack
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, cs.getDefaultKubernetesClusterSubnetIPv6()}, ",")
 				}
 			}
 		} else {
@@ -227,7 +231,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					if err == nil {
 						if ip.To4() != nil {
 							// the first cidr block is ipv4, so append ipv6
-							clusterSubnets = append(clusterSubnets, DefaultKubernetesClusterSubnetIPv6)
+							clusterSubnets = append(clusterSubnets, cs.getDefaultKubernetesClusterSubnetIPv6())
 						} else {
 							// first cidr has to be ipv4
 							clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
@@ -246,12 +250,18 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 		if o.KubernetesConfig.DNSServiceIP == "" {
 			o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIP
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.DNSServiceIP = DefaultKubernetesDNSServiceIPv6
+			}
 		}
 		if o.KubernetesConfig.DockerBridgeSubnet == "" {
 			o.KubernetesConfig.DockerBridgeSubnet = DefaultDockerBridgeSubnet
 		}
 		if o.KubernetesConfig.ServiceCIDR == "" {
 			o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDR
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+				o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDRIPv6
+			}
 		}
 
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
@@ -267,7 +277,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// Enforce sane cloudprovider backoff defaults.
-		o.KubernetesConfig.SetCloudProviderBackoffDefaults()
+		a.SetCloudProviderBackoffDefaults()
 
 		if o.KubernetesConfig.CloudProviderRateLimit == nil {
 			o.KubernetesConfig.CloudProviderRateLimit = to.BoolPtr(DefaultKubernetesCloudProviderRateLimit)
@@ -549,6 +559,8 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		cs.setSchedulerConfig()
 		// Configure components
 		cs.setComponentsConfig(isUpgrade)
+		// Configure Linux kernel runtime values via sysctl.d
+		cs.setSysctlDConfig()
 
 	case DCOS:
 		if o.DcosConfig == nil {
@@ -589,6 +601,9 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	// set default to VMAS for now
 	if p.MasterProfile.AvailabilityProfile == "" {
 		p.MasterProfile.AvailabilityProfile = AvailabilitySet
+		if p.IsAzureStackCloud() {
+			p.MasterProfile.AvailabilityProfile = DefaultAzureStackAvailabilityProfile
+		}
 	}
 
 	if p.MasterProfile.IsVirtualMachineScaleSets() {
@@ -1068,4 +1083,17 @@ func generateEtcdEncryptionKey() string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
+}
+
+// getDefaultKubernetesClusterSubnetIPv6 returns the default IPv6 cluster subnet
+func (cs *ContainerService) getDefaultKubernetesClusterSubnetIPv6() string {
+	o := cs.Properties.OrchestratorProfile
+	// In 1.17+ the default IPv6 mask size is /64 which means the cluster
+	// subnet mask size >= /48
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.17.0") {
+		return DefaultKubernetesClusterSubnetIPv6
+	}
+	// In 1.16, the default mask size for IPv6 is /24 which forces the cluster
+	// subnet mask size to be strictly >= /8
+	return "fc00::/8"
 }

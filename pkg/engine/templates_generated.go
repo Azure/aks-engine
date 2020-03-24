@@ -212,6 +212,8 @@
 // ../../parts/k8s/windowsazurecnifunc.tests.ps1
 // ../../parts/k8s/windowscnifunc.ps1
 // ../../parts/k8s/windowsconfigfunc.ps1
+// ../../parts/k8s/windowscontainerdfunc.ps1
+// ../../parts/k8s/windowscsiproxyfunc.ps1
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
 // ../../parts/k8s/windowslogscleanup.ps1
@@ -24337,6 +24339,15 @@ data:
       kubeconfig: /var/lib/kubelet/kubeconfig
     clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
     mode: "{{ContainerConfig "proxy-mode"}}"
+    {{- if ContainerConfig "bind-address"}}
+    bindAddress: "{{ContainerConfig "bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "healthz-bind-address"}}
+    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "metrics-bind-address"}}
+    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
+    {{end}}
     featureGates:
       {{ContainerConfig "featureGates"}}
 metadata:
@@ -26549,9 +26560,11 @@ func k8sAddonsAzureCniNetworkmonitorYaml() (*asset, error) {
 var _k8sAddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.4
   creationTimestamp: null
   labels:
-    controller-tools.k8s.io: "1.0"
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: configs.config.gatekeeper.sh
@@ -26559,24 +26572,28 @@ spec:
   group: config.gatekeeper.sh
   names:
     kind: Config
+    listKind: ConfigList
     plural: configs
+    singular: config
   scope: Namespaced
   validation:
     openAPIV3Schema:
+      description: Config is the Schema for the configs API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
         spec:
+          description: ConfigSpec defines the desired state of Config
           properties:
             sync:
               description: Configuration for syncing k8s objects
@@ -26625,30 +26642,14 @@ spec:
               type: object
           type: object
         status:
-          properties:
-            byPod:
-              description: List of statuses as seen by individual pods
-              items:
-                properties:
-                  allFinalizers:
-                    description: List of Group/Version/Kinds with finalizers
-                    items:
-                      properties:
-                        group:
-                          type: string
-                        kind:
-                          type: string
-                        version:
-                          type: string
-                      type: object
-                    type: array
-                  id:
-                    description: a unique identifier for the pod that wrote the status
-                    type: string
-                type: object
-              type: array
+          description: ConfigStatus defines the observed state of Config
           type: object
+      type: object
   version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
 status:
   acceptedNames:
     kind: ""
@@ -26656,14 +26657,49 @@ status:
   conditions: []
   storedVersions: []
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-admin
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-role
+  namespace: kube-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: gatekeeper-manager-role
   labels:
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-role
 rules:
 - apiGroups:
   - '*'
@@ -26673,177 +26709,138 @@ rules:
   - get
   - list
   - watch
-  - update
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
   - patch
+  - update
+  - watch
 - apiGroups:
   - config.gatekeeper.sh
   resources:
   - configs
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
   - config.gatekeeper.sh
   resources:
   - configs/status
   verbs:
   - get
-  - update
   - patch
+  - update
 - apiGroups:
   - constraints.gatekeeper.sh
   resources:
   - '*'
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - watch
-  - create
   - update
-  - patch
-  - delete
+  - watch
 - apiGroups:
   - templates.gatekeeper.sh
   resources:
   - constrainttemplates
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
+  - update
+  - watch
 - apiGroups:
   - templates.gatekeeper.sh
   resources:
   - constrainttemplates/status
   verbs:
   - get
-  - update
   - patch
-- apiGroups:
-  - constraints.gatekeeper.sh
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
-  - create
   - update
-  - patch
-  - delete
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
 - apiGroups:
   - admissionregistration.k8s.io
+  resourceNames:
+  - gatekeeper-validating-webhook-configuration
   resources:
-  - mutatingwebhookconfigurations
   - validatingwebhookconfigurations
   verbs:
+  - create
+  - delete
   - get
   - list
-  - watch
-  - create
-  - update
   - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
   - update
-  - patch
-  - delete
-- apiGroups:
-  - ""
-  resources:
-  - services
-  verbs:
-  - get
-  - list
   - watch
-  - create
-  - update
-  - patch
-  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-rolebinding
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gatekeeper-manager-role
+subjects:
+- kind: ServiceAccount
+  name: gatekeeper-admin
+  namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  creationTimestamp: null
-  name: gatekeeper-manager-rolebinding
   labels:
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: gatekeeper-manager-role
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: gatekeeper-admin
   namespace: kube-system
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: gatekeeper-webhook-server-secret
-  namespace: kube-system
   labels:
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: gatekeeper-webhook-server-cert
+  namespace: kube-system
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
-  name: gatekeeper-controller-manager-service
+  name: gatekeeper-webhook-service
   namespace: kube-system
 spec:
   ports:
@@ -26851,35 +26848,38 @@ spec:
     targetPort: 8443
   selector:
     control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
+    gatekeeper.sh/system: "yes"
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   labels:
     control-plane: controller-manager
-    controller-tools.k8s.io: "1.0"
+    gatekeeper.sh/system: "yes"
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager
   namespace: kube-system
 spec:
+  replicas: 1
   selector:
     matchLabels:
       control-plane: controller-manager
-      controller-tools.k8s.io: "1.0"
-  serviceName: gatekeeper-controller-manager-service
+      gatekeeper.sh/system: "yes"
   template:
     metadata:
       labels:
         control-plane: controller-manager
-        controller-tools.k8s.io: "1.0"
+        gatekeeper.sh/system: "yes"
     spec:
       containers:
       - args:
-        - --auditInterval={{ContainerConfig "auditInterval"}}
-        - --constraintViolationsLimit={{ContainerConfig "constraintViolationsLimit"}}
         - --port=8443
+        - --logtostderr
+        - --exempt-namespace=kube-system
+        - --log-denies
+        command:
+        - /manager
         env:
         - name: POD_NAMESPACE
           valueFrom:
@@ -26890,8 +26890,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
-        - name: SECRET_NAME
-          value: gatekeeper-webhook-server-secret
         image: {{ContainerImage "gatekeeper"}}
         resources:
           requests:
@@ -26901,21 +26899,105 @@ spec:
             cpu: {{ContainerCPULimits "gatekeeper"}}
             memory: {{ContainerMemLimits "gatekeeper"}}
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
         name: manager
         ports:
         - containerPort: 8443
           name: webhook-server
           protocol: TCP
+        - containerPort: 8888
+          name: metrics
+          protocol: TCP
+        - containerPort: 9090
+          name: healthz
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 9090
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsGroup: 999
+          runAsNonRoot: true
+          runAsUser: 1000
         volumeMounts:
         - mountPath: /certs
           name: cert
           readOnly: true
+      serviceAccountName: gatekeeper-admin
       terminationGracePeriodSeconds: 60
       volumes:
       - name: cert
         secret:
           defaultMode: 420
-          secretName: gatekeeper-webhook-server-secret
+          secretName: gatekeeper-webhook-server-cert
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  labels:
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: gatekeeper-validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: gatekeeper-webhook-service
+      namespace: kube-system
+      path: /v1/admit
+  failurePolicy: Ignore
+  name: validation.gatekeeper.sh
+  namespaceSelector:
+    matchExpressions:
+    - key: control-plane
+      operator: DoesNotExist
+    - key: admission.gatekeeper.sh/ignore
+      operator: DoesNotExist
+  rules:
+  - apiGroups:
+    - '*'
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - '*'
+  sideEffects: None
+  timeoutSeconds: 5
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: gatekeeper-webhook-service
+      namespace: kube-system
+      path: /v1/admitlabel
+  failurePolicy: Fail
+  name: check-ignore-label.gatekeeper.sh
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - namespaces
+  sideEffects: None
+  timeoutSeconds: 5
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -26932,18 +27014,20 @@ spec:
     kind: ConstraintTemplate
     plural: constrainttemplates
   scope: Cluster
+  subresources:
+    status: {}
   validation:
     openAPIV3Schema:
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -26957,6 +27041,10 @@ spec:
                       properties:
                         kind:
                           type: string
+                        shortNames:
+                          items:
+                            type: string
+                          type: array
                       type: object
                     validation:
                       type: object
@@ -26965,6 +27053,10 @@ spec:
             targets:
               items:
                 properties:
+                  libs:
+                    items:
+                      type: string
+                    type: array
                   rego:
                     type: string
                   target:
@@ -26994,6 +27086,9 @@ spec:
                   id:
                     description: a unique identifier for the pod that wrote the status
                     type: string
+                  observedGeneration:
+                    format: int64
+                    type: integer
                 type: object
               type: array
             created:
@@ -27013,33 +27108,6 @@ status:
     plural: ""
   conditions: []
   storedVersions: []
----
-apiVersion: config.gatekeeper.sh/v1alpha1
-kind: Config
-metadata:
-  name: config
-  namespace: "kube-system"
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  sync:
-    syncOnly:
-      - group: ""
-        version: "v1"
-        kind: "Namespace"
-      - group: ""
-        version: "v1"
-        kind: "Pod"
-      - group: ""
-        version: "v1"
-        kind: "Service"
-      - group: "extensions"
-        version: "v1beta1"
-        kind: "Ingress"
-      - group: "networking.k8s.io"
-        version: "v1beta1"
-        kind: "Ingress"
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -27079,6 +27147,36 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: policy-agent
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-pod-agent
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: policy-pod-agent
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+- kind: ServiceAccount
+  name: azure-policy
+  namespace: kube-system
+roleRef:
+  kind: Role
+  name: policy-pod-agent
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
@@ -27121,16 +27219,18 @@ spec:
           value: <resourceId>
         - name: RESOURCE_TYPE
           value: AKS Engine
-        - name: DATAPLANE_ENDPOINT
-          value: https://gov-prod-policy-data.trafficmanager.net
         - name: ACS_CREDENTIAL_LOCATION
           value: /etc/acs/azure.json
-        - name: REFRESH_INTERVAL
-          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
-        - name: AUDIT_INTERVAL
-          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
-        - name: TELEMETRY_HEARTBEAT_INTERVAL
-          value: 5m {{/* Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h" */}}
+        - name: DATAPLANE_ENDPOINT
+          value: https://gov-prod-policy-data.trafficmanager.net
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: CURRENT_IMAGE
           value: {{ContainerImage "azure-policy"}}
         volumeMounts:
@@ -27315,6 +27415,9 @@ spec:
           effect: NoSchedule
       nodeSelector:
         beta.kubernetes.io/os: linux
+        {{- if ContainerConfig "use-host-network"}}
+        kubernetes.azure.com/role: agent
+        {{end}}
       containers:
       - name: coredns
         image: {{ContainerImage "coredns"}}
@@ -27366,6 +27469,9 @@ spec:
             - all
           readOnlyRootFilesystem: true
       dnsPolicy: Default
+      {{- if ContainerConfig "use-host-network"}}
+      hostNetwork: {{ContainerConfig "use-host-network"}}
+      {{end}}
       volumes:
         - name: config-volume
           configMap:
@@ -32859,7 +32965,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
-    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "namespaces", "services"]
+    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions", "apps"]
     resources: ["replicasets"]
@@ -32905,6 +33011,7 @@ data:
      tag oms.containerinsights.KubePodInventory
      run_interval 60
      log_level debug
+     custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westeurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
     </source>
 
      #Kubernetes events
@@ -32939,7 +33046,7 @@ data:
      log_level debug
     </source>
 
-    <filter mdm.kubepodinventory** mdm.kubenodeinventory**>
+    <filter mdm.kubenodeinventory**>
      type filter_inventory2mdm
      custom_metrics_azure_regions eastus,southcentralus,westcentralus,westus2,southeastasia,northeurope,westEurope,southafricanorth,centralus,northcentralus,eastus2,koreacentral,eastasia,centralindia,uksouth,canadacentral,francecentral,japaneast,australiaeast
      log_level info
@@ -33060,7 +33167,7 @@ data:
      retry_limit 10
      retry_wait 5s
      max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
+     retry_mdm_post_wait_minutes 30
     </match>
 
     <match oms.api.wincadvisorperf**>
@@ -33091,7 +33198,7 @@ data:
      retry_limit 10
      retry_wait 5s
      max_retry_wait 5m
-     retry_mdm_post_wait_minutes 60
+     retry_mdm_post_wait_minutes 30
     </match>
 
     <match kubehealth.Signals**>
@@ -33101,6 +33208,21 @@ data:
      buffer_chunk_limit 4m
      buffer_type file
      buffer_path %STATE_DIR_WS%/out_oms_kubehealth*.buffer
+     buffer_queue_limit 20
+     buffer_queue_full_action drop_oldest_chunk
+     flush_interval 20s
+     retry_limit 10
+     retry_wait 5s
+     max_retry_wait 5m
+    </match>
+
+    <match oms.api.InsightsMetrics**>
+     type out_oms
+     log_level debug
+     num_threads 5
+     buffer_chunk_limit 4m
+     buffer_type file
+     buffer_path %STATE_DIR_WS%/out_oms_insightsmetrics*.buffer
      buffer_queue_limit 20
      buffer_queue_full_action drop_oldest_chunk
      flush_interval 20s
@@ -33164,6 +33286,9 @@ spec:
               value: "DaemonSet"
             - name: ISTEST
               value: "true"
+            # Update this with the user assigned msi client id for omsagent addon (if exists)
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           livenessProbe:
             exec:
               command:
@@ -33293,6 +33418,9 @@ spec:
               value: "ReplicaSet"
             - name: ISTEST
               value: "true"
+            # Update this with the user assigned msi client id for omsagent addon (if exists)
+            - name: USER_ASSIGNED_IDENTITY_CLIENT_ID
+              value: ""
           securityContext:
             privileged: true
           ports:
@@ -34508,11 +34636,9 @@ systemctlEnableAndStart() {
     RESTART_STATUS=$?
     systemctl status $1 --no-pager -l > /var/log/azure/$1-status.log
     if [ $RESTART_STATUS -ne 0 ]; then
-        echo "$1 could not be started"
         return 1
     fi
     if ! retrycmd_if_failure 120 5 25 systemctl enable $1; then
-        echo "$1 could not be enabled by systemctl"
         return 1
     fi
 }
@@ -34532,47 +34658,30 @@ configureEtcdUser(){
 configureSecrets(){
     APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
     touch "${APISERVER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}"
-    chown root:root "${APISERVER_PRIVATE_KEY_PATH}"
-
     CA_PRIVATE_KEY_PATH="/etc/kubernetes/certs/ca.key"
     touch "${CA_PRIVATE_KEY_PATH}"
-    chmod 0600 "${CA_PRIVATE_KEY_PATH}"
-    chown root:root "${CA_PRIVATE_KEY_PATH}"
-
     ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
     touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     fi
-
     ETCD_CLIENT_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdclient.key"
     touch "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-    chown root:root "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-
     ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
     touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
     if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
     fi
-
+    chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_SERVER_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}" "${ETCD_PEER_PRIVATE_KEY_PATH}"
+    chown root:root "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
     ETCD_SERVER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdserver.crt"
     touch "${ETCD_SERVER_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_SERVER_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_SERVER_CERTIFICATE_PATH}"
-
     ETCD_CLIENT_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdclient.crt"
     touch "${ETCD_CLIENT_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_CLIENT_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_CLIENT_CERTIFICATE_PATH}"
-
     ETCD_PEER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.crt"
     touch "${ETCD_PEER_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_PEER_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_PEER_CERTIFICATE_PATH}"
+    chmod 0644 "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
+    chown root:root "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
 
     set +x
     echo "${APISERVER_PRIVATE_KEY}" | base64 --decode > "${APISERVER_PRIVATE_KEY_PATH}"
@@ -34619,6 +34728,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+ensureNTP() {
+    systemctlEnableAndStart ntp || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
@@ -34628,9 +34741,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    if apt list --installed | grep 'auditd'; then
-      apt_get_purge 20 30 120 auditd &
-    fi
+    apt_get_purge auditd &
   fi
 }
 
@@ -34651,22 +34762,26 @@ configureKubeletServerCert() {
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
-    chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
-    chown root:root "${KUBELET_PRIVATE_KEY_PATH}"
-
     APISERVER_PUBLIC_KEY_PATH="/etc/kubernetes/certs/apiserver.crt"
     touch "${APISERVER_PUBLIC_KEY_PATH}"
+    chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
     chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
-    chown root:root "${APISERVER_PUBLIC_KEY_PATH}"
-
-    AZURE_JSON_PATH="/etc/kubernetes/azure.json"
-    touch "${AZURE_JSON_PATH}"
-    chmod 0600 "${AZURE_JSON_PATH}"
-    chown root:root "${AZURE_JSON_PATH}"
+    chown root:root "${KUBELET_PRIVATE_KEY_PATH}" "${APISERVER_PUBLIC_KEY_PATH}"
 
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
+    configureKubeletServerCert
+    AZURE_JSON_PATH="/etc/kubernetes/azure.json"
+    if [[ -n "${MASTER_NODE}" ]]; then
+        if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
+            generateAggregatedAPICerts
+        fi
+    else
+        {{- /* If we are a node vm then we only proceed w/ local azure.json configuration if cloud-init has pre-paved that file */}}
+        wait_for_file 1 1 $AZURE_JSON_PATH || return
+    fi
+
     {{/* Perform the required JSON escaping */}}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
@@ -34712,16 +34827,9 @@ configureK8s() {
 EOF
     set -x
     if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
-        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
-        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffExponent/d" $AZURE_JSON_PATH
+        sed -i "/cloudProviderBackoffJitter/d" $AZURE_JSON_PATH
     fi
-    if [[ -n "${MASTER_NODE}" ]]; then
-        if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
-            generateAggregatedAPICerts
-        fi
-    fi
-
-    configureKubeletServerCert
 }
 
 configureCNI() {
@@ -34756,13 +34864,15 @@ configureCNIIPTables() {
     fi
 }
 
-{{if NeedsContainerd}}
+{{- if NeedsContainerd}}
 ensureContainerd() {
-    echo "Starting cri-containerd service..."
+    wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 1200 1 /etc/containerd/config.toml || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 {{end}}
 
+{{- if IsDockerContainerRuntime}}
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -34790,14 +34900,15 @@ ensureDocker() {
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart docker-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms}}
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{- if IsIPv6Enabled}}
 ensureDHCPv6() {
     wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
@@ -34807,6 +34918,8 @@ ensureDHCPv6() {
 {{end}}
 
 ensureKubelet() {
+    wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    sysctl_reload 10 5 120 || exit $ERR_SYSCTL_RELOAD
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     KUBECONFIG_FILE=/var/lib/kubelet/kubeconfig
@@ -34856,7 +34969,7 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
-{{if IsAzurePolicyAddonEnabled}}
+{{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
 }
@@ -34872,14 +34985,13 @@ createKubeManifestDir() {
 }
 
 writeKubeConfig() {
-    KUBECONFIGDIR=/home/$ADMINUSER/.kube
-    KUBECONFIGFILE=$KUBECONFIGDIR/config
-    mkdir -p $KUBECONFIGDIR
-    touch $KUBECONFIGFILE
-    chown $ADMINUSER:$ADMINUSER $KUBECONFIGDIR
-    chown $ADMINUSER:$ADMINUSER $KUBECONFIGFILE
-    chmod 700 $KUBECONFIGDIR
-    chmod 600 $KUBECONFIGFILE
+    local DIR=/home/$ADMINUSER/.kube
+    local FILE=$DIR/config
+    mkdir -p $DIR
+    touch $FILE
+    chown $ADMINUSER:$ADMINUSER $DIR $FILE
+    chmod 700 $DIR
+    chmod 600 $FILE
     set +x
     echo "
 ---
@@ -34901,10 +35013,12 @@ users:
   user:
     client-certificate-data: \"$KUBECONFIG_CERTIFICATE\"
     client-key-data: \"$KUBECONFIG_KEY\"
-" > $KUBECONFIGFILE
+" > $FILE
     set -x
+    KUBECTL="$KUBECTL --kubeconfig=$FILE"
 }
 
+{{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
     CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
     wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -34914,7 +35028,9 @@ configClusterAutoscalerAddon() {
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
+{{end}}
 
+{{- if IsACIConnectorAddonEnabled}}
 configACIConnectorAddon() {
     ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"%s\", \"clientSecret\": \"%s\", \"tenantId\": \"%s\", \"subscriptionId\": \"%s\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
 
@@ -34929,13 +35045,16 @@ configACIConnectorAddon() {
     sed -i "s|<cert>|$ACI_CONNECTOR_CERT|g" $ACI_CONNECTOR_ADDON_FILE
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
+{{end}}
 
+{{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
     AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
     sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
 }
+{{end}}
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
+{{- if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
     {{if IsClusterAutoscalerAddonEnabled}}
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
@@ -34953,7 +35072,7 @@ configAddons() {
 }
 {{end}}
 
-{{if HasNSeriesSKU}}
+{{- if HasNSeriesSKU}}
 configGPUDrivers() {
     {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
     {{/* we will manually install nvidia-docker2 */}}
@@ -35200,74 +35319,71 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
-{{/* ERR_SYSTEMCTL_ENABLE_FAIL=3 Service could not be enabled by systemctl -- DEPRECATED */}}
-ERR_SYSTEMCTL_START_FAIL=4 {{/* Service could not be started or enabled by systemctl */}}
-ERR_CLOUD_INIT_TIMEOUT=5 {{/* Timeout waiting for cloud-init runcmd to complete */}}
-ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
-ERR_HOLD_WALINUXAGENT=7 {{/* Unable to place walinuxagent apt package on hold during install */}}
-ERR_RELEASE_HOLD_WALINUXAGENT=8 {{/* Unable to release hold on walinuxagent apt package after install */}}
-ERR_APT_INSTALL_TIMEOUT=9 {{/* Timeout installing required apt packages */}}
-ERR_ETCD_DATA_DIR_NOT_FOUND=10 {{/* Etcd data dir not found */}}
-ERR_ETCD_RUNNING_TIMEOUT=11 {{/* Timeout waiting for etcd to be accessible */}}
-ERR_ETCD_DOWNLOAD_TIMEOUT=12 {{/* Timeout waiting for etcd to download */}}
-ERR_ETCD_VOL_MOUNT_FAIL=13 {{/* Unable to mount etcd disk volume */}}
-ERR_ETCD_START_TIMEOUT=14 {{/* Unable to start etcd runtime */}}
-ERR_ETCD_CONFIG_FAIL=15 {{/* Unable to configure etcd cluster */}}
-ERR_DOCKER_INSTALL_TIMEOUT=20 {{/* Timeout waiting for docker install */}}
-ERR_DOCKER_DOWNLOAD_TIMEOUT=21 {{/* Timout waiting for docker downloads */}}
-ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT=22 {{/* Timeout waiting to download docker repo key */}}
-ERR_DOCKER_APT_KEY_TIMEOUT=23 {{/* Timeout waiting for docker apt-key */}}
-ERR_DOCKER_START_FAIL=24 {{/* Docker could not be started by systemctl */}}
-ERR_MOBY_APT_LIST_TIMEOUT=25 {{/* Timeout waiting for moby apt sources */}}
-ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT=26 {{/* Timeout waiting for MS GPG key download */}}
-ERR_MOBY_INSTALL_TIMEOUT=27 {{/* Timeout waiting for moby install */}}
-ERR_K8S_RUNNING_TIMEOUT=30 {{/* Timeout waiting for k8s cluster to be healthy */}}
-ERR_K8S_DOWNLOAD_TIMEOUT=31 {{/* Timeout waiting for Kubernetes downloads */}}
-ERR_KUBECTL_NOT_FOUND=32 {{/* kubectl client binary not found on local disk */}}
-ERR_IMG_DOWNLOAD_TIMEOUT=33 {{/* Timeout waiting for img download */}}
-ERR_KUBELET_START_FAIL=34 {{/* kubelet could not be started by systemctl */}}
-ERR_CONTAINER_IMG_PULL_TIMEOUT=35 {{/* Timeout trying to pull a container image */}}
-ERR_CNI_DOWNLOAD_TIMEOUT=41 {{/* Timeout waiting for CNI downloads */}}
-ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT=42 {{/* Timeout waiting for https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb */}}
-ERR_MS_PROD_DEB_PKG_ADD_FAIL=43 {{/* Failed to add repo pkg file */}}
-{{/* ERR_FLEXVOLUME_DOWNLOAD_TIMEOUT=44 Failed to add repo pkg file -- DEPRECATED */}}
-ERR_SYSTEMD_INSTALL_FAIL=48 {{/* Unable to install required systemd version */}}
-ERR_MODPROBE_FAIL=49 {{/* Unable to load a kernel module using modprobe */}}
-ERR_OUTBOUND_CONN_FAIL=50 {{/* Unable to establish outbound connection */}}
-ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60 {{/* Timeout waiting to download kata repo key */}}
-ERR_KATA_APT_KEY_TIMEOUT=61 {{/* Timeout waiting for kata apt-key */}}
-ERR_KATA_INSTALL_TIMEOUT=62 {{/* Timeout waiting for kata install */}}
-ERR_CONTAINERD_DOWNLOAD_TIMEOUT=70 {{/* Timeout waiting for containerd downloads */}}
-ERR_CUSTOM_SEARCH_DOMAINS_FAIL=80 {{/* Unable to configure custom search domains */}}
-ERR_GPU_DRIVERS_START_FAIL=84 {{/* nvidia-modprobe could not be started by systemctl */}}
-ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85 {{/* Timeout waiting for GPU drivers install */}}
-ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90 {{/* Timeout waiting for SGX prereqs to download */}}
-ERR_SGX_DRIVERS_START_FAIL=91 {{/* Failed to execute SGX driver binary */}}
-ERR_APT_DAILY_TIMEOUT=98 {{/* Timeout waiting for apt daily updates */}}
-ERR_APT_UPDATE_TIMEOUT=99 {{/* Timeout waiting for apt-get update to complete */}}
-ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100 {{/* Timeout waiting for cloud-init to place this script on the vm */}}
-ERR_APT_DIST_UPGRADE_TIMEOUT=101 {{/* Timeout waiting for apt-get dist-upgrade to complete */}}
-ERR_APT_PURGE_FAIL=102 {{/* Error purging distro packages */}}
-ERR_SYSCTL_RELOAD=103 {{/* Error reloading sysctl config */}}
-ERR_CIS_ASSIGN_ROOT_PW=111 {{/* Error assigning root password in CIS enforcement */}}
-ERR_CIS_ASSIGN_FILE_PERMISSION=112 {{/* Error assigning permission to a file in CIS enforcement */}}
-ERR_PACKER_COPY_FILE=113 {{/* Error writing a file to disk during VHD CI */}}
-ERR_CIS_APPLY_PASSWORD_CONFIG=115 {{/* Error applying CIS-recommended passwd configuration */}}
-
-ERR_VHD_FILE_NOT_FOUND=124 {{/* VHD log file not found on VM built from VHD distro */}}
-ERR_VHD_BUILD_ERROR=125 {{/* Reserved for VHD CI exit conditions */}}
-
-{{/* Azure Stack specific errors */}}
-ERR_AZURE_STACK_GET_ARM_TOKEN=120 {{/* Error generating a token to use with Azure Resource Manager */}}
-ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121 {{/* Error fetching the network configuration for the node */}}
-ERR_AZURE_STACK_GET_SUBNET_PREFIX=122 {{/* Error fetching the subnet address prefix for a subnet ID */}}
-
-{{/* BCC/BPF-related error codes */}}
-ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT=166 {{/* Timeout waiting to download IOVisor repo key */}}
-ERR_IOVISOR_APT_KEY_TIMEOUT=167 {{/* Timeout waiting for IOVisor apt-key */}}
-ERR_BCC_INSTALL_TIMEOUT=168 {{/* Timeout waiting for bcc install */}}
-ERR_BPFTRACE_BIN_DOWNLOAD_FAIL=169 {{/* Failed to download bpftrace binary */}}
-ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL=170 {{/* Failed to download bpftrace default programs */}}
+ERR_SYSTEMCTL_STOP_FAIL=3
+ERR_SYSTEMCTL_START_FAIL=4
+ERR_CLOUD_INIT_TIMEOUT=5
+ERR_FILE_WATCH_TIMEOUT=6
+ERR_HOLD_WALINUXAGENT=7
+ERR_RELEASE_HOLD_WALINUXAGENT=8
+ERR_APT_INSTALL_TIMEOUT=9
+ERR_ETCD_DATA_DIR_NOT_FOUND=10
+ERR_ETCD_RUNNING_TIMEOUT=11
+ERR_ETCD_DOWNLOAD_TIMEOUT=12
+ERR_ETCD_VOL_MOUNT_FAIL=13
+ERR_ETCD_START_TIMEOUT=14
+ERR_ETCD_CONFIG_FAIL=15
+ERR_DOCKER_INSTALL_TIMEOUT=20
+ERR_DOCKER_DOWNLOAD_TIMEOUT=21
+ERR_DOCKER_KEY_DOWNLOAD_TIMEOUT=22
+ERR_DOCKER_APT_KEY_TIMEOUT=23
+ERR_DOCKER_START_FAIL=24
+ERR_MOBY_APT_LIST_TIMEOUT=25
+ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT=26
+ERR_MOBY_INSTALL_TIMEOUT=27
+ERR_K8S_RUNNING_TIMEOUT=30
+ERR_K8S_DOWNLOAD_TIMEOUT=31
+ERR_KUBECTL_NOT_FOUND=32
+ERR_IMG_DOWNLOAD_TIMEOUT=33
+ERR_KUBELET_START_FAIL=34
+ERR_CONTAINER_IMG_PULL_TIMEOUT=35
+ERR_CNI_DOWNLOAD_TIMEOUT=41
+ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT=42
+ERR_MS_PROD_DEB_PKG_ADD_FAIL=43
+ERR_SYSTEMD_INSTALL_FAIL=48
+ERR_MODPROBE_FAIL=49
+ERR_OUTBOUND_CONN_FAIL=50
+ERR_K8S_API_CONN_FAIL=51
+ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60
+ERR_KATA_APT_KEY_TIMEOUT=61
+ERR_KATA_INSTALL_TIMEOUT=62
+ERR_CONTAINERD_DOWNLOAD_TIMEOUT=70
+ERR_CUSTOM_SEARCH_DOMAINS_FAIL=80
+ERR_GPU_DRIVERS_START_FAIL=84
+ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85
+ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90
+ERR_SGX_DRIVERS_START_FAIL=91
+ERR_SGX_DRIVERS_NOT_SUPPORTED=92
+ERR_SGX_DRIVERS_CHECKSUM_MISMATCH=93
+ERR_APT_DAILY_TIMEOUT=98
+ERR_APT_UPDATE_TIMEOUT=99
+ERR_CSE_PROVISION_SCRIPT_NOT_READY_TIMEOUT=100
+ERR_APT_DIST_UPGRADE_TIMEOUT=101
+ERR_APT_PURGE_FAIL=102
+ERR_SYSCTL_RELOAD=103
+ERR_CIS_ASSIGN_ROOT_PW=111
+ERR_CIS_ASSIGN_FILE_PERMISSION=112
+ERR_PACKER_COPY_FILE=113
+ERR_CIS_APPLY_PASSWORD_CONFIG=115
+ERR_VHD_FILE_NOT_FOUND=124
+ERR_VHD_BUILD_ERROR=125
+ERR_AZURE_STACK_GET_ARM_TOKEN=120
+ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION=121
+ERR_AZURE_STACK_GET_SUBNET_PREFIX=122
+ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT=166
+ERR_IOVISOR_APT_KEY_TIMEOUT=167
+ERR_BCC_INSTALL_TIMEOUT=168
+ERR_BPFTRACE_BIN_DOWNLOAD_FAIL=169
+ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL=170
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
@@ -35289,10 +35405,10 @@ configure_prerequisites() {
     ip_forward_path=/proc/sys/net/ipv4/ip_forward
     ip_forward_setting="net.ipv4.ip_forward=0"
     sysctl_conf=/etc/sysctl.conf
-    if ! egrep -q "^1$" ${ip_forward_path}; then
+    if ! grep -qE "^1$" ${ip_forward_path}; then
         echo 1 > ${ip_forward_path}
     fi
-    if egrep -q "${ip_forward_setting}" ${sysctl_conf}; then
+    if grep -qE "${ip_forward_setting}" ${sysctl_conf}; then
         sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
     fi
 }
@@ -35416,19 +35532,23 @@ apt_get_install() {
     wait_for_apt_locks
 }
 apt_get_purge() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a --force-confdef
-        apt-get purge -o Dpkg::Options::="--force-confold" -y ${@} && break || \
-        if [ $i -eq $retries ]; then
-            return 1
-        else
-            sleep $wait_sleep
+    retries=20; wait_sleep=30; timeout=120
+    for package in $@; do
+        if apt list --installed | grep $package; then
+            for i in $(seq 1 $retries); do
+                wait_for_apt_locks
+                export DEBIAN_FRONTEND=noninteractive
+                dpkg --configure -a --force-confdef
+                apt-get purge -o Dpkg::Options::="--force-confold" -y $package && break || \
+                if [ $i -eq $retries ]; then
+                    return 1
+                else
+                    sleep $wait_sleep
+                fi
+            done
         fi
     done
-    echo Executed apt-get purge -y \"$@\" $i times;
+    echo Executed apt-get purge -y \"$package\" $i times;
     wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
@@ -35531,25 +35651,21 @@ removeEtcd() {
 }
 
 removeMoby() {
-    if apt list --installed | grep 'moby-engine'; then
-      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
-    if apt list --installed | grep 'moby-cli'; then
-      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-engine moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 removeContainerd() {
-    if apt list --installed | grep 'moby-containerd'; then
-      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
+}
+
+disableTimeSyncd() {
+    systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
 }
 
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
-    if [[ "$CURRENT_VERSION" == "${ETCD_VERSION}" ]]; then
-        echo "etcd version ${ETCD_VERSION} is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
         CLI_TOOL=$1
         if [[ $OS == $COREOS_OS_NAME ]]; then
             path="/opt/bin"
@@ -35574,19 +35690,16 @@ installEtcd() {
 }
 
 installDeps() {
-    if [[ $OS == $UBUNTU_OS_NAME ]]; then
-      CEPH_COMMON="ceph-common"
-      GLUSTERFS_CLIENT="glusterfs-client"
-    else
-      CEPH_COMMON=""
-      GLUSTERFS_CLIENT=""
-    fi
-    packages="apache2-utils apt-transport-https blobfuse ca-certificates ${CEPH_COMMON} cifs-utils conntrack dbus ebtables ethtool fuse git $GLUSTERFS_CLIENT htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
+    packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus ebtables ethtool fuse git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
     if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
         retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
         retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
-        packages+=" cgroup-lite"
+        packages+=" cgroup-lite ceph-common glusterfs-client"
+        if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+            disableTimeSyncd
+            packages+=" ntp ntpstat"
+        fi
     elif [[ $OS == $DEBIAN_OS_NAME ]]; then
         packages+=" gpg cgroup-bin"
     fi
@@ -35631,33 +35744,39 @@ installGPUDrivers() {
 }
 
 installSGXDrivers() {
-    local VERSION
-    VERSION=$(grep DISTRIB_RELEASE /etc/*-release| cut -f 2 -d "=")
-    case $VERSION in
-    "18.04")
-        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.2/linux/dcap_installers/ubuntuServer18.04/sgx_linux_x64_driver_1.12_c110012.bin"
-        ;;
-    "16.04")
-        SGX_DRIVER_URL="https://download.01.org/intel-sgx/dcap-1.2/linux/dcap_installers/ubuntuServer16.04/sgx_linux_x64_driver_1.12_c110012.bin"
-        ;;
-    "*")
-        echo "$VERSION is not supported"
-        exit 1
-        ;;
-    esac
+    [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
-    local PACKAGES="make gcc dkms"
+    local packages="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install $PACKAGES  || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
-    local SGX_DRIVER
-    SGX_DRIVER=$(basename $SGX_DRIVER_URL)
-    local OE_DIR=/opt/azure/containers/oe
-    mkdir -p ${OE_DIR}
+    local oe_dir=/opt/azure/containers/oe
+    rm -rf ${oe_dir}
+    mkdir -p ${oe_dir}
+    pushd ${oe_dir} || exit
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
+    sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
+    read -ra tmp_array <<< "$matched_line"
+    sgx_driver_sha256sum_expected="${tmp_array[0]}"
+    sgx_driver_remote_path="${tmp_array[1]}"
+    sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
+    sgx_driver=$(basename "$sgx_driver_url")
 
-    retrycmd_if_failure 120 5 25 curl -fsSL ${SGX_DRIVER_URL} -o ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
-    chmod a+x ${OE_DIR}/${SGX_DRIVER}
-    ${OE_DIR}/${SGX_DRIVER} || exit $ERR_SGX_DRIVERS_START_FAIL
+    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
+    sgx_driver_sha256sum_real="${tmp_array[0]}"
+    [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit $ERR_SGX_DRIVERS_CHECKSUM_MISMATCH
+
+    chmod a+x ./"${sgx_driver}"
+    if ! ./"${sgx_driver}"; then
+        popd || exit
+        exit $ERR_SGX_DRIVERS_START_FAIL
+    fi
+    popd || exit
+    rm -rf ${oe_dir}
 }
 
 installContainerRuntime() {
@@ -35669,9 +35788,7 @@ installContainerRuntime() {
 installMoby() {
     removeContainerd
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
-    if [[ "$CURRENT_VERSION" == "${MOBY_VERSION}" ]]; then
-        echo "dockerd $MOBY_VERSION is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${MOBY_VERSION}" ]]; then
         removeMoby
         retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
         retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
@@ -35720,13 +35837,13 @@ installBcc() {
 
 downloadCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
-    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${CNI_PLUGINS_URL} || exit $ERR_CNI_DOWNLOAD_TIMEOUT
 }
 
 downloadAzureCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
-    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit $ERR_CNI_DOWNLOAD_TIMEOUT
 }
 
@@ -35736,10 +35853,8 @@ ensureAPMZ() {
     if [[ -f "$apmz_filepath" ]]; then
         installed_version=$($apmz_filepath version)
         if [[ "$version" == "$installed_version" ]]; then
-            # already installed, noop
             return
         fi
-        # linked, but not the version we expect
     fi
     install_dir="$APMZ_DOWNLOADS_DIR/$version"
     download_path="$install_dir/apmz.gz"
@@ -35748,7 +35863,7 @@ ensureAPMZ() {
     tar -xvf "$download_path" -C "$install_dir"
     bin_path="$install_dir/apmz_linux_amd64"
     chmod +x "$bin_path"
-    ln -Ffs "$bin_path" "$apmz_filepath" # symlink apmz into /usr/local/bin/apmz
+    ln -Ffs "$bin_path" "$apmz_filepath"
 }
 
 installBpftrace() {
@@ -35780,7 +35895,7 @@ installBpftrace() {
 }
 
 installCNI() {
-    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
         downloadCNI
     fi
@@ -35791,7 +35906,7 @@ installCNI() {
 }
 
 installAzureCNI() {
-    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
+    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
         downloadAzureCNI
     fi
@@ -35805,9 +35920,7 @@ installAzureCNI() {
 installContainerd() {
     removeMoby
     CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-    if [[ "$CURRENT_VERSION" == "${CONTAINERD_VERSION}" ]]; then
-        echo "containerd is already installed"
-    else
+    if [[ "$CURRENT_VERSION" != "${CONTAINERD_VERSION}" ]]; then
         os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
         if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
             url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
@@ -35837,7 +35950,6 @@ extractHyperkube() {
     pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
     if [[ "$CLI_TOOL" == "docker" ]]; then
         mkdir -p "$path"
-        # Check if we can extract kubelet and kubectl directly from hyperkube's binary folder
         if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
             mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
             mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
@@ -35861,7 +35973,6 @@ extractHyperkube() {
 
 extractKubeBinaries() {
     KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
-    # Split by "/" and get the last element
     K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
     mkdir -p "${K8S_DOWNLOADS_DIR}"
     retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit $ERR_K8S_DOWNLOAD_TIMEOUT
@@ -35872,7 +35983,7 @@ extractKubeBinaries() {
 
 installKubeletAndKubectl() {
     if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if version_gte ${KUBERNETES_VERSION} 1.17; then  # don't use hyperkube
+        if version_gte ${KUBERNETES_VERSION} 1.17; then
             extractKubeBinaries
         else
             if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
@@ -35895,11 +36006,10 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${KUBERNETES_VERSION}$" | grep 'cloud-controller-manager') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -v "${ETCD_VERSION}$" | grep 'etcd') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
+    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
-        echo "Cleaning up AKS container images"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
@@ -35948,6 +36058,11 @@ var _k8sCloudInitArtifactsCse_mainSh = []byte(`#!/bin/bash
 ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
+if [ -f /opt/azure/containers/provision.complete ]; then
+    echo "Already ran to success exiting..."
+    exit 0
+fi
+
 echo $(date),$(hostname), startcustomscript>>/opt/m
 
 for i in $(seq 1 3600); do
@@ -36024,6 +36139,9 @@ fi
 
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
+    if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+        overrideNetworkConfig
+    fi
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         time_metric "InstallBcc" installBcc
     fi
@@ -36032,6 +36150,12 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{end}}
 else
     echo "Golden image; skipping dependencies installation"
+fi
+
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+    if apt list --installed | grep 'ntp'; then
+        time_metric "EnsureNTP" ensureNTP
+    fi
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
@@ -36059,7 +36183,7 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     time_metric "InstallEtcd" installEtcd $CLI_TOOL
 fi
 
-# this will capture the amount of time to install of the network plugin during cse
+{{/* this will capture the amount of time to install of the network plugin during cse */}}
 time_metric "InstallNetworkPlugin" installNetworkPlugin
 
 {{- if HasNSeriesSKU}}
@@ -36147,8 +36271,8 @@ if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
 fi
 {{end}}
 
-{{/* configure and enable dhcpv6 for dual stack feature */}}
-{{- if IsIPv6DualStackFeatureEnabled}}
+{{/* configure and enable dhcpv6 for ipv6 features */}}
+{{- if IsIPv6Enabled}}
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
@@ -36161,7 +36285,9 @@ if [[ -n "${MASTER_NODE}" ]]; then
     fi
     time_metric "WriteKubeConfig" writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        time_metric "EnsureEtcd" ensureEtcd
+        if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+            time_metric "EnsureEtcd" ensureEtcd
+        fi
     fi
     time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
@@ -36179,7 +36305,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
+    time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
 
@@ -36761,15 +36887,6 @@ ExecStartPre=/bin/bash -c "if [ $(mount | grep \"/var/lib/kubelet\" | wc -l) -le
 ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
 {{/* This is a partial workaround to this upstream Kubernetes issue: */}}
 {{/* https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731 */}}
-ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_retries2=8
-ExecStartPre=/sbin/sysctl -w net.core.somaxconn=16384
-ExecStartPre=/sbin/sysctl -w net.ipv4.tcp_max_syn_backlog=16384
-ExecStartPre=/sbin/sysctl -w net.core.message_cost=40
-ExecStartPre=/sbin/sysctl -w net.core.message_burst=80
-
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh1=4096
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh2=8192
-ExecStartPre=/sbin/sysctl -w net.ipv4.neigh.default.gc_thresh3=16384
 
 ExecStartPre=-/sbin/ebtables -t nat --list
 ExecStartPre=-/sbin/iptables -t nat --numeric --list
@@ -36807,6 +36924,8 @@ After=kubelet.service
 Restart=always
 RestartSec=60
 ExecStart=/bin/bash /opt/azure/containers/label-nodes.sh
+[Install]
+WantedBy=multi-user.target
 #EOF
 `)
 
@@ -36835,13 +36954,16 @@ var _k8sCloudInitArtifactsLabelNodesSh = []byte(`#!/usr/bin/env bash
 
 set -euo pipefail
 
+KUBECONFIG="$(find /home/*/.kube/config)"
+KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
+
 MASTER_SELECTOR="kubernetes.azure.com/role!=agent,kubernetes.io/role!=agent"
 MASTER_LABELS="kubernetes.azure.com/role=master kubernetes.io/role=master node-role.kubernetes.io/master="
 AGENT_SELECTOR="kubernetes.azure.com/role!=master,kubernetes.io/role!=master"
 AGENT_LABELS="kubernetes.azure.com/role=agent kubernetes.io/role=agent node-role.kubernetes.io/agent="
 
-kubectl label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
-kubectl label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
+${KUBECTL} label nodes --overwrite -l $MASTER_SELECTOR $MASTER_LABELS
+${KUBECTL} label nodes --overwrite -l $AGENT_SELECTOR $AGENT_LABELS
 #EOF
 `)
 
@@ -37600,6 +37722,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .MasterProfile.IsUbuntu1804}}
+  {{- if not .MasterProfile.IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
@@ -37678,7 +37810,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -37743,7 +37875,22 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
+- path: /etc/sysctl.d/11-aks-engine.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
+    #EOF
+
 {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
@@ -37780,6 +37927,7 @@ write_files:
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
               {{end}}
+    #EOF
 
   {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
@@ -37872,8 +38020,8 @@ write_files:
   permissions: "0600"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
           - secrets
@@ -37890,8 +38038,8 @@ write_files:
   permissions: "0444"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
         - secrets
@@ -38156,6 +38304,14 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 
 write_files:
+{{- if .RequiresCloudproviderConfig}}
+- path: /etc/kubernetes/azure.json
+  permissions: "0600"
+  owner: root
+  content: |
+    #EOF
+{{end}}
+
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -38201,6 +38357,16 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "auditdRules"}}
+  {{end}}
+{{end}}
+
+{{- if .IsUbuntu1804}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
   {{end}}
 {{end}}
 
@@ -38268,7 +38434,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -38340,33 +38506,61 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
+- path: /etc/sysctl.d/11-aks-engine.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    {{GetSysctlDConfigKeyVals .SysctlDConfig}}
+    #EOF
+
 {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
   content: |
+    version = 2
     subreaper = false
     oom_score = 0
-    [plugins.cri]
-    sandbox_image = "{{GetPodInfraContainerSpec}}"
-    [plugins.cri.containerd.untrusted_workload_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    [plugins.cri.containerd.default_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    {{if IsKubenet }}
-    [plugins.cri.cni]
-    conf_template = "/etc/containerd/kubenet_template.conf"
 
+    [plugins]
+      [plugins."io.containerd.grpc.v1.cri"]
+        sandbox_image = "{{GetPodInfraContainerSpec}}"
+        [plugins."io.containerd.grpc.v1.cri".cni]
+          {{if IsKubenet}}
+          conf_template = "/etc/containerd/kubenet_template.conf"
+          {{end}}
+        [plugins."io.containerd.grpc.v1.cri".containerd]
+          {{if IsKataContainerRuntime }}
+          default_runtime_name = "kata"
+          {{else}}
+          default_runtime_name = "runc"
+          {{end}}
+         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+            {{if IsKataContainerRuntime }}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+              runtime_type = "io.containerd.kata.v2"
+            {{end}}
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
+              {{if IsKataContainerRuntime }}
+              runtime_engine = "/usr/bin/kata-runtime"
+              runtime_type = "io.containerd.kata.v2"
+              {{else}}
+              {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
+              runtime_type = "io.containerd.runc.v2"
+              {{end}}
+    #EOF
+
+  {{if IsKubenet }}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
   owner: root
@@ -38389,7 +38583,7 @@ write_files:
             }
           }]
       }
-    {{end}}
+  {{end}}
 {{end}}
 
 {{if IsNSeriesSKU .}}
@@ -38787,12 +38981,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       },
       "type": "string"
     },
-    "kubeProxySpec": {
-      "metadata": {
-        "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -38840,7 +39028,7 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.10",
+      "defaultValue": "3.0.11",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -38853,7 +39041,8 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
          "3.0.6",
          "3.0.7",
          "3.0.8",
-         "3.0.10"
+         "3.0.10",
+         "3.0.11"
        ],
       "type": "string"
     },
@@ -39147,7 +39336,8 @@ func k8sKubernetesparamsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -39178,7 +39368,7 @@ function DownloadFileOverHttp
     if ($search.Count -ne 0)
     {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
-        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+        Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
     else
     {
@@ -39358,6 +39548,7 @@ function Register-NodeResetScriptTask {
     Write-Log "Creating a startup task to run windowsnodereset.ps1"
 
     (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
+    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy } |
     Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
     Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
     Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
@@ -39368,6 +39559,17 @@ function Register-NodeResetScriptTask {
     $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
     $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
+}
+
+function Assert-FileExists {
+    Param(
+        [Parameter(Mandatory=$true,Position=0)][string]
+        $Filename
+    )
+    
+    if (-Not (Test-Path $Filename)) {
+        throw "$Filename does not exist"
+    }
 }
 `)
 
@@ -39453,9 +39655,14 @@ $global:AgentCertificate = "{{WrapAsParameter "clientCertificate"}}"
 $global:KubeBinariesPackageSASURL = "{{WrapAsParameter "kubeBinariesSASURL"}}"
 $global:WindowsKubeBinariesURL = "{{WrapAsParameter "windowsKubeBinariesURL"}}"
 $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
+$global:ContainerdUrl = "{{WrapAsParameter "windowsContainerdURL"}}"
+$global:ContainerdSdnPluginUrl = "{{WrapAsParameter "windowsSdnPluginURL"}}"
 
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
+
+## ContainerD Usage
+$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -39519,6 +39726,10 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
+# CSI Proxy settings
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -39532,15 +39743,11 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
+. c:\AzureData\k8s\windowscontainerdfunc.ps1
 
-function
-Update-ServiceFailureActions()
-{
-    sc.exe failure "kubelet" actions= restart/60000/restart/60000/restart/60000 reset= 900
-    sc.exe failure "kubeproxy" actions= restart/60000/restart/60000/restart/60000 reset= 900
-    sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
-}
+$useContainerD = ($global:ContainerRuntime -eq "containerd")
 
 try
 {
@@ -39610,12 +39817,22 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
-        Write-Log "Install docker"
-        $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        Install-Docker -DockerVersion $global:DockerVersion
-        Set-DockerLogFileOptions
-        $dockerTimer.Stop()
-        $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
+
+        if ($useContainerD) {
+            Write-Log "Installing ContainerD"
+            $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl
+            $containerdTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
+            # TODO: disable/uninstall Docker later
+        } else {
+            Write-Log "Install docker"
+            $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
+            Install-Docker -DockerVersion $global:DockerVersion
+            Set-DockerLogFileOptions
+            $dockerTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
+        }
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
@@ -39662,6 +39879,10 @@ try
         Write-CACert -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir
 
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
+
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate ` + "`" + `
             -KubeDir $global:KubeDir ` + "`" + `
@@ -39672,14 +39893,19 @@ try
 
         Write-Log "Create the Pause Container kubletwin/pause"
         $infraContainerTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        New-InfraContainer -KubeDir $global:KubeDir
+        New-InfraContainer -KubeDir $global:KubeDir -ContainerRuntime $global:ContainerRuntime
         $infraContainerTimer.Stop()
         $global:AppInsightsClient.TrackMetric("New-InfraContainer", $infraContainerTimer.Elapsed.TotalSeconds)
 
-        if (-not (Test-ContainerImageExists -Image "kubletwin/pause")) {
+        if (-not (Test-ContainerImageExists -Image "kubletwin/pause" -ContainerRuntime $global:ContainerRuntime)) {
             Write-Log "Could not find container with name kubletwin/pause"
-            $o = docker image list
-            Write-Log $o
+            if ($useContainerD) {
+                $o = ctr -n k8s.io image list
+                Write-Log $o
+            } else {
+                $o = docker image list
+                Write-Log $o
+            }
             throw "kubletwin/pause container does not exist!"
         }
 
@@ -39718,7 +39944,13 @@ try
         }
         elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
-            Update-WinCNI -CNIPath $global:CNIPath
+            if ($useContainerD) {
+                # TODO: CNI may need to move to c:\program files\containerd\cni\bin with ContainerD
+                Install-SdnBridge -Url $global:ContainerdSdnPluginUrl -CNIPath $global:CNIPath
+            } else {
+                Update-WinCNI -CNIPath $global:CNIPath
+            }
+            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         New-ExternalHnsNetwork
@@ -39742,7 +39974,10 @@ try
             -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
             -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
             -HNSModule $global:HNSModule ` + "`" + `
-            -KubeletNodeLabels $global:KubeletNodeLabels
+            -KubeletNodeLabels $global:KubeletNodeLabels ` + "`" + `
+            -UseContainerD $useContainerD
+
+
 
         Get-LogCollectionScripts
 
@@ -39756,7 +39991,7 @@ try
         PREPROVISION_EXTENSION
 
         Write-Log "Update service failure actions"
-        Update-ServiceFailureActions
+        Update-ServiceFailureActions -ContainerRuntime $global:ContainerRuntime
 
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
@@ -39778,7 +40013,7 @@ try
     else
     {
         # keep for debugging purposes
-        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret"
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
     }
 }
 catch
@@ -40474,6 +40709,21 @@ function Update-WinCNI
     DownloadFileOverHttp -Url $WinCniUrl -DestinationPath $wincniFile
 }
 
+function Install-SdnBridge
+{
+    Param(
+        [Parameter(Mandatory=$true)][string]
+        $Url,
+        [Parameter(Mandatory=$true)][string]
+        $CNIPath
+    )
+
+    $cnizip = [Io.path]::Combine($CNIPath, "cni.zip")
+    DownloadFileOverHttp -Url $Url -DestinationPath $cnizip
+    Expand-Archive -path $cnizip -DestinationPath $CNIPath
+    del $cnizip
+}
+
 # TODO: Move the code that creates the wincni configuration file out of windowskubeletfunc.ps1 and put it here`)
 
 func k8sWindowscnifuncPs1Bytes() ([]byte, error) {
@@ -40636,6 +40886,41 @@ function Adjust-DynamicPortRange()
     # Kube-proxy load balancing should be set to DSR mode when it releases with future versions of the OS
 
     Invoke-Executable -Executable "netsh.exe" -ArgList @("int", "ipv4", "set", "dynamicportrange", "tcp", "16385", "49151")
+}
+
+# TODO: should this be in this PR?
+# Service start actions. These should be split up later and included in each install step
+function Update-ServiceFailureActions
+{
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $ContainerRuntime
+    )
+    sc.exe failure "kubelet" actions= restart/60000/restart/60000/restart/60000 reset= 900
+    sc.exe failure "kubeproxy" actions= restart/60000/restart/60000/restart/60000 reset= 900
+    sc.exe failure $ContainerRuntime actions= restart/60000/restart/60000/restart/60000 reset= 900
+}
+
+function Add-SystemPathEntry
+{
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $Directory
+    )
+    # update the path variable if it doesn't have the needed paths
+    $path = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine)
+    $updated = $false
+    if(-not ($path -match $Directory.Replace("\","\\")+"(;|$)"))
+    {
+        $path += ";"+$Directory
+        $updated = $true
+    }
+    if($updated)
+    {
+        Write-Output "Updating path, added $Directory"
+        [Environment]::SetEnvironmentVariable("Path", $path, [EnvironmentVariableTarget]::Machine)
+        $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    }
 }`)
 
 func k8sWindowsconfigfuncPs1Bytes() ([]byte, error) {
@@ -40649,6 +40934,227 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/windowsconfigfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowscontainerdfuncPs1 = []byte(`# this is $global to persist across all functions since this is dot-sourced
+$global:ContainerdInstallLocation = "$Env:ProgramFiles\containerd"
+
+function RegisterContainerDService
+{
+  Assert-FileExists (Join-Path $global:ContainerdInstallLocation containerd.exe)
+
+  Write-Host "Registering containerd as a service"
+  $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
+  $svc = Get-Service -Name containerd -ErrorAction SilentlyContinue
+  if ($null -ne $svc) {
+      & $cdbinary --unregister-service
+  }
+  & $cdbinary --register-service
+  $svc = Get-Service -Name "containerd" -ErrorAction SilentlyContinue
+  if ($null -eq $svc) {
+      throw "containerd.exe did not get installed as a service correctly."
+  }
+  $svc | Start-Service
+  if ($svc.Status -ne "Running") {
+      throw "containerd service is not running"
+  }
+}
+
+
+function Install-Containerd
+{
+    Param(
+      [Parameter(Mandatory = $true)][string]
+      $ContainerdUrl
+    )
+    $zipfile =  [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
+    del $zipfile
+
+    Add-SystemPathEntry $global:ContainerdInstallLocation
+    
+    # TODO: remove if the node comes up without this code
+    # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
+    # if (-Not (Test-Path $configDir)) {
+    #     mkdir $configDir
+    # }
+
+    # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+    $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
+    @"
+version = 2
+root = "C:\\ProgramData\\containerd\\root"
+state = "C:\\ProgramData\\containerd\\state"
+plugin_dir = ""
+disabled_plugins = []
+required_plugins = []
+oom_score = 0
+
+[grpc]
+  address = "\\\\.\\pipe\\containerd-containerd"
+  tcp_address = ""
+  tcp_tls_cert = ""
+  tcp_tls_key = ""
+  uid = 0
+  gid = 0
+  max_recv_message_size = 16777216
+  max_send_message_size = 16777216
+
+[ttrpc]
+  address = ""
+  uid = 0
+  gid = 0
+
+[debug]
+  address = ""
+  uid = 0
+  gid = 0
+  level = ""
+
+[metrics]
+  address = ""
+  grpc_histogram = false
+
+[cgroup]
+  path = ""
+
+[timeouts]
+  "io.containerd.timeout.shim.cleanup" = "5s"
+  "io.containerd.timeout.shim.load" = "5s"
+  "io.containerd.timeout.shim.shutdown" = "3s"
+  "io.containerd.timeout.task.state" = "2s"
+
+[plugins]
+  [plugins."io.containerd.gc.v1.scheduler"]
+    pause_threshold = 0.02
+    deletion_threshold = 0
+    mutation_threshold = 100
+    schedule_delay = "0s"
+    startup_delay = "100ms"
+  [plugins."io.containerd.grpc.v1.cri"]
+    disable_tcp_service = true
+    stream_server_address = "127.0.0.1"
+    stream_server_port = "0"
+    stream_idle_timeout = "4h0m0s"
+    enable_selinux = false
+    sandbox_image = "mcr.microsoft.com/k8s/core/pause:1.2.0"
+    stats_collect_period = 10
+    systemd_cgroup = false
+    enable_tls_streaming = false
+    max_container_log_line_size = 16384
+    disable_cgroup = false
+    disable_apparmor = false
+    restrict_oom_score_adj = false
+    max_concurrent_downloads = 3
+    disable_proc_mount = false
+    [plugins."io.containerd.grpc.v1.cri".containerd]
+      snapshotter = "windows"
+      default_runtime_name = "runhcs-wcow-process"
+      no_pivot = false
+      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
+        runtime_type = ""
+        runtime_engine = ""
+        runtime_root = ""
+        privileged_without_host_devices = false
+      [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime]
+        runtime_type = ""
+        runtime_engine = ""
+        runtime_root = ""
+        privileged_without_host_devices = false
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runhcs-wcow-process]
+          runtime_type = "io.containerd.runhcs.v1"
+          runtime_engine = ""
+          runtime_root = ""
+          privileged_without_host_devices = false
+    [plugins."io.containerd.grpc.v1.cri".cni]
+      bin_dir = "C:\\k\\cni"
+      conf_dir = "C:\\k\\cni\\config"
+      max_conf_num = 1
+      conf_template = ""
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
+        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."docker.io"]
+          endpoint = ["https://registry-1.docker.io"]
+    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
+      tls_cert_file = ""
+      tls_key_file = ""
+  [plugins."io.containerd.metadata.v1.bolt"]
+    content_sharing_policy = "shared"
+  [plugins."io.containerd.runtime.v2.task"]
+    platforms = ["windows/amd64", "linux/amd64"]
+  [plugins."io.containerd.service.v1.diff-service"]
+    default = ["windows", "windows-lcow"]
+"@ | Out-File -Encoding ascii $configFile
+    RegisterContainerDService
+    
+}`)
+
+func k8sWindowscontainerdfuncPs1Bytes() ([]byte, error) {
+	return _k8sWindowscontainerdfuncPs1, nil
+}
+
+func k8sWindowscontainerdfuncPs1() (*asset, error) {
+	bytes, err := k8sWindowscontainerdfuncPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowscontainerdfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowscsiproxyfuncPs1 = []byte(`function New-CsiProxyService {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $CsiProxyPackageUrl,
+        [Parameter(Mandatory = $true)][string]
+        $KubeDir
+    )
+
+    $tempdir = New-TemporaryDirectory
+    $binaryPackage = "$tempdir\csiproxy.tar"
+
+    DownloadFileOverHttp -Url $CsiProxyPackageUrl -DestinationPath $binaryPackage
+
+    tar -xzf $binaryPackage -C $tempdir
+    cp "$tempdir\build\server.exe" "$KubeDir\csi-proxy-server.exe"
+
+    del $tempdir -Recurse
+
+    & "$KubeDir\nssm.exe" install csi-proxy-server "$KubeDir\csi-proxy-server.exe" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppDirectory "$KubeDir" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRestartDekay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Description csi-proxy-server | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdout "$KubeDir\csi-proxy-server.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderr "$KubeDir\csi-proxy-server.err.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateBytes 10485760 | RemoveNulls
+}`)
+
+func k8sWindowscsiproxyfuncPs1Bytes() ([]byte, error) {
+	return _k8sWindowscsiproxyfuncPs1, nil
+}
+
+func k8sWindowscsiproxyfuncPs1() (*asset, error) {
+	bytes, err := k8sWindowscsiproxyfuncPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowscsiproxyfunc.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -40772,7 +41278,9 @@ Write-AzureConfig {
         [Parameter(Mandatory = $true)][string]
         $KubeDir,
         [Parameter(Mandatory = $true)][string]
-        $TargetEnvironment
+        $TargetEnvironment,
+        [Parameter(Mandatory = $false)][bool]
+        $UseContainerD = $false
     )
 
     if ( -Not $PrimaryAvailabilitySetName -And -Not $PrimaryScaleSetName ) {
@@ -40865,16 +41373,50 @@ users:
 }
 
 function
+Test-ContainerImageExists {
+    Param(
+        [Parameter(Mandatory = $true)][string]
+        $Image,
+        [Parameter(Mandatory = $false)][string]
+        $Tag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
+    )
+
+    $target = $Image
+    if ($Tag) {
+        $target += ":$Tag"
+    }
+
+    if ($ContainerRuntime -eq "docker") {
+        $images = docker image list $target --format "{{json .}}"
+        return $images.Count -gt 0
+    }
+    else
+    {
+        return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
+    }
+}
+
+function
 Build-PauseContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
         $WindowsBase,
-        $DestinationTag
+        $DestinationTag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
     # Future work: This needs to build wincat - see https://github.com/Azure/aks-engine/issues/1461
+    # Otherwise, delete this code and require a prebuilt pause image (or override with one from an Azure Container Registry instance)
+    # ContainerD can't build, so doing the builds outside of node deployment is probably the right long-term solution.
     "FROM $($WindowsBase)" | Out-File -encoding ascii -FilePath Dockerfile
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
-    Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
+    if ($ContainerRuntime -eq "docker") {
+        Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
+    } else {
+        throw "Cannot build pause container without Docker"
+    }
 }
 
 function
@@ -40882,7 +41424,9 @@ New-InfraContainer {
     Param(
         [Parameter(Mandatory = $true)][string]
         $KubeDir,
-        $DestinationTag = "kubletwin/pause"
+        $DestinationTag = "kubletwin/pause",
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
     cd $KubeDir
     $computerInfo = Get-ComputerInfo
@@ -40895,14 +41439,21 @@ New-InfraContainer {
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
     if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
-        $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
-        if (-not $imageList) {
-            Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+        if ($ContainerRuntime -eq "docker") {
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+                Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+            }
+            Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
+        } else {
+            # containerd
+            if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
+                Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
+            }
+            Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "tag", "$defaultPauseImage", "$DestinationTag")
         }
-        Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
     }
     else {
-        Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag
+        Build-PauseContainer -WindowsBase "mcr.microsoft.com/nanoserver-insider" -DestinationTag $DestinationTag -ContainerRuntime $ContainerRuntime
     }
 }
 
@@ -40912,7 +41463,9 @@ Test-ContainerImageExists {
         [Parameter(Mandatory = $true)][string]
         $Image,
         [Parameter(Mandatory = $false)][string]
-        $Tag
+        $Tag,
+        [Parameter(Mandatory = $false)][string]
+        $ContainerRuntime = "docker"
     )
 
     $target = $Image
@@ -40920,11 +41473,15 @@ Test-ContainerImageExists {
         $target += ":$Tag"
     }
 
-    $images = docker image list $target --format "{{json .}}"
-
-    return $images.Count -gt 0
+    if ($ContainerRuntime -eq "docker") {
+        $images = docker image list $target --format "{{json .}}"
+        return $images.Count -gt 0
+    }
+    else
+    {
+        return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
+    }
 }
-
 
 # TODO: Deprecate this and replace with methods that get individual components instead of zip containing everything
 # This expects the ZIP file created by Azure Pipelines.
@@ -40997,44 +41554,49 @@ New-NSSMService {
         $KubeProxyStartFile
     )
 
+    $kubeletDependOnServices = "docker"
+    if ($global:EnableCsiProxy) {
+        $kubeletDependOnServices += " csi-proxy-server"
+    }
+
     # setup kubelet
-    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir
-    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
-    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
-    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START
-    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500
-    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
 
     # setup kubeproxy
-    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir
-    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile
-    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy
-    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet
-    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy
-    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START
-    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760 | RemoveNulls
 }
 
 # Renamed from Write-KubernetesStartFiles
@@ -41074,7 +41636,9 @@ Install-KubernetesServices {
         [Parameter(Mandatory = $true)][string]
         $HNSModule,
         [Parameter(Mandatory = $true)][string]
-        $KubeletNodeLabels
+        $KubeletNodeLabels,
+        [Parameter(Mandatory = $false)][bool]
+        $UseContainerD = $false
     )
 
     # Calculate some local paths
@@ -41110,6 +41674,11 @@ Install-KubernetesServices {
     }
     else {
         throw "Unknown network type $NetworkPlugin, can't configure kubelet"
+    }
+
+    # Update args to use ContainerD if needed
+    if ($UseContainerD -eq $true) {
+        $KubeletArgList += @("--container-runtime=remote", "--container-runtime-endpoint=npipe://./pipe/containerd-containerd")
     }
 
     # Used in WinCNI version of kubeletstart.ps1
@@ -41203,7 +41772,8 @@ $KubeletCommandLine
 
 "@
     }
-    else {
+    elseif (($NetworkPlugin -eq "kubenet" ) -and ($UseContainerD -eq $false))
+    {
         # using WinCNI. TODO: If WinCNI support is removed, then delete this as dead code later
         $KubeNetwork = "l2bridge"
         $kubeStartStr += @"
@@ -41336,7 +41906,161 @@ catch
 }
 
 "@
-    } # end else using WinCNI.
+    } # end elseif using WinCNI and Docker.
+    elseif (($NetworkPlugin -eq "kubenet" ) -and ($UseContainerD -eq $true))
+    {
+        # TODO: something is wrong with the CNI configuration
+        # Warning  FailedCreatePodSandBox  2m16s (x222 over 50m)  kubelet, 4068k8s011  (combined from similar events): Failed to create pod sandbox: 
+        # rpc error: code = Unknown desc = failed to setup network for sandbox "922b1a200078edb15c7a5732612cbe19e5dadf7cf8a4622d72b376874522435d": error creating endpoint hcnCreateEndpoint failed in Win32: Invalid JSON document string. (0x803b001b) {"Success":false,"Error":"Invalid JSON document string. {{Policies.Type,UnknownEnumValue}}","ErrorCode":2151350299} : endpoint config &{ 922b1a200078edb15c7a5732612cbe19e5dadf7cf8a4622d72b376874522435d_l2bridge f94e9649-d4df-486e-bcd4-2721938d89f3  [{OutBoundNAT []} {ROUTE []}] [] { [default.svc.cluster.local] [10.0.0.10] []} [{10.240.0.1 0.0.0.0/0 0}]  0 {2 0}}
+
+
+        # using SDNBridge & Containerd
+        $KubeNetwork = "l2bridge"
+        $kubeStartStr += @"
+
+function
+Get-DefaultGateway(` + "`" + `$CIDR)
+{
+    return ` + "`" + `$CIDR.substring(0,` + "`" + `$CIDR.lastIndexOf(".")) + ".1"
+}
+
+function
+Get-PodCIDR()
+{
+    ` + "`" + `$podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/` + "`" + `$(` + "`" + `$env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    return ` + "`" + `$podCIDR
+}
+
+function
+Test-PodCIDR(` + "`" + `$podCIDR)
+{
+    return ` + "`" + `$podCIDR.length -gt 0
+}
+
+function
+Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
+{
+    ` + "`" + `$jsonSampleConfig =
+"{
+    ""cniVersion"": ""0.2.0"",
+    ""name"": ""<NetworkMode>"",
+    ""type"": ""sdnbridge.exe"",
+    ""master"": ""Ethernet"",
+    ""capabilities"": { ""portMappings"": true },
+    ""ipam"": {
+        ""environment"": ""azure"",
+        ""subnet"":""<PODCIDR>"",
+        ""routes"": [{
+        ""GW"":""<PODGW>""
+        }]
+    },
+    ""dns"" : {
+    ""Nameservers"" : [ ""<NameServers>"" ],
+    ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+    },
+    ""AdditionalArgs"" : [
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""Settings"" : { ""Exceptions"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }}
+    },
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""SDNRoute"", ""Settings"" : { ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }}
+    }
+    ]
+}"
+
+    ` + "`" + `$configJson = ConvertFrom-Json ` + "`" + `$jsonSampleConfig
+    ` + "`" + `$configJson.name = ` + "`" + `$global:NetworkMode.ToLower()
+    ` + "`" + `$configJson.ipam.subnet=` + "`" + `$podCIDR
+    ` + "`" + `$configJson.ipam.routes[0].GW = ` + "`" + `$masterSubnetGW
+    ` + "`" + `$configJson.dns.Nameservers[0] = ` + "`" + `$global:KubeDnsServiceIp
+    ` + "`" + `$configJson.dns.Search[0] = ` + "`" + `$global:KubeDnsSearchPath
+
+
+    ` + "`" + `$configJson.AdditionalArgs[0].Value.Settings.Exceptions[0] = ` + "`" + `$global:KubeClusterCIDR
+    ` + "`" + `$configJson.AdditionalArgs[0].Value.Settings.Exceptions[1] = ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$configJson.AdditionalArgs[1].Value.Settings.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
+
+    if (Test-Path ` + "`" + `$global:CNIConfig)
+    {
+        Clear-Content -Path ` + "`" + `$global:CNIConfig
+    }
+
+    Write-Host "Generated CNI Config [` + "`" + `$configJson]"
+
+    Add-Content -Path ` + "`" + `$global:CNIConfig -Value (ConvertTo-Json ` + "`" + `$configJson -Depth 20)
+}
+
+try
+{
+    ` + "`" + `$masterSubnetGW = Get-DefaultGateway ` + "`" + `$global:MasterSubnet
+    ` + "`" + `$podCIDR=Get-PodCIDR
+    ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
+
+    # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
+    if (-not ` + "`" + `$podCidrDiscovered)
+    {
+        ` + "`" + `$argList = $KubeletArgListStr
+
+        ` + "`" + `$process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList ` + "`" + `$argList
+
+        # run kubelet until podCidr is discovered
+        Write-Host "waiting to discover pod CIDR"
+        while (-not ` + "`" + `$podCidrDiscovered)
+        {
+            Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
+            Start-Sleep 10
+
+            ` + "`" + `$podCIDR=Get-PodCIDR
+            ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
+        }
+
+        # stop the kubelet process now that we have our CIDR, discard the process output
+        ` + "`" + `$process | Stop-Process | Out-Null
+    }
+
+    # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+    netsh advfirewall set allprofiles state off
+
+    # startup the service
+    ` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ ` + "`" + `$global:NetworkMode.ToLower()
+
+    if (` + "`" + `$hnsNetwork)
+    {
+        # Kubelet has been restarted with existing network.
+        # Cleanup all containers
+        # TODO: convert this to ctr.exe -n k8s.io container list ; container rm
+        docker ps -q | foreach {docker rm ` + "`" + `$_ -f}
+        # cleanup network
+        Write-Host "Cleaning up old HNS network found"
+        Remove-HnsNetwork ` + "`" + `$hnsNetwork
+        Start-Sleep 10
+    }
+
+    Write-Host "Creating a new hns Network"
+    ipmo ` + "`" + `$global:HNSModule
+
+    ` + "`" + `$hnsNetwork = New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix ` + "`" + `$podCIDR -Gateway ` + "`" + `$masterSubnetGW -Name ` + "`" + `$global:NetworkMode.ToLower() -Verbose
+    # New network has been created, Kubeproxy service has to be restarted
+    Restart-Service Kubeproxy
+
+    Start-Sleep 10
+    # Add route to all other POD networks
+    Write-Host "Updating CNI config"
+    Update-CNIConfig ` + "`" + `$podCIDR ` + "`" + `$masterSubnetGW
+
+    $KubeletCommandLine
+}
+catch
+{
+    Write-Error ` + "`" + `$_
+}
+
+"@
+    } # end elseif using sdnbridge and containerd.
+    else
+    {
+        throw "The combination of $NetworkPlugin and UseContainerD=$UseContainerD is not implemented"
+    }
 
     # Now that the script is generated, based on what CNI plugin and startup options are needed, write it to disk
     $kubeStartStr | Out-File -encoding ASCII -filepath $KubeletStartFile
@@ -41438,6 +42162,7 @@ $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
 # Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean("{{CsiProxyEnabled}}")
 $global:MasterSubnet = "{{MasterSubnet}}"
 $global:NetworkMode = "{{NetworkMode}}"
 $global:NetworkPlugin = "{{NetworkPlugin}}"
@@ -41460,6 +42185,11 @@ Stop-Service kubeproxy
 
 Write-Log "Stopping kubelet service"
 Stop-Service kubelet
+
+if ($global:CsiProxyEnabled) {
+    Write-Log "Stopping csi-proxy-server service"
+    Stop-Service csi-proxy-server
+}
 
 #
 # Perform cleanup
@@ -41513,6 +42243,12 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 #
 # Start Services
 #
+
+if ($global:CsiProxyEnabled) {
+    Write-Log "Starting csi-proxy-server service"
+    Start-Service csi-proxy-server
+}
+
 Write-Log "Starting kubelet service"
 Start-Service kubelet
 
@@ -44790,6 +45526,18 @@ var _windowsparamsT = []byte(` {{if IsKubernetes}}
       },
       "type": "string"
     },
+    "windowsContainerdURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
+      },
+      "type": "string"
+    },
+    "windowsSdnPluginURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
+      },
+      "type": "string"
+    },
     "kubeServiceCidr": {
       "metadata": {
         "description": "Kubernetes service address space"
@@ -45152,6 +45900,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/windowsazurecnifunc.tests.ps1":                                       k8sWindowsazurecnifuncTestsPs1,
 	"k8s/windowscnifunc.ps1":                                                  k8sWindowscnifuncPs1,
 	"k8s/windowsconfigfunc.ps1":                                               k8sWindowsconfigfuncPs1,
+	"k8s/windowscontainerdfunc.ps1":                                           k8sWindowscontainerdfuncPs1,
+	"k8s/windowscsiproxyfunc.ps1":                                             k8sWindowscsiproxyfuncPs1,
 	"k8s/windowsinstallopensshfunc.ps1":                                       k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                              k8sWindowskubeletfuncPs1,
 	"k8s/windowslogscleanup.ps1":                                              k8sWindowslogscleanupPs1,
@@ -45466,6 +46216,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"windowsazurecnifunc.tests.ps1": {k8sWindowsazurecnifuncTestsPs1, map[string]*bintree{}},
 		"windowscnifunc.ps1":            {k8sWindowscnifuncPs1, map[string]*bintree{}},
 		"windowsconfigfunc.ps1":         {k8sWindowsconfigfuncPs1, map[string]*bintree{}},
+		"windowscontainerdfunc.ps1":     {k8sWindowscontainerdfuncPs1, map[string]*bintree{}},
+		"windowscsiproxyfunc.ps1":       {k8sWindowscsiproxyfuncPs1, map[string]*bintree{}},
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
 		"windowslogscleanup.ps1":        {k8sWindowslogscleanupPs1, map[string]*bintree{}},

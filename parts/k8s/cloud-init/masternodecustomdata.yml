@@ -49,6 +49,16 @@ write_files:
   {{end}}
 {{end}}
 
+{{- if .MasterProfile.IsUbuntu1804}}
+  {{- if not .MasterProfile.IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
 {{if IsAzureStackCloud}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
@@ -127,7 +137,7 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -192,7 +202,22 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
+- path: /etc/sysctl.d/11-aks-engine.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
+    #EOF
+
 {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
@@ -229,6 +254,7 @@ write_files:
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
               {{end}}
+    #EOF
 
   {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
@@ -321,8 +347,8 @@ write_files:
   permissions: "0600"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
           - secrets
@@ -339,8 +365,8 @@ write_files:
   permissions: "0444"
   owner: root
   content: |
-    kind: EncryptionConfig
-    apiVersion: v1
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
     resources:
       - resources:
         - secrets

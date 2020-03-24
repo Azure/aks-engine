@@ -28,11 +28,11 @@ const (
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.32"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.33"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
-	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"
-	gatekeeperImageReference                          string = "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2"
+	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200227.1"
+	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.7"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.1"
 	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.4.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
@@ -105,7 +105,7 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
+			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",

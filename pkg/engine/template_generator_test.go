@@ -172,6 +172,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedIsDockerContainerRuntime      bool
 		expectedHasPrivateAzureRegistryServer bool
 		expectedGetPrivateAzureRegistryServer string
+		expectedGetSysctlDConfigKeyVals       string
 	}{
 		{
 			name: "1.15 release",
@@ -203,6 +204,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "1.16 release",
@@ -234,6 +236,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "1.17 release",
@@ -265,6 +268,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "custom search domain",
@@ -303,6 +307,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "custom nodes DNS",
@@ -339,6 +344,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -366,6 +372,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "china cloud",
@@ -398,6 +405,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureChinaCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "german cloud",
@@ -430,6 +438,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureGermanCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "usgov cloud",
@@ -462,6 +471,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureUSGovernmentCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "Azure Stack",
@@ -498,6 +508,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureStackCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "N series SKU",
@@ -530,6 +541,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 true,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "kata-containers",
@@ -561,6 +573,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsKataContainerRuntime:       true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "PrivateAzureRegistryServer",
@@ -595,6 +608,71 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:      true,
 			expectedHasPrivateAzureRegistryServer: true,
 			expectedGetPrivateAzureRegistryServer: "my-server",
+			expectedGetSysctlDConfigKeyVals:       "",
+		},
+		{
+			name: "sysctl config",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.16.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					MasterProfile: &api.MasterProfile{
+						SysctlDConfig: map[string]string{
+							"net.ipv4.tcp_retries2":             "8",
+							"net.core.somaxconn":                "16384",
+							"net.ipv4.tcp_max_syn_backlog":      "16384",
+							"net.core.message_cost":             "40",
+							"net.core.message_burst":            "80",
+							"net.ipv4.neigh.default.gc_thresh1": "4096",
+							"net.ipv4.neigh.default.gc_thresh2": "8192",
+							"net.ipv4.neigh.default.gc_thresh3": "16384",
+							"net.ipv4.tcp_keepalive_time":       "7200",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							SysctlDConfig: map[string]string{
+								"net.ipv4.tcp_retries2":             "8",
+								"net.core.somaxconn":                "16384",
+								"net.ipv4.tcp_max_syn_backlog":      "16384",
+								"net.core.message_cost":             "40",
+								"net.core.message_burst":            "80",
+								"net.ipv4.neigh.default.gc_thresh1": "4096",
+								"net.ipv4.neigh.default.gc_thresh2": "8192",
+								"net.ipv4.neigh.default.gc_thresh3": "16384",
+								"net.ipv4.tcp_keepalive_time":       "7200",
+							},
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.16.1",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals: `net.core.message_burst = 80
+    net.core.message_cost = 40
+    net.core.somaxconn = 16384
+    net.ipv4.neigh.default.gc_thresh1 = 4096
+    net.ipv4.neigh.default.gc_thresh2 = 8192
+    net.ipv4.neigh.default.gc_thresh3 = 16384
+    net.ipv4.tcp_keepalive_time = 7200
+    net.ipv4.tcp_max_syn_backlog = 16384
+    net.ipv4.tcp_retries2 = 8`,
 		},
 	}
 
@@ -694,6 +772,20 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetPrivateAzureRegistryServer {
 				t.Errorf("expected funcMap invocation of GetPrivateAzureRegistryServer to return %s, instead got %s", c.expectedGetPrivateAzureRegistryServer, ret[0].Interface())
+			}
+			if c.cs.Properties.MasterProfile != nil {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.MasterProfile.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for _, pool := range c.cs.Properties.AgentPoolProfiles {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(pool.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
 			}
 		})
 	}

@@ -46,25 +46,29 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - xz-utils
   - zip
 EOF
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  echo "  - ntp" >> ${VHD_LOGS_FILEPATH}
+  echo "  - ntpstat" >> ${VHD_LOGS_FILEPATH}
+fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
 fi
 
-apmz_version="v0.5.0"
+apmz_version="v0.5.1"
 ensureAPMZ "${apmz_version}"
 echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.10"
+MOBY_VERSION="3.0.11"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 installGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
-ETCD_VERSION="3.3.18"
+ETCD_VERSION="3.3.19"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -87,12 +91,10 @@ for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
 done
 
 CNI_PLUGIN_VERSIONS="
-0.7.6
-0.7.5
-0.7.1
+0.8.5
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
-    CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-amd64-v${CNI_PLUGIN_VERSION}.tgz"
+    CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-linux-amd64-v${CNI_PLUGIN_VERSION}.tgz"
     downloadCNI
     echo "  - CNI plugin version ${CNI_PLUGIN_VERSION}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -204,6 +206,7 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
+1.18.0
 1.17.1
 1.16.4
 1.15.5
@@ -270,6 +273,7 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
+1.0.33
 1.0.32
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
@@ -335,13 +339,14 @@ echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
 1.18.0-beta.1
+1.17.4
 1.17.3
-1.17.2
+1.16.8
 1.16.7
-1.16.6
+1.16.7-azs
+1.15.11
 1.15.10
-1.15.9
-1.15.9-azs
+1.15.10-azs
 1.14.8
 1.14.7
 1.14.7-azs

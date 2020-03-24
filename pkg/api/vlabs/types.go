@@ -59,6 +59,7 @@ type FeatureFlags struct {
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
+	EnableIPv6Only           bool `json:"enableIPv6Only,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -161,6 +162,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername          string            `json:"adminUsername,omitempty"`
 	AdminPassword          string            `json:"adminPassword,omitempty"`
+	CSIProxyURL            string            `json:"csiProxyURL,omitempty"`
+	EnableCSIProxy         *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef               *ImageReference   `json:"imageReference,omiteempty"`
 	ImageVersion           string            `json:"imageVersion,omitempty"`
 	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
@@ -328,6 +331,8 @@ type KubernetesConfig struct {
 	UseCloudControllerManager         *bool                 `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL           string                `json:"customWindowsPackageURL,omitempty"`
 	WindowsNodeBinariesURL            string                `json:"windowsNodeBinariesURL,omitempty"`
+	WindowsContainerdURL              string                `json:"windowsContainerdURL,omitempty"`
+	WindowsSdnPluginURL               string                `json:"windowsSdnPluginURL,omitempty"`
 	UseInstanceMetadata               *bool                 `json:"useInstanceMetadata,omitempty"`
 	EnableRbac                        *bool                 `json:"enableRbac,omitempty"`
 	EnableSecureKubelet               *bool                 `json:"enableSecureKubelet,omitempty"`
@@ -431,6 +436,8 @@ type MasterProfile struct {
 	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
+	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
+	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -501,7 +508,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
-
+	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	// subnet is internal
 	subnet string
 
@@ -516,6 +523,7 @@ type AgentPoolProfile struct {
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 	EnableVMSSDiskEncryption          *bool             `json:"enableVMSSDiskEncryption,omitempty"`
+	SysctlDConfig                     map[string]string `json:"sysctldConfig,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -695,7 +703,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKSUbuntu1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 		return true
 	default:
 		return false
@@ -848,7 +856,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
 		default:
 			return false
@@ -880,6 +888,14 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 		}
 	}
 	return false
+}
+
+// IsCSIProxyEnabled returns true if CSI proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
+	}
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
@@ -926,4 +942,9 @@ func (k *KubernetesConfig) IsAddonEnabled(addonName string) bool {
 // IsIPv6DualStackEnabled checks if IPv6DualStack feature is enabled
 func (f *FeatureFlags) IsIPv6DualStackEnabled() bool {
 	return f != nil && f.EnableIPv6DualStack
+}
+
+// IsIPv6OnlyEnabled checks if IPv6Only feature is enabled
+func (f *FeatureFlags) IsIPv6OnlyEnabled() bool {
+	return f != nil && f.EnableIPv6Only
 }

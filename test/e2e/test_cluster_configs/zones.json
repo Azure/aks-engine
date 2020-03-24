@@ -24,9 +24,10 @@
 				{
 					"name": "agentpool1",
 					"count": 4,
-					"vmSize": "Standard_D2_v3",
-                    "scalesetPriority": "Spot",
-                    "availabilityZones": [
+					"vmSize": "Standard_D2s_v3",
+					"scalesetPriority": "Spot",
+					"ultraSSDEnabled": true,
+                                        "availabilityZones": [
 						"1",
 						"2"
 					]

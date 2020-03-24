@@ -23,18 +23,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		k8sVersion := orchestratorProfile.OrchestratorVersion
 		k8sComponents := api.GetK8sComponentsByVersionMap(properties.OrchestratorProfile.KubernetesConfig)[k8sVersion]
 		kubernetesConfig := orchestratorProfile.KubernetesConfig
-		kubernetesImageBase := kubernetesConfig.KubernetesImageBase
-
-		if properties.IsAzureStackCloud() {
-			kubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
-		}
 
 		if kubernetesConfig != nil {
-			kubeProxySpec := kubernetesImageBase + k8sComponents[common.KubeProxyAddonName]
-			if kubernetesConfig.CustomKubeProxyImage != "" {
-				kubeProxySpec = kubernetesConfig.CustomKubeProxyImage
-			}
-			addValue(parametersMap, "kubeProxySpec", kubeProxySpec)
 			if kubernetesConfig.CustomKubeBinaryURL != "" {
 				addValue(parametersMap, "kubeBinaryURL", kubernetesConfig.CustomKubeBinaryURL)
 			}
@@ -112,6 +102,8 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 				addValue(parametersMap, "kubeBinariesVersion", k8sVersion)
 				addValue(parametersMap, "windowsTelemetryGUID", cloudSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID)
+				addValue(parametersMap, "windowsContainerdURL", kubernetesConfig.WindowsContainerdURL)
+				addValue(parametersMap, "windowsSdnPluginURL", kubernetesConfig.WindowsSdnPluginURL)
 			}
 		}
 

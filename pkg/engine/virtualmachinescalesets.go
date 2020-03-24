@@ -360,6 +360,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		ExtensionProfile: &extensionProfile,
 	}
 
+	if to.Bool(masterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	virtualMachine.VirtualMachineScaleSetProperties = vmProperties
 
 	return VirtualMachineScaleSetARM{
@@ -566,7 +572,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
@@ -714,6 +720,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	if profile.DiskEncryptionSetID != "" {
 		osDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
 			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
+		}
+	}
+
+	if to.Bool(profile.UltraSSDEnabled) {
+		vmssProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
 		}
 	}
 

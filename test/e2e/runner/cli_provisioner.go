@@ -73,10 +73,14 @@ func (cli *CLIProvisioner) Run() error {
 			}
 		} else {
 			cli.Point.RecordProvisionSuccess()
-			cli.Point.SetNodeWaitStart()
-			err := cli.waitForNodes()
-			cli.Point.RecordNodeWait(err)
-			return err
+			if cli.Config.SkipTest {
+				return nil
+			} else {
+				cli.Point.SetNodeWaitStart()
+				err := cli.waitForNodes()
+				cli.Point.RecordNodeWait(err)
+				return err
+			}
 		}
 	}
 	return errors.New("Unable to run provisioner")
@@ -223,7 +227,7 @@ func (cli *CLIProvisioner) provision() error {
 		}
 	}
 
-	if cli.Config.IsKubernetes() {
+	if cli.Config.IsKubernetes() && !cli.Config.SkipTest {
 		// Store the hosts for future introspection
 		hosts, err := cli.Account.GetHosts(cli.Config.Name)
 		if err != nil {

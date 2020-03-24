@@ -125,16 +125,18 @@ func TestCertsAlreadyPresent(t *testing.T) {
 func TestSetMissingKubeletValues(t *testing.T) {
 	config := &KubernetesConfig{}
 	defaultKubeletConfig := map[string]string{
-		"--network-plugin":               "1",
-		"--pod-infra-container-image":    "2",
-		"--max-pods":                     "3",
-		"--eviction-hard":                "4",
-		"--node-status-update-frequency": "5",
-		"--image-gc-high-threshold":      "6",
-		"--image-gc-low-threshold":       "7",
-		"--non-masquerade-cidr":          "8",
-		"--cloud-provider":               "9",
-		"--pod-max-pids":                 "10",
+		"--network-plugin":                  "1",
+		"--pod-infra-container-image":       "2",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "azure",
+		"--cloud-config":                    "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
 	}
 	setMissingKubeletValues(config, defaultKubeletConfig)
 	for key, val := range defaultKubeletConfig {
@@ -147,20 +149,50 @@ func TestSetMissingKubeletValues(t *testing.T) {
 		KubeletConfig: map[string]string{
 			"--network-plugin":            "a",
 			"--pod-infra-container-image": "b",
-			"--cloud-provider":            "c",
+			"--cloud-provider":            "",
 		},
 	}
 	expectedResult := map[string]string{
-		"--network-plugin":               "a",
-		"--pod-infra-container-image":    "b",
-		"--max-pods":                     "3",
-		"--eviction-hard":                "4",
-		"--node-status-update-frequency": "5",
-		"--image-gc-high-threshold":      "6",
-		"--image-gc-low-threshold":       "7",
-		"--non-masquerade-cidr":          "8",
-		"--cloud-provider":               "c",
-		"--pod-max-pids":                 "10",
+		"--network-plugin":                  "a",
+		"--pod-infra-container-image":       "b",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "",
+		"--cloud-config":                    "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
+	}
+	setMissingKubeletValues(config, defaultKubeletConfig)
+	for key, val := range expectedResult {
+		if config.KubeletConfig[key] != val {
+			t.Fatalf("setMissingKubeletValue() did not return the expected value %s for key %s, instead returned: %s", val, key, config.KubeletConfig[key])
+		}
+	}
+
+	config = &KubernetesConfig{
+		KubeletConfig: map[string]string{
+			"--cloud-provider":                  "",
+			"--cloud-config":                    "",
+			"--azure-container-registry-config": "",
+		},
+	}
+	expectedResult = map[string]string{
+		"--network-plugin":                  "1",
+		"--pod-infra-container-image":       "2",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "",
+		"--cloud-config":                    "",
+		"--azure-container-registry-config": "",
 	}
 	setMissingKubeletValues(config, defaultKubeletConfig)
 	for key, val := range expectedResult {
@@ -210,7 +242,7 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
 		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
 		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
 		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
@@ -1418,8 +1450,8 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount, DefaultMaximumLoadBalancerRuleCount)
 	}
 
-	// this validates cluster subnet default configuration for dual stack feature.
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	// this validates cluster subnet default configuration for dual stack feature with 1.16
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -1428,14 +1460,46 @@ func TestMasterProfileDefaults(t *testing.T) {
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
-	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for dual stack feature in 1.16 when only ipv4 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for dual stack feature.
+	mockCS = getMockBaseContainerService("1.17.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.17.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.244.0.0/16"
@@ -1452,7 +1516,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.17.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
@@ -1481,6 +1545,29 @@ func TestMasterProfileDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != DefaultOutboundRuleIdleTimeoutInMinutes {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes did not have the expected configuration, got %d, expected %d",
 			properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes, DefaultOutboundRuleIdleTimeoutInMinutes)
+	}
+
+	// this validates cluster subnet default configuration for single stack IPv6 only cluster
+	mockCS = getMockBaseContainerService("1.18.0-alpha.1")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP != DefaultKubernetesDNSServiceIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.DNSServiceIP did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, DefaultKubernetesDNSServiceIPv6)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != DefaultKubernetesServiceCIDRIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, DefaultKubernetesServiceCIDRIPv6)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != DefaultKubernetesClusterSubnetIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, DefaultKubernetesClusterSubnetIPv6)
 	}
 }
 
@@ -2411,6 +2498,31 @@ func TestCloudProviderBackoff(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: KubernetesConfig{
+				CloudProviderBackoffMode:          "v2",
+				CloudProviderBackoff:              to.BoolPtr(true),
+				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        0,
+				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      0,
+				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
+				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			},
+		},
+		{
+			name: "Kubernetes 1.13.0",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.13.0",
+						OrchestratorType:    Kubernetes,
 					},
 					MasterProfile: &MasterProfile{},
 				},

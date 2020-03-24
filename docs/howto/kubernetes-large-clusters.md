@@ -31,7 +31,7 @@ The following configuration parameters are available in the `properties.orchestr
       "value": "6" // maximum retry attempts before failure
     },
     "cloudProviderRatelimit": {
-      "value": "false" // if true, enforce rate limits for azure API calls
+      "value": "true" // if true, enforce rate limits for azure API calls
     },
     "cloudProviderRatelimitBucket": {
       "value": "10" // number of requests in queue

@@ -28,18 +28,18 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
 	}
 	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
-	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020"
+	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
 	var workspaceDomain string
 	if cs.Properties.IsAzureStackCloud() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod03022020"
 		}
 	} else {
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(cloudSpecConfig.CloudName)
 		if strings.EqualFold(cloudSpecConfig.CloudName, "AzureChinaCloud") {
-			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod01072020"
+			omsagentImage = "dockerhub.azk8s.cn/microsoft/oms:ciprod03022020"
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
@@ -265,7 +265,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "8.0.0-2",
+			"dockerProviderVersion": "8.0.0-3",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
@@ -301,7 +301,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"non-masquerade-cidr":           cs.Properties.GetNonMasqueradeCIDR(),
 			"non-masq-cni-cidr":             cs.Properties.GetAzureCNICidr(),
 			"secondary-non-masquerade-cidr": cs.Properties.GetSecondaryNonMasqueradeCIDR(),
-			"enable-ipv6":                   strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
+			"enable-ipv6": strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+				cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")),
 		},
 	}
 
@@ -459,8 +460,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.AzurePolicyAddonName,
 		Enabled: to.BoolPtr(DefaultAzurePolicyAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
-			"auditInterval":             "30",
-			"constraintViolationsLimit": "20",
+			"auditInterval":             "60",
+			"constraintViolationsLimit": "100",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -476,7 +477,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image:          k8sComponents[common.GatekeeperContainerName],
 				CPURequests:    "100m",
 				MemoryRequests: "256Mi",
-				CPULimits:      "100m",
+				CPULimits:      "1000m",
 				MemoryLimits:   "512Mi",
 			},
 		},
@@ -677,6 +678,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	// set host network to true for single stack IPv6 as the the nameserver is currently
+	// IPv4 only. By setting it to host network, we can leverage the host routes to successfully
+	// resolve dns.
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		defaultCorednsAddonsConfig.Config["use-host-network"] = "true"
+	}
+
 	// If we have any explicit coredns or kube-dns configuration in the addons array
 	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.CoreDNSAddonName) != -1 {
 		// Ensure we don't we don't prepare an addons spec w/ both kube-dns and coredns enabled
@@ -699,6 +707,14 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName] + kubeProxyImageSuffix(*cs),
 			},
 		},
+	}
+
+	// set bind address, healthz and metric bind address to :: explicitly for
+	// single stack IPv6 cluster as it is single stack IPv6 on dual stack host
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		defaultKubeProxyAddonsConfig.Config["bind-address"] = "::"
+		defaultKubeProxyAddonsConfig.Config["healthz-bind-address"] = "::"
+		defaultKubeProxyAddonsConfig.Config["metrics-bind-address"] = "::1"
 	}
 
 	defaultPodSecurityPolicyAddonsConfig := KubernetesAddon{
@@ -870,6 +886,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			if j := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeDNSAddonName); j > -1 {
 				o.KubernetesConfig.Addons[j].Enabled = to.BoolPtr(false)
 			}
+		}
+	}
+
+	// Honor customKubeProxyImage field
+	if o.KubernetesConfig.CustomKubeProxyImage != "" {
+		if i := getAddonsIndexByName(o.KubernetesConfig.Addons, common.KubeProxyAddonName); i > -1 {
+			o.KubernetesConfig.Addons[i].Containers[0].Image = o.KubernetesConfig.CustomKubeProxyImage
 		}
 	}
 

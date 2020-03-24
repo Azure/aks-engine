@@ -14,11 +14,9 @@ systemctlEnableAndStart() {
     RESTART_STATUS=$?
     systemctl status $1 --no-pager -l > /var/log/azure/$1-status.log
     if [ $RESTART_STATUS -ne 0 ]; then
-        echo "$1 could not be started"
         return 1
     fi
     if ! retrycmd_if_failure 120 5 25 systemctl enable $1; then
-        echo "$1 could not be enabled by systemctl"
         return 1
     fi
 }
@@ -38,47 +36,30 @@ configureEtcdUser(){
 configureSecrets(){
     APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
     touch "${APISERVER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}"
-    chown root:root "${APISERVER_PRIVATE_KEY_PATH}"
-
     CA_PRIVATE_KEY_PATH="/etc/kubernetes/certs/ca.key"
     touch "${CA_PRIVATE_KEY_PATH}"
-    chmod 0600 "${CA_PRIVATE_KEY_PATH}"
-    chown root:root "${CA_PRIVATE_KEY_PATH}"
-
     ETCD_SERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdserver.key"
     touch "${ETCD_SERVER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_SERVER_PRIVATE_KEY_PATH}"
     fi
-
     ETCD_CLIENT_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdclient.key"
     touch "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-    chown root:root "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
-
     ETCD_PEER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.key"
     touch "${ETCD_PEER_PRIVATE_KEY_PATH}"
-    chmod 0600 "${ETCD_PEER_PRIVATE_KEY_PATH}"
     if [[ -z "${COSMOS_URI}" ]]; then
       chown etcd:etcd "${ETCD_PEER_PRIVATE_KEY_PATH}"
     fi
-
+    chmod 0600 "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_SERVER_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}" "${ETCD_PEER_PRIVATE_KEY_PATH}"
+    chown root:root "${APISERVER_PRIVATE_KEY_PATH}" "${CA_PRIVATE_KEY_PATH}" "${ETCD_CLIENT_PRIVATE_KEY_PATH}"
     ETCD_SERVER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdserver.crt"
     touch "${ETCD_SERVER_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_SERVER_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_SERVER_CERTIFICATE_PATH}"
-
     ETCD_CLIENT_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdclient.crt"
     touch "${ETCD_CLIENT_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_CLIENT_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_CLIENT_CERTIFICATE_PATH}"
-
     ETCD_PEER_CERTIFICATE_PATH="/etc/kubernetes/certs/etcdpeer${NODE_INDEX}.crt"
     touch "${ETCD_PEER_CERTIFICATE_PATH}"
-    chmod 0644 "${ETCD_PEER_CERTIFICATE_PATH}"
-    chown root:root "${ETCD_PEER_CERTIFICATE_PATH}"
+    chmod 0644 "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
+    chown root:root "${ETCD_SERVER_CERTIFICATE_PATH}" "${ETCD_CLIENT_CERTIFICATE_PATH}" "${ETCD_PEER_CERTIFICATE_PATH}"
 
     set +x
     echo "${APISERVER_PRIVATE_KEY}" | base64 --decode > "${APISERVER_PRIVATE_KEY_PATH}"
@@ -125,6 +106,10 @@ configureEtcd() {
     retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
+ensureNTP() {
+    systemctlEnableAndStart ntp || exit $ERR_SYSTEMCTL_START_FAIL
+}
+
 ensureRPC() {
     systemctlEnableAndStart rpcbind || exit $ERR_SYSTEMCTL_START_FAIL
     systemctlEnableAndStart rpc-statd || exit $ERR_SYSTEMCTL_START_FAIL
@@ -134,9 +119,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    if apt list --installed | grep 'auditd'; then
-      apt_get_purge 20 30 120 auditd &
-    fi
+    apt_get_purge auditd &
   fi
 }
 
@@ -157,22 +140,26 @@ configureKubeletServerCert() {
 configureK8s() {
     KUBELET_PRIVATE_KEY_PATH="/etc/kubernetes/certs/client.key"
     touch "${KUBELET_PRIVATE_KEY_PATH}"
-    chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
-    chown root:root "${KUBELET_PRIVATE_KEY_PATH}"
-
     APISERVER_PUBLIC_KEY_PATH="/etc/kubernetes/certs/apiserver.crt"
     touch "${APISERVER_PUBLIC_KEY_PATH}"
+    chmod 0600 "${KUBELET_PRIVATE_KEY_PATH}"
     chmod 0644 "${APISERVER_PUBLIC_KEY_PATH}"
-    chown root:root "${APISERVER_PUBLIC_KEY_PATH}"
-
-    AZURE_JSON_PATH="/etc/kubernetes/azure.json"
-    touch "${AZURE_JSON_PATH}"
-    chmod 0600 "${AZURE_JSON_PATH}"
-    chown root:root "${AZURE_JSON_PATH}"
+    chown root:root "${KUBELET_PRIVATE_KEY_PATH}" "${APISERVER_PUBLIC_KEY_PATH}"
 
     set +x
     echo "${KUBELET_PRIVATE_KEY}" | base64 --decode > "${KUBELET_PRIVATE_KEY_PATH}"
     echo "${APISERVER_PUBLIC_KEY}" | base64 --decode > "${APISERVER_PUBLIC_KEY_PATH}"
+    configureKubeletServerCert
+    AZURE_JSON_PATH="/etc/kubernetes/azure.json"
+    if [[ -n "${MASTER_NODE}" ]]; then
+        if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
+            generateAggregatedAPICerts
+        fi
+    else
+        {{- /* If we are a node vm then we only proceed w/ local azure.json configuration if cloud-init has pre-paved that file */}}
+        wait_for_file 1 1 $AZURE_JSON_PATH || return
+    fi
+
     {{/* Perform the required JSON escaping */}}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\\/\\\\}
     SERVICE_PRINCIPAL_CLIENT_SECRET=${SERVICE_PRINCIPAL_CLIENT_SECRET//\"/\\\"}
@@ -218,16 +205,9 @@ configureK8s() {
 EOF
     set -x
     if [[ "${CLOUDPROVIDER_BACKOFF_MODE}" = "v2" ]]; then
-        sed -i "/cloudProviderBackoffExponent/d" /etc/kubernetes/azure.json
-        sed -i "/cloudProviderBackoffJitter/d" /etc/kubernetes/azure.json
+        sed -i "/cloudProviderBackoffExponent/d" $AZURE_JSON_PATH
+        sed -i "/cloudProviderBackoffJitter/d" $AZURE_JSON_PATH
     fi
-    if [[ -n "${MASTER_NODE}" ]]; then
-        if [[ "${ENABLE_AGGREGATED_APIS}" = True ]]; then
-            generateAggregatedAPICerts
-        fi
-    fi
-
-    configureKubeletServerCert
 }
 
 configureCNI() {
@@ -262,13 +242,15 @@ configureCNIIPTables() {
     fi
 }
 
-{{if NeedsContainerd}}
+{{- if NeedsContainerd}}
 ensureContainerd() {
-    echo "Starting cri-containerd service..."
+    wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    wait_for_file 1200 1 /etc/containerd/config.toml || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart containerd || exit $ERR_SYSTEMCTL_START_FAIL
 }
 {{end}}
 
+{{- if IsDockerContainerRuntime}}
 ensureDocker() {
     DOCKER_SERVICE_EXEC_START_FILE=/etc/systemd/system/docker.service.d/exec_start.conf
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -296,14 +278,15 @@ ensureDocker() {
     wait_for_file 1200 1 $DOCKER_MONITOR_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart docker-monitor.timer || exit $ERR_SYSTEMCTL_START_FAIL
 }
+{{end}}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms}}
 ensureKMS() {
     systemctlEnableAndStart kms || exit $ERR_SYSTEMCTL_START_FAIL
 }
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+{{- if IsIPv6Enabled}}
 ensureDHCPv6() {
     wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
@@ -313,6 +296,8 @@ ensureDHCPv6() {
 {{end}}
 
 ensureKubelet() {
+    wait_for_file 1200 1 /etc/sysctl.d/11-aks-engine.conf || exit $ERR_FILE_WATCH_TIMEOUT
+    sysctl_reload 10 5 120 || exit $ERR_SYSCTL_RELOAD
     KUBELET_DEFAULT_FILE=/etc/default/kubelet
     wait_for_file 1200 1 $KUBELET_DEFAULT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     KUBECONFIG_FILE=/var/lib/kubelet/kubeconfig
@@ -362,7 +347,7 @@ ensureK8sControlPlane() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
-{{if IsAzurePolicyAddonEnabled}}
+{{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
     retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
 }
@@ -378,14 +363,13 @@ createKubeManifestDir() {
 }
 
 writeKubeConfig() {
-    KUBECONFIGDIR=/home/$ADMINUSER/.kube
-    KUBECONFIGFILE=$KUBECONFIGDIR/config
-    mkdir -p $KUBECONFIGDIR
-    touch $KUBECONFIGFILE
-    chown $ADMINUSER:$ADMINUSER $KUBECONFIGDIR
-    chown $ADMINUSER:$ADMINUSER $KUBECONFIGFILE
-    chmod 700 $KUBECONFIGDIR
-    chmod 600 $KUBECONFIGFILE
+    local DIR=/home/$ADMINUSER/.kube
+    local FILE=$DIR/config
+    mkdir -p $DIR
+    touch $FILE
+    chown $ADMINUSER:$ADMINUSER $DIR $FILE
+    chmod 700 $DIR
+    chmod 600 $FILE
     set +x
     echo "
 ---
@@ -407,10 +391,12 @@ users:
   user:
     client-certificate-data: \"$KUBECONFIG_CERTIFICATE\"
     client-key-data: \"$KUBECONFIG_KEY\"
-" > $KUBECONFIGFILE
+" > $FILE
     set -x
+    KUBECTL="$KUBECTL --kubeconfig=$FILE"
 }
 
+{{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
     CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
     wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit $ERR_FILE_WATCH_TIMEOUT
@@ -420,7 +406,9 @@ configClusterAutoscalerAddon() {
     sed -i "s|<tenantID>|$(echo $TENANT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
     sed -i "s|<rg>|$(echo $RESOURCE_GROUP | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
 }
+{{end}}
 
+{{- if IsACIConnectorAddonEnabled}}
 configACIConnectorAddon() {
     ACI_CONNECTOR_CREDENTIALS=$(printf "{\"clientId\": \"%s\", \"clientSecret\": \"%s\", \"tenantId\": \"%s\", \"subscriptionId\": \"%s\", \"activeDirectoryEndpointUrl\": \"https://login.microsoftonline.com\",\"resourceManagerEndpointUrl\": \"https://management.azure.com/\", \"activeDirectoryGraphResourceId\": \"https://graph.windows.net/\", \"sqlManagementEndpointUrl\": \"https://management.core.windows.net:8443/\", \"galleryEndpointUrl\": \"https://gallery.azure.com/\", \"managementEndpointUrl\": \"https://management.core.windows.net/\"}" "$SERVICE_PRINCIPAL_CLIENT_ID" "$SERVICE_PRINCIPAL_CLIENT_SECRET" "$TENANT_ID" "$SUBSCRIPTION_ID" | base64 -w 0)
 
@@ -435,13 +423,16 @@ configACIConnectorAddon() {
     sed -i "s|<cert>|$ACI_CONNECTOR_CERT|g" $ACI_CONNECTOR_ADDON_FILE
     sed -i "s|<key>|$ACI_CONNECTOR_KEY|g" $ACI_CONNECTOR_ADDON_FILE
 }
+{{end}}
 
+{{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
     AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
     sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
 }
+{{end}}
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
+{{- if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
     {{if IsClusterAutoscalerAddonEnabled}}
     if [[ "${CLUSTER_AUTOSCALER_ADDON}" = true ]]; then
@@ -459,7 +450,7 @@ configAddons() {
 }
 {{end}}
 
-{{if HasNSeriesSKU}}
+{{- if HasNSeriesSKU}}
 configGPUDrivers() {
     {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
     {{/* we will manually install nvidia-docker2 */}}

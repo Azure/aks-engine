@@ -54,7 +54,7 @@ type Config struct {
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
 	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                         string `envconfig:"DISTRO"`
+	Distro                         string `envconfig:"DISTRO" default:""`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
 	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
 	Location                       string `envconfig:"LOCATION"`
@@ -213,6 +213,13 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if config.ContainerRuntime == "containerd" &&
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" &&
+		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip"
+		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+	}
+
 	if config.ContainerRuntime != "" {
 		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
@@ -299,6 +306,15 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			str := strings.Replace(pool.DiskEncryptionSetID, "SUB_ID", config.SubscriptionID, 1)
 			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
 			pool.DiskEncryptionSetID = str
+		}
+	}
+
+	if config.Distro != "" {
+		prop.MasterProfile.Distro = vlabs.Distro(config.Distro)
+		for _, pool := range prop.AgentPoolProfiles {
+			if !pool.IsWindows() {
+				pool.Distro = vlabs.Distro(config.Distro)
+			}
 		}
 	}
 

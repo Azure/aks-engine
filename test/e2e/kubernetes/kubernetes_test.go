@@ -53,7 +53,7 @@ const (
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
 	stabilityCommandTimeout                   = 3 * time.Second
-	windowsCommandTimeout                     = 1 * time.Minute
+	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
 	firstMasterRegexStr                       = "^k8s-master-"
@@ -212,7 +212,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				hostOSDNSValidationCommand = fmt.Sprintf("\"%s /tmp/%s\"", envString, hostOSDNSValidateScript)
 				for _, n := range nodes {
 					if n.IsLinux() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+hostOSDNSValidateScript)
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+hostOSDNSValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, hostOSDNSValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -225,6 +225,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
 			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				var cloudproviderEnabledPrefixes []string
+				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
+					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-master-")
+				}
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if profile.RequiresCloudproviderConfig() {
+						cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-"+profile.Name)
+					}
+				}
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				cloudproviderConfigValidateScript := "cloudprovider-config-validate.sh"
@@ -236,8 +245,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				err = sshConn.Execute(cloudproviderConfigValidationCommand, false)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript)
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) && n.HasSubstring(cloudproviderEnabledPrefixes) {
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+cloudproviderConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, cloudproviderConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -249,7 +258,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the expected k8s version", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
+			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" &&
+				eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.CustomWindowsPackageURL == "" {
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
@@ -327,6 +337,35 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
+		It("should validate aks-engine-provided sysctl configuration", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				for key, val := range eng.ExpandedDefinition.Properties.MasterProfile.SysctlDConfig {
+					for _, n := range nodes {
+						if n.HasSubstring([]string{"k8s-master"}) && n.IsUbuntu() {
+							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
+							Expect(err).NotTo(HaveOccurred())
+						}
+					}
+				}
+				for _, pool := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					for key, val := range pool.SysctlDConfig {
+						for _, n := range nodes {
+							if n.HasSubstring([]string{pool.Name}) && n.IsUbuntu() {
+								err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
+								Expect(err).NotTo(HaveOccurred())
+							}
+						}
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
 		It("should validate Ubuntu host OS network configuration on all nodes", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
@@ -355,7 +394,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						}
 						netConfigValidationCommand := fmt.Sprintf("\"GT_8_CORE_SKU=%s /tmp/%s\"", gt8CoreSKU, netConfigValidateScript)
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+netConfigValidateScript)
+							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+netConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -384,7 +423,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					for _, n := range nodes {
 						if !firstMasterRegexp.MatchString(n.Metadata.Name) {
-							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+CISFilesValidateScript)
+							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+CISFilesValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, CISValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -414,7 +453,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					for _, n := range nodes {
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+modprobeConfigValidateScript)
+							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+modprobeConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, netConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -442,7 +481,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+installedPackagesValidateScript)
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+installedPackagesValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, installedPackagesValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -468,7 +507,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					for _, n := range nodes {
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+sshdConfigValidateScript)
+							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+sshdConfigValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, sshdConfigValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -497,7 +536,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					for _, n := range nodes {
 						if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-							err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+pwQualityValidateScript)
+							err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+pwQualityValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, pwQualityValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 							Expect(err).NotTo(HaveOccurred())
@@ -540,7 +579,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						if n.HasSubstring(auditDNodePrefixes) {
 							enabled = true
 						}
-						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+auditdValidateScript)
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+auditdValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						auditdValidationCommand := fmt.Sprintf("\"ENABLED=%t /tmp/%s\"", enabled, auditdValidateScript)
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, auditdValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
@@ -580,33 +619,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(len(nodeList)).To(Equal(nodes))
 			} else {
 				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
-			}
-		})
-
-		It("should have node labels specific to masters or agents", func() {
-			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() &&
-				cfg.AddNodePoolInput == "" {
-				Expect(len(nodes)).To(Equal(eng.NodeCount()))
-			}
-			for _, n := range nodes {
-				role := "master"
-				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
-					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
-						continue
-					} else {
-						role = "agent"
-					}
-				}
-				labels := n.Metadata.Labels
-				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
-				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
-				if role == "master" && common.IsKubernetesVersionGe(
-					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
-					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-from-external-load-balancers", "true"))
-					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
-				}
 			}
 		})
 
@@ -1203,7 +1215,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						for _, n := range nodes {
 							if n.IsWindows() {
 								By(fmt.Sprintf("simulating docker and subsequent kubelet service crash on node: %s", n.Metadata.Name))
-								err = sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+simulateDockerdCrashScript)
+								err = sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+simulateDockerdCrashScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 								Expect(err).NotTo(HaveOccurred())
 								simulateDockerCrashCommand := fmt.Sprintf("\"/tmp/%s\"", simulateDockerdCrashScript)
 								err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, simulateDockerCrashCommand, true, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
@@ -1481,10 +1493,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				eng.HasNetworkPolicy("cilium") || eng.HasNetworkPolicy("antrea") {
 				nsDev, nsProd := "development", "production"
 				By("Creating development namespace")
-				namespaceDev, err := namespace.CreateIfNotExist(nsDev)
+				namespaceDev, err := namespace.CreateNamespaceDeleteIfExist(nsDev)
 				Expect(err).NotTo(HaveOccurred())
 				By("Creating production namespace")
-				namespaceProd, err := namespace.CreateIfNotExist(nsProd)
+				namespaceProd, err := namespace.CreateNamespaceDeleteIfExist(nsProd)
 				Expect(err).NotTo(HaveOccurred())
 				By("Labelling development namespace")
 				err = namespaceDev.Label("purpose=development")
@@ -1509,178 +1521,112 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Ensure there is a running frontend-prod pod")
-				running, err := pod.WaitOnSuccesses(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
+				networkpolicy.EnsureRunningPodExists(frontendProdDeploymentName, nsProd, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 				By("Ensure there is a running frontend-dev pod")
-				running, err = pod.WaitOnSuccesses(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
+				networkpolicy.EnsureRunningPodExists(frontendDevDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 				By("Ensure there is a running backend pod")
-				running, err = pod.WaitOnSuccesses(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
+				networkpolicy.EnsureRunningPodExists(backendDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 				By("Ensure there is a running network-policy pod")
-				running, err = pod.WaitOnSuccesses(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(running).To(Equal(true))
+				networkpolicy.EnsureRunningPodExists(nwpolicyDeploymentName, nsDev, 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 
 				By("Ensuring we have outbound internet access from the frontend-prod pods")
-				frontendProdPods, err := frontendProdDeployment.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(frontendProdPods)).ToNot(BeZero())
-				pl := pod.List{Pods: frontendProdPods}
-				pass, err := pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
+				frontendProdPods := networkpolicy.GetRunningPodsFromDeployment(frontendProdDeployment)
+				networkpolicy.EnsureOutboundInternetAccess(frontendProdPods, cfg)
 
 				By("Ensuring we have outbound internet access from the frontend-dev pods")
-				frontendDevPods, err := frontendDevDeployment.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(frontendDevPods)).ToNot(BeZero())
-				pl = pod.List{Pods: frontendDevPods}
-				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
+				frontendDevPods := networkpolicy.GetRunningPodsFromDeployment(frontendDevDeployment)
+				networkpolicy.EnsureOutboundInternetAccess(frontendDevPods, cfg)
 
 				By("Ensuring we have outbound internet access from the backend pods")
-				backendPods, err := backendDeployment.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(backendPods)).ToNot(BeZero())
-				pl = pod.List{Pods: backendPods}
-				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
+				backendPods := networkpolicy.GetRunningPodsFromDeployment(backendDeployment)
+				networkpolicy.EnsureOutboundInternetAccess(backendPods, cfg)
 
 				By("Ensuring we have outbound internet access from the network-policy pods")
-				nwpolicyPods, err := nwpolicyDeployment.PodsRunning()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(len(nwpolicyPods)).ToNot(BeZero())
-				pl = pod.List{Pods: nwpolicyPods}
-				pass, err = pl.CheckOutboundConnection(5*time.Second, cfg.Timeout, api.Linux)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pass).To(BeTrue())
+				nwpolicyPods := networkpolicy.GetRunningPodsFromDeployment(nwpolicyDeployment)
+				networkpolicy.EnsureOutboundInternetAccess(nwpolicyPods, cfg)
 
 				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
-				pl = pod.List{Pods: nwpolicyPods}
-				for _, frontendProdPod := range frontendProdPods {
-					pass, err = pl.ValidateCurlConnection(frontendProdPod.Status.PodIP, 30*time.Second, cfg.Timeout)
-					if err != nil {
-						e := frontendProdPod.Describe()
-						if e != nil {
-							log.Printf("Unable to describe pod %s\n: %s", frontendProdPod.Metadata.Name, e)
-						}
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, frontendProdPods, validateNetworkPolicyTimeout, true)
 
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
-				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
-					if err != nil {
-						e := backendPod.Describe()
-						if e != nil {
-							log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
-						}
-					}
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pass).To(BeTrue())
-				}
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, true)
 
 				By("Applying a network policy to deny ingress access to app: webapp, role: backend pods in development namespace")
-				nwpolicyName, namespace := "backend-deny-ingress", nsDev
-				err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-deny-ingress.yaml"), nwpolicyName, namespace)
-				Expect(err).NotTo(HaveOccurred())
+				nwpolicyName, namespace, nwpolicyFileName := "backend-deny-ingress", nsDev, "backend-policy-deny-ingress.yaml"
+				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
-				for _, backendPod := range backendPods {
-					pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
-					if err != nil {
-						e := backendPod.Describe()
-						if e != nil {
-							log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
-						}
-					}
-					Expect(err).Should(HaveOccurred())
-					Expect(pass).To(BeFalse())
-				}
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+
+				By("Cleaning up after ourselves")
+				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+				By("Applying a network policy to deny egress access in development namespace")
+				nwpolicyName, namespace, nwpolicyFileName = "backend-deny-egress", nsDev, "backend-policy-deny-egress.yaml"
+				networkpolicy.ApplyNetworkPolicy(nwpolicyName, nsDev, nwpolicyFileName, PolicyDir)
+
+				By("Ensuring we no longer have egress access from the network-policy pods to backend pods")
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+				networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, false)
 
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
-					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
-					nwpolicyName, namespace = "backend-allow-ingress-pod-label", nsDev
-					err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-label.yaml"), nwpolicyName, namespace)
-					Expect(err).NotTo(HaveOccurred())
 
-					By("Ensuring we have ingress access from pods with matching labels")
-					pl = pod.List{Pods: backendPods}
-					for _, backendDstPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendDstPod.Status.PodIP, 30*time.Second, cfg.Timeout)
-						if err != nil {
-							e := backendDstPod.Describe()
-							if e != nil {
-								log.Printf("Unable to describe pod %s\n: %s", backendDstPod.Metadata.Name, e)
-							}
-						}
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
-					}
+					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods in any namespace from pods with app: webapp, role: backend labels in development namespace")
+					nwpolicyName, namespace, nwpolicyFileName := "backend-allow-egress-pod-label", nsDev, "backend-policy-allow-egress-pod-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+
+					By("Ensuring we have egress access from pods with matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, true)
 
 					By("Ensuring we don't have ingress access from pods without matching labels")
-					pl = pod.List{Pods: nwpolicyPods}
-					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
-						if err != nil {
-							e := backendPod.Describe()
-							if e != nil {
-								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
-							}
-						}
-						Expect(err).Should(HaveOccurred())
-						Expect(pass).To(BeFalse())
-					}
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods from pods with app: webapp, role: backend labels in same development namespace")
+					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-egress-pod-namespace-label", nsDev, "backend-policy-allow-egress-pod-namespace-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+
+					By("Ensuring we have egress access from pods with matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+
+					By("Ensuring we don't have ingress access from pods without matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, false)
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
+					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-ingress-pod-label", nsDev, "backend-policy-allow-ingress-pod-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+
+					By("Ensuring we have ingress access from pods with matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, backendPods, validateNetworkPolicyTimeout, true)
+
+					By("Ensuring we don't have ingress access from pods without matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
 
 					By("Cleaning up after ourselves")
 					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
 					By("Applying a network policy to only allow ingress access to app: webapp role:backends in development namespace from pods with label app:webapp, role: frontendProd within namespace with label purpose: development")
-					nwpolicyName, namespace = "backend-policy-allow-ingress-pod-namespace-label", nsDev
-					err = networkpolicy.CreateNetworkPolicyFromFile(filepath.Join(PolicyDir, "backend-policy-allow-ingress-pod-namespace-label.yaml"), nwpolicyName, namespace)
-					Expect(err).NotTo(HaveOccurred())
+					nwpolicyName, namespace, nwpolicyFileName = "backend-policy-allow-ingress-pod-namespace-label", nsDev, "backend-policy-allow-ingress-pod-namespace-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 					By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
-					pl = pod.List{Pods: frontendProdPods}
-					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, validateNetworkPolicyTimeout)
-						if err != nil {
-							e := backendPod.Describe()
-							if e != nil {
-								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
-							}
-						}
-						Expect(err).Should(HaveOccurred())
-						Expect(pass).To(BeFalse())
-					}
+					networkpolicy.EnsureConnectivityResultBetweenPods(frontendProdPods, backendPods, validateNetworkPolicyTimeout, false)
 
 					By("Ensuring we have ingress access from role:frontend pods in development namespace")
-					pl = pod.List{Pods: frontendDevPods}
-					for _, backendPod := range backendPods {
-						pass, err = pl.ValidateCurlConnection(backendPod.Status.PodIP, 30*time.Second, cfg.Timeout)
-						if err != nil {
-							e := backendPod.Describe()
-							if e != nil {
-								log.Printf("Unable to describe pod %s\n: %s", backendPod.Metadata.Name, e)
-							}
-						}
-						Expect(err).NotTo(HaveOccurred())
-						Expect(pass).To(BeTrue())
-					}
+					networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, true)
 
 					By("Cleaning up after ourselves")
 					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
@@ -1851,21 +1797,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Windows from Linux deployment")
 				name = fmt.Sprintf("linux-2-windows-%s", cfg.Name)
 				command = fmt.Sprintf("wget %s", windowsService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, windowsCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
@@ -2003,7 +1949,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
-						err := sshConn.CopyToRemote(n.Metadata.Name, "/tmp/"+timeSyncValidateScript)
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+timeSyncValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, timeSyncValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -2142,6 +2088,29 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("Keep long-running php-apache workloads running for soak clusters")
+			}
+		})
+
+		It("should have node labels specific to masters or agents", func() {
+			nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
+			for _, n := range nodes {
+				role := "master"
+				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
+					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+						continue
+					} else {
+						role = "agent"
+					}
+				}
+				labels := n.Metadata.Labels
+				Expect(labels).To(HaveKeyWithValue("kubernetes.io/role", role))
+				Expect(labels).To(HaveKey(fmt.Sprintf("node-role.kubernetes.io/%s", role)))
+				if role == "master" && common.IsKubernetesVersionGe(
+					eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.1") {
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-from-external-load-balancers", "true"))
+					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
+				}
 			}
 		})
 	})

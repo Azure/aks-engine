@@ -124,6 +124,7 @@ type FeatureFlags struct {
 	BlockOutboundInternet    bool `json:"blockOutboundInternet,omitempty"`
 	EnableIPv6DualStack      bool `json:"enableIPv6DualStack,omitempty"`
 	EnableTelemetry          bool `json:"enableTelemetry,omitempty"`
+	EnableIPv6Only           bool `json:"enableIPv6Only,omitempty"`
 }
 
 // ServicePrincipalProfile contains the client and secret used by the cluster for Azure Resource CRUD
@@ -209,6 +210,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername             string            `json:"adminUsername"`
 	AdminPassword             string            `json:"adminPassword" conform:"redact"`
+	CSIProxyURL               string            `json:"csiProxyURL,omitempty"`
+	EnableCSIProxy            *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef                  *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion              string            `json:"imageVersion"`
 	WindowsImageSourceURL     string            `json:"windowsImageSourceURL"`
@@ -446,6 +449,8 @@ type KubernetesConfig struct {
 	UseCloudControllerManager         *bool                 `json:"useCloudControllerManager,omitempty"`
 	CustomWindowsPackageURL           string                `json:"customWindowsPackageURL,omitempty"`
 	WindowsNodeBinariesURL            string                `json:"windowsNodeBinariesURL,omitempty"`
+	WindowsContainerdURL              string                `json:"windowsContainerdURL,omitempty"`
+	WindowsSdnPluginURL               string                `json:"windowsSdnPluginURL,omitempty"`
 	UseInstanceMetadata               *bool                 `json:"useInstanceMetadata,omitempty"`
 	EnableRbac                        *bool                 `json:"enableRbac,omitempty"`
 	EnableSecureKubelet               *bool                 `json:"enableSecureKubelet,omitempty"`
@@ -566,13 +571,15 @@ type MasterProfile struct {
 	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+	CosmosEtcd    *bool             `json:"cosmosEtcd,omitempty"`
+	SysctlDConfig map[string]string `json:"sysctldConfig,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -650,6 +657,8 @@ type AgentPoolProfile struct {
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 	EnableVMSSDiskEncryption            *bool                `json:"enableVMSSDiskEncryption,omitempty"`
+	SysctlDConfig                       map[string]string    `json:"sysctldConfig,omitempty"`
+	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -1199,13 +1208,13 @@ func (p *Properties) IsVHDDistroForAllNodes() bool {
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro != Ubuntu && ap.Distro != Ubuntu1804 {
+			if !ap.IsUbuntuNonVHD() {
 				return false
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return true
 }
@@ -1214,13 +1223,13 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 func (p *Properties) HasUbuntuDistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu || ap.Distro == Ubuntu1804 {
+			if ap.IsUbuntuNonVHD() {
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return false
 }
@@ -1244,13 +1253,17 @@ func (p *Properties) HasUbuntu1604DistroNodes() bool {
 func (p *Properties) HasUbuntu1804DistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu1804 {
+			switch ap.Distro {
+			case Ubuntu1804, Ubuntu1804Gen2:
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu1804
+		switch p.MasterProfile.Distro {
+		case Ubuntu1804, Ubuntu1804Gen2:
+			return true
+		}
 	}
 	return false
 }
@@ -1476,7 +1489,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKSUbuntu1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 		return true
 	default:
 		return false
@@ -1620,7 +1633,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
 		default:
 			return false
@@ -1637,6 +1650,36 @@ func (a *AgentPoolProfile) IsUbuntu() bool {
 // IsUbuntuNonVHD returns true if the distro uses a base Ubuntu image
 func (a *AgentPoolProfile) IsUbuntuNonVHD() bool {
 	return a.IsUbuntu() && !a.IsVHDDistro()
+}
+
+// RequiresCloudproviderConfig returns true if the azure.json cloudprovider config should be delivered to the nodes in this pool
+func (a *AgentPoolProfile) RequiresCloudproviderConfig() bool {
+	if a.KubernetesConfig != nil && a.KubernetesConfig.KubeletConfig != nil {
+		if v, ok := a.KubernetesConfig.KubeletConfig["--cloud-provider"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+		if v, ok := a.KubernetesConfig.KubeletConfig["--cloud-config"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+		if v, ok := a.KubernetesConfig.KubeletConfig["--azure-container-registry-config"]; ok {
+			if v != "" {
+				return true
+			}
+		} else {
+			return true
+		}
+	} else {
+		return true
+	}
+	return false
 }
 
 // GetKubernetesLabels returns a k8s API-compliant labels string for nodes in this profile
@@ -1666,6 +1709,14 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 		buf.WriteString(fmt.Sprintf(",%s=%s", key, a.CustomNodeLabels[key]))
 	}
 	return buf.String()
+}
+
+// IsCSIProxyEnabled returns true if csi proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
+	}
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // HasSecrets returns true if the customer specified secrets to install
@@ -2147,12 +2198,18 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = agentPoolProfilesCount * common.MaxAgentCount
 		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket = DefaultAzureStackKubernetesCloudProviderRateLimitBucket
+		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS == 0 {
 		if (DefaultKubernetesCloudProviderRateLimitQPS / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket)) < common.MinCloudProviderQPSToBucketFactor {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucket) * common.MinCloudProviderQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultKubernetesCloudProviderRateLimitQPS
+		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPS = DefaultAzureStackKubernetesCloudProviderRateLimitQPS
 		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite == 0 {
@@ -2162,12 +2219,18 @@ func (p *Properties) SetCloudProviderRateLimitDefaults() {
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = agentPoolProfilesCount * common.MaxAgentCount
 		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite = DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite
+		}
 	}
 	if p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite == 0 {
 		if (DefaultKubernetesCloudProviderRateLimitQPSWrite / float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite)) < common.MinCloudProviderQPSToBucketFactor {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = float64(p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitBucketWrite) * common.MinCloudProviderQPSToBucketFactor
 		} else {
 			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = DefaultKubernetesCloudProviderRateLimitQPSWrite
+		}
+		if p.IsAzureStackCloud() {
+			p.OrchestratorProfile.KubernetesConfig.CloudProviderRateLimitQPSWrite = DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite
 		}
 	}
 }
@@ -2196,19 +2259,32 @@ func (k *KubernetesConfig) RequiresDocker() bool {
 }
 
 // SetCloudProviderBackoffDefaults sets default cloudprovider backoff config
-func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
+func (p *Properties) SetCloudProviderBackoffDefaults() {
+	k := p.OrchestratorProfile.KubernetesConfig
 	if k.CloudProviderBackoffDuration == 0 {
 		k.CloudProviderBackoffDuration = DefaultKubernetesCloudProviderBackoffDuration
+		if p.IsAzureStackCloud() {
+			k.CloudProviderBackoffDuration = DefaultAzureStackKubernetesCloudProviderBackoffDuration
+		}
 	}
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
+		if p.IsAzureStackCloud() {
+			k.CloudProviderBackoffRetries = DefaultAzureStackKubernetesCloudProviderBackoffRetries
+		}
 	}
 	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
 		if k.CloudProviderBackoffExponent == 0 {
 			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
+			if p.IsAzureStackCloud() {
+				k.CloudProviderBackoffExponent = DefaultAzureStackKubernetesCloudProviderBackoffExponent
+			}
 		}
 		if k.CloudProviderBackoffJitter == 0 {
 			k.CloudProviderBackoffJitter = DefaultKubernetesCloudProviderBackoffJitter
+			if p.IsAzureStackCloud() {
+				k.CloudProviderBackoffJitter = DefaultAzureStackKubernetesCloudProviderBackoffJitter
+			}
 		}
 	}
 }
@@ -2241,6 +2317,8 @@ func (f *FeatureFlags) IsFeatureEnabled(feature string) bool {
 			return f.EnableIPv6DualStack
 		case "EnableTelemetry":
 			return f.EnableTelemetry
+		case "EnableIPv6Only":
+			return f.EnableIPv6Only
 		default:
 			return false
 		}
@@ -2336,6 +2414,7 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"KMS_PROVIDER_VAULT_NAME":              input.ClusterKeyVaultName,
 		"IS_HOSTED_MASTER":                     strconv.FormatBool(cs.Properties.IsHostedMasterProfile()),
 		"IS_IPV6_DUALSTACK_FEATURE_ENABLED":    strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
+		"IS_IPV6_ENABLED":                      strconv.FormatBool(cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack")),
 		"AUTHENTICATION_METHOD":                cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"IDENTITY_SYSTEM":                      cs.Properties.GetCustomCloudIdentitySystem(),
 		"NETWORK_API_VERSION":                  APIVersionNetwork,

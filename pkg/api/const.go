@@ -27,6 +27,7 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
 	CoreOS            Distro = "coreos"
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
@@ -258,14 +259,13 @@ const (
 const (
 	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
 	DefaultAzureStackUseInstanceMetadata = false
-
 	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
 	DefaultAzureStackAcceleratedNetworking = false
-
-	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
+	// DefaultAzureStackAvailabilityProfile set to AvailabilitySet as VMSS clusters are not suppored on Azure Stack
+	DefaultAzureStackAvailabilityProfile = AvailabilitySet
+	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment
 	DefaultAzureStackFaultDomainCount = 3
-
-	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
+	// MaxAzureStackManagedDiskSize is the size in GB of the etcd disk volumes when total nodes count is greater than 10
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
@@ -308,6 +308,22 @@ const (
 	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
+// Azure Stack configures all clusters as if they were large clusters.
+const (
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 1
+	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
+	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
+	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "5m"
+)
+
 const (
 	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
 	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
@@ -320,14 +336,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.0.30"
+	AzureCniPluginVerLinux = "v1.0.33"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.0.30"
+	AzureCniPluginVerWindows = "v1.0.33"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.6"
+	CNIPluginVer = "v0.8.5"
 )
 
 const (
@@ -414,7 +430,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.18"
+	DefaultEtcdVersion = "3.3.19"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -440,13 +456,17 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fc00::/8"
+	DefaultKubernetesClusterSubnetIPv6 = "fc00::/48"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultKubernetesServiceCIDRIPv6 specifies the IPv6 subnet that kubernetes will create Service IPs within.
+	DefaultKubernetesServiceCIDRIPv6 = "fd00::/108"
+	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
+	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.10"
+	DefaultMobyVersion = "3.0.11"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.3.2"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

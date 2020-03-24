@@ -16,7 +16,7 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     sudo timedatectl status | grep 'Network time on: yes' || exit 1
     sudo timedatectl status | grep 'NTP synchronized: yes' || exit 1
   elif [[ $RELEASE == "18.04" ]]; then
-    sudo timedatectl status | grep 'systemd-timesyncd.service active: yes' || exit 1
+    sudo ntpstat | grep 'synchronised to NTP server' || exit 1
     sudo timedatectl status | grep 'System clock synchronized: yes' || exit 1
   fi
 fi
@@ -26,5 +26,7 @@ if [[ $OS == $DEBIAN_OS_NAME ]]; then
 fi
 
 sudo timedatectl status | grep 'RTC in local TZ: no' || exit 1
-sudo systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
-sudo systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
+if ! { [ $OS = $UBUNTU_OS_NAME ] && [ $RELEASE = "18.04" ]; }; then
+  sudo systemctl status systemd-timesyncd | grep 'Active: active' || exit 1
+  sudo systemctl status systemd-timesyncd | grep 'Status: "Synchronized to time server' || exit 1
+fi
