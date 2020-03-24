@@ -43,7 +43,7 @@ type vmStatus int
 const (
 	defaultTimeout                     = time.Minute * 20
 	defaultCordonDrainTimeout          = time.Minute * 20
-	nodePropertiesCopyTimeout          = time.Minute * 5
+	nodePropertiesCopyTimeout          = time.Second * 5
 	clusterUpgradeTimeout              = time.Minute * 180
 	vmStatusUpgraded          vmStatus = iota
 	vmStatusNotUpgraded
@@ -726,7 +726,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	// additionally only drain if we actually did something on the node.
 	// Ideally we would bring nodes up with the right taints/annotations/labels but VMSS makes that pretty hard  (doable in VMAS)
 
-	ch := make(chan bool, 1)
+	ch := make(chan struct{}, 1)
 	go func() {
 		for {
 			oldNode, err := client.GetNode(oldNodeName)
@@ -743,28 +743,22 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 				continue
 			}
 
-			copiedProps, err := ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
+			err = ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
 			if err != nil {
 				ku.logger.Debugf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", oldNodeName, newNodeName, err)
 				time.Sleep(time.Second * 5)
 			} else {
-				ch <- copiedProps
+				ch <- struct{}{}
 			}
 		}
 	}()
 
-	copiedProps := false
 	select {
-	case copiedProps = <-ch:
+	case <-ch:
 	case <-time.After(nodePropertiesCopyTimeout):
 		err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
 		ku.logger.Errorf(err.Error())
 		return err
-	}
-
-	if !copiedProps {
-		ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
-		return nil
 	}
 
 	ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
@@ -783,9 +777,8 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	return nil
 }
 
-func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) (bool, error) {
+func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient, oldNodeName string, oldNode *v1.Node, newNodeName string, newNode *v1.Node) error {
 	// copy additional custom annotations from old node to new node
-	didSomething := false
 	if oldNode.Annotations != nil {
 		if newNode.Annotations == nil {
 			newNode.Annotations = map[string]string{}
@@ -794,7 +787,6 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		for k, v := range oldNode.Annotations {
 			if _, ok := newNode.Annotations[k]; !ok {
 				newNode.Annotations[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
-				didSomething = true
 			}
 		}
 	}
@@ -809,7 +801,6 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 		for k, v := range oldNode.Labels {
 			if _, ok := newNode.Labels[k]; !ok {
 				newNode.Labels[k] = strings.Replace(v, oldNodeName, newNodeName, -1)
-				didSomething = true
 			}
 		}
 	}
@@ -817,7 +808,6 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	// copy Taints from old node to new node
 	if len(oldNode.Spec.Taints) > 0 {
 		//be smarter here and check
-		didSomething = true
 		newNode.Spec.Taints = append([]v1.Taint{}, oldNode.Spec.Taints...)
 		for i := range newNode.Spec.Taints {
 			newNode.Spec.Taints[i].Value = strings.Replace(newNode.Spec.Taints[i].Value, oldNodeName, newNodeName, -1)
@@ -827,9 +817,9 @@ func (ku *Upgrader) copyCustomNodeProperties(client armhelpers.KubernetesClient,
 	_, err := client.UpdateNode(newNode)
 	if err != nil {
 		ku.logger.Warningf("Failed to update the new node %s: %v", newNodeName, err)
-		return false, err
+		return err
 	}
-	return didSomething, nil
+	return nil
 }
 
 func (ku *Upgrader) getKubernetesClient(timeout time.Duration) (armhelpers.KubernetesClient, error) {
