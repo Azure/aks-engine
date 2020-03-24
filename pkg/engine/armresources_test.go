@@ -121,7 +121,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 								Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 								VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 									Publisher:               to.StringPtr("Microsoft.AKS"),
@@ -556,7 +556,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                map[string]interface{}{},
 				ProtectedSettings: map[string]interface{}{
-					"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+					"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 			Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 				Publisher:               to.StringPtr("Microsoft.AKS"),
@@ -856,7 +856,7 @@ func TestGenerateARMResourceWithVMASAgents(t *testing.T) {
 				AutoUpgradeMinorVersion: to.BoolPtr(true),
 				Settings:                &map[string]interface{}{},
 				ProtectedSettings: &map[string]interface{}{
-					"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`},
+					"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`},
 			},
 			Name:     to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), copyIndex(variables('agentpool1Offset')),'/cse', '-agent-', copyIndex(variables('agentpool1Offset')))]"),
 			Type:     to.StringPtr("Microsoft.Compute/virtualMachines/extensions"),
@@ -1354,7 +1354,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 								Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 								VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 									Publisher:               to.StringPtr("Microsoft.AKS"),
@@ -1979,7 +1979,7 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 									AutoUpgradeMinorVersion: to.BoolPtr(true),
 									Settings:                map[string]interface{}{},
 									ProtectedSettings: map[string]interface{}{
-										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
+										"commandToExecute": `[concat('echo $(date),$(hostname);  for i in $(seq 1 1200); do grep -Fq "EOF" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),` + generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled) + `,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=true GPU_NODE=false SGX_NODE=false AUDITD_ENABLED=false /usr/bin/nohup /bin/bash -c "/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1"')]`}}}, {
 								Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
 								VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
 									Publisher:               to.StringPtr("Microsoft.AKS"),
