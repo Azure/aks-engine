@@ -24,9 +24,8 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var userAssignedIDEnabled bool
 	if k8sConfig != nil {
-		useManagedIdentity = k8sConfig.UseManagedIdentity
 		userAssignedIDEnabled = k8sConfig.UserAssignedIDEnabled()
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
