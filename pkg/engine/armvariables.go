@@ -100,7 +100,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
 		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
-		"userAssignedIDReference":       "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+		"userAssignedIDReference":       "[resourceId(variables('userAssignedID'))]",
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),

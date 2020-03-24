@@ -1964,10 +1964,18 @@ func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedClientID != ""
 }
 
+func (k *KubernetesConfig) UserAssignedIDIsReference() bool {
+	return k.UserAssignedIDEnabled() && strings.Contains(k.UserAssignedID, "/")
+}
+
 // GetUserAssignedID returns the user assigned ID if it is enabled.
 func (k *KubernetesConfig) GetUserAssignedID() string {
 	if k.UserAssignedIDEnabled() {
-		return k.UserAssignedID
+		if strings.Contains(k.UserAssignedID, "/") {
+			return k.UserAssignedID
+		}
+
+		return "Microsoft.ManagedIdentity/userAssignedIdentities/" + k.UserAssignedID
 	}
 	return ""
 }

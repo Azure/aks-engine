@@ -27,24 +27,30 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var useManagedIdentity, userAssignedIDEnabled, createNewUserAssignedIdentity bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
+		createNewUserAssignedIdentity = !kubernetesConfig.UserAssignedIDIsReference()
 	}
 
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
-		userAssignedID := createUserAssignedIdentities()
+		if createNewUserAssignedIdentity {
+			userAssignedID := createUserAssignedIdentities()
+			armResources = append(armResources, userAssignedID)
+		}
+
 		var msiRoleAssignment RoleAssignmentARM
 		if isHostedMaster {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
 		} else {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
 		}
-		armResources = append(armResources, userAssignedID, msiRoleAssignment)
+
+		armResources = append(armResources, msiRoleAssignment)
 	}
 
 	// Create the Standard Load Balancer resource spec, so long as:
