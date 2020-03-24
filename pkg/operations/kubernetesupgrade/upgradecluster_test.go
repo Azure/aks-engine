@@ -1068,4 +1068,41 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
+
+	It("Tests No Need to copy as Labels/Annotations are the same", func() {
+		u := &Upgrader{}
+
+		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
+
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion, false)
+
+		oldNode := &v1.Node{}
+		oldNode.Annotations = map[string]string{}
+		oldNode.Annotations["ann1"] = "val1"
+		oldNode.Annotations["ann2"] = "val2"
+
+		oldNode.Labels = map[string]string{}
+		oldNode.Labels["label1"] = "val1"
+		oldNode.Labels["label2"] = "val2"
+
+		//hard to test this
+		oldNode.Spec.Taints = []v1.Taint{}
+
+		newNode := &v1.Node{}
+		newNode.Annotations = map[string]string{}
+		newNode.Annotations["ann1"] = "newval1"
+		newNode.Annotations["ann2"] = "newval2"
+
+		newNode.Labels = map[string]string{}
+		newNode.Labels["label1"] = "newval1"
+		newNode.Labels["label2"] = "newval2"
+
+		mockClient.MockKubernetesClient.UpdateNodeFunc = func(node *v1.Node) (*v1.Node, error) {
+			return node, nil
+		}
+
+		didSomething, err := u.copyCustomNodeProperties(mockClient.MockKubernetesClient, "oldnode", oldNode, "newnode", newNode)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(didSomething).To(BeFalse())
+	})
 })

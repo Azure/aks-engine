@@ -743,32 +743,31 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 				continue
 			}
 
-			didSomething, err := ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
+			copiedProps, err := ku.copyCustomNodeProperties(client, oldNodeName, oldNode, newNodeName, newNode)
 			if err != nil {
 				ku.logger.Debugf("Failed to copy custom annotations, labels, taints from old node %s to new node %s: %v", oldNodeName, newNodeName, err)
 				time.Sleep(time.Second * 5)
 			} else {
-				ch <- didSomething
+				ch <- copiedProps
 			}
 		}
 	}()
 
-	for {
-		select {
-		case didSomething := <-ch:
-			if didSomething {
-				ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
-				break
-			} else {
-				ku.logger.Infof("No annotations, labels, taints needed copying old node %s to new node %s.", oldNodeName, newNodeName)
-				return nil
-			}
-		case <-time.After(nodePropertiesCopyTimeout):
-			err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
-			ku.logger.Errorf(err.Error())
-			return err
-		}
+	copiedProps := false
+	select {
+	case copiedProps = <-ch:
+	case <-time.After(nodePropertiesCopyTimeout):
+		err := fmt.Errorf("Copying custom annotations, labels, taints from old node %s to new node %s can't complete within %v", oldNodeName, newNodeName, nodePropertiesCopyTimeout)
+		ku.logger.Errorf(err.Error())
+		return err
 	}
+
+	if !copiedProps {
+		ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
+		return nil
+	}
+
+	ku.logger.Infof("Successfully copied custom annotations, labels, taints from old node %s to new node %s.", oldNodeName, newNodeName)
 
 	var cordonDrainTimeout time.Duration
 	if ku.cordonDrainTimeout == nil {
