@@ -254,11 +254,7 @@ fi
 {{end}}
 
 {{- if IsHostedMaster }}
-NCLIB="nc"
-if [[ $OS == $COREOS_OS_NAME ]]; then
-    NCLIB="ncat"
-fi
-retrycmd_if_failure 50 1 3 $NCLIB -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then
