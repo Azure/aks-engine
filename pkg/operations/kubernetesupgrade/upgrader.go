@@ -777,7 +777,7 @@ func (ku *Upgrader) copyCustomPropertiesToNewNode(client armhelpers.KubernetesCl
 	}
 	err := operations.JustDrainNodeWithClient(client, ku.logger, newNodeName, cordonDrainTimeout)
 	if err != nil {
-		ku.logger.Warningf("Error draining agent VM %s. Proceeding with copying node properties. Error: %v", newNodeName, err)
+		ku.logger.Warningf("Error draining agent VM %s. Error: %v", newNodeName, err)
 		//would like to return err but draining is even more likely to fail
 	}
 	return nil
