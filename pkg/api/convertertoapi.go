@@ -609,7 +609,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.DiskEncryptionSetID = vlabs.DiskEncryptionSetID
-  api.EnableVMSSDiskEncryption = vlabs.EnableVMSSDiskEncryption
+	api.EnableVMSSDiskEncryption = vlabs.EnableVMSSDiskEncryption
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {
