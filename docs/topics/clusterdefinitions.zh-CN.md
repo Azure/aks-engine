@@ -31,13 +31,13 @@
 |名称|是否必须|说明|
 |---|---|---|
 |count|是|集群中master的节点可以指定为1，3，5。|
-|dnsPrefix|是|指定master节点的FQDN的dns前缀。当使用ssh或者命令行工具连接master的时候就需要用到这个FQDN。这个字段必须是一个唯一值。([用户自定义VNET的例子](../examples/vnet))|
+|dnsPrefix|是|指定master节点的FQDN的dns前缀。当使用ssh或者命令行工具连接master的时候就需要用到这个FQDN。这个字段必须是一个唯一值。([用户自定义VNET的例子](../../examples/vnet))|
 |firstConsecutiveStaticIP|只有当vnetSubnetId被设置是需要|指定第一个master节点的IP地址。后续的master节点的IP地址会根据这个值向后累加。|
 |vmsize|是|具体的值请参考 [Azure虚机规格](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-sizes/).  所选的虚机的规格必须最少有2个CPU核心和100GB的磁盘空间。|
-|vnetSubnetId|否|指定一个备用的VNET子网的ID。这个子网必须具有一个正确的VNET ID，并且处于同一个订阅中。([用户自定义VNET的例子](../examples/vnet))|
+|vnetSubnetId|否|指定一个备用的VNET子网的ID。这个子网必须具有一个正确的VNET ID，并且处于同一个订阅中。([用户自定义VNET的例子](../../examples/vnet))|
 
 ### agentPoolProfiles
-一个集群可以拥有0到12个agent pool配置。agent pool配置用来指定创建各种资源比如虚机，虚机规模集或者高可用集，Public/Private access，[attached storage disks](../examples/disks-storageaccount), [attached managed disks](../examples/disks-managed), 或者 [Windows](../examples/windows).
+一个集群可以拥有0到12个agent pool配置。agent pool配置用来指定创建各种资源比如虚机，虚机规模集或者高可用集，Public/Private access，[attached storage disks](../../examples/disks-storageaccount), [attached managed disks](../../examples/disks-managed), 或者 [Windows](../../examples/windows).
 
 |名称|是否必须|说明|
 |---|---|---|
@@ -47,9 +47,9 @@
 |dnsPrefix|当agent节点需要通过一个外部的负载均衡暴露给外部网络时使用。|这个值用来创建agent节点的FQDN，然后外部网络就可以通过这个FQDN远程连接到agent节点。这个字段必须是一个唯一值。|
 |name|是|agent pool配置的唯一名称。agent pool中各种资源的名称都基于这个名称创建。|
 |ports|当且仅当需要将服务暴露给外部网络时使用。|指定一个数组，其中包含了需要暴露给外部的端口号。每个端口都会配置一个tcp probe，并且只能被agent节点访问。最大可以指定150个端口。|
-|storageProfile|否, 默认值为`StorageAccount`|指定存储配置。可选值为[StorageAccount](../examples/disks-storageaccount)或者[ManagedDisks](../examples/disks-managed)|
+|storageProfile|否, 默认值为`StorageAccount`|指定存储配置。可选值为[StorageAccount](../../examples/disks-storageaccount)或者[ManagedDisks](../../examples/disks-managed)|
 |vmsize|是|指定虚机的规格[Azure VM Sizes](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-windows-sizes/).虚机最小必须是2个CPU核心。|
-|vnetSubnetId|否|指定备用的VNET子网的ID。这个子网必须具有一个正确的VNET ID，并且处于同一个订阅中。([用户自定义VNET的例子](../examples/vnet))|
+|vnetSubnetId|否|指定备用的VNET子网的ID。这个子网必须具有一个正确的VNET ID，并且处于同一个订阅中。([用户自定义VNET的例子](../../examples/vnet))|
 
 ### linuxProfile
 
@@ -118,7 +118,7 @@
 |名称|是否必须|说明|
 |---|---|---|
 |count|是|集群中master的节点可以指定为1，3，5。|
-|dnsPrefix|是|指定master节点的FQDN的dns前缀。当使用ssh或者命令行工具连接master的时候就需要用到这个FQDN。这个字段必须是一个唯一值。([用户自定义VNET的例子](../examples/vnet))|
+|dnsPrefix|是|指定master节点的FQDN的dns前缀。当使用ssh或者命令行工具连接master的时候就需要用到这个FQDN。这个字段必须是一个唯一值。([用户自定义VNET的例子](../../examples/vnet))|
 
 ### agentPoolProfiles
 对于"2016-03-30"版本apiVersion的集群定义文件，一个集群中只能包含一个agent pool配置。
