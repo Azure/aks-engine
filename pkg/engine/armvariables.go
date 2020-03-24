@@ -71,7 +71,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	var useInstanceMetadata *bool
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedID = kubernetesConfig.UserAssignedIDEnabled()
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
 		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata

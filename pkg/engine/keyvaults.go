@@ -18,7 +18,7 @@ func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 	masterCount := cs.Properties.MasterProfile.Count
 
 	if useManagedIdentity {
@@ -101,7 +101,7 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 
 	accessPolicy := map[string]interface{}{
 		"tenantId": "[variables('tenantID')]",
