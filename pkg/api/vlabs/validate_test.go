@@ -3500,6 +3500,23 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
 	})
+
+	t.Run("Should not support os type other than linux for single stack ipv6 and dual stack feature", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(true)
+		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
+			cs.Properties.FeatureFlags = &featureFlags
+			masterProfile := cs.Properties.MasterProfile
+			masterProfile.Distro = Ubuntu
+			agentPoolProfiles := cs.Properties.AgentPoolProfiles
+			agentPoolProfiles[0].OSType = Windows
+			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
+		}
+
+	})
 }
 
 func TestValidateProperties_CustomNodeLabels(t *testing.T) {

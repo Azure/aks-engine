@@ -451,6 +451,13 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			return e
 		}
 
+		// validate os type is linux if dual stack feature is enabled
+		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
+			if agentPoolProfile.OSType == Windows {
+				return errors.Errorf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
+			}
+		}
+
 		// validate that each AgentPoolProfile Name is unique
 		if _, ok := profileNames[agentPoolProfile.Name]; ok {
 			return errors.Errorf("profile name '%s' already exists, profile names must be unique across pools", agentPoolProfile.Name)
