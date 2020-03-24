@@ -1292,7 +1292,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	}
 
 	if isIPv6 {
-		minVersion, err := semver.Make("1.18.0-alpha.4")
+		minVersion, err := semver.Make("1.18.0")
 		if err != nil {
 			return errors.New("could not validate version")
 		}
@@ -1454,7 +1454,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// dualstack IPVS mode supported from 1.16+
 	// dualstack IPtables mode supported from 1.18+
 	if ipv6DualStackEnabled && k.ProxyMode == KubeProxyModeIPTables {
-		minVersion, err := semver.Make("1.18.0-alpha.2")
+		minVersion, err := semver.Make("1.18.0")
 		if err != nil {
 			return errors.New("could not validate version")
 		}

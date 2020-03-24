@@ -1604,7 +1604,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 		"1.18": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorVersion: "1.18.0-alpha.1",
+					OrchestratorVersion: "1.18.0",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:     specConfig.KubernetesImageBase,
 						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
@@ -1616,7 +1616,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 		"1.18 user-configured": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorVersion: "1.18.0-alpha.1",
+					OrchestratorVersion: "1.18.0",
 					KubernetesConfig: &KubernetesConfig{
 						KubernetesImageBase:     specConfig.KubernetesImageBase,
 						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
@@ -1635,7 +1635,7 @@ func getContainerServicesMap() map[string]*ContainerService {
 		"1.18 + customCcmImage + customKubeAPIServerImage + customKubeControllerManagerImage + customKubeSchedulerImage": {
 			Properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorVersion: "1.18.0-alpha.1",
+					OrchestratorVersion: "1.18.0",
 					KubernetesConfig: &KubernetesConfig{
 						CustomCcmImage:                   customCcmImage,
 						CustomKubeAPIServerImage:         customKubeAPIServerImage,
