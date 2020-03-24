@@ -1549,17 +1549,17 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				networkpolicy.EnsureOutboundInternetAccess(nwpolicyPods, cfg)
 
 				By("Ensuring we have connectivity from network-policy pods to frontend-prod pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, frontendProdPods, cfg, true)
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, frontendProdPods, validateNetworkPolicyTimeout, true)
 
 				By("Ensuring we have connectivity from network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, true)
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, true)
 
 				By("Applying a network policy to deny ingress access to app: webapp, role: backend pods in development namespace")
 				nwpolicyName, namespace, nwpolicyFileName := "backend-deny-ingress", nsDev, "backend-policy-deny-ingress.yaml"
 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 				By("Ensuring we no longer have ingress access from the network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, false)
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
 
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
@@ -1569,22 +1569,51 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				networkpolicy.ApplyNetworkPolicy(nwpolicyName, nsDev, nwpolicyFileName, PolicyDir)
 
 				By("Ensuring we no longer have egress access from the network-policy pods to backend pods")
-				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, false)
-				networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, cfg, false)
+				networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
+				networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, false)
 
 				By("Cleaning up after ourselves")
 				networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
 
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.11.0") {
+
+					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods in any namespace from pods with app: webapp, role: backend labels in development namespace")
+					nwpolicyName, namespace, nwpolicyFileName := "backend-allow-egress-pod-label", nsDev, "backend-policy-allow-egress-pod-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+
+					By("Ensuring we have egress access from pods with matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, true)
+
+					By("Ensuring we don't have ingress access from pods without matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
+					By("Applying a network policy to allow egress access to app: webapp, role: frontend pods from pods with app: webapp, role: backend labels in same development namespace")
+					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-egress-pod-namespace-label", nsDev, "backend-policy-allow-egress-pod-namespace-label.yaml"
+					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
+
+					By("Ensuring we have egress access from pods with matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendDevPods, validateNetworkPolicyTimeout, true)
+
+					By("Ensuring we don't have ingress access from pods without matching labels")
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, frontendProdPods, validateNetworkPolicyTimeout, false)
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, nwpolicyPods, validateNetworkPolicyTimeout, false)
+
+					By("Cleaning up after ourselves")
+					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
+
 					By("Applying a network policy to only allow ingress access to app: webapp, role: backend pods in development namespace from pods in any namespace with the same labels")
 					nwpolicyName, namespace, nwpolicyFileName = "backend-allow-ingress-pod-label", nsDev, "backend-policy-allow-ingress-pod-label.yaml"
 					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 					By("Ensuring we have ingress access from pods with matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, backendPods, cfg, true)
+					networkpolicy.EnsureConnectivityResultBetweenPods(backendPods, backendPods, validateNetworkPolicyTimeout, true)
 
 					By("Ensuring we don't have ingress access from pods without matching labels")
-					networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, cfg, false)
+					networkpolicy.EnsureConnectivityResultBetweenPods(nwpolicyPods, backendPods, validateNetworkPolicyTimeout, false)
 
 					By("Cleaning up after ourselves")
 					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
@@ -1594,10 +1623,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					networkpolicy.ApplyNetworkPolicy(nwpolicyName, namespace, nwpolicyFileName, PolicyDir)
 
 					By("Ensuring we don't have ingress access from role:frontend pods in production namespace")
-					networkpolicy.EnsureConnectivityResultBetweenPods(frontendProdPods, backendPods, cfg, false)
+					networkpolicy.EnsureConnectivityResultBetweenPods(frontendProdPods, backendPods, validateNetworkPolicyTimeout, false)
 
 					By("Ensuring we have ingress access from role:frontend pods in development namespace")
-					networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, cfg, true)
+					networkpolicy.EnsureConnectivityResultBetweenPods(frontendDevPods, backendPods, validateNetworkPolicyTimeout, true)
 
 					By("Cleaning up after ourselves")
 					networkpolicy.DeleteNetworkPolicy(nwpolicyName, namespace)
