@@ -34741,9 +34741,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    if apt list --installed | grep 'auditd'; then
-      apt_get_purge 20 30 120 auditd &
-    fi
+    apt_get_purge auditd &
   fi
 }
 
@@ -35534,19 +35532,23 @@ apt_get_install() {
     wait_for_apt_locks
 }
 apt_get_purge() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
-        dpkg --configure -a --force-confdef
-        apt-get purge -o Dpkg::Options::="--force-confold" -y ${@} && break || \
-        if [ $i -eq $retries ]; then
-            return 1
-        else
-            sleep $wait_sleep
+    retries=20; wait_sleep=30; timeout=120
+    for package in $@; do
+        if apt list --installed | grep $package; then
+            for i in $(seq 1 $retries); do
+                wait_for_apt_locks
+                export DEBIAN_FRONTEND=noninteractive
+                dpkg --configure -a --force-confdef
+                apt-get purge -o Dpkg::Options::="--force-confold" -y $package && break || \
+                if [ $i -eq $retries ]; then
+                    return 1
+                else
+                    sleep $wait_sleep
+                fi
+            done
         fi
     done
-    echo Executed apt-get purge -y \"$@\" $i times;
+    echo Executed apt-get purge -y \"$package\" $i times;
     wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
@@ -35649,18 +35651,11 @@ removeEtcd() {
 }
 
 removeMoby() {
-    if apt list --installed | grep 'moby-engine'; then
-      apt_get_purge 20 30 120 moby-engine || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
-    if apt list --installed | grep 'moby-cli'; then
-      apt_get_purge 20 30 120 moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-engine moby-cli || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 removeContainerd() {
-    if apt list --installed | grep 'moby-containerd'; then
-      apt_get_purge 20 30 120 moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
-    fi
+    apt_get_purge moby-containerd || exit $ERR_MOBY_INSTALL_TIMEOUT
 }
 
 disableTimeSyncd() {
@@ -36310,7 +36305,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
+    time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
 {{end}}
 

@@ -61,10 +61,10 @@ func EnsureOutboundInternetAccess(pods []pod.Pod, cfg config.Config) {
 	Expect(pass).To(BeTrue())
 }
 
-func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, cfg config.Config, true bool) {
+func EnsureConnectivityResultBetweenPods(fromPods []pod.Pod, toPods []pod.Pod, timeout time.Duration, true bool) {
 	pl := pod.List{Pods: fromPods}
 	for _, toPod := range toPods {
-		pass, err := pl.ValidateCurlConnection(toPod.Status.PodIP, 30*time.Second, cfg.Timeout)
+		pass, err := pl.ValidateCurlConnection(toPod.Status.PodIP, 30*time.Second, timeout)
 		if true {
 			if err != nil {
 				e := toPod.Describe()
