@@ -367,8 +367,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 	agentFiles := []string{"/var/log/azure/cluster-provision.log", "/var/log/cloud-init.log",
 		"/var/log/cloud-init-output.log", "/var/log/syslog", "/var/log/azure/custom-script/handler.log",
 		"/opt/m", "/opt/azure/containers/kubelet.sh", "/opt/azure/containers/provision.sh",
-		"/opt/azure/provision-ps.log", "/var/log/azure/kubelet-status.log",
-		"/var/log/azure/docker-status.log", "/var/log/azure/systemd-journald-status.log"}
+		"/var/log/azure/kubelet-status.log", "/var/log/azure/docker-status.log", "/var/log/azure/systemd-journald-status.log"}
 	masterFiles := agentFiles
 	masterFiles = append(masterFiles, "/opt/azure/containers/mountetcd.sh", "/opt/azure/containers/setup-etcd.sh", "/opt/azure/containers/setup-etcd.log")
 	hostname := fmt.Sprintf("%s.%s.cloudapp.azure.com", cli.Config.Name, cli.Config.Location)
