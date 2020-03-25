@@ -6073,6 +6073,25 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	}
 }
 
+func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
+	k := KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "fooID",
+	}
+	if k.ShouldCreateNewUserAssignedIdentity() {
+		t.Errorf("expected ShouldCreateNewUserAssignedIdentity to be false when UserAssignedID does not have a resource id")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     exampleUserMSI,
+	}
+
+	if !k.UserAssignedIDEnabled() {
+		t.Errorf("expected ShouldCreateNewUserAssignedIdentity to be true when UserAssignedID has a resource id")
+	}
+}
+
 func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
 		UseManagedIdentity: true,
