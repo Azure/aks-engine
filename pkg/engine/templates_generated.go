@@ -37450,27 +37450,6 @@ downloadContainerd() {
     retrycmd_get_tarball 120 5 "$CONTAINERD_DOWNLOADS_DIR/${CONTAINERD_TGZ_TMP}" ${CONTAINERD_DOWNLOAD_URL} || exit $ERR_CONTAINERD_DOWNLOAD_TIMEOUT
 }
 
-ensureAPMZ() {
-    local version=$1
-    local apmz_url="https://upstreamartifacts.blob.core.windows.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
-    if [[ -f "$apmz_filepath" ]]; then
-        installed_version=$($apmz_filepath version)
-        if [[ "$version" == "$installed_version" ]]; then
-            # already installed, noop
-            return
-        fi
-        # linked, but not the version we expect
-    fi
-    install_dir="$APMZ_DOWNLOADS_DIR/$version"
-    download_path="$install_dir/apmz.gz"
-    mkdir -p "$install_dir"
-    retrycmd_get_tarball 120 5 "$download_path" "${apmz_url}"
-    tar -xvf "$download_path" -C "$install_dir"
-    bin_path="$install_dir/apmz_linux_amd64"
-    chmod +x "$bin_path"
-    ln -Ffs "$bin_path" "$apmz_filepath" # symlink apmz into /usr/local/bin/apmz
-}
-
 installCNI() {
     CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/} # Use bash builtin ## to remove all chars ("*") up to the final "/"
     if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
@@ -37639,13 +37618,6 @@ source {{GetCSEHelpersScriptFilepath}}
 wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEInstallScriptFilepath}}
 
-ensureAPMZ "v0.4.0"
-{{- if HasTelemetryEnabled }}
-eval "$(apmz bash -n "cse" -t "{{GetLinuxDefaultTelemetryTags}}" --api-key "{{GetApplicationInsightsTelemetryKey}}")"
-{{else}}
-eval "$(apmz bash -d)"
-{{end}}
-
 wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
 source {{GetCSEConfigScriptFilepath}}
 
@@ -37671,20 +37643,20 @@ else
     REBOOTREQUIRED=false
 fi
 
-time_metric "ConfigureAdminUser" configureAdminUser
+configureAdminUser
 
 {{- if not NeedsContainerd}}
-time_metric "CleanupContainerd" cleanUpContainerd
+cleanUpContainerd
 {{end}}
 
 if [[ "${GPU_NODE}" != "true" ]]; then
-    time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
+    cleanUpGPUDrivers
 fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
-    time_metric "CleanUpContainerImages" cleanUpContainerImages
+    cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
@@ -37695,17 +37667,17 @@ else
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
-    time_metric "InstallDeps" installDeps
+    installDeps
 else
     echo "Golden image; skipping dependencies installation"
 fi
 
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "EnsureAuditD" ensureAuditD
+    ensureAuditD
 fi
 
 {{- if not HasCoreOS}}
-time_metric "InstallContainerRuntime" installContainerRuntime
+installContainerRuntime
 {{end}}
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -37714,23 +37686,23 @@ if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
     {{else}}
     CLI_TOOL="img"
     {{end}}
-    time_metric "InstallEtcd" installEtcd $CLI_TOOL
+    installEtcd $CLI_TOOL
 fi
 
 # this will capture the amount of time to install of the network plugin during cse
-time_metric "InstallNetworkPlugin" installNetworkPlugin
+installNetworkPlugin
 
 
 {{- if NeedsContainerd}}
-time_metric "InstallContainerd" installContainerd
+installContainerd
 {{end}}
 
 {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" = true ]]; then
     if $FULL_INSTALL_REQUIRED; then
-        time_metric "InstallGPUDrivers" installGPUDrivers
+        installGPUDrivers
     fi
-    time_metric "EnsureGPUDrivers" ensureGPUDrivers
+    ensureGPUDrivers
 fi
 {{end}}
 
@@ -37738,36 +37710,36 @@ fi
 docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET {{GetPrivateAzureRegistryServer}}
 {{end}}
 
-time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
+installKubeletAndKubectl
 
 if [[ $OS != $COREOS_OS_NAME ]]; then
-    time_metric "EnsureRPC" ensureRPC
+    ensureRPC
 fi
 
-time_metric "CreateKubeManifestDir" createKubeManifestDir
+createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
 if [[ "${SGX_NODE}" = true ]]; then
-    time_metric "InstallSGXDrivers" installSGXDrivers
+    installSGXDrivers
 fi
 {{end}}
 
 {{/* create etcd user if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    time_metric "ConfigureEtcdUser" configureEtcdUser
+    configureEtcdUser
 fi
 
 if [[ -n "${MASTER_NODE}" ]]; then
     {{/* this step configures all certs */}}
     {{/* both configs etcd/cosmos */}}
-    time_metric "ConfigureSecrets" configureSecrets
+    configureSecrets
 fi
 
 {{/* configure etcd if we are configured for etcd */}}
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
-    time_metric "ConfigureEtcd" configureEtcd
+    configureEtcd
 else
-    time_metric "RemoveEtcd" removeEtcd
+    removeEtcd
 fi
 
 {{- if HasCustomSearchDomain}}
@@ -37776,57 +37748,57 @@ wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FI
 {{end}}
 
 {{- if IsDockerContainerRuntime}}
-time_metric "EnsureDocker" ensureDocker
+ensureDocker
 {{else if IsKataContainerRuntime}}
 if grep -q vmx /proc/cpuinfo; then
-    time_metric "InstallKataContainers" installKataContainersRuntime
+    installKataContainersRuntime
 fi
 {{end}}
 
-time_metric "ConfigureK8s" configureK8s
+configureK8s
 
 {{- if IsAzureStackCloud}}
-time_metric "ConfigureK8sCustomCloud" configureK8sCustomCloud
+configureK8sCustomCloud
     {{- if IsAzureCNI}}
-    time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
+    configureAzureStackInterfaces
     {{end}}
 {{end}}
 
-time_metric "ConfigureCNI" configureCNI
+configureCNI
 
 if [[ -n "${MASTER_NODE}" ]]; then
-    time_metric "ConfigAddons" configAddons
+    configAddons
 fi
 
 {{- if NeedsContainerd}}
-time_metric "EnsureContainerd" ensureContainerd
+ensureContainerd
 {{end}}
 
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n "${MASTER_NODE}" && "${KMS_PROVIDER_VAULT_NAME}" != "" ]]; then
-    time_metric "EnsureKMS" ensureKMS
+    ensureKMS
 fi
 {{end}}
 
 {{/* configure and enable dhcpv6 for dual stack feature */}}
 {{- if IsIPv6DualStackFeatureEnabled}}
-time_metric "EnsureDHCPv6" ensureDHCPv6
+ensureDHCPv6
 {{end}}
 
-time_metric "EnsureKubelet" ensureKubelet
-time_metric "EnsureJournal" ensureJournal
+ensureKubelet
+ensureJournal
 
 if [[ -n "${MASTER_NODE}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.16; then
-        time_metric "EnsureLabelNodes" ensureLabelNodes
+        ensureLabelNodes
     fi
-    time_metric "WriteKubeConfig" writeKubeConfig
+    writeKubeConfig
     if [[ -z "${COSMOS_URI}" ]]; then
-        time_metric "EnsureEtcd" ensureEtcd
+        ensureEtcd
     fi
-    time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
+    ensureK8sControlPlane
     {{if IsAzurePolicyAddonEnabled}}
-    time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
+    ensureLabelExclusionForAzurePolicyAddon
     {{end}}
 fi
 
@@ -37840,7 +37812,7 @@ fi
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
-    time_metric "PurgeApt" apt_get_purge 20 30 120 apache2-utils &
+    apt_get_purge 20 30 120 apache2-utils &
 fi
 {{end}}
 
