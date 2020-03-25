@@ -154,7 +154,7 @@ New-InfraContainer {
         $DestinationTag = "kubletwin/pause"
     )
     cd $KubeDir
-    $computerInfo = Get-ComputerInfo
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
 
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
@@ -163,7 +163,7 @@ New-InfraContainer {
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
-    if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
+    if ($pauseImageVersions -icontains $windowsVersion) {
         $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
         if (-not $imageList) {
             Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
