@@ -44,6 +44,7 @@ type Config struct {
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
+	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
