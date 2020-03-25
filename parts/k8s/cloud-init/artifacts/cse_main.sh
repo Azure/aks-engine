@@ -46,11 +46,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX}+1)))
 set -x
 
-if [[ $OS == $COREOS_OS_NAME ]]; then
-    echo "Changing default kubectl bin location"
-    KUBECTL=/opt/kubectl
-fi
-
 if [ -f /var/run/reboot-required ]; then
     REBOOTREQUIRED=true
     trace_info "RebootRequired" "reboot=true"
@@ -110,9 +105,7 @@ if [[ "$FULL_INSTALL_REQUIRED" = "true" ]]; then
     time_metric "InstallBpftrace" installBpftrace
 fi
 
-{{- if not HasCoreOS}}
 time_metric "InstallContainerRuntime" installContainerRuntime
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
@@ -144,11 +137,7 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 {{end}}
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
-
-if [[ $OS != $COREOS_OS_NAME ]]; then
-    time_metric "EnsureRPC" ensureRPC
-fi
-
+time_metric "EnsureRPC" ensureRPC
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
