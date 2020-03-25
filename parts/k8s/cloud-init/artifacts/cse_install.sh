@@ -219,7 +219,7 @@ downloadAzureCNI() {
 
 ensureAPMZ() {
     local version=$1
-    local apmz_url="https://upstreamartifacts.blob.core.windows.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+    local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
     if [[ -f "$apmz_filepath" ]]; then
         installed_version=$($apmz_filepath version)
         if [[ "$version" == "$installed_version" ]]; then
