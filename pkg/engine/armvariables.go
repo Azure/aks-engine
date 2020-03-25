@@ -69,6 +69,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
+	var userAssignedIDReference string
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedID = kubernetesConfig.UserAssignedIDEnabled()
@@ -78,6 +79,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
 		provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
+
+		if kubernetesConfig.ShouldCreateNewUserAssignedIdentity() {
+			userAssignedIDReference = "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]"
+		} else {
+			userAssignedIDReference = "[variables('userAssignedID')]"
+		}
 	}
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
@@ -100,7 +107,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
 		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
-		"userAssignedIDReference":       "[resourceId(variables('userAssignedID'))]",
+		"userAssignedIDReference":       userAssignedIDReference,
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),

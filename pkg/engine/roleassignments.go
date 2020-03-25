@@ -30,7 +30,7 @@ func createMSIRoleAssignment(identityRoleDefinition IdentityRoleDefinition) Role
 			Name: to.StringPtr("[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr(string(identityRoleDefinition)),
-				PrincipalID:      to.StringPtr("[reference(variables('userAssignedID')).principalId]"),
+				PrincipalID:      to.StringPtr("[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"),
 				PrincipalType:    authorization.ServicePrincipal,
 				Scope:            to.StringPtr("[resourceGroup().id]"),
 			},

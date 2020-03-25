@@ -33,7 +33,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
 		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
-		createNewUserAssignedIdentity = !kubernetesConfig.UserAssignedIDIsReference()
+		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	}
 
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
