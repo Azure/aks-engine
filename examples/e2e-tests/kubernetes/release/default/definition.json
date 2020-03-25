@@ -66,6 +66,7 @@
           128
         ],
         "availabilityProfile": "VirtualMachineScaleSets",
+        "scalesetPriority": "Spot",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "availabilityZones": ["1"]
       },
@@ -74,6 +75,7 @@
         "count": 1,
         "vmSize": "Standard_D2s_v3",
         "availabilityProfile": "VirtualMachineScaleSets",
+        "scalesetPriority": "Spot",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osType": "Windows",
         "storageProfile": "Ephemeral",
