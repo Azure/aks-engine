@@ -267,6 +267,8 @@ const (
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// DefaultAzureStackLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU on Azure Stack
+	DefaultAzureStackLoadBalancerSku = BasicLoadBalancerSku
 )
 
 const (

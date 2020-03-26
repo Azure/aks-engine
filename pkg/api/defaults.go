@@ -365,7 +365,12 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		}
 
-		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
+		if a.IsAzureStackCloud() && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
+			if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" {
+				log.Warnf("apimodel: orchestratorProfile.kubernetesConfig.LoadBalancerSku forced to \"%s\"\n", DefaultAzureStackLoadBalancerSku)
+			}
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultAzureStackLoadBalancerSku
+		} else if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
 			if a.HasAvailabilityZones() {
 				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 			} else {

@@ -952,20 +952,26 @@ func TestKubernetesImageBaseAppendSlash(t *testing.T) {
 	}
 }
 
-func TestKubernetesImageBaseAzureStack(t *testing.T) {
+func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.15.7")
 	properties := mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
-	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = "gcr"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 	properties.CustomCloudProfile = &CustomCloudProfile{}
 	properties.CustomCloudProfile.Environment = &azure.Environment{}
 	mockCS.setOrchestratorDefaults(true, true)
-	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "mcr.microsoft.com/" {
-		t.Fatalf("defaults flow did not set Azure Stack's KubernetesImageBase")
+
+	expectedImageBase := "mcr.microsoft.com/"
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != expectedImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != "mcr" {
-		t.Fatalf("defaults flow did not set Azure Stack's KubernetesImageBaseType")
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
+		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
 	}
 }
 
