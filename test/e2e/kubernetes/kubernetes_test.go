@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"math/rand"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
