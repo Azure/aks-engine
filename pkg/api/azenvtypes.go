@@ -96,8 +96,8 @@ var (
 		KubeBinariesSASURLBase:           "https://kubernetesartifacts.azureedge.net/kubernetes/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
 		CNIPluginsDownloadURL:            "https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
-		VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + "-signed.tar",
+		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + "-signed.zip",
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
 	}
 
