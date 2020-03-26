@@ -622,28 +622,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have the correct IP address for the apiserver", func() {
-			running, err := pod.WaitOnSuccesses(common.APIServerComponentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(running).To(Equal(true))
-			pods, err := pod.GetAllRunningByPrefixWithRetry(common.APIServerComponentName, "kube-system", 3*time.Second, cfg.Timeout)
-			Expect(err).NotTo(HaveOccurred())
-			By("Ensuring that the correct IP address has been applied to the apiserver")
-			expectedIPAddress := eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP
-			if eng.ExpandedDefinition.Properties.MasterProfile.HasMultipleNodes() {
-				firstMasterIP := net.ParseIP(eng.ExpandedDefinition.Properties.MasterProfile.FirstConsecutiveStaticIP).To4()
-				expectedIP := net.IP{firstMasterIP[0], firstMasterIP[1], firstMasterIP[2], firstMasterIP[3] + byte(common.DefaultInternalLbStaticIPOffset)}
-				if eng.ExpandedDefinition.Properties.MasterProfile.IsVirtualMachineScaleSets() {
-					expectedIP = net.IP{firstMasterIP[0], firstMasterIP[1], byte(255), byte(common.DefaultInternalLbStaticIPOffset)}
-				}
-				expectedIPAddress = expectedIP.String()
-			}
-
-			actualIPAddress, err := pods[0].Spec.Containers[0].GetArg("--advertise-address")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(actualIPAddress).To(Equal(expectedIPAddress))
-		})
-
 		It("should have core kube-system componentry running", func() {
 			coreComponents := []string{"kube-proxy", "kube-addon-manager", common.APIServerComponentName, "kube-controller-manager", "kube-scheduler"}
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
