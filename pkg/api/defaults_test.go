@@ -1548,7 +1548,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for single stack IPv6 only cluster
-	mockCS = getMockBaseContainerService("1.18.0-alpha.1")
+	mockCS = getMockBaseContainerService("1.18.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
