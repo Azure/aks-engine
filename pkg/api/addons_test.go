@@ -4323,7 +4323,7 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				},
 				{
 					Name:           common.CSISecretsStoreDriverContainerName,
-					Image:          "docker.io/deislabs/secrets-store-csi:v0.0.8",
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreDriverContainerName],
 					CPURequests:    "50m",
 					MemoryRequests: "100Mi",
 					CPULimits:      "200m",
@@ -4338,7 +4338,6 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 					MemoryLimits:   "200Mi",
 				},
 			},
-			Config: map[string]string{"volume-lifecycle-mode": "Ephemeral"},
 		})
 	}
 

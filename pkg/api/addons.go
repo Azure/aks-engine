@@ -773,8 +773,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
-		Name:    common.SecretsStoreCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultSecretStoreCSIDriverAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
+		Name: common.SecretsStoreCSIDriverAddonName,
+		Enabled: to.BoolPtr(!o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) && DefaultSecretStoreCSIDriverAddonEnabled &&
+			common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.CSILivenessProbeContainerName,
@@ -794,7 +795,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:           common.CSISecretsStoreDriverContainerName,
-				Image:          "docker.io/deislabs/secrets-store-csi:v0.0.8",
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISecretsStoreDriverContainerName],
 				CPURequests:    "50m",
 				MemoryRequests: "100Mi",
 				CPULimits:      "200m",
@@ -809,19 +810,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryLimits:   "200Mi",
 			},
 		},
-	}
-
-	// volume lifecycle mode needs to be explicitly set for 1.16+
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultSecretsStoreCSIDriverAddonsConfig.Config = map[string]string{"volume-lifecycle-mode": "Ephemeral"}
-	}
-
-	// If we have any explicit keyvault-flexvolume or csi-secrets-store configuration in the addons array
-	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.KeyVaultFlexVolumeAddonName) != -1 || getAddonsIndexByName(o.KubernetesConfig.Addons, common.SecretsStoreCSIDriverAddonName) != -1 {
-		// Ensure we don't we don't prepare an addons spec w/ both keyvalt-flexvolume and csi-secrets-store enabled
-		if o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) {
-			defaultSecretsStoreCSIDriverAddonsConfig.Enabled = to.BoolPtr(false)
-		}
 	}
 
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled

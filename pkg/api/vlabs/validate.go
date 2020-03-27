@@ -678,6 +678,7 @@ func (a *Properties) validateAddons() error {
 						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
 					}
 				case "keyvault-flexvolume":
+					keyvaultFlexvolumeEnabled = true
 					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
 					}

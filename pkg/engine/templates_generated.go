@@ -34059,10 +34059,8 @@ metadata:
 spec:
   podInfoOnMount: true
   attachRequired: false
-  {{- if ContainerConfig "volume-lifecycle-mode"}}
   volumeLifecycleModes:
   - Ephemeral
-  {{ end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
