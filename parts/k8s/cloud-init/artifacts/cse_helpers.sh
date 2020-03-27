@@ -33,6 +33,7 @@ ERR_MS_PROD_DEB_PKG_ADD_FAIL=43 {{/* Failed to add repo pkg file */}}
 ERR_SYSTEMD_INSTALL_FAIL=48 {{/* Unable to install required systemd version */}}
 ERR_MODPROBE_FAIL=49 {{/* Unable to load a kernel module using modprobe */}}
 ERR_OUTBOUND_CONN_FAIL=50 {{/* Unable to establish outbound connection */}}
+ERR_K8S_API_SERVER_CONN_FAIL=51 {{/* Unable to establish connection to k8s api server*/}}
 ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60 {{/* Timeout waiting to download kata repo key */}}
 ERR_KATA_APT_KEY_TIMEOUT=61 {{/* Timeout waiting for kata apt-key */}}
 ERR_KATA_INSTALL_TIMEOUT=62 {{/* Timeout waiting for kata install */}}
