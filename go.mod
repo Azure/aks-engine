@@ -1,6 +1,6 @@
 module github.com/Azure/aks-engine
 
-go 1.14
+go 1.13
 
 require (
 	github.com/Azure/aks-engine/test/e2e v0.0.0-20200318043210-65f753070203 // indirect
