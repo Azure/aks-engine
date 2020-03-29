@@ -38,8 +38,6 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
-        args:
-          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
         securityContext:
           privileged: true
         volumeMounts:
