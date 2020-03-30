@@ -488,6 +488,10 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			}
 			masterVars["masterEtcdMetricURLs"] = []string{
 				"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]",
 			}
 		}
 	}
