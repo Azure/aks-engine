@@ -5,11 +5,11 @@
 * [Service Principals and Identity Providers](#service-principals-and-identity-providers)
 * [CLI flags](#cli-flags)
 * [Cluster Definition (aka API Model)](#cluster-definition-aka-api-model)
-    * [location](#location)
-    * [kubernetesConfig](#kubernetesConfig)
-    * [customCloudProfile](#customCloudProfile)
-    * [masterProfile](#masterProfile)
-    * [agentPoolProfiles](#agentPoolProfiles)
+  * [location](#location)
+  * [kubernetesConfig](#kubernetesConfig)
+  * [customCloudProfile](#customCloudProfile)
+  * [masterProfile](#masterProfile)
+  * [agentPoolProfiles](#agentPoolProfiles)ß
 * [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
 * [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-instances)
 * [Supported AKS Engine Versions](#supported-aks-engine-versions)
@@ -29,10 +29,8 @@ Because Azure Stack Hub instances do not have infinite storage available, Azure 
 
 Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack Hub administrator.
 
-- `Custom Script for Linux 2.0` virtual machine extension
-- [Required](#supported-aks-engine-versions) `AKS Base Image` virtual machine
-
-_Note: AKS Engine on disconnected Azure Stack Hub instances is a preview feature_
+* `Custom Script for Linux 2.0` virtual machine extension
+* [Required](#supported-aks-engine-versions) `AKS Base Image` virtual machine
 
 ## Service Principals and Identity Providers
 
@@ -121,8 +119,6 @@ If your Azure Stack Hub instance is located in China, then the `dependenciesLoca
 
 ## Disconnected Azure Stack Hub Instances
 
-_Note: AKS Engine on disconnected Azure Stack Hub instances is a preview feature_
-
 By default, the AKS Engine provisioning process relies on an internet connection to download the software dependencies required to create or upgrade a cluster (Kubernetes images, etcd binaries, network plugins and so on).
 
 If your Azure Stack Hub instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
@@ -205,3 +201,7 @@ Once you are done updating the extension template, host the extension directory 
 ### Troubleshoting
 
 This [how-to guide](/docs/howto/troubleshooting.md) has a good high-level explanation of how AKS Engine interacts with the Azure Resource Manager (ARM) and lists a few potential issues that can cause AKS Engine commands to fail. Checkout the scripts in this [repository](https://github.com/msazurestackworkloads/azurestack-gallery/tree/master/diagnosis) to simplify the logs collection task.
+
+## Next Steps
+
+* [What is the AKS engine on Azure Stack Hub?](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-overview)
