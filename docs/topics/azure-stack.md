@@ -178,8 +178,17 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 Currently, Azure Stack Hub only supports the `Basic` load balancer SKU.
 This SKU [limits](https://docs.microsoft.com/en-us/azure/load-balancer/concepts-limitations#skus)
-the backend pool endpoints to virtual machines in a single availability set or virtual machine scale set.
+the backend pool endpoints to virtual machines in a single availability set (or virtual machine scale set).
 Therefore, all Kubernetes services of type `LoadBalancer` should be deployed on the same agent pool.
+
+You can force Kubernetes to create pods in a specific agent pool by adding [node selector](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/) "`agentpool: MY_POOL_NAME`" in your pod template.
+
+```yaml
+nodeSelector:
+  agentpool: linuxpool
+```
+
+If a `LoadBalancer` service was already created in your cluster, you can find out which agent pool was selected as the load balancer's backend pool by inspecting the load balancer `backend pools` blade in the Azure Stack Hub portal.
 
 ## Frequently Asked Questions
 
