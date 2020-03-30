@@ -1,4 +1,4 @@
-# AKS Engine on Azure Stack
+# AKS Engine on Azure Stack Hub
 
 * [Introduction](#introduction)
 * [Marketplace Prerequisites](#marketplace-prerequisites)
@@ -10,45 +10,43 @@
     * [customCloudProfile](#customCloudProfile)
     * [masterProfile](#masterProfile)
     * [agentPoolProfiles](#agentPoolProfiles)
-* [Azure Stack Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
-* [Disconnected Azure Stack Instances](#disconnected-azure-stack-instances)
-* [Supported Kubernetes Versions](#supported-kubernetes-versions)
+* [Azure Stack Hub Instances Registered with Azure's China cloud](#azure-stack-instances-registered-with-azures-china-cloud)
+* [Disconnected Azure Stack Hub Instances](#disconnected-azure-stack-instances)
+* [Supported AKS Engine Versions](#supported-aks-engine-versions)
 * [Azure Monitor for containers](#azure-Monitor-for-containers)
 * [Known Issues and Limitations](#known-issues-and-limitations)
 * [Frequently Asked Questions](#frequently-asked-questions)
 
 ## Introduction
 
-Starting from [release](https://github.com/Azure/aks-engine/releases/) v0.36.2, AKS Engine can be used to provision self-managed Kubernetes clusters on [Azure Stack](https://azure.microsoft.com/overview/azure-stack/). It is now possible to execute AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack instance.
+Specific AKS Engine [versions](#supported-aks-engine-versions) can be used to provision self-managed Kubernetes clusters on [Azure Stack Hub](https://azure.microsoft.com/overview/azure-stack/). AKS Engine's `generate`, [deploy](../tutorials/deploy.md), [upgrade](upgrade.md), and [scale](scale.md) commands can be executed as if you were targeting Azure's public cloud. You are only required to slightly update your cluster definition to provide some extra information about your Azure Stack Hub instance.
 
-The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack using AKS Engine and to capture the differences between Azure and Azure Stack. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack. In most cases, these are not available because dependent Azure components are not part of Azure Stack.
+The goal of this guide is to explain how to provision Kubernetes clusters to Azure Stack Hub using AKS Engine and to capture the differences between Azure and Azure Stack Hub. Bear in mind as well that not every AKS Engine feature or configuration option is currently supported on Azure Stack Hub. In most cases, these are not available because dependent Azure components are not part of Azure Stack Hub.
 
 ## Marketplace prerequisites
 
-Because Azure Stack instances do not have infinite storage available, Azure Stack administrators are in charge of managing it by selecting which marketplace items are downloaded from Azure's marketplace. The Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
+Because Azure Stack Hub instances do not have infinite storage available, Azure Stack Hub administrators are in charge of managing it by selecting which marketplace items are downloaded from Azure's marketplace. The Azure Stack Hub administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
-Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack administrator.
+Before you try to deploy the first Kubernetes cluster, make sure these marketplace items were made available to the target subscription by the Azure Stack Hub administrator.
 
 - `Custom Script for Linux 2.0` virtual machine extension
-- `AKS Base Image` virtual machines
+- [Required](#supported-aks-engine-versions) `AKS Base Image` virtual machine
 
-The `AKS Base Image` is the only viable option if you are deploying to an [air-gapped Azure Stack instance](#disconnected-azure-stack-instances).
-
-_Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
+_Note: AKS Engine on disconnected Azure Stack Hub instances is a preview feature_
 
 ## Service Principals and Identity Providers
 
-Kubernetes uses a `service principal` identity to talk to Azure Stack APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
+Kubernetes uses a `service principal` identity to talk to Azure Stack Hub APIs to dynamically manage resources such as storage or load balancers. Therefore, you will need to create a service principal before you can provision a Kubernetes cluster using AKS Engine.
 
-This [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
+This [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-create-service-principals) explains how to create and manage service principals on Azure Stack Hub for both Azure Active Directory (AAD) and Active Directory Federation Services (ADFS) identity providers. This other [guide](../../docs/topics/service-principals.md) is a good resource to understand the permissions that the service principal requires to deploy under your subscription.
 
 Once you have created the required service principal, make sure to assign it the `contributor` role at the target subscription scope.
 
 ## CLI flags
 
-To indicate to AKS Engine that your target platform is Azure Stack, all commands require CLI flag `azure-env` to be set to `"AzureStackCloud"`.
+To indicate to AKS Engine that your target platform is Azure Stack Hub, all commands require CLI flag `azure-env` to be set to `"AzureStackCloud"`.
 
-If your Azure Stack instance uses ADFS to authenticate identities, then flag `identity-system` is also required.
+If your Azure Stack Hub instance uses ADFS to authenticate identities, then flag `identity-system` is also required.
 
 ``` bash
 aks-engine deploy \
@@ -65,15 +63,15 @@ aks-engine deploy \
 
 ## Cluster Definition (aka API Model)
 
-This section details how to tailor your cluster definitions in order to make them compatible with Azure Stack. You can start off from this [template](../../examples/azure-stack/kubernetes-azurestack-azure-ad.json) if your identity provider is AAD or from this other [template](../../examples/azure-stack/kubernetes-azurestack-adfs.json) if you are using ADFS instead.
+This section details how to tailor your cluster definitions in order to make them compatible with Azure Stack Hub. You can start off from this [template](../../examples/azure-stack/kubernetes-azurestack-azure-ad.json) if your identity provider is AAD or from this other [template](../../examples/azure-stack/kubernetes-azurestack-adfs.json) if you are using ADFS instead.
 
-Unless otherwise specified down below, standard [cluster definition](../../docs/topics/clusterdefinitions.md) properties should also work with Azure Stack. Please create an [issue](https://github.com/Azure/aks-engine/issues/new) if you find that we missed a property that should be called out.
+Unless otherwise specified down below, standard [cluster definition](../../docs/topics/clusterdefinitions.md) properties should also work with Azure Stack Hub. Please create an [issue](https://github.com/Azure/aks-engine/issues/new) if you find that we missed a property that should be called out.
 
 ### location
 
 | Name       | Required | Description                                                   |
 | ---------- | -------- | ------------------------------------------------------------- |
-| location   | yes      | The region name of the target Azure Stack. |
+| location   | yes      | The region name of the target Azure Stack Hub. |
 
 ### kubernetesConfig
 
@@ -81,19 +79,19 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name                            | Required | Description                          |
 | ------------------------------- | -------- | ------------------------------------ |
-| addons                          | no       | A few addons are not supported on Azure Stack. See the [complete list](#unsupported-addons) down below.|
+| addons                          | no       | A few addons are not supported on Azure Stack Hub. See the [complete list](#unsupported-addons) down below.|
 | kubernetesImageBase             | yes      | Specifies the default image base URL to be used for all Kubernetes-related containers such as hyperkube, cloud-controller-manager, pause, addon-manager, etc. This property should be set to `"mcr.microsoft.com/k8s/azurestack/core/"`. |
 | networkPlugin                   | yes      | Specifies the network plugin implementation for the cluster. Valid values are `"kubenet"` for Kubernetes software networking implementation. |
 | useInstanceMetadata             | no      | Use the Azure cloud provider instance metadata service for appropriate resource discovery operations. This property should be always set to `"false"`. |
 
 ### customCloudProfile
 
-`customCloudProfile` contains information specific to the target Azure Stack instance.
+`customCloudProfile` contains information specific to the target Azure Stack Hub instance.
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | environment                     | no       | The custom cloud type. This property should be always set to `"AzureStackCloud"`. |
-| identitySystem                  | yes      | Specifies the identity provider used by the Azure Stack instance. Valid values are `"azure_ad"` (default) and `"adfs"`. |
+| identitySystem                  | yes      | Specifies the identity provider used by the Azure Stack Hub instance. Valid values are `"azure_ad"` (default) and `"adfs"`. |
 | portalUrl                       | yes      | The tenant portal URL. |
 | dependenciesLocation            | no       | Specifies where to locate the dependencies required to during the provision/upgrade process. Valid values are `"public"` (default), `"china"`, `"german"` and `"usgovernment".` |
 
@@ -103,7 +101,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
-| vmsize                          | yes      | Specifies a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
+| vmsize                          | yes      | Specifies a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
 
 ### agentPoolProfiles
@@ -112,50 +110,38 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
-| vmsize                          | yes      | Describes a valid [Azure Stack VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
+| vmsize                          | yes      | Describes a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
 | distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
 
-## Azure Stack Instances Registered with Azure's China cloud
+## Azure Stack Hub Instances Registered with Azure's China cloud
 
-If your Azure Stack instance is located in China, then the `dependenciesLocation` property of your cluster definition should be set to `"china"`. This switch ensures that the provisioning process fetches software dependencies from reachable hosts within China's mainland.
+If your Azure Stack Hub instance is located in China, then the `dependenciesLocation` property of your cluster definition should be set to `"china"`. This switch ensures that the provisioning process fetches software dependencies from reachable hosts within China's mainland.
 
-## Disconnected Azure Stack Instances
+## Disconnected Azure Stack Hub Instances
 
-_Note: AKS Engine on disconnected Azure Stack instances is a private preview feature_
+_Note: AKS Engine on disconnected Azure Stack Hub instances is a preview feature_
 
 By default, the AKS Engine provisioning process relies on an internet connection to download the software dependencies required to create or upgrade a cluster (Kubernetes images, etcd binaries, network plugins and so on).
 
-If your Azure Stack instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
+If your Azure Stack Hub instance is air-gapped or if network connectivity in your geographical location is not reliable, then the default approach will not work, take a long time or timeout due to transient networking issues.
 
-To overcome these issues, you can choose to set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This change will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won’t be required during the provisioning process.
+To overcome these issues, you should set the `distro` property of your cluster definition to `"aks-ubuntu-16.04"`. This will instruct AKS Engine to deploy VM nodes using a base OS image called `AKS Base Image`. This custom image, generally based on Ubuntu Server, already contains the required software dependencies in its file system. Hence, internet connectivity won't be required during the provisioning process.
 
-The `AKS Base Image` marketplace item has to be available in your Azure Stack's Marketplace before it could be used by AKS Engine. Your Azure Stack administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
+The `AKS Base Image` marketplace item has to be available in your Azure Stack Hub's Marketplace before it could be used by AKS Engine. Your Azure Stack Hub administrator can follow this [guide](https://docs.microsoft.com/azure-stack/operator/azure-stack-download-azure-marketplace-item) for a general explanation about how to download marketplace items from Azure.
 
 Each AKS Engine release is validated and tied to a specific version of the AKS Base Image. Therefore, you need to take note of the base image version required by the AKS Engine release that you plan to use, and then download exactly that base image version. New builds of the `AKS Base Image` are frequently released to ensure that your disconnected cluster can be upgraded to the latest supported version of each component.
 
-## Supported Kubernetes Versions
-
-These are the Kubernetes versions that you can deploy to Azure Stack using AKS Engine [v0.43.1](https://github.com/Azure/aks-engine/releases/tag/v0.43.1):
-
-- 1.15.5
-- 1.15.4
-- 1.14.8
-- 1.14.7
-
-If the Azure Stack instance is air-gapped, then your options will be constrained by the Kubernetes versions preloaded on the [AKS Base Images](#disconnected-azure-stack-instances) available on the target system. The table below lists the pre-pulled Kubernetes versions on each of the supported AKS Base Image versions.
-
-_Note: AKS Engine on disconnected Azure Stack instances is a preview feature_
+## Supported AKS Engine Versions
 
 | AKS Engine                 | AKS Base Image     | Kubernetes versions | Notes |
 |----------------------------|--------------------|---------------------|-------|
-| v0.41.2   | [AKS Base Ubuntu 16.04-LTS Image Distro, September 2019 (2019.09.19)](https://github.com/Azure/aks-engine/blob/v0.41.2/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201908_2019.09.19.txt) | 1.15.4 - 1.15.3 - 1.14.7 - 1.14.6 - 1.13.11 -  1.13.10 |  |
-| v0.43.1   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.15.5 - 1.15.4 - 1.14.8 - 1.14.7 |  |
+| [v0.43.1](https://github.com/Azure/aks-engine/releases/tag/v0.43.1)   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.15.5, 1.15.4, 1.14.8, 1.14.7 |  |
 
 ## Azure Monitor for containers
 
-Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
+Azure Monitor for containers can be deployed to AKS Engine clusters hosted in Azure Stack Hub Cloud Environments. Refer to [Azure Monitor for containers](../topics/monitoring.md#azure-monitor-for-containers) for more details on how to onboard and monitor clusters, nodes, pods, containers inventory, performance metrics and logs.
 
 ## Known Issues and Limitations
 
@@ -165,7 +151,7 @@ This section lists all known issues you may find when you use the GA version.
 
 AKS Engine includes a number of optional [addons](../topics/clusterdefinitions.md#addons) that can be deployed as part of the cluster provisioning process.
 
-The list below includes the addons currently unsupported on Azure Stack:
+The list below includes the addons currently unsupported on Azure Stack Hub:
 
 * AAD Pod Identity
 * ACI Connector
@@ -184,9 +170,16 @@ To work around this issue, do not delete `LoadBalancer` services as part of your
 
 ### Limited Number of Frontend Public IPs
 
-The `Basic` load balancer SKU available on Azure Stack limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
+The `Basic` load balancer SKU available on Azure Stack Hub limits the number of frontend IPs to 5. That implies that each cluster's agents pool is limited to 5 public IPs.
 
 If you need to expose more than 5 services, then the recommendation is to route traffic to those services using an Ingress controller.
+
+### Single agent pool
+
+Currently, Azure Stack Hub only supports the `Basic` load balancer SKU.
+This SKU [limits](https://docs.microsoft.com/en-us/azure/load-balancer/concepts-limitations#skus)
+the backend pool endpoints to virtual machines in a single availability set or virtual machine scale set.
+Therefore, all Kubernetes services of type `LoadBalancer` should be deployed on the same agent pool.
 
 ## Frequently Asked Questions
 
@@ -194,9 +187,9 @@ If you need to expose more than 5 services, then the recommendation is to route 
 
 Extensions in AKS Engine provide an easy way to include your own customization at provisioning time.
 
-Because Azure and Azure Stack currently rely on a different version of the Compute Resource Provider API, you may find that some of sample [extensions](https://github.com/Azure/aks-engine/tree/master/extensions) fail to deploy correctly.
+Because Azure and Azure Stack Hub currently rely on a different version of the Compute Resource Provider API, you may find that some of sample [extensions](https://github.com/Azure/aks-engine/tree/master/extensions) fail to deploy correctly.
 
-This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack runs at the time you try to deploy) should be all you need.
+This can be resolved by making a small modification to the extension `template.json` file. Replacing all usages of template parameter `apiVersionDeployments` by the hard-code value `2017-12-01` (or whatever API version Azure Stack Hub runs at the time you try to deploy) should be all you need.
 
 Once you are done updating the extension template, host the extension directory in your own Github repository or storage account. Finally, at deployment time, make sure that your cluster definition points to the new [rootURL](https://github.com/Azure/aks-engine/blob/master/docs/topics/extensions.md#rooturl).
 
