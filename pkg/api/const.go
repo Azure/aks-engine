@@ -334,7 +334,7 @@ const (
 
 const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
-	// nuget package releases with signed binareis to https://kubernetesartifacts.azureedge.net/azure-cni
+	// nuget package releases with signed binaries to https://kubernetesartifacts.azureedge.net/azure-cni
 	AzureCniPluginVerLinux = "2020.2.21.1"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// nuget package releases with signed binaries to https://kubernetesartifacts.azureedge.net/azure-cni
