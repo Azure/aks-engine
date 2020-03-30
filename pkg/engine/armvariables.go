@@ -486,6 +486,9 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]",
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]",
 			}
+			masterVars["masterEtcdMetricURLs"] = []string{
+				"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
+			}
 		}
 	}
 

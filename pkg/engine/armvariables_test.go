@@ -114,6 +114,7 @@ func TestK8sVars(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
@@ -460,6 +461,7 @@ func TestK8sVars(t *testing.T) {
 	delete(expectedMap, "masterEtcdPeerURLs")
 	delete(expectedMap, "masterEtcdClusterStates")
 	delete(expectedMap, "masterEtcdClientURLs")
+	delete(expectedMap, "masterEtcdMetricURLs")
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -683,6 +685,7 @@ func TestK8sVars(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
@@ -930,6 +933,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
