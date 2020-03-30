@@ -44392,7 +44392,13 @@ try
         if ($useContainerD) {
             Write-Log "Installing ContainerD"
             $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl
+            $cniBinPath = $global:AzureCNIBinDir
+            $cniConfigPath = $global:AzureCNIConfDir
+            if ($global:NetworkPlugin -eq "kubenet") {
+                $cniBinPath = $global:CNIPath
+                $cniConfigPath = $global:CNIConfigPath
+            }
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath
             $containerdTimer.Stop()
             $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
             # TODO: disable/uninstall Docker later
@@ -44521,7 +44527,6 @@ try
             } else {
                 Update-WinCNI -CNIPath $global:CNIPath
             }
-            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         New-ExternalHnsNetwork
@@ -45512,50 +45517,53 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 var _k8sWindowscontainerdfuncPs1 = []byte(`# this is $global to persist across all functions since this is dot-sourced
 $global:ContainerdInstallLocation = "$Env:ProgramFiles\containerd"
 
-function RegisterContainerDService
-{
+function RegisterContainerDService {
   Assert-FileExists (Join-Path $global:ContainerdInstallLocation containerd.exe)
 
   Write-Host "Registering containerd as a service"
   $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $svc = Get-Service -Name containerd -ErrorAction SilentlyContinue
   if ($null -ne $svc) {
-      & $cdbinary --unregister-service
+    & $cdbinary --unregister-service
   }
   & $cdbinary --register-service
   $svc = Get-Service -Name "containerd" -ErrorAction SilentlyContinue
   if ($null -eq $svc) {
-      throw "containerd.exe did not get installed as a service correctly."
+    throw "containerd.exe did not get installed as a service correctly."
   }
   $svc | Start-Service
   if ($svc.Status -ne "Running") {
-      throw "containerd service is not running"
+    throw "containerd service is not running"
   }
 }
 
 
-function Install-Containerd
-{
-    Param(
-      [Parameter(Mandatory = $true)][string]
-      $ContainerdUrl
-    )
-    $zipfile =  [Io.path]::Combine($ENV:TEMP, "containerd.zip")
-    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
-    del $zipfile
+function Install-Containerd {
+  Param(
+    [Parameter(Mandatory = $true)][string]
+    $ContainerdUrl,
+    [Parameter(Mandatory = $true)][string]
+    $CNIBinDir,
+    [Parameter(Mandatory = $true)][string]
+    $CNIConfDir
+  )
+  $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+  DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
+  del $zipfile
 
-    Add-SystemPathEntry $global:ContainerdInstallLocation
+  Add-SystemPathEntry $global:ContainerdInstallLocation
     
-    # TODO: remove if the node comes up without this code
-    # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
-    # if (-Not (Test-Path $configDir)) {
-    #     mkdir $configDir
-    # }
+  # TODO: remove if the node comes up without this code
+  # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
+  # if (-Not (Test-Path $configDir)) {
+  #     mkdir $configDir
+  # }
 
-    # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
-    $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
-    @"
+  # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+  $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
+
+  @"
 version = 2
 root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
@@ -45642,8 +45650,8 @@ oom_score = 0
           runtime_root = ""
           privileged_without_host_devices = false
     [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "C:\\k\\cni"
-      conf_dir = "C:\\k\\cni\\config"
+      bin_dir = "$(($CNIBinDir).Replace("\","//"))"
+      conf_dir = "$(($CNIConfDir).Replace("\","//"))"
       max_conf_num = 1
       conf_template = ""
     [plugins."io.containerd.grpc.v1.cri".registry]
@@ -45660,7 +45668,7 @@ oom_score = 0
   [plugins."io.containerd.service.v1.diff-service"]
     default = ["windows", "windows-lcow"]
 "@ | Out-File -Encoding ascii $configFile
-    RegisterContainerDService
+  RegisterContainerDService
     
 }`)
 
