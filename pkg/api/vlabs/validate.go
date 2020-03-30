@@ -604,6 +604,7 @@ func (a *Properties) validateAddons() error {
 		var IsNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
+		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -676,6 +677,11 @@ func (a *Properties) validateAddons() error {
 					if !a.HasAADAdminGroupID() {
 						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
 					}
+				case "keyvault-flexvolume":
+					keyvaultFlexvolumeEnabled = true
+					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
+					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
 						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
@@ -737,6 +743,11 @@ func (a *Properties) validateAddons() error {
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
+				case common.SecretsStoreCSIDriverAddonName:
+					csiSecretsStoreEnabled = true
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.16+", addon.Name))
+					}
 				}
 			} else {
 				// Validation for addons if they are disabled
@@ -753,6 +764,9 @@ func (a *Properties) validateAddons() error {
 		}
 		if kubeDNSEnabled && corednsEnabled {
 			return errors.New("Both kube-dns and coredns addons are enabled, only one of these may be enabled on a cluster")
+		}
+		if keyvaultFlexvolumeEnabled && csiSecretsStoreEnabled {
+			return errors.New("Both keyvault-flexvolume and csi-secrets-store addons are enabled, only one of these may be enabled on a cluster")
 		}
 	}
 	return nil
