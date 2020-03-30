@@ -188,7 +188,7 @@ nodeSelector:
   agentpool: linuxpool
 ```
 
-If a `LoadBalancer` service was already created in your cluster, you can find out which agent pool was selected as the load balancer's backend pool by inspecting the load balancer `backend pools` blade in the Azure Stack Hub portal.
+If a `LoadBalancer` service was already created in your cluster, you can find out which agent pool was selected as the load balancer's backend pool by inspecting the load balancer `backend pools` blade in the Azure Stack Hub portal. Once you have that information, you can specify the target agent pool by updating your deployment/pod yaml (as explained in the previous paragraph).
 
 ## Frequently Asked Questions
 
