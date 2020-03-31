@@ -3,7 +3,6 @@ ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
-    echo "Already ran to success exiting..."
     exit 0
 fi
 
@@ -65,12 +64,10 @@ fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
-    echo "detected golden image pre-install"
     time_metric "CleanUpContainerImages" cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
-        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
         exit $ERR_VHD_FILE_NOT_FOUND
     fi
     FULL_INSTALL_REQUIRED=true
@@ -87,8 +84,6 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{- if not IsDockerContainerRuntime}}
     time_metric "InstallImg" installImg
     {{end}}
-else
-    echo "Golden image; skipping dependencies installation"
 fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
@@ -243,11 +238,10 @@ fi
 {{end}}
 
 {{- if IsHostedMaster }}
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+retrycmd 50 1 3 nc -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then
-    echo 'reboot required, rebooting node in 1 minute'
     /bin/bash -c "shutdown -r 1 &"
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         aptmarkWALinuxAgent unhold &
@@ -259,7 +253,7 @@ else
     fi
 fi
 
-echo "Custom script finished successfully"
+echo "CSE Success"
 echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &

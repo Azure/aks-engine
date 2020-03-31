@@ -39693,7 +39693,7 @@ systemctlEnableAndStart() {
     if [ $RESTART_STATUS -ne 0 ]; then
         return 1
     fi
-    if ! retrycmd_if_failure 120 5 25 systemctl enable $1; then
+    if ! retrycmd 120 5 25 systemctl enable $1; then
         return 1
     fi
 }
@@ -39780,7 +39780,7 @@ configureEtcd() {
             sleep 1
         fi
     done
-    retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
+    retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit $ERR_ETCD_CONFIG_FAIL
 }
 
 ensureNTP() {
@@ -39889,7 +39889,7 @@ EOF
 
 configureCNI() {
     {{/* needed for the iptables rules to work on bridges */}}
-    retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
+    retrycmd 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
     echo -n "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
     configureCNIIPTables
     {{if HasCiliumNetworkPlugin}}
@@ -39965,7 +39965,7 @@ ensureDHCPv6() {
     wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart dhcpv6 || exit $ERR_SYSTEMCTL_START_FAIL
-    retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
+    retrycmd 120 5 25 modprobe ip6_tables || exit $ERR_MODPROBE_FAIL
 }
 {{end}}
 
@@ -40018,20 +40018,20 @@ ensureK8sControlPlane() {
     if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
         return
     fi
-    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
+    retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
     GATEKEEPER_NAMESPACE="gatekeeper-system"
-    retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+    retrycmd 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 
-    retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+    retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 {{end}}
 
 ensureEtcd() {
-    retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
+    retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit $ERR_ETCD_RUNNING_TIMEOUT
 }
 
 createKubeManifestDir() {
@@ -40133,9 +40133,9 @@ configGPUDrivers() {
     {{/* we will manually install nvidia-docker2 */}}
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
-    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
+    retrycmd 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
+    retrycmd 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
@@ -40145,16 +40145,16 @@ configGPUDrivers() {
       cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_CONFIG
     )
     rm -rf $GPU_DEST/tmp
-    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_CONFIG
+    retrycmd 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_CONFIG
     mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
-    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_CONFIG
-    retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
+    retrycmd 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_CONFIG
+    retrycmd 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
-    retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
+    retrycmd 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
     umount -l /usr/lib/x86_64-linux-gnu
-    retrycmd_if_failure 120 5 25 nvidia-modprobe -u -c0 || exit $ERR_GPU_DRIVERS_START_FAIL
-    retrycmd_if_failure 120 5 25 $GPU_DEST/bin/nvidia-smi || exit $ERR_GPU_DRIVERS_START_FAIL
-    retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
+    retrycmd 120 5 25 nvidia-modprobe -u -c0 || exit $ERR_GPU_DRIVERS_START_FAIL
+    retrycmd 120 5 25 $GPU_DEST/bin/nvidia-smi || exit $ERR_GPU_DRIVERS_START_FAIL
+    retrycmd 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
 }
 ensureGPUDrivers() {
     configGPUDrivers
@@ -40215,7 +40215,7 @@ ensureCertificates() {
 
 configureK8sCustomCloud() {
     export -f ensureCertificates
-    retrycmd_if_failure 60 10 30 bash -c ensureCertificates
+    retrycmd 60 10 30 bash -c ensureCertificates
     set +x
     # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut,
     # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
@@ -40455,6 +40455,7 @@ GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+export DEBIAN_FRONTEND=noninteractive
 
 configure_prerequisites() {
     ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -40470,7 +40471,7 @@ configure_prerequisites() {
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
-    retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
+    retrycmd 120 5 25 apt-mark $1 walinuxagent || \
     if [[ "$1" == "hold" ]]; then
         exit $ERR_HOLD_WALINUXAGENT
     elif [[ "$1" == "unhold" ]]; then
@@ -40478,7 +40479,7 @@ aptmarkWALinuxAgent() {
     fi
 }
 
-retrycmd_if_failure() {
+retrycmd() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         timeout $timeout ${@} && break || \
@@ -40490,17 +40491,6 @@ retrycmd_if_failure() {
         fi
     done
     echo Executed \"$@\" $i times;
-}
-retrycmd_if_failure_no_stats() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        timeout $timeout ${@} && break || \
-        if [ $i -eq $retries ]; then
-            return 1
-        else
-            sleep $wait_sleep
-        fi
-    done
 }
 retrycmd_get_tarball() {
     tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
@@ -40555,7 +40545,6 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
@@ -40573,7 +40562,6 @@ apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
@@ -40592,7 +40580,6 @@ apt_get_purge() {
         if apt list --installed | grep $package; then
             for i in $(seq 1 $retries); do
                 wait_for_apt_locks
-                export DEBIAN_FRONTEND=noninteractive
                 dpkg --configure -a --force-confdef
                 apt-get purge -o Dpkg::Options::="--force-confold" -y $package && break || \
                 if [ $i -eq $retries ]; then
@@ -40611,7 +40598,6 @@ apt_get_dist_upgrade() {
   apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
-    export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
@@ -40711,7 +40697,7 @@ removeContainerd() {
 
 disableTimeSyncd() {
     systemctl_stop 20 5 10 systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
-    retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
+    retrycmd 120 5 25 systemctl disable systemd-timesyncd || exit $ERR_SYSTEMCTL_STOP_FAIL
 }
 
 installEtcd() {
@@ -40739,8 +40725,8 @@ installEtcd() {
 installDeps() {
     packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus ebtables ethtool fuse git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
     if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
-        retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
+        retrycmd 120 5 25 curl -fsSL https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/packages-microsoft-prod.deb > /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT
+        retrycmd 60 5 10 dpkg -i /tmp/packages-microsoft-prod.deb || exit $ERR_MS_PROD_DEB_PKG_ADD_FAIL
         aptmarkWALinuxAgent hold
         packages+=" cgroup-lite ceph-common glusterfs-client"
         if [[ $UBUNTU_RELEASE == "18.04" ]]; then
@@ -40770,21 +40756,21 @@ installDeps() {
 
 installGPUDrivers() {
     mkdir -p $GPU_DEST/tmp
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey > $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey > $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 120 5 25 apt-key add $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 120 5 25 apt-key add $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/ubuntu${UBUNTU_RELEASE}/nvidia-docker.list > $GPU_DEST/tmp/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/ubuntu${UBUNTU_RELEASE}/nvidia-docker.list > $GPU_DEST/tmp/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure_no_stats 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     apt_get_update
-    retrycmd_if_failure 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    retrycmd_if_failure 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 30 5 60 curl -fLS https://us.download.nvidia.com/tesla/$GPU_DV/NVIDIA-Linux-x86_64-${GPU_DV}.run -o ${GPU_DEST}/nvidia-drivers-${GPU_DV} || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
     if ! (
       set -e -o pipefail
       cd "${tmpDir}"
-      retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+      retrycmd 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     ); then
       exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     fi
@@ -40795,16 +40781,16 @@ installSGXDrivers() {
 
     local packages="make gcc dkms"
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
     local oe_dir=/opt/azure/containers/oe
     rm -rf ${oe_dir}
     mkdir -p ${oe_dir}
     pushd ${oe_dir} || exit
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
     dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
     sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
     matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
     read -ra tmp_array <<< "$matched_line"
     sgx_driver_sha256sum_expected="${tmp_array[0]}"
@@ -40812,7 +40798,7 @@ installSGXDrivers() {
     sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
     sgx_driver=$(basename "$sgx_driver_url")
 
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
+    retrycmd 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
     read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
     sgx_driver_sha256sum_real="${tmp_array[0]}"
     [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit $ERR_SGX_DRIVERS_CHECKSUM_MISMATCH
@@ -40837,10 +40823,10 @@ installMoby() {
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
     if [[ "$CURRENT_VERSION" != "${MOBY_VERSION}" ]]; then
         removeMoby
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        retrycmd 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list > /tmp/microsoft-prod.list || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
         MOBY_CLI=${MOBY_VERSION}
         if [[ "${MOBY_CLI}" == "3.0.4" ]]; then
@@ -40855,9 +40841,9 @@ installKataContainersRuntime() {
     BRANCH=stable-1.7
     KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
     KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
+    retrycmd 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
+    retrycmd 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
     echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 kata-runtime || exit $ERR_KATA_INSTALL_TIMEOUT
@@ -40874,9 +40860,9 @@ installNetworkPlugin() {
 installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $IOVISOR_URL > $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT
+    retrycmd 120 5 25 curl -fsSL $IOVISOR_URL > $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_APT_KEY_TIMEOUT
+    retrycmd 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_APT_KEY_TIMEOUT
     echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/iovisor.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
     apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit $ERR_BCC_INSTALL_TIMEOUT
@@ -40934,8 +40920,8 @@ installBpftrace() {
     install_dir="$BPFTRACE_DOWNLOADS_DIR/$version"
     mkdir -p "$install_dir"
     download_path="$install_dir/$bpftrace_tools"
-    retrycmd_if_failure 30 5 60 curl -fSL -o "$bpftrace_filepath" "$bpftrace_url/$bpftrace_bin" || exit $ERR_BPFTRACE_BIN_DOWNLOAD_FAIL
-    retrycmd_if_failure 30 5 60 curl -fSL -o "$download_path" "$bpftrace_url/$bpftrace_tools" || exit $ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL
+    retrycmd 30 5 60 curl -fSL -o "$bpftrace_filepath" "$bpftrace_url/$bpftrace_bin" || exit $ERR_BPFTRACE_BIN_DOWNLOAD_FAIL
+    retrycmd 30 5 60 curl -fSL -o "$download_path" "$bpftrace_url/$bpftrace_tools" || exit $ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL
     tar -xvf "$download_path" -C "$tools_filepath"
     chmod +x "$bpftrace_filepath"
     chmod -R +x "$tools_filepath/tools"
@@ -40978,9 +40964,9 @@ installContainerd() {
         fi
         removeContainerd
         echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" > /tmp/microsoft-prod-testing.list
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        retrycmd 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit $ERR_MOBY_APT_LIST_TIMEOUT
+        retrycmd 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
+        retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit $ERR_MS_GPG_KEY_DOWNLOAD_TIMEOUT
         apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
         apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit $ERR_MOBY_INSTALL_TIMEOUT
     fi
@@ -41043,7 +41029,7 @@ installKubeletAndKubectl() {
 pullContainerImage() {
     CLI_TOOL=$1
     DOCKER_IMAGE_URL=$2
-    retrycmd_if_failure 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit $ERR_CONTAINER_IMG_PULL_TIMEOUT
+    retrycmd 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit $ERR_CONTAINER_IMG_PULL_TIMEOUT
 }
 
 cleanUpContainerImages() {
@@ -41100,7 +41086,6 @@ ERR_FILE_WATCH_TIMEOUT=6 {{/* Timeout waiting for a file */}}
 
 set -x
 if [ -f /opt/azure/containers/provision.complete ]; then
-    echo "Already ran to success exiting..."
     exit 0
 fi
 
@@ -41162,12 +41147,10 @@ fi
 
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
-    echo "detected golden image pre-install"
     time_metric "CleanUpContainerImages" cleanUpContainerImages
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
-        echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
         exit $ERR_VHD_FILE_NOT_FOUND
     fi
     FULL_INSTALL_REQUIRED=true
@@ -41184,8 +41167,6 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
     {{- if not IsDockerContainerRuntime}}
     time_metric "InstallImg" installImg
     {{end}}
-else
-    echo "Golden image; skipping dependencies installation"
 fi
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
@@ -41340,11 +41321,10 @@ fi
 {{end}}
 
 {{- if IsHostedMaster }}
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+retrycmd 50 1 3 nc -vz ${API_SERVER_IP} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then
-    echo 'reboot required, rebooting node in 1 minute'
     /bin/bash -c "shutdown -r 1 &"
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         aptmarkWALinuxAgent unhold &
@@ -41356,7 +41336,7 @@ else
     fi
 fi
 
-echo "Custom script finished successfully"
+echo "CSE Success"
 echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
@@ -42354,7 +42334,7 @@ source {{GetCSEHelpersScriptFilepath}}
 echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 networking
 wait_for_apt_locks
-retrycmd_if_failure 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
+retrycmd 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
 wait_for_apt_locks
 echo "{{GetSearchDomainRealmPassword}}" | realm join -U {{GetSearchDomainRealmUser}}@$(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/) $(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/)
 `)
@@ -42681,7 +42661,7 @@ write_files:
 
 runcmd:
 - . {{GetCSEHelpersScriptFilepath}}
-- retrycmd_if_failure 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
+- retrycmd 10 5 10 curl -LO https://storage.googleapis.com/kubernetes-release/release/v{{.OrchestratorProfile.OrchestratorVersion}}/bin/linux/amd64/kubectl
 - chmod +x ./kubectl
 - sudo mv ./kubectl /usr/local/bin/kubectl
 - chown -R "{{WrapAsParameter "jumpboxUsername"}}" "/home/{{WrapAsParameter "jumpboxUsername"}}"

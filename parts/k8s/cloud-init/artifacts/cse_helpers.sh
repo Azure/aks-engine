@@ -80,6 +80,7 @@ GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+export DEBIAN_FRONTEND=noninteractive
 
 configure_prerequisites() {
     ip_forward_path=/proc/sys/net/ipv4/ip_forward
@@ -95,7 +96,7 @@ configure_prerequisites() {
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
-    retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent || \
+    retrycmd 120 5 25 apt-mark $1 walinuxagent || \
     if [[ "$1" == "hold" ]]; then
         exit $ERR_HOLD_WALINUXAGENT
     elif [[ "$1" == "unhold" ]]; then
@@ -103,7 +104,7 @@ aptmarkWALinuxAgent() {
     fi
 }
 
-retrycmd_if_failure() {
+retrycmd() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         timeout $timeout ${@} && break || \
@@ -115,17 +116,6 @@ retrycmd_if_failure() {
         fi
     done
     echo Executed \"$@\" $i times;
-}
-retrycmd_if_failure_no_stats() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        timeout $timeout ${@} && break || \
-        if [ $i -eq $retries ]; then
-            return 1
-        else
-            sleep $wait_sleep
-        fi
-    done
 }
 retrycmd_get_tarball() {
     tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
@@ -180,7 +170,6 @@ apt_get_update() {
     apt_update_output=/tmp/apt-get-update.out
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a --force-confdef
         apt-get -f -y install
         ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
@@ -198,7 +187,6 @@ apt_get_install() {
     retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
     for i in $(seq 1 $retries); do
         wait_for_apt_locks
-        export DEBIAN_FRONTEND=noninteractive
         dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
         if [ $i -eq $retries ]; then
@@ -217,7 +205,6 @@ apt_get_purge() {
         if apt list --installed | grep $package; then
             for i in $(seq 1 $retries); do
                 wait_for_apt_locks
-                export DEBIAN_FRONTEND=noninteractive
                 dpkg --configure -a --force-confdef
                 apt-get purge -o Dpkg::Options::="--force-confold" -y $package && break || \
                 if [ $i -eq $retries ]; then
@@ -236,7 +223,6 @@ apt_get_dist_upgrade() {
   apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
-    export DEBIAN_FRONTEND=noninteractive
     dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
