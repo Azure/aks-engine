@@ -3668,6 +3668,40 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.16.0")),
 		},
+		{
+			name: "ip-masq-agent upgrade to 1.1.16 overrides custom image",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.8",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.IPMASQAgentAddonName,
+									Enabled: to.BoolPtr(true),
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:  common.IPMASQAgentAddonName,
+											Image: "my-custom-image",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.16.8", "", common.KubernetesImageBaseTypeGCR), // the default addons will include the default image
+		},
 	}
 
 	for _, test := range tests {
