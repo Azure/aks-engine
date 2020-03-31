@@ -350,7 +350,8 @@ func (glc *getLogsCmd) downloadWindowsLogs(hostname string, client *ssh.Client) 
 		return "", errors.Wrap(err, "opening ssh session stdout pipe")
 	}
 
-	if err := session.Start("powershell Get-Content $env:temp\\$env:computername.zip -Raw"); err != nil {
+	cmd := "type %TEMP%"
+	if err := session.Start(fmt.Sprintf("%s\\%s.zip", cmd, hostname)); err != nil {
 		return fmt.Sprintf("%s -> %s", hostname, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
 	}
 	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
