@@ -29,8 +29,8 @@ import (
 
 const (
 	getLogsName             = "get-logs"
-	getLogsShortDescription = "Creates a SSH session to each cluster node and collects log files"
-	getLogsLongDescription  = "Creates a SSH session to each cluster node and collects log files"
+	getLogsShortDescription = "Collect logs and current cluster nodes configuration."
+	getLogsLongDescription  = "Collect deployment logs, running daemons/services logs and current nodes configuration."
 )
 
 type getLogsCmd struct {
@@ -42,12 +42,14 @@ type getLogsCmd struct {
 	linuxScriptPath        string
 	outputDirectory        string
 	// computed
-	cs           *api.ContainerService
-	locale       *gotext.Locale
-	armClient    armhelpers.AKSEngineClient
-	masterNodes  []*clusterNode
-	linuxNodes   []*clusterNode
-	windowsNodes []*clusterNode
+	cs               *api.ContainerService
+	locale           *gotext.Locale
+	armClient        armhelpers.AKSEngineClient
+	masterNodes      []v1.Node
+	linuxNodes       []v1.Node
+	linuxSSHConfig   *ssh.ClientConfig
+	windowsNodes     []v1.Node
+	windowsSSHConfig *ssh.ClientConfig
 }
 
 func newGetLogsCmd() *cobra.Command {
@@ -69,12 +71,13 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVarP(&glc.location, "location", "l", "", "Azure location where the cluster is deployed (required)")
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
 	command.Flags().StringVar(&glc.apiserverURI, "apiserver", "", "apiserver endpoint (required)")
-	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private ssh key to access the cluster's nodes")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's linux nodes")
-	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "")
+	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private ssh key to access the cluster's Linux nodes (required)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes")
+	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.MarkFlagRequired("location")
 	command.MarkFlagRequired("api-model")
 	command.MarkFlagRequired("apiserver")
+	command.MarkFlagRequired("linux-ssh-private-key")
 	return command
 }
 
@@ -84,16 +87,16 @@ func (glc *getLogsCmd) validateArgs(cmd *cobra.Command, args []string) (err erro
 	}
 	glc.location = helpers.NormalizeAzureRegion(glc.location)
 	if glc.location == "" {
-		return errors.New("location must be specified")
+		return errors.New("--location must be specified")
 	}
 	if _, err := os.Stat(glc.apiModelPath); os.IsNotExist(err) {
-		return errors.Errorf("specified api-model does not exist (%s)", glc.apiModelPath)
+		return errors.Errorf("specified --api-model does not exist (%s)", glc.apiModelPath)
 	}
-	if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
-		return errors.Errorf("specified ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
+	if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); glc.linuxSSHPrivateKeyPath != "" && os.IsNotExist(err) {
+		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
 	if _, err := os.Stat(glc.linuxScriptPath); glc.linuxScriptPath != "" && os.IsNotExist(err) {
-		return errors.Errorf("specified linux-script does not exist (%s)", glc.linuxScriptPath)
+		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -118,6 +121,15 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	} else if glc.cs.Location != glc.location {
 		return errors.New("--location flag does not match api-model location")
 	}
+	auth, err := helpers.PublicKeyAuth(glc.linuxSSHPrivateKeyPath)
+	if err != nil {
+		return errors.Wrap(err, "creating linux ssh config")
+	}
+	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, auth)
+	if glc.cs.Properties.WindowsProfile != nil {
+		auth := ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword)
+		glc.windowsSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.WindowsProfile.AdminUsername, auth)
+	}
 	var client *armhelpers.AzureClient
 	glc.armClient = client
 	return nil
@@ -128,17 +140,25 @@ func (glc *getLogsCmd) run(cmd *cobra.Command, args []string) (err error) {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
 	// TODO run in parallel
-	for _, l := range glc.masterNodes {
-		log.Infof("Processing node: %s\n", l.node.Name)
-		out, err := glc.collectLinuxLogs(l.node.Name, l.sshConfig)
-		if err != nil {
-			log.Warnf("Remote command output: %s", out)
-			log.Warnf("Error: %s", err)
-		}
-	}
-	for _, l := range glc.linuxNodes {
-		log.Infof("Processing node: %s\n", l.node.Name)
-		out, err := glc.collectLinuxLogs(l.node.Name, l.sshConfig)
+	// for _, n := range glc.masterNodes {
+	// 	log.Infof("Processing node: %s\n", n.Name)
+	// 	out, err := glc.collectLinuxLogs(n.Name, glc.linuxSSHConfig)
+	// 	if err != nil {
+	// 		log.Warnf("Remote command output: %s", out)
+	// 		log.Warnf("Error: %s", err)
+	// 	}
+	// }
+	// for _, n := range glc.linuxNodes {
+	// 	log.Infof("Processing node: %s\n", n.Name)
+	// 	out, err := glc.collectLinuxLogs(n.Name, glc.linuxSSHConfig)
+	// 	if err != nil {
+	// 		log.Warnf("Remote command output: %s", out)
+	// 		log.Warnf("Error: %s", err)
+	// 	}
+	// }
+	for _, n := range glc.windowsNodes {
+		log.Infof("Processing node: %s\n", n.Name)
+		out, err := glc.collectWindowsLogs(n.Name, glc.windowsSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
 			log.Warnf("Error: %s", err)
@@ -160,39 +180,25 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	if err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	if glc.cs.Properties.LinuxProfile != nil {
-		linuxSSHConfig, err := helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, glc.linuxSSHPrivateKeyPath)
-		if err != nil {
-			return errors.Wrap(err, "creating ssh config")
-		}
-		for _, node := range nodeList.Items {
-			if node.Status.NodeInfo.OperatingSystem == "linux" {
-				if strings.HasPrefix(node.Name, "k8s-master") {
-					glc.masterNodes = append(glc.masterNodes, &clusterNode{
-						node:      node,
-						sshConfig: linuxSSHConfig,
-					})
-				} else {
-					glc.linuxNodes = append(glc.linuxNodes, &clusterNode{
-						node:      node,
-						sshConfig: linuxSSHConfig,
-					})
-				}
+	for _, node := range nodeList.Items {
+		if strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux") {
+			if strings.HasPrefix(node.Name, "k8s-master") {
+				glc.masterNodes = append(glc.masterNodes, node)
+			} else {
+				glc.linuxNodes = append(glc.linuxNodes, node)
 			}
+		}
+		if strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows") {
+			glc.windowsNodes = append(glc.windowsNodes, node)
 		}
 	}
 	return nil
 }
 
-type clusterNode struct {
-	node      v1.Node
-	sshConfig *ssh.ClientConfig
-}
-
 func (glc *getLogsCmd) collectLinuxLogs(hostname string, config *ssh.ClientConfig) (string, error) {
 	// TODO always 22?
 	jumpboxPort := "22"
-	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, hostname, config)
+	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, hostname, glc.linuxSSHConfig, config)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -205,11 +211,30 @@ func (glc *getLogsCmd) collectLinuxLogs(hostname string, config *ssh.ClientConfi
 			return stdout, err
 		}
 	}
-	stdout, err = glc.collectLogs(hostname, client)
+	stdout, err = glc.execCollectLogs(hostname, client)
 	if err != nil {
 		return stdout, err
 	}
 	stdout, err = glc.downloadLogs(hostname, client)
+	if err != nil {
+		return stdout, err
+	}
+	return "", nil
+}
+
+func (glc *getLogsCmd) collectWindowsLogs(hostname string, config *ssh.ClientConfig) (string, error) {
+	jumpboxPort := "22"
+	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, hostname, glc.linuxSSHConfig, config)
+	if err != nil {
+		return "", errors.Wrap(err, "creating SSH client")
+	}
+	defer client.Close()
+
+	stdout, err := glc.execCollectWindowsLogs(hostname, client)
+	if err != nil {
+		return stdout, err
+	}
+	stdout, err = glc.downloadWindowsLogs(hostname, client)
 	if err != nil {
 		return stdout, err
 	}
@@ -234,7 +259,7 @@ func (glc *getLogsCmd) uploadScript(hostname string, client *ssh.Client) (string
 	return "", nil
 }
 
-func (glc *getLogsCmd) collectLogs(hostname string, client *ssh.Client) (string, error) {
+func (glc *getLogsCmd) execCollectLogs(hostname string, client *ssh.Client) (string, error) {
 	log.Debug("Collecting logs\n")
 	session, err := client.NewSession()
 	if err != nil {
@@ -251,6 +276,21 @@ func (glc *getLogsCmd) collectLogs(hostname string, client *ssh.Client) (string,
 	}
 
 	if co, err := session.CombinedOutput(fmt.Sprintf("bash -c \"%s\"", cmd)); err != nil {
+		return fmt.Sprintf("%s -> %s", hostname, string(co)), errors.Wrap(err, "collecting logs on remote host")
+	}
+	return "", nil
+}
+
+func (glc *getLogsCmd) execCollectWindowsLogs(hostname string, client *ssh.Client) (string, error) {
+	log.Debug("Collecting logs\n")
+	session, err := client.NewSession()
+	if err != nil {
+		return "", errors.Wrap(err, "creating SSH session")
+	}
+	defer session.Close()
+
+	cmd := "powershell -command \"c:\\k\\debug\\collect-windows-logs.ps1 | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\""
+	if co, err := session.CombinedOutput(cmd); err != nil {
 		return fmt.Sprintf("%s -> %s", hostname, string(co)), errors.Wrap(err, "collecting logs on remote host")
 	}
 	return "", nil
@@ -278,6 +318,39 @@ func (glc *getLogsCmd) downloadLogs(hostname string, client *ssh.Client) (string
 	}
 
 	if err := session.Start("bash -c \"cat /tmp/logs.zip > /dev/stdout\""); err != nil {
+		return fmt.Sprintf("%s -> %s", hostname, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
+	}
+	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
+	if err != nil {
+		return "", errors.Wrap(err, "downloading logs")
+	}
+
+	fmt.Println()
+	return "", nil
+}
+
+func (glc *getLogsCmd) downloadWindowsLogs(hostname string, client *ssh.Client) (string, error) {
+	log.Debug("Downloading logs\n")
+	session, err := client.NewSession()
+	if err != nil {
+		return "", errors.Wrap(err, "creating SSH session")
+	}
+	defer session.Close()
+
+	localFileName := fmt.Sprintf("%s.zip", hostname)
+	localFilePath := path.Join(glc.outputDirectory, localFileName)
+	file, err := os.OpenFile(localFilePath, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return "", errors.Wrap(err, "opening destination file")
+	}
+	defer file.Close()
+
+	stdout, err := session.StdoutPipe()
+	if err != nil {
+		return "", errors.Wrap(err, "opening ssh session stdout pipe")
+	}
+
+	if err := session.Start("powershell Get-Content $env:temp\\$env:computername.zip -Raw"); err != nil {
 		return fmt.Sprintf("%s -> %s", hostname, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
 	}
 	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
