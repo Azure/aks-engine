@@ -39,6 +39,8 @@ const (
 	MaxIPAddressCount = 256
 	// address relative to the first consecutive Kubernetes static IP
 	DefaultInternalLbStaticIPOffset = 10
+	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
+	DefaultEnableCSIProxyWindows = false
 )
 
 // Availability profiles

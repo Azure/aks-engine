@@ -17,6 +17,18 @@
       },
       "type": "string"
     },
+    "windowsContainerdURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
+      },
+      "type": "string"
+    },
+    "windowsSdnPluginURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
+      },
+      "type": "string"
+    },
     "kubeServiceCidr": {
       "metadata": {
         "description": "Kubernetes service address space"

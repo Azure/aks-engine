@@ -2,17 +2,17 @@
 
 |Feature|Status|API Version|Example|Description|
 |---|---|---|---|---|
-|Managed Disks|Beta|`vlabs`|[kubernetes-vmas.json](../../examples/disks-managed/kubernetes-vmas.json)|[Description](#feat-managed-disks)|
+|Antrea Network Policy|Alpha|`vlabs`|[kubernetes-antrea.json](../../examples/networkpolicy/kubernetes-antrea.json)|[Description](#feat-antrea)|
+|Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
 |Calico Network Policy|Alpha|`vlabs`|[kubernetes-calico.json](../../examples/networkpolicy/kubernetes-calico-azure.json)|[Description](#feat-calico)|
 |Cilium Network Policy|Alpha|`vlabs`|[kubernetes-cilium.json](../../examples/networkpolicy/kubernetes-cilium.json)|[Description](#feat-cilium)|
-|Antrea Network Policy|Alpha|`vlabs`|[kubernetes-antrea.json](../../examples/networkpolicy/kubernetes-antrea.json)|[Description](#feat-antrea)|
+|ContainerD Runtime for Windows|Experimental|`vlabs`|[kubernetes-hybrid.containerd.json](../../examples/windows/kubernetes-hybrid.containerd.json)|[Description](#windows-containerd)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
-|Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
-|Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
-|Azure Key Vault Encryption|Alpha|`vlabs`|[kubernetes-keyvault-encryption.json](../../examples/kubernetes-config/kubernetes-keyvault-encryption.json)|[Description](#feat-keyvault-encryption)|
-|Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
 |Ephemeral OS Disks|Experimental|`vlabs`|[ephmeral-disk.json](../../examples/disks-ephemeral/ephemeral-disks.json)|[Description](#ephemeral-os-disks)|
-
+|Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
+|Managed Disks|Beta|`vlabs`|[kubernetes-vmas.json](../../examples/disks-managed/kubernetes-vmas.json)|[Description](#feat-managed-disks)|
+|Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
+|Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
 
 <a name="feat-kubernetes-msi"></a>
 
@@ -543,3 +543,34 @@ We are investigating possible risks & mitigations for when VMs are deprovisioned
 
 
 [Ephemeral OS Disks]: https://docs.microsoft.com/en-us/azure/virtual-machines/windows/ephemeral-os-disks
+
+
+## Windows ContainerD
+
+> This feature is currently experimental, and has open issues.
+
+Kubernetes 1.18 introduces alpha support for the ContainerD runtime on Windows Server 2019. This is still a work-in-progress tracked in [kubernetes/enhancements#1001](https://github.com/kubernetes/enhancements/issues/1001). This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
+
+Currently it only supports the `kubenet` networking model, and requires URLs to custom ContainerD and CNI plugin builds.
+
+### Deploying multi-OS clusters with ContainerD
+
+If you want to test or develop with Windows & ContainerD in AKS-Engine, see this sample
+[kubernetes-hybrid.containerd.json](../../examples/windows/kubernetes-hybrid.containerd.json)
+
+These parameters are all required.
+
+```json
+      "kubernetesConfig": {
+        "networkPlugin": "kubenet",
+        "containerRuntime": "containerd",
+        "windowsContainerdURL": "...",
+        "windowsSdnPluginURL": "..."
+      }
+```
+
+### Building ContainerD
+
+As of March 3, 2020, the ContainerD and network plugin repos don't have public builds available. This repo has a script that will build them from source and create two ZIP files: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
+
+Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` and `windowsSdnPluginURL` in the AKS-Engine apimodel shown above.
