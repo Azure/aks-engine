@@ -41147,7 +41147,7 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX}+1)))
 set -x
 
-chmod a-x /etc/update-motd.d/??-@(motd-news|release-upgrade)
+chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
 
 if [ -f /var/run/reboot-required ]; then
     REBOOTREQUIRED=true
