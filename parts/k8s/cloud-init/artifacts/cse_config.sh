@@ -342,7 +342,10 @@ ensureK8sControlPlane() {
 
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    GATEKEEPER_NAMESPACE="gatekeeper-system"
+    retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+
+    retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 {{end}}
 

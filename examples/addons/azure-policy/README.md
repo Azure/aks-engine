@@ -93,7 +93,7 @@ kubectl get pods -n kube-system
 | Name           | Required | Description                       | Default Value                                        |
 | -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
 | name           | no       | container name                    | "gatekeeper"                                         |
-| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeepe:v3.1.0-beta.7" |
+| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.7-hotfix.20200327" |
 | cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
 | memoryRequests | no       | memory requests for the container | "256Mi"                                              |
 | cpuLimits      | no       | cpu limits for the container      | "1000m"                                              |

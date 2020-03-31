@@ -2017,10 +2017,18 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on azure-policy when ServicePrincipalProfile is not empty",
 		)
 	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.13"
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.12"
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with k8s < 1.14",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.14"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on azure-policy with k8s >= 1.12",
+			"should not error on azure-policy with k8s >= 1.14",
 		)
 	}
 

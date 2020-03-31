@@ -31305,7 +31305,18 @@ func k8sAddonsAzureCniNetworkmonitorYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+var _k8sAddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    admission.gatekeeper.sh/ignore: no-self-managing
+    control-plane: controller-manager
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -31413,7 +31424,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -31424,7 +31435,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-manager-role
-  namespace: kube-system
+  namespace: gatekeeper-system
 rules:
 - apiGroups:
   - ""
@@ -31544,7 +31555,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-manager-rolebinding
-  namespace: kube-system
+  namespace: gatekeeper-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -31552,7 +31563,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -31569,7 +31580,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: v1
 kind: Secret
@@ -31579,7 +31590,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
   name: gatekeeper-webhook-server-cert
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: v1
 kind: Service
@@ -31589,7 +31600,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-webhook-service
-  namespace: kube-system
+  namespace: gatekeeper-system
 spec:
   ports:
   - port: 443
@@ -31607,7 +31618,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager
-  namespace: kube-system
+  namespace: gatekeeper-system
 spec:
   replicas: 1
   selector:
@@ -31616,6 +31627,8 @@ spec:
       gatekeeper.sh/system: "yes"
   template:
     metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
       labels:
         control-plane: controller-manager
         gatekeeper.sh/system: "yes"
@@ -31624,7 +31637,7 @@ spec:
       - args:
         - --port=8443
         - --logtostderr
-        - --exempt-namespace=kube-system
+        - --exempt-namespace=gatekeeper-system
         - --log-denies
         command:
         - /manager
@@ -31666,15 +31679,11 @@ spec:
           httpGet:
             path: /readyz
             port: 9090
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 256Mi
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
           runAsGroup: 999
           runAsNonRoot: true
           runAsUser: 1000
@@ -31704,7 +31713,7 @@ webhooks:
     caBundle: Cg==
     service:
       name: gatekeeper-webhook-service
-      namespace: kube-system
+      namespace: gatekeeper-system
       path: /v1/admit
   failurePolicy: Ignore
   name: validation.gatekeeper.sh
@@ -31730,7 +31739,7 @@ webhooks:
     caBundle: Cg==
     service:
       name: gatekeeper-webhook-service
-      namespace: kube-system
+      namespace: gatekeeper-system
       path: /v1/admitlabel
   failurePolicy: Fail
   name: check-ignore-label.gatekeeper.sh
@@ -40014,7 +40023,10 @@ ensureK8sControlPlane() {
 
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    GATEKEEPER_NAMESPACE="gatekeeper-system"
+    retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+
+    retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 {{end}}
 

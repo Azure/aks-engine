@@ -729,12 +729,12 @@ func (a *Properties) validateAddons() error {
 						}
 					}
 				case "azure-policy":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
 					if err != nil {
 						return err
 					}
 					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
 					}
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
