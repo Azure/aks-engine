@@ -59,13 +59,13 @@ func newGetLogsCmd() *cobra.Command {
 		Short: getLogsShortDescription,
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := glc.validateArgs(cmd, args); err != nil {
+			if err := glc.validateArgs(); err != nil {
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
 				return errors.Wrap(err, "loading API model")
 			}
-			return glc.run(cmd, args)
+			return glc.run()
 		},
 	}
 	command.Flags().StringVarP(&glc.location, "location", "l", "", "Azure location where the cluster is deployed (required)")
@@ -81,7 +81,7 @@ func newGetLogsCmd() *cobra.Command {
 	return command
 }
 
-func (glc *getLogsCmd) validateArgs(cmd *cobra.Command, args []string) (err error) {
+func (glc *getLogsCmd) validateArgs() (err error) {
 	if glc.locale, err = i18n.LoadTranslations(); err != nil {
 		return errors.Wrap(err, "loading translation files")
 	}
@@ -121,44 +121,48 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	} else if glc.cs.Location != glc.location {
 		return errors.New("--location flag does not match api-model location")
 	}
-	auth, err := helpers.PublicKeyAuth(glc.linuxSSHPrivateKeyPath)
+
+	lauth, err := helpers.PublicKeyAuth(glc.linuxSSHPrivateKeyPath)
 	if err != nil {
 		return errors.Wrap(err, "creating linux ssh config")
 	}
-	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, auth)
+	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
+
 	if glc.cs.Properties.WindowsProfile != nil {
-		auth := ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword)
-		glc.windowsSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.WindowsProfile.AdminUsername, auth)
+		glc.windowsSSHConfig = helpers.SSHClientConfig(
+			glc.cs.Properties.WindowsProfile.AdminUsername,
+			ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword))
 	}
+
 	var client *armhelpers.AzureClient
 	glc.armClient = client
 	return nil
 }
 
-func (glc *getLogsCmd) run(cmd *cobra.Command, args []string) (err error) {
+func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
 	// TODO run in parallel
-	// for _, n := range glc.masterNodes {
-	// 	log.Infof("Processing node: %s\n", n.Name)
-	// 	out, err := glc.collectLinuxLogs(n.Name, glc.linuxSSHConfig)
-	// 	if err != nil {
-	// 		log.Warnf("Remote command output: %s", out)
-	// 		log.Warnf("Error: %s", err)
-	// 	}
-	// }
-	// for _, n := range glc.linuxNodes {
-	// 	log.Infof("Processing node: %s\n", n.Name)
-	// 	out, err := glc.collectLinuxLogs(n.Name, glc.linuxSSHConfig)
-	// 	if err != nil {
-	// 		log.Warnf("Remote command output: %s", out)
-	// 		log.Warnf("Error: %s", err)
-	// 	}
-	// }
+	for _, n := range glc.masterNodes {
+		log.Infof("Processing master node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+		if err != nil {
+			log.Warnf("Remote command output: %s", out)
+			log.Warnf("Error: %s", err)
+		}
+	}
+	for _, n := range glc.linuxNodes {
+		log.Infof("Processing Linux node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
+		if err != nil {
+			log.Warnf("Remote command output: %s", out)
+			log.Warnf("Error: %s", err)
+		}
+	}
 	for _, n := range glc.windowsNodes {
-		log.Infof("Processing node: %s\n", n.Name)
-		out, err := glc.collectWindowsLogs(n.Name, glc.windowsSSHConfig)
+		log.Infof("Processing Windows node: %s\n", n.Name)
+		out, err := glc.collectLogs(n, glc.windowsSSHConfig)
 		if err != nil {
 			log.Warnf("Remote command output: %s", out)
 			log.Warnf("Error: %s", err)
@@ -181,85 +185,70 @@ func (glc *getLogsCmd) getClusterNodes() error {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
 	for _, node := range nodeList.Items {
-		if strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux") {
+		if isLinuxNode(node) {
 			if strings.HasPrefix(node.Name, "k8s-master") {
 				glc.masterNodes = append(glc.masterNodes, node)
 			} else {
 				glc.linuxNodes = append(glc.linuxNodes, node)
 			}
-		}
-		if strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows") {
+		} else if isWindowsNode(node) {
 			glc.windowsNodes = append(glc.windowsNodes, node)
+		} else {
+			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}
 	}
 	return nil
 }
 
-func (glc *getLogsCmd) collectLinuxLogs(hostname string, config *ssh.ClientConfig) (string, error) {
+func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (string, error) {
 	// TODO always 22?
 	jumpboxPort := "22"
-	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, hostname, glc.linuxSSHConfig, config)
+	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, node.Name, glc.linuxSSHConfig, config)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
 	defer client.Close()
 
-	var stdout string
-	if glc.linuxScriptPath != "" {
-		stdout, err = glc.uploadScript(hostname, client)
-		if err != nil {
-			return stdout, err
-		}
-	}
-	stdout, err = glc.execCollectLogs(hostname, client)
+	stdout, err := glc.uploadScript(node, client)
 	if err != nil {
 		return stdout, err
 	}
-	stdout, err = glc.downloadLogs(hostname, client)
+	stdout, err = glc.executeScript(node, client)
+	if err != nil {
+		return stdout, err
+	}
+	stdout, err = glc.downloadLogs(node, client)
 	if err != nil {
 		return stdout, err
 	}
 	return "", nil
 }
 
-func (glc *getLogsCmd) collectWindowsLogs(hostname string, config *ssh.ClientConfig) (string, error) {
-	jumpboxPort := "22"
-	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, hostname, glc.linuxSSHConfig, config)
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH client")
+func (glc *getLogsCmd) uploadScript(node v1.Node, client *ssh.Client) (string, error) {
+	if isWindowsNode(node) || glc.linuxScriptPath == "" {
+		return "", nil
 	}
-	defer client.Close()
 
-	stdout, err := glc.execCollectWindowsLogs(hostname, client)
-	if err != nil {
-		return stdout, err
-	}
-	stdout, err = glc.downloadWindowsLogs(hostname, client)
-	if err != nil {
-		return stdout, err
-	}
-	return "", nil
-}
-
-func (glc *getLogsCmd) uploadScript(hostname string, client *ssh.Client) (string, error) {
 	scriptContent, err := ioutil.ReadFile(glc.linuxScriptPath)
 	if err != nil {
 		return "", errors.Wrap(err, "reading log collection script content")
 	}
+
 	log.Debugf("Uploading log collection script (%s)\n", glc.linuxScriptPath)
 	session, err := client.NewSession()
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH session")
 	}
 	defer session.Close()
+
 	session.Stdin = bytes.NewReader(scriptContent)
 	if co, err := session.CombinedOutput("bash -c \"cat /dev/stdin > /tmp/collect-logs.sh\""); err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, string(co)), errors.Wrap(err, "uploading log collection script")
+		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "uploading log collection script")
 	}
 	return "", nil
 }
 
-func (glc *getLogsCmd) execCollectLogs(hostname string, client *ssh.Client) (string, error) {
+func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, error) {
 	log.Debug("Collecting logs\n")
 	session, err := client.NewSession()
 	if err != nil {
@@ -268,35 +257,26 @@ func (glc *getLogsCmd) execCollectLogs(hostname string, client *ssh.Client) (str
 	defer session.Close()
 
 	var script, cmd string
-	if glc.linuxScriptPath != "" {
-		script = "/tmp/collect-logs.sh"
-		cmd = fmt.Sprintf("sudo chmod +x %s; %s; rm %s", script, script, script)
+	if isLinuxNode(node) {
+		if glc.linuxScriptPath != "" {
+			script = "/tmp/collect-logs.sh"
+			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; sudo %s; rm %s\"", script, script, script)
+		} else {
+			script = "/opt/azure/containers/collect-logs.sh"
+			cmd = fmt.Sprintf("bash -c \"sudo %s\"", cmd)
+		}
 	} else {
-		cmd = "sudo /opt/azure/containers/collect-logs.sh"
+		script = "c:\\k\\debug\\collect-windows-logs.ps1"
+		cmd = fmt.Sprintf("powershell -command \"%s | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\"", script)
 	}
 
-	if co, err := session.CombinedOutput(fmt.Sprintf("bash -c \"%s\"", cmd)); err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, string(co)), errors.Wrap(err, "collecting logs on remote host")
-	}
-	return "", nil
-}
-
-func (glc *getLogsCmd) execCollectWindowsLogs(hostname string, client *ssh.Client) (string, error) {
-	log.Debug("Collecting logs\n")
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
-	}
-	defer session.Close()
-
-	cmd := "powershell -command \"c:\\k\\debug\\collect-windows-logs.ps1 | Where-Object { $_.extension -eq '.zip' } | Copy-Item -Destination $env:temp\\$env:computername.zip\""
 	if co, err := session.CombinedOutput(cmd); err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, string(co)), errors.Wrap(err, "collecting logs on remote host")
+		return fmt.Sprintf("%s -> %s", node.Name, string(co)), errors.Wrap(err, "collecting logs on remote host")
 	}
 	return "", nil
 }
 
-func (glc *getLogsCmd) downloadLogs(hostname string, client *ssh.Client) (string, error) {
+func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, error) {
 	log.Debug("Downloading logs\n")
 	session, err := client.NewSession()
 	if err != nil {
@@ -304,7 +284,7 @@ func (glc *getLogsCmd) downloadLogs(hostname string, client *ssh.Client) (string
 	}
 	defer session.Close()
 
-	localFileName := fmt.Sprintf("%s.zip", hostname)
+	localFileName := fmt.Sprintf("%s.zip", node.Name)
 	localFilePath := path.Join(glc.outputDirectory, localFileName)
 	file, err := os.OpenFile(localFilePath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
@@ -317,8 +297,16 @@ func (glc *getLogsCmd) downloadLogs(hostname string, client *ssh.Client) (string
 		return "", errors.Wrap(err, "opening ssh session stdout pipe")
 	}
 
-	if err := session.Start("bash -c \"cat /tmp/logs.zip > /dev/stdout\""); err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
+	var cmd string
+	if isLinuxNode(node) {
+		cmd = "bash -c \"cat /tmp/logs.zip > /dev/stdout\""
+	} else {
+		cmd = "type %TEMP%"
+		cmd = fmt.Sprintf("%s\\%s.zip", cmd, node.Name)
+	}
+
+	if err = session.Start(cmd); err != nil {
+		return fmt.Sprintf("%s -> %s", node.Name, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
 	}
 	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
 	if err != nil {
@@ -329,38 +317,12 @@ func (glc *getLogsCmd) downloadLogs(hostname string, client *ssh.Client) (string
 	return "", nil
 }
 
-func (glc *getLogsCmd) downloadWindowsLogs(hostname string, client *ssh.Client) (string, error) {
-	log.Debug("Downloading logs\n")
-	session, err := client.NewSession()
-	if err != nil {
-		return "", errors.Wrap(err, "creating SSH session")
-	}
-	defer session.Close()
+func isLinuxNode(node v1.Node) bool {
+	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "linux")
+}
 
-	localFileName := fmt.Sprintf("%s.zip", hostname)
-	localFilePath := path.Join(glc.outputDirectory, localFileName)
-	file, err := os.OpenFile(localFilePath, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return "", errors.Wrap(err, "opening destination file")
-	}
-	defer file.Close()
-
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		return "", errors.Wrap(err, "opening ssh session stdout pipe")
-	}
-
-	cmd := "type %TEMP%"
-	if err := session.Start(fmt.Sprintf("%s\\%s.zip", cmd, hostname)); err != nil {
-		return fmt.Sprintf("%s -> %s", hostname, session.Stderr), errors.Wrap(err, "downloading logs from remote host")
-	}
-	_, err = io.Copy(file, io.TeeReader(stdout, &DownloadProgressWriter{}))
-	if err != nil {
-		return "", errors.Wrap(err, "downloading logs")
-	}
-
-	fmt.Println()
-	return "", nil
+func isWindowsNode(node v1.Node) bool {
+	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows")
 }
 
 type DownloadProgressWriter struct {
