@@ -39796,7 +39796,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    apt_get_purge auditd &
+    apt_get_purge auditd mlocate &
   fi
 }
 
