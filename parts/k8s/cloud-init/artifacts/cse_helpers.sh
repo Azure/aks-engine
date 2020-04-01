@@ -177,7 +177,7 @@ apt_get_update() {
     apt_wait
 }
 apt_get_install() {
-    local i r=$1 s=$2 t=$3; shift && shift && shift
+    local r=$1 s=$2 t=$3; shift && shift && shift
     for i in $(seq 1 $r); do
         apt_wait
         dpkg --configure -a --force-confdef
@@ -193,7 +193,7 @@ apt_get_install() {
     apt_wait
 }
 apt_get_purge() {
-    local i r=20 s=30 t=120
+    local r=20 s=30 t=120
     for p in $@; do
         if apt list --installed | grep $p; then
             for i in $(seq 1 $r); do
@@ -212,7 +212,7 @@ apt_get_purge() {
     apt_wait
 }
 apt_get_dist_upgrade() {
-  local i r=10 o=/tmp/apt-get-dist-upgrade.out
+  local r=10 o=/tmp/apt-get-dist-upgrade.out
   for i in $(seq 1 $r); do
     apt_wait
     dpkg --configure -a --force-confdef
@@ -230,7 +230,7 @@ apt_get_dist_upgrade() {
   apt_wait
 }
 systemctl_restart() {
-    local i r=$1 s=$2 t=$3 n=$4
+    local r=$1 s=$2 t=$3 n=$4
     for i in $(seq 1 $r); do
         timeout $t systemctl daemon-reload
         timeout $t systemctl restart $n && break || \
