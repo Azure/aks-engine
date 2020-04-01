@@ -223,6 +223,19 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
+{{- if IsHostedMaster }}
+RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
+STS=$?
+if [[ $STS != 0 ]]; then
+    if [[ $RES == *"168.63.129.16"*  ]]; then
+        exit $ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL
+    else
+        exit $ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
+    fi
+fi
+retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+{{end}}
+
 if $REBOOTREQUIRED; then
     echo 'reboot required, rebooting node in 1 minute'
     /bin/bash -c "shutdown -r 1 &"
