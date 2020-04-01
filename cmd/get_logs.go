@@ -41,6 +41,7 @@ type getLogsCmd struct {
 	linuxSSHPrivateKeyPath string
 	linuxScriptPath        string
 	outputDirectory        string
+	controlPlaneOnly       bool
 	// computed
 	cs               *api.ContainerService
 	locale           *gotext.Locale
@@ -60,6 +61,7 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
+				cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
@@ -74,6 +76,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private ssh key to access the cluster's Linux nodes (required)")
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
+	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	command.MarkFlagRequired("location")
 	command.MarkFlagRequired("api-model")
 	command.MarkFlagRequired("apiserver")
@@ -89,14 +92,23 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	if glc.location == "" {
 		return errors.New("--location must be specified")
 	}
-	if _, err := os.Stat(glc.apiModelPath); os.IsNotExist(err) {
+	if glc.apiserverURI == "" {
+		return errors.New("--apiserver must be specified")
+	}
+	if glc.apiModelPath == "" {
+		return errors.New("--api-model must be specified")
+	} else if _, err := os.Stat(glc.apiModelPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --api-model does not exist (%s)", glc.apiModelPath)
 	}
-	if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); glc.linuxSSHPrivateKeyPath != "" && os.IsNotExist(err) {
+	if glc.linuxSSHPrivateKeyPath == "" {
+		return errors.New("--linux-ssh-private-key must be specified")
+	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if _, err := os.Stat(glc.linuxScriptPath); glc.linuxScriptPath != "" && os.IsNotExist(err) {
-		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+	if glc.linuxScriptPath != "" {
+		if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+			return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
+		}
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -143,7 +155,6 @@ func (glc *getLogsCmd) run() (err error) {
 	if err = glc.getClusterNodes(); err != nil {
 		return errors.Wrap(err, "listing cluster nodes")
 	}
-	// TODO run in parallel
 	for _, n := range glc.masterNodes {
 		log.Infof("Processing master node: %s\n", n.Name)
 		out, err := glc.collectLogs(n, glc.linuxSSHConfig)
@@ -151,6 +162,9 @@ func (glc *getLogsCmd) run() (err error) {
 			log.Warnf("Remote command output: %s", out)
 			log.Warnf("Error: %s", err)
 		}
+	}
+	if glc.controlPlaneOnly {
+		return nil
 	}
 	for _, n := range glc.linuxNodes {
 		log.Infof("Processing Linux node: %s\n", n.Name)
@@ -201,7 +215,6 @@ func (glc *getLogsCmd) getClusterNodes() error {
 }
 
 func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (string, error) {
-	// TODO always 22?
 	jumpboxPort := "22"
 	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, node.Name, glc.linuxSSHConfig, config)
 	if err != nil {

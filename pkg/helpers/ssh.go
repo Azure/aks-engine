@@ -11,7 +11,7 @@ import (
 func SSHClient(jumpboxHost, jumpboxPort, hostname string, jumpboxConfig, nodeConfig *ssh.ClientConfig) (*ssh.Client, error) {
 	lbConn, err := ssh.Dial("tcp", fmt.Sprintf("%s:%s", jumpboxHost, jumpboxPort), jumpboxConfig)
 	if err != nil {
-		return nil, errors.Wrapf(err, "dialing load balancer (%s)", jumpboxHost)
+		return nil, errors.Wrapf(err, "dialing jumpbox (%s)", jumpboxHost)
 	}
 	conn, err := lbConn.Dial("tcp", fmt.Sprintf("%s:22", hostname))
 	if err != nil {
