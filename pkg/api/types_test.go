@@ -6054,48 +6054,6 @@ func TestIsFeatureEnabled(t *testing.T) {
 	}
 }
 
-func TestKubernetesConfig_GetUserAssignedID(t *testing.T) {
-	k := KubernetesConfig{
-		UseManagedIdentity: true,
-		UserAssignedID:     "fooID",
-	}
-	expected := "fooID"
-
-	if k.GetUserAssignedID() != expected {
-		t.Errorf("expected user assigned ID to be %s, but got %s", expected, k.GetUserAssignedID())
-	}
-
-	k = KubernetesConfig{
-		UseManagedIdentity: false,
-		UserAssignedID:     "fooID",
-	}
-
-	if k.GetUserAssignedID() != "" {
-		t.Errorf("expected user assigned ID to be empty when useManagedIdentity is set to false")
-	}
-}
-
-func TestKubernetesConfig_GetUserAssignedClientID(t *testing.T) {
-	k := KubernetesConfig{
-		UseManagedIdentity:   true,
-		UserAssignedClientID: "fooClientID",
-	}
-	expected := "fooClientID"
-
-	if k.GetUserAssignedClientID() != expected {
-		t.Errorf("expected user assigned ID to be %s, but got %s", expected, k.GetUserAssignedClientID())
-	}
-
-	k = KubernetesConfig{
-		UseManagedIdentity:   false,
-		UserAssignedClientID: "fooClientID",
-	}
-
-	if k.GetUserAssignedClientID() != "" {
-		t.Errorf("expected user assigned client ID to be empty when useManagedIdentity is set to false")
-	}
-}
-
 func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 	k := KubernetesConfig{
 		UseManagedIdentity: true,
@@ -6112,6 +6070,25 @@ func TestKubernetesConfig_UserAssignedIDEnabled(t *testing.T) {
 
 	if k.UserAssignedIDEnabled() {
 		t.Errorf("expected userAssignedIDEnabled to be false when useManagedIdentity is set to false")
+	}
+}
+
+func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
+	k := KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     "fooID",
+	}
+	if !k.ShouldCreateNewUserAssignedIdentity() {
+		t.Errorf("expected ShouldCreateNewUserAssignedIdentity to be false when UserAssignedID does not have a resource id")
+	}
+
+	k = KubernetesConfig{
+		UseManagedIdentity: true,
+		UserAssignedID:     exampleUserMSI,
+	}
+
+	if !k.UserAssignedIDEnabled() {
+		t.Errorf("expected ShouldCreateNewUserAssignedIdentity to be true when UserAssignedID has a resource id")
 	}
 }
 
@@ -6140,25 +6117,6 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 
 	if k.SystemAssignedIDEnabled() {
 		t.Errorf("expected SystemAssignedIDEnabled to be false when UseManagedIdentity is set to false")
-	}
-}
-
-func TestKubernetesConfig_UserAssignedClientIDEnabled(t *testing.T) {
-	k := KubernetesConfig{
-		UseManagedIdentity:   true,
-		UserAssignedClientID: "fooClientID",
-	}
-	if !k.UserAssignedClientIDEnabled() {
-		t.Errorf("expected userAssignedClientIDEnabled to be true when UseManagedIdentity is true and UserAssignedClientID is non-empty")
-	}
-
-	k = KubernetesConfig{
-		UseManagedIdentity:   false,
-		UserAssignedClientID: "fooClientID",
-	}
-
-	if k.UserAssignedClientIDEnabled() {
-		t.Errorf("expected userAssignedClientIDEnabled to be false when useManagedIdentity is set to false")
 	}
 }
 

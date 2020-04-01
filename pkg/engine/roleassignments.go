@@ -24,16 +24,13 @@ func createMSIRoleAssignment(identityRoleDefinition IdentityRoleDefinition) Role
 	return RoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationUser')]",
-			DependsOn: []string{
-				"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
-			},
 		},
 		RoleAssignment: authorization.RoleAssignment{
 			Type: to.StringPtr("Microsoft.Authorization/roleAssignments"),
 			Name: to.StringPtr("[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]"),
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				RoleDefinitionID: to.StringPtr(string(identityRoleDefinition)),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"),
+				PrincipalID:      to.StringPtr("[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"),
 				PrincipalType:    authorization.ServicePrincipal,
 				Scope:            to.StringPtr("[resourceGroup().id]"),
 			},
