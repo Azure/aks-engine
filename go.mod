@@ -3,7 +3,6 @@ module github.com/Azure/aks-engine
 go 1.13
 
 require (
-	github.com/Azure/aks-engine/test/e2e v0.0.0-20200318043210-65f753070203 // indirect
 	github.com/Azure/azure-sdk-for-go v36.2.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.9.2
 	github.com/Azure/go-autorest/autorest/adal v0.8.0
