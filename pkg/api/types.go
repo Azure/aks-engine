@@ -2252,6 +2252,10 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
 	}
 
+	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {
+		parameters["API_SERVER_NAME"] = cs.Properties.HostedMasterProfile.FQDN
+	}
+
 	keys := make([]string, 0)
 	for k := range parameters {
 		keys = append(keys, k)
