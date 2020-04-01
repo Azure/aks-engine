@@ -6078,7 +6078,7 @@ func TestKubernetesConfig_ShouldCreateNewUserAssignedIdentity(t *testing.T) {
 		UseManagedIdentity: true,
 		UserAssignedID:     "fooID",
 	}
-	if k.ShouldCreateNewUserAssignedIdentity() {
+	if !k.ShouldCreateNewUserAssignedIdentity() {
 		t.Errorf("expected ShouldCreateNewUserAssignedIdentity to be false when UserAssignedID does not have a resource id")
 	}
 
