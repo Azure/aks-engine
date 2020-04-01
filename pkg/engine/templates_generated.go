@@ -39047,6 +39047,8 @@ spec:
           hostPath:
             path: /etc/kubernetes/secrets-store-csi-providers
             type: DirectoryOrCreate
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: apps/v1
 kind: DaemonSet
