@@ -40134,13 +40134,13 @@ configGPUDrivers() {
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
       cd "${tmpDir}"
-      wait_for_apt_locks
+      apt_wait
       dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_CONFIG
       cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_CONFIG
     )
@@ -40458,19 +40458,17 @@ NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
 export DEBIAN_FRONTEND=noninteractive
 
 configure_prerequisites() {
-    ip_forward_path=/proc/sys/net/ipv4/ip_forward
-    ip_forward_setting="net.ipv4.ip_forward=0"
-    sysctl_conf=/etc/sysctl.conf
-    if ! grep -qE "^1$" ${ip_forward_path}; then
-        echo 1 > ${ip_forward_path}
+    local p=/proc/sys/net/ipv4/ip_forward s="net.ipv4.ip_forward=0" c=/etc/sysctl.conf
+    if ! grep -qE "^1$" $p; then
+        echo 1 > $p
     fi
-    if grep -qE "${ip_forward_setting}" ${sysctl_conf}; then
-        sed -i '/^net.ipv4.ip_forward=0$/d' ${sysctl_conf}
+    if grep -qE "${s}" $c; then
+        sed -i '/^net.ipv4.ip_forward=0$/d' ${c}
     fi
 }
 
 aptmarkWALinuxAgent() {
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 apt-mark $1 walinuxagent || \
     if [[ "$1" == "hold" ]]; then
         exit $ERR_HOLD_WALINUXAGENT
@@ -40480,170 +40478,164 @@ aptmarkWALinuxAgent() {
 }
 
 retrycmd() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        timeout $timeout ${@} && break || \
-        if [ $i -eq $retries ]; then
+    local r=$1 s=$2 t=$3; shift && shift && shift
+    for i in $(seq 1 $r); do
+        timeout $t ${@} && break || \
+        if [ $i -eq $r ]; then
             echo Executed \"$@\" $i times;
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
         fi
     done
     echo Executed \"$@\" $i times;
 }
 retrycmd_get_tarball() {
-    tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
-    echo "${tar_retries} retries"
-    for i in $(seq 1 $tar_retries); do
-        tar -tzf $tarball && break || \
-        if [ $i -eq $tar_retries ]; then
+    local r=$1 s=$2 t=$3 u=$4
+    for i in $(seq 1 $r); do
+        tar -tzf $t && break || \
+        if [ $i -eq $r ]; then
             return 1
         else
-            timeout 60 curl -fsSL $url -o $tarball
-            sleep $wait_sleep
+            timeout 60 curl -fsSL $u -o $t
+            sleep $s
         fi
     done
 }
 retrycmd_get_executable() {
-    retries=$1; wait_sleep=$2; filepath=$3; url=$4; validation_args=$5
-    echo "${retries} retries"
-    for i in $(seq 1 $retries); do
-        $filepath $validation_args && break || \
-        if [ $i -eq $retries ]; then
+    local r=$1 s=$2 f=$3 u=$4 a=$5
+    for i in $(seq 1 $r); do
+        $f $a && break || \
+        if [ $i -eq $r ]; then
             return 1
         else
-            timeout 30 curl -fsSL $url -o $filepath
-            chmod +x $filepath
-            sleep $wait_sleep
+            timeout 30 curl -fsSL $u -o $f
+            chmod +x $f
+            sleep $s
         fi
     done
 }
 wait_for_file() {
-    retries=$1; wait_sleep=$2; filepath=$3
-    paved=/opt/azure/cloud-init-files.paved
-    grep -Fq "${filepath}" $paved && return 0
-    for i in $(seq 1 $retries); do
-        grep -Fq '#EOF' $filepath && break
-        if [ $i -eq $retries ]; then
+    local r=$1 s=$2 f=$3 p=/opt/azure/cloud-init-files.paved
+    grep -Fq "${f}" $p && return 0
+    for i in $(seq 1 $r); do
+        grep -Fq '#EOF' $f && break
+        if [ $i -eq $r ]; then
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
         fi
     done
-    sed -i "/#EOF/d" $filepath
-    echo $filepath >> $paved
+    sed -i "/#EOF/d" $f
+    echo $f >> $p
 }
-wait_for_apt_locks() {
+apt_wait() {
     while fuser /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1; do
-        echo 'Waiting for release of apt locks'
         sleep 3
     done
 }
 apt_get_update() {
-    retries=10
-    apt_update_output=/tmp/apt-get-update.out
-    for i in $(seq 1 $retries); do
-        wait_for_apt_locks
+    local r=10 o=/tmp/apt-get-update.out
+    for i in $(seq 1 $r); do
+        apt_wait
         dpkg --configure -a --force-confdef
         apt-get -f -y install
-        ! (apt-get update 2>&1 | tee $apt_update_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
-        cat $apt_update_output && break || \
-        cat $apt_update_output
-        if [ $i -eq $retries ]; then
+        ! (apt-get update 2>&1 | tee $o | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
+        cat $o && break || \
+        cat $o
+        if [ $i -eq $r ]; then
             return 1
         else sleep 5
         fi
     done
     echo Executed apt-get update $i times
-    wait_for_apt_locks
+    apt_wait
 }
 apt_get_install() {
-    retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-    for i in $(seq 1 $retries); do
-        wait_for_apt_locks
+    local i r=$1 s=$2 t=$3; shift && shift && shift
+    for i in $(seq 1 $r); do
+        apt_wait
         dpkg --configure -a --force-confdef
         apt-get install -o Dpkg::Options::="--force-confold" --no-install-recommends -y ${@} && break || \
-        if [ $i -eq $retries ]; then
+        if [ $i -eq $r ]; then
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
             apt_get_update
         fi
     done
-    echo Executed apt-get install --no-install-recommends -y \"$@\" $i times;
-    wait_for_apt_locks
+    echo Executed apt-get install \"$@\" $i times;
+    apt_wait
 }
 apt_get_purge() {
-    retries=20; wait_sleep=30; timeout=120
-    for package in $@; do
-        if apt list --installed | grep $package; then
-            for i in $(seq 1 $retries); do
-                wait_for_apt_locks
+    local i r=20 s=30 t=120
+    for p in $@; do
+        if apt list --installed | grep $p; then
+            for i in $(seq 1 $r); do
+                apt_wait
                 dpkg --configure -a --force-confdef
-                apt-get purge -o Dpkg::Options::="--force-confold" -y $package && break || \
-                if [ $i -eq $retries ]; then
+                apt-get purge -o Dpkg::Options::="--force-confold" -y $p && break || \
+                if [ $i -eq $r ]; then
                     return 1
                 else
-                    sleep $wait_sleep
+                    sleep $s
                 fi
             done
         fi
     done
-    echo Executed apt-get purge -y \"$package\" $i times;
-    wait_for_apt_locks
+    echo Executed apt-get purge \"$@\" $i times;
+    apt_wait
 }
 apt_get_dist_upgrade() {
-  retries=10
-  apt_dist_upgrade_output=/tmp/apt-get-dist-upgrade.out
-  for i in $(seq 1 $retries); do
-    wait_for_apt_locks
+  local i r=10 o=/tmp/apt-get-dist-upgrade.out
+  for i in $(seq 1 $r); do
+    apt_wait
     dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
-    ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
-    cat $apt_dist_upgrade_output && break || \
-    cat $apt_dist_upgrade_output
-    if [ $i -eq $retries ]; then
+    ! (apt-get dist-upgrade -y 2>&1 | tee $o | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
+    cat $o && break || \
+    cat $o
+    if [ $i -eq $r ]; then
       return 1
     else sleep 5
     fi
   done
   echo Executed apt-get dist-upgrade $i times
-  wait_for_apt_locks
+  apt_wait
 }
 systemctl_restart() {
-    retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
-    for i in $(seq 1 $retries); do
-        timeout $timeout systemctl daemon-reload
-        timeout $timeout systemctl restart $svcname && break || \
-        if [ $i -eq $retries ]; then
+    local i r=$1 s=$2 t=$3 n=$4
+    for i in $(seq 1 $r); do
+        timeout $t systemctl daemon-reload
+        timeout $t systemctl restart $n && break || \
+        if [ $i -eq $r ]; then
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
         fi
     done
 }
 systemctl_stop() {
-    retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
-    for i in $(seq 1 $retries); do
-        timeout $timeout systemctl daemon-reload
-        timeout $timeout systemctl stop $svcname && break || \
-        if [ $i -eq $retries ]; then
+    local r=$1 s=$2 t=$3 n=$4
+    for i in $(seq 1 $r); do
+        timeout $t systemctl daemon-reload
+        timeout $t systemctl stop $n && break || \
+        if [ $i -eq $r ]; then
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
         fi
     done
 }
 sysctl_reload() {
-    retries=$1; wait_sleep=$2; timeout=$3
-    for i in $(seq 1 $retries); do
-        timeout $timeout sysctl --system && break || \
-        if [ $i -eq $retries ]; then
+    local r=$1 s=$2 t=$3
+    for i in $(seq 1 $r); do
+        timeout $t sysctl --system && break || \
+        if [ $i -eq $r ]; then
             return 1
         else
-            sleep $wait_sleep
+            sleep $s
         fi
     done
 }
@@ -40757,11 +40749,11 @@ installDeps() {
 installGPUDrivers() {
     mkdir -p $GPU_DEST/tmp
     retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey > $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 apt-key add $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/ubuntu${UBUNTU_RELEASE}/nvidia-docker.list > $GPU_DEST/tmp/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     apt_get_update
     retrycmd 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
@@ -40780,7 +40772,7 @@ installSGXDrivers() {
     [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
     local packages="make gcc dkms"
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
     local oe_dir=/opt/azure/containers/oe
@@ -40842,7 +40834,7 @@ installKataContainersRuntime() {
     KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
     KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
     retrycmd 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
     echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
@@ -40861,7 +40853,7 @@ installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
     retrycmd 120 5 25 curl -fsSL $IOVISOR_URL > $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_APT_KEY_TIMEOUT
     echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/iovisor.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
@@ -42333,9 +42325,9 @@ source {{GetCSEHelpersScriptFilepath}}
 
 echo "  dns-search {{GetSearchDomainName}}" | tee -a /etc/network/interfaces.d/50-cloud-init.cfg
 systemctl_restart 20 5 10 networking
-wait_for_apt_locks
+apt_wait
 retrycmd 10 5 120 apt-get -y install realmd sssd sssd-tools samba-common samba samba-common python2.7 samba-libs packagekit
-wait_for_apt_locks
+apt_wait
 echo "{{GetSearchDomainRealmPassword}}" | realm join -U {{GetSearchDomainRealmUser}}@$(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/) $(echo "{{GetSearchDomainName}}" | tr /a-z/ /A-Z/)
 `)
 

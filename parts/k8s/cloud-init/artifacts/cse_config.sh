@@ -453,13 +453,13 @@ configGPUDrivers() {
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
       cd "${tmpDir}"
-      wait_for_apt_locks
+      apt_wait
       dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_CONFIG
       cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_CONFIG
     )

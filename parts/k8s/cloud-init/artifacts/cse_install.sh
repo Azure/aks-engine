@@ -86,11 +86,11 @@ installDeps() {
 installGPUDrivers() {
     mkdir -p $GPU_DEST/tmp
     retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey > $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 apt-key add $GPU_DEST/tmp/aptnvidia.gpg || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/ubuntu${UBUNTU_RELEASE}/nvidia-docker.list > $GPU_DEST/tmp/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 120 5 25 cat $GPU_DEST/tmp/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list || exit  $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     apt_get_update
     retrycmd 30 5 3600 apt-get install -y linux-headers-$(uname -r) gcc make dkms || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
@@ -109,7 +109,7 @@ installSGXDrivers() {
     [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit $ERR_SGX_DRIVERS_NOT_SUPPORTED
 
     local packages="make gcc dkms"
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 3600 apt-get -y install "$packages" || exit $ERR_SGX_DRIVERS_INSTALL_TIMEOUT
 
     local oe_dir=/opt/azure/containers/oe
@@ -171,7 +171,7 @@ installKataContainersRuntime() {
     KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
     KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
     retrycmd 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_KEY_DOWNLOAD_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit $ERR_KATA_APT_KEY_TIMEOUT
     echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
@@ -190,7 +190,7 @@ installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
     retrycmd 120 5 25 curl -fsSL $IOVISOR_URL > $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_KEY_DOWNLOAD_TIMEOUT
-    wait_for_apt_locks
+    apt_wait
     retrycmd 30 5 30 apt-key add $IOVISOR_KEY_TMP || exit $ERR_IOVISOR_APT_KEY_TIMEOUT
     echo "deb https://repo.iovisor.org/apt/${UBUNTU_CODENAME} ${UBUNTU_CODENAME} main" > /etc/apt/sources.list.d/iovisor.list
     apt_get_update || exit $ERR_APT_UPDATE_TIMEOUT
