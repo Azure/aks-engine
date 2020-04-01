@@ -1,4 +1,4 @@
-$ProgressPreference="SilentlyContinue"
+$ProgressPreference = "SilentlyContinue"
 
 $lockedFiles = "kubelet.err.log", "kubelet.log", "kubeproxy.log", "kubeproxy.err.log", "containerd.err.log", "containerd.log", "azure-vnet-telemetry.log", "azure-vnet.log"
 
@@ -15,17 +15,17 @@ $lockedFiles | Foreach-Object {
   Write-Host "Copying $_ to temp"
   $src = "c:\k\$_"
   if (Test-Path $src) {
-    $tempfile= Copy-Item $src $lockedTemp -Passthru -ErrorAction Ignore
+    $tempfile = Copy-Item $src $lockedTemp -Passthru -ErrorAction Ignore
     if ($tempFile) {
       $paths += $tempFile
     }
   }
 }
 Write-Host Exporting ETW events to CSV files
-$scm = Get-WinEvent -FilterHashtable @{logname='System';ProviderName='Service Control Manager'} | Where-Object { $_.Message -Like "*docker*" -or $_.Message -Like "*kub*" } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
+$scm = Get-WinEvent -FilterHashtable @{logname = 'System'; ProviderName = 'Service Control Manager' } | Where-Object { $_.Message -Like "*docker*" -or $_.Message -Like "*kub*" } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
 # 2004 = resource exhaustion, other 5 events related to reboots
-$reboots = Get-WinEvent -ErrorAction Ignore -FilterHashtable @{logname='System'; id=1074,1076,2004,6005,6006,6008} | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
-$crashes = Get-WinEvent -ErrorAction Ignore -FilterHashtable @{logname='Application'; ProviderName='Windows Error Reporting' } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
+$reboots = Get-WinEvent -ErrorAction Ignore -FilterHashtable @{logname = 'System'; id = 1074, 1076, 2004, 6005, 6006, 6008 } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
+$crashes = Get-WinEvent -ErrorAction Ignore -FilterHashtable @{logname = 'Application'; ProviderName = 'Windows Error Reporting' } | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message
 $scm + $reboots + $crashes | Sort-Object TimeCreated | Export-CSV -Path "$ENV:TEMP\\$($timeStamp)_services.csv"
 $paths += "$ENV:TEMP\\$($timeStamp)_services.csv"
 Get-WinEvent -LogName Microsoft-Windows-Hyper-V-Compute-Operational | Select-Object -Property TimeCreated, Id, LevelDisplayName, Message | Sort-Object TimeCreated | Export-Csv -Path "$ENV:TEMP\\$($timeStamp)_hyper-v-compute-operational.csv"
