@@ -1,4 +1,5 @@
 #!/bin/bash
+# exit codes defined in /pkg/engine/cse.go
 
 copyPackerFiles() {
   SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf
@@ -74,5 +75,5 @@ copyPackerFiles() {
 
 cpAndMode() {
   src=$1; dest=$2; mode=$3
-  DIR=$(dirname "$dest") && mkdir -p ${DIR} && cp $src $dest && chmod $mode $dest || exit $ERR_PACKER_COPY_FILE
+  DIR=$(dirname "$dest") && mkdir -p ${DIR} && cp $src $dest && chmod $mode $dest || exit 113
 }
