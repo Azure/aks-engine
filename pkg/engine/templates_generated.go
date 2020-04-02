@@ -39588,6 +39588,7 @@ func k8sCloudInitArtifactsAuditdRules() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCisSh = []byte(`#!/bin/bash
+# exit codes defined in /pkg/engine/cse.go
 
 assignRootPW() {
   if grep '^root:[!*]:' /etc/shadow; then
@@ -40182,6 +40183,7 @@ func k8sCloudInitArtifactsCse_configSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_customcloudSh = []byte(`#!/bin/bash
+# exit codes defined in /pkg/engine/cse.go
 
 ensureCertificates() {
     AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
@@ -40376,6 +40378,7 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
+# exit codes defined in /pkg/engine/cse.go
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
@@ -40620,6 +40623,7 @@ func k8sCloudInitArtifactsCse_helpersSh() (*asset, error) {
 }
 
 var _k8sCloudInitArtifactsCse_installSh = []byte(`#!/bin/bash
+# exit codes defined in /pkg/engine/cse.go
 
 CC_SERVICE_IN_TMP=/opt/azure/containers/cc-proxy.service.in
 CC_SOCKET_IN_TMP=/opt/azure/containers/cc-proxy.socket.in
