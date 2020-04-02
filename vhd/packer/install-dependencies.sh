@@ -338,7 +338,7 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.18.0-beta.1
+1.18.0
 1.17.4
 1.17.3
 1.16.8
@@ -476,6 +476,24 @@ NODE_PROBLEM_DETECTOR_VERSIONS="
 "
 for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS="
+0.0.3
+"
+for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_SECRETS_STORE_DRIVER_VERSIONS="
+0.0.9
+"
+for CSI_SECRETS_STORE_DRIVER_VERSION in ${CSI_SECRETS_STORE_DRIVER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/driver:v${CSI_SECRETS_STORE_DRIVER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done

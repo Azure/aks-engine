@@ -29,7 +29,7 @@ const (
 	Ubuntu1804        Distro = "ubuntu-18.04"
 	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"
+	CoreOS            Distro = "coreos"            // deprecated
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -166,6 +166,8 @@ const (
 	DefaultCoreDNSAddonEnabled = true
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
+	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
+	DefaultSecretStoreCSIDriverAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -174,8 +176,6 @@ const (
 	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -250,7 +250,7 @@ const (
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
-	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
 )
@@ -269,6 +269,8 @@ const (
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// DefaultAzureStackLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU on Azure Stack
+	DefaultAzureStackLoadBalancerSku = BasicLoadBalancerSku
 )
 
 const (

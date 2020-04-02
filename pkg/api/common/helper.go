@@ -84,10 +84,13 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 		"Standard_NC24":  true,
 		"Standard_NC24r": true,
 		// M60
-		"Standard_NV6":   true,
-		"Standard_NV12":  true,
-		"Standard_NV24":  true,
-		"Standard_NV24r": true,
+		"Standard_NV6":      true,
+		"Standard_NV12":     true,
+		"Standard_NV12s_v3": true,
+		"Standard_NV24":     true,
+		"Standard_NV24s_v3": true,
+		"Standard_NV24r":    true,
+		"Standard_NV48s_v3": true,
 		// P40
 		"Standard_ND6s":   true,
 		"Standard_ND12s":  true,

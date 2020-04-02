@@ -87,7 +87,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		EtcdVersion:             DefaultEtcdVersion,
 		MobyVersion:             DefaultMobyVersion,
 		ContainerdVersion:       DefaultContainerdVersion,
-		LoadBalancerSku:         DefaultLoadBalancerSku,
+		LoadBalancerSku:         BasicLoadBalancerSku,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
 		KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
@@ -226,7 +226,6 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 				OSImageConfig: map[Distro]AzureOSImageConfig{
 					Ubuntu:        Ubuntu1604OSImageConfig,
 					RHEL:          RHELOSImageConfig,
-					CoreOS:        CoreOSImageConfig,
 					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 				},
 			}

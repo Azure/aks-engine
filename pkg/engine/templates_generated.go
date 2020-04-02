@@ -120,6 +120,30 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
+// ../../parts/k8s/addons/1.19/azure-cni-networkmonitor.yaml
+// ../../parts/k8s/addons/1.19/ip-masq-agent.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmaster-audit-policy.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-cilium-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-metrics-server-deployment.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-pod-security-policy.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
+// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.6/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.7/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.8/kubernetesmasteraddons-heapster-deployment.yaml
@@ -154,6 +178,7 @@
 // ../../parts/k8s/addons/kubernetesmasteraddons-omsagent-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml
+// ../../parts/k8s/addons/kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/node-problem-detector.yaml
@@ -25248,6 +25273,4729 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddons119AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: azure-cni-networkmonitor
+  namespace: kube-system
+  labels:
+    app: azure-cnms
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-cnms
+  template:
+    metadata:
+      labels:
+        k8s-app: azure-cnms
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+        - name: azure-cnms
+          image: {{ContainerImage "azure-cni-networkmonitor"}}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          volumeMounts:
+          - name: ebtables-rule-repo
+            mountPath: /var/run
+          - name: log
+            mountPath: /var/log
+          - name: telemetry
+            mountPath: /opt/cni/bin
+      hostNetwork: true
+      volumes:
+      - name: log
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: ebtables-rule-repo
+        hostPath:
+          path: /var/run/
+          type: Directory
+      - name: telemetry
+        hostPath:
+          path: /opt/cni/bin
+          type: Directory
+`)
+
+func k8sAddons119AzureCniNetworkmonitorYamlBytes() ([]byte, error) {
+	return _k8sAddons119AzureCniNetworkmonitorYaml, nil
+}
+
+func k8sAddons119AzureCniNetworkmonitorYaml() (*asset, error) {
+	bytes, err := k8sAddons119AzureCniNetworkmonitorYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119IpMasqAgentYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: azure-ip-masq-agent
+  namespace: kube-system
+  labels:
+    component: azure-ip-masq-agent
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    tier: node
+spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
+  template:
+    metadata:
+      labels:
+        k8s-app: azure-ip-masq-agent
+        tier: node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: azure-ip-masq-agent
+        image: {{ContainerImage "ip-masq-agent"}}
+        imagePullPolicy: IfNotPresent
+        args:
+          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: azure-ip-masq-agent-config-volume
+            mountPath: /etc/config
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
+            memory: {{ContainerMemReqs "ip-masq-agent"}}
+          limits:
+            cpu: {{ContainerCPULimits "ip-masq-agent"}}
+            memory: {{ContainerMemLimits "ip-masq-agent"}}
+      volumes:
+        - name: azure-ip-masq-agent-config-volume
+          configMap:
+            name: azure-ip-masq-agent-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-ip-masq-agent-config
+  namespace: kube-system
+  labels:
+    component: azure-ip-masq-agent
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  ip-masq-agent: |-
+    nonMasqueradeCIDRs:
+      - {{ContainerConfig "non-masquerade-cidr"}}
+    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
+    {{end -}}
+    {{- if ContainerConfig "non-masq-cni-cidr"}}
+      - {{ContainerConfig "non-masq-cni-cidr"}}
+    masqLinkLocal: true
+    {{else}}
+    masqLinkLocal: false
+    {{end -}}
+    resyncInterval: 60s
+`)
+
+func k8sAddons119IpMasqAgentYamlBytes() ([]byte, error) {
+	return _k8sAddons119IpMasqAgentYaml, nil
+}
+
+func k8sAddons119IpMasqAgentYaml() (*asset, error) {
+	bytes, err := k8sAddons119IpMasqAgentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/ip-masq-agent.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: ""
+      resources: ["endpoints", "services"]
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - /api*
+    - /version
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+    namespaces: ["kube-system"]
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["secrets"]
+  - level: Request
+    resources:
+    - group: ""
+    - group: extensions
+  - level: Metadata
+    omitStages:
+      - RequestReceived
+`)
+
+func k8sAddons119KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasterAuditPolicyYaml, nil
+}
+
+func k8sAddons119KubernetesmasterAuditPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasterAuditPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aad-pod-id-nmi-service-account
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureassignedidentities.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureAssignedIdentity
+    plural: azureassignedidentities
+  scope: Namespaced
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureidentitybindings.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureIdentityBinding
+    plural: azureidentitybindings
+  scope: Namespaced
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureidentities.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureIdentity
+    singular: azureidentity
+    plural: azureidentities
+  scope: Namespaced
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aad-pod-id-nmi-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aad-pod-id-nmi-binding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-nmi-binding
+subjects:
+- kind: ServiceAccount
+  name: aad-pod-id-nmi-service-account
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: aad-pod-id-nmi-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    component: nmi
+    tier: node
+    k8s-app: aad-pod-id
+  name: nmi
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
+  template:
+    metadata:
+      labels:
+        component: nmi
+        tier: node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-cluster-critical
+      serviceAccountName: aad-pod-id-nmi-service-account
+      hostNetwork: true
+      containers:
+      - name: nmi
+        image: {{ContainerImage "nmi"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
+          limits:
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
+        args:
+          - "--host-ip=$(HOST_IP)"
+          - "--node=$(NODE_NAME)"
+        env:
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aad-pod-id-mic-service-account
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aad-pod-id-mic-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: [ "list", "watch" ]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureidentitybindings", "azureidentities"]
+  verbs: ["get", "list", "watch", "post"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureassignedidentities"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aad-pod-id-mic-binding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-mic-binding
+subjects:
+- kind: ServiceAccount
+  name: aad-pod-id-mic-service-account
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: aad-pod-id-mic-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    component: mic
+    k8s-app: aad-pod-id
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: mic
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      component: mic
+  template:
+    metadata:
+      labels:
+        component: mic
+    spec:
+      serviceAccountName: aad-pod-id-mic-service-account
+      containers:
+      - name: mic
+        image: {{ContainerImage "mic"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
+          limits:
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
+        args:
+          - --cloudconfig=/etc/kubernetes/azure.json
+          - --logtostderr
+        volumeMounts:
+          - name: k8s-azure-file
+            mountPath: /etc/kubernetes/azure.json
+            readOnly: true
+      volumes:
+      - name: k8s-azure-file
+        hostPath:
+          path: /etc/kubernetes/azure.json
+`)
+
+func k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: aci-connector
+  labels:
+    app: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - services
+  - endpoints
+  - events
+  - secrets
+  - nodes
+  - nodes/status
+  - pods/status
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aci-connector
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: aci-connector
+subjects:
+- kind: ServiceAccount
+  name: aci-connector
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aci-connector-secret
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+type: Opaque
+data:
+  credentials.json: <creds>
+  cert.pem: <cert>
+  key.pem: <key>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    app: aci-connector
+    name: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aci-connector
+  template:
+    metadata:
+      labels:
+        app: aci-connector
+    spec:
+      serviceAccountName: aci-connector
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - name: aci-connector
+        image: {{ContainerImage "aci-connector"}}
+        imagePullPolicy: Always
+        env:
+        - name: KUBELET_PORT
+          value: "10250"
+        - name: AZURE_AUTH_LOCATION
+          value: /etc/virtual-kubelet/credentials.json
+        - name: ACI_RESOURCE_GROUP
+          value: <rgName>
+        - name: ACI_REGION
+          value: {{ContainerConfig "region"}}
+        - name: APISERVER_CERT_LOCATION
+          value: /etc/virtual-kubelet/cert.pem
+        - name: APISERVER_KEY_LOCATION
+          value: /etc/virtual-kubelet/key.pem
+        - name: VKUBELET_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "aci-connector"}}
+            memory: {{ContainerMemReqs "aci-connector"}}
+          limits:
+            cpu: {{ContainerCPULimits "aci-connector"}}
+            memory: {{ContainerMemLimits "aci-connector"}}
+        volumeMounts:
+        - name: credentials
+          mountPath: "/etc/virtual-kubelet"
+          readOnly: true
+        command: ["virtual-kubelet"]
+        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
+      volumes:
+      - name: credentials
+        secret:
+          secretName: aci-connector-secret
+#EOF
+`)
+
+func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYaml = []byte(`---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+rules:
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - create
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+- apiGroups: ['']
+  resources: ['secrets']
+  verbs:     ['get','create']
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:azure-persistent-volume-binder
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:azure-persistent-volume-binder
+subjects:
+- kind: ServiceAccount
+  name: persistent-volume-binder
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+  name: system:azure-cloud-provider-secret-getter
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:azure-cloud-provider-secret-getter
+subjects:
+- kind: ServiceAccount
+  name: azure-cloud-provider
+  namespace: kube-system
+{{- if UsesCloudControllerManager}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Premium_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: disk.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+  kind: managed
+  cachingMode: ReadOnly
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+  {{- if HasAvailabilityZones}}
+volumeBindingMode: WaitForFirstConsumer
+allowedTopologies:
+- matchLabelExpressions:
+  - key: topology.disk.csi.azure.com/zone
+    values: {{GetZones}}
+  {{else}}
+volumeBindingMode: Immediate
+  {{end}}
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: file.csi.azure.com
+parameters:
+  skuName: Standard_LRS
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+{{else}}
+  {{- if NeedsStorageAccountStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: unmanaged-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: shared
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end}}
+  {{end}}
+  {{- if NeedsManagedDiskStorageClasses}}
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.beta.kubernetes.io/is-default-class: "true"
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-premium
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Premium_LRS
+  cachingmode: ReadOnly
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: managed-standard
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-disk
+parameters:
+  kind: Managed
+  storageaccounttype: Standard_LRS
+  cachingmode: ReadOnly
+    {{- if not IsAzureStackCloud}}
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile
+  annotations:
+  labels:
+    kubernetes.io/cluster-service: "true"
+provisioner: kubernetes.io/azure-file
+parameters:
+  skuName: Standard_LRS
+    {{end -}}
+  {{end -}}
+{{end -}}
+`)
+
+func k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups:
+    - ""
+    resources:
+      - pods
+      - nodes
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+    - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: azure-npm-binding
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+subjects:
+  - kind: ServiceAccount
+    name: azure-npm
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: azure-npm
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    app: azure-npm
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-npm
+  template:
+    metadata:
+      labels:
+        k8s-app: azure-npm
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+        - name: azure-npm
+          image: {{ContainerImage "azure-npm-daemonset"}}
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
+              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
+              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          volumeMounts:
+          - name: xtables-lock
+            mountPath: /run/xtables.lock
+          - name: log
+            mountPath: /var/log
+      hostNetwork: true
+      volumes:
+      - name: log
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: File
+      serviceAccountName: azure-npm
+`)
+
+func k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: blobfuse-flexvol-installer
+  namespace: kube-system
+  labels:
+    k8s-app: blobfuse
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      name: blobfuse
+  template:
+    metadata:
+      labels:
+        name: blobfuse
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-cluster-critical
+      containers:
+      - name: blobfuse-flexvol-installer
+        image: {{ContainerImage "blobfuse-flexvolume"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
+            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
+          limits:
+            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
+            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
+        volumeMounts:
+        - name: volplugins
+          mountPath: /etc/kubernetes/volumeplugins/
+        - name: varlog
+          mountPath: /var/log/
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log/
+      - name: volplugins
+        hostPath:
+          path: /etc/kubernetes/volumeplugins/
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml = []byte(`{{- /* Source: calico/templates/calico-config.yaml
+This ConfigMap is used to configure a self-hosted Calico installation. */}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: calico-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  {{- /* You must set a non-zero value for Typha replicas below. */}}
+  typha_service_name: "calico-typha"
+  {{- /* The CNI network configuration to install on each node.  The special
+  values in this config will be automatically populated. */}}
+  cni_network_config: |-
+    {
+      "name": "k8s-pod-network",
+      "cniVersion": "0.3.0",
+      "plugins": [
+        {
+          "type": "calico",
+          "log_level": "info",
+          "datastore_type": "kubernetes",
+          "nodename": "__KUBERNETES_NODE_NAME__",
+          "mtu": 1500,
+          "ipam": <calicoIPAMConfig>,
+          "policy": {
+              "type": "k8s"
+          },
+          "kubernetes": {
+              "kubeconfig": "__KUBECONFIG_FILEPATH__"
+          }
+        },
+        {
+          "type": "portmap",
+          "snat": true,
+          "capabilities": {"portMappings": true}
+        }
+      ]
+    }
+
+---
+{{- /* Source: calico/templates/kdd-crds.yaml */}}
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: felixconfigurations.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: FelixConfiguration
+    plural: felixconfigurations
+    singular: felixconfiguration
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: bgpconfigurations.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: BGPConfiguration
+    plural: bgpconfigurations
+    singular: bgpconfiguration
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: ippools.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: IPPool
+    plural: ippools
+    singular: ippool
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: hostendpoints.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: HostEndpoint
+    plural: hostendpoints
+    singular: hostendpoint
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: clusterinformations.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: ClusterInformation
+    plural: clusterinformations
+    singular: clusterinformation
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: globalnetworkpolicies.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: GlobalNetworkPolicy
+    plural: globalnetworkpolicies
+    singular: globalnetworkpolicy
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: globalnetworksets.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Cluster
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: GlobalNetworkSet
+    plural: globalnetworksets
+    singular: globalnetworkset
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: networkpolicies.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Namespaced
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: NetworkPolicy
+    plural: networkpolicies
+    singular: networkpolicy
+---
+
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: networksets.crd.projectcalico.org
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  scope: Namespaced
+  group: crd.projectcalico.org
+  version: v1
+  names:
+    kind: NetworkSet
+    plural: networksets
+    singular: networkset
+---
+{{- /* Source: calico/templates/rbac.yaml
+Include a clusterrole for the calico-node DaemonSet,
+and bind it to the calico-node serviceaccount. */}}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: calico-node
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+{{- /* The CNI plugin needs to get pods, nodes, and namespaces. */}}
+- apiGroups: [""]
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+- apiGroups: [""]
+  resources:
+  - endpoints
+  - services
+  verbs:
+  {{- /* Used to discover service IPs for advertisement. */}}
+  - watch
+  - list
+  {{- /* Used to discover Typhas. */}}
+  - get
+- apiGroups: [""]
+  resources:
+  - nodes/status
+  verbs:
+  {{- /* Needed for clearing NodeNetworkUnavailable flag. */}}
+  - patch
+  {{- /* Calico stores some configuration information in node annotations. */}}
+  - update
+{{- /* Watch for changes to Kubernetes NetworkPolicies. */}}
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs:
+  - watch
+  - list
+{{- /* Used by Calico for policy information. */}}
+- apiGroups: [""]
+  resources:
+  - pods
+  - namespaces
+  - serviceaccounts
+  verbs:
+  - list
+  - watch
+{{- /* The CNI plugin patches pods/status. */}}
+- apiGroups: [""]
+  resources:
+  - pods/status
+  verbs:
+  - patch
+{{- /* Calico monitors various CRDs for config. */}}
+- apiGroups: ["crd.projectcalico.org"]
+  resources:
+  - globalfelixconfigs
+  - felixconfigurations
+  - bgppeers
+  - globalbgpconfigs
+  - bgpconfigurations
+  - ippools
+  - ipamblocks
+  - globalnetworkpolicies
+  - globalnetworksets
+  - networkpolicies
+  - networksets
+  - clusterinformations
+  - hostendpoints
+  verbs:
+  - get
+  - list
+  - watch
+{{- /* Calico must create and update some CRDs on startup. */}}
+- apiGroups: ["crd.projectcalico.org"]
+  resources:
+  - ippools
+  - felixconfigurations
+  - clusterinformations
+  verbs:
+  - create
+  - update
+{{- /* Calico stores some configuration information on the node. */}}
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+{{- /* These permissions are only requried for upgrade from v2.6, and can
+be removed after upgrade or on fresh installations. */}}
+- apiGroups: ["crd.projectcalico.org"]
+  resources:
+  - bgpconfigurations
+  - bgppeers
+  verbs:
+  - create
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: calico-node
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: calico-node
+subjects:
+- kind: ServiceAccount
+  name: calico-node
+  namespace: kube-system
+
+---
+{{- /* Source: calico/templates/calico-typha.yaml
+This manifest creates a Service, which will be backed by Calico's Typha daemon.
+Typha sits in between Felix and the API server, reducing Calico's load on the API server. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: calico-typha
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  ports:
+  - port: 5473
+    protocol: TCP
+    targetPort: calico-typha
+    name: calico-typha
+  selector:
+    k8s-app: calico-typha
+---
+{{- /* This manifest creates a Deployment of Typha to back the above service. */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calico-typha
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  {{- /* Number of Typha replicas.  To enable Typha, set this to a non-zero value *and* set the
+  typha_service_name variable in the calico-config ConfigMap above.
+  We recommend using Typha if you have more than 50 nodes.  Above 100 nodes it is essential
+  (when using the Kubernetes datastore).  Use one replica for every 100-200 nodes.  In
+  production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade. */}}
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      k8s-app: calico-typha
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-typha
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
+    spec:
+      priorityClassName: system-cluster-critical
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      hostNetwork: true
+      tolerations:
+      {{- /* Mark the pod as a critical add-on for rescheduling. */}}
+      - key: CriticalAddonsOnly
+        operator: Exists
+      {{- /* Since Calico can't network a pod until Typha is up, we need to run Typha itself
+      as a host-networked pod. */}}
+      serviceAccountName: calico-node
+      containers:
+      - image: {{ContainerImage "calico-typha"}}
+        name: calico-typha
+        ports:
+        - containerPort: 5473
+          name: calico-typha
+          protocol: TCP
+        env:
+        {{- /* Enable "info" logging by default.  Can be set to "debug" to increase verbosity. */}}
+        - name: TYPHA_LOGSEVERITYSCREEN
+          value: "info"
+        {{- /* Disable logging to file and syslog since those don't make sense in Kubernetes. */}}
+        - name: TYPHA_LOGFILEPATH
+          value: "none"
+        - name: TYPHA_LOGSEVERITYSYS
+          value: "none"
+        {{- /* Monitor the Kubernetes API to find the number of running instances and rebalance
+        connections. */}}
+        - name: TYPHA_CONNECTIONREBALANCINGMODE
+          value: "kubernetes"
+        - name: TYPHA_DATASTORETYPE
+          value: "kubernetes"
+        - name: TYPHA_HEALTHENABLED
+          value: "true"
+        {{- /* Configure route aggregation based on pod CIDR. */}}
+        - name: USE_POD_CIDR
+          value: "true"
+        - name: FELIX_INTERFACEPREFIX
+          value: "azv"
+        # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
+        # this opens a port on the host, which may need to be secured.
+        #- name: TYPHA_PROMETHEUSMETRICSENABLED
+        #  value: "true"
+        #- name: TYPHA_PROMETHEUSMETRICSPORT
+        #  value: "9093"
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9098
+            host: localhost
+          periodSeconds: 30
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 9098
+            host: localhost
+          periodSeconds: 10
+---
+{{- /* Source: calico/templates/calico-node.yaml
+This manifest installs the calico-node container, as well
+as the CNI plugins and network config on
+each master and worker node in a Kubernetes cluster. */}}
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: calico-node
+  namespace: kube-system
+  labels:
+    k8s-app: calico-node
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  selector:
+    matchLabels:
+      k8s-app: calico-node
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-cluster-critical
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      hostNetwork: true
+      tolerations:
+      {{- /* Make sure calico-node gets scheduled on all nodes. */}}
+      - effect: NoSchedule
+        operator: Exists
+      {{- /* Mark the pod as a critical add-on for rescheduling. */}}
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      serviceAccountName: calico-node
+      {{- /* Minimize downtime during a rolling upgrade or deletion; tell Kubernetes to do a "force deletion":
+      https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods. */}}
+      terminationGracePeriodSeconds: 0
+      initContainers:
+      {{- /* This container installs the CNI binaries
+      and CNI network config file on each node. */}}
+      - name: install-cni
+        image: {{ContainerImage "calico-cni"}}
+        command: ["/install-cni.sh"]
+        env:
+        {{- /* Name of the CNI config file to create. */}}
+        - name: CNI_CONF_NAME
+          value: "10-calico.conflist"
+        {{- /* The CNI network config to install on each node. */}}
+        - name: CNI_NETWORK_CONFIG
+          valueFrom:
+            configMapKeyRef:
+              name: calico-config
+              key: cni_network_config
+        {{- /* Set the hostname based on the k8s node name. */}}
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        {{- /* Prevents the container from sleeping forever. */}}
+        - name: SLEEP
+          value: "false"
+        volumeMounts:
+        - mountPath: /host/opt/cni/bin
+          name: cni-bin-dir
+        - mountPath: /host/etc/cni/net.d
+          name: cni-net-dir
+      containers:
+      {{- /* Runs calico-node container on each Kubernetes node.  This
+      container programs network policy and routes on each
+      host. */}}
+      - name: calico-node
+        image: {{ContainerImage "calico-node"}}
+        env:
+        {{- /* Use Kubernetes API as the backing datastore. */}}
+        - name: DATASTORE_TYPE
+          value: "kubernetes"
+        {{- /* Configure route aggregation based on pod CIDR. */}}
+        - name: USE_POD_CIDR
+          value: "true"
+        {{- /* Typha support: controlled by the ConfigMap. */}}
+        - name: FELIX_TYPHAK8SSERVICENAME
+          valueFrom:
+            configMapKeyRef:
+              name: calico-config
+              key: typha_service_name
+        {{- /* Wait for the datastore. */}}
+        - name: WAIT_FOR_DATASTORE
+          value: "true"
+        {{- /* Set based on the k8s node name. */}}
+        - name: NODENAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        {{- /* Don't enable BGP. */}}
+        - name: CALICO_NETWORKING_BACKEND
+          value: "none"
+        {{- /* Cluster type to identify the deployment type */}}
+        - name: CLUSTER_TYPE
+          value: "k8s"
+        {{- /* The default IPv4 pool to create on startup if none exists. Pod IPs will be
+        chosen from this range. Changing this value after installation will have
+        no effect. This should fall within ` + "`" + `--cluster-cidr` + "`" + `. */}}
+        - name: CALICO_IPV4POOL_CIDR
+          value: "<kubeClusterCidr>"
+        {{- /* Disable file logging so ` + "`" + `kubectl logs` + "`" + ` works. */}}
+        - name: CALICO_DISABLE_FILE_LOGGING
+          value: "true"
+        {{- /* Set Felix endpoint to host default action to ACCEPT. */}}
+        - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
+          value: "ACCEPT"
+        {{- /* Disable IPv6 on Kubernetes. */}}
+        - name: FELIX_IPV6SUPPORT
+          value: "false"
+        {{- /* Set Felix logging to "info" */}}
+        - name: FELIX_LOGSEVERITYSCREEN
+          value: "info"
+        - name: FELIX_HEALTHENABLED
+          value: "true"
+        - name: CALICO_IPV4POOL_IPIP
+          value: "off"
+        - name: FELIX_INTERFACEPREFIX
+          value: "azv"
+        securityContext:
+          privileged: true
+        resources:
+          requests:
+            cpu: 250m
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 9099
+            host: localhost
+          periodSeconds: 10
+          initialDelaySeconds: 10
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - /bin/calico-node
+            - -felix-ready
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /lib/modules
+          name: lib-modules
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: xtables-lock
+          readOnly: false
+        - mountPath: /var/run/calico
+          name: var-run-calico
+          readOnly: false
+        - mountPath: /var/lib/calico
+          name: var-lib-calico
+          readOnly: false
+      volumes:
+      {{- /* Used by calico-node. */}}
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: var-run-calico
+        hostPath:
+          path: /var/run/calico
+      - name: var-lib-calico
+        hostPath:
+          path: /var/lib/calico
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: FileOrCreate
+      {{- /* Used to install CNI. */}}
+      - name: cni-bin-dir
+        hostPath:
+          path: /opt/cni/bin
+      - name: cni-net-dir
+        hostPath:
+          path: /etc/cni/net.d
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: calico-node
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+---
+{{- /* Typha Horizontal Autoscaler ConfigMap */}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: calico-typha-horizontal-autoscaler
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  ladder: |-
+    {
+      "coresToReplicas": [],
+      "nodesToReplicas":
+      [
+        [1, 1],
+        [10, 2],
+        [100, 3],
+        [250, 4],
+        [500, 5],
+        [1000, 6],
+        [1500, 7],
+        [2000, 8]
+      ]
+    }
+
+---
+{{- /* Typha Horizontal Autoscaler Deployment */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calico-typha-horizontal-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-typha-autoscaler
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-typha-autoscaler
+    spec:
+      priorityClassName: system-cluster-critical
+      securityContext:
+        supplementalGroups: [65534]
+        fsGroup: 65534
+      containers:
+      - image: {{ContainerImage "calico-cluster-proportional-autoscaler"}}
+        name: autoscaler
+        command:
+        - /cluster-proportional-autoscaler
+        - --namespace=kube-system
+        - --configmap=calico-typha-horizontal-autoscaler
+        - --target=deployment/calico-typha
+        - --logtostderr=true
+        - --v=2
+        resources:
+          requests:
+            cpu: 10m
+          limits:
+            cpu: 10m
+      serviceAccountName: typha-cpha
+---
+{{- /* Typha Horizontal Autoscaler Cluster Role */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: typha-cpha
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list"]
+
+---
+{{- /* Typha Horizontal Autoscaler Cluster Role Binding */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: typha-cpha
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: typha-cpha
+subjects:
+- kind: ServiceAccount
+  name: typha-cpha
+  namespace: kube-system
+---
+{{- /* Typha Horizontal Autoscaler Role */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get"]
+- apiGroups: ["extensions"]
+  resources: ["deployments/scale"]
+  verbs: ["get", "update"]
+
+---
+{{- /* Typha Horizontal Autoscaler Role Binding */}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: typha-cpha
+subjects:
+- kind: ServiceAccount
+  name: typha-cpha
+  namespace: kube-system
+---
+{{- /* Typha Horizontal Autoscaler Service Account */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+`)
+
+func k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml = []byte(`---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cilium-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  etcd-config: |-
+    ---
+    endpoints:
+      - https://cilium-etcd-client.kube-system.svc:2379
+    ca-file: '/var/lib/etcd-secrets/etcd-client-ca.crt'
+    key-file: '/var/lib/etcd-secrets/etcd-client.key'
+    cert-file: '/var/lib/etcd-secrets/etcd-client.crt'
+  debug: "false"
+  enable-ipv4: "true"
+  enable-ipv6: "false"
+  clean-cilium-state: "false"
+  clean-cilium-bpf-state: "false"
+  monitor-aggregation-level: "none"
+  ct-global-max-entries-tcp: "524288"
+  ct-global-max-entries-other: "262144"
+  preallocate-bpf-maps: "false"
+  sidecar-istio-proxy-image: "cilium/istio_proxy"
+  tunnel: "vxlan"
+  cluster-name: default
+  flannel-master-device: ""
+  flannel-uninstall-on-exit: "false"
+  flannel-manage-existing-containers: "false"
+  tofqdns-enable-poller: "false"
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: cilium
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: cilium
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cilium
+      kubernetes.io/cluster-service: "true"
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/scrape: "true"
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
+      labels:
+        k8s-app: cilium
+        kubernetes.io/cluster-service: "true"
+    spec:
+      containers:
+      - args:
+        - --debug=$(CILIUM_DEBUG)
+        - --kvstore=etcd
+        - --kvstore-opt=etcd.config=/var/lib/etcd-config/etcd.config
+        command:
+        - cilium-agent
+        env:
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_K8S_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: CILIUM_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: debug
+              name: cilium-config
+        - name: CILIUM_ENABLE_IPV4
+          valueFrom:
+            configMapKeyRef:
+              key: enable-ipv4
+              name: cilium-config
+              optional: true
+        - name: CILIUM_ENABLE_IPV6
+          valueFrom:
+            configMapKeyRef:
+              key: enable-ipv6
+              name: cilium-config
+              optional: true
+        - name: CILIUM_PROMETHEUS_SERVE_ADDR
+          valueFrom:
+            configMapKeyRef:
+              key: prometheus-serve-addr
+              name: cilium-metrics-config
+              optional: true
+        - name: CILIUM_LEGACY_HOST_ALLOWS_WORLD
+          valueFrom:
+            configMapKeyRef:
+              key: legacy-host-allows-world
+              name: cilium-config
+              optional: true
+        - name: CILIUM_SIDECAR_ISTIO_PROXY_IMAGE
+          valueFrom:
+            configMapKeyRef:
+              key: sidecar-istio-proxy-image
+              name: cilium-config
+              optional: true
+        - name: CILIUM_TUNNEL
+          valueFrom:
+            configMapKeyRef:
+              key: tunnel
+              name: cilium-config
+              optional: true
+        - name: CILIUM_MONITOR_AGGREGATION_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              key: monitor-aggregation-level
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTERMESH_CONFIG
+          value: /var/lib/cilium/clustermesh/
+        - name: CILIUM_CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-name
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-id
+              name: cilium-config
+              optional: true
+        - name: CILIUM_GLOBAL_CT_MAX_TCP
+          valueFrom:
+            configMapKeyRef:
+              key: ct-global-max-entries-tcp
+              name: cilium-config
+              optional: true
+        - name: CILIUM_GLOBAL_CT_MAX_ANY
+          valueFrom:
+            configMapKeyRef:
+              key: ct-global-max-entries-other
+              name: cilium-config
+              optional: true
+        - name: CILIUM_PREALLOCATE_BPF_MAPS
+          valueFrom:
+            configMapKeyRef:
+              key: preallocate-bpf-maps
+              name: cilium-config
+              optional: true
+        - name: CILIUM_FLANNEL_MASTER_DEVICE
+          valueFrom:
+            configMapKeyRef:
+              key: flannel-master-device
+              name: cilium-config
+              optional: true
+        - name: CILIUM_FLANNEL_UNINSTALL_ON_EXIT
+          valueFrom:
+            configMapKeyRef:
+              key: flannel-uninstall-on-exit
+              name: cilium-config
+              optional: true
+        - name: CILIUM_FLANNEL_MANAGE_EXISTING_CONTAINERS
+          valueFrom:
+            configMapKeyRef:
+              key: flannel-manage-existing-containers
+              name: cilium-config
+              optional: true
+        - name: CILIUM_DATAPATH_MODE
+          valueFrom:
+            configMapKeyRef:
+              key: datapath-mode
+              name: cilium-config
+              optional: true
+        - name: CILIUM_IPVLAN_MASTER_DEVICE
+          valueFrom:
+            configMapKeyRef:
+              key: ipvlan-master-device
+              name: cilium-config
+              optional: true
+        - name: CILIUM_INSTALL_IPTABLES_RULES
+          valueFrom:
+            configMapKeyRef:
+              key: install-iptables-rules
+              name: cilium-config
+              optional: true
+        - name: CILIUM_MASQUERADE
+          valueFrom:
+            configMapKeyRef:
+              key: masquerade
+              name: cilium-config
+              optional: true
+        - name: CILIUM_AUTO_DIRECT_NODE_ROUTES
+          valueFrom:
+            configMapKeyRef:
+              key: auto-direct-node-routes
+              name: cilium-config
+              optional: true
+        - name: CILIUM_TOFQDNS_ENABLE_POLLER
+          valueFrom:
+            configMapKeyRef:
+              key: tofqdns-enable-poller
+              name: cilium-config
+              optional: true
+        image: {{ContainerImage "cilium-agent"}}
+        imagePullPolicy: Always
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /cni-install.sh
+          preStop:
+            exec:
+              command:
+              - /cni-uninstall.sh
+        livenessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          failureThreshold: 10
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: cilium-agent
+        ports:
+        - containerPort: 9090
+          hostPort: 9090
+          name: prometheus
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - cilium
+            - status
+          failureThreshold: 3
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          successThreshold: 1
+          timeoutSeconds: 1
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+          privileged: true
+        volumeMounts:
+        - mountPath: /sys/fs/bpf
+          name: bpf-maps
+        - mountPath: /var/run/cilium
+          name: cilium-run
+        - mountPath: /host/opt/cni/bin
+          name: cni-path
+        - mountPath: /host/etc/cni/net.d
+          name: etc-cni-netd
+        - mountPath: /var/run/docker.sock
+          name: docker-socket
+          readOnly: true
+        - mountPath: /var/lib/etcd-config
+          name: etcd-config-path
+          readOnly: true
+        - mountPath: /var/lib/etcd-secrets
+          name: etcd-secrets
+          readOnly: true
+        - mountPath: /var/lib/cilium/clustermesh
+          name: clustermesh-secrets
+          readOnly: true
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      hostPID: false
+      initContainers:
+      - command:
+        - /init-container.sh
+        env:
+        - name: CLEAN_CILIUM_STATE
+          valueFrom:
+            configMapKeyRef:
+              key: clean-cilium-state
+              name: cilium-config
+              optional: true
+        - name: CLEAN_CILIUM_BPF_STATE
+          valueFrom:
+            configMapKeyRef:
+              key: clean-cilium-bpf-state
+              name: cilium-config
+              optional: true
+        image: {{ContainerImage "clean-cilium-state"}}
+        imagePullPolicy: IfNotPresent
+        name: clean-cilium-state
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+          privileged: true
+        volumeMounts:
+        - mountPath: /sys/fs/bpf
+          name: bpf-maps
+        - mountPath: /var/run/cilium
+          name: cilium-run
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      serviceAccount: cilium
+      serviceAccountName: cilium
+      terminationGracePeriodSeconds: 1
+      tolerations:
+      - operator: Exists
+      - effect: NoSchedule
+        key: node.kubernetes.io/not-ready
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /var/run/cilium
+          type: DirectoryOrCreate
+        name: cilium-run
+      - hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
+        name: bpf-maps
+      - hostPath:
+          path: /var/run/docker.sock
+          type: Socket
+        name: docker-socket
+      - hostPath:
+          path: /opt/cni/bin
+          type: DirectoryOrCreate
+        name: cni-path
+      - hostPath:
+          path: /etc/cni/net.d
+          type: DirectoryOrCreate
+        name: etc-cni-netd
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: etcd-config
+            path: etcd.config
+          name: cilium-config
+        name: etcd-config-path
+      - name: etcd-secrets
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: cilium-etcd-secrets
+      - name: clustermesh-secrets
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: cilium-clustermesh
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 2
+    type: RollingUpdate
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.cilium/app: operator
+    name: cilium-operator
+  name: cilium-operator
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.cilium/app: operator
+      name: cilium-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.cilium/app: operator
+        name: cilium-operator
+    spec:
+      containers:
+      - args:
+        - --debug=$(CILIUM_DEBUG)
+        - --kvstore=etcd
+        - --kvstore-opt=etcd.config=/var/lib/etcd-config/etcd.config
+        command:
+        - cilium-operator
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: CILIUM_DEBUG
+          valueFrom:
+            configMapKeyRef:
+              key: debug
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-name
+              name: cilium-config
+              optional: true
+        - name: CILIUM_CLUSTER_ID
+          valueFrom:
+            configMapKeyRef:
+              key: cluster-id
+              name: cilium-config
+              optional: true
+        - name: CILIUM_DISABLE_ENDPOINT_CRD
+          valueFrom:
+            configMapKeyRef:
+              key: disable-endpoint-crd
+              name: cilium-config
+              optional: true
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              key: AWS_ACCESS_KEY_ID
+              name: cilium-aws
+              optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AWS_SECRET_ACCESS_KEY
+              name: cilium-aws
+              optional: true
+        - name: AWS_DEFAULT_REGION
+          valueFrom:
+            secretKeyRef:
+              key: AWS_DEFAULT_REGION
+              name: cilium-aws
+              optional: true
+        image: {{ContainerImage "cilium-operator"}}
+        imagePullPolicy: Always
+        name: cilium-operator
+        volumeMounts:
+        - mountPath: /var/lib/etcd-config
+          name: etcd-config-path
+          readOnly: true
+        - mountPath: /var/lib/etcd-secrets
+          name: etcd-secrets
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      serviceAccount: cilium-operator
+      serviceAccountName: cilium-operator
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: etcd-config
+            path: etcd.config
+          name: cilium-config
+        name: etcd-config-path
+      - name: etcd-secrets
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: cilium-etcd-secrets
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium-operator
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cilium-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - deployments
+  - componentstatuses
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cilium.io
+  resources:
+  - ciliumnetworkpolicies
+  - ciliumnetworkpolicies/status
+  - ciliumendpoints
+  - ciliumendpoints/status
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cilium-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium-operator
+subjects:
+- kind: ServiceAccount
+  name: cilium-operator
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cilium-etcd-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups:
+  - etcd.database.coreos.com
+  resources:
+  - etcdclusters
+  verbs:
+  - get
+  - delete
+  - create
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - delete
+  - get
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - deployments
+  verbs:
+  - delete
+  - create
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - delete
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - delete
+  - create
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - componentstatuses
+  verbs:
+  - get
+- apiGroups:
+  - extensions
+  resources:
+  - deployments
+  verbs:
+  - delete
+  - create
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - create
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: cilium-etcd-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium-etcd-operator
+subjects:
+- kind: ServiceAccount
+  name: cilium-etcd-operator
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: etcd-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups:
+  - etcd.database.coreos.com
+  resources:
+  - etcdclusters
+  - etcdbackups
+  - etcdrestores
+  verbs:
+  - '*'
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - deployments
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: etcd-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: etcd-operator
+subjects:
+- kind: ServiceAccount
+  name: cilium-etcd-sa
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium-etcd-operator
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium-etcd-sa
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.cilium/app: etcd-operator
+    name: cilium-etcd-operator
+    addonmanager.kubernetes.io/mode: "Reconcile"
+  name: cilium-etcd-operator
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.cilium/app: etcd-operator
+      name: cilium-etcd-operator
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        io.cilium/app: etcd-operator
+        name: cilium-etcd-operator
+    spec:
+      containers:
+      - command:
+        - /usr/bin/cilium-etcd-operator
+        env:
+        - name: CILIUM_ETCD_OPERATOR_CLUSTER_DOMAIN
+          value: cluster.local
+        - name: CILIUM_ETCD_OPERATOR_ETCD_CLUSTER_SIZE
+          value: "3"
+        - name: CILIUM_ETCD_OPERATOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: CILIUM_ETCD_OPERATOR_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: CILIUM_ETCD_OPERATOR_POD_UID
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.uid
+        image: {{ContainerImage "cilium-etcd-operator"}}
+        imagePullPolicy: IfNotPresent
+        name: cilium-etcd-operator
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      serviceAccount: cilium-etcd-operator
+      serviceAccountName: cilium-etcd-operator
+      tolerations:
+      - operator: Exists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cilium
+subjects:
+- kind: ServiceAccount
+  name: cilium
+  namespace: kube-system
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:nodes
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+rules:
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - services
+  - nodes
+  - endpoints
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - cilium.io
+  resources:
+  - ciliumnetworkpolicies
+  - ciliumnetworkpolicies/status
+  - ciliumendpoints
+  - ciliumendpoints/status
+  verbs:
+  - '*'
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cilium
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "Reconcile"
+`)
+
+func k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-cilium-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: cloud-node-manager
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch","list","get","update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cloud-node-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-node-manager
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      hostNetwork: true {{/* required to fetch correct hostname */}}
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command: ["cloud-node-manager"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+`)
+
+func k8sAddons119KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsCloudNodeManagerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["events", "endpoints"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/status"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["endpoints"]
+  resourceNames: ["cluster-autoscaler"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch", "list", "get", "update"]
+- apiGroups: [""]
+  resources:
+  - "pods"
+  - "services"
+  - "replicationcontrollers"
+  - "persistentvolumeclaims"
+  - "persistentvolumes"
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["extensions"]
+  resources: ["replicasets", "daemonsets"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["watch", "list"]
+- apiGroups: ["apps"]
+  resources: ["statefulsets","replicasets","daemonsets"]
+  verbs: ["watch","list","get"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses", "csinodes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["batch"]
+  resources: ["jobs", "cronjobs"]
+  verbs: ["watch", "list", "get"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["create"]
+- apiGroups: ["coordination.k8s.io"]
+  resourceNames: ["cluster-autoscaler"]
+  resources: ["leases"]
+  verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames:
+  - "cluster-autoscaler-status"
+  - "cluster-autoscaler-priority-expander"
+  verbs: ["delete", "get", "update", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-autoscaler
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: cluster-autoscaler.addons.k8s.io
+    k8s-app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-autoscaler
+    namespace: kube-system
+---
+apiVersion: v1
+data:
+  ClientID: <clientID>
+  ClientSecret: <clientSec>
+  ResourceGroup: <rg>
+  SubscriptionID: <subID>
+  TenantID: <tenantID>
+  VMType: {{GetBase64EncodedVMType}}
+kind: Secret
+metadata:
+  name: cluster-autoscaler-azure
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: cluster-autoscaler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+  name: cluster-autoscaler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      priorityClassName: system-node-critical{{GetHostNetwork}}
+      serviceAccountName: cluster-autoscaler
+      tolerations:
+      - effect: NoSchedule
+        operator: "Equal"
+        value: "true"
+        key: node-role.kubernetes.io/master
+      nodeSelector:
+        kubernetes.io/role: master
+        beta.kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "cluster-autoscaler"}}
+        imagePullPolicy: IfNotPresent
+        name: cluster-autoscaler
+        resources:
+          limits:
+            cpu: {{ContainerCPULimits "cluster-autoscaler"}}
+            memory: {{ContainerMemLimits "cluster-autoscaler"}}
+          requests:
+            cpu: {{ContainerCPUReqs "cluster-autoscaler"}}
+            memory: {{ContainerMemReqs "cluster-autoscaler"}}
+        command:
+        - ./cluster-autoscaler
+        - --logtostderr=true
+        - --cloud-provider=azure
+        - --skip-nodes-with-local-storage=false
+        - --scan-interval={{ContainerConfig "scan-interval"}}
+        - --expendable-pods-priority-cutoff={{ContainerConfig "expendable-pods-priority-cutoff"}}
+        - --ignore-daemonsets-utilization={{ContainerConfig "ignore-daemonsets-utilization"}}
+        - --ignore-mirror-pods-utilization={{ContainerConfig "ignore-mirror-pods-utilization"}}
+        - --max-autoprovisioned-node-group-count={{ContainerConfig "max-autoprovisioned-node-group-count"}}
+        - --max-empty-bulk-delete={{ContainerConfig "max-empty-bulk-delete"}}
+        - --max-failing-time={{ContainerConfig "max-failing-time"}}
+        - --max-graceful-termination-sec={{ContainerConfig "max-graceful-termination-sec"}}
+        - --max-inactivity={{ContainerConfig "max-inactivity"}}
+        - --max-node-provision-time={{ContainerConfig "max-node-provision-time"}}
+        - --max-nodes-total={{ContainerConfig "max-nodes-total"}}
+        - --max-total-unready-percentage={{ContainerConfig "max-total-unready-percentage"}}
+        - --memory-total={{ContainerConfig "memory-total"}}
+        - --min-replica-count={{ContainerConfig "min-replica-count"}}
+        - --namespace=kube-system
+        - --new-pod-scale-up-delay={{ContainerConfig "new-pod-scale-up-delay"}}
+        - --node-autoprovisioning-enabled={{ContainerConfig "node-autoprovisioning-enabled"}}
+        - --ok-total-unready-count={{ContainerConfig "ok-total-unready-count"}}
+        - --scale-down-candidates-pool-min-count={{ContainerConfig "scale-down-candidates-pool-min-count"}}
+        - --scale-down-candidates-pool-ratio={{ContainerConfig "scale-down-candidates-pool-ratio"}}
+        - --scale-down-delay-after-add={{ContainerConfig "scale-down-delay-after-add"}}
+        - --scale-down-delay-after-delete={{ContainerConfig "scale-down-delay-after-delete"}}
+        - --scale-down-delay-after-failure={{ContainerConfig "scale-down-delay-after-failure"}}
+        - --scale-down-enabled={{ContainerConfig "scale-down-enabled"}}
+        - --scale-down-non-empty-candidates-count={{ContainerConfig "scale-down-non-empty-candidates-count"}}
+        - --scale-down-unneeded-time={{ContainerConfig "scale-down-unneeded-time"}}
+        - --scale-down-unready-time={{ContainerConfig "scale-down-unready-time"}}
+        - --scale-down-utilization-threshold={{ContainerConfig "scale-down-utilization-threshold"}}
+        - --skip-nodes-with-local-storage={{ContainerConfig "skip-nodes-with-local-storage"}}
+        - --skip-nodes-with-system-pods={{ContainerConfig "skip-nodes-with-system-pods"}}
+        - --stderrthreshold={{ContainerConfig "stderrthreshold"}}
+        - --unremovable-node-recheck-timeout={{ContainerConfig "unremovable-node-recheck-timeout"}}
+        - --v={{ContainerConfig "v"}}
+        - --write-status-configmap={{ContainerConfig "write-status-configmap"}}
+        - --balance-similar-node-groups={{ContainerConfig "balance-similar-node-groups"}}
+{{GetClusterAutoscalerNodesConfig}}
+        env:
+        - name: ARM_CLOUD
+          value: "{{GetCloud}}"
+        - name: ARM_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              key: SubscriptionID
+              name: cluster-autoscaler-azure
+        - name: ARM_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              key: ResourceGroup
+              name: cluster-autoscaler-azure
+        - name: ARM_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              key: TenantID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              key: ClientID
+              name: cluster-autoscaler-azure
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: ClientSecret
+              name: cluster-autoscaler-azure
+        - name: ARM_VM_TYPE
+          valueFrom:
+            secretKeyRef:
+              key: VMType
+              name: cluster-autoscaler-azure
+        - name: ARM_USE_MANAGED_IDENTITY_EXTENSION
+          value: "{{UseManagedIdentity}}"
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: ssl-certs
+          readOnly: true{{GetVolumeMounts}}
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      volumes:
+      - hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: ""
+        name: ssl-certs{{GetVolumes}}
+#EOF
+`)
+
+func k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flannel
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kube-flannel-cfg
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  cni-conf.json: |
+    {
+      "name": "cbr0",
+      "type": "flannel",
+      "delegate": {
+        "isDefaultGateway": true
+      }
+    }
+  net-conf.json: |
+    {
+      "Network": "<kubeClusterCidr>",
+      "Backend": {
+        "Type": "vxlan"
+      }
+    }
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-flannel-ds
+  namespace: kube-system
+  labels:
+    tier: node
+    app: flannel
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      tier: node
+      app: flannel
+  template:
+    metadata:
+      labels:
+        tier: node
+        app: flannel
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: node.kubernetes.io/not-ready
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: Exists
+      serviceAccountName: flannel
+      containers:
+      - name: kube-flannel
+        image: {{ContainerImage "kube-flannel"}}
+        command: [ "/opt/bin/flanneld", "--ip-masq", "--kube-subnet-mgr" ]
+        securityContext:
+          privileged: true
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        volumeMounts:
+        - name: run
+          mountPath: /run
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      - name: install-cni
+        image: {{ContainerImage "install-cni"}}
+        command: [ "/bin/sh", "-c", "set -e -x; cp -f /etc/kube-flannel/cni-conf.json /etc/cni/net.d/10-flannel.conf; while true; do sleep 3600; done" ]
+        volumeMounts:
+        - name: cni
+          mountPath: /etc/cni/net.d
+        - name: flannel-cfg
+          mountPath: /etc/kube-flannel/
+      volumes:
+        - name: run
+          hostPath:
+            path: /run
+        - name: cni
+          hostPath:
+            path: /etc/cni/net.d
+        - name: flannel-cfg
+          configMap:
+            name: kube-flannel-cfg
+---
+{{- /* This file was pulled from:
+https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+    verbs:
+      - patch
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flannel
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flannel
+subjects:
+- kind: ServiceAccount
+  name: flannel
+  namespace: kube-system
+`)
+
+func k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: heapster
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: system:heapster-with-nanny
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+rules:
+- apiGroups:
+  - extensions
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - namespaces
+  - nodes
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: system:heapster-with-nanny
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:heapster-with-nanny
+subjects:
+- kind: ServiceAccount
+  name: heapster
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heapster-config
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  NannyConfiguration: |-
+    apiVersion: nannyconfig/v1alpha1
+    kind: NannyConfiguration
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    kubernetes.io/name: Heapster
+  name: heapster
+  namespace: kube-system
+spec:
+  ports:
+  - port: 80
+    targetPort: 8082
+  selector:
+    k8s-app: heapster
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heapster
+  namespace: kube-system
+  labels:
+    k8s-app: heapster
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: heapster
+  template:
+    metadata:
+      labels:
+        k8s-app: heapster
+    spec:
+      priorityClassName: system-node-critical
+      containers:
+        - image: {{ContainerImage "heapster"}}
+          imagePullPolicy: IfNotPresent
+          name: heapster
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "heapster"}}
+              memory: {{ContainerMemReqs "heapster"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster"}}
+              memory: {{ContainerMemLimits "heapster"}}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+              scheme: HTTP
+            initialDelaySeconds: 180
+            timeoutSeconds: 5
+          command:
+            - /heapster
+            - --source=kubernetes.summary_api:''
+        - image: {{ContainerImage "heapster-nanny"}}
+          imagePullPolicy: IfNotPresent
+          name: heapster-nanny
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "heapster-nanny"}}
+              memory: {{ContainerMemReqs "heapster-nanny"}}
+            limits:
+              cpu: {{ContainerCPULimits "heapster-nanny"}}
+              memory: {{ContainerMemLimits "heapster-nanny"}}
+          env:
+            - name: MY_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+          - name: heapster-config-volume
+            mountPath: /etc/config
+          command:
+            - /pod_nanny
+            - --config-dir=/etc/config
+            - --cpu=80m
+            - --extra-cpu=0.5m
+            - --memory=140Mi
+            - --extra-memory=4Mi
+            - --threshold=5
+            - --deployment=heapster
+            - --container=heapster
+            - --poll-period=300000
+            - --estimator=exponential
+      volumes:
+        - name: heapster-config-volume
+          configMap:
+            name: heapster-config
+      serviceAccountName: heapster
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: keyvault-flexvolume
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: keyvault-flexvolume
+  namespace: kube-system
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: keyvault-flexvolume
+  template:
+    metadata:
+      labels:
+        app: keyvault-flexvolume
+        kubernetes.io/cluster-service: "true"
+        addonmanager.kubernetes.io/mode: Reconcile
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-cluster-critical
+      tolerations:
+      containers:
+      - name: keyvault-flexvolume
+        image: {{ContainerImage "keyvault-flexvolume"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "keyvault-flexvolume"}}
+            memory: {{ContainerMemReqs "keyvault-flexvolume"}}
+          limits:
+            cpu: {{ContainerCPULimits "keyvault-flexvolume"}}
+            memory: {{ContainerMemLimits "keyvault-flexvolume"}}
+        env:
+        - name: TARGET_DIR
+          value: /etc/kubernetes/volumeplugins
+        volumeMounts:
+        - mountPath: /etc/kubernetes/volumeplugins
+          name: volplugins
+      volumes:
+      - hostPath:
+          path: /etc/kubernetes/volumeplugins
+        name: volplugins
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
+in sync with this file. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: "KubeDNS"
+spec:
+  selector:
+    k8s-app: kube-dns
+  clusterIP: {{ContainerConfig "clusterIP"}}
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  {{- /* replicas: not specified here:
+  1. In order to make Addon Manager do not reconcile this replicas parameter.
+  2. Default is 1.
+  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
+  strategy:
+    rollingUpdate:
+      maxSurge: 10%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-dns
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: "CriticalAddonsOnly"
+        operator: "Exists"
+      volumes:
+      - name: kube-dns-config
+        configMap:
+          name: kube-dns
+          optional: true
+      containers:
+      - name: kubedns
+        image: {{ContainerImage "kubedns"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          {{- /* TODO: Set memory limits when we've profiled the container for large
+          clusters, then set request = limit to keep this container in
+          guaranteed class. Currently, this container falls into the
+          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
+          limits:
+            memory: 170Mi
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/kubedns
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 3
+          timeoutSeconds: 5
+        args:
+        - --domain={{ContainerConfig "domain"}}.
+        - --dns-port=10053
+        - --config-dir=/kube-dns-config
+        - --v=2
+        env:
+        - name: PROMETHEUS_PORT
+          value: "10055"
+        ports:
+        - containerPort: 10053
+          name: dns-local
+          protocol: UDP
+        - containerPort: 10053
+          name: dns-tcp-local
+          protocol: TCP
+        - containerPort: 10055
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: kube-dns-config
+          mountPath: /kube-dns-config
+      - name: dnsmasq
+        image: {{ContainerImage "dnsmasq"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/dnsmasq
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        args:
+        - -v=2
+        - -logtostderr
+        - -configDir=/etc/k8s/dns/dnsmasq-nanny
+        - -restartDnsmasq=true
+        - --
+        - -k
+        - --cache-size=1000
+        - --no-negcache
+        - --log-facility=-
+        - --server=/cluster.local/127.0.0.1#10053
+        - --server=/in-addr.arpa/127.0.0.1#10053
+        - --server=/ip6.arpa/127.0.0.1#10053
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 150m
+            memory: 20Mi
+        volumeMounts:
+        - name: kube-dns-config
+          mountPath: /etc/k8s/dns/dnsmasq-nanny
+      - name: sidecar
+        image: {{ContainerImage "sidecar"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        args:
+        - --v=2
+        - --logtostderr
+        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
+        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
+        ports:
+        - containerPort: 10054
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+      dnsPolicy: Default
+      serviceAccountName: kube-dns
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.yaml: |
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    kind: KubeProxyConfiguration
+    clientConnection:
+      kubeconfig: /var/lib/kubelet/kubeconfig
+    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
+    mode: "{{ContainerConfig "proxy-mode"}}"
+    {{- if ContainerConfig "bind-address"}}
+    bindAddress: "{{ContainerConfig "bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "healthz-bind-address"}}
+    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
+    {{end}}
+    {{- if ContainerConfig "metrics-bind-address"}}
+    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
+    {{end}}
+    featureGates:
+      {{ContainerConfig "featureGates"}}
+metadata:
+  name: kube-proxy-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+    k8s-app: kube-proxy
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+    k8s-app: kube-proxy
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+  selector:
+    matchLabels:
+      component: kube-proxy
+      tier: node
+      k8s-app: kube-proxy
+  template:
+    metadata:
+      labels:
+        component: kube-proxy
+        tier: node
+        k8s-app: kube-proxy
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      containers:
+      - command:
+        - kube-proxy
+        - --config=/var/lib/kube-proxy/config.yaml
+        image: {{ContainerImage "kube-proxy"}}
+        imagePullPolicy: IfNotPresent
+        name: kube-proxy
+        resources:
+          requests:
+            cpu: 100m
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/ssl/certs
+          name: ssl-certs-host
+          readOnly: true
+        - mountPath: /etc/kubernetes
+          name: etc-kubernetes
+          readOnly: true
+        - mountPath: /var/lib/kubelet/kubeconfig
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: iptableslock
+        - mountPath: /lib/modules/
+          name: kernelmodules
+          readOnly: true
+        - mountPath: /var/lib/kube-proxy/config.yaml
+          subPath: config.yaml
+          name: kube-proxy-config-volume
+          readOnly: true
+      hostNetwork: true
+      volumes:
+      - hostPath:
+          path: /usr/share/ca-certificates
+        name: ssl-certs-host
+      - hostPath:
+          path: /var/lib/kubelet/kubeconfig
+        name: kubeconfig
+      - hostPath:
+          path: /etc/kubernetes
+        name: etc-kubernetes
+      - hostPath:
+          path: /run/xtables.lock
+        name: iptableslock
+      - hostPath:
+          path: /lib/modules/
+        name: kernelmodules
+      - configMap:
+          name: kube-proxy-config
+        name: kube-proxy-config-volume
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rescheduler
+  namespace: kube-system
+  labels:
+    k8s-app: rescheduler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: rescheduler
+  template:
+    metadata:
+      labels:
+        k8s-app: rescheduler
+    spec:
+      priorityClassName: system-node-critical
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "rescheduler"}}
+        imagePullPolicy: IfNotPresent
+        name: rescheduler
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "rescheduler"}}
+            memory: {{ContainerMemReqs "rescheduler"}}
+          limits:
+            cpu: {{ContainerCPULimits "rescheduler"}}
+            memory: {{ContainerMemLimits "rescheduler"}}
+        command:
+        - sh
+        - -c
+        - '/rescheduler'
+`)
+
+func k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: kubernetes-dashboard
+  namespace: kube-system
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+  labels:
+    k8s-app: kubernetes-dashboard
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["kubernetes-dashboard-key-holder"]
+  verbs: ["get", "update", "delete"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  resourceNames: ["kubernetes-dashboard-settings"]
+  verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["services"]
+  resourceNames: ["heapster"]
+  verbs: ["proxy"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  resourceNames: ["heapster", "http:heapster:", "https:heapster:"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubernetes-dashboard-minimal
+  namespace: kube-system
+  labels:
+    k8s-app: kubernetes-dashboard
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-dashboard-minimal
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-dashboard
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  ports:
+  - port: 443
+    targetPort: 8443
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kubernetes-dashboard
+  template:
+    metadata:
+      labels:
+        k8s-app: kubernetes-dashboard
+    spec:
+      containers:
+      - args:
+        - --auto-generate-certificates
+        - --heapster-host=http://heapster.kube-system:80
+        image: {{ContainerImage "kubernetes-dashboard"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: "/"
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+        name: kubernetes-dashboard
+        ports:
+        - containerPort: 8443
+          protocol: TCP
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "kubernetes-dashboard"}}
+            memory: {{ContainerMemReqs "kubernetes-dashboard"}}
+          limits:
+            cpu: {{ContainerCPULimits "kubernetes-dashboard"}}
+            memory: {{ContainerMemLimits "kubernetes-dashboard"}}
+        volumeMounts:
+         - name: kubernetes-dashboard-certs
+           mountPath: /certs
+      volumes:
+        - name: kubernetes-dashboard-certs
+          emptyDir: {}
+      serviceAccountName: kubernetes-dashboard
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - nodes
+  - nodes/stats
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "extensions"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:metrics-server
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:metrics-server
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: metrics-server-auth-reader
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: metrics-server:system:auth-delegator
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  name: metrics-server
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: "Metrics-server"
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    k8s-app: metrics-server
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-server
+  namespace: kube-system
+  labels:
+    k8s-app: metrics-server
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  template:
+    metadata:
+      name: metrics-server
+      labels:
+        k8s-app: metrics-server
+    spec:
+      serviceAccountName: metrics-server
+      containers:
+      - name: metrics-server
+        image: {{ContainerImage "metrics-server"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /metrics-server
+        - --kubelet-insecure-tls
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apiregistration.k8s.io/v1beta1
+kind: APIService
+metadata:
+  name: v1beta1.metrics.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  service:
+    name: metrics-server
+    namespace: kube-system
+  group: metrics.k8s.io
+  version: v1beta1
+  insecureSkipTLSVerify: true
+  groupPriorityMinimum: 100
+  versionPriority: 100
+`)
+
+func k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-metrics-server-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s-app: nvidia-device-plugin
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: nvidia-device-plugin
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: nvidia-device-plugin
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        k8s-app: nvidia-device-plugin
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: accelerator
+                operator: In
+                values:
+                - nvidia
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: nvidia.com/gpu
+        effect: NoSchedule
+        operator: Equal
+        value: "true"
+      containers:
+      - image: {{ContainerImage "nvidia-device-plugin"}}
+        name: nvidia-device-plugin-ctr
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "nvidia-device-plugin"}}
+            memory: {{ContainerMemReqs "nvidia-device-plugin"}}
+          limits:
+            cpu: {{ContainerCPULimits "nvidia-device-plugin"}}
+            memory: {{ContainerMemLimits "nvidia-device-plugin"}}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+        volumeMounts:
+          - name: device-plugin
+            mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+        accelerator: nvidia
+`)
+
+func k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYaml = []byte(`apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - "*"
+  volumes:
+  - "*"
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restricted
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  docker/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName:  runtime/default
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      {{- /* Forbid adding the root group. */}}
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - privileged
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: psp:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - restricted
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:restricted
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:restricted
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: default:privileged
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:privileged
+subjects:
+- kind: Group
+  name: system:authenticated
+  apiGroup: rbac.authorization.k8s.io
+- kind: Group
+  name: system:nodes
+  apiGroup: rbac.authorization.k8s.io
+`)
+
+func k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-pod-security-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: smb-flexvol-installer
+  namespace: kube-system
+  labels:
+    k8s-app: smb
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      name: smb
+  template:
+    metadata:
+      labels:
+        name: smb
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      containers:
+      - name: smb-flexvol-installer
+        image: {{ContainerImage "smb-flexvolume"}}
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "smb-flexvolume"}}
+            memory: {{ContainerMemReqs "smb-flexvolume"}}
+          limits:
+            cpu: {{ContainerCPULimits "smb-flexvolume"}}
+            memory: {{ContainerMemLimits "smb-flexvolume"}}
+        volumeMounts:
+        - name: volplugins
+          mountPath: /etc/kubernetes/volumeplugins/
+        - name: varlog
+          mountPath: /var/log/
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log/
+      - name: volplugins
+        hostPath:
+          path: /etc/kubernetes/volumeplugins/
+          type: DirectoryOrCreate
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: tiller
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helm
+    name: tiller
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: tiller-deploy
+  namespace: kube-system
+spec:
+  ports:
+  - name: tiller
+    port: 44134
+    targetPort: tiller
+  selector:
+    app: helm
+    name: tiller
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: helm
+    name: tiller
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: tiller-deploy
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
+  template:
+    metadata:
+      labels:
+        app: helm
+        name: tiller
+    spec:
+      serviceAccountName: tiller
+      containers:
+      - env:
+        - name: TILLER_NAMESPACE
+          value: kube-system
+        - name: TILLER_HISTORY_MAX
+          value: "{{ContainerConfig "max-history"}}"
+        image: {{ContainerImage "tiller"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 44135
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        name: tiller
+        ports:
+        - containerPort: 44134
+          name: tiller
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 44135
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "tiller"}}
+            memory: {{ContainerMemReqs "tiller"}}
+          limits:
+            cpu: {{ContainerCPULimits "tiller"}}
+            memory: {{ContainerMemLimits "tiller"}}
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddons119KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
+	return _k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, nil
+}
+
+func k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
+	bytes, err := k8sAddons119KubernetesmasteraddonsTillerDeploymentYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddons16KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -26557,7 +31305,18 @@ func k8sAddonsAzureCniNetworkmonitorYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: apiextensions.k8s.io/v1beta1
+var _k8sAddonsAzurePolicyDeploymentYaml = []byte(`apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    admission.gatekeeper.sh/ignore: no-self-managing
+    control-plane: controller-manager
+    gatekeeper.sh/system: "yes"
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: gatekeeper-system
+---
+apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
@@ -26665,7 +31424,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -26676,7 +31435,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-manager-role
-  namespace: kube-system
+  namespace: gatekeeper-system
 rules:
 - apiGroups:
   - ""
@@ -26796,7 +31555,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-manager-rolebinding
-  namespace: kube-system
+  namespace: gatekeeper-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -26804,7 +31563,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -26821,7 +31580,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: gatekeeper-admin
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: v1
 kind: Secret
@@ -26831,7 +31590,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
   name: gatekeeper-webhook-server-cert
-  namespace: kube-system
+  namespace: gatekeeper-system
 ---
 apiVersion: v1
 kind: Service
@@ -26841,7 +31600,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-webhook-service
-  namespace: kube-system
+  namespace: gatekeeper-system
 spec:
   ports:
   - port: 443
@@ -26859,7 +31618,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
   name: gatekeeper-controller-manager
-  namespace: kube-system
+  namespace: gatekeeper-system
 spec:
   replicas: 1
   selector:
@@ -26868,6 +31627,8 @@ spec:
       gatekeeper.sh/system: "yes"
   template:
     metadata:
+      annotations:
+        container.seccomp.security.alpha.kubernetes.io/manager: runtime/default
       labels:
         control-plane: controller-manager
         gatekeeper.sh/system: "yes"
@@ -26876,7 +31637,7 @@ spec:
       - args:
         - --port=8443
         - --logtostderr
-        - --exempt-namespace=kube-system
+        - --exempt-namespace=gatekeeper-system
         - --log-denies
         command:
         - /manager
@@ -26918,15 +31679,11 @@ spec:
           httpGet:
             path: /readyz
             port: 9090
-        resources:
-          limits:
-            cpu: 1000m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 256Mi
         securityContext:
           allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - all
           runAsGroup: 999
           runAsNonRoot: true
           runAsUser: 1000
@@ -26956,7 +31713,7 @@ webhooks:
     caBundle: Cg==
     service:
       name: gatekeeper-webhook-service
-      namespace: kube-system
+      namespace: gatekeeper-system
       path: /v1/admit
   failurePolicy: Ignore
   name: validation.gatekeeper.sh
@@ -26982,7 +31739,7 @@ webhooks:
     caBundle: Cg==
     service:
       name: gatekeeper-webhook-service
-      namespace: kube-system
+      namespace: gatekeeper-system
       path: /v1/admitlabel
   failurePolicy: Fail
   name: check-ignore-label.gatekeeper.sh
@@ -34049,6 +38806,310 @@ func k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml() (*asset
 	return a, nil
 }
 
+var _k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml = []byte(`apiVersion: storage.k8s.io/v1beta1
+kind: CSIDriver
+metadata:
+  name: secrets-store.csi.k8s.io
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  podInfoOnMount: true
+  attachRequired: false
+  volumeLifecycleModes:
+  - Ephemeral
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secrets-store-csi-driver
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secretproviderclasses-rolebinding
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: secretproviderclasses-role
+subjects:
+- kind: ServiceAccount
+  name: secrets-store-csi-driver
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secretproviderclasses-role
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - secrets-store.csi.x-k8s.io
+  resources:
+  - secretproviderclasses
+  verbs:
+  - get
+  - list
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: secretproviderclasses.secrets-store.csi.x-k8s.io
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: secrets-store.csi.x-k8s.io
+  names:
+    kind: SecretProviderClass
+    listKind: SecretProviderClassList
+    plural: secretproviderclasses
+    singular: secretproviderclass
+  scope: ""
+  validation:
+    openAPIV3Schema:
+      description: SecretProviderClass is the Schema for the secretproviderclasses
+        API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: SecretProviderClassSpec defines the desired state of SecretProviderClass
+          properties:
+            parameters:
+              additionalProperties:
+                type: string
+              description: Configuration for specific provider
+              type: object
+            provider:
+              description: Configuration for provider name
+              type: string
+          type: object
+        status:
+          description: SecretProviderClassStatus defines the observed state of SecretProviderClass
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: csi-secrets-store
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      app: csi-secrets-store
+  template:
+    metadata:
+      labels:
+        app: csi-secrets-store
+    spec:
+      serviceAccountName: secrets-store-csi-driver
+      hostNetwork: true
+      containers:
+        - name: node-driver-registrar
+          image: {{ContainerImage "csi-node-driver-registrar"}}
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-secrets-store/csi.sock
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  [
+                    "/bin/sh",
+                    "-c",
+                    "rm -rf /registration/secrets-store.csi.k8s.io-reg.sock",
+                  ]
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "csi-node-driver-registrar"}}
+              memory: {{ContainerMemLimits "csi-node-driver-registrar"}}
+            requests:
+              cpu: {{ContainerCPUReqs "csi-node-driver-registrar"}}
+              memory: {{ContainerMemReqs "csi-node-driver-registrar"}}
+        - name: secrets-store
+          image: {{ContainerImage "secrets-store"}}
+          args:
+            - "--debug=true"
+            - "--endpoint=$(CSI_ENDPOINT)"
+            - "--nodeid=$(KUBE_NODE_NAME)"
+            - "--provider-volume=/etc/kubernetes/secrets-store-csi-providers"
+          env:
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 9808
+              name: healthz
+              protocol: TCP
+          livenessProbe:
+              failureThreshold: 5
+              httpGet:
+                path: /healthz
+                port: healthz
+              initialDelaySeconds: 30
+              timeoutSeconds: 10
+              periodSeconds: 15
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: mountpoint-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+            - name: providers-dir
+              mountPath: /etc/kubernetes/secrets-store-csi-providers
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "secrets-store"}}
+              memory: {{ContainerMemLimits "secrets-store"}}
+            requests:
+              cpu: {{ContainerCPUReqs "secrets-store"}}
+              memory: {{ContainerMemReqs "secrets-store"}}
+        - name: liveness-probe
+          image: {{ContainerImage "livenessprobe"}}
+          imagePullPolicy: Always
+          args:
+          - --csi-address=/csi/csi.sock
+          - --probe-timeout=3s
+          - --health-port=9808
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "livenessprobe"}}
+              memory: {{ContainerMemLimits "livenessprobe"}}
+            requests:
+              cpu: {{ContainerCPUReqs "livenessprobe"}}
+              memory: {{ContainerMemReqs "livenessprobe"}}
+      volumes:
+        - name: mountpoint-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: DirectoryOrCreate
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry/
+            type: Directory
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/csi-secrets-store/
+            type: DirectoryOrCreate
+        - name: providers-dir
+          hostPath:
+            path: /etc/kubernetes/secrets-store-csi-providers
+            type: DirectoryOrCreate
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: csi-secrets-store-provider-azure
+  namespace: kube-system
+  labels:
+    app: csi-secrets-store-provider-azure
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: csi-secrets-store-provider-azure
+  template:
+    metadata:
+      labels:
+        app: csi-secrets-store-provider-azure
+    spec:
+      tolerations:
+      containers:
+        - name: provider-azure-installer
+          image: {{ContainerImage "provider-azure-installer"}}
+          imagePullPolicy: Always
+          env:
+            - name: TARGET_DIR
+              value: "/etc/kubernetes/secrets-store-csi-providers"
+          volumeMounts:
+            - mountPath: "/etc/kubernetes/secrets-store-csi-providers"
+              name: providervol
+          resources:
+            limits:
+              cpu: {{ContainerCPULimits "provider-azure-installer"}}
+              memory: {{ContainerMemLimits "provider-azure-installer"}}
+            requests:
+              cpu: {{ContainerCPUReqs "provider-azure-installer"}}
+              memory: {{ContainerMemReqs "provider-azure-installer"}}
+      volumes:
+        - name: providervol
+          hostPath:
+            path: "/etc/kubernetes/secrets-store-csi-providers"
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+`)
+
+func k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml, nil
+}
+
+func k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -34623,11 +39684,7 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-if [[ $OS == $COREOS_OS_NAME ]]; then
-    PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-else
-    PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
-fi
+PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
@@ -34741,7 +39798,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    apt_get_purge auditd &
+    apt_get_purge auditd mlocate &
   fi
 }
 
@@ -34878,9 +39935,6 @@ ensureDocker() {
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
-    if [[ $OS != $COREOS_OS_NAME ]]; then
-        wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
     for i in $(seq 1 1200); do
         if [ -s $DOCKER_JSON_FILE ]; then
@@ -34971,7 +40025,10 @@ ensureK8sControlPlane() {
 
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    GATEKEEPER_NAMESPACE="gatekeeper-system"
+    retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+
+    retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 {{end}}
 
@@ -35078,21 +40135,21 @@ configGPUDrivers() {
     {{/* we will manually install nvidia-docker2 */}}
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
-    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
       cd "${tmpDir}"
       wait_for_apt_locks
-      dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-      cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+      dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_CONFIG
+      cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_CONFIG
     )
     rm -rf $GPU_DEST/tmp
-    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_CONFIG
     mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
-    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_CONFIG
     retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
@@ -35352,7 +40409,9 @@ ERR_MS_PROD_DEB_PKG_ADD_FAIL=43
 ERR_SYSTEMD_INSTALL_FAIL=48
 ERR_MODPROBE_FAIL=49
 ERR_OUTBOUND_CONN_FAIL=50
-ERR_K8S_API_CONN_FAIL=51
+ERR_K8S_API_SERVER_CONN_FAIL=51
+ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL=52
+ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL=53
 ERR_KATA_KEY_DOWNLOAD_TIMEOUT=60
 ERR_KATA_APT_KEY_TIMEOUT=61
 ERR_KATA_INSTALL_TIMEOUT=62
@@ -35360,6 +40419,7 @@ ERR_CONTAINERD_DOWNLOAD_TIMEOUT=70
 ERR_CUSTOM_SEARCH_DOMAINS_FAIL=80
 ERR_GPU_DRIVERS_START_FAIL=84
 ERR_GPU_DRIVERS_INSTALL_TIMEOUT=85
+ERR_GPU_DRIVERS_CONFIG=86
 ERR_SGX_DRIVERS_INSTALL_TIMEOUT=90
 ERR_SGX_DRIVERS_START_FAIL=91
 ERR_SGX_DRIVERS_NOT_SUPPORTED=92
@@ -35385,12 +40445,11 @@ ERR_BCC_INSTALL_TIMEOUT=168
 ERR_BPFTRACE_BIN_DOWNLOAD_FAIL=169
 ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL=170
 
-OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
-COREOS_OS_NAME="COREOS"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
     OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 KUBECTL=/usr/local/bin/kubectl
@@ -35643,11 +40702,7 @@ UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
 
 removeEtcd() {
-    if [[ $OS == $COREOS_OS_NAME ]]; then
-        rm -rf /opt/bin/etcd
-    else
-        rm -rf /usr/bin/etcd
-    fi
+    rm -rf /usr/bin/etcd
 }
 
 removeMoby() {
@@ -35667,11 +40722,7 @@ installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
         CLI_TOOL=$1
-        if [[ $OS == $COREOS_OS_NAME ]]; then
-            path="/opt/bin"
-        else
-            path="/usr/bin"
-        fi
+        local path="/usr/bin"
         CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
         pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
         removeEtcd
@@ -35849,7 +40900,7 @@ downloadAzureCNI() {
 
 ensureAPMZ() {
     local version=$1
-    local apmz_url="https://upstreamartifacts.blob.core.windows.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+    local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
     if [[ -f "$apmz_filepath" ]]; then
         installed_version=$($apmz_filepath version)
         if [[ "$version" == "$installed_version" ]]; then
@@ -35961,14 +41012,8 @@ extractHyperkube() {
         img unpack -o "$path" ${HYPERKUBE_URL}
     fi
 
-    if [[ $OS == $COREOS_OS_NAME ]]; then
-        cp "$path/hyperkube" "/opt/kubelet"
-        mv "$path/hyperkube" "/opt/kubectl"
-        chmod a+x /opt/kubelet /opt/kubectl
-    else
-        cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-        mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
-    fi
+    cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+    mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
 }
 
 extractKubeBinaries() {
@@ -36102,11 +41147,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((${NODE_INDEX}+1)))
 set -x
 
-if [[ $OS == $COREOS_OS_NAME ]]; then
-    echo "Changing default kubectl bin location"
-    KUBECTL=/opt/kubectl
-fi
-
 if [ -f /var/run/reboot-required ]; then
     REBOOTREQUIRED=true
     trace_info "RebootRequired" "reboot=true"
@@ -36166,9 +41206,7 @@ if [[ "$FULL_INSTALL_REQUIRED" = "true" ]]; then
     time_metric "InstallBpftrace" installBpftrace
 fi
 
-{{- if not HasCoreOS}}
 time_metric "InstallContainerRuntime" installContainerRuntime
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
@@ -36200,11 +41238,7 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 {{end}}
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
-
-if [[ $OS != $COREOS_OS_NAME ]]; then
-    time_metric "EnsureRPC" ensureRPC
-fi
-
+time_metric "EnsureRPC" ensureRPC
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
@@ -36307,6 +41341,19 @@ fi
 if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "PurgeApt" apt_get_purge apache2-utils &
 fi
+{{end}}
+
+{{- if IsHostedMaster }}
+RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
+STS=$?
+if [[ $STS != 0 ]]; then
+    if [[ $RES == *"168.63.129.16"*  ]]; then
+        exit $ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL
+    else
+        exit $ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
+    fi
+fi
+retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then
@@ -37749,11 +42796,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{if not .MasterProfile.IsVHDDistro}}
-    {{if .MasterProfile.IsCoreOS}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -37827,15 +42870,13 @@ write_files:
 {{end}}
 
 {{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{if not .MasterProfile.IsCoreOS}}
-        {{if not .MasterProfile.IsVHDDistro}}
+    {{if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-         {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -37844,11 +42885,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .MasterProfile.IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -38085,19 +43122,16 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -e
-  {{if IsMasterVirtualMachineScaleSets}}
-    {{if .MasterProfile.IsCoreOS}}
-    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
+  {{if IsMasterVirtualMachineScaleSets}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
   {{end}}
 {{if gt .MasterProfile.Count 1}}
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
-    sed -i "s|<advertiseAddr>|{{WrapAsVariable "kubernetesAPIServerIP"}}|g" /etc/kubernetes/manifests/kube-apiserver.yaml
+    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 
 {{if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
@@ -38147,11 +43181,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    {{if .MasterProfile.IsCoreOS}}
-    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
@@ -38180,14 +43210,14 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
     sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
+    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "http://$PRIVATE_IP:2480" | tee -a /etc/default/etcd
   {{else}}
     sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
     sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
     sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
     sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" | tee -a /etc/default/etcd
+    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "{{WrapAsVerbatim "variables('masterEtcdMetricURLs')[copyIndex(variables('masterOffset'))]"}}" | tee -a /etc/default/etcd
   {{end}}
 {{end}}
     #EOF
@@ -38200,90 +43230,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .MasterProfile.IsCoreOS}}
-- path: /opt/azure/containers/provision-setup.sh
-  permissions: "0755"
-  owner: root
-  content: |
-    #!/bin/bash
-    source {{GetCSEHelpersScriptFilepath}}
-    /opt/azure/containers/mountetcd.sh
-    retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
-
-    {{if EnableAggregatedAPIs}}
-    sudo bash /etc/kubernetes/generate-proxy-certs.sh
-    {{end}}
-
-    touch /opt/azure/containers/runcmd.complete
-
-- path: "/etc/kubernetes/manifests/.keep"
-
-{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
-
-coreos:
-  units:
-    - name: start-provision-setup.service
-      command: "start"
-      content: |
-        [Unit]
-        Description=Start provision setup service
-
-        [Service]
-        ExecStart=/opt/azure/containers/provision-setup.sh
-    - name: kubelet.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Unit]
-            Requires=rpc-statd.service
-            After=etcd.service
-            ConditionPathExists=
-            ConditionPathExists=/opt/kubelet
-            [Service]
-            ExecStart=
-            ExecStart=/opt/kubelet \
-              --enable-server \
-              --node-labels="${KUBELET_NODE_LABELS}" \
-              --v=2 \
-              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-              $KUBELET_CONFIG $KUBELET_OPTS \
-              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
-    - name: kubelet-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh kubelet
-    - name: docker-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh container-runtime
-    - name: etcd.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/etcd $DAEMON_ARGS
-    - name: etcd-member.service
-      mask: true
-{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
-{{end}}
 `)
 
 func k8sCloudInitMasternodecustomdataYmlBytes() ([]byte, error) {
@@ -38387,11 +43337,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{if not .IsVHDDistro}}
-    {{if .IsCoreOS}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -38451,15 +43397,13 @@ write_files:
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsCoreOS}}
-        {{if not .IsVHDDistro}}
+    {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -38468,11 +43412,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -38689,58 +43629,10 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsCoreOS}}
-- path: "/etc/kubernetes/manifests/.keep"
-
-{{if .KubernetesConfig.RequiresDocker}}
-groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
-
-coreos:
-  units:
-    - name: kubelet.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Unit]
-            Requires=rpc-statd.service
-            ConditionPathExists=
-            ConditionPathExists=/opt/kubelet
-            [Service]
-            ExecStart=
-            ExecStart=/opt/kubelet \
-              --enable-server \
-              --node-labels="${KUBELET_NODE_LABELS}" \
-              --v=2 \
-              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-              $KUBELET_CONFIG $KUBELET_OPTS \
-              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
-    - name: kubelet-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh kubelet
-    - name: docker-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh container-runtime
-    - name: rpcbind.service
-      enable: true
-{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
-{{end}}
 `)
 
 func k8sCloudInitNodecustomdataYmlBytes() ([]byte, error) {
@@ -39571,6 +44463,14 @@ function Assert-FileExists {
         throw "$Filename does not exist"
     }
 }
+
+function Update-DefenderPreferences {
+    Add-MpPreference -ExclusionProcess "c:\k\kubelet.exe"
+
+    if ($global:EnableCsiProxy) {
+        Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+}
 `)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
@@ -39758,6 +44658,9 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+
+        $configAppInsightsClientTimer = [System.Diagnostics.Stopwatch]::StartNew()
         # Get app insights binaries and set up app insights client
         mkdir c:\k\appinsights
         DownloadFileOverHttp -Url "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg" -DestinationPath "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip"
@@ -39793,13 +44696,18 @@ try
             $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
         }
 
-        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+        $configAppInsightsClientTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Config-AppInsightsClient", $configAppInsightsClientTimer.Elapsed.TotalSeconds)
 
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
         if ( $sshEnabled ) {
+            Write-Log "Install OpenSSH"
+            $installOpenSSHTimer = [System.Diagnostics.Stopwatch]::StartNew()
             Install-OpenSSH -SSHKeys $SSHKeys
+            $installOpenSSHTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-OpenSSH", $installOpenSSHTimer.Elapsed.TotalSeconds)
         }
 
         Write-Log "Apply telemetry data setting"
@@ -39821,7 +44729,13 @@ try
         if ($useContainerD) {
             Write-Log "Installing ContainerD"
             $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl
+            $cniBinPath = $global:AzureCNIBinDir
+            $cniConfigPath = $global:AzureCNIConfDir
+            if ($global:NetworkPlugin -eq "kubenet") {
+                $cniBinPath = $global:CNIPath
+                $cniConfigPath = $global:CNIConfigPath
+            }
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath
             $containerdTimer.Stop()
             $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
             # TODO: disable/uninstall Docker later
@@ -39950,7 +44864,6 @@ try
             } else {
                 Update-WinCNI -CNIPath $global:CNIPath
             }
-            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         New-ExternalHnsNetwork
@@ -39996,7 +44909,8 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
-        
+        Update-DefenderPreferences
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -40941,50 +45855,53 @@ func k8sWindowsconfigfuncPs1() (*asset, error) {
 var _k8sWindowscontainerdfuncPs1 = []byte(`# this is $global to persist across all functions since this is dot-sourced
 $global:ContainerdInstallLocation = "$Env:ProgramFiles\containerd"
 
-function RegisterContainerDService
-{
+function RegisterContainerDService {
   Assert-FileExists (Join-Path $global:ContainerdInstallLocation containerd.exe)
 
   Write-Host "Registering containerd as a service"
   $cdbinary = Join-Path $global:ContainerdInstallLocation containerd.exe
   $svc = Get-Service -Name containerd -ErrorAction SilentlyContinue
   if ($null -ne $svc) {
-      & $cdbinary --unregister-service
+    & $cdbinary --unregister-service
   }
   & $cdbinary --register-service
   $svc = Get-Service -Name "containerd" -ErrorAction SilentlyContinue
   if ($null -eq $svc) {
-      throw "containerd.exe did not get installed as a service correctly."
+    throw "containerd.exe did not get installed as a service correctly."
   }
   $svc | Start-Service
   if ($svc.Status -ne "Running") {
-      throw "containerd service is not running"
+    throw "containerd service is not running"
   }
 }
 
 
-function Install-Containerd
-{
-    Param(
-      [Parameter(Mandatory = $true)][string]
-      $ContainerdUrl
-    )
-    $zipfile =  [Io.path]::Combine($ENV:TEMP, "containerd.zip")
-    DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-    Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
-    del $zipfile
+function Install-Containerd {
+  Param(
+    [Parameter(Mandatory = $true)][string]
+    $ContainerdUrl,
+    [Parameter(Mandatory = $true)][string]
+    $CNIBinDir,
+    [Parameter(Mandatory = $true)][string]
+    $CNIConfDir
+  )
+  $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
+  DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
+  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
+  del $zipfile
 
-    Add-SystemPathEntry $global:ContainerdInstallLocation
+  Add-SystemPathEntry $global:ContainerdInstallLocation
     
-    # TODO: remove if the node comes up without this code
-    # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
-    # if (-Not (Test-Path $configDir)) {
-    #     mkdir $configDir
-    # }
+  # TODO: remove if the node comes up without this code
+  # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
+  # if (-Not (Test-Path $configDir)) {
+  #     mkdir $configDir
+  # }
 
-    # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
-    $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
-    @"
+  # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
+  $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
+
+  @"
 version = 2
 root = "C:\\ProgramData\\containerd\\root"
 state = "C:\\ProgramData\\containerd\\state"
@@ -41071,8 +45988,8 @@ oom_score = 0
           runtime_root = ""
           privileged_without_host_devices = false
     [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "C:\\k\\cni"
-      conf_dir = "C:\\k\\cni\\config"
+      bin_dir = "$(($CNIBinDir).Replace("\","//"))"
+      conf_dir = "$(($CNIConfDir).Replace("\","//"))"
       max_conf_num = 1
       conf_template = ""
     [plugins."io.containerd.grpc.v1.cri".registry]
@@ -41089,7 +46006,7 @@ oom_score = 0
   [plugins."io.containerd.service.v1.diff-service"]
     default = ["windows", "windows-lcow"]
 "@ | Out-File -Encoding ascii $configFile
-    RegisterContainerDService
+  RegisterContainerDService
     
 }`)
 
@@ -41122,26 +46039,26 @@ var _k8sWindowscsiproxyfuncPs1 = []byte(`function New-CsiProxyService {
     DownloadFileOverHttp -Url $CsiProxyPackageUrl -DestinationPath $binaryPackage
 
     tar -xzf $binaryPackage -C $tempdir
-    cp "$tempdir\build\server.exe" "$KubeDir\csi-proxy-server.exe"
+    cp "$tempdir\bin\csi-proxy.exe" "$KubeDir\csi-proxy.exe"
 
     del $tempdir -Recurse
 
-    & "$KubeDir\nssm.exe" install csi-proxy-server "$KubeDir\csi-proxy-server.exe" | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppDirectory "$KubeDir" | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRestartDekay 5000 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server Description csi-proxy-server | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server Start SERVICE_DEMAND_START | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server ObjectName LocalSystem | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppThrottle 1500 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdout "$KubeDir\csi-proxy-server.log" | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderr "$KubeDir\csi-proxy-server.err.log" | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStdoutCreationDisposition 4 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppStderrCreationDisposition 4 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateFiles 1 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateOnline 1 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateSeconds 86400 | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy-server AppRotateBytes 10485760 | RemoveNulls
+    & "$KubeDir\nssm.exe" install csi-proxy "$KubeDir\csi-proxy.exe" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppDirectory "$KubeDir" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRestartDekay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy Description csi-proxy | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppStdout "$KubeDir\csi-proxy.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppStderr "$KubeDir\csi-proxy.err.log" | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRotateBytes 10485760 | RemoveNulls
 }`)
 
 func k8sWindowscsiproxyfuncPs1Bytes() ([]byte, error) {
@@ -41172,7 +46089,7 @@ Install-OpenSSH {
     $sshdService = Get-Service | ? Name -like 'sshd'
     if ($sshdService.Count -eq 0)
     {
-        Write-Host "Installing OpenSSH"
+        Write-Log "Installing OpenSSH"
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
@@ -41183,29 +46100,29 @@ Install-OpenSSH {
     }
     else
     {
-        Write-Host "OpenSSH Server service detected - skipping online install..."
+        Write-Log "OpenSSH Server service detected - skipping online install..."
     }
 
     Start-Service sshd
 
     if (!(Test-Path "$adminpath")) {
-        Write-Host "Created new file and text content added"
+        Write-Log "Created new file and text content added"
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
-    Write-Host "$adminpath found."
-    Write-Host "Adding keys to: $adminpath\$adminfile ..."
+    Write-Log "$adminpath found."
+    Write-Log "Adding keys to: $adminpath\$adminfile ..."
     $SSHKeys | foreach-object {
         Add-Content $adminpath\$adminfile $_
     }
 
-    Write-Host "Setting required permissions..."
+    Write-Log "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
     icacls $adminpath\$adminfile /grant SYSTEM:` + "`" + `(F` + "`" + `)
     icacls $adminpath\$adminfile /grant BUILTIN\Administrators:` + "`" + `(F` + "`" + `)
 
-    Write-Host "Restarting sshd service..."
+    Write-Log "Restarting sshd service..."
     Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
@@ -41216,7 +46133,7 @@ Install-OpenSSH {
     if (!$firewall) {
         throw "OpenSSH is firewall is not configured properly"
     }
-    Write-Host "OpenSSH installed and configured successfully"
+    Write-Log "OpenSSH installed and configured successfully"
 }
 `)
 
@@ -41429,7 +46346,7 @@ New-InfraContainer {
         $ContainerRuntime = "docker"
     )
     cd $KubeDir
-    $computerInfo = Get-ComputerInfo
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
 
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
@@ -41438,7 +46355,7 @@ New-InfraContainer {
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
-    if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
+    if ($pauseImageVersions -icontains $windowsVersion) {
         if ($ContainerRuntime -eq "docker") {
             if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
@@ -41556,7 +46473,7 @@ New-NSSMService {
 
     $kubeletDependOnServices = "docker"
     if ($global:EnableCsiProxy) {
-        $kubeletDependOnServices += " csi-proxy-server"
+        $kubeletDependOnServices += " csi-proxy"
     }
 
     # setup kubelet
@@ -42187,8 +47104,8 @@ Write-Log "Stopping kubelet service"
 Stop-Service kubelet
 
 if ($global:CsiProxyEnabled) {
-    Write-Log "Stopping csi-proxy-server service"
-    Stop-Service csi-proxy-server
+    Write-Log "Stopping csi-proxy service"
+    Stop-Service csi-proxy
 }
 
 #
@@ -42245,8 +47162,8 @@ if ($global:NetworkPlugin -eq 'kubenet') {
 #
 
 if ($global:CsiProxyEnabled) {
-    Write-Log "Starting csi-proxy-server service"
-    Start-Service csi-proxy-server
+    Write-Log "Starting csi-proxy service"
+    Start-Service csi-proxy
 }
 
 Write-Log "Starting kubelet service"
@@ -45808,120 +50725,145 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons118KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":               k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
+	"k8s/addons/1.19/azure-cni-networkmonitor.yaml":                               k8sAddons119AzureCniNetworkmonitorYaml,
+	"k8s/addons/1.19/ip-masq-agent.yaml":                                          k8sAddons119IpMasqAgentYaml,
+	"k8s/addons/1.19/kubernetesmaster-audit-policy.yaml":                          k8sAddons119KubernetesmasterAuditPolicyYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":        k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml":             k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml":                k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-cilium-daemonset.yaml":                k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml":              k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml":               k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":             k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml":             k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml":            k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":     k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
+	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":               k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.6/kubernetesmasteraddons-heapster-deployment.yaml":              k8sAddons16KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.7/kubernetesmasteraddons-heapster-deployment.yaml":              k8sAddons17KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.8/kubernetesmasteraddons-heapster-deployment.yaml":              k8sAddons18KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.9/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sAddons19KubernetesmasteraddonsMetricsServerDeploymentYaml,
-	"k8s/addons/antrea.yaml":                                                  k8sAddonsAntreaYaml,
-	"k8s/addons/azure-cni-networkmonitor.yaml":                                k8sAddonsAzureCniNetworkmonitorYaml,
-	"k8s/addons/azure-policy-deployment.yaml":                                 k8sAddonsAzurePolicyDeploymentYaml,
-	"k8s/addons/coredns.yaml":                                                 k8sAddonsCorednsYaml,
-	"k8s/addons/dns-autoscaler.yaml":                                          k8sAddonsDnsAutoscalerYaml,
-	"k8s/addons/ip-masq-agent.yaml":                                           k8sAddonsIpMasqAgentYaml,
-	"k8s/addons/kubernetesmaster-audit-policy.yaml":                           k8sAddonsKubernetesmasterAuditPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":     k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
-	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":      k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":         k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":  k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-npm-daemonset.yaml":              k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":  k8sAddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":  k8sAddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":    k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
-	"k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml":                 k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":                 k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":    k8sAddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":              k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":    k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":              k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":             k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":      k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  k8sAddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-metrics-server-deployment.yaml":        k8sAddonsKubernetesmasteraddonsMetricsServerDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":   k8sAddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-omsagent-daemonset.yaml":               k8sAddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":              k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":         k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
-	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":                k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/node-problem-detector.yaml":                                   k8sAddonsNodeProblemDetectorYaml,
-	"k8s/armparameters.t":                                                     k8sArmparametersT,
-	"k8s/cloud-init/artifacts/apt-preferences":                                k8sCloudInitArtifactsAptPreferences,
-	"k8s/cloud-init/artifacts/auditd-rules":                                   k8sCloudInitArtifactsAuditdRules,
-	"k8s/cloud-init/artifacts/cis.sh":                                         k8sCloudInitArtifactsCisSh,
-	"k8s/cloud-init/artifacts/cse_config.sh":                                  k8sCloudInitArtifactsCse_configSh,
-	"k8s/cloud-init/artifacts/cse_customcloud.sh":                             k8sCloudInitArtifactsCse_customcloudSh,
-	"k8s/cloud-init/artifacts/cse_helpers.sh":                                 k8sCloudInitArtifactsCse_helpersSh,
-	"k8s/cloud-init/artifacts/cse_install.sh":                                 k8sCloudInitArtifactsCse_installSh,
-	"k8s/cloud-init/artifacts/cse_main.sh":                                    k8sCloudInitArtifactsCse_mainSh,
-	"k8s/cloud-init/artifacts/default-grub":                                   k8sCloudInitArtifactsDefaultGrub,
-	"k8s/cloud-init/artifacts/dhcpv6.service":                                 k8sCloudInitArtifactsDhcpv6Service,
-	"k8s/cloud-init/artifacts/docker-monitor.service":                         k8sCloudInitArtifactsDockerMonitorService,
-	"k8s/cloud-init/artifacts/docker-monitor.timer":                           k8sCloudInitArtifactsDockerMonitorTimer,
-	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":      k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
-	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                               k8sCloudInitArtifactsEnableDhcpv6Sh,
-	"k8s/cloud-init/artifacts/etc-issue":                                      k8sCloudInitArtifactsEtcIssue,
-	"k8s/cloud-init/artifacts/etc-issue.net":                                  k8sCloudInitArtifactsEtcIssueNet,
-	"k8s/cloud-init/artifacts/etcd.service":                                   k8sCloudInitArtifactsEtcdService,
-	"k8s/cloud-init/artifacts/generateproxycerts.sh":                          k8sCloudInitArtifactsGenerateproxycertsSh,
-	"k8s/cloud-init/artifacts/health-monitor.sh":                              k8sCloudInitArtifactsHealthMonitorSh,
-	"k8s/cloud-init/artifacts/kms.service":                                    k8sCloudInitArtifactsKmsService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.service":                        k8sCloudInitArtifactsKubeletMonitorService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                          k8sCloudInitArtifactsKubeletMonitorTimer,
-	"k8s/cloud-init/artifacts/kubelet.service":                                k8sCloudInitArtifactsKubeletService,
-	"k8s/cloud-init/artifacts/label-nodes.service":                            k8sCloudInitArtifactsLabelNodesService,
-	"k8s/cloud-init/artifacts/label-nodes.sh":                                 k8sCloudInitArtifactsLabelNodesSh,
-	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                              k8sCloudInitArtifactsModprobeCisConf,
-	"k8s/cloud-init/artifacts/mountetcd.sh":                                   k8sCloudInitArtifactsMountetcdSh,
-	"k8s/cloud-init/artifacts/pam-d-common-auth":                              k8sCloudInitArtifactsPamDCommonAuth,
-	"k8s/cloud-init/artifacts/pam-d-common-password":                          k8sCloudInitArtifactsPamDCommonPassword,
-	"k8s/cloud-init/artifacts/pam-d-su":                                       k8sCloudInitArtifactsPamDSu,
-	"k8s/cloud-init/artifacts/profile-d-cis.sh":                               k8sCloudInitArtifactsProfileDCisSh,
-	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                             k8sCloudInitArtifactsPwqualityCisConf,
-	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                          k8sCloudInitArtifactsRsyslogD60CisConf,
-	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                 k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
-	"k8s/cloud-init/artifacts/sshd_config":                                    k8sCloudInitArtifactsSshd_config,
-	"k8s/cloud-init/artifacts/sshd_config_1604":                               k8sCloudInitArtifactsSshd_config_1604,
-	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                               k8sCloudInitArtifactsSysFsBpfMount,
-	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                           k8sCloudInitArtifactsSysctlD60CisConf,
-	"k8s/cloud-init/jumpboxcustomdata.yml":                                    k8sCloudInitJumpboxcustomdataYml,
-	"k8s/cloud-init/masternodecustomdata.yml":                                 k8sCloudInitMasternodecustomdataYml,
-	"k8s/cloud-init/nodecustomdata.yml":                                       k8sCloudInitNodecustomdataYml,
-	"k8s/kubeconfig.json":                                                     k8sKubeconfigJson,
-	"k8s/kubernetesparams.t":                                                  k8sKubernetesparamsT,
-	"k8s/kuberneteswindowsfunctions.ps1":                                      k8sKuberneteswindowsfunctionsPs1,
-	"k8s/kuberneteswindowssetup.ps1":                                          k8sKuberneteswindowssetupPs1,
-	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":            k8sManifestsKubernetesmasterCloudControllerManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":                  k8sManifestsKubernetesmasterKubeAddonManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                      k8sManifestsKubernetesmasterKubeApiserverYaml,
-	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":             k8sManifestsKubernetesmasterKubeControllerManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                      k8sManifestsKubernetesmasterKubeSchedulerYaml,
-	"k8s/windowsazurecnifunc.ps1":                                             k8sWindowsazurecnifuncPs1,
-	"k8s/windowsazurecnifunc.tests.ps1":                                       k8sWindowsazurecnifuncTestsPs1,
-	"k8s/windowscnifunc.ps1":                                                  k8sWindowscnifuncPs1,
-	"k8s/windowsconfigfunc.ps1":                                               k8sWindowsconfigfuncPs1,
-	"k8s/windowscontainerdfunc.ps1":                                           k8sWindowscontainerdfuncPs1,
-	"k8s/windowscsiproxyfunc.ps1":                                             k8sWindowscsiproxyfuncPs1,
-	"k8s/windowsinstallopensshfunc.ps1":                                       k8sWindowsinstallopensshfuncPs1,
-	"k8s/windowskubeletfunc.ps1":                                              k8sWindowskubeletfuncPs1,
-	"k8s/windowslogscleanup.ps1":                                              k8sWindowslogscleanupPs1,
-	"k8s/windowsnodereset.ps1":                                                k8sWindowsnoderesetPs1,
-	"masteroutputs.t":                                                         masteroutputsT,
-	"masterparams.t":                                                          masterparamsT,
-	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                          swarmInstallContainerhostAndJoinSwarmPs1,
-	"swarm/Join-SwarmMode-cluster.ps1":                                        swarmJoinSwarmmodeClusterPs1,
-	"swarm/configure-swarm-cluster.sh":                                        swarmConfigureSwarmClusterSh,
-	"swarm/configure-swarmmode-cluster.sh":                                    swarmConfigureSwarmmodeClusterSh,
-	"swarm/swarmagentresourcesvmas.t":                                         swarmSwarmagentresourcesvmasT,
-	"swarm/swarmagentresourcesvmss.t":                                         swarmSwarmagentresourcesvmssT,
-	"swarm/swarmagentvars.t":                                                  swarmSwarmagentvarsT,
-	"swarm/swarmbase.t":                                                       swarmSwarmbaseT,
-	"swarm/swarmmasterresources.t":                                            swarmSwarmmasterresourcesT,
-	"swarm/swarmmastervars.t":                                                 swarmSwarmmastervarsT,
-	"swarm/swarmparams.t":                                                     swarmSwarmparamsT,
-	"swarm/swarmwinagentresourcesvmas.t":                                      swarmSwarmwinagentresourcesvmasT,
-	"swarm/swarmwinagentresourcesvmss.t":                                      swarmSwarmwinagentresourcesvmssT,
-	"windowsparams.t":                                                         windowsparamsT,
+	"k8s/addons/antrea.yaml":                                                    k8sAddonsAntreaYaml,
+	"k8s/addons/azure-cni-networkmonitor.yaml":                                  k8sAddonsAzureCniNetworkmonitorYaml,
+	"k8s/addons/azure-policy-deployment.yaml":                                   k8sAddonsAzurePolicyDeploymentYaml,
+	"k8s/addons/coredns.yaml":                                                   k8sAddonsCorednsYaml,
+	"k8s/addons/dns-autoscaler.yaml":                                            k8sAddonsDnsAutoscalerYaml,
+	"k8s/addons/ip-masq-agent.yaml":                                             k8sAddonsIpMasqAgentYaml,
+	"k8s/addons/kubernetesmaster-audit-policy.yaml":                             k8sAddonsKubernetesmasterAuditPolicyYaml,
+	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
+	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":           k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":    k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-azure-npm-daemonset.yaml":                k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":    k8sAddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":    k8sAddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
+	"k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml":                   k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":                   k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":      k8sAddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                  k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":                k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
+	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":                k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":               k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":        k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":    k8sAddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-metrics-server-deployment.yaml":          k8sAddonsKubernetesmasteraddonsMetricsServerDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":     k8sAddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-omsagent-daemonset.yaml":                 k8sAddonsKubernetesmasteraddonsOmsagentDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-pod-security-policy.yaml":                k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml,
+	"k8s/addons/kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":   k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml,
+	"k8s/addons/kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml": k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml,
+	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":           k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
+	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":                  k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
+	"k8s/addons/node-problem-detector.yaml":                                     k8sAddonsNodeProblemDetectorYaml,
+	"k8s/armparameters.t":                                                       k8sArmparametersT,
+	"k8s/cloud-init/artifacts/apt-preferences":                                  k8sCloudInitArtifactsAptPreferences,
+	"k8s/cloud-init/artifacts/auditd-rules":                                     k8sCloudInitArtifactsAuditdRules,
+	"k8s/cloud-init/artifacts/cis.sh":                                           k8sCloudInitArtifactsCisSh,
+	"k8s/cloud-init/artifacts/cse_config.sh":                                    k8sCloudInitArtifactsCse_configSh,
+	"k8s/cloud-init/artifacts/cse_customcloud.sh":                               k8sCloudInitArtifactsCse_customcloudSh,
+	"k8s/cloud-init/artifacts/cse_helpers.sh":                                   k8sCloudInitArtifactsCse_helpersSh,
+	"k8s/cloud-init/artifacts/cse_install.sh":                                   k8sCloudInitArtifactsCse_installSh,
+	"k8s/cloud-init/artifacts/cse_main.sh":                                      k8sCloudInitArtifactsCse_mainSh,
+	"k8s/cloud-init/artifacts/default-grub":                                     k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                   k8sCloudInitArtifactsDhcpv6Service,
+	"k8s/cloud-init/artifacts/docker-monitor.service":                           k8sCloudInitArtifactsDockerMonitorService,
+	"k8s/cloud-init/artifacts/docker-monitor.timer":                             k8sCloudInitArtifactsDockerMonitorTimer,
+	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":        k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                 k8sCloudInitArtifactsEnableDhcpv6Sh,
+	"k8s/cloud-init/artifacts/etc-issue":                                        k8sCloudInitArtifactsEtcIssue,
+	"k8s/cloud-init/artifacts/etc-issue.net":                                    k8sCloudInitArtifactsEtcIssueNet,
+	"k8s/cloud-init/artifacts/etcd.service":                                     k8sCloudInitArtifactsEtcdService,
+	"k8s/cloud-init/artifacts/generateproxycerts.sh":                            k8sCloudInitArtifactsGenerateproxycertsSh,
+	"k8s/cloud-init/artifacts/health-monitor.sh":                                k8sCloudInitArtifactsHealthMonitorSh,
+	"k8s/cloud-init/artifacts/kms.service":                                      k8sCloudInitArtifactsKmsService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.service":                          k8sCloudInitArtifactsKubeletMonitorService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                            k8sCloudInitArtifactsKubeletMonitorTimer,
+	"k8s/cloud-init/artifacts/kubelet.service":                                  k8sCloudInitArtifactsKubeletService,
+	"k8s/cloud-init/artifacts/label-nodes.service":                              k8sCloudInitArtifactsLabelNodesService,
+	"k8s/cloud-init/artifacts/label-nodes.sh":                                   k8sCloudInitArtifactsLabelNodesSh,
+	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                k8sCloudInitArtifactsModprobeCisConf,
+	"k8s/cloud-init/artifacts/mountetcd.sh":                                     k8sCloudInitArtifactsMountetcdSh,
+	"k8s/cloud-init/artifacts/pam-d-common-auth":                                k8sCloudInitArtifactsPamDCommonAuth,
+	"k8s/cloud-init/artifacts/pam-d-common-password":                            k8sCloudInitArtifactsPamDCommonPassword,
+	"k8s/cloud-init/artifacts/pam-d-su":                                         k8sCloudInitArtifactsPamDSu,
+	"k8s/cloud-init/artifacts/profile-d-cis.sh":                                 k8sCloudInitArtifactsProfileDCisSh,
+	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                               k8sCloudInitArtifactsPwqualityCisConf,
+	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                            k8sCloudInitArtifactsRsyslogD60CisConf,
+	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                   k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
+	"k8s/cloud-init/artifacts/sshd_config":                                      k8sCloudInitArtifactsSshd_config,
+	"k8s/cloud-init/artifacts/sshd_config_1604":                                 k8sCloudInitArtifactsSshd_config_1604,
+	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                 k8sCloudInitArtifactsSysFsBpfMount,
+	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                             k8sCloudInitArtifactsSysctlD60CisConf,
+	"k8s/cloud-init/jumpboxcustomdata.yml":                                      k8sCloudInitJumpboxcustomdataYml,
+	"k8s/cloud-init/masternodecustomdata.yml":                                   k8sCloudInitMasternodecustomdataYml,
+	"k8s/cloud-init/nodecustomdata.yml":                                         k8sCloudInitNodecustomdataYml,
+	"k8s/kubeconfig.json":                                                       k8sKubeconfigJson,
+	"k8s/kubernetesparams.t":                                                    k8sKubernetesparamsT,
+	"k8s/kuberneteswindowsfunctions.ps1":                                        k8sKuberneteswindowsfunctionsPs1,
+	"k8s/kuberneteswindowssetup.ps1":                                            k8sKuberneteswindowssetupPs1,
+	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":              k8sManifestsKubernetesmasterCloudControllerManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":                    k8sManifestsKubernetesmasterKubeAddonManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                        k8sManifestsKubernetesmasterKubeApiserverYaml,
+	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":               k8sManifestsKubernetesmasterKubeControllerManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                        k8sManifestsKubernetesmasterKubeSchedulerYaml,
+	"k8s/windowsazurecnifunc.ps1":                                               k8sWindowsazurecnifuncPs1,
+	"k8s/windowsazurecnifunc.tests.ps1":                                         k8sWindowsazurecnifuncTestsPs1,
+	"k8s/windowscnifunc.ps1":                                                    k8sWindowscnifuncPs1,
+	"k8s/windowsconfigfunc.ps1":                                                 k8sWindowsconfigfuncPs1,
+	"k8s/windowscontainerdfunc.ps1":                                             k8sWindowscontainerdfuncPs1,
+	"k8s/windowscsiproxyfunc.ps1":                                               k8sWindowscsiproxyfuncPs1,
+	"k8s/windowsinstallopensshfunc.ps1":                                         k8sWindowsinstallopensshfuncPs1,
+	"k8s/windowskubeletfunc.ps1":                                                k8sWindowskubeletfuncPs1,
+	"k8s/windowslogscleanup.ps1":                                                k8sWindowslogscleanupPs1,
+	"k8s/windowsnodereset.ps1":                                                  k8sWindowsnoderesetPs1,
+	"masteroutputs.t":                                                           masteroutputsT,
+	"masterparams.t":                                                            masterparamsT,
+	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                            swarmInstallContainerhostAndJoinSwarmPs1,
+	"swarm/Join-SwarmMode-cluster.ps1":                                          swarmJoinSwarmmodeClusterPs1,
+	"swarm/configure-swarm-cluster.sh":                                          swarmConfigureSwarmClusterSh,
+	"swarm/configure-swarmmode-cluster.sh":                                      swarmConfigureSwarmmodeClusterSh,
+	"swarm/swarmagentresourcesvmas.t":                                           swarmSwarmagentresourcesvmasT,
+	"swarm/swarmagentresourcesvmss.t":                                           swarmSwarmagentresourcesvmssT,
+	"swarm/swarmagentvars.t":                                                    swarmSwarmagentvarsT,
+	"swarm/swarmbase.t":                                                         swarmSwarmbaseT,
+	"swarm/swarmmasterresources.t":                                              swarmSwarmmasterresourcesT,
+	"swarm/swarmmastervars.t":                                                   swarmSwarmmastervarsT,
+	"swarm/swarmparams.t":                                                       swarmSwarmparamsT,
+	"swarm/swarmwinagentresourcesvmas.t":                                        swarmSwarmwinagentresourcesvmasT,
+	"swarm/swarmwinagentresourcesvmss.t":                                        swarmSwarmwinagentresourcesvmssT,
+	"windowsparams.t":                                                           windowsparamsT,
 }
 
 // AssetDir returns the file names below a certain
@@ -46109,6 +51051,32 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
+			"1.19": {nil, map[string]*bintree{
+				"azure-cni-networkmonitor.yaml":                               {k8sAddons119AzureCniNetworkmonitorYaml, map[string]*bintree{}},
+				"ip-masq-agent.yaml":                                          {k8sAddons119IpMasqAgentYaml, map[string]*bintree{}},
+				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons119KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-aci-connector-deployment.yaml":        {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml": {k8sAddons119KubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-azure-npm-daemonset.yaml":             {k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":   {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-calico-daemonset.yaml":                {k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cilium-daemonset.yaml":                {k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cloud-node-manager.yaml":              {k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-flannel-daemonset.yaml":               {k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-heapster-deployment.yaml":             {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":   {k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-kube-dns-deployment.yaml":             {k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":            {k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":     {k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml": {k8sAddons119KubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-metrics-server-deployment.yaml":       {k8sAddons119KubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":  {k8sAddons119KubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons119KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":        {k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
+				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
+			}},
 			"1.6": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml": {k8sAddons16KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -46128,32 +51096,33 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"dns-autoscaler.yaml":                {k8sAddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                 {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kubernetesmaster-audit-policy.yaml": {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":     {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aci-connector-deployment.yaml":         {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":  {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-npm-daemonset.yaml":              {k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":  {k8sAddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":  {k8sAddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":    {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-calico-daemonset.yaml":                 {k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-cilium-daemonset.yaml":                 {k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":    {k8sAddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-flannel-daemonset.yaml":                {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-heapster-deployment.yaml":              {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":    {k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-dns-deployment.yaml":              {k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":             {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":  {k8sAddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-metrics-server-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":   {k8sAddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-omsagent-daemonset.yaml":               {k8sAddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-pod-security-policy.yaml":              {k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml": {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":         {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-tiller-deployment.yaml":                {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			"node-problem-detector.yaml":                                   {k8sAddonsNodeProblemDetectorYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-aci-connector-deployment.yaml":           {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-cloud-provider-deployment.yaml":    {k8sAddonsKubernetesmasteraddonsAzureCloudProviderDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azure-npm-daemonset.yaml":                {k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azuredisk-csi-driver-deployment.yaml":    {k8sAddonsKubernetesmasteraddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-azurefile-csi-driver-deployment.yaml":    {k8sAddonsKubernetesmasteraddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":      {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-calico-daemonset.yaml":                   {k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-cilium-daemonset.yaml":                   {k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsClusterAutoscalerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-flannel-daemonset.yaml":                  {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-heapster-deployment.yaml":                {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":      {k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-dns-deployment.yaml":                {k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":               {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-kubernetes-dashboard-deployment.yaml":    {k8sAddonsKubernetesmasteraddonsKubernetesDashboardDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-metrics-server-deployment.yaml":          {k8sAddonsKubernetesmasteraddonsMetricsServerDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-nvidia-device-plugin-daemonset.yaml":     {k8sAddonsKubernetesmasteraddonsNvidiaDevicePluginDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-omsagent-daemonset.yaml":                 {k8sAddonsKubernetesmasteraddonsOmsagentDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-pod-security-policy.yaml":                {k8sAddonsKubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-scheduled-maintenance-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml": {k8sAddonsKubernetesmasteraddonsSecretsStoreCsiDriverDaemonsetYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":           {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
+			"kubernetesmasteraddons-tiller-deployment.yaml":                  {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
+			"node-problem-detector.yaml":                                     {k8sAddonsNodeProblemDetectorYaml, map[string]*bintree{}},
 		}},
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{

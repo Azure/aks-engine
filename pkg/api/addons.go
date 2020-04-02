@@ -160,7 +160,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultBlobfuseFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    common.BlobfuseFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(DefaultBlobfuseFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.BlobfuseFlexVolumeAddonName,
@@ -175,7 +175,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultSMBFlexVolumeAddonsConfig := KubernetesAddon{
 		Name:    common.SMBFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultSMBFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(DefaultSMBFlexVolumeAddonEnabled && common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.8.0") && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.SMBFlexVolumeAddonName,
@@ -189,8 +189,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultKeyVaultFlexVolumeAddonsConfig := KubernetesAddon{
-		Name:    common.KeyVaultFlexVolumeAddonName,
-		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Name: common.KeyVaultFlexVolumeAddonName,
+		// keyvault-flexvolume solution will be deprecated in favor of secrets-store-csi-driver for 1.16+
+		Enabled: to.BoolPtr(DefaultKeyVaultFlexVolumeAddonEnabled && !cs.Properties.IsAzureStackCloud() &&
+			!common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.KeyVaultFlexVolumeAddonName,
@@ -246,7 +248,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
 		Name:    common.NVIDIADevicePluginAddonName,
-		Enabled: to.BoolPtr(cs.Properties.IsNvidiaDevicePluginCapable() && !cs.Properties.HasCoreOS() && !cs.Properties.IsAzureStackCloud()),
+		Enabled: to.BoolPtr(cs.Properties.IsNvidiaDevicePluginCapable() && !cs.Properties.IsAzureStackCloud()),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name: common.NVIDIADevicePluginAddonName,
@@ -770,6 +772,46 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultSecretsStoreCSIDriverAddonsConfig := KubernetesAddon{
+		Name: common.SecretsStoreCSIDriverAddonName,
+		Enabled: to.BoolPtr(!o.KubernetesConfig.IsAddonEnabled(common.KeyVaultFlexVolumeAddonName) && DefaultSecretStoreCSIDriverAddonEnabled &&
+			common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")),
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:           common.CSILivenessProbeContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSILivenessProbeContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSINodeDriverRegistrarContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSINodeDriverRegistrarContainerName],
+				CPURequests:    "10m",
+				MemoryRequests: "20Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSISecretsStoreDriverContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISecretsStoreDriverContainerName],
+				CPURequests:    "50m",
+				MemoryRequests: "100Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+			{
+				Name:           common.CSISecretsStoreProviderAzureContainerName,
+				Image:          specConfig.MCRKubernetesImageBase + k8sComponents[common.CSISecretsStoreProviderAzureContainerName],
+				CPURequests:    "50m",
+				MemoryRequests: "100Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "200Mi",
+			},
+		},
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -811,6 +853,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultsAntreaDaemonSetAddonsConfig,
 		defaultFlannelAddonsConfig,
 		defaultScheduledMaintenanceAddonsConfig,
+		defaultSecretsStoreCSIDriverAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

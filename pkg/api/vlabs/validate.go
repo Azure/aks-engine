@@ -390,12 +390,6 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
-		// validate distro is ubuntu if dual stack or ipv6 only feature is enabled
-		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
-			if m.Distro == CoreOS {
-				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
-			}
-		}
 	}
 
 	if m.ImageRef != nil {
@@ -461,9 +455,6 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
 			if agentPoolProfile.OSType == Windows {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
-			}
-			if agentPoolProfile.Distro == CoreOS {
-				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
 			}
 		}
 
@@ -619,6 +610,7 @@ func (a *Properties) validateAddons() error {
 		var IsNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
+		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -687,24 +679,14 @@ func (a *Properties) validateAddons() error {
 					if IsNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
-					if a.HasCoreOS() {
-						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
-					}
 				case "aad":
 					if !a.HasAADAdminGroupID() {
 						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
 					}
-				case "blobfuse-flexvolume":
-					if a.HasCoreOS() {
-						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
-					}
-				case "smb-flexvolume":
-					if a.HasCoreOS() {
-						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
-					}
 				case "keyvault-flexvolume":
-					if a.HasCoreOS() {
-						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+					keyvaultFlexvolumeEnabled = true
+					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
 					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
@@ -753,12 +735,12 @@ func (a *Properties) validateAddons() error {
 						}
 					}
 				case "azure-policy":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
 					if err != nil {
 						return err
 					}
 					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
 					}
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
@@ -767,6 +749,11 @@ func (a *Properties) validateAddons() error {
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
+				case common.SecretsStoreCSIDriverAddonName:
+					csiSecretsStoreEnabled = true
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.16+", addon.Name))
+					}
 				}
 			} else {
 				// Validation for addons if they are disabled
@@ -783,6 +770,9 @@ func (a *Properties) validateAddons() error {
 		}
 		if kubeDNSEnabled && corednsEnabled {
 			return errors.New("Both kube-dns and coredns addons are enabled, only one of these may be enabled on a cluster")
+		}
+		if keyvaultFlexvolumeEnabled && csiSecretsStoreEnabled {
+			return errors.New("Both keyvault-flexvolume and csi-secrets-store addons are enabled, only one of these may be enabled on a cluster")
 		}
 	}
 	return nil
@@ -1322,7 +1312,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	}
 
 	if isIPv6 {
-		minVersion, err := semver.Make("1.18.0-alpha.4")
+		minVersion, err := semver.Make("1.18.0")
 		if err != nil {
 			return errors.New("could not validate version")
 		}
@@ -1484,7 +1474,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// dualstack IPVS mode supported from 1.16+
 	// dualstack IPtables mode supported from 1.18+
 	if ipv6DualStackEnabled && k.ProxyMode == KubeProxyModeIPTables {
-		minVersion, err := semver.Make("1.18.0-alpha.2")
+		minVersion, err := semver.Make("1.18.0")
 		if err != nil {
 			return errors.New("could not validate version")
 		}
@@ -1683,9 +1673,6 @@ func (a *Properties) validateContainerRuntime() error {
 
 	// TODO: These validations should be relaxed once ContainerD and CNI plugins are more readily available
 	if containerRuntime == Containerd && a.HasWindows() {
-		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin != "kubenet" {
-			return errors.Errorf("Windows only supports kubenet with containerd runtime. %q is not supported", a.OrchestratorProfile.KubernetesConfig.NetworkPlugin)
-		}
 		if a.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
 			return errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd")
 		}

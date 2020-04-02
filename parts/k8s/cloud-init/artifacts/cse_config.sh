@@ -1,11 +1,7 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-if [[ $OS == $COREOS_OS_NAME ]]; then
-    PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-else
-    PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
-fi
+PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 
@@ -119,7 +115,7 @@ ensureAuditD() {
   if [[ "${AUDITD_ENABLED}" == true ]]; then
     systemctlEnableAndStart auditd || exit $ERR_SYSTEMCTL_START_FAIL
   else
-    apt_get_purge auditd &
+    apt_get_purge auditd mlocate &
   fi
 }
 
@@ -256,9 +252,6 @@ ensureDocker() {
     wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     usermod -aG docker ${ADMINUSER}
     DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
-    if [[ $OS != $COREOS_OS_NAME ]]; then
-        wait_for_file 1200 1 $DOCKER_MOUNT_FLAGS_SYSTEMD_FILE || exit $ERR_FILE_WATCH_TIMEOUT
-    fi
     DOCKER_JSON_FILE=/etc/docker/daemon.json
     for i in $(seq 1 1200); do
         if [ -s $DOCKER_JSON_FILE ]; then
@@ -349,7 +342,10 @@ ensureK8sControlPlane() {
 
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-    retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null patch ns kube-system -p '{"metadata":{"labels":{"control-plane":"controller-manager"{{CloseBraces}}}' || exit $ERR_K8S_RUNNING_TIMEOUT
+    GATEKEEPER_NAMESPACE="gatekeeper-system"
+    retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
+
+    retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit $ERR_K8S_RUNNING_TIMEOUT
 }
 {{end}}
 
@@ -456,21 +452,21 @@ configGPUDrivers() {
     {{/* we will manually install nvidia-docker2 */}}
     rmmod nouveau
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
-    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_CONFIG
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_CONFIG
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
       cd "${tmpDir}"
       wait_for_apt_locks
-      dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-      cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+      dpkg-deb -R ./nvidia-docker2*.deb "${tmpDir}/pkg" || exit $ERR_GPU_DRIVERS_CONFIG
+      cp -r ${tmpDir}/pkg/usr/* /usr/ || exit $ERR_GPU_DRIVERS_CONFIG
     )
     rm -rf $GPU_DEST/tmp
-    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_CONFIG
     mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
-    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_CONFIG
     retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL

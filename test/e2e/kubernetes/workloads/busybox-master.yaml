@@ -9,6 +9,9 @@ spec:
       - name: init-resolver
         image: busybox:1.31.1
         command: ['sh', '-c', 'until nc -nvz $(grep nameserver /etc/resolv.conf | cut -d" " -f2) 53; do echo waiting for container DNS resolver access; sleep 3; done;']
+      - name: init-kubernetes-net
+        image: busybox:1.31.1
+        command: ['sh', '-c', 'until nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443; do echo waiting for successful connection to apiserver endpoint; sleep 3; done;']
       - name: init-dns
         image: busybox:1.31.1
         command: ['sh', '-c', 'until nslookup mcr.microsoft.com; do echo waiting for successful container DNS resolution; sleep 3; done;']

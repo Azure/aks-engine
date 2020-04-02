@@ -41,6 +41,9 @@ func TestK8sVars(t *testing.T) {
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType: api.Kubernetes,
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku: api.BasicLoadBalancerSku,
+				},
 			},
 			LinuxProfile: &api.LinuxProfile{},
 			AgentPoolProfiles: []*api.AgentPoolProfile{
@@ -84,7 +87,7 @@ func TestK8sVars(t *testing.T) {
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
 		"apiVersionKeyVault":                 "2018-02-14",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,
@@ -114,6 +117,7 @@ func TestK8sVars(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
@@ -373,6 +377,30 @@ func TestK8sVars(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
+		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
+		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
+		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
+		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
+		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
+		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
+		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
+		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+	}
 	expectedMap["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	expectedMap["agentpool1AccountName"] = "[concat(variables('storageAccountBaseName'), 'agnt0')]"
 	expectedMap["agentpool1StorageAccountOffset"] = "[mul(variables('maxStorageAccountsPerAgent'),variables('agentpool1Index'))]"
@@ -436,6 +464,7 @@ func TestK8sVars(t *testing.T) {
 	delete(expectedMap, "masterEtcdPeerURLs")
 	delete(expectedMap, "masterEtcdClusterStates")
 	delete(expectedMap, "masterEtcdClientURLs")
+	delete(expectedMap, "masterEtcdMetricURLs")
 
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -449,7 +478,30 @@ func TestK8sVars(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
+		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
+		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
+		"dockerMonitorSystemdTimer":        getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdTimer, cs),
+		"dockerMonitorSystemdService":      getBase64EncodedGzippedCustomScript(kubernetesDockerMonitorSystemdService, cs),
+		"labelNodesScript":                 getBase64EncodedGzippedCustomScript(labelNodesScript, cs),
+		"labelNodesSystemdService":         getBase64EncodedGzippedCustomScript(labelNodesSystemdService, cs),
+		"aptPreferences":                   getBase64EncodedGzippedCustomScript(aptPreferences, cs),
+		"dockerClearMountPropagationFlags": getBase64EncodedGzippedCustomScript(dockerClearMountPropagationFlags, cs),
+		"auditdRules":                      getBase64EncodedGzippedCustomScript(auditdRules, cs),
+		"etcdSystemdService":               getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":        getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":             getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+	}
 	expectedMap["useManagedIdentityExtension"] = "true"
 	expectedMap["provisionScriptParametersCommon"] = "[concat('" + cs.GetProvisionScriptParametersCommon(api.ProvisionScriptParametersInput{Location: common.WrapAsARMVariable("location"), ResourceGroup: common.WrapAsARMVariable("resourceGroup"), TenantID: common.WrapAsARMVariable("tenantID"), SubscriptionID: common.WrapAsARMVariable("subscriptionId"), ClientID: common.WrapAsARMVariable("servicePrincipalClientId"), ClientSecret: common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"), APIServerCertificate: common.WrapAsParameter("apiServerCertificate"), KubeletPrivateKey: common.WrapAsParameter("clientPrivateKey"), ClusterKeyVaultName: common.WrapAsARMVariable("clusterKeyVaultName")}) + "')]"
 
@@ -607,7 +659,7 @@ func TestK8sVars(t *testing.T) {
 		"environmentJSON":                    `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`,
 		"customCloudAuthenticationMethod":    "client_secret",
 		"customCloudIdentifySystem":          "azure_ad",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2017-10-01",
 		"apiVersionStorage":                  "2017-10-01",
 		"clusterKeyVaultName":                "",
@@ -636,6 +688,7 @@ func TestK8sVars(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",
@@ -851,7 +904,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"apiVersionCompute":                  "2019-07-01",
 		"apiVersionDeployments":              "2018-06-01",
 		"apiVersionKeyVault":                 "2018-02-14",
-		"apiVersionManagedIdentity":          "2015-08-31-preview",
+		"apiVersionManagedIdentity":          "2018-11-30",
 		"apiVersionNetwork":                  "2018-08-01",
 		"apiVersionStorage":                  "2018-07-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,
@@ -883,6 +936,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"masterEtcdClusterStates":            []string{"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]", "[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]"},
 		"masterEtcdPeerURLs":                 []string{"[concat('https://', variables('masterPrivateIpAddrs')[0], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[1], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[2], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[3], ':', variables('masterEtcdServerPort'))]", "[concat('https://', variables('masterPrivateIpAddrs')[4], ':', variables('masterEtcdServerPort'))]"},
 		"masterEtcdServerPort":               2380,
+		"masterEtcdMetricURLs":               []string{"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]", "[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]"},
 		"masterFirstAddrComment":             "these MasterFirstAddrComment are used to place multiple masters consecutively in the address space",
 		"masterFirstAddrOctet4":              "[variables('masterFirstAddrOctets')[3]]",
 		"masterFirstAddrOctets":              "[split(parameters('firstConsecutiveStaticIP'),'.')]",

@@ -13,11 +13,7 @@ UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
 
 removeEtcd() {
-    if [[ $OS == $COREOS_OS_NAME ]]; then
-        rm -rf /opt/bin/etcd
-    else
-        rm -rf /usr/bin/etcd
-    fi
+    rm -rf /usr/bin/etcd
 }
 
 removeMoby() {
@@ -37,11 +33,7 @@ installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
         CLI_TOOL=$1
-        if [[ $OS == $COREOS_OS_NAME ]]; then
-            path="/opt/bin"
-        else
-            path="/usr/bin"
-        fi
+        local path="/usr/bin"
         CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
         pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
         removeEtcd
@@ -219,7 +211,7 @@ downloadAzureCNI() {
 
 ensureAPMZ() {
     local version=$1
-    local apmz_url="https://upstreamartifacts.blob.core.windows.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+    local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
     if [[ -f "$apmz_filepath" ]]; then
         installed_version=$($apmz_filepath version)
         if [[ "$version" == "$installed_version" ]]; then
@@ -331,14 +323,8 @@ extractHyperkube() {
         img unpack -o "$path" ${HYPERKUBE_URL}
     fi
 
-    if [[ $OS == $COREOS_OS_NAME ]]; then
-        cp "$path/hyperkube" "/opt/kubelet"
-        mv "$path/hyperkube" "/opt/kubectl"
-        chmod a+x /opt/kubelet /opt/kubectl
-    else
-        cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-        mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
-    fi
+    cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+    mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
 }
 
 extractKubeBinaries() {

@@ -835,16 +835,6 @@ type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
 }
 
-// HasCoreOS returns true if the cluster contains coreos nodes
-func (p *Properties) HasCoreOS() bool {
-	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.Distro == CoreOS {
-			return true
-		}
-	}
-	return false
-}
-
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
@@ -1417,11 +1407,6 @@ func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
 }
 
-// IsCoreOS returns true if the master specified a CoreOS distro
-func (m *MasterProfile) IsCoreOS() bool {
-	return m.Distro == CoreOS
-}
-
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
@@ -1554,11 +1539,6 @@ func (a *AgentPoolProfile) IsLinux() bool {
 // IsRHEL returns true if the agent pool specified a RHEL distro
 func (a *AgentPoolProfile) IsRHEL() bool {
 	return a.OSType == Linux && a.Distro == RHEL
-}
-
-// IsCoreOS returns true if the agent specified a CoreOS distro
-func (a *AgentPoolProfile) IsCoreOS() bool {
-	return a.OSType == Linux && a.Distro == CoreOS
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
@@ -1980,25 +1960,8 @@ func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedID == ""
 }
 
-// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
-func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedClientID != ""
-}
-
-// GetUserAssignedID returns the user assigned ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedID() string {
-	if k.UserAssignedIDEnabled() {
-		return k.UserAssignedID
-	}
-	return ""
-}
-
-// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedClientID() string {
-	if k.UserAssignedClientIDEnabled() {
-		return k.UserAssignedClientID
-	}
-	return ""
+func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
+	return !(k.UserAssignedIDEnabled() && strings.Contains(k.UserAssignedID, "/"))
 }
 
 // GetOrderedKubeletConfigString returns an ordered string of key/val pairs
@@ -2420,6 +2383,10 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
+	}
+
+	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {
+		parameters["API_SERVER_NAME"] = cs.Properties.HostedMasterProfile.FQDN
 	}
 
 	keys := make([]string, 0)

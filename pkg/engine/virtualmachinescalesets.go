@@ -53,10 +53,9 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var userAssignedIDEnabled bool
 	if k8sConfig != nil {
-		useManagedIdentity = k8sConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && k8sConfig.UserAssignedID != ""
+		userAssignedIDEnabled = k8sConfig.UserAssignedIDEnabled()
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
@@ -118,7 +117,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		virtualMachine.Zones = &masterProfile.AvailabilityZones
 	}
 
-	if useManagedIdentity && userAssignedIDEnabled {
+	if userAssignedIDEnabled {
 		identity := &compute.VirtualMachineScaleSetIdentity{}
 		identity.Type = compute.ResourceIdentityTypeUserAssigned
 		identity.UserAssignedIdentities = map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
@@ -306,9 +305,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
-		ncBinary = "ncat"
-	}
 	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() && cs.Properties.IsHostedMasterProfile() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {
@@ -445,7 +441,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		useManagedIdentity = k8sConfig.UseManagedIdentity
 	}
 	if useManagedIdentity {
-		userAssignedIdentityEnabled := k8sConfig.UserAssignedID != ""
+		userAssignedIdentityEnabled := k8sConfig.UserAssignedIDEnabled()
 		if userAssignedIdentityEnabled {
 			virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeUserAssigned,
@@ -738,9 +734,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if profile.IsCoreOS() {
-		ncBinary = "ncat"
-	}
 	featureFlags := cs.Properties.FeatureFlags
 
 	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") && cs.Properties.IsHostedMasterProfile() {

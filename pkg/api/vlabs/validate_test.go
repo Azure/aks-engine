@@ -598,7 +598,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ProxyMode:     "iptables",
 		}
 
-		if err := c.Validate(k8sVersion, false, true, false); err == nil && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0-alpha.2") {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil && !common.IsKubernetesVersionGe(k8sVersion, "1.18.0") {
 			t.Errorf("should error with ipv6 dual stack feature enabled as iptables mode not supported in %s", k8sVersion)
 		}
 
@@ -648,7 +648,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to single stack IPv6 with 1.18 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0-alpha.4", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0", true, true) {
 		c := KubernetesConfig{
 			NetworkPlugin: "azure",
 		}
@@ -1919,6 +1919,43 @@ func TestValidateAddons(t *testing.T) {
 			},
 			expectedErr: errors.Errorf("%s add-on is required, it cannot be disabled", common.AzureCloudProviderAddonName),
 		},
+		{
+			name: "csi-secrets-store enabled with version < 1.16",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.SecretsStoreCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s add-on can only be used in 1.16+", common.SecretsStoreCSIDriverAddonName),
+		},
+		{
+			name: "keyvault-flexvolume and csi-secrets-store addons enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.KeyVaultFlexVolumeAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    common.SecretsStoreCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("Both %s and %s addons are enabled, only one of these may be enabled on a cluster", common.KeyVaultFlexVolumeAddonName, common.SecretsStoreCSIDriverAddonName),
+		},
 	}
 
 	for _, test := range tests {
@@ -1980,10 +2017,18 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on azure-policy when ServicePrincipalProfile is not empty",
 		)
 	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.13"
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.12"
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with k8s < 1.14",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.14"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on azure-policy with k8s >= 1.12",
+			"should not error on azure-policy with k8s >= 1.14",
 		)
 	}
 
@@ -2246,62 +2291,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on providing valid addon.Data",
-		)
-	}
-
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			AvailabilityProfile: AvailabilitySet,
-			Distro:              CoreOS,
-		},
-	}
-
-	p.MasterProfile = &MasterProfile{
-		Distro: CoreOS,
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "smb-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with coreos (smb-flexvolume)",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "keyvault-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with coreos (keyvault-flexvolume)",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "blobfuse-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
 		)
 	}
 
@@ -3563,23 +3552,10 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
 			cs.Properties.FeatureFlags = &featureFlags
 			masterProfile := cs.Properties.MasterProfile
-			masterProfile.Distro = CoreOS
-			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
-			if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
-				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-			}
-
 			masterProfile.Distro = Ubuntu
 			agentPoolProfiles := cs.Properties.AgentPoolProfiles
 			agentPoolProfiles[0].OSType = Windows
-			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
-			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
-				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-			}
-
-			agentPoolProfiles[0].OSType = Linux
-			agentPoolProfiles[0].Distro = CoreOS
-			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
+			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
 			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 			}
@@ -3791,7 +3767,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 			agentPoolProfiles[0].Distro = distro
 			agentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL, CoreOS:
+			case RHEL:
 				expectedMsg := fmt.Sprintf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfiles[0].Name)
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
@@ -3814,7 +3790,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 			masterProfile.Distro = distro
 			masterProfile.AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL, CoreOS:
+			case RHEL:
 				expectedMsg := fmt.Sprintf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())

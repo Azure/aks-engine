@@ -361,16 +361,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "coreos",
-			apiModelPath: "../examples/coreos/kubernetes-coreos.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "coreos hybrid",
-			apiModelPath: "../examples/coreos/kubernetes-coreos-hybrid.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "cosmos etcd",
 			apiModelPath: "../examples/cosmos-etcd/kubernetes-3-masters-cosmos.json",
 			setArgs:      defaultSet,
@@ -578,6 +568,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "1.18 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.18.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "1.19 example",
+			apiModelPath: "../examples/kubernetes-releases/kubernetes1.19.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -793,11 +788,6 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "ubuntu distros",
 			apiModelPath: "../examples/kubernetes-non-vhd-distros.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "e2e coreos",
-			apiModelPath: "../examples/e2e-tests/kubernetes/coreos/coreos.json",
 			setArgs:      defaultSet,
 		},
 		{
