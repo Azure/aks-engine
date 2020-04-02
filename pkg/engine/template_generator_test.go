@@ -157,6 +157,14 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		},
 	}
 	api.AzureCloudSpecEnvMap[api.AzureStackCloud] = azureStackCloudSpec
+	var errorCodeStrings []string
+	var errorCodes []int
+	for k, v := range cseErrorCodes {
+		errorCodeStrings = append(errorCodeStrings, k)
+		errorCodes = append(errorCodes, v)
+	}
+	errorCodeStrings = append(errorCodeStrings, "ERR_HOLD_MY_BEER")
+	errorCodes = append(errorCodes, -1)
 	cases := []struct {
 		name                                  string
 		cs                                    *api.ContainerService
@@ -173,6 +181,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedHasPrivateAzureRegistryServer bool
 		expectedGetPrivateAzureRegistryServer string
 		expectedGetSysctlDConfigKeyVals       string
+		expectedGetCSEErrorCodeVals           []int
 	}{
 		{
 			name: "1.15 release",
@@ -205,6 +214,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedGetCSEErrorCodeVals:          []int{-1},
 		},
 		{
 			name: "1.16 release",
@@ -785,6 +795,13 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				ret = v.Call([]reflect.Value{reflect.ValueOf(pool.SysctlDConfig)})
 				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
 					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for i, errorCodeString := range errorCodeStrings {
+				v = reflect.ValueOf(funcMap["GetCSEErrorCode"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(errorCodeString)})
+				if ret[0].Interface() != errorCodes[i] {
+					t.Errorf("expected funcMap invocation of GetCSEErrorCode to return %d, instead got %d", errorCodes[i], ret[0].Interface())
 				}
 			}
 		})
