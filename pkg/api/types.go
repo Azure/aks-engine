@@ -1193,6 +1193,21 @@ func (p *Properties) IsVHDDistroForAllNodes() bool {
 	return true
 }
 
+// HasVHDDistroNodes returns true if any one Linux node pool, including masters, are running a VHD image
+func (p *Properties) HasVHDDistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.IsVHDDistro() {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.IsVHDDistro()
+	}
+	return false
+}
+
 // IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {

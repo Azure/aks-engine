@@ -12,23 +12,10 @@ BPFTRACE_DOWNLOADS_DIR="/opt/bpftrace/downloads"
 UBUNTU_RELEASE=$(lsb_release -r -s)
 UBUNTU_CODENAME=$(lsb_release -c -s)
 
-removeEtcd() {
-    rm -rf /usr/bin/etcd
-}
-
-removeMoby() {
-    apt_get_purge moby-engine moby-cli || exit 27
-}
-
-removeContainerd() {
-    apt_get_purge moby-containerd || exit 27
-}
-
 disableTimeSyncd() {
     systemctl_stop 20 5 10 systemd-timesyncd || exit 3
     retrycmd_if_failure 120 5 25 systemctl disable systemd-timesyncd || exit 3
 }
-
 installEtcd() {
     CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
     if [[ "$CURRENT_VERSION" != "${ETCD_VERSION}" ]]; then
@@ -50,7 +37,6 @@ installEtcd() {
         chmod a+x "$path/etcd" "$path/etcdctl"
     fi
 }
-
 installDeps() {
     packages="apache2-utils apt-transport-https blobfuse ca-certificates cifs-utils conntrack cracklib-runtime dbus ebtables ethtool fuse git htop iftop init-system-helpers iotop iproute2 ipset iptables jq libpam-pwquality libpwquality-tools mount nfs-common pigz socat sysstat traceroute util-linux xz-utils zip"
     if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
@@ -82,7 +68,6 @@ installDeps() {
       fi
     fi
 }
-
 installGPUDrivers() {
     mkdir -p $GPU_DEST/tmp
     retrycmd_if_failure_no_stats 120 5 25 curl -fsSL https://nvidia.github.io/nvidia-docker/gpgkey > $GPU_DEST/tmp/aptnvidia.gpg || exit 85
@@ -104,49 +89,6 @@ installGPUDrivers() {
       exit 85
     fi
 }
-
-installSGXDrivers() {
-    [[ "$UBUNTU_RELEASE" == "18.04" || "$UBUNTU_RELEASE" == "16.04" ]] || exit 92
-
-    local packages="make gcc dkms"
-    wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit 90
-
-    local oe_dir=/opt/azure/containers/oe
-    rm -rf ${oe_dir}
-    mkdir -p ${oe_dir}
-    pushd ${oe_dir} || exit
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit 90
-    dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
-    sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit 90
-    matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
-    read -ra tmp_array <<< "$matched_line"
-    sgx_driver_sha256sum_expected="${tmp_array[0]}"
-    sgx_driver_remote_path="${tmp_array[1]}"
-    sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
-    sgx_driver=$(basename "$sgx_driver_url")
-
-    retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit 90
-    read -ra tmp_array <<< "$(sha256sum ./"$sgx_driver")"
-    sgx_driver_sha256sum_real="${tmp_array[0]}"
-    [[ "$sgx_driver_sha256sum_real" == "$sgx_driver_sha256sum_expected" ]] || exit 93
-
-    chmod a+x ./"${sgx_driver}"
-    if ! ./"${sgx_driver}"; then
-        popd || exit
-        exit 91
-    fi
-    popd || exit
-    rm -rf ${oe_dir}
-}
-
-installContainerRuntime() {
-    if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-        installMoby
-    fi
-}
-
 installMoby() {
     removeContainerd
     CURRENT_VERSION=$(dockerd --version | grep "Docker version" | cut -d "," -f 1 | cut -d " " -f 3 | cut -d "+" -f 1)
@@ -164,7 +106,6 @@ installMoby() {
         apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit 27
     fi
 }
-
 installKataContainersRuntime() {
     ARCH=$(arch)
     BRANCH=stable-1.7
@@ -177,15 +118,6 @@ installKataContainersRuntime() {
     apt_get_update || exit 99
     apt_get_install 120 5 25 kata-runtime || exit 62
 }
-
-installNetworkPlugin() {
-    if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
-        installAzureCNI
-    fi
-    installCNI
-    rm -rf $CNI_DOWNLOADS_DIR &
-}
-
 installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
@@ -196,19 +128,16 @@ installBcc() {
     apt_get_update || exit 99
     apt_get_install 120 5 25 bcc-tools libbcc-examples linux-headers-$(uname -r) || exit 168
 }
-
 downloadCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
     CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${CNI_PLUGINS_URL} || exit 41
 }
-
 downloadAzureCNI() {
     mkdir -p $CNI_DOWNLOADS_DIR
     CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
     retrycmd_get_tarball 120 5 "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ${VNET_CNI_PLUGINS_URL} || exit 41
 }
-
 ensureAPMZ() {
     local version=$1
     local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
@@ -227,7 +156,6 @@ ensureAPMZ() {
     chmod +x "$bin_path"
     ln -Ffs "$bin_path" "$apmz_filepath"
 }
-
 installBpftrace() {
     local version="v0.9.4"
     local bpftrace_bin="bpftrace"
@@ -255,57 +183,10 @@ installBpftrace() {
     chmod +x "$bpftrace_filepath"
     chmod -R +x "$tools_filepath/tools"
 }
-
-installCNI() {
-    CNI_TGZ_TMP=${CNI_PLUGINS_URL##*/}
-    if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
-        downloadCNI
-    fi
-    mkdir -p $CNI_BIN_DIR
-    tar -xzf "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" -C $CNI_BIN_DIR
-    chown -R root:root $CNI_BIN_DIR
-    chmod -R 755 $CNI_BIN_DIR
-}
-
-installAzureCNI() {
-    CNI_TGZ_TMP=${VNET_CNI_PLUGINS_URL##*/}
-    if [[ ! -f "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" ]]; then
-        downloadAzureCNI
-    fi
-    mkdir -p $CNI_CONFIG_DIR
-    chown -R root:root $CNI_CONFIG_DIR
-    chmod 755 $CNI_CONFIG_DIR
-    mkdir -p $CNI_BIN_DIR
-    tar -xzf "$CNI_DOWNLOADS_DIR/${CNI_TGZ_TMP}" -C $CNI_BIN_DIR
-}
-
-installContainerd() {
-    removeMoby
-    CURRENT_VERSION=$(containerd -version | cut -d " " -f 3 | sed 's|v||')
-    if [[ "$CURRENT_VERSION" != "${CONTAINERD_VERSION}" ]]; then
-        os_lower=$(echo ${OS} | tr '[:upper:]' '[:lower:]')
-        if [[ "${OS}" == "${UBUNTU_OS_NAME}" ]]; then
-            url_path="${os_lower}/${UBUNTU_RELEASE}/multiarch/prod"
-        elif [[ "${OS}" == "${DEBIAN_OS_NAME}" ]]; then
-            url_path="${os_lower}/${UBUNTU_RELEASE}/prod"
-        else
-            exit 25
-        fi
-        removeContainerd
-        echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" > /tmp/microsoft-prod-testing.list
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit 25
-        retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg || exit 26
-        retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
-        apt_get_update || exit 99
-        apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
-    fi
-}
-
 installImg() {
     img_filepath=/usr/local/bin/img
     retrycmd_get_executable 120 5 $img_filepath "https://upstreamartifacts.azureedge.net/img/img-linux-amd64-v0.5.6" ls || exit 33
 }
-
 extractHyperkube() {
     CLI_TOOL=$1
     path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
@@ -326,7 +207,6 @@ extractHyperkube() {
     cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
     mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
 }
-
 extractKubeBinaries() {
     KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"}
     K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
@@ -336,53 +216,11 @@ extractKubeBinaries() {
         --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
     rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
 }
-
-installKubeletAndKubectl() {
-    if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
-        if version_gte ${KUBERNETES_VERSION} 1.17; then
-            extractKubeBinaries
-        else
-            if [[ "$CONTAINER_RUNTIME" == "docker" ]]; then
-                extractHyperkube "docker"
-            else
-                extractHyperkube "img"
-            fi
-        fi
-    fi
-    mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
-    mv "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" "/usr/local/bin/kubectl"
-    chmod a+x /usr/local/bin/kubelet /usr/local/bin/kubectl
-    rm -rf /usr/local/bin/kubelet-* /usr/local/bin/kubectl-* /home/hyperkube-downloads &
-}
-
 pullContainerImage() {
     CLI_TOOL=$1
     DOCKER_IMAGE_URL=$2
     retrycmd_if_failure 60 1 1200 $CLI_TOOL pull $DOCKER_IMAGE_URL || exit 35
 }
-
-cleanUpContainerImages() {
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
-    if [ "$IS_HOSTED_MASTER" = "false" ]; then
-        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
-        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'kube-svc-redirect') &
-        docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'nginx') &
-    fi
-
-    docker rmi registry:2.7.1 &
-}
-
-cleanUpGPUDrivers() {
-    rm -Rf $GPU_DEST
-    rm -f /etc/apt/sources.list.d/nvidia-docker.list
-}
-
-cleanUpContainerd() {
-    rm -Rf $CONTAINERD_DOWNLOADS_DIR
-}
-
 overrideNetworkConfig() {
     CONFIG_FILEPATH="/etc/cloud/cloud.cfg.d/80_azure_net_config.cfg"
     touch ${CONFIG_FILEPATH}
