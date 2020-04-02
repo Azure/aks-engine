@@ -39989,7 +39989,29 @@ configureCNI() {
 }
 configureCNIIPTables() {
   if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
-    mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
+    cat <<EOF >"${CNI_CONFIG_DIR}/10-azure.conflist"
+{
+  "cniVersion":"0.3.0",
+  "name":"azure",
+  "plugins":[
+  {
+    "type":"azure-vnet",
+    "mode":"bridge",
+    "bridge":"azure0",
+    "ipsToRouteViaHost":["169.254.20.10"],
+    "ipam":{
+      "type":"azure-vnet-ipam"
+    }
+  },
+  {
+    "type":"portmap",
+    "capabilities":{
+      "portMappings":true
+    },
+    "snat":true
+  }]
+}
+EOF
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
     if [[ ${NETWORK_POLICY} == "calico" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
