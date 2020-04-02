@@ -119,7 +119,7 @@ configureAzureStackInterfaces() {
 
     if [[ -z "$TOKEN" ]]; then
         echo "Error generating token for Azure Resource Manager"
-        exit ${ERR_AZURE_STACK_GET_ARM_TOKEN}
+        exit 120
     fi
 
     echo "Fetching network interface configuration for node"
@@ -139,7 +139,7 @@ configureAzureStackInterfaces() {
 
     if [[ ! -s ${NETWORK_INTERFACES_FILE} ]]; then
         echo "Error fetching network interface configuration for node"
-        exit ${ERR_AZURE_STACK_GET_NETWORK_CONFIGURATION}
+        exit 121
     fi
 
     echo "Generating Azure CNI interface file"
@@ -161,7 +161,7 @@ configureAzureStackInterfaces() {
 
         if [[ -z "$SUBNET_PREFIX" ]]; then
             echo "Error fetching the subnet address prefix for a subnet ID"
-            exit ${ERR_AZURE_STACK_GET_SUBNET_PREFIX}
+            exit 122
         fi
 
         # shellcheck disable=SC2001

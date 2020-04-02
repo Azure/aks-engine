@@ -748,6 +748,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
+		"GetCSEErrorCode": func(errorType string) int {
+			return GetCSEErrorCode(errorType)
+		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
 			if cs.Properties.TelemetryProfile != nil {

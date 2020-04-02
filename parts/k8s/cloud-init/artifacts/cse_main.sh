@@ -14,7 +14,7 @@ for i in $(seq 1 3600); do
         grep -Fq '#HELPERSEOF' {{GetCSEHelpersScriptFilepath}} && break
     fi
     if [ $i -eq 3600 ]; then
-        exit $ERR_FILE_WATCH_TIMEOUT
+        exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
     else
         sleep 1
     fi
@@ -23,7 +23,7 @@ sed -i "/#HELPERSEOF/d" {{GetCSEHelpersScriptFilepath}}
 source {{GetCSEHelpersScriptFilepath}}
 configure_prerequisites
 
-wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+wait_for_file 3600 1 {{GetCSEInstallScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCSEInstallScriptFilepath}}
 
 ensureAPMZ "v0.5.1"
@@ -33,11 +33,11 @@ eval "$(apmz bash -n "cse" -t "{{GetLinuxDefaultTelemetryTags}}" --api-keys "{{G
 eval "$(apmz bash -d)"
 {{end}}
 
-wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCSEConfigScriptFilepath}}
 
 {{- if IsAzureStackCloud}}
-wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
+wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
 
@@ -71,7 +71,7 @@ if [ -f $VHD_LOGS_FILEPATH ]; then
 else
     if [[ "${IS_VHD}" = true ]]; then
         echo "Using VHD distro but file $VHD_LOGS_FILEPATH not found"
-        exit $ERR_VHD_FILE_NOT_FOUND
+        exit {{GetCSEErrorCode "ERR_VHD_FILE_NOT_FOUND"}}
     fi
     FULL_INSTALL_REQUIRED=true
 fi
@@ -165,8 +165,8 @@ else
 fi
 
 {{- if HasCustomSearchDomain}}
-wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
-{{GetCustomSearchDomainsCSEScriptFilepath}} > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit $ERR_CUSTOM_SEARCH_DOMAINS_FAIL
+wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+{{GetCustomSearchDomainsCSEScriptFilepath}} > /opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit {{GetCSEErrorCode "ERR_CUSTOM_SEARCH_DOMAINS_FAIL"}}
 {{end}}
 
 {{- if IsDockerContainerRuntime}}
@@ -247,12 +247,12 @@ RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
 STS=$?
 if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
-        exit $ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL
+        exit {{GetCSEErrorCode "ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL"}}
     else
-        exit $ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
+        exit {{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
     fi
 fi
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || exit {{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
 {{end}}
 
 if $REBOOTREQUIRED; then
