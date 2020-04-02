@@ -40,9 +40,7 @@
             "name": "aad-pod-identity",
             "enabled": true
           }
-        ],
-        "loadBalancerSku": "Standard",
-        "excludeMasterFromStandardLB": true
+        ]
       }
     },
     "masterProfile": {

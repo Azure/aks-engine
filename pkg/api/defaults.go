@@ -371,11 +371,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultAzureStackLoadBalancerSku
 		} else if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
-			if a.HasAvailabilityZones() {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-			} else {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
-			}
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
 		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
@@ -417,9 +413,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		// Master-specific defaults that depend upon OrchestratorProfile defaults
-		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
-			cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
-		}
 		if cs.Properties.MasterProfile != nil {
 			if !cs.Properties.MasterProfile.IsCustomVNET() {
 				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
@@ -472,9 +465,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 
 		// Pool-specific defaults that depend upon OrchestratorProfile defaults
 		for _, profile := range cs.Properties.AgentPoolProfiles {
-			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
-				cs.Properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB = to.BoolPtr(DefaultExcludeMasterFromStandardLB)
-			}
 			// configure the subnets if not in custom VNET
 			if cs.Properties.MasterProfile != nil && !cs.Properties.MasterProfile.IsCustomVNET() {
 				subnetCounter := 0

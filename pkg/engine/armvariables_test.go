@@ -41,6 +41,9 @@ func TestK8sVars(t *testing.T) {
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
 				OrchestratorType: api.Kubernetes,
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku: api.BasicLoadBalancerSku,
+				},
 			},
 			LinuxProfile: &api.LinuxProfile{},
 			AgentPoolProfiles: []*api.AgentPoolProfile{

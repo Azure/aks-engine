@@ -2277,9 +2277,9 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("MasterProfile.HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.MasterProfile.HasAvailabilityZones(), false)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultLoadBalancerSku {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
 	// masters with VMSS and zones
 	mockCS = getMockBaseContainerService("1.12.0")
@@ -2324,9 +2324,9 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), false)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultLoadBalancerSku {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
 	// agents with VMSS and zones
 	mockCS = getMockBaseContainerService("1.13.12")
@@ -3690,7 +3690,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: BasicLoadBalancerSku,
+			expected: StandardLoadBalancerSku,
 		},
 		{
 			name: "basic",
@@ -3709,7 +3709,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: BasicLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "basic using const",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -3725,7 +3725,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: BasicLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "standard",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -3741,7 +3741,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: StandardLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "standard using const",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{

@@ -58,9 +58,7 @@
 							"name": "rescheduler",
 							"enabled": true
 						}
-					],
-					"loadBalancerSku": "Standard",
-					"excludeMasterFromStandardLB": true
+					]
 				}
 			},
 			"masterProfile": {
