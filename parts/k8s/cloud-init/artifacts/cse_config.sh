@@ -454,7 +454,17 @@ configAddons() {
 {{if HasNSeriesSKU}}
 
 installGPUDriversRun() {
-    rm -rf "/var/lib/dkms/nvidia/${GPU_DV}"
+    # if there's no file under the module folder, means the installation not succeeds
+    # so need to do some cleanup here.
+    NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
+    NVIDIA_DKMS_MODULE_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
+    if [ -d "${NVIDIA_DKMS_DIR}" ]; then
+        if [ -z "$(ls -A ${NVIDIA_DKMS_DIR}/*azure/x86_64/module)" ]; then
+            echo "the dkms folder exists, but the module does not exists, we need to do the clean up first before retry to install."
+            rm -rf "${NVIDIA_DKMS_DIR}"
+        fi
+    fi
+    
     sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
     exit $?
 }
