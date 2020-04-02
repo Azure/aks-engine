@@ -184,10 +184,6 @@ wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit {{GetCS
 
 {{- if IsDockerContainerRuntime}}
 time_metric "EnsureDocker" ensureDocker
-{{else if IsKataContainerRuntime}}
-if grep -q vmx /proc/cpuinfo; then
-    time_metric "InstallKataContainers" installKataContainersRuntime
-fi
 {{end}}
 
 time_metric "ConfigureK8s" configureK8s

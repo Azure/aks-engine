@@ -96,7 +96,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetAgentSwarmModeCustomData",
 		"GetPodInfraContainerSpec",
 		"IsKubenet",
-		"IsKataContainerRuntime",
 		"WrapAsVariable",
 		"CloudInitData",
 		"WrapAsParameter",
@@ -176,7 +175,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetHyperkubeImageReference    string
 		expectedGetTargetEnvironment          string
 		expectedIsNSeriesSKU                  bool
-		expectedIsKataContainerRuntime        bool
 		expectedIsDockerContainerRuntime      bool
 		expectedHasPrivateAzureRegistryServer bool
 		expectedGetPrivateAzureRegistryServer string
@@ -598,38 +596,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
-			name: "kata-containers",
-			cs: &api.ContainerService{
-				Properties: &api.Properties{
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime:        api.KataContainers,
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-						},
-					},
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:                "pool1",
-							Count:               1,
-							AvailabilityProfile: api.VirtualMachineScaleSets,
-						},
-					},
-				},
-			},
-			expectedHasCustomSearchDomain:        false,
-			expectedGetSearchDomainName:          "",
-			expectedGetSearchDomainRealmUser:     "",
-			expectedGetSearchDomainRealmPassword: "",
-			expectedHasCustomNodesDNS:            false,
-			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
-			expectedGetTargetEnvironment:         "AzurePublicCloud",
-			expectedIsNSeriesSKU:                 false,
-			expectedIsKataContainerRuntime:       true,
-			expectedGetSysctlDConfigKeyVals:      "",
-		},
-		{
 			name: "PrivateAzureRegistryServer",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
@@ -822,11 +788,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedIsDockerContainerRuntime {
 				t.Errorf("expected funcMap invocation of IsDockerContainerRuntime to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
 			}
-			v = reflect.ValueOf(funcMap["IsKataContainerRuntime"])
-			ret = v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != c.expectedIsKataContainerRuntime {
-				t.Errorf("expected funcMap invocation of IsKataContainerRuntime to return %t, instead got %t", c.expectedIsKataContainerRuntime, ret[0].Interface())
-			}
 			v = reflect.ValueOf(funcMap["HasPrivateAzureRegistryServer"])
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasPrivateAzureRegistryServer {
@@ -881,20 +842,6 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 		{
 			Name:           "IsKubenet_IsFalseWhenNetworkPluginIsNotKubenet",
 			FuncName:       "IsKubenet",
-			ExpectedResult: false,
-		},
-		{
-			Name:     "IsKataContainerRuntime_IsTrueWhenContainerRuntimeIsKataContainers",
-			FuncName: "IsKataContainerRuntime",
-			MutateFunc: func(cs api.ContainerService) api.ContainerService {
-				cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = api.KataContainers
-				return cs
-			},
-			ExpectedResult: true,
-		},
-		{
-			Name:           "IsKataContainerRuntime_IsFalseWhenContainerRuntimeIsNotKataContainers",
-			FuncName:       "IsKataContainerRuntime",
 			ExpectedResult: false,
 		},
 		{

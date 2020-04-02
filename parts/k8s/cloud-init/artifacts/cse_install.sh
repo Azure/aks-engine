@@ -106,18 +106,6 @@ installMoby() {
         apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit 27
     fi
 }
-installKataContainersRuntime() {
-    ARCH=$(arch)
-    BRANCH=stable-1.7
-    KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
-    KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit 60
-    wait_for_apt_locks
-    retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit 61
-    echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
-    apt_get_update || exit 99
-    apt_get_install 120 5 25 kata-runtime || exit 62
-}
 installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY

@@ -685,9 +685,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
 		},
-		"IsKataContainerRuntime": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
-		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
 		},

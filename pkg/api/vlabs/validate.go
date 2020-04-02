@@ -380,7 +380,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
 	}
 
-	return a.validateContainerRuntime()
+	return a.validateContainerRuntime(isUpdate)
 }
 
 func (a *Properties) validateMasterProfile(isUpdate bool) error {
@@ -1485,7 +1485,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// Validate containerd scenarios
 	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
 		if k.ContainerdVersion != "" {
-			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers)
+			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd)
 		}
 	} else {
 		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
@@ -1636,7 +1636,7 @@ func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
 	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeProxyImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
 }
 
-func (a *Properties) validateContainerRuntime() error {
+func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 	var containerRuntime string
 
 	switch a.OrchestratorProfile.OrchestratorType {
@@ -1646,6 +1646,11 @@ func (a *Properties) validateContainerRuntime() error {
 		}
 	default:
 		return nil
+	}
+
+	// Check for deprecated, non-back-compat
+	if isUpdate && containerRuntime == KataContainers {
+		return errors.Errorf("%s containerRuntime has been deprecated, you will not be able to update this cluster with this version of aks-engine", KataContainers)
 	}
 
 	// Check ContainerRuntime has a valid value.
@@ -1658,11 +1663,6 @@ func (a *Properties) validateContainerRuntime() error {
 	}
 	if !valid {
 		return errors.Errorf("unknown containerRuntime %q specified", containerRuntime)
-	}
-
-	// Make sure we don't use unsupported container runtimes on windows.
-	if (containerRuntime == KataContainers) && a.HasWindows() {
-		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
 	}
 
 	// TODO: These validations should be relaxed once ContainerD and CNI plugins are more readily available

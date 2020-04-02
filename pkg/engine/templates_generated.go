@@ -40834,18 +40834,6 @@ installMoby() {
         apt_get_install 20 30 120 moby-engine=${MOBY_VERSION}* moby-cli=${MOBY_CLI}* --allow-downgrades || exit 27
     fi
 }
-installKataContainersRuntime() {
-    ARCH=$(arch)
-    BRANCH=stable-1.7
-    KATA_RELEASE_KEY_TMP=/tmp/kata-containers-release.key
-    KATA_URL=http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/Release.key
-    retrycmd_if_failure_no_stats 120 5 25 curl -fsSL $KATA_URL > $KATA_RELEASE_KEY_TMP || exit 60
-    wait_for_apt_locks
-    retrycmd_if_failure 30 5 30 apt-key add $KATA_RELEASE_KEY_TMP || exit 61
-    echo "deb http://download.opensuse.org/repositories/home:/katacontainers:/releases:/${ARCH}:/${BRANCH}/xUbuntu_${UBUNTU_RELEASE}/ /" > /etc/apt/sources.list.d/kata-containers.list
-    apt_get_update || exit 99
-    apt_get_install 120 5 25 kata-runtime || exit 62
-}
 installBcc() {
     IOVISOR_KEY_TMP=/tmp/iovisor-release.key
     IOVISOR_URL=https://repo.iovisor.org/GPG-KEY
@@ -41162,10 +41150,6 @@ wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit {{GetCS
 
 {{- if IsDockerContainerRuntime}}
 time_metric "EnsureDocker" ensureDocker
-{{else if IsKataContainerRuntime}}
-if grep -q vmx /proc/cpuinfo; then
-    time_metric "InstallKataContainers" installKataContainersRuntime
-fi
 {{end}}
 
 time_metric "ConfigureK8s" configureK8s
@@ -42836,26 +42820,13 @@ write_files:
           conf_template = "/etc/containerd/kubenet_template.conf"
           {{end}}
         [plugins."io.containerd.grpc.v1.cri".containerd]
-          {{if IsKataContainerRuntime }}
-          default_runtime_name = "kata"
-          {{else}}
           default_runtime_name = "runc"
-          {{end}}
          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
               runtime_type = "io.containerd.runc.v2"
-            {{if IsKataContainerRuntime }}
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-              runtime_type = "io.containerd.kata.v2"
-            {{end}}
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-              {{if IsKataContainerRuntime }}
-              runtime_engine = "/usr/bin/kata-runtime"
-              runtime_type = "io.containerd.kata.v2"
-              {{else}}
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
-              {{end}}
     #EOF
 
   {{if IsKubenet}}
@@ -43370,26 +43341,13 @@ write_files:
           conf_template = "/etc/containerd/kubenet_template.conf"
           {{end}}
         [plugins."io.containerd.grpc.v1.cri".containerd]
-          {{if IsKataContainerRuntime }}
-          default_runtime_name = "kata"
-          {{else}}
           default_runtime_name = "runc"
-          {{end}}
          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
               runtime_type = "io.containerd.runc.v2"
-            {{if IsKataContainerRuntime }}
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-              runtime_type = "io.containerd.kata.v2"
-            {{end}}
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-              {{if IsKataContainerRuntime }}
-              runtime_engine = "/usr/bin/kata-runtime"
-              runtime_type = "io.containerd.kata.v2"
-              {{else}}
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
-              {{end}}
     #EOF
 
   {{if IsKubenet }}
@@ -43884,11 +43842,10 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
-        "description": "The container runtime to use (docker|kata-containers|containerd)"
+        "description": "The container runtime to use (docker|containerd)"
       },
       "allowedValues": [
         "docker",
-        "kata-containers",
         "containerd"
       ],
       "type": "string"
