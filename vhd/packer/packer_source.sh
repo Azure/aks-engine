@@ -1,5 +1,4 @@
 #!/bin/bash
-# exit codes defined in /pkg/engine/cse.go
 
 copyPackerFiles() {
   SYSCTL_CONFIG_SRC=/home/packer/sysctl-d-60-CIS.conf

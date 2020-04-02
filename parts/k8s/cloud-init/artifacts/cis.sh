@@ -1,5 +1,4 @@
 #!/bin/bash
-# exit codes defined in /pkg/engine/cse.go
 
 assignRootPW() {
   if grep '^root:[!*]:' /etc/shadow; then

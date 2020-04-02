@@ -1,5 +1,4 @@
 #!/bin/bash
-# exit codes defined in /pkg/engine/cse.go
 
 ensureCertificates() {
     AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"

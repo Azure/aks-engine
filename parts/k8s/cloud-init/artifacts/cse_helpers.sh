@@ -1,5 +1,4 @@
 #!/bin/bash
-# exit codes defined in /pkg/engine/cse.go
 
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"

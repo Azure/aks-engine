@@ -1,5 +1,4 @@
 #!/bin/bash
-# exit codes defined in /pkg/engine/cse.go
 
 CC_SERVICE_IN_TMP=/opt/azure/containers/cc-proxy.service.in
 CC_SOCKET_IN_TMP=/opt/azure/containers/cc-proxy.socket.in
