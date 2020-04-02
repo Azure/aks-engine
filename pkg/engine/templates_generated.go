@@ -44463,6 +44463,14 @@ function Assert-FileExists {
         throw "$Filename does not exist"
     }
 }
+
+function Update-DefenderPreferences {
+    Add-MpPreference -ExclusionProcess "c:\k\kubelet.exe"
+
+    if ($global:EnableCsiProxy) {
+        Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+}
 `)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
@@ -44901,7 +44909,8 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
-        
+        Update-DefenderPreferences
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
