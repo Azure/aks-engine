@@ -276,7 +276,7 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; sudo %s; rm %s\"", script, script, script)
 		} else {
 			script = "/opt/azure/containers/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo %s\"", cmd)
+			cmd = fmt.Sprintf("bash -c \"sudo %s\"", script)
 		}
 	} else {
 		script = "c:\\k\\debug\\collect-windows-logs.ps1"
