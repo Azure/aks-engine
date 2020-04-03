@@ -41311,7 +41311,7 @@ echo $(date),$(hostname), endcustomscript >>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww >/opt/azure/provision-ps.log &
 
-exit VALIDATION_ERR
+exit $VALIDATION_ERR
 
 #EOF
 `)
