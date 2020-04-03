@@ -9,7 +9,6 @@
 |ContainerD Runtime for Windows|Experimental|`vlabs`|[kubernetes-hybrid.containerd.json](../../examples/windows/kubernetes-hybrid.containerd.json)|[Description](#windows-containerd)|
 |Custom VNET|Beta|`vlabs`|[kubernetesvnet-azure-cni.json](../../examples/vnet/kubernetesvnet-azure-cni.json)|[Description](#feat-custom-vnet)|
 |Ephemeral OS Disks|Experimental|`vlabs`|[ephmeral-disk.json](../../examples/disks-ephemeral/ephemeral-disks.json)|[Description](#ephemeral-os-disks)|
-|Kata Containers Runtime|Alpha|`vlabs`|[kubernetes-kata-containers.json](../../examples/kubernetes-kata-containers.json)|[Description](#feat-kata-containers)|
 |Managed Disks|Beta|`vlabs`|[kubernetes-vmas.json](../../examples/disks-managed/kubernetes-vmas.json)|[Description](#feat-managed-disks)|
 |Private Cluster|Alpha|`vlabs`|[kubernetes-private-cluster.json](../../examples/kubernetes-config/kubernetes-private-cluster.json)|[Description](#feat-private-cluster)|
 |Shared Image Gallery images|Alpha|`vlabs`|[custom-shared-image.json](../../examples/custom-shared-image.json)|[Description](#feat-shared-image-gallery)|
@@ -361,37 +360,6 @@ E.g.:
       ...
     }
 ]
-```
-
-<a name="feat-kata-containers"></a>
-
-## Kata Containers
-
-You can designate kubernetes agents to use Kata Containers as the
-container runtime by setting:
-
-```json
-"kubernetesConfig": {
-  "containerRuntime": "kata-containers"
-}
-```
-
-You will need to make sure your agents are using a `vmSize` that [supports
-nested virtualization](https://azure.microsoft.com/en-us/blog/nested-virtualization-in-azure/).
-These are the `Dv3` or `Ev3` series nodes.
-
-This should look like:
-
-```json
-"agentPoolProfiles": [
-      {
-        "name": "agentpool1",
-        "count": 3,
-        "vmSize": "Standard_D4s_v3",
-        "availabilityProfile": "AvailabilitySet",
-        "diskSizesGB": [1023]
-      }
-],
 ```
 
 <a name="feat-private-cluster"></a>

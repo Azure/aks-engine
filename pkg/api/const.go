@@ -110,7 +110,7 @@ const (
 // Supported container runtimes
 const (
 	Docker         = "docker"
-	KataContainers = "kata-containers"
+	KataContainers = "kata-containers" // Deprecated
 	Containerd     = "containerd"
 )
 

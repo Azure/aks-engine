@@ -2007,9 +2007,8 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 }
 
 // NeedsContainerd returns whether or not we need the containerd runtime configuration
-// E.g., kata configuration requires containerd config
 func (k *KubernetesConfig) NeedsContainerd() bool {
-	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
+	return k.ContainerRuntime == Containerd
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM

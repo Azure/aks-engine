@@ -469,12 +469,11 @@
             "defaultValue": "docker",
             "allowedValues": [
                 "docker",
-                "kata-containers",
                 "containerd"
             ],
             "type": "String",
             "metadata": {
-                "description": "The container runtime to use (docker|kata-containers|containerd)"
+                "description": "The container runtime to use (docker|containerd)"
             }
         },
         "containerdDownloadURLBase": {

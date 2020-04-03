@@ -73,18 +73,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
 		},
-		"should error when KubernetesConfig has invalid containerd version for kata-containers runtime": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:  KataContainers,
-						ContainerdVersion: "1.0.0",
-					},
-				},
-			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
-		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -95,7 +83,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd),
 		},
 		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
 			properties: &Properties{
@@ -106,7 +94,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd),
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled and enableRBAC disabled": {
 			properties: &Properties{
@@ -1531,7 +1519,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	for _, runtime := range ContainerRuntimeValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = runtime
-		if err := p.validateContainerRuntime(); err != nil {
+		if err := p.validateContainerRuntime(false); err != nil {
 			t.Errorf(
 				"should not error on containerRuntime=\"%s\"",
 				runtime,
@@ -1540,21 +1528,17 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "not-existing"
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(false); err == nil {
 		t.Errorf(
 			"should error on invalid containerRuntime",
 		)
 	}
 
+	// Expect deprecated error on upgrading w/ kata-containers
 	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			OSType: Windows,
-		},
-	}
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(true); err == nil {
 		t.Errorf(
-			"should error on kata-containers for windows clusters",
+			"%s containerRuntime has been deprecated, you will not be able to update this cluster with this version of aks-engine", KataContainers,
 		)
 	}
 
@@ -1564,7 +1548,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 			OSType: Windows,
 		},
 	}
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(false); err == nil {
 		t.Errorf(
 			"should error on containerd for windows clusters",
 		)

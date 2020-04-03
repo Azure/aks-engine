@@ -7281,13 +7281,6 @@ func TestHasContainerd(t *testing.T) {
 			},
 			expected: true,
 		},
-		{
-			name: "kata",
-			k: &KubernetesConfig{
-				ContainerRuntime: KataContainers,
-			},
-			expected: true,
-		},
 	}
 
 	for _, test := range tests {

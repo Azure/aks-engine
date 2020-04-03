@@ -1050,24 +1050,6 @@ func TestContainerRuntime(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
 	}
 
-	mockCS = getMockBaseContainerService("1.10.13")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
-	mockCS.setOrchestratorDefaults(false, false)
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != KataContainers {
-		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, KataContainers)
-	}
-	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
-	}
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
-	}
-
 	for _, containerdVersion := range []string{"1.1.2", "1.1.4", "1.1.5"} {
 
 		mockCS = getMockBaseContainerService("1.10.13")

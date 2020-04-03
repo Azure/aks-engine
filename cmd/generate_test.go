@@ -781,11 +781,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "kata-containers",
-			apiModelPath: "../examples/kubernetes-kata-containers.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "ubuntu distros",
 			apiModelPath: "../examples/kubernetes-non-vhd-distros.json",
 			setArgs:      defaultSet,
