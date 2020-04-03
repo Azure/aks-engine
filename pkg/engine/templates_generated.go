@@ -41272,7 +41272,7 @@ if $FULL_INSTALL_REQUIRED; then
 fi
 {{end}}
 
-# re-enable unattended upgrades
+{{- /* re-enable unattended upgrades */}}
 rm -f /etc/apt/apt.conf.d/99periodic
 
 {{- if not IsAzureStackCloud}}
@@ -42795,8 +42795,6 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    // Disable unattended upgrades at first boot
-    // This file must be removed by the provision script
     APT::Periodic::Update-Package-Lists "0";
     APT::Periodic::Download-Upgradeable-Packages "0";
     APT::Periodic::AutocleanInterval "0";
@@ -43320,8 +43318,6 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    // Disable unattended upgrades at first boot
-    // This file must be removed by the provision script
     APT::Periodic::Update-Package-Lists "0";
     APT::Periodic::Download-Upgradeable-Packages "0";
     APT::Periodic::AutocleanInterval "0";

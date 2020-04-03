@@ -137,8 +137,6 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    // Disable unattended upgrades at first boot
-    // This file must be removed by the provision script
     APT::Periodic::Update-Package-Lists "0";
     APT::Periodic::Download-Upgradeable-Packages "0";
     APT::Periodic::AutocleanInterval "0";
