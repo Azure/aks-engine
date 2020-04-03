@@ -12,12 +12,14 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
@@ -35,16 +37,17 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName           string
-	apiModelPath                string
-	deploymentDirectory         string
-	upgradeVersion              string
-	location                    string
-	kubeconfigPath              string
-	timeoutInMinutes            int
-	cordonDrainTimeoutInMinutes int
-	force                       bool
-	controlPlaneOnly            bool
+	resourceGroupName                        string
+	apiModelPath                             string
+	deploymentDirectory                      string
+	upgradeVersion                           string
+	location                                 string
+	kubeconfigPath                           string
+	timeoutInMinutes                         int
+	cordonDrainTimeoutInMinutes              int
+	force                                    bool
+	controlPlaneOnly                         bool
+	disableClusterInitComponentDuringUpgrade bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -159,6 +162,14 @@ func (uc *upgradeCmd) loadCluster() error {
 	uc.containerService, uc.apiVersion, err = apiloader.LoadContainerServiceFromFile(uc.apiModelPath, true, true, nil)
 	if err != nil {
 		return errors.Wrap(err, "error parsing the api model")
+	}
+
+	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
+	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
+			uc.disableClusterInitComponentDuringUpgrade = true
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(false)
+		}
 	}
 
 	if uc.containerService.Properties.IsAzureStackCloud() {
@@ -296,6 +307,12 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save the new apimodel to reflect the cluster's state.
+	// Restore the original cluster-init component enabled value, if it was disabled during upgrade
+	if uc.disableClusterInitComponentDuringUpgrade {
+		if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(true)
+		}
+	}
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
 			Locale: uc.locale,
