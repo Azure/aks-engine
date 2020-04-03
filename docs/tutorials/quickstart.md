@@ -50,9 +50,9 @@ After the cluster is deployed, the upgrade and [scale][] commands can be used to
 
 ### Gather Information
 
-* The subscription in which you would like to provision the cluster. This is a uuid which can be found with `az account list -o table`.
+* The subscription in which you would like to provision the cluster. This is a UUID which can be found with `az account list -o table`.
 * Proper access rights within the subscription; especially the right to create and assign [service principals][sp] to applications
-* A `dnsPrefix` which forms part of the the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique so pick a random name.
+* A `dnsPrefix` which forms part of the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique so pick a random name.
 * A location to provision the cluster e.g. `westus2`.
 
 ```sh
@@ -118,10 +118,10 @@ $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --set servicePrincipalProfile.clientId="47a62f0b-917c-4def-aa85-9b010455e591" \
     --set servicePrincipalProfile.secret="26054d2b-799b-448e-962a-783d0d6f976b"
 
-WARN[0005] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
-WARN[0005] --resource-group was not specified. Using the DNS prefix from the apimodel as the resource group name: contoso-apple
-INFO[0034] Starting ARM Deployment (contoso-apple-1423145182). This will take some time...
-INFO[0393] Finished ARM Deployment (contoso-apple-1423145182).
+INFO[0000] new api model file has been generated during merge: /tmp/mergedApiModel619868596
+WARN[0002] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
+INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group contoso-apple. This will take some time...
+INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
 ```
 
 `aks-engine` will output Azure Resource Manager (ARM) templates, SSH keys, and a kubeconfig file in `_output/contoso-apple-59769a59` directory:
@@ -182,7 +182,7 @@ $ az group create --name contoso-apple --location westus2
 }
 ```
 
-Once that's done, we need to create a [service principal][sp] for the Kubernetes cluster so it can talk to the any resources that are a part of the same resource group.
+Once that's done, we need to create a [service principal][sp] for the Kubernetes cluster so it can talk to any resources that are a part of the same resource group.
 
 ```console
 $ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple"
@@ -203,7 +203,7 @@ Edit the [simple Kubernetes cluster definition](/examples/kubernetes.json) and f
 
 * `dnsPrefix`: must be a region-unique name and will form part of the hostname (e.g. myprod1, staging, leapingllama) - be unique!
 * `keyData`: must contain the public portion of the SSH key we generated - this will be associated with the `adminUsername` value found in the same section of the cluster definition (e.g. 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABA....')
-* `clientId`: this is the service principal's appId uuid or name from earlier
+* `clientId`: this is the service principal's appId UUID or name from earlier
 * `secret`: this is the service principal's password or randomly-generated password from earlier
 
 Optional: attach to an existing virtual network (VNET). Details [here][custom-vnet]
