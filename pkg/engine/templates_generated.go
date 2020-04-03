@@ -41287,7 +41287,7 @@ if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
         VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL"}}
     else
-        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
+        VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL"}}
     fi
 fi
 retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
