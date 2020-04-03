@@ -40229,6 +40229,25 @@ configAddons() {
 }
 {{end}}
 {{- if HasNSeriesSKU}}
+
+installGPUDriversRun() {
+    # if there's no file under the module folder, means the installation not succeeds
+    # so need to do some cleanup here.
+    NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
+    NVIDIA_DKMS_MODULE_DIR="${NVIDIA_DKMS_DIR}/*azure/x86_64/module"
+    if [ -d "${NVIDIA_DKMS_DIR}" ]; then
+        if [ -z "$(ls -A ${NVIDIA_DKMS_MODULE_DIR})" ]; then
+            echo "the dkms folder exists, but the module does not exists, we need to do the clean up first before retry to install."
+            # we do not use the /usr/local/nvidia/bin/nvidia-uninstall directly, because the 
+            # nvidia-uninstall itself may not exists either in this case
+            rm -rf "${NVIDIA_DKMS_DIR}"
+        fi
+    fi
+    
+    sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
+    exit $?
+}
+
 configGPUDrivers() {
   {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
   {{/* we will manually install nvidia-docker2 */}}
@@ -40249,7 +40268,9 @@ configGPUDrivers() {
   retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
   retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
-  retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  export -f installGPUDriversRun
+  export GPU_DEST GPU_DV
+  retrycmd_if_failure 3 1 600 bash -c installGPUDriversRun || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   echo "${GPU_DEST}/lib64" >/etc/ld.so.conf.d/nvidia.conf
   retrycmd_if_failure 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   umount -l /usr/lib/x86_64-linux-gnu
