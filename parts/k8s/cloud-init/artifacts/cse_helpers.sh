@@ -9,6 +9,8 @@ if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}
 fi
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
+# when you upgrade the GPU driver version, please help check whether the retry installation is gone
+# if yes, please help remove the clean up logic in the installGPUDriversRun (cse_config.sh)
 GPU_DV=418.40.04
 GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
