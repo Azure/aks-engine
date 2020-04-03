@@ -72,6 +72,7 @@ var cseErrorCodes = map[string]int{
 	"ERR_BCC_INSTALL_TIMEOUT":                    168,
 	"ERR_BPFTRACE_BIN_DOWNLOAD_FAIL":             169,
 	"ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL":           170,
+	"ERR_CLUSTER_INIT_FAIL":                      180,
 }
 
 func GetCSEErrorCode(errorType string) int {

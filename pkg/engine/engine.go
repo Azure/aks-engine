@@ -882,7 +882,11 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				templ.Execute(&buffer, component)
 				input = buffer.String()
 			}
-			result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
+			if componentName == common.ClusterInitComponentName {
+				result += getComponentString(input, "/opt/azure/containers", setting.destinationFile)
+			} else {
+				result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
+			}
 		}
 	}
 	return result

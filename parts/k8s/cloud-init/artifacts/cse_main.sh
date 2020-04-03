@@ -235,6 +235,9 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{if IsAzurePolicyAddonEnabled}}
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
   {{end}}
+  {{- if HasClusterInitComponent}}
+  retrycmd_if_failure 20 1 3 kubectl create -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+  {{end}}
 fi
 
 {{- if not IsVHDDistroForAllNodes}}

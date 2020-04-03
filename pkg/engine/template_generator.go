@@ -314,6 +314,10 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
 		},
+		"HasClusterInitComponent": func() bool {
+			_, enabled := cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(common.ClusterInitComponentName)
+			return enabled
+		},
 		"HasCosmosEtcd": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd()
 		},
