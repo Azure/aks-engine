@@ -27100,7 +27100,7 @@ data:
     # - geneve
     # - gre
     # - stt
-    #tunnelType: vxlan
+    tunnelType: {{ContainerConfig "tunnelType"}}
 
     # Default MTU to use for the host gateway interface and the network interface of each Pod. If
     # omitted, antrea-agent will default this value to 1450 to accommodate for tunnel encapsulate
@@ -27121,7 +27121,7 @@ data:
     # hybrid: noEncap if worker Nodes on same subnet, otherwise encap.
     # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod IPAM and connectivity to primary CNI.
     #
-    #trafficEncapMode: encap
+    trafficEncapMode: {{ContainerConfig "trafficEncapMode"}}
   antrea-cni.conf: |
     {
         "cniVersion":"0.3.0",
@@ -27386,6 +27386,7 @@ spec:
         - install_cni
         image: {{ContainerImage "install-cni"}}
         name: install-cni
+        command: [{{ContainerConfig "installCniCmd"}}]
         securityContext:
           capabilities:
             add:
@@ -37231,6 +37232,7 @@ configureCNI() {
   fi
 {{end}}
 }
+<<<<<<< HEAD
 configureAzureCNI() {
     if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
         mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
@@ -37246,6 +37248,19 @@ configureAzureCNI() {
         sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
         sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+=======
+configureCNIIPTables() {
+  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
+    mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
+    chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
+    if [[ ${NETWORK_POLICY} == "calico" ]]; then
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins += [{"type": "antrea"}]') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    elif [[ ${NETWORK_POLICY} == "" || ${NETWORK_POLICY} == "none" ]] && [[ ${NETWORK_MODE} == "transparent" ]]; then
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+>>>>>>> Enable Antrea in NetworkPolicyOnly mode with Azure CNI
     fi
     /sbin/ebtables -t nat --list
     fi
@@ -37333,9 +37348,15 @@ ensureKubelet() {
   done
   {{end}}
   {{if HasAntreaNetworkPolicy}}
-  while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
-    sleep 3
-  done
+  if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+    while ! $(grep -sq "antrea" $CNI_CONFIG_DIR/10-azure.conflist); do
+      sleep 3
+    done
+  else
+    while [ ! -f $CNI_CONFIG_DIR/10-antrea.conf ]; do
+      sleep 3
+    done
+  fi
   {{end}}
   {{if HasFlannelNetworkPlugin}}
   while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do

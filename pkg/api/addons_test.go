@@ -4028,21 +4028,81 @@ func TestSetAddonsConfig(t *testing.T) {
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
+							NetworkPlugin: NetworkPluginAntrea,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr":      DefaultKubernetesServiceCIDR,
+										"tunnelType":       common.AntreaDefaultTunnelType,
+										"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+										"installCniCmd":    common.AntreaDefaultInstallCniCmd,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AntreaAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"serviceCidr": DefaultKubernetesServiceCIDR,
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+						"tunnelType":       common.AntreaDefaultTunnelType,
+						"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+						"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 					},
 				},
-			}, "1.15.4"),
+			}, "1.15.4")),
+		},
+		{
+			name: "antrea addon enabled with azure",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPolicy: NetworkPolicyAntrea,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr":      DefaultKubernetesServiceCIDR,
+										"tunnelType":       common.AntreaDefaultTunnelType,
+										"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"tunnelType":       common.AntreaDefaultTunnelType,
+						"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
+						"installCniCmd":    common.AntreaInstallCniChainCmd,
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+					},
+				},
+			}, "1.15.4")),
 		},
 		{
 			name: "addons with IPv6 single stack",
@@ -4438,6 +4498,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.PodSecurityPolicyAddonName,
 				common.AADAdminGroupAddonName,
 				common.SecretsStoreCSIDriverAddonName,
+				common.AntreaAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {

@@ -287,8 +287,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name: common.IPMASQAgentAddonName,
 		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled &&
-			(o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
-				o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea)),
+			o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
+			o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.IPMASQAgentAddonName,
@@ -309,8 +309,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultAzureCNINetworkMonitorAddonsConfig := KubernetesAddon{
-		Name:    common.AzureCNINetworkMonitorAddonName,
-		Enabled: to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico),
+		Name: common.AzureCNINetworkMonitorAddonName,
+		Enabled: to.BoolPtr(o.IsAzureCNI() &&
+			o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico &&
+			o.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.AzureCNINetworkMonitorAddonName,
@@ -397,9 +399,12 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultsAntreaDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.AntreaAddonName,
-		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea),
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea),
 		Config: map[string]string{
-			"serviceCidr": o.KubernetesConfig.ServiceCIDR,
+			"serviceCidr":      o.KubernetesConfig.ServiceCIDR,
+			"tunnelType":       common.AntreaDefaultTunnelType,
+			"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+			"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -419,6 +424,13 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
 			},
 		},
+	}
+
+	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.AntreaAddonName) != -1 {
+		// Update cni install command when network plugin is set to azure cni
+		if o.KubernetesConfig.IsAddonEnabled(common.AntreaAddonName) && o.IsAzureCNI() {
+			defaultsAntreaDaemonSetAddonsConfig.Config["installCniCmd"] = common.AntreaInstallCniChainCmd
+		}
 	}
 
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{

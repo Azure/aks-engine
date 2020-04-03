@@ -99,9 +99,11 @@ Once the template has been successfully deployed, following the [deploy the demo
 
 For the latest documentation on Cilium (including BPF and XDP reference guides), please refer to [this](http://cilium.readthedocs.io/en/latest/)
 
+
 ## Antrea
 
 The kubernetes-antrea deployment template enables Antrea networking and policies for the AKS Engine cluster via `"networkPolicy": "antrea"` or `"networkPlugin": "antrea"` being present inside the `kubernetesConfig`.
+
 
 ```json
   "properties": {
@@ -109,6 +111,29 @@ The kubernetes-antrea deployment template enables Antrea networking and policies
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPolicy": "antrea"
+      }
+```
+
+Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antrea will enforce Network Policies using OVS and Azure CNI will take care of Networking. The kubernetes-antrea deployment template enables Azure Networking and Antrea Network Policies for the AKS Engine via `"networkPolicy": "antrea"` and `"networkPlugin": "azure"` being present inside the `kubernetesConfig`. For more details regarding Antrea NetworkPolicyOnly mode, please refer to [this]() (Link TODO).
+
+
+```json
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "networkPlugin": "azure",
+        "networkPolicy": "antrea",
+        "addons": [
+          {
+            "name": "antrea",
+            "enabled": true,
+            "config": {
+              "trafficEncapMode": "networkPolicyOnly"
+            }
+          }
+        ]
       }
 ```
 
