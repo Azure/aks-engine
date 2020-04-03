@@ -16,17 +16,17 @@ systemctlEnableAndStart() {
     return 1
   fi
 }
-configureAdminUser() {
+configureAdminUser(){
   chage -E -1 -I -1 -m 0 -M 99999 "${ADMINUSER}"
   chage -l "${ADMINUSER}"
 }
-configureEtcdUser() {
+configureEtcdUser(){
   useradd -U etcd
   chage -E -1 -I -1 -m 0 -M 99999 etcd
   chage -l etcd
   id etcd
 }
-configureSecrets() {
+configureSecrets(){
   APISERVER_PRIVATE_KEY_PATH="/etc/kubernetes/certs/apiserver.key"
   touch "${APISERVER_PRIVATE_KEY_PATH}"
   CA_PRIVATE_KEY_PATH="/etc/kubernetes/certs/ca.key"
@@ -197,9 +197,9 @@ EOF
 }
 
 installNetworkPlugin() {
-  {{- if IsAzureCNI}}
+{{- if IsAzureCNI}}
   installAzureCNI
-  {{end}}
+{{end}}
   installCNI
   rm -rf $CNI_DOWNLOADS_DIR &
 }
@@ -236,13 +236,13 @@ configureCNI() {
   systemctl restart sys-fs-bpf.mount
   REBOOTREQUIRED=true
   {{end}}
-  {{- if IsAzureStackCloud}}
+{{- if IsAzureStackCloud}}
   if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
     {{/* set environment to mas when using Azure CNI on Azure Stack */}}
     {{/* shellcheck disable=SC2002,SC2005 */}}
     echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipam.environment = "mas"') >"$CNI_CONFIG_DIR/10-azure.conflist"
   fi
-  {{end}}
+{{end}}
 }
 configureCNIIPTables() {
   if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
@@ -386,7 +386,7 @@ ensureK8sControlPlane() {
   if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd_if_failure 120 5 25 $KUBECTL cluster-info 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {

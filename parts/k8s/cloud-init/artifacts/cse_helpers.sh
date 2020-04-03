@@ -54,10 +54,7 @@ retrycmd_if_failure() {
   echo Executed \"$@\" $i times
 }
 retrycmd_if_failure_no_stats() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3
-  shift && shift && shift
+  retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     timeout $timeout ${@} && break ||
       if [ $i -eq $retries ]; then
@@ -68,10 +65,7 @@ retrycmd_if_failure_no_stats() {
   done
 }
 retrycmd_get_tarball() {
-  tar_retries=$1
-  wait_sleep=$2
-  tarball=$3
-  url=$4
+  tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
   echo "${tar_retries} retries"
   for i in $(seq 1 $tar_retries); do
     tar -tzf $tarball && break ||
@@ -84,11 +78,7 @@ retrycmd_get_tarball() {
   done
 }
 retrycmd_get_executable() {
-  retries=$1
-  wait_sleep=$2
-  filepath=$3
-  url=$4
-  validation_args=$5
+  retries=$1; wait_sleep=$2; filepath=$3; url=$4; validation_args=$5
   echo "${retries} retries"
   for i in $(seq 1 $retries); do
     $filepath $validation_args && break ||
@@ -102,9 +92,7 @@ retrycmd_get_executable() {
   done
 }
 wait_for_file() {
-  retries=$1
-  wait_sleep=$2
-  filepath=$3
+  retries=$1; wait_sleep=$2; filepath=$3
   paved=/opt/azure/cloud-init-files.paved
   grep -Fq "${filepath}" $paved && return 0
   for i in $(seq 1 $retries); do
@@ -145,10 +133,7 @@ apt_get_update() {
   wait_for_apt_locks
 }
 apt_get_install() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3
-  shift && shift && shift
+  retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     wait_for_apt_locks
     export DEBIAN_FRONTEND=noninteractive
@@ -165,9 +150,7 @@ apt_get_install() {
   wait_for_apt_locks
 }
 apt_get_purge() {
-  retries=20
-  wait_sleep=30
-  timeout=120
+  retries=20; wait_sleep=30; timeout=120
   for package in $@; do
     if apt list --installed | grep $package; then
       for i in $(seq 1 $retries); do
@@ -195,9 +178,9 @@ apt_get_dist_upgrade() {
     dpkg --configure -a --force-confdef
     apt-get -f -y install
     apt-mark showhold
-    ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") &&
-      cat $apt_dist_upgrade_output && break ||
-      cat $apt_dist_upgrade_output
+    ! (apt-get dist-upgrade -y 2>&1 | tee $apt_dist_upgrade_output | grep -E "^([WE]:.*)|([eE]rr.*)$") && \
+    cat $apt_dist_upgrade_output && break || \
+    cat $apt_dist_upgrade_output
     if [ $i -eq $retries ]; then
       return 1
     else
@@ -208,9 +191,7 @@ apt_get_dist_upgrade() {
   wait_for_apt_locks
 }
 systemctl_restart() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3 svcname=$4
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do
     timeout $timeout systemctl daemon-reload
     timeout $timeout systemctl restart $svcname && break ||
@@ -222,9 +203,7 @@ systemctl_restart() {
   done
 }
 systemctl_stop() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3 svcname=$4
+  retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
   for i in $(seq 1 $retries); do
     timeout $timeout systemctl daemon-reload
     timeout $timeout systemctl stop $svcname && break ||
@@ -236,9 +215,7 @@ systemctl_stop() {
   done
 }
 sysctl_reload() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3
+  retries=$1; wait_sleep=$2; timeout=$3
   for i in $(seq 1 $retries); do
     timeout $timeout sysctl --system && break ||
       if [ $i -eq $retries ]; then
