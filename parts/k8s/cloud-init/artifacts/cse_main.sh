@@ -55,14 +55,20 @@ fi
 
 time_metric "ConfigureAdminUser" configureAdminUser
 
-{{- if not NeedsContainerd}}
+{{- if HasVHDDistroNodes}}
+    {{- if not NeedsContainerd}}
 time_metric "CleanupContainerd" cleanUpContainerd
-{{end}}
-
+    {{end}}
+    {{- if HasNSeriesSKU}}
 if [[ "${GPU_NODE}" != "true" ]]; then
     time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 fi
+    {{else}}
+time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
+    {{end}}
+{{end}}
 
+{{- if HasVHDDistroNodes}}
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
@@ -75,7 +81,11 @@ else
     fi
     FULL_INSTALL_REQUIRED=true
 fi
+{{else}}
+FULL_INSTALL_REQUIRED=true
+{{end}}
 
+{{- if not IsVHDDistroForAllNodes}}
 if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTALL_REQUIRED" = "true" ]; then
     time_metric "InstallDeps" installDeps
     if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
@@ -90,6 +100,7 @@ if [[ ( $OS == $UBUNTU_OS_NAME || $OS == $DEBIAN_OS_NAME ) ]] && [ "$FULL_INSTAL
 else
     echo "Golden image; skipping dependencies installation"
 fi
+{{end}}
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
     if apt list --installed | grep 'ntp'; then
@@ -101,14 +112,16 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
     time_metric "EnsureAuditD" ensureAuditD
 fi
 
+{{- if not IsVHDDistroForAllNodes}}
 if [[ "$FULL_INSTALL_REQUIRED" = "true" ]]; then
     time_metric "InstallBpftrace" installBpftrace
 fi
-
-time_metric "InstallContainerRuntime" installContainerRuntime
+{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
+{{else}}
+time_metric "installMoby" installMoby
 {{end}}
 
 if [[ -n "${MASTER_NODE}" ]] && [[ -z "${COSMOS_URI}" ]]; then
@@ -228,6 +241,7 @@ if [[ -n "${MASTER_NODE}" ]]; then
     {{end}}
 fi
 
+{{- if not IsVHDDistroForAllNodes}}
 if $FULL_INSTALL_REQUIRED; then
     if [[ $OS == $UBUNTU_OS_NAME ]]; then
         {{/* mitigation for bug https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1676635 */}}
@@ -235,6 +249,7 @@ if $FULL_INSTALL_REQUIRED; then
         sed -i "13i\echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind\n" /etc/rc.local
     fi
 fi
+{{end}}
 
 {{- if not IsAzureStackCloud}}
 if [[ $OS == $UBUNTU_OS_NAME ]]; then

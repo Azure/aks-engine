@@ -630,6 +630,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			return fmt.Sprintf("\"%s\"", cloudSpecConfig.OSImageConfig[profile.Distro].ImageVersion)
 		},
+		"HasVHDDistroNodes": func() bool {
+			return cs.Properties.HasVHDDistroNodes()
+		},
+		"IsVHDDistroForAllNodes": func() bool {
+			return cs.Properties.IsVHDDistroForAllNodes()
+		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
 		},

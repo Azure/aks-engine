@@ -182,6 +182,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetPrivateAzureRegistryServer string
 		expectedGetSysctlDConfigKeyVals       string
 		expectedGetCSEErrorCodeVals           []int
+		expectedHasVHDDistroNodes             bool
+		expectedIsVHDDistroForAllNodes        bool
 	}{
 		{
 			name: "1.15 release",
@@ -281,6 +283,41 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
+			name: "1.17 release w/ VHD distro",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							Distro:              api.AKSUbuntu1604,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedHasVHDDistroNodes:            true,
+			expectedIsVHDDistroForAllNodes:       true,
+		},
+		{
 			name: "custom search domain",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
@@ -369,6 +406,13 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 							CustomKubeControllerManagerImage: "example.azurecr.io/kube-controller-manager-amd64:tag",
 							CustomKubeSchedulerImage:         "example.azurecr.io/kube-scheduler-amd64:tag",
 							KubernetesImageBaseType:          common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
 						},
 					},
 				},
@@ -755,6 +799,16 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != dhcpV6ConfigCSEScriptFilepath {
 				t.Errorf("expected funcMap invocation of GetDHCPv6ConfigCSEScriptFilepath to return %s, instead got %s", dhcpV6ConfigCSEScriptFilepath, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasVHDDistroNodes"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasVHDDistroNodes {
+				t.Errorf("expected funcMap invocation of HasVHDDistroNodes to return %t, instead got %t", c.expectedHasVHDDistroNodes, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsVHDDistroForAllNodes"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsVHDDistroForAllNodes {
+				t.Errorf("expected funcMap invocation of IsVHDDistroForAllNodes to return %t, instead got %t", c.expectedIsVHDDistroForAllNodes, ret[0].Interface())
 			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])

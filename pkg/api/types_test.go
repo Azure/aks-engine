@@ -2554,6 +2554,171 @@ func TestHasUbuntuDistroNodes(t *testing.T) {
 	}
 }
 
+func TestHasVHDDistroNodes(t *testing.T) {
+	cases := []struct {
+		p        Properties
+		expected bool
+	}{
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804Gen2,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+					{
+						Count:  1,
+						Distro: Ubuntu1804,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1604,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: AKSUbuntu1604,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: AKSUbuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
+					Distro: Ubuntu1804,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Ubuntu,
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		if c.p.HasVHDDistroNodes() != c.expected {
+			t.Fatalf("expected HasVHDDistroNodes() to return %t but instead returned %t", c.expected, c.p.HasVHDDistroNodes())
+		}
+	}
+}
+
 func TestHasUbuntu1604DistroNodes(t *testing.T) {
 	cases := []struct {
 		p        Properties
