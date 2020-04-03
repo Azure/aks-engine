@@ -40581,10 +40581,7 @@ aptmarkWALinuxAgent() {
 }
 
 retrycmd_if_failure() {
-  retries=$1
-  wait_sleep=$2
-  timeout=$3
-  shift && shift && shift
+  retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     timeout $timeout ${@} && break ||
       if [ $i -eq $retries ]; then
@@ -40668,8 +40665,7 @@ apt_get_update() {
       cat $apt_update_output
     if [ $i -eq $retries ]; then
       return 1
-    else
-      sleep 5
+    else sleep 5
     fi
   done
   echo Executed apt-get update $i times
@@ -40726,8 +40722,7 @@ apt_get_dist_upgrade() {
     cat $apt_dist_upgrade_output
     if [ $i -eq $retries ]; then
       return 1
-    else
-      sleep 5
+    else sleep 5
     fi
   done
   echo Executed apt-get dist-upgrade $i times
@@ -41086,16 +41081,16 @@ fi
 time_metric "ConfigureAdminUser" configureAdminUser
 
 {{- if HasVHDDistroNodes}}
-{{- if not NeedsContainerd}}
+  {{- if not NeedsContainerd}}
 time_metric "CleanupContainerd" cleanUpContainerd
-{{end}}
-{{- if HasNSeriesSKU}}
+  {{end}}
+  {{- if HasNSeriesSKU}}
 if [[ ${GPU_NODE} != "true" ]]; then
   time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 fi
-{{else}}
+  {{else}}
 time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
-{{end}}
+  {{end}}
 {{end}}
 
 {{- if HasVHDDistroNodes}}

@@ -56,16 +56,16 @@ fi
 time_metric "ConfigureAdminUser" configureAdminUser
 
 {{- if HasVHDDistroNodes}}
-{{- if not NeedsContainerd}}
+  {{- if not NeedsContainerd}}
 time_metric "CleanupContainerd" cleanUpContainerd
-{{end}}
-{{- if HasNSeriesSKU}}
+  {{end}}
+  {{- if HasNSeriesSKU}}
 if [[ ${GPU_NODE} != "true" ]]; then
   time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
 fi
-{{else}}
+  {{else}}
 time_metric "CleanupGPUDrivers" cleanUpGPUDrivers
-{{end}}
+  {{end}}
 {{end}}
 
 {{- if HasVHDDistroNodes}}
