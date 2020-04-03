@@ -174,6 +174,14 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", func() {
 	Describe("regardless of agent pool type", func() {
+		It("should check for cluster-init pod", func() {
+			if cfg.ClusterInitPodName != "" {
+				By(fmt.Sprintf("Ensuring that cluster-init Pod \"%s\" is Running", cfg.ClusterInitPodName))
+				running, err := pod.WaitOnSuccesses(cfg.ClusterInitPodName, "default", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+			}
+		})
 		It("should validate host OS DNS", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")

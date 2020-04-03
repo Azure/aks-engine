@@ -36,6 +36,7 @@ type Config struct {
 	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
+	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string

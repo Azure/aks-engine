@@ -4,7 +4,8 @@
 		"REGION_OPTIONS": "eastus,westeurope,westus2",
 		"GINKGO_SKIP": "should report all nodes in a Ready state",
 		"TEST_PVC": true,
-		"LB_TEST_TIMEOUT": "10m"
+		"LB_TEST_TIMEOUT": "10m",
+		"CLUSTER_INIT_POD_NAME": "aks-engine-cluster-init"
 	},
 	"options": {
 		"allowedOrchestratorVersions": [
@@ -57,6 +58,13 @@
 						{
 							"name": "rescheduler",
 							"enabled": true
+						}
+					],
+					"components": [
+						{
+							"name": "cluster-init",
+							"enabled": true,
+							"data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGFrcy1lbmdpbmUtY2x1c3Rlci1pbml0CnNwZWM6CiAgY29udGFpbmVyczoKICAtIG5hbWU6IGFrcy1lbmdpbmUtY2x1c3Rlci1pbml0CiAgICBpbWFnZTogYnVzeWJveDoxLjMxLjEKICAgIGFyZ3M6CiAgICAtIC9iaW4vc2gKICAgIC0gLWMKICAgIC0gd2hpbGUgdHJ1ZTsgZG8gc2xlZXAgNjAwOyBkb25lCiAgbm9kZVNlbGVjdG9yOgogICAgYmV0YS5rdWJlcm5ldGVzLmlvL29zOiBsaW51eAo="
 						}
 					]
 				}

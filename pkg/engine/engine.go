@@ -865,7 +865,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				if err != nil {
 					return ""
 				}
-			} else {
+			} else if setting.sourceFile != "" {
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
 				templ := template.New("component resolver template").Funcs(getComponentFuncMap(component, cs))
