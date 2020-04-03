@@ -12,7 +12,7 @@ assignRootPW() {
 }
 
 assignFilePermissions() {
-    FILES="
+  FILES="
     auth.log
     alternatives.log
     cloud-init.log
@@ -34,21 +34,21 @@ assignFilePermissions() {
     blobfuse-flexvol-installer.log
     landscape/sysinfo.log
     "
-    for FILE in ${FILES}; do
-        FILEPATH="/var/log/${FILE}"
-        DIR=$(dirname "${FILEPATH}")
-        mkdir -p ${DIR} || exit 112
-        touch ${FILEPATH} || exit 112
-        chmod 640 ${FILEPATH} || exit 112
-    done
-    find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
-    chmod 600 /etc/passwd- || exit 112
-    chmod 600 /etc/shadow- || exit 112
-    chmod 600 /etc/group- || exit 112
-    chmod 644 /etc/default/grub || exit 112
-    for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
-      chmod 0600 $filepath || exit 112
-    done
+  for FILE in ${FILES}; do
+    FILEPATH="/var/log/${FILE}"
+    DIR=$(dirname "${FILEPATH}")
+    mkdir -p ${DIR} || exit 112
+    touch ${FILEPATH} || exit 112
+    chmod 640 ${FILEPATH} || exit 112
+  done
+  find /var/log -type f -perm '/o+r' -exec chmod 'g-wx,o-rwx' {} \;
+  chmod 600 /etc/passwd- || exit 112
+  chmod 600 /etc/shadow- || exit 112
+  chmod 600 /etc/group- || exit 112
+  chmod 644 /etc/default/grub || exit 112
+  for filepath in /etc/crontab /etc/cron.hourly /etc/cron.daily /etc/cron.weekly /etc/cron.monthly /etc/cron.d; do
+    chmod 0600 $filepath || exit 112
+  done
 }
 
 setPWExpiration() {
@@ -58,11 +58,11 @@ setPWExpiration() {
   grep 'PASS_MIN_DAYS' /etc/login.defs && exit 115
   sed -i "s|INACTIVE=||g" /etc/default/useradd || exit 115
   grep 'INACTIVE=' /etc/default/useradd && exit 115
-  echo 'PASS_MAX_DAYS 90' >> /etc/login.defs || exit 115
+  echo 'PASS_MAX_DAYS 90' >>/etc/login.defs || exit 115
   grep 'PASS_MAX_DAYS 90' /etc/login.defs || exit 115
-  echo 'PASS_MIN_DAYS 7' >> /etc/login.defs || exit 115
+  echo 'PASS_MIN_DAYS 7' >>/etc/login.defs || exit 115
   grep 'PASS_MIN_DAYS 7' /etc/login.defs || exit 115
-  echo 'INACTIVE=30' >> /etc/default/useradd || exit 115
+  echo 'INACTIVE=30' >>/etc/default/useradd || exit 115
   grep 'INACTIVE=30' /etc/default/useradd || exit 115
 }
 
