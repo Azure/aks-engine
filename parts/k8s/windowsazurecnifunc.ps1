@@ -32,11 +32,12 @@ Install-VnetPlugins
     mkdir $AzureCNIConfDir
 
     # Download Azure VNET CNI plugins.
-    # Mirror from https://github.com/Azure/azure-container-networking/releases
+    # nuget releases mirrored to https://kubernetesartifacts.azureedge.net/azure-cni
     $zipfile =  [Io.path]::Combine("$AzureCNIDir", "azure-vnet.zip")
     DownloadFileOverHttp -Url $VNetCNIPluginsURL -DestinationPath $zipfile
     Expand-Archive -path $zipfile -DestinationPath $AzureCNIBinDir
     del $zipfile
+    Get-ChildItem -Path "$AzureCNIBinDir/*.exe","$AzureCNIBinDir/*.conf*" -Recurse | Move-Item -Destination "$AzureCNIBinDir"
 
     # Windows does not need a separate CNI loopback plugin because the Windows
     # kernel automatically creates a loopback interface for each network namespace.
