@@ -51,7 +51,7 @@ const (
 	ScheduledMaintenanceManagerImageReference         string = "quay.io/awesomenix/drainsafe-manager:latest"
 	nvidiaDevicePluginImageReference                  string = "k8s-device-plugin:1.11"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
-	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.6"
+	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
 	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.3"
 	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.9"
