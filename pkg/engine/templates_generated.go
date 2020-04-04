@@ -40563,7 +40563,7 @@ DEBIAN_OS_NAME="DEBIAN"
 if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
-KUBECTL=/usr/local/bin/kubectl
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 DOCKER=/usr/bin/docker
 export GPU_DV=418.40.04
 export GPU_DEST=/usr/local/nvidia
@@ -41269,8 +41269,8 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd_if_failure 120 5 30 kubectl apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
-    retrycmd_if_failure 120 5 30 kubectl apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd_if_failure 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd_if_failure 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
 {{end}}
 fi

@@ -237,8 +237,8 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd_if_failure 120 5 30 kubectl apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
-    retrycmd_if_failure 120 5 30 kubectl apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd_if_failure 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd_if_failure 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
 {{end}}
 fi

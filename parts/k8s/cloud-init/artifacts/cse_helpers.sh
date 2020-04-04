@@ -7,7 +7,7 @@ DEBIAN_OS_NAME="DEBIAN"
 if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
-KUBECTL=/usr/local/bin/kubectl
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 DOCKER=/usr/bin/docker
 export GPU_DV=418.40.04
 export GPU_DEST=/usr/local/nvidia
