@@ -36731,21 +36731,20 @@ configAddons() {
 {{if HasNSeriesSKU}}
 
 installGPUDriversRun() {
-    # if there's no file under the module folder, means the installation not succeeds
-    # so need to do some cleanup here.
-    NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
-    NVIDIA_DKMS_MODULE_DIR="${NVIDIA_DKMS_DIR}/*azure/x86_64/module"
-    if [ -d "${NVIDIA_DKMS_DIR}" ]; then
-        if [ -z "$(ls -A ${NVIDIA_DKMS_MODULE_DIR})" ]; then
-            echo "the dkms folder exists, but the module does not exists, we need to do the clean up first before retry to install."
-            # we do not use the /usr/local/nvidia/bin/nvidia-uninstall directly, because the 
-            # nvidia-uninstall itself may not exists either in this case
-            rm -rf "${NVIDIA_DKMS_DIR}"
-        fi
-    fi
-    
-    sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
-    exit $?
+{{- /* there is no file under the module folder, the installation failed, so clean up the dirty directory
+when you upgrade the GPU driver version, please help check whether the retry installation issue is gone,
+if yes please help remove the clean up logic here too */}}
+NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
+NVIDIA_DKMS_MODULE_DIR="${NVIDIA_DKMS_DIR}/*azure/x86_64/module"
+if [ -d "${NVIDIA_DKMS_DIR}" ]; then
+if [ -z "$(ls -A ${NVIDIA_DKMS_MODULE_DIR})" ]; then
+echo "the dkms folder exists, but the module does not exists, we need to do the clean up first before retry to install."
+{{- /* we do not use the /usr/local/nvidia/bin/nvidia-uninstall directly, because the nvidia-uninstall itself may not exists too */}}
+rm -rf "${NVIDIA_DKMS_DIR}"
+fi
+fi
+sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
+exit $?
 }
 
 configGPUDrivers() {
