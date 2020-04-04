@@ -41269,9 +41269,14 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd_if_failure 120 1 3 kubectl create -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    {{- /* TODO figure out how to check for these errors:
+          Error from server (Forbidden): error when creating "/opt/azure/containers/cluster-init.yaml": pods <pod name> is forbidden: no providers available to validate pod request
+          Until then we sleep for 30 seconds to give the apiserver time to warm up */}}
+    sleep 30
+    retrycmd_if_failure 120 5 30 kubectl create -f /opt/azure/containers/cluster-init.yaml --dry-run
+    retrycmd_if_failure 120 5 30 kubectl create -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
-  {{end}}
+{{end}}
 fi
 
 {{- if not IsVHDDistroForAllNodes}}

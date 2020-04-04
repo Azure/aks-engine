@@ -181,6 +181,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 			}
+			if cfg.ClusterInitJobName != "" {
+				ready, err := job.WaitOnSucceeded(cfg.ClusterInitJobName, "default", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			}
 		})
 		It("should validate host OS DNS", func() {
 			if cfg.BlockSSHPort {

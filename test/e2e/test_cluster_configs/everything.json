@@ -5,7 +5,8 @@
 		"GINKGO_SKIP": "should report all nodes in a Ready state",
 		"TEST_PVC": true,
 		"LB_TEST_TIMEOUT": "10m",
-		"CLUSTER_INIT_POD_NAME": "aks-engine-cluster-init"
+		"CLUSTER_INIT_POD_NAME": "aks-engine-pod-init",
+		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init"
 	},
 	"options": {
 		"allowedOrchestratorVersions": [
@@ -64,7 +65,7 @@
 						{
 							"name": "cluster-init",
 							"enabled": true,
-							"data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGFrcy1lbmdpbmUtY2x1c3Rlci1pbml0CnNwZWM6CiAgY29udGFpbmVyczoKICAtIG5hbWU6IGFrcy1lbmdpbmUtY2x1c3Rlci1pbml0CiAgICBpbWFnZTogYnVzeWJveDoxLjMxLjEKICAgIGFyZ3M6CiAgICAtIC9iaW4vc2gKICAgIC0gLWMKICAgIC0gd2hpbGUgdHJ1ZTsgZG8gc2xlZXAgNjAwOyBkb25lCiAgbm9kZVNlbGVjdG9yOgogICAgYmV0YS5rdWJlcm5ldGVzLmlvL29zOiBsaW51eAo="
+							"data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGFrcy1lbmdpbmUtcG9kLWluaXQKc3BlYzoKICBjb250YWluZXJzOgogIC0gbmFtZTogYWtzLWVuZ2luZS1wb2QtaW5pdAogICAgaW1hZ2U6IGJ1c3lib3g6MS4zMS4xCiAgICBhcmdzOgogICAgLSAvYmluL3NoCiAgICAtIC1jCiAgICAtIHdoaWxlIHRydWU7IGRvIHNsZWVwIDYwMDsgZG9uZQogIG5vZGVTZWxlY3RvcjoKICAgIGJldGEua3ViZXJuZXRlcy5pby9vczogbGludXgKLS0tCmFwaVZlcnNpb246IGJhdGNoL3YxCmtpbmQ6IEpvYgptZXRhZGF0YToKICBuYW1lOiBha3MtZW5naW5lLWpvYi1pbml0CnNwZWM6CiAgdGVtcGxhdGU6CiAgICBzcGVjOgogICAgICBjb250YWluZXJzOgogICAgICAtIGltYWdlOiBidXN5Ym94OjEuMzEuMQogICAgICAgIG5hbWU6IGJ1c3lib3gtYWdlbnQKICAgICAgICBjb21tYW5kOiBbJ3NoJywgJy1jJywgJ1sgJChlY2hvICJIZWxsbywgV29ybGQhIiB8IHNoYTI1NnN1bSB8IGN1dCAtZCIgIiAtZjEpID0gImM5OGMyNGI2NzdlZmY0NDg2MGFmZWE2ZjQ5M2JiYWVjNWJiMWM0Y2JiMjA5YzZmYzJiYmI0N2Y2NmZmMmFkMzEiIF0nXQogICAgICByZXN0YXJ0UG9saWN5OiBOZXZlcgogICAgICBub2RlU2VsZWN0b3I6CiAgICAgICAgYmV0YS5rdWJlcm5ldGVzLmlvL29zOiBsaW51eAogIGJhY2tvZmZMaW1pdDogMAo="
 						}
 					]
 				}

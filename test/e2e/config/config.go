@@ -37,6 +37,7 @@ type Config struct {
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
 	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
+	ClusterInitJobName  string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
