@@ -96,6 +96,42 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 		}
 	}
 
+	// Honor custom{component}Image fields
+	useHyperkube := !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+	for _, component := range defaultComponents {
+		if i := getComponentsIndexByName(kubernetesConfig.Components, component.Name); i > -1 {
+			var customComponentImage string
+			switch component.Name {
+			case common.APIServerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeAPIServerImage
+				}
+			case common.ControllerManagerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeControllerManagerImage
+				}
+			case common.CloudControllerManagerComponentName:
+				customComponentImage = kubernetesConfig.CustomCcmImage
+			case common.SchedulerComponentName:
+				if useHyperkube {
+					customComponentImage = kubernetesConfig.CustomHyperkubeImage
+				} else {
+					customComponentImage = kubernetesConfig.CustomKubeSchedulerImage
+				}
+			}
+
+			if customComponentImage != "" {
+				// Since there is only one container for all Kubernetes components,
+				// it is safe to access index 0 of the component's containers
+				kubernetesConfig.Components[i].Containers[0].Image = customComponentImage
+			}
+		}
+	}
+
 	for _, component := range defaultComponents {
 		synthesizeComponentsConfig(kubernetesConfig.Components, component, isUpgrade)
 	}
@@ -163,9 +199,12 @@ func assignDefaultComponentVals(component, defaultComponent KubernetesComponent,
 			}
 		}
 	}
+	if component.Config == nil {
+		component.Config = make(map[string]string)
+	}
 	for key, val := range defaultComponent.Config {
-		if component.Config == nil {
-			component.Config = make(map[string]string)
+		if key == "command" && isUpgrade {
+			component.Config[key] = val
 		}
 		if v, ok := component.Config[key]; !ok || v == "" {
 			component.Config[key] = val
@@ -213,25 +252,15 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	if kubernetesConfig.KubernetesImageBase != "" {
 		kubernetesImageBase = kubernetesConfig.KubernetesImageBase
 	}
-	if cs.Properties.IsAzureStackCloud() {
-		kubernetesImageBase = cs.GetCloudSpecConfig().KubernetesSpecConfig.KubernetesImageBase
-	}
 	k8sComponents := GetK8sComponentsByVersionMap(kubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
 	hyperkubeImageBase := kubernetesImageBase
 	hyperkubeImage := hyperkubeImageBase + k8sComponents[common.Hyperkube]
 	if cs.Properties.IsAzureStackCloud() {
 		hyperkubeImage = hyperkubeImage + common.AzureStackSuffix
 	}
-	if kubernetesConfig.CustomHyperkubeImage != "" {
-		hyperkubeImage = kubernetesConfig.CustomHyperkubeImage
-	}
 	controllerManagerBase := kubernetesImageBase
 	if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 		controllerManagerBase = kubernetesConfig.MCRKubernetesImageBase
-	}
-	ccmImage := controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
-	if kubernetesConfig.CustomCcmImage != "" {
-		ccmImage = kubernetesConfig.CustomCcmImage
 	}
 
 	switch component {
@@ -246,7 +275,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 		}
 		return hyperkubeImage
 	case common.CloudControllerManagerComponentName:
-		return ccmImage
+		return controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
 	case common.SchedulerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName]

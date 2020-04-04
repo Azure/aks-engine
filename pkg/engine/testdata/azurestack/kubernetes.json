@@ -40,7 +40,6 @@
             "distro": "ubuntu",
             "osDiskSizeGB": 200,
             "count": 3,
-            "availabilityProfile": "AvailabilitySet",
             "vmSize": "Standard_D2_v2"
         },
         "agentPoolProfiles": [

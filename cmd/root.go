@@ -71,6 +71,7 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(newScaleCmd())
 	rootCmd.AddCommand(newRotateCertsCmd())
 	rootCmd.AddCommand(newAddPoolCmd())
+	rootCmd.AddCommand(newGetLocationsCmd())
 	rootCmd.AddCommand(getCompletionCmd(rootCmd))
 
 	return rootCmd
@@ -136,22 +137,32 @@ func (authArgs *authArgs) isAzureStackCloud() bool {
 }
 
 func (authArgs *authArgs) validateAuthArgs() error {
-	authArgs.ClientID, _ = uuid.Parse(authArgs.rawClientID)
-	authArgs.SubscriptionID, _ = uuid.Parse(authArgs.rawSubscriptionID)
+	var err error
 
-	if authArgs.AuthMethod == "client_secret" {
-		if authArgs.ClientID.String() == "00000000-0000-0000-0000-000000000000" || authArgs.ClientSecret == "" {
-			return errors.New(`--client-id and --client-secret must be specified when --auth-method="client_secret"`)
+	if authArgs.AuthMethod == "" {
+		return errors.New("--auth-method is a required parameter")
+	}
+
+	if authArgs.AuthMethod == "client_secret" || authArgs.AuthMethod == "client_certificate" {
+		authArgs.ClientID, err = uuid.Parse(authArgs.rawClientID)
+		if err != nil {
+			return errors.Wrap(err, "parsing --client-id")
 		}
-		// try parse the UUID
-	} else if authArgs.AuthMethod == "client_certificate" {
-		if authArgs.ClientID.String() == "00000000-0000-0000-0000-000000000000" || authArgs.CertificatePath == "" || authArgs.PrivateKeyPath == "" {
-			return errors.New(`--client-id and --certificate-path, and --private-key-path must be specified when --auth-method="client_certificate"`)
+		if authArgs.AuthMethod == "client_secret" {
+			if authArgs.ClientSecret == "" {
+				return errors.New(`--client-secret must be specified when --auth-method="client_secret"`)
+			}
+		} else if authArgs.AuthMethod == "client_certificate" {
+			if authArgs.CertificatePath == "" || authArgs.PrivateKeyPath == "" {
+				return errors.New(`--certificate-path and --private-key-path must be specified when --auth-method="client_certificate"`)
+			}
 		}
 	}
 
+	authArgs.SubscriptionID, _ = uuid.Parse(authArgs.rawSubscriptionID)
 	if authArgs.SubscriptionID.String() == "00000000-0000-0000-0000-000000000000" {
-		subID, err := getSubFromAzDir(filepath.Join(helpers.GetHomeDir(), ".azure"))
+		var subID uuid.UUID
+		subID, err = getSubFromAzDir(filepath.Join(helpers.GetHomeDir(), ".azure"))
 		if err != nil || subID.String() == "00000000-0000-0000-0000-000000000000" {
 			return errors.New("--subscription-id is required (and must be a valid UUID)")
 		}
@@ -159,8 +170,7 @@ func (authArgs *authArgs) validateAuthArgs() error {
 		authArgs.SubscriptionID = subID
 	}
 
-	_, err := azure.EnvironmentFromName(authArgs.RawAzureEnvironment)
-	if err != nil {
+	if _, err = azure.EnvironmentFromName(authArgs.RawAzureEnvironment); err != nil {
 		return errors.New("failed to parse --azure-env as a valid target Azure cloud environment")
 	}
 	return nil

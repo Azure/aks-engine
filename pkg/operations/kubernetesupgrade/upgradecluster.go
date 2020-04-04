@@ -75,6 +75,7 @@ type UpgradeCluster struct {
 	CordonDrainTimeout *time.Duration
 	UpgradeWorkFlow    UpgradeWorkFlow
 	Force              bool
+	ControlPlaneOnly   bool
 }
 
 // MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
@@ -104,7 +105,7 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	}
 
 	kc := uc.DataModel.Properties.OrchestratorProfile.KubernetesConfig
-	if kc != nil && kc.IsClusterAutoscalerEnabled() {
+	if kc != nil && kc.IsClusterAutoscalerEnabled() && !uc.ControlPlaneOnly {
 		// pause the cluster-autoscaler before running upgrade and resume it afterward
 		uc.Logger.Info("Pausing cluster autoscaler, replica count: 0")
 		count, err := uc.SetClusterAutoscalerReplicaCount(kubeClient, 0)
@@ -126,13 +127,21 @@ func (uc *UpgradeCluster) UpgradeCluster(az armhelpers.AKSEngineClient, kubeConf
 	}
 
 	upgradeVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
-	uc.Logger.Infof("Upgrading to Kubernetes version %s", upgradeVersion)
+	what := "control plane and all nodes"
+	if uc.ControlPlaneOnly {
+		what = "control plane nodes"
+	}
+	uc.Logger.Infof("Upgrading %s to Kubernetes version %s", what, upgradeVersion)
 
 	if err := uc.getUpgradeWorkflow(kubeConfig, aksEngineVersion).RunUpgrade(); err != nil {
 		return err
 	}
 
-	uc.Logger.Infof("Cluster upgraded successfully to Kubernetes version %s", upgradeVersion)
+	what = "Cluster"
+	if uc.ControlPlaneOnly {
+		what = "Control plane"
+	}
+	uc.Logger.Infof("%s upgraded successfully to Kubernetes version %s", what, upgradeVersion)
 	return nil
 }
 
@@ -170,7 +179,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 		return uc.UpgradeWorkFlow
 	}
 	u := &Upgrader{}
-	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion)
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion, uc.ControlPlaneOnly)
 	return u
 }
 

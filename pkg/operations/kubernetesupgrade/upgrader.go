@@ -35,6 +35,7 @@ type Upgrader struct {
 	stepTimeout        *time.Duration
 	cordonDrainTimeout *time.Duration
 	AKSEngineVersion   string
+	ControlPlaneOnly   bool
 }
 
 type vmStatus int
@@ -55,7 +56,7 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string, controlPlaneOnly bool) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
@@ -64,6 +65,7 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 	ku.stepTimeout = stepTimeout
 	ku.cordonDrainTimeout = cordonDrainTimeout
 	ku.AKSEngineVersion = aksEngineVersion
+	ku.ControlPlaneOnly = controlPlaneOnly
 }
 
 // RunUpgrade runs the upgrade pipeline
@@ -72,6 +74,10 @@ func (ku *Upgrader) RunUpgrade() error {
 	defer cancel()
 	if err := ku.upgradeMasterNodes(ctx); err != nil {
 		return err
+	}
+
+	if ku.ControlPlaneOnly {
+		return nil
 	}
 
 	if err := ku.upgradeAgentScaleSets(ctx); err != nil {

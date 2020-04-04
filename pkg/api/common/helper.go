@@ -84,10 +84,13 @@ func IsNvidiaEnabledSKU(vmSize string) bool {
 		"Standard_NC24":  true,
 		"Standard_NC24r": true,
 		// M60
-		"Standard_NV6":   true,
-		"Standard_NV12":  true,
-		"Standard_NV24":  true,
-		"Standard_NV24r": true,
+		"Standard_NV6":      true,
+		"Standard_NV12":     true,
+		"Standard_NV12s_v3": true,
+		"Standard_NV24":     true,
+		"Standard_NV24s_v3": true,
+		"Standard_NV24r":    true,
+		"Standard_NV48s_v3": true,
 		// P40
 		"Standard_ND6s":   true,
 		"Standard_ND12s":  true,
@@ -313,6 +316,20 @@ func GetOrderedEscapedKeyValsString(config map[string]string) string {
 		buf.WriteString(fmt.Sprintf("\"%s=%s\", ", key, config[key]))
 	}
 	return strings.TrimSuffix(buf.String(), ", ")
+}
+
+// GetOrderedNewlinedKeyValsStringForCloudInit returns an ordered string of key = val, separated by newlines
+func GetOrderedNewlinedKeyValsStringForCloudInit(config map[string]string) string {
+	keys := []string{}
+	for key := range config {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	var buf bytes.Buffer
+	for _, key := range keys {
+		buf.WriteString(fmt.Sprintf("%s = %s\n%4s", key, config[key], " "))
+	}
+	return strings.TrimSuffix(buf.String(), fmt.Sprintf("\n%4s", " "))
 }
 
 // SliceIntIsNonEmpty is a simple convenience to determine if a []int is non-empty

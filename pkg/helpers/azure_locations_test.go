@@ -27,7 +27,9 @@ func TestGetAzureLocations(t *testing.T) {
 		"eastus2euap":        {},
 		"francecentral":      {},
 		"francesouth":        {},
+		"germanycentral":     {},
 		"germanynorth":       {},
+		"germanynortheast":   {},
 		"germanywestcentral": {},
 		"japaneast":          {},
 		"japanwest":          {},
@@ -37,36 +39,35 @@ func TestGetAzureLocations(t *testing.T) {
 		"northeurope":        {},
 		"norwayeast":         {},
 		"norwaywest":         {},
-		"southcentralus":     {},
 		"southafricanorth":   {},
 		"southafricawest":    {},
+		"southcentralus":     {},
 		"southeastasia":      {},
 		"southindia":         {},
 		"switzerlandnorth":   {},
 		"switzerlandwest":    {},
+		"uaecentral":         {},
+		"uaenorth":           {},
 		"uksouth":            {},
 		"ukwest":             {},
 		"usdodcentral":       {},
 		"usdodeast":          {},
+		"usgovarizona":       {},
+		"usgoviowa":          {},
+		"usgovtexas":         {},
+		"usgovvirginia":      {},
 		"westcentralus":      {},
 		"westeurope":         {},
 		"westindia":          {},
 		"westus":             {},
 		"westus2":            {},
-		"germanycentral":     {},
-		"germanynortheast":   {},
-		"usgovvirginia":      {},
-		"usgoviowa":          {},
-		"usgovarizona":       {},
-		"usgovtexas":         {},
-		"uaenorth":           {},
-		"uaecentral":         {},
 	}
 
 	locations := GetAzureLocations()
 
-	if len(locations) == 0 {
-		t.Errorf("expected the GetAzureLocations slice to be non-empty")
+	if len(locations) != len(expectedLocationMap) {
+		t.Errorf("expected the GetAzureLocations slice to be of length %d",
+			len(expectedLocationMap))
 	}
 
 	for _, location := range locations {

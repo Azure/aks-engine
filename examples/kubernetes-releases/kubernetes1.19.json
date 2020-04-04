@@ -3,11 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.13",
-      "kubernetesConfig": {
-        "networkPlugin": "flannel",
-        "containerRuntime": "kata-containers"
-      }
+      "orchestratorRelease": "1.19"
     },
     "masterProfile": {
       "count": 1,
@@ -18,8 +14,7 @@
       {
         "name": "agentpool1",
         "count": 3,
-        "vmSize": "Standard_D4s_v3",
-        "availabilityProfile": "AvailabilitySet"
+        "vmSize": "Standard_D2_v3"
       }
     ],
     "linuxProfile": {

@@ -79,7 +79,7 @@ To update resources:
             "containers": [
                 {
                     "name": "keyvault-flexvolume",
-                    "image": "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.13",
+                    "image": "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16",
                     "cpuRequests": "50m",
                     "memoryRequests": "100Mi",
                     "cpuLimits": "50m",

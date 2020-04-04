@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"regexp"
@@ -269,6 +270,54 @@ func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command strin
 		d.Delete(util.DefaultDeleteRetries)
 	}
 	return RunLinuxDeploy(image, name, namespace, command, replicas)
+}
+
+type deployRunnerCmd func(string, string, string, string, int) (*Deployment, error)
+
+// RunDeploymentMultipleTimes runs the same command 'desiredAttempts' times
+func RunDeploymentMultipleTimes(deployRunnerCmd deployRunnerCmd, image, name, command string, replicas, desiredAttempts int, sleep, podTimeout, timeout time.Duration) (int, error) {
+	var successfulAttempts int
+	var actualAttempts int
+	logResults := func() {
+		log.Printf("Ran command on %d of %d desired attempts with %d successes\n\n", actualAttempts, desiredAttempts, successfulAttempts)
+	}
+	defer logResults()
+	for i := 0; i < desiredAttempts; i++ {
+		actualAttempts++
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		deploymentName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
+		var d *Deployment
+		var err error
+		d, err = deployRunnerCmd(image, deploymentName, "default", command, replicas)
+		if err != nil {
+			return successfulAttempts, err
+		}
+		pods, err := d.WaitForReplicas(replicas, replicas, sleep, timeout)
+		if err != nil {
+			log.Printf("deployment %s did not have the expected replica count %d in time\n", deploymentName, replicas)
+			return successfulAttempts, err
+		}
+		var podsSucceeded int
+		for _, p := range pods {
+			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, podTimeout)
+			if err != nil {
+				log.Printf("pod %s did not succeed in time\n", p.Metadata.Name)
+				return successfulAttempts, err
+			}
+			if running {
+				podsSucceeded++
+			}
+		}
+		err = d.Delete(util.DefaultDeleteRetries)
+		if err != nil {
+			return successfulAttempts, err
+		}
+		if podsSucceeded == replicas {
+			successfulAttempts++
+		}
+	}
+
+	return successfulAttempts, nil
 }
 
 // CreateWindowsDeployAsync wraps CreateWindowsDeploy with a struct response for goroutine + channel usage

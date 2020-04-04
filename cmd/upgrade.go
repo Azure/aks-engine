@@ -44,6 +44,7 @@ type upgradeCmd struct {
 	timeoutInMinutes            int
 	cordonDrainTimeoutInMinutes int
 	force                       bool
+	controlPlaneOnly            bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -78,6 +79,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
 	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
+	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
 	addAuthFlags(uc.getAuthArgs(), f)
 
 	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
@@ -161,7 +163,6 @@ func (uc *upgradeCmd) loadCluster() error {
 
 	if uc.containerService.Properties.IsAzureStackCloud() {
 		writeCustomCloudProfile(uc.containerService)
-
 		if err = uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
@@ -266,6 +267,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
 	upgradeCluster.Force = uc.force
+	upgradeCluster.ControlPlaneOnly = uc.controlPlaneOnly
 
 	var kubeConfig string
 	if uc.kubeconfigPath != "" {

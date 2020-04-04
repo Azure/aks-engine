@@ -525,7 +525,6 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 	roleAssignmentARM := RoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationUser')]",
-			DependsOn:  []string{"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]"},
 		},
 		RoleAssignment: authorization.RoleAssignment{
 			Name: to.StringPtr("[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]"),
@@ -533,7 +532,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				Scope:            to.StringPtr("[resourceGroup().id]"),
 				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"),
+				PrincipalID:      to.StringPtr("[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"),
 				PrincipalType:    authorization.PrincipalType("ServicePrincipal"),
 			},
 		},
