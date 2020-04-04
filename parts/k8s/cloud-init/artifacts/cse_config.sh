@@ -233,7 +233,7 @@ configureCNI() {
     {{/* needed for the iptables rules to work on bridges */}}
     retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit $ERR_MODPROBE_FAIL
     echo -n "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
-    configureCNIIPTables
+    configureAzureCNI
     {{if HasCiliumNetworkPlugin}}
     systemctl enable sys-fs-bpf.mount
     systemctl restart sys-fs-bpf.mount
@@ -248,16 +248,23 @@ configureCNI() {
 {{end}}
 }
 
-configureCNIIPTables() {
+configureAzureCNI() {
     if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
         mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
         chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-        if [[ "${NETWORK_POLICY}" == "calico" ]]; then
-          sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-        elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-          sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" ]]; then
+            echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
         fi
-        /sbin/ebtables -t nat --list
+    if [[ {{GetKubeProxyMode}} = "ipvs" ]]; then
+        serviceCidrs={{GetServiceCidr}}
+        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
+    fi
+    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
+        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
+        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    fi
+    /sbin/ebtables -t nat --list
     fi
 }
 
