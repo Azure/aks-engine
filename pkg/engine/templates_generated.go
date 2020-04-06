@@ -37824,17 +37824,19 @@ if [[ $OS == $UBUNTU_OS_NAME ]]; then
 fi
 {{end}}
 
+VALIDATION_ERR=0
+
 {{- if IsHostedMaster }}
 RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
 STS=$?
 if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
-        exit $ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL
+        VALIDATION_ERR=$ERR_K8S_API_SERVER_AZURE_DNS_LOOKUP_FAIL
     else
-        exit $ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
+        VALIDATION_ERR=$ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL
     fi
 fi
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || exit $ERR_K8S_API_SERVER_CONN_FAIL
+retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR=$ERR_K8S_API_SERVER_CONN_FAIL
 {{end}}
 
 if $REBOOTREQUIRED; then
@@ -37850,10 +37852,12 @@ else
     fi
 fi
 
-echo "Custom script finished successfully"
+echo "Custom script finished. API server connection check code:" $VALIDATION_ERR
 echo $(date),$(hostname), endcustomscript>>/opt/m
 mkdir -p /opt/azure/containers && touch /opt/azure/containers/provision.complete
 ps auxfww > /opt/azure/provision-ps.log &
+
+exit $VALIDATION_ERR
 
 #EOF
 `)
