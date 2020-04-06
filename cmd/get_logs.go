@@ -211,6 +211,7 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}
 	}
+	log.Debugf("Logs downloaded to %s", glc.outputDirectory)
 	return nil
 }
 
@@ -326,7 +327,6 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 		return "", errors.Wrap(err, "downloading logs")
 	}
 
-	fmt.Println()
 	return "", nil
 }
 
