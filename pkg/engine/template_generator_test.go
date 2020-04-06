@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/telemetry"
 
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/pkg/errors"
 )
 
@@ -182,6 +183,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetCSEErrorCodeVals           []int
 		expectedHasVHDDistroNodes             bool
 		expectedIsVHDDistroForAllNodes        bool
+		expectedHasClusterInitComponent       bool
 	}{
 		{
 			name: "1.15 release",
@@ -631,6 +633,45 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:       "",
 		},
 		{
+			name: "cluster-init config",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							Components: []api.KubernetesComponent{
+								{
+									Name:    common.ClusterInitComponentName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedHasClusterInitComponent:      true,
+		},
+		{
 			name: "sysctl config",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
@@ -818,6 +859,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				if ret[0].Interface() != errorCodes[i] {
 					t.Errorf("expected funcMap invocation of GetCSEErrorCode to return %d, instead got %d", errorCodes[i], ret[0].Interface())
 				}
+			}
+			v = reflect.ValueOf(funcMap["HasClusterInitComponent"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasClusterInitComponent {
+				t.Errorf("expected funcMap invocation of HasClusterInitComponent to return %t, instead got %t", c.expectedHasClusterInitComponent, ret[0].Interface())
 			}
 		})
 	}
