@@ -30,7 +30,7 @@ configure_prerequisites() {
 
 aptmarkWALinuxAgent() {
   wait_for_apt_locks
-  retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent ||
+  retrycmd 120 5 25 apt-mark $1 walinuxagent ||
     if [[ $1 == "hold" ]]; then
       exit 7
     elif [[ $1 == "unhold" ]]; then
@@ -38,7 +38,7 @@ aptmarkWALinuxAgent() {
     fi
 }
 
-retrycmd_if_failure() {
+retrycmd() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     timeout $timeout ${@} && break ||
@@ -50,17 +50,6 @@ retrycmd_if_failure() {
       fi
   done
   echo Executed \"$@\" $i times
-}
-retrycmd_if_failure_no_stats() {
-  retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
-  for i in $(seq 1 $retries); do
-    timeout $timeout ${@} && break ||
-      if [ $i -eq $retries ]; then
-        return 1
-      else
-        sleep $wait_sleep
-      fi
-  done
 }
 retrycmd_get_tarball() {
   tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
