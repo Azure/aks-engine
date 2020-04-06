@@ -4,6 +4,7 @@ NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
