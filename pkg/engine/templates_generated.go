@@ -39746,6 +39746,7 @@ NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -40563,7 +40564,6 @@ DEBIAN_OS_NAME="DEBIAN"
 if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
-KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 DOCKER=/usr/bin/docker
 export GPU_DV=418.40.04
 export GPU_DEST=/usr/local/nvidia
