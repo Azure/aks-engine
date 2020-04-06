@@ -487,6 +487,16 @@ configAddons() {
 }
 {{end}}
 {{- if HasNSeriesSKU}}
+{{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
+installNvidiaDrivers() {
+  NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
+  KERNEL_NAME=$(uname -r)
+  if [ -d $NVIDIA_DKMS_DIR ]; then
+    dkms remove -m nvidia -v $GPU_DV -k $KERNEL_NAME
+  fi
+  local log_file="/var/log/nvidia-installer-$(date +%s).log"
+  sh $GPU_DEST/nvidia-drivers-$GPU_DV -s -k=$KERNEL_NAME --log-file-name=$log_file -a --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
+}
 configGPUDrivers() {
   {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
   {{/* we will manually install nvidia-docker2 */}}
@@ -494,7 +504,7 @@ configGPUDrivers() {
   echo blacklist nouveau >>/etc/modprobe.d/blacklist.conf
   retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   wait_for_apt_locks
-  retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   tmpDir=$GPU_DEST/tmp
   (
     set -e -o pipefail
@@ -507,7 +517,8 @@ configGPUDrivers() {
   retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
   retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
-  retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  export -f installNvidiaDrivers
+  retrycmd_if_failure 3 1 600 bash -c installNvidiaDrivers || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   echo "${GPU_DEST}/lib64" >/etc/ld.so.conf.d/nvidia.conf
   retrycmd_if_failure 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   umount -l /usr/lib/x86_64-linux-gnu
@@ -573,6 +584,7 @@ cleanUpContainerImages() {
 cleanUpGPUDrivers() {
   rm -Rf $GPU_DEST
   rm -f /etc/apt/sources.list.d/nvidia-docker.list
+  apt-key del $(apt-key list | grep NVIDIA -B 1 | head -n 1 | cut -d "/" -f 2 | cut -d " " -f 1)
 }
 cleanUpContainerd() {
   rm -Rf $CONTAINERD_DOWNLOADS_DIR
