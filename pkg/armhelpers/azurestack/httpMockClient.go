@@ -23,7 +23,6 @@ const (
 	resourceGroupAPIVersion                    = "2018-05-01"
 	logAnalyticsAPIVersion                     = "2015-11-01-preview"
 	subscriptionsAPIVersion                    = "2016-06-01"
-	resourceSkusAPIVersion                     = "2019-04-01"
 	deploymentName                             = "testDeplomentName"
 	deploymentStatus                           = "08586474508192185203"
 	virtualMachineScaleSetName                 = "vmscalesetName"
@@ -58,7 +57,6 @@ const (
 	filePathCreateOrUpdateWorkspace            = "httpMockClientData/createOrUpdateWorkspace.json"
 	filePathGetVirtualMachineImage             = "httpMockClientData/getVirtualMachineImage.json"
 	filePathListVirtualMachineImages           = "httpMockClientData/listVirtualMachineImages.json"
-	filePathListResourceSkus                   = "httpMockClientData/listResourceSkus.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -72,7 +70,6 @@ type HTTPMockClient struct {
 	DeploymentAPIVersion                       string
 	LogAnalyticsAPIVersion                     string
 	SubscriptionsAPIVersion                    string
-	ResourceSkusAPIVersion                     string
 	DeploymentName                             string
 	DeploymentStatus                           string
 	VirtualMachineScaleSetName                 string
@@ -106,7 +103,6 @@ type HTTPMockClient struct {
 	ResponseCreateOrUpdateWorkspace            string
 	ResponseGetVirtualMachineImage             string
 	ResponseListVirtualMachineImages           string
-	ResponseListResourceSkus                   string
 	mux                                        *http.ServeMux
 	server                                     *testserver.TestServer
 }
@@ -137,7 +133,6 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		ComputeAPIVersion:                   computeAPIVersion,
 		LogAnalyticsAPIVersion:              logAnalyticsAPIVersion,
 		SubscriptionsAPIVersion:             subscriptionsAPIVersion,
-		ResourceSkusAPIVersion:              resourceSkusAPIVersion,
 		NetworkAPIVersion:                   networkAPIVersion,
 		DeploymentAPIVersion:                deploymentAPIVersion,
 		DeploymentName:                      deploymentName,
@@ -220,11 +215,6 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 	}
 
 	client.ResponseListLocations, err = readFromFile(filePathListLocations)
-	if err != nil {
-		return client, err
-	}
-
-	client.ResponseListResourceSkus, err = readFromFile(filePathListResourceSkus)
 	if err != nil {
 		return client, err
 	}
@@ -363,15 +353,7 @@ func (mc HTTPMockClient) RegisterGetAvailabilitySetFaultDomainCount() {
 
 // RegisterListResourceSkus registers a mock response for ListResourceSkus.
 func (mc HTTPMockClient) RegisterListResourceSkus() {
-	pattern := fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/skus", mc.SubscriptionID)
-	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(r.URL.Query().Get("api-version"))
-		if r.URL.Query().Get("api-version") != mc.ResourceSkusAPIVersion {
-			w.WriteHeader(http.StatusNotFound)
-		} else {
-			_, _ = fmt.Fprint(w, mc.ResponseListResourceSkus)
-		}
-	})
+	// Not implemented on Azure Stack.
 }
 
 // RegisterVirtualMachineEndpoint registers mock responses for the Microsoft.Compute/virtualMachines endpoint

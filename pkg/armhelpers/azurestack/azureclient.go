@@ -18,7 +18,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement"
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
-	compute2 "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-10-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
@@ -57,7 +56,6 @@ type AzureClient struct {
 	deploymentOperationsClient      resources.DeploymentOperationsClient
 	msiClient                       msi.UserAssignedIdentitiesClient
 	resourcesClient                 apimanagement.GroupClient
-	resourceSkusClient              compute2.ResourceSkusClient
 	storageAccountsClient           storage.AccountsClient
 	interfacesClient                network.InterfacesClient
 	groupsClient                    resources.GroupsClient
@@ -212,7 +210,6 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 		deploymentOperationsClient:      resources.NewDeploymentOperationsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		msiClient:                       msi.NewUserAssignedIdentitiesClient(subscriptionID),
 		resourcesClient:                 apimanagement.NewGroupClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
-		resourceSkusClient:              compute2.NewResourceSkusClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		storageAccountsClient:           storage.NewAccountsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		interfacesClient:                network.NewInterfacesClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
 		groupsClient:                    resources.NewGroupsClientWithBaseURI(env.ResourceManagerEndpoint, subscriptionID),
@@ -236,7 +233,6 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.deploymentOperationsClient.Authorizer = armAuthorizer
 	c.msiClient.Authorizer = armAuthorizer
 	c.resourcesClient.Authorizer = armAuthorizer
-	c.resourceSkusClient.Authorizer = armAuthorizer
 	c.storageAccountsClient.Authorizer = armAuthorizer
 	c.interfacesClient.Authorizer = armAuthorizer
 	c.groupsClient.Authorizer = armAuthorizer
@@ -264,7 +260,6 @@ func getClient(env azure.Environment, subscriptionID, tenantID string, armAuthor
 	c.interfacesClient.PollingDuration = DefaultARMOperationTimeout
 	c.providersClient.PollingDuration = DefaultARMOperationTimeout
 	c.resourcesClient.PollingDuration = DefaultARMOperationTimeout
-	c.resourceSkusClient.PollingDuration = DefaultARMOperationTimeout
 	c.storageAccountsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineScaleSetsClient.PollingDuration = DefaultARMOperationTimeout
 	c.virtualMachineScaleSetVMsClient.PollingDuration = DefaultARMOperationTimeout
@@ -365,7 +360,6 @@ func (az *AzureClient) AddAcceptLanguages(languages []string) {
 	az.deploymentsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.deploymentOperationsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.resourcesClient.Client.RequestInspector = az.addAcceptLanguages()
-	az.resourceSkusClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.storageAccountsClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.interfacesClient.Client.RequestInspector = az.addAcceptLanguages()
 	az.groupsClient.Client.RequestInspector = az.addAcceptLanguages()
@@ -430,7 +424,6 @@ func (az *AzureClient) AddAuxiliaryTokens(tokens []string) {
 	az.deploymentsClient.Client.RequestInspector = requestWithTokens
 	az.deploymentOperationsClient.Client.RequestInspector = requestWithTokens
 	az.resourcesClient.Client.RequestInspector = requestWithTokens
-	az.resourceSkusClient.Client.RequestInspector = requestWithTokens
 	az.storageAccountsClient.Client.RequestInspector = requestWithTokens
 	az.interfacesClient.Client.RequestInspector = requestWithTokens
 	az.groupsClient.Client.RequestInspector = requestWithTokens

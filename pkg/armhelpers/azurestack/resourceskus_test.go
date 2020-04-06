@@ -29,10 +29,10 @@ func TestResourceSkusInterface(t *testing.T) {
 	}
 
 	page, err := azureClient.ListResourceSkus(context.Background(), "")
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error("expected an error to be returned")
 	}
-	if page == nil || len(page.Values()) == 0 {
-		t.Fatalf("expected skus not to be empty")
+	if page != nil {
+		t.Fatalf("expected skus to be empty")
 	}
 }
