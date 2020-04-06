@@ -25,10 +25,12 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - cifs-utils
   - conntrack
   - cracklib-runtime
+  - dkms
   - dbus
   - ebtables
   - ethtool
   - fuse
+  - gcc
   - git
   - glusterfs-client
   - init-system-helpers
@@ -38,6 +40,8 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - jq
   - libpam-pwquality
   - libpwquality-tools
+  - linux-headers-$(uname -r)
+  - make
   - mount
   - nfs-common
   - pigz socat
@@ -67,7 +71,7 @@ echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 MOBY_VERSION="3.0.11"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
-installGPUDrivers
+downloadGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
 ETCD_VERSION="3.3.19"
