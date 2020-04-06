@@ -243,9 +243,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D16a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D16a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D16as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D16as_v4",
@@ -283,8 +293,18 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_D2a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D2a_v4",
 		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_D2as_v3",
+		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
 	},
 	{
@@ -308,9 +328,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D32a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D32a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D32as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D32as_v4",
@@ -343,9 +373,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D48a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D48a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D48as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D48as_v4",
@@ -373,9 +413,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D4a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D4a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D4as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D4as_v4",
@@ -403,9 +453,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D64a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D64a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D64as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D64as_v4",
@@ -423,9 +483,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D8a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D8a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D8as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D8as_v4",
@@ -438,9 +508,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_D96a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_D96a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_D96as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_D96as_v4",
@@ -478,6 +558,11 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_DC8s",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_DS1",
 		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
@@ -491,11 +576,6 @@ var VMSkus = []VMSku{
 		Name:                  "Standard_DS11-1_v2",
 		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
-	},
-	{
-		Name:                  "Standard_DS11-1v2",
-		StorageAccountType:    "Premium_LRS",
-		AcceleratedNetworking: true,
 	},
 	{
 		Name:                  "Standard_DS11_v2",
@@ -663,9 +743,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E16a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E16a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E16as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E16as_v4",
@@ -703,8 +793,18 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: false,
 	},
 	{
+		Name:                  "Standard_E2a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E2a_v4",
 		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
+		Name:                  "Standard_E2as_v3",
+		StorageAccountType:    "Premium_LRS",
 		AcceleratedNetworking: false,
 	},
 	{
@@ -733,9 +833,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E32a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E32a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E32as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E32as_v4",
@@ -758,9 +868,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E48a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E48a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E48as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E48as_v4",
@@ -778,9 +898,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E4a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E4a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E4as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E4as_v4",
@@ -808,9 +938,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E64a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E64a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E64as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E64as_v4",
@@ -848,9 +988,19 @@ var VMSkus = []VMSku{
 		AcceleratedNetworking: true,
 	},
 	{
+		Name:                  "Standard_E8a_v3",
+		StorageAccountType:    "Standard_LRS",
+		AcceleratedNetworking: false,
+	},
+	{
 		Name:                  "Standard_E8a_v4",
 		StorageAccountType:    "Standard_LRS",
 		AcceleratedNetworking: true,
+	},
+	{
+		Name:                  "Standard_E8as_v3",
+		StorageAccountType:    "Premium_LRS",
+		AcceleratedNetworking: false,
 	},
 	{
 		Name:                  "Standard_E8as_v4",
