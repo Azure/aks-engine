@@ -1,20 +1,18 @@
 # This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
 filter RemoveNulls { $_ -replace '\0', '' }
 
-filter Timestamp {"$(Get-Date -Format o): $_"}
+filter Timestamp { "$(Get-Date -Format o): $_" }
 
-function Write-Log($message)
-{
+function Write-Log($message) {
     $msg = $message | Timestamp
     Write-Output $msg
 }
 
-function DownloadFileOverHttp
-{
+function DownloadFileOverHttp {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $Url,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $DestinationPath
     )
 
@@ -22,25 +20,20 @@ function DownloadFileOverHttp
     $fileName = [IO.Path]::GetFileName($Url)
     
     $search = @()
-    if (Test-Path $global:CacheDir)
-    {
+    if (Test-Path $global:CacheDir) {
         $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
 
-    if ($search.Count -ne 0)
-    {
+    if ($search.Count -ne 0) {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    else
-    {
+    else {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
     
-        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
-        {
-            if ($insecureProtocols -notcontains $protocol)
-            {
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
+            if ($insecureProtocols -notcontains $protocol) {
                 $secureProtocols += $protocol
             }
         }
@@ -72,11 +65,12 @@ function Get-WindowsVersion {
 }
 
 function Get-CniVersion {
-    switch($global:NetworkPlugin) {
+    switch ($global:NetworkPlugin) {
         "azure" {
             if ($global:VNetCNIPluginsURL -match "(v[0-9`.]+).(zip|tar)") {
                 return $matches[1]
-            } else {
+            }
+            else {
                 return ""
             }
             break;
@@ -88,12 +82,12 @@ function Get-CniVersion {
 }
 
 function Get-InstanceMetadataServiceTelemetry {
-    $keys = @{}
+    $keys = @{ }
 
     try {
         # Write-Log "Querying instance metadata service..."
         # Note: 2019-04-30 is latest api available in all clouds
-        $metadata = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
+        $metadata = Invoke-RestMethod -Headers @{"Metadata" = "true" } -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
         # Write-Log ($metadata | ConvertTo-Json)
 
         $keys.Add("vm_size", $metadata.compute.vmSize)
@@ -125,30 +119,29 @@ function Initialize-DataDirectories {
     }
 }
 
-function Retry-Command
-{
+function Retry-Command {
     Param(
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]
         $Command,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][hashtable]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][hashtable]
         $Args,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $Retries,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $RetryDelaySeconds
     )
 
     for ($i = 0; $i -lt $Retries; $i++) {
         try {
             return & $Command @Args
-        } catch {
+        }
+        catch {
             Start-Sleep $RetryDelaySeconds
         }
     }
 }
 
-function Invoke-Executable
-{
+function Invoke-Executable {
     Param(
         [string]
         $Executable,
@@ -169,7 +162,8 @@ function Invoke-Executable
             Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
             Start-Sleep -Seconds $RetryDelaySeconds
             continue
-        } else {
+        }
+        else {
             Write-Log "$Executable returned successfully"
             return
         }
@@ -223,9 +217,67 @@ function Register-NodeResetScriptTask {
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
 
+# TODO ksubrmnn parameterize this fully
+function Write-KubeClusterConfig {
+    param(		
+        [Parameter(Mandatory = $true)][string]	
+        $MasterIP,
+        [Parameter(Mandatory = $true)][string]	
+        $KubeDnsServiceIp
+    )
+    $ConfigFile = "c:\k\Kubeclusterbridge.json"
+    $Global:ClusterConfiguration = [PSCustomObject]@{ }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
+        Name   = $global:ContainerRuntime;
+        Images = @{
+            Pause      = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0";
+            Nanoserver = "mcr.microsoft.com/windows/nanoserver:1809";
+            ServerCore = "mcr.microsoft.com/windows/servercore:ltsc2019";
+        }
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
+        Name   = $global:NetworkPlugin;
+        Plugin = @{
+            Name = "bridge";
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Csi -Value @{
+        EnableProxy = "true"
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Kubernetes -Value @{
+        Source       = @{
+            Release = $global:KubeBinariesVersion;
+        };
+        ControlPlane = @{
+            IpAddress = $MasterIP;
+            Username  = "azureuser"
+            MasterSubnet = $global:MasterSubnet
+        };
+        Network = @{
+            ServiceCidr = $global:KubeServiceCIDR;
+            ClusterCidr = $global:KubeClusterCIDR;
+            DnsIp = $KubeDnsServiceIp
+        };
+        Kubelet = @{
+            NodeLabels = $global:KubeletNodeLabels;
+            ConfigArgs = $global:KubeletConfigArgs
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{ 
+        Destination = "c:\k";
+    }
+    
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigFile
+}
+
 function Assert-FileExists {
     Param(
-        [Parameter(Mandatory=$true,Position=0)][string]
+        [Parameter(Mandatory = $true, Position = 0)][string]
         $Filename
     )
     

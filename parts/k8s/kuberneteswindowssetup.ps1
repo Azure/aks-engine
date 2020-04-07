@@ -147,7 +147,7 @@ $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 [io.file]::WriteAllBytes("scripts.zip", [System.Convert]::FromBase64String($zippedFiles))
 Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 
-# Dot-source contents of zip. This should match the list in template_generator.go GetKubernetesWindowsAgentFunctions
+# Dot-source scripts with functions that are called in this script
 . c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
 . c:\AzureData\k8s\windowsconfigfunc.ps1
 . c:\AzureData\k8s\windowskubeletfunc.ps1
@@ -235,6 +235,7 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
+        Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
 
         if ($useContainerD) {
             Write-Log "Installing ContainerD"
@@ -381,26 +382,7 @@ try
 
         Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
-            -KubeletConfigArgs $global:KubeletConfigArgs `
-            -KubeBinariesVersion $global:KubeBinariesVersion `
-            -NetworkPlugin $global:NetworkPlugin `
-            -NetworkMode $global:NetworkMode `
-            -KubeDir $global:KubeDir `
-            -AzureCNIBinDir $global:AzureCNIBinDir `
-            -AzureCNIConfDir $global:AzureCNIConfDir `
-            -CNIPath $global:CNIPath `
-            -CNIConfig $global:CNIConfig `
-            -CNIConfigPath $global:CNIConfigPath `
-            -MasterIP $MasterIP `
-            -KubeDnsServiceIp $KubeDnsServiceIp `
-            -MasterSubnet $global:MasterSubnet `
-            -KubeClusterCIDR $global:KubeClusterCIDR `
-            -KubeServiceCIDR $global:KubeServiceCIDR `
-            -HNSModule $global:HNSModule `
-            -KubeletNodeLabels $global:KubeletNodeLabels `
-            -UseContainerD $useContainerD
-
-
+            -KubeDir $global:KubeDir
 
         Get-LogCollectionScripts
 
@@ -421,6 +403,12 @@ try
         Register-NodeResetScriptTask
         Update-DefenderPreferences
 
+        # Output kubelet and kube-proxy scripts
+        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
+        Out-File "c:\k\kubeletstart.ps1"
+        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
+        Out-File "c:\k\kubeproxystart.ps1"
+        
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
