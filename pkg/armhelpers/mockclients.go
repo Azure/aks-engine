@@ -556,6 +556,11 @@ func (mc *MockAKSEngineClient) EnsureResourceGroup(ctx context.Context, resource
 	return nil, nil
 }
 
+// ListResourceSkus mock
+func (mc *MockAKSEngineClient) ListResourceSkus(ctx context.Context, filter string) (ResourceSkusResultPage, error) {
+	return nil, nil
+}
+
 //ListVirtualMachines mock
 func (mc *MockAKSEngineClient) ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error) {
 	if mc.FailListVirtualMachines {

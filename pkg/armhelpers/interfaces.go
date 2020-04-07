@@ -21,6 +21,15 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+// ResourceSkusResultPage
+type ResourceSkusResultPage interface {
+	Next() error
+	NextWithContext(ctx context.Context) (err error)
+	NotDone() bool
+	Response() compute.ResourceSkusResult
+	Values() []compute.ResourceSku
+}
+
 // VirtualMachineListResultPage is an interface for compute.VirtualMachineListResultPage to aid in mocking
 type VirtualMachineListResultPage interface {
 	Next() error
@@ -115,6 +124,9 @@ type AKSEngineClient interface {
 
 	//
 	// COMPUTE
+
+	// ListResourceSkus lists Microsoft.Compute SKUs available for a subscription
+	ListResourceSkus(ctx context.Context, filter string) (ResourceSkusResultPage, error)
 
 	// ListVirtualMachines lists VM resources
 	ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error)

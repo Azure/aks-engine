@@ -232,11 +232,11 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 		},
 		{
 			input:          "AZAP_Performance_ComputeV17C",
-			expectedResult: true,
+			expectedResult: false,
 		},
 		{
 			input:          "SQLGL",
-			expectedResult: true,
+			expectedResult: false,
 		},
 		{
 			input:          "",
