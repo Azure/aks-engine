@@ -37072,8 +37072,6 @@ RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
-# when you upgrade the GPU driver version, please help check whether the retry installation is gone
-# if yes, please help remove the clean up logic in the installGPUDriversRun (cse_config.sh)
 export GPU_DV=418.40.04
 export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
