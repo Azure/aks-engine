@@ -36,7 +36,9 @@ func NewAPIIssueCommentsClient(subscriptionID string) APIIssueCommentsClient {
 	return NewAPIIssueCommentsClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewAPIIssueCommentsClientWithBaseURI creates an instance of the APIIssueCommentsClient client.
+// NewAPIIssueCommentsClientWithBaseURI creates an instance of the APIIssueCommentsClient client using a custom
+// endpoint.  Use this when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure
+// stack).
 func NewAPIIssueCommentsClientWithBaseURI(baseURI string, subscriptionID string) APIIssueCommentsClient {
 	return APIIssueCommentsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -79,10 +81,10 @@ func (client APIIssueCommentsClient) ListByService(ctx context.Context, resource
 				{Target: "issueID", Name: validation.Pattern, Rule: `^[^*#&+:<>?]+$`, Chain: nil}}},
 		{TargetValue: top,
 			Constraints: []validation.Constraint{{Target: "top", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: 1, Chain: nil}}}}},
+				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: int64(1), Chain: nil}}}}},
 		{TargetValue: skip,
 			Constraints: []validation.Constraint{{Target: "skip", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: 0, Chain: nil}}}}}}); err != nil {
+				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: int64(0), Chain: nil}}}}}}); err != nil {
 		return result, validation.NewError("apimanagement.APIIssueCommentsClient", "ListByService", err.Error())
 	}
 
