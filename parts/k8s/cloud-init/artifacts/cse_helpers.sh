@@ -70,11 +70,12 @@ RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
-GPU_DV=418.40.04
-GPU_DEST=/usr/local/nvidia
+export GPU_DV=418.40.04
+export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks

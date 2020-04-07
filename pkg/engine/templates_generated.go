@@ -36729,6 +36729,31 @@ configAddons() {
 {{end}}
 
 {{if HasNSeriesSKU}}
+
+installGPUDriversRun() {
+    {{- /* there is no file under the module folder, the installation failed, so clean up the dirty directory
+    when you upgrade the GPU driver version, please help check whether the retry installation issue is gone,
+    if yes please help remove the clean up logic here too */}}
+    set -x
+    MODULE_NAME="nvidia"
+    NVIDIA_DKMS_DIR="/var/lib/dkms/${MODULE_NAME}/${GPU_DV}"
+    KERNEL_NAME=$(uname -r)
+    if [ -d "${NVIDIA_DKMS_DIR}" ]; then
+        if [ -x "$(command -v dkms)" ]; then
+          dkms remove -m ${MODULE_NAME} -v ${GPU_DV} -k ${KERNEL_NAME}
+        else
+          rm -rf "${NVIDIA_DKMS_DIR}"
+        fi
+    fi
+    {{- /* we need to append the date to the end of the file because the retry will override the log file */}}
+    local log_file_name="/var/log/nvidia-installer-$(date +%s).log"
+    sh $GPU_DEST/nvidia-drivers-$GPU_DV -s \
+        -k=$KERNEL_NAME \
+        --log-file-name=${log_file_name} \
+        -a --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
+    exit $?
+}
+
 configGPUDrivers() {
     {{/* only install the runtime since nvidia-docker2 has a hard dep on docker CE packages. */}}
     {{/* we will manually install nvidia-docker2 */}}
@@ -36736,7 +36761,7 @@ configGPUDrivers() {
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
@@ -36749,7 +36774,8 @@ configGPUDrivers() {
     retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
     retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
-    retrycmd_if_failure 3 1 600 sh $GPU_DEST/nvidia-drivers-$GPU_DV --silent --accept-license --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}" || exit $ERR_GPU_DRIVERS_START_FAIL
+    export -f installGPUDriversRun
+    retrycmd_if_failure 3 1 600 bash -c installGPUDriversRun || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
     umount -l /usr/lib/x86_64-linux-gnu
@@ -37046,11 +37072,12 @@ RHEL_OS_NAME="RHEL"
 COREOS_OS_NAME="COREOS"
 KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
-GPU_DV=418.40.04
-GPU_DEST=/usr/local/nvidia
+export GPU_DV=418.40.04
+export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
 NVIDIA_CONTAINER_RUNTIME_VERSION=2.0.0
+NVIDIA_DOCKER_SUFFIX=docker18.09.2-1
 
 aptmarkWALinuxAgent() {
     wait_for_apt_locks
@@ -37348,7 +37375,7 @@ installGPUDrivers() {
     if ! (
       set -e -o pipefail
       cd "${tmpDir}"
-      retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+      retrycmd_if_failure 30 5 3600 apt-get download nvidia-docker2="${NVIDIA_DOCKER_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     ); then
       exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     fi
