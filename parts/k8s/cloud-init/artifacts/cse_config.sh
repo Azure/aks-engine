@@ -462,18 +462,16 @@ installGPUDriversRun() {
     NVIDIA_DKMS_DIR="/var/lib/dkms/${MODULE_NAME}/${GPU_DV}"
     KERNEL_NAME=$(uname -r)
     if [ -d "${NVIDIA_DKMS_DIR}" ]; then
-        echo "the dkms module folder exists, we need to do the clean up first before retry to install."
         if [ -x "$(command -v dkms)" ]; then
           dkms remove -m ${MODULE_NAME} -v ${GPU_DV} -k ${KERNEL_NAME}
         else
-          echo "the dkms tool is not found, so we just remove the directory to have a try"
           rm -rf "${NVIDIA_DKMS_DIR}"
         fi
     fi
     {{- /* we need to append the date to the end of the file because the retry will override the log file */}}
     local log_file_name="/var/log/nvidia-installer-$(date +%s).log"
     sh $GPU_DEST/nvidia-drivers-$GPU_DV -s \
-        -k=$(uname -r) \
+        -k=$KERNEL_NAME \
         --log-file-name=${log_file_name} \
         -a --no-drm --dkms --utility-prefix="${GPU_DEST}" --opengl-prefix="${GPU_DEST}"
     exit $?
@@ -486,7 +484,7 @@ configGPUDrivers() {
     echo blacklist nouveau >> /etc/modprobe.d/blacklist.conf
     retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     wait_for_apt_locks
-    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+docker18.09.2-1" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
+    retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     tmpDir=$GPU_DEST/tmp
     (
       set -e -o pipefail
@@ -500,7 +498,6 @@ configGPUDrivers() {
     mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
     retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit $ERR_GPU_DRIVERS_INSTALL_TIMEOUT
     export -f installGPUDriversRun
-    export GPU_DEST GPU_DV
     retrycmd_if_failure 3 1 600 bash -c installGPUDriversRun || exit $ERR_GPU_DRIVERS_START_FAIL
     echo "${GPU_DEST}/lib64" > /etc/ld.so.conf.d/nvidia.conf
     retrycmd_if_failure 120 5 25 ldconfig || exit $ERR_GPU_DRIVERS_START_FAIL
