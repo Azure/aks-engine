@@ -19,7 +19,7 @@ const (
 	tenantID                                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 	resourceGroup                              = "TestResourceGroup"
 	computeAPIVersion                          = "2019-07-01"
-	diskAPIVersion                             = "2019-07-01"
+	diskAPIVersion                             = "2019-11-01"
 	networkAPIVersion                          = "2018-08-01"
 	deploymentAPIVersion                       = "2018-05-01"
 	resourceGroupAPIVersion                    = "2018-05-01"
