@@ -569,9 +569,38 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 func (a *Properties) validateZones() error {
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		// all zones or no zones should be defined for the cluster
 		if a.HasAvailabilityZones() {
-			if a.MastersAndAgentsUseAvailabilityZones() {
+			var poolsWithZones, poolsWithoutZones []string
+			for _, pool := range a.AgentPoolProfiles {
+				if pool.HasAvailabilityZones() {
+					poolsWithZones = append(poolsWithZones, pool.Name)
+				} else {
+					poolsWithoutZones = append(poolsWithoutZones, pool.Name)
+				}
+			}
+			if !a.MastersAndAgentsUseAvailabilityZones() {
+				poolsWithZonesPrefix := "pool"
+				poolsWithoutZonesPrefix := "pool"
+				if len(poolsWithZones) > 1 {
+					poolsWithZonesPrefix = "pools"
+				}
+				if len(poolsWithoutZones) > 1 {
+					poolsWithoutZonesPrefix = "pools"
+				}
+				poolsWithZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithZones)
+				poolsWithoutZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithoutZones)
+				if !a.MasterProfile.HasAvailabilityZones() {
+					if len(poolsWithZones) == len(a.AgentPoolProfiles) {
+						log.Warnf("This cluster is using Availability Zones for %s %s, but not for master VMs", poolsWithZonesPrefix, poolsWithZonesString)
+					} else {
+						log.Warnf("This cluster is using Availability Zones for %s %s, but not for %s %s, nor for master VMs", poolsWithZonesPrefix, poolsWithZonesString, poolsWithoutZonesPrefix, poolsWithoutZonesString)
+					}
+				} else {
+					if len(poolsWithoutZones) > 0 {
+						log.Warnf("This cluster is using Availability Zones for master VMs, but not for %s %s", poolsWithoutZonesPrefix, poolsWithoutZonesString)
+					}
+				}
+			} else {
 				// agent pool profiles
 				for _, agentPoolProfile := range a.AgentPoolProfiles {
 					if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
@@ -581,8 +610,6 @@ func (a *Properties) validateZones() error {
 				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
-			} else {
-				return errors.New("Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles")
 			}
 		}
 	}

@@ -5,6 +5,7 @@ package vlabs
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -2875,7 +2877,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 		excludeMasterFromStandardLB bool
 		masterProfile               *MasterProfile
 		agentProfiles               []*AgentPoolProfile
-		expectedErr                 string
+		expectedErr                 bool
+		expectedErrStr              string
 	}{
 		{
 			name:                "Agent profile with zones vmas",
@@ -2896,7 +2899,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
+			expectedErr:    true,
+			expectedErrStr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
 		},
 		{
 			name:                "Master profile with zones and Agent profile without zones",
@@ -2916,7 +2920,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityProfile: VirtualMachineScaleSets,
 				},
 			},
-			expectedErr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
+			expectedErr:    false,
+			expectedErrStr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
 		},
 		{
 			name:                "Master profile without zones and Agent profile with zones",
@@ -2936,7 +2941,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
+			expectedErr:    false,
+			expectedErrStr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
 		},
 		{
 			name:                "all zones and basic loadbalancer",
@@ -2958,7 +2964,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"",
+			expectedErr:    true,
+			expectedErrStr: "Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"",
 		},
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
@@ -2981,7 +2988,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
+			expectedErr:    true,
+			expectedErrStr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
 		},
 	}
 
@@ -2998,16 +3006,119 @@ func TestProperties_ValidateZones(t *testing.T) {
 				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
-			if err := cs.Validate(false); err != nil {
-				expectedMsg := test.expectedErr
-				if err.Error() != expectedMsg {
-					t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
+			err := cs.Validate(false)
+			if test.expectedErr {
+				if err == nil {
+					t.Errorf("error should have occurred")
+				} else {
+					if err.Error() != test.expectedErrStr {
+						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
+					}
 				}
-			} else {
-				t.Errorf("error should have occurred")
 			}
 		})
 	}
+}
+
+func ExampleProperties_validateZones() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+
+	// Master VMs have Availability Zone configuration, but pool does not
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+		AvailabilityZones:   []string{"1", "2"},
+	}
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "agentpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
+
+	// Pool has Availability Zone configuration, but Master VMs do not
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+	}
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "anotherpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
+
+	// Some pools have Availability Zone configuration, Master VMs do not
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "anotherpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+		{
+			Name:                "anotherpool2",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+		{
+			Name:                "anotherpool3",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+		{
+			Name:                "anotherpool4",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
+
+	// Master VMs and some (but not all) pools have Availability Zone configuration
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+		AvailabilityZones:   []string{"1", "2"},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
+	// The ordered collection of all output is validated below:
+
+	// Output:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
+	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
+	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
 }
 
 func TestProperties_ValidateLoadBalancer(t *testing.T) {

@@ -206,3 +206,28 @@ func GetLogAnalyticsWorkspaceDomain(cloudOrDependenciesLocation string) string {
 	}
 	return workspaceDomain
 }
+
+// GetEnglishOrderedQuotedListWithOxfordCommas returns a string that you can use in an English statement to report a list of things
+// With each thing in quotes, e.g. "thing 1", "thing 2", and "thing 3"
+// Oxford Comma not optional!
+func GetEnglishOrderedQuotedListWithOxfordCommas(l []string) string {
+	var ret string
+	for i, item := range l {
+		ret += fmt.Sprintf("\"%s\"", item)
+		switch i {
+		case len(l) - 2:
+			if len(l) > 2 {
+				ret += ", and "
+			} else {
+				ret += " and "
+			}
+		case len(l) - 2:
+			ret += ", and "
+		case len(l) - 1:
+			break
+		default:
+			ret += ", "
+		}
+	}
+	return ret
+}
