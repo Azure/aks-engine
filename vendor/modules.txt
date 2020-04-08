@@ -1,4 +1,4 @@
-# github.com/Azure/azure-sdk-for-go v40.2.0+incompatible
+# github.com/Azure/azure-sdk-for-go v41.0.0+incompatible
 github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement
 github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization
 github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute
