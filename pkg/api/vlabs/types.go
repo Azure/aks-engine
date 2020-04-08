@@ -413,7 +413,7 @@ type MasterProfile struct {
 	DNSPrefix                 string            `json:"dnsPrefix" validate:"required"`
 	SubjectAltNames           []string          `json:"subjectAltNames"`
 	VMSize                    string            `json:"vmSize" validate:"required"`
-	OSDiskSizeGB              int               `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1024"`
+	OSDiskSizeGB              int               `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	VnetSubnetID              string            `json:"vnetSubnetID,omitempty"`
 	VnetCidr                  string            `json:"vnetCidr,omitempty"`
 	AgentVnetSubnetID         string            `json:"agentVnetSubnetID,omitempty"`
