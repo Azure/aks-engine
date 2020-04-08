@@ -573,7 +573,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 		Identity: msi.Identity{
 			Name:     to.StringPtr("[variables('userAssignedID')]"),
 			Location: to.StringPtr("[variables('location')]"),
-			Type:     msi.UserAssignedIdentities("Microsoft.ManagedIdentity/userAssignedIdentities"),
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 		},
 	}
 

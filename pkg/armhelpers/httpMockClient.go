@@ -18,7 +18,7 @@ const (
 	subscriptionID                             = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
 	tenantID                                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 	resourceGroup                              = "TestResourceGroup"
-	computeAPIVersion                          = "2019-07-01"
+	computeAPIVersion                          = "2019-12-01"
 	diskAPIVersion                             = "2019-11-01"
 	networkAPIVersion                          = "2018-08-01"
 	deploymentAPIVersion                       = "2018-05-01"
