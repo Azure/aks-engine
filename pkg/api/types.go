@@ -374,7 +374,7 @@ type PrivateCluster struct {
 type PrivateJumpboxProfile struct {
 	Name           string `json:"name" validate:"required"`
 	VMSize         string `json:"vmSize" validate:"required"`
-	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	Username       string `json:"username,omitempty"`
 	PublicKey      string `json:"publicKey" validate:"required"`
 	StorageProfile string `json:"storageProfile,omitempty"`
