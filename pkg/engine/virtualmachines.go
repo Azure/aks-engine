@@ -11,7 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -23,7 +23,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	var useManagedIdentity, userAssignedIDEnabled bool
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 
 	var dependencies []string
@@ -335,7 +335,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 	}
 
 	if isStorageAccount {

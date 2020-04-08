@@ -84,7 +84,7 @@ const (
 // Supported container runtimes
 const (
 	Docker         = "docker"
-	KataContainers = "kata-containers"
+	KataContainers = "kata-containers" // Deprecated
 	Containerd     = "containerd"
 )
 
@@ -97,7 +97,7 @@ var (
 	NetworkPolicyValues = [...]string{"", "calico", NetworkPolicyCilium, NetworkPolicyAntrea, "azure", "none"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
-	ContainerRuntimeValues = [...]string{"", Docker, KataContainers, Containerd}
+	ContainerRuntimeValues = [...]string{"", Docker, Containerd}
 
 	// DistroValues holds the valid values for OS distros
 	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, Ubuntu1804Gen2, RHEL, AKSUbuntu1604, AKSUbuntu1804, ACC1604}

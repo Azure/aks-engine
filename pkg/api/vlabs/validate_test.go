@@ -5,6 +5,7 @@ package vlabs
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -73,18 +75,6 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
 		},
-		"should error when KubernetesConfig has invalid containerd version for kata-containers runtime": {
-			properties: &Properties{
-				OrchestratorProfile: &OrchestratorProfile{
-					OrchestratorType: "Kubernetes",
-					KubernetesConfig: &KubernetesConfig{
-						ContainerRuntime:  KataContainers,
-						ContainerdVersion: "1.0.0",
-					},
-				},
-			},
-			expectedError: "Invalid containerd version \"1.0.0\", please use one of the following versions: [1.3.2]",
-		},
 		"should error when KubernetesConfig has containerdVersion value for docker container runtime": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
@@ -95,7 +85,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd),
 		},
 		"should error when KubernetesConfig has containerdVersion value for default (empty string) container runtime": {
 			properties: &Properties{
@@ -106,7 +96,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers),
+			expectedError: fmt.Sprintf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd),
 		},
 		"should error when KubernetesConfig has enableAggregatedAPIs enabled and enableRBAC disabled": {
 			properties: &Properties{
@@ -1531,7 +1521,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	for _, runtime := range ContainerRuntimeValues {
 		p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
 		p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = runtime
-		if err := p.validateContainerRuntime(); err != nil {
+		if err := p.validateContainerRuntime(false); err != nil {
 			t.Errorf(
 				"should not error on containerRuntime=\"%s\"",
 				runtime,
@@ -1540,21 +1530,17 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = "not-existing"
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(false); err == nil {
 		t.Errorf(
 			"should error on invalid containerRuntime",
 		)
 	}
 
+	// Expect deprecated error on upgrading w/ kata-containers
 	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			OSType: Windows,
-		},
-	}
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(true); err == nil {
 		t.Errorf(
-			"should error on kata-containers for windows clusters",
+			"%s containerRuntime has been deprecated, you will not be able to update this cluster with this version of aks-engine", KataContainers,
 		)
 	}
 
@@ -1564,7 +1550,7 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 			OSType: Windows,
 		},
 	}
-	if err := p.validateContainerRuntime(); err == nil {
+	if err := p.validateContainerRuntime(false); err == nil {
 		t.Errorf(
 			"should error on containerd for windows clusters",
 		)
@@ -1919,6 +1905,43 @@ func TestValidateAddons(t *testing.T) {
 			},
 			expectedErr: errors.Errorf("%s add-on is required, it cannot be disabled", common.AzureCloudProviderAddonName),
 		},
+		{
+			name: "csi-secrets-store enabled with version < 1.16",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.SecretsStoreCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("%s add-on can only be used in 1.16+", common.SecretsStoreCSIDriverAddonName),
+		},
+		{
+			name: "keyvault-flexvolume and csi-secrets-store addons enabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						Addons: []KubernetesAddon{
+							{
+								Name:    common.KeyVaultFlexVolumeAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+							{
+								Name:    common.SecretsStoreCSIDriverAddonName,
+								Enabled: to.BoolPtr(true),
+							},
+						},
+					},
+				},
+			},
+			expectedErr: errors.Errorf("Both %s and %s addons are enabled, only one of these may be enabled on a cluster", common.KeyVaultFlexVolumeAddonName, common.SecretsStoreCSIDriverAddonName),
+		},
 	}
 
 	for _, test := range tests {
@@ -1980,10 +2003,18 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			"should not error on azure-policy when ServicePrincipalProfile is not empty",
 		)
 	}
-	p.OrchestratorProfile.OrchestratorRelease = "1.13"
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.12"
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error on azure-policy with k8s < 1.14",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorRelease = "1.14"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should not error on azure-policy with k8s >= 1.12",
+			"should not error on azure-policy with k8s >= 1.14",
 		)
 	}
 
@@ -2846,7 +2877,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 		excludeMasterFromStandardLB bool
 		masterProfile               *MasterProfile
 		agentProfiles               []*AgentPoolProfile
-		expectedErr                 string
+		expectedErr                 bool
+		expectedErrStr              string
 	}{
 		{
 			name:                "Agent profile with zones vmas",
@@ -2867,7 +2899,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
+			expectedErr:    true,
+			expectedErrStr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
 		},
 		{
 			name:                "Master profile with zones and Agent profile without zones",
@@ -2887,7 +2920,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityProfile: VirtualMachineScaleSets,
 				},
 			},
-			expectedErr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
+			expectedErr:    false,
+			expectedErrStr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
 		},
 		{
 			name:                "Master profile without zones and Agent profile with zones",
@@ -2907,7 +2941,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
+			expectedErr:    false,
+			expectedErrStr: "Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles",
 		},
 		{
 			name:                "all zones and basic loadbalancer",
@@ -2929,7 +2964,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"",
+			expectedErr:    true,
+			expectedErrStr: "Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"",
 		},
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
@@ -2952,7 +2988,8 @@ func TestProperties_ValidateZones(t *testing.T) {
 					AvailabilityZones:   []string{"1", "2"},
 				},
 			},
-			expectedErr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
+			expectedErr:    true,
+			expectedErrStr: "standard loadBalancerSku should exclude master nodes. Please set KubernetesConfig \"ExcludeMasterFromStandardLB\" to \"true\"",
 		},
 	}
 
@@ -2969,16 +3006,119 @@ func TestProperties_ValidateZones(t *testing.T) {
 				ExcludeMasterFromStandardLB: to.BoolPtr(test.excludeMasterFromStandardLB),
 			}
 
-			if err := cs.Validate(false); err != nil {
-				expectedMsg := test.expectedErr
-				if err.Error() != expectedMsg {
-					t.Errorf("expected error with message : %s, but got : %s", expectedMsg, err.Error())
+			err := cs.Validate(false)
+			if test.expectedErr {
+				if err == nil {
+					t.Errorf("error should have occurred")
+				} else {
+					if err.Error() != test.expectedErrStr {
+						t.Errorf("expected error with message : %s, but got : %s", test.expectedErrStr, err.Error())
+					}
 				}
-			} else {
-				t.Errorf("error should have occurred")
 			}
 		})
 	}
+}
+
+func ExampleProperties_validateZones() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+
+	// Master VMs have Availability Zone configuration, but pool does not
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+		AvailabilityZones:   []string{"1", "2"},
+	}
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "agentpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
+
+	// Pool has Availability Zone configuration, but Master VMs do not
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+	}
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "anotherpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
+
+	// Some pools have Availability Zone configuration, Master VMs do not
+	cs.Properties.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			Name:                "anotherpool",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+		{
+			Name:                "anotherpool2",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+		{
+			Name:                "anotherpool3",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+		},
+		{
+			Name:                "anotherpool4",
+			VMSize:              "Standard_DS2_v2",
+			Count:               4,
+			AvailabilityProfile: AvailabilitySet,
+			AvailabilityZones:   []string{"1", "2"},
+		},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
+
+	// Master VMs and some (but not all) pools have Availability Zone configuration
+	cs.Properties.MasterProfile = &MasterProfile{
+		Count:               5,
+		DNSPrefix:           "foo",
+		VMSize:              "Standard_DS2_v2",
+		AvailabilityProfile: VirtualMachineScaleSets,
+		AvailabilityZones:   []string{"1", "2"},
+	}
+	cs.Properties.validateZones()
+	// Should yield:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
+	// The ordered collection of all output is validated below:
+
+	// Output:
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
+	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
+	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
+	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
 }
 
 func TestProperties_ValidateLoadBalancer(t *testing.T) {

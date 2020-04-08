@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -24,10 +24,9 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	isCustomVnet := masterProfile.IsCustomVNET()
 	hasAvailabilityZones := masterProfile.HasAvailabilityZones()
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var userAssignedIDEnabled bool
 	if k8sConfig != nil {
-		useManagedIdentity = k8sConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && k8sConfig.UserAssignedID != ""
+		userAssignedIDEnabled = k8sConfig.UserAssignedIDEnabled()
 	}
 	isAzureCNI := orchProfile.IsAzureCNI()
 	masterCount := masterProfile.Count
@@ -89,7 +88,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		virtualMachine.Zones = &masterProfile.AvailabilityZones
 	}
 
-	if useManagedIdentity && userAssignedIDEnabled {
+	if userAssignedIDEnabled {
 		identity := &compute.VirtualMachineScaleSetIdentity{}
 		identity.Type = compute.ResourceIdentityTypeUserAssigned
 		identity.UserAssignedIdentities = map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
@@ -413,7 +412,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		useManagedIdentity = k8sConfig.UseManagedIdentity
 	}
 	if useManagedIdentity {
-		userAssignedIdentityEnabled := k8sConfig.UserAssignedID != ""
+		userAssignedIdentityEnabled := k8sConfig.UserAssignedIDEnabled()
 		if userAssignedIdentityEnabled {
 			virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
 				Type: compute.ResourceIdentityTypeUserAssigned,
@@ -749,7 +748,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		auditDEnabled := strconv.FormatBool(to.Bool(profile.AuditDEnabled))
 		isVHD := strconv.FormatBool(profile.IsVHDDistro())
 
-		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' API_SERVER_IP=',variables('kubernetesAPIServerIP'),' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; ', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmssCSE = compute.VirtualMachineScaleSetExtension{
 			Name: to.StringPtr("vmssCSE"),
 			VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{

@@ -1193,6 +1193,21 @@ func (p *Properties) IsVHDDistroForAllNodes() bool {
 	return true
 }
 
+// HasVHDDistroNodes returns true if any one Linux node pool, including masters, are running a VHD image
+func (p *Properties) HasVHDDistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.IsVHDDistro() {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.IsVHDDistro()
+	}
+	return false
+}
+
 // IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
@@ -1959,25 +1974,8 @@ func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedID == ""
 }
 
-// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
-func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedClientID != ""
-}
-
-// GetUserAssignedID returns the user assigned ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedID() string {
-	if k.UserAssignedIDEnabled() {
-		return k.UserAssignedID
-	}
-	return ""
-}
-
-// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedClientID() string {
-	if k.UserAssignedClientIDEnabled() {
-		return k.UserAssignedClientID
-	}
-	return ""
+func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
+	return !(k.UserAssignedIDEnabled() && strings.Contains(k.UserAssignedID, "/"))
 }
 
 // GetOrderedKubeletConfigString returns an ordered string of key/val pairs
@@ -2009,9 +2007,8 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 }
 
 // NeedsContainerd returns whether or not we need the containerd runtime configuration
-// E.g., kata configuration requires containerd config
 func (k *KubernetesConfig) NeedsContainerd() bool {
-	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
+	return k.ContainerRuntime == Containerd
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
@@ -2371,6 +2368,10 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
+	}
+
+	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {
+		parameters["API_SERVER_NAME"] = cs.Properties.HostedMasterProfile.FQDN
 	}
 
 	keys := make([]string, 0)

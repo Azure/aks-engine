@@ -111,12 +111,11 @@
                 "containerRuntime": {
                     "allowedValues": [
                         "docker",
-                        "kata-containers",
                         "containerd"
                     ],
                     "defaultValue": "docker",
                     "metadata": {
-                        "description": "The container runtime to use (docker|kata-containers|containerd)"
+                        "description": "The container runtime to use (docker|containerd)"
                     },
                     "type": "string"
                 },
@@ -1497,7 +1496,7 @@
                 "apiVersionAuthorizationUser": "2018-09-01-preview",
                 "apiVersionCompute": "2017-03-30",
                 "apiVersionKeyVault": "2016-10-01",
-                "apiVersionManagedIdentity": "2015-08-31-preview",
+                "apiVersionManagedIdentity": "2018-11-30",
                 "apiVersionNetwork": "2017-10-01",
                 "apiVersionStorage": "2017-10-01",
                 "clusterKeyVaultName": "",

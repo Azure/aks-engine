@@ -127,6 +127,15 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
+- path: /etc/apt/apt.conf.d/99periodic
+  permissions: "0644"
+  owner: root
+  content: |
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
+
 {{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
@@ -225,26 +234,13 @@ write_files:
           conf_template = "/etc/containerd/kubenet_template.conf"
           {{end}}
         [plugins."io.containerd.grpc.v1.cri".containerd]
-          {{if IsKataContainerRuntime }}
-          default_runtime_name = "kata"
-          {{else}}
           default_runtime_name = "runc"
-          {{end}}
          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
               runtime_type = "io.containerd.runc.v2"
-            {{if IsKataContainerRuntime }}
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-              runtime_type = "io.containerd.kata.v2"
-            {{end}}
             [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-              {{if IsKataContainerRuntime }}
-              runtime_engine = "/usr/bin/kata-runtime"
-              runtime_type = "io.containerd.kata.v2"
-              {{else}}
               {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
               runtime_type = "io.containerd.runc.v2"
-              {{end}}
     #EOF
 
   {{if IsKubenet }}

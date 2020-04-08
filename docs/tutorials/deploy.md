@@ -41,13 +41,14 @@ Run `aks-engine deploy` with the appropriate arguments:
 $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --client-id '<service principal client ID>' \
     --client-secret '<service principal client secret>' \
-    --dns-prefix contoso-apple --location westus2 \
+    --dns-prefix contoso-apple \
+    --location westus2 \
     --api-model examples/kubernetes.json
 
-WARN[0005] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
-WARN[0005] --resource-group was not specified. Using the DNS prefix from the apimodel as the resource group name: contoso-apple
-INFO[0034] Starting ARM Deployment (contoso-apple-1423145182). This will take some time...
-INFO[0393] Finished ARM Deployment (contoso-apple-1423145182).
+INFO[0000] new api model file has been generated during merge: /tmp/mergedApiModel619868596
+WARN[0002] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
+INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group contoso-apple. This will take some time...
+INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
 ```
 
 `aks-engine` will output Azure Resource Manager (ARM) templates, SSH keys, and a kubeconfig file in `_output/contoso-apple-59769a59` directory:

@@ -87,7 +87,7 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		EtcdVersion:             DefaultEtcdVersion,
 		MobyVersion:             DefaultMobyVersion,
 		ContainerdVersion:       DefaultContainerdVersion,
-		LoadBalancerSku:         DefaultLoadBalancerSku,
+		LoadBalancerSku:         BasicLoadBalancerSku,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
 		KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,

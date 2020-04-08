@@ -319,7 +319,7 @@ New-NSSMService {
 
     $kubeletDependOnServices = "docker"
     if ($global:EnableCsiProxy) {
-        $kubeletDependOnServices += " csi-proxy-server"
+        $kubeletDependOnServices += " csi-proxy"
     }
 
     # setup kubelet

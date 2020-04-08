@@ -380,7 +380,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 		return errors.Errorf("DcosConfig can be specified only when OrchestratorType is DCOS")
 	}
 
-	return a.validateContainerRuntime()
+	return a.validateContainerRuntime(isUpdate)
 }
 
 func (a *Properties) validateMasterProfile(isUpdate bool) error {
@@ -569,9 +569,38 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 func (a *Properties) validateZones() error {
 	if a.OrchestratorProfile.OrchestratorType == Kubernetes {
-		// all zones or no zones should be defined for the cluster
 		if a.HasAvailabilityZones() {
-			if a.MastersAndAgentsUseAvailabilityZones() {
+			var poolsWithZones, poolsWithoutZones []string
+			for _, pool := range a.AgentPoolProfiles {
+				if pool.HasAvailabilityZones() {
+					poolsWithZones = append(poolsWithZones, pool.Name)
+				} else {
+					poolsWithoutZones = append(poolsWithoutZones, pool.Name)
+				}
+			}
+			if !a.MastersAndAgentsUseAvailabilityZones() {
+				poolsWithZonesPrefix := "pool"
+				poolsWithoutZonesPrefix := "pool"
+				if len(poolsWithZones) > 1 {
+					poolsWithZonesPrefix = "pools"
+				}
+				if len(poolsWithoutZones) > 1 {
+					poolsWithoutZonesPrefix = "pools"
+				}
+				poolsWithZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithZones)
+				poolsWithoutZonesString := helpers.GetEnglishOrderedQuotedListWithOxfordCommas(poolsWithoutZones)
+				if !a.MasterProfile.HasAvailabilityZones() {
+					if len(poolsWithZones) == len(a.AgentPoolProfiles) {
+						log.Warnf("This cluster is using Availability Zones for %s %s, but not for master VMs", poolsWithZonesPrefix, poolsWithZonesString)
+					} else {
+						log.Warnf("This cluster is using Availability Zones for %s %s, but not for %s %s, nor for master VMs", poolsWithZonesPrefix, poolsWithZonesString, poolsWithoutZonesPrefix, poolsWithoutZonesString)
+					}
+				} else {
+					if len(poolsWithoutZones) > 0 {
+						log.Warnf("This cluster is using Availability Zones for master VMs, but not for %s %s", poolsWithoutZonesPrefix, poolsWithoutZonesString)
+					}
+				}
+			} else {
 				// agent pool profiles
 				for _, agentPoolProfile := range a.AgentPoolProfiles {
 					if agentPoolProfile.AvailabilityProfile == AvailabilitySet {
@@ -581,8 +610,6 @@ func (a *Properties) validateZones() error {
 				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
-			} else {
-				return errors.New("Availability Zones need to be defined for master profile and all agent pool profiles. Please set \"availabilityZones\" for all profiles")
 			}
 		}
 	}
@@ -604,6 +631,7 @@ func (a *Properties) validateAddons() error {
 		var IsNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
+		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
 
 		for _, agentPool := range a.AgentPoolProfiles {
 			if agentPool.IsAvailabilitySets() {
@@ -676,6 +704,11 @@ func (a *Properties) validateAddons() error {
 					if !a.HasAADAdminGroupID() {
 						return errors.New("aad addon can't be enabled without a valid aadProfile w/ adminGroupID")
 					}
+				case "keyvault-flexvolume":
+					keyvaultFlexvolumeEnabled = true
+					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
+					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
 						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
@@ -723,12 +756,12 @@ func (a *Properties) validateAddons() error {
 						}
 					}
 				case "azure-policy":
-					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.10.0")
+					isValidVersion, err := common.IsValidMinVersion(a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion, "1.14.0")
 					if err != nil {
 						return err
 					}
 					if !isValidVersion {
-						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.10 and above. Please specify a compatible version")
+						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
 					}
 					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
 						return errors.New("Azure Policy add-on requires service principal profile to be specified")
@@ -737,6 +770,11 @@ func (a *Properties) validateAddons() error {
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:
 					corednsEnabled = true
+				case common.SecretsStoreCSIDriverAddonName:
+					csiSecretsStoreEnabled = true
+					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.16+", addon.Name))
+					}
 				}
 			} else {
 				// Validation for addons if they are disabled
@@ -753,6 +791,9 @@ func (a *Properties) validateAddons() error {
 		}
 		if kubeDNSEnabled && corednsEnabled {
 			return errors.New("Both kube-dns and coredns addons are enabled, only one of these may be enabled on a cluster")
+		}
+		if keyvaultFlexvolumeEnabled && csiSecretsStoreEnabled {
+			return errors.New("Both keyvault-flexvolume and csi-secrets-store addons are enabled, only one of these may be enabled on a cluster")
 		}
 	}
 	return nil
@@ -1471,7 +1512,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	// Validate containerd scenarios
 	if k.ContainerRuntime == Docker || k.ContainerRuntime == "" {
 		if k.ContainerdVersion != "" {
-			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s or %s containerRuntime values instead if you wish to provide a containerdVersion", Containerd, KataContainers)
+			return errors.Errorf("containerdVersion is only valid in a non-docker context, use %s containerRuntime value instead if you wish to provide a containerdVersion", Containerd)
 		}
 	} else {
 		if e := validateContainerdVersion(k.ContainerdVersion); e != nil {
@@ -1622,7 +1663,7 @@ func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
 	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeProxyImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
 }
 
-func (a *Properties) validateContainerRuntime() error {
+func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 	var containerRuntime string
 
 	switch a.OrchestratorProfile.OrchestratorType {
@@ -1632,6 +1673,11 @@ func (a *Properties) validateContainerRuntime() error {
 		}
 	default:
 		return nil
+	}
+
+	// Check for deprecated, non-back-compat
+	if isUpdate && containerRuntime == KataContainers {
+		return errors.Errorf("%s containerRuntime has been deprecated, you will not be able to update this cluster with this version of aks-engine", KataContainers)
 	}
 
 	// Check ContainerRuntime has a valid value.
@@ -1646,16 +1692,8 @@ func (a *Properties) validateContainerRuntime() error {
 		return errors.Errorf("unknown containerRuntime %q specified", containerRuntime)
 	}
 
-	// Make sure we don't use unsupported container runtimes on windows.
-	if (containerRuntime == KataContainers) && a.HasWindows() {
-		return errors.Errorf("containerRuntime %q is not supporting windows agents", containerRuntime)
-	}
-
 	// TODO: These validations should be relaxed once ContainerD and CNI plugins are more readily available
 	if containerRuntime == Containerd && a.HasWindows() {
-		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin != "kubenet" {
-			return errors.Errorf("Windows only supports kubenet with containerd runtime. %q is not supported", a.OrchestratorProfile.KubernetesConfig.NetworkPlugin)
-		}
 		if a.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
 			return errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd")
 		}

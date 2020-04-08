@@ -15,7 +15,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
@@ -553,6 +553,11 @@ func (mc *MockAKSEngineClient) EnsureResourceGroup(ctx context.Context, resource
 		return nil, errors.New("EnsureResourceGroup failed")
 	}
 
+	return nil, nil
+}
+
+// ListResourceSkus mock
+func (mc *MockAKSEngineClient) ListResourceSkus(ctx context.Context, filter string) (ResourceSkusResultPage, error) {
 	return nil, nil
 }
 
