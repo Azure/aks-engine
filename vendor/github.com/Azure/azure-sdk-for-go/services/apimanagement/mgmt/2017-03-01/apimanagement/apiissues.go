@@ -36,7 +36,8 @@ func NewAPIIssuesClient(subscriptionID string) APIIssuesClient {
 	return NewAPIIssuesClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewAPIIssuesClientWithBaseURI creates an instance of the APIIssuesClient client.
+// NewAPIIssuesClientWithBaseURI creates an instance of the APIIssuesClient client using a custom endpoint.  Use this
+// when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure stack).
 func NewAPIIssuesClientWithBaseURI(baseURI string, subscriptionID string) APIIssuesClient {
 	return APIIssuesClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -75,10 +76,10 @@ func (client APIIssuesClient) ListByService(ctx context.Context, resourceGroupNa
 				{Target: "apiid", Name: validation.Pattern, Rule: `^[^*#&+:<>?]+$`, Chain: nil}}},
 		{TargetValue: top,
 			Constraints: []validation.Constraint{{Target: "top", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: 1, Chain: nil}}}}},
+				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: int64(1), Chain: nil}}}}},
 		{TargetValue: skip,
 			Constraints: []validation.Constraint{{Target: "skip", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: 0, Chain: nil}}}}}}); err != nil {
+				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: int64(0), Chain: nil}}}}}}); err != nil {
 		return result, validation.NewError("apimanagement.APIIssuesClient", "ListByService", err.Error())
 	}
 
@@ -138,8 +139,7 @@ func (client APIIssuesClient) ListByServicePreparer(ctx context.Context, resourc
 // ListByServiceSender sends the ListByService request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIIssuesClient) ListByServiceSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // ListByServiceResponder handles the response to the ListByService request. The method always

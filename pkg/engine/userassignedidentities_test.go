@@ -18,7 +18,7 @@ func TestCreateUserAssignedIdentities(t *testing.T) {
 			APIVersion: "[variables('apiVersionManagedIdentity')]",
 		},
 		Identity: msi.Identity{
-			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 			Name:     to.StringPtr("[variables('userAssignedID')]"),
 			Location: to.StringPtr("[variables('location')]"),
 		},
@@ -39,7 +39,7 @@ func TestCreateAppGwUserAssignedIdentities(t *testing.T) {
 			APIVersion: "[variables('apiVersionManagedIdentity')]",
 		},
 		Identity: msi.Identity{
-			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 			Name:     to.StringPtr("[variables('appGwICIdentityName')]"),
 			Location: to.StringPtr("[variables('location')]"),
 		},
