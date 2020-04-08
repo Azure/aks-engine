@@ -51,6 +51,17 @@ retrycmd() {
   done
   echo Executed \"$@\" $i times
 }
+retrycmd_no_stats() {
+  retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
+  for i in $(seq 1 $retries); do
+    timeout $timeout ${@} && break ||
+      if [ $i -eq $retries ]; then
+        return 1
+      else
+        sleep $wait_sleep
+      fi
+  done
+}
 retrycmd_get_tarball() {
   tar_retries=$1; wait_sleep=$2; tarball=$3; url=$4
   echo "${tar_retries} retries"
