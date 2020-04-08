@@ -146,7 +146,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if o.KubernetesConfig.KubernetesImageBaseType == "" {
-			o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+			o.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
 		}
 
 		if o.KubernetesConfig.MCRKubernetesImageBase == "" {
