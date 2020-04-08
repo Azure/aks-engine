@@ -750,6 +750,30 @@ func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
 	return nil
 }
 
+// ShouldEnableAzureCloudAddon determines whether or not we should enable the following addons:
+// 1. cloud-node-manager,
+// 2. azuredisk-csi-driver,
+// 3. azurefile-csi-driver.
+// For Linux clusters, we should enable CSI Drivers when using K8s 1.13+ and cloud-node-manager when using K8s 1.16+.
+// For Windwos clusters, we should enable them when using K8s 1.18+.
+func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
+	o := p.OrchestratorProfile
+	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+		return false
+	}
+	if !p.HasWindows() {
+		switch addonName {
+		case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
+			return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")
+		case common.CloudNodeManagerAddonName:
+			return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")
+		default:
+			return false
+		}
+	}
+	return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.18.0")
+}
+
 // IsCustomVNET returns true if the customer brought their own VNET
 func (a *AgentPoolProfile) IsCustomVNET() bool {
 	return len(a.VnetSubnetID) > 0

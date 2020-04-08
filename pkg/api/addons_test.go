@@ -2410,6 +2410,204 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.16.1"),
 		},
 		{
+			name: "azure cloud-node-manager disabled for Windows cluster with k8s < 1.18 and useCloudControllerManager is true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.17.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+			}, "1.17.0"),
+		},
+		{
+			name: "azure cloud-node-manager enabled for Windows cluster with k8s == 1.18 and useCloudControllerManager is true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIProvisionerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAttacherContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIClusterDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIClusterDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSILivenessProbeContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSINodeDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAzureFileContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAzureFileContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+					},
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIProvisionerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAttacherContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIClusterDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIClusterDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSILivenessProbeContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSINodeDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSISnapshotterContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIResizerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAzureDiskContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAzureDiskContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+					},
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.18.0"),
+		},
+		{
 			name: "azure cloud-node-manager enabled for k8s == 1.17.0 and useCloudControllerManager is true",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -2726,6 +2924,177 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 				},
 			}, "1.17.0"),
+		},
+		{
+			name: "azure cloud-node-manager enabled for Windows cluster with k8s >= 1.18.0 - upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AzureDiskCSIDriverAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+								{
+									Name:    common.AzureFileCSIDriverAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+								{
+									Name:    common.CloudNodeManagerAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: true,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIProvisionerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAttacherContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIClusterDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIClusterDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSILivenessProbeContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSINodeDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAzureFileContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAzureFileContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+					},
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIProvisionerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAttacherContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIClusterDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSILivenessProbeContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSINodeDriverRegistrarContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSISnapshotterContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIResizerContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+						{
+							Name:           common.CSIAzureDiskContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CSIAzureDiskContainerName],
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "200Mi",
+						},
+					},
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.18.0"),
 		},
 		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16.1 upgrade",

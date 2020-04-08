@@ -161,10 +161,6 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validatePrivateAzureRegistryServer(); e != nil {
-		return e
-	}
-
 	if e := a.validateAzureStackSupport(); e != nil {
 		return e
 	}
@@ -718,14 +714,18 @@ func (a *Properties) validateAddons() error {
 					}
 				case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
-						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
+						return errors.Errorf("%s add-on requires useCloudControllerManager to be true", addon.Name)
 					}
 				case "cloud-node-manager":
-					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						return errors.New(fmt.Sprintf("%s add-on can only be used Kubernetes 1.16 or above", addon.Name))
-					}
 					if !to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
-						return errors.New(fmt.Sprintf("%s add-on requires useCloudControllerManager to be true", addon.Name))
+						return errors.Errorf("%s add-on requires useCloudControllerManager to be true", addon.Name)
+					}
+					if !a.ShouldEnableAzureCloudAddon(addon.Name) {
+						minVersion := "1.16.0"
+						if a.HasWindows() {
+							minVersion = "1.18.0"
+						}
+						return errors.Errorf("%s add-on can only be used Kubernetes %s or above", addon.Name, minVersion)
 					}
 				case common.CiliumAddonName:
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
@@ -767,16 +767,19 @@ func (a *Properties) validateAddons() error {
 				case common.SecretsStoreCSIDriverAddonName:
 					csiSecretsStoreEnabled = true
 					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						return errors.New(fmt.Sprintf("%s add-on can only be used in 1.16+", addon.Name))
+						return errors.Errorf("%s add-on can only be used in 1.16+", addon.Name)
 					}
 				}
 			} else {
 				// Validation for addons if they are disabled
 				switch addon.Name {
 				case "cloud-node-manager":
-					if to.Bool(a.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
-						common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						return errors.New(fmt.Sprintf("%s add-on is required when useCloudControllerManager is true in Kubernetes 1.16 or above", addon.Name))
+					if a.ShouldEnableAzureCloudAddon(addon.Name) {
+						minVersion := "1.16.0"
+						if a.HasWindows() {
+							minVersion = "1.18.0"
+						}
+						return errors.Errorf("%s add-on is required when useCloudControllerManager is true in Kubernetes %s or above", addon.Name, minVersion)
 					}
 				case common.AzureCloudProviderAddonName:
 					return errors.Errorf("%s add-on is required, it cannot be disabled", addon.Name)
@@ -1514,7 +1517,7 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 		}
 	}
 
-	if k.UseCloudControllerManager != nil && *k.UseCloudControllerManager || k.CustomCcmImage != "" {
+	if to.Bool(k.UseCloudControllerManager) || k.CustomCcmImage != "" {
 		sv, err := semver.Make(k8sVersion)
 		if err != nil {
 			return errors.Errorf("could not validate version %s", k8sVersion)
@@ -1718,26 +1721,6 @@ func (a *Properties) validateCustomKubeComponent() error {
 	return nil
 }
 
-func (a *Properties) validatePrivateAzureRegistryServer() error {
-	k := a.OrchestratorProfile.KubernetesConfig
-	if k == nil || k.PrivateAzureRegistryServer == "" {
-		return nil
-	}
-
-	// Custom components must be provided if private azure registry server is not empty
-	if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-		if !k.isUsingCustomKubeComponent() {
-			return errors.Errorf("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided")
-		}
-	} else {
-		if k.CustomHyperkubeImage == "" {
-			return errors.Errorf("customHyperkubeImage must be provided when privateAzureRegistryServer is provided")
-		}
-	}
-
-	return nil
-}
-
 func validateName(name string, label string) error {
 	if name == "" {
 		return errors.Errorf("%s must be a non-empty value", label)
@@ -1855,7 +1838,7 @@ func (cs *ContainerService) validateCustomCloudProfile() error {
 			return errors.New("portalURL needs to be specified when CustomCloudProfile is provided")
 		}
 		if !strings.HasPrefix(a.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
-			return fmt.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
+			return errors.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
 		}
 		if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
 			return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)

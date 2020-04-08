@@ -377,9 +377,9 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   fi
 done
 
-# Starting with 1.16 we pull a common cloud-controller-manager image
+# Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
-0.4.1
+0.5.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do

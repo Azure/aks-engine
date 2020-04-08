@@ -13916,7 +13916,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch","list","get","update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -13952,6 +13952,8 @@ spec:
     metadata:
       labels:
         k8s-app: cloud-node-manager
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: cloud-node-manager
@@ -13973,7 +13975,14 @@ spec:
       - name: cloud-node-manager
         image: {{ContainerImage "cloud-node-manager"}}
         imagePullPolicy: IfNotPresent
-        command: ["cloud-node-manager"]
+        command:
+        - cloud-node-manager
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         resources:
           requests:
             cpu: 50m
@@ -18615,7 +18624,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch","list","get","update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -18674,7 +18683,14 @@ spec:
       - name: cloud-node-manager
         image: {{ContainerImage "cloud-node-manager"}}
         imagePullPolicy: IfNotPresent
-        command: ["cloud-node-manager"]
+        command:
+        - cloud-node-manager
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         resources:
           requests:
             cpu: 50m
@@ -23329,7 +23345,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch","list","get","update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -23372,7 +23388,7 @@ spec:
       serviceAccountName: cloud-node-manager
       hostNetwork: true {{/* required to fetch correct hostname */}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
@@ -23388,7 +23404,14 @@ spec:
       - name: cloud-node-manager
         image: {{ContainerImage "cloud-node-manager"}}
         imagePullPolicy: IfNotPresent
-        command: ["cloud-node-manager"]
+        command:
+        - cloud-node-manager
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         resources:
           requests:
             cpu: 50m
@@ -23396,6 +23419,63 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+{{- if HasWindows}}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager-windows
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager-windows
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager-windows
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /cloud-node-manager.exe
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+{{end}}
 `)
 
 func k8sAddons118KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
@@ -28052,7 +28132,7 @@ metadata:
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
-  verbs: ["watch","list","get","update"]
+  verbs: ["watch","list","get","update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -28095,7 +28175,7 @@ spec:
       serviceAccountName: cloud-node-manager
       hostNetwork: true {{/* required to fetch correct hostname */}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
@@ -28111,7 +28191,14 @@ spec:
       - name: cloud-node-manager
         image: {{ContainerImage "cloud-node-manager"}}
         imagePullPolicy: IfNotPresent
-        command: ["cloud-node-manager"]
+        command:
+        - cloud-node-manager
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         resources:
           requests:
             cpu: 50m
@@ -28119,6 +28206,63 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
+{{- if HasWindows}}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager-windows
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager-windows
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager-windows
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /cloud-node-manager.exe
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+{{end}}
 `)
 
 func k8sAddons119KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {

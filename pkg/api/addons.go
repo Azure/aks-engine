@@ -336,7 +336,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
 		Name:    common.CloudNodeManagerAddonName,
-		Enabled: to.BoolPtr(common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(cs.Properties.ShouldEnableAzureCloudAddon(common.CloudNodeManagerAddonName)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CloudNodeManagerAddonName,
@@ -518,7 +518,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultAzureDiskCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureDiskCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureDiskCSIDriverAddonEnabled && cs.Properties.ShouldEnableAzureCloudAddon(common.AzureDiskCSIDriverAddonName)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.CSIProvisionerContainerName,
@@ -589,7 +589,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultAzureFileCSIDriverAddonsConfig := KubernetesAddon{
 		Name:    common.AzureFileCSIDriverAddonName,
-		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && to.Bool(o.KubernetesConfig.UseCloudControllerManager)),
+		Enabled: to.BoolPtr(DefaultAzureFileCSIDriverAddonEnabled && cs.Properties.ShouldEnableAzureCloudAddon(common.AzureFileCSIDriverAddonName)),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.CSIProvisionerContainerName,
@@ -865,8 +865,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	// Ensure cloud-node-manager and CSI components are enabled on appropriate upgrades
-	if isUpgrade && to.Bool(o.KubernetesConfig.UseCloudControllerManager) &&
-		common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+	if isUpgrade &&
+		cs.Properties.ShouldEnableAzureCloudAddon(common.AzureDiskCSIDriverAddonName) &&
+		cs.Properties.ShouldEnableAzureCloudAddon(common.AzureFileCSIDriverAddonName) &&
+		cs.Properties.ShouldEnableAzureCloudAddon(common.CloudNodeManagerAddonName) {
 		componentry := map[string]KubernetesAddon{
 			common.AzureDiskCSIDriverAddonName: defaultAzureDiskCSIDriverAddonsConfig,
 			common.AzureFileCSIDriverAddonName: defaultAzureFileCSIDriverAddonsConfig,

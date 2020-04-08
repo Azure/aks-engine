@@ -721,28 +721,27 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].Image
 		},
-
 		"ContainerCPUReqs": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].CPURequests
 		},
-
 		"ContainerCPULimits": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].CPULimits
 		},
-
 		"ContainerMemReqs": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].MemoryRequests
 		},
-
 		"ContainerMemLimits": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].MemoryLimits
 		},
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
+		},
+		"HasWindows": func() bool {
+			return cs.Properties.HasWindows()
 		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
