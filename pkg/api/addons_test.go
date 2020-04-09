@@ -258,6 +258,29 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: getDefaultAddons("1.15.4", "custommcr.microsoft.com/", common.KubernetesImageBaseTypeMCR),
 		},
 		{
+			name: "default addons w/ custom GCR KubernetesImageBase",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase:     "customgcr.example.com/",
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4", "customgcr.example.com/", common.KubernetesImageBaseTypeGCR),
+		},
+		{
 			name: "tiller addon is enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
