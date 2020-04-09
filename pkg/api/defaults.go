@@ -138,7 +138,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if o.KubernetesConfig.KubernetesImageBase == "" {
-			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+			o.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase
 		} else {
 			if o.KubernetesConfig.KubernetesImageBase[len(o.KubernetesConfig.KubernetesImageBase)-1:] != "/" {
 				o.KubernetesConfig.KubernetesImageBase += "/"
