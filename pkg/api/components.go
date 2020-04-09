@@ -248,7 +248,7 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	kubernetesImageBase := specConfig.KubernetesImageBase
+	kubernetesImageBase := specConfig.MCRKubernetesImageBase
 	if kubernetesConfig.KubernetesImageBase != "" {
 		kubernetesImageBase = kubernetesConfig.KubernetesImageBase
 	}
