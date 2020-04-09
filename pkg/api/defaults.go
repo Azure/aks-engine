@@ -509,6 +509,14 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 					profile.Distro = Ubuntu
 				}
 			}
+			// Ensure that all VMSS pools have SinglePlacementGroup set to false in Standard LB cluster scenarios
+			if profile.AvailabilityProfile == VirtualMachineScaleSets && profile.SinglePlacementGroup == nil {
+				if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+					profile.SinglePlacementGroup = to.BoolPtr(false)
+				} else {
+					profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
+				}
+			}
 		}
 
 		// Configure kubelet
@@ -672,12 +680,6 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
-			}
-			if profile.Count > 100 {
-				profile.SinglePlacementGroup = to.BoolPtr(false)
-			}
-			if profile.SinglePlacementGroup == nil {
-				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 			}
 		}
 		// set default OSType to Linux
