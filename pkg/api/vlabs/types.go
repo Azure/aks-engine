@@ -495,7 +495,7 @@ type AgentPoolProfile struct {
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty" validate:"eq=Delete|eq=Deallocate|len=0"`
 	SpotMaxPrice                        *float64             `json:"spotMaxPrice,omitempty"`
 	StorageProfile                      string               `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|eq=Ephemeral|len=0"`
-	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty" validate:"max=4,dive,min=1,max=1023"`
+	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty" validate:"max=4,dive,min=1,max=32767"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
 	IPAddressCount                      int                  `json:"ipAddressCount,omitempty" validate:"min=0,max=256"`
 	Distro                              Distro               `json:"distro,omitempty"`
