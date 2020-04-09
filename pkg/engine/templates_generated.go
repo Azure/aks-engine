@@ -40682,7 +40682,6 @@ apt_get_update() {
     fi
   done
   echo Executed apt-get update $i times
-  wait_for_apt_locks
 }
 apt_get_install() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
@@ -40699,7 +40698,6 @@ apt_get_install() {
       fi
   done
   echo Executed apt-get install --no-install-recommends -y \"$@\" $i times
-  wait_for_apt_locks
 }
 apt_get_purge() {
   retries=20; wait_sleep=30; timeout=120
@@ -40719,7 +40717,6 @@ apt_get_purge() {
     fi
   done
   echo Executed apt-get purge -y \"$package\" $i times
-  wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
   retries=10
@@ -40739,7 +40736,6 @@ apt_get_dist_upgrade() {
     fi
   done
   echo Executed apt-get dist-upgrade $i times
-  wait_for_apt_locks
 }
 systemctl_restart() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4
