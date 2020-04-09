@@ -228,33 +228,33 @@ func TestAddonsIndexByName(t *testing.T) {
 
 func TestAssignDefaultAddonImages(t *testing.T) {
 	kubernetesVersion := "1.13.11"
-	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})[kubernetesVersion]
+	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
 		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
 		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
-		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
 		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
 		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
 		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
-		common.DashboardAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
-		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
-		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.DashboardAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.DashboardAddonName],
+		common.ReschedulerAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+		common.MetricsServerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
 		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
-		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
-		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+		common.DNSAutoscalerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
+		common.HeapsterAddonName:               specConfig.MCRKubernetesImageBase + k8sComponents[common.HeapsterAddonName],
 		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
 		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
 		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
-		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
-		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
-		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.KubeDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
 		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
 	}

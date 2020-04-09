@@ -23,7 +23,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 	cloudSpecConfig := cs.GetCloudSpecConfig()
 	specConfig := cloudSpecConfig.KubernetesSpecConfig
-	kubernetesImageBase := specConfig.KubernetesImageBase
+	kubernetesImageBase := specConfig.MCRKubernetesImageBase
 	if o.KubernetesConfig.KubernetesImageBase != "" {
 		kubernetesImageBase = o.KubernetesConfig.KubernetesImageBase
 	}

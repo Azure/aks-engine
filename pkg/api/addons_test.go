@@ -186,6 +186,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		CloudName: "AzureStackCloud",
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "KubernetesImageBase",
+			MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -204,7 +205,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		},
 	}
 	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
-	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
 	tests := []struct {
 		name           string
 		cs             *ContainerService
@@ -218,7 +219,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -231,7 +232,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "default addons w/ custom MCR KubernetesImageBase",
@@ -257,13 +258,36 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: getDefaultAddons("1.15.4", "custommcr.microsoft.com/", common.KubernetesImageBaseTypeMCR),
 		},
 		{
+			name: "default addons w/ custom GCR KubernetesImageBase",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase:     "customgcr.example.com/",
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4", "customgcr.example.com/", common.KubernetesImageBaseTypeGCR),
+		},
+		{
 			name: "tiller addon is enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -309,7 +333,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -358,7 +382,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -439,7 +463,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -452,7 +476,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -537,7 +561,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -550,7 +574,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -653,7 +677,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -666,7 +690,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -773,7 +797,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -786,7 +810,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -948,7 +972,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -961,7 +985,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1123,7 +1147,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1136,7 +1160,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1248,7 +1272,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1261,7 +1285,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1373,7 +1397,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1386,7 +1410,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1429,7 +1453,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1459,7 +1483,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "10m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
 						},
 					},
 				},
@@ -1472,7 +1496,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1514,7 +1538,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1564,7 +1588,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1602,7 +1626,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1656,7 +1680,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1682,7 +1706,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.DNSAutoscalerAddonName,
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
 							CPURequests:    "20m",
 							MemoryRequests: "100Mi",
 						},
@@ -1697,7 +1721,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1734,7 +1758,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:  common.CalicoClusterAutoscalerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},
@@ -1747,7 +1771,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1779,7 +1803,7 @@ func TestSetAddonsConfig(t *testing.T) {
 										},
 										{
 											Name:  common.CalicoClusterAutoscalerComponentName,
-											Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+											Image: specConfig.MCRKubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 										},
 									},
 								},
@@ -1812,7 +1836,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:  common.CalicoClusterAutoscalerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},
@@ -1825,7 +1849,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1876,7 +1900,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1931,7 +1955,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -1977,7 +2001,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2011,7 +2035,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2021,7 +2045,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2035,7 +2059,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2064,7 +2088,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
 						},
 					},
 				},
@@ -2079,7 +2103,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "KubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
 						},
 					},
 				},
@@ -2092,7 +2116,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2240,7 +2264,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2392,7 +2416,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2544,7 +2568,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2710,7 +2734,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2876,7 +2900,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2890,7 +2914,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeGCR),
+			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "upgrade w/ manual kube-dns enabled",
@@ -2899,7 +2923,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2929,15 +2953,15 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  common.DNSMasqComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSMasqComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSMasqComponentName],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSSidecarComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSSidecarComponentName],
 						},
 					},
 				},
@@ -2950,7 +2974,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.13.11",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2969,7 +2993,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeGCR),
+			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "kube-dns enabled",
@@ -2978,7 +3002,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3008,15 +3032,15 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  common.DNSMasqComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSMasqComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSMasqComponentName],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSSidecarComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSSidecarComponentName],
 						},
 					},
 				},
@@ -3029,7 +3053,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3048,7 +3072,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "kube-proxy w/ user configuration",
@@ -3057,7 +3081,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3112,7 +3136,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3131,7 +3155,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.KubeProxyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			expectedAddons: omitFromAddons([]string{common.KubeProxyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "node-problem-detector addon enabled",
@@ -3140,7 +3164,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3189,7 +3213,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3202,7 +3226,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "pod-security-policy disabled",
@@ -3211,7 +3235,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3230,7 +3254,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "pod-security-policy disabled during upgrade",
@@ -3239,7 +3263,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3258,7 +3282,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "audit-policy disabled",
@@ -3267,7 +3291,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3286,7 +3310,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
+			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "aad-default-aad-admin-group addon enabled",
@@ -3295,7 +3319,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3328,7 +3352,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3361,7 +3385,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.18.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIPv6,
 							NetworkPlugin:           NetworkPluginKubenet,
 							KubeletConfig: map[string]string{
@@ -3396,7 +3420,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAddonName],
 						},
 					},
 				},
@@ -3410,7 +3434,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -3434,7 +3458,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -3450,7 +3474,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.18.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							NetworkPlugin:           NetworkPluginKubenet,
 							KubeletConfig: map[string]string{
@@ -3482,7 +3506,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -3503,7 +3527,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
 						},
 					},
 				},
@@ -3516,7 +3540,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3555,7 +3579,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3588,7 +3612,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3632,7 +3656,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3675,7 +3699,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.8",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -3700,7 +3724,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.16.8", "", common.KubernetesImageBaseTypeGCR), // the default addons will include the default image
+			expectedAddons: getDefaultAddons("1.16.8", "", common.KubernetesImageBaseTypeMCR), // the default addons will include the default image
 		},
 	}
 
@@ -3951,7 +3975,7 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 
 func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
-	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
 	cases := []struct {
 		name                string
 		addon               KubernetesAddon
@@ -3975,7 +3999,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -4032,7 +4056,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -4101,7 +4125,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -4152,7 +4176,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 }
 
 func concatenateDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
-	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeGCR)
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeMCR)
 	defaults = append(defaults, addons...)
 	return defaults
 }
@@ -4164,7 +4188,7 @@ func overwriteDefaultAddons(addons []KubernetesAddon, version string) []Kubernet
 	}
 
 	var ret []KubernetesAddon
-	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeGCR)
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeMCR)
 
 	for _, addon := range defaults {
 		if _, exists := overrideAddons[addon.Name]; exists {
@@ -4198,7 +4222,7 @@ func isInStrSlice(name string, names []string) bool {
 
 func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType string) []KubernetesAddon {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
-	imageBase := specConfig.KubernetesImageBase
+	imageBase := specConfig.MCRKubernetesImageBase
 	if kubernetesImageBase != "" {
 		imageBase = kubernetesImageBase
 	}
