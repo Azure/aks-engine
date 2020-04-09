@@ -39972,7 +39972,7 @@ configureCNI() {
   {{/* needed for the iptables rules to work on bridges */}}
   retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
   echo -n "br_netfilter" >/etc/modules-load.d/br_netfilter.conf
-    configureAzureCNI
+  configureAzureCNI
   {{if HasCiliumNetworkPlugin}}
   systemctl enable sys-fs-bpf.mount
   systemctl restart sys-fs-bpf.mount
