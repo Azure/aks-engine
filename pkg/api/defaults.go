@@ -444,22 +444,24 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 
 			// Distro assignment for masterProfile
-			if cs.Properties.MasterProfile.Distro == "" && cs.Properties.MasterProfile.ImageRef == nil {
-				if cs.Properties.OrchestratorProfile.IsKubernetes() && cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
-					cs.Properties.MasterProfile.Distro = AKSUbuntu1604
-				} else {
+			if cs.Properties.MasterProfile.ImageRef == nil {
+				if cs.Properties.MasterProfile.Distro == "" {
+					if cs.Properties.OrchestratorProfile.IsKubernetes() && cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
+						cs.Properties.MasterProfile.Distro = AKSUbuntu1604
+					} else {
+						cs.Properties.MasterProfile.Distro = Ubuntu
+					}
+				} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+					if cs.Properties.MasterProfile.Distro == AKSDockerEngine || cs.Properties.MasterProfile.Distro == AKS1604Deprecated {
+						cs.Properties.MasterProfile.Distro = AKSUbuntu1604
+					} else if cs.Properties.MasterProfile.Distro == AKS1804Deprecated {
+						cs.Properties.MasterProfile.Distro = AKSUbuntu1804
+					}
+				}
+				// The AKS Distro is not available in Azure German Cloud.
+				if cloudSpecConfig.CloudName == AzureGermanCloud {
 					cs.Properties.MasterProfile.Distro = Ubuntu
 				}
-			} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
-				if cs.Properties.MasterProfile.Distro == AKSDockerEngine || cs.Properties.MasterProfile.Distro == AKS1604Deprecated {
-					cs.Properties.MasterProfile.Distro = AKSUbuntu1604
-				} else if cs.Properties.MasterProfile.Distro == AKS1804Deprecated {
-					cs.Properties.MasterProfile.Distro = AKSUbuntu1804
-				}
-			}
-			// The AKS Distro is not available in Azure German Cloud.
-			if cloudSpecConfig.CloudName == AzureGermanCloud {
-				cs.Properties.MasterProfile.Distro = Ubuntu
 			}
 		}
 
@@ -484,29 +486,31 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 			// Distro assignment for pools
 			if profile.OSType != Windows {
-				if profile.Distro == "" && profile.ImageRef == nil {
-					if cs.Properties.OrchestratorProfile.IsKubernetes() && cs.Properties.OrchestratorProfile.KubernetesConfig != nil && cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
-						if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
-							profile.Distro = Ubuntu
+				if profile.ImageRef == nil {
+					if profile.Distro == "" {
+						if cs.Properties.OrchestratorProfile.IsKubernetes() && cs.Properties.OrchestratorProfile.KubernetesConfig != nil && cs.Properties.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage == "" {
+							if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
+								profile.Distro = Ubuntu
+							} else {
+								profile.Distro = AKSUbuntu1604
+							}
 						} else {
-							profile.Distro = AKSUbuntu1604
+							profile.Distro = Ubuntu
 						}
-					} else {
+						// Ensure deprecated distros are overridden
+						// Previous versions of aks-engine required the docker-engine distro for N series vms,
+						// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
+					} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
+						if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
+							profile.Distro = AKSUbuntu1604
+						} else if profile.Distro == AKS1804Deprecated {
+							profile.Distro = AKSUbuntu1804
+						}
+					}
+					// The AKS Distro is not available in Azure German Cloud.
+					if cloudSpecConfig.CloudName == AzureGermanCloud {
 						profile.Distro = Ubuntu
 					}
-					// Ensure deprecated distros are overridden
-					// Previous versions of aks-engine required the docker-engine distro for N series vms,
-					// so we need to hard override it in order to produce a working cluster in upgrade/scale contexts.
-				} else if cs.Properties.OrchestratorProfile.IsKubernetes() && (isUpgrade || isScale) {
-					if profile.Distro == AKSDockerEngine || profile.Distro == AKS1604Deprecated {
-						profile.Distro = AKSUbuntu1604
-					} else if profile.Distro == AKS1804Deprecated {
-						profile.Distro = AKSUbuntu1804
-					}
-				}
-				// The AKS Distro is not available in Azure German Cloud.
-				if cloudSpecConfig.CloudName == AzureGermanCloud {
-					profile.Distro = Ubuntu
 				}
 			}
 		}

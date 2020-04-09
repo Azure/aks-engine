@@ -4311,7 +4311,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 		isUpdate      bool
 		expectedError error
 	}{
-		"should error when masterProfile includes both an ImageRef and a Distro configuration": {
+		"should not error when masterProfile includes both an ImageRef and a Distro configuration": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4329,9 +4329,9 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+			expectedError: nil,
 		},
-		"should error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
+		"should not error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4349,7 +4349,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+			expectedError: nil,
 		},
 		"should not error when masterProfile includes an ImageRef configuration only": {
 			properties: &Properties{
@@ -4459,7 +4459,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 		isUpdate      bool
 		expectedError error
 	}{
-		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
+		"should not error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4479,9 +4479,9 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+			expectedError: nil,
 		},
-		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
+		"should not error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4501,7 +4501,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+			expectedError: nil,
 		},
 		"should not error when AgentPoolProfile includes an ImageRef configuration only": {
 			properties: &Properties{
