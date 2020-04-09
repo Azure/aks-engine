@@ -952,6 +952,114 @@ func TestKubernetesImageBaseAppendSlash(t *testing.T) {
 	}
 }
 
+func TestKubernetesImageBase(t *testing.T) {
+	// Default public cloud
+	mockCS := getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig := mockCS.GetCloudSpecConfig()
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Default mooncake cloud
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "chinanorth"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// User-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
+	}
+
+	// User-customized MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-mcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-mcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-mcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade default scenario
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario forces GCR to MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario doesn't force user-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
+	}
+}
+
 func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.15.7")
 	properties := mockCS.Properties
