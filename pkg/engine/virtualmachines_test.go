@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 )
@@ -196,6 +196,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	profile.DiskSizesGB = []int{256, 256, 256}
 	profile.OSDiskSizeGB = 512
 	profile.StorageProfile = api.StorageAccount
+	profile.UltraSSDEnabled = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
 		SSHEnabled: true,
 	}
@@ -229,6 +230,9 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 			VirtualMachineProperties: &compute.VirtualMachineProperties{
 				HardwareProfile: &compute.HardwareProfile{
 					VMSize: compute.VirtualMachineSizeTypes("[variables('agentpool1VMSize')]"),
+				},
+				AdditionalCapabilities: &compute.AdditionalCapabilities{
+					UltraSSDEnabled: to.BoolPtr(true),
 				},
 				StorageProfile: &compute.StorageProfile{
 					ImageReference: &compute.ImageReference{Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),

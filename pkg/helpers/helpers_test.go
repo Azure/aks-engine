@@ -71,6 +71,37 @@ func TestNormalizeAzureRegion(t *testing.T) {
 	}
 }
 
+func TestGetEnglishOrderedListWithOxfordCommas(t *testing.T) {
+	cases := []struct {
+		input          []string
+		expectedResult string
+	}{
+		{
+			input:          []string{"foo"},
+			expectedResult: "\"foo\"",
+		},
+		{
+			input:          []string{"foo", "bar"},
+			expectedResult: "\"foo\" and \"bar\"",
+		},
+		{
+			input:          []string{"foo", "bar", "baz"},
+			expectedResult: "\"foo\", \"bar\", and \"baz\"",
+		},
+		{
+			input:          []string{"thing 1", "thing 2"},
+			expectedResult: "\"thing 1\" and \"thing 2\"",
+		},
+	}
+
+	for _, c := range cases {
+		result := GetEnglishOrderedQuotedListWithOxfordCommas(c.input)
+		if c.expectedResult != result {
+			t.Fatalf("GetEnglishOrderedQuotedListWithOxfordCommas returned unexpected result: expected %s but got %s", c.expectedResult, result)
+		}
+	}
+}
+
 func TestPointerToBool(t *testing.T) {
 	boolVar := true
 	ret := PointerToBool(boolVar)
@@ -232,11 +263,11 @@ func TestAcceleratedNetworkingSupported(t *testing.T) {
 		},
 		{
 			input:          "AZAP_Performance_ComputeV17C",
-			expectedResult: true,
+			expectedResult: false,
 		},
 		{
 			input:          "SQLGL",
-			expectedResult: true,
+			expectedResult: false,
 		},
 		{
 			input:          "",

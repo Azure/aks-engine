@@ -31,8 +31,11 @@ az login --service-principal \
 # set to the sub id we want to cleanup
 az account set -s "$SUBSCRIPTION_ID"
 
-python pkg/helpers/generate_azure_constants.py
-git status | grep pkg/helpers/azureconst.go
+./bin/aks-engine get-locations -o code --client-id="${CLIENT_ID}" --client-secret="${CLIENT_SECRET}" --subscription-id="${SUBSCRIPTION_ID}" \
+  > pkg/helpers/azure_locations.go
+./bin/aks-engine get-skus -o code --client-id="${CLIENT_ID}" --client-secret="${CLIENT_SECRET}" --subscription-id="${SUBSCRIPTION_ID}" \
+  > pkg/helpers/azure_skus_const.go
+git status | grep pkg/helpers/azure
 exit_code=$?
 if [ $exit_code -gt "0" ]; then
   echo "No modifications found! Exiting 0"

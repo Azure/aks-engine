@@ -8,7 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -27,24 +27,30 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var useManagedIdentity, userAssignedIDEnabled, createNewUserAssignedIdentity bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
+		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	}
 
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
-		userAssignedID := createUserAssignedIdentities()
+		if createNewUserAssignedIdentity {
+			userAssignedID := createUserAssignedIdentities()
+			armResources = append(armResources, userAssignedID)
+		}
+
 		var msiRoleAssignment RoleAssignmentARM
 		if isHostedMaster {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
 		} else {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
 		}
-		armResources = append(armResources, userAssignedID, msiRoleAssignment)
+
+		armResources = append(armResources, msiRoleAssignment)
 	}
 
 	// Create the Standard Load Balancer resource spec, so long as:
@@ -161,7 +167,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASResources = append(agentVMASResources, agentVMASVM)
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {
 		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment(profile)

@@ -3,6 +3,7 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
+      "orchestratorRelease": "1.14",
       "kubernetesConfig": {
         "enableRbac": false
       }

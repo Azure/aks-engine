@@ -149,8 +149,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.5":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.15.7":         false,
 	"1.15.8":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
-	"1.15.9":         true,
+	"1.15.9":         false,
 	"1.15.10":        true,
+	"1.15.11":        true,
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -162,8 +163,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.2":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.16.4":         false,
 	"1.16.5":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
-	"1.16.6":         true,
+	"1.16.6":         false,
 	"1.16.7":         true,
+	"1.16.8":         true,
 	"1.17.0-alpha.1": false,
 	"1.17.0-alpha.2": false,
 	"1.17.0-alpha.3": false,
@@ -173,13 +175,16 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.0-rc.2":    false,
 	"1.17.0":         false,
 	"1.17.1":         false,
-	"1.17.2":         true,
+	"1.17.2":         false,
 	"1.17.3":         true,
-	"1.18.0-alpha.1": true,
-	"1.18.0-alpha.2": true,
-	"1.18.0-alpha.3": true,
-	"1.18.0-alpha.5": true,
-	"1.18.0-beta.1":  true,
+	"1.17.4":         true,
+	"1.18.0-alpha.1": false,
+	"1.18.0-alpha.2": false,
+	"1.18.0-alpha.3": false,
+	"1.18.0-alpha.5": false,
+	"1.18.0-beta.1":  false,
+	"1.18.0":         true,
+	"1.19.0-alpha.1": true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release

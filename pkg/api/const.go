@@ -27,8 +27,9 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"
+	CoreOS            Distro = "coreos"            // deprecated
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -109,7 +110,7 @@ const (
 // Supported container runtimes
 const (
 	Docker         = "docker"
-	KataContainers = "kata-containers"
+	KataContainers = "kata-containers" // Deprecated
 	Containerd     = "containerd"
 )
 
@@ -165,6 +166,8 @@ const (
 	DefaultCoreDNSAddonEnabled = true
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
+	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
+	DefaultSecretStoreCSIDriverAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -173,8 +176,6 @@ const (
 	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -247,7 +248,7 @@ const (
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
-	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
 )
@@ -256,17 +257,18 @@ const (
 const (
 	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
 	DefaultAzureStackUseInstanceMetadata = false
-
 	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
 	DefaultAzureStackAcceleratedNetworking = false
-
-	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
+	// DefaultAzureStackAvailabilityProfile set to AvailabilitySet as VMSS clusters are not suppored on Azure Stack
+	DefaultAzureStackAvailabilityProfile = AvailabilitySet
+	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment
 	DefaultAzureStackFaultDomainCount = 3
-
-	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
+	// MaxAzureStackManagedDiskSize is the size in GB of the etcd disk volumes when total nodes count is greater than 10
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// DefaultAzureStackLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU on Azure Stack
+	DefaultAzureStackLoadBalancerSku = BasicLoadBalancerSku
 )
 
 const (
@@ -308,9 +310,9 @@ const (
 
 // Azure Stack configures all clusters as if they were large clusters.
 const (
-	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 6
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 1
 	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
-	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 5
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
 	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
 	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
 	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
@@ -319,7 +321,7 @@ const (
 	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
 	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
 	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
-	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "5m"
 )
 
 const (
@@ -428,7 +430,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.18"
+	DefaultEtcdVersion = "3.3.19"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -464,7 +466,7 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.10"
+	DefaultMobyVersion = "3.0.11"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.3.2"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

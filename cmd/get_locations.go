@@ -22,7 +22,7 @@ import (
 const (
 	locationsName             = "get-locations"
 	locationsShortDescription = "Show Azure locations where an AKS Engine cluster can be deployed"
-	locationsLongDescription  = locationsShortDescription + "\n\nThis command is unsupported and intended to be used only by AKS Engine developers."
+	locationsLongDescription  = locationsShortDescription + developersOnly
 )
 
 var (

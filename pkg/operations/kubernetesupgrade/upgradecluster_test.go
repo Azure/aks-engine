@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	. "github.com/Azure/aks-engine/pkg/test"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -860,6 +860,51 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 	})
 
+	It("Should not pause cluster-autoscaler if only control plane is upgraded", func() {
+		cs := api.CreateMockContainerService("testcluster", "1.11.10", 3, 2, false)
+		enabled := true
+		addon := api.KubernetesAddon{
+			Name:    "cluster-autoscaler",
+			Enabled: &enabled,
+		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{
+			Addons: []api.KubernetesAddon{
+				addon,
+			},
+		}
+
+		uc := UpgradeCluster{
+			Translator: &i18n.Translator{},
+			Logger:     log.NewEntry(log.New()),
+		}
+
+		mockClient := armhelpers.MockAKSEngineClient{}
+		uc.Client = &mockClient
+		uc.ControlPlaneOnly = true
+		uc.DataModel = cs
+
+		logger, hook := logtest.NewNullLogger()
+		uc.Logger.Logger = logger
+		defer hook.Reset()
+		err := uc.UpgradeCluster(&mockClient, "kubeConfig", TestAKSEngineVersion)
+		Expect(err).NotTo(HaveOccurred())
+		// messages we do not expect to see
+		messages := []string{
+			"pausing cluster autoscaler",
+			"resuming cluster autoscaler",
+		}
+		for _, m := range messages {
+			found := false
+			for _, entry := range hook.Entries {
+				if strings.Contains(strings.ToLower(entry.Message), m) {
+					found = true
+					break
+				}
+			}
+			Expect(found).To(BeFalse())
+		}
+	})
+
 	It("Tests SetClusterAutoscalerReplicaCount", func() {
 		uc := UpgradeCluster{
 			Translator: &i18n.Translator{},
@@ -931,7 +976,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 
 		u := &Upgrader{}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
 
 		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
@@ -945,7 +990,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
 			}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -954,7 +999,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -967,7 +1012,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 		mockClient.MockKubernetesClient.FailGetNode = true
 
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion, false)
 		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
 		Expect(err).To(HaveOccurred())
 

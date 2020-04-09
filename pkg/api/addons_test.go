@@ -1539,7 +1539,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "8.0.0-2",
+						"dockerProviderVersion": "8.0.0-3",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 						"workspaceDomain":       "b3BpbnNpZ2h0cy5henVyZS5jb20=",
@@ -1551,7 +1551,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
 						},
 					},
 				},
@@ -1900,8 +1900,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"auditInterval":             "30",
-						"constraintViolationsLimit": "20",
+						"auditInterval":             "60",
+						"constraintViolationsLimit": "100",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
@@ -1917,7 +1917,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							Image:          k8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "256Mi",
-							CPULimits:      "100m",
+							CPULimits:      "1000m",
 							MemoryLimits:   "512Mi",
 						},
 					},
@@ -2084,34 +2084,6 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 				},
 			},
-		},
-		{
-			name: "CoreOS addons",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							Distro: CoreOS,
-							VMSize: "Standard_NC6", // to validate that CoreOS distro does not get nvidia addon
-						},
-					},
-				},
-			},
-			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.BlobfuseFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
 		},
 		{
 			name: "azure disk and azure file csi driver enabled for k8s >= 1.13.0 and UseCloudControllerManager is true",
@@ -3131,7 +3103,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.15.4", "", common.KubernetesImageBaseTypeGCR),
+			}, "1.15.4"),
 		},
 		{
 			name: "kube-proxy disabled",
@@ -3466,7 +3438,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.18.0")),
 		},
 		{
 			name: "addons with dual stack",
@@ -3535,7 +3507,200 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 					},
 				},
-			}, "1.18.0", "", common.KubernetesImageBaseTypeGCR)),
+			}, "1.18.0")),
+		},
+		{
+			name: "kube proxy w/ customKubeProxyImage",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:        DefaultKubernetesSubnet,
+							ProxyMode:            KubeProxyModeIPTables,
+							NetworkPlugin:        NetworkPluginAzure,
+							CustomKubeProxyImage: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			}, "1.15.4"),
+		},
+		{
+			name: "csi-secrets-store addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.SecretsStoreCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.SecretsStoreCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.15.4"),
+		},
+		{
+			name: "keyvault-flexvolume enabled for k8s >= 1.16.0 - upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(false),
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KeyVaultFlexVolumeAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: true,
+			expectedAddons: omitFromAddons([]string{common.SecretsStoreCSIDriverAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
+						},
+					},
+				},
+			}, "1.16.0")),
+		},
+		{
+			name: "keyvault-flexvolume enabled for 1.16+",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KeyVaultFlexVolumeAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.SecretsStoreCSIDriverAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
+						},
+					},
+				},
+			}, "1.16.0")),
+		},
+		{
+			name: "ip-masq-agent upgrade to 1.1.16 overrides custom image",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.8",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.IPMASQAgentAddonName,
+									Enabled: to.BoolPtr(true),
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:  common.IPMASQAgentAddonName,
+											Image: "my-custom-image",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.16.8", "", common.KubernetesImageBaseTypeGCR), // the default addons will include the default image
 		},
 	}
 
@@ -3573,6 +3738,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.NodeProblemDetectorAddonName,
 				common.PodSecurityPolicyAddonName,
 				common.AADAdminGroupAddonName,
+				common.SecretsStoreCSIDriverAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
@@ -3991,14 +4157,14 @@ func concatenateDefaultAddons(addons []KubernetesAddon, version string) []Kubern
 	return defaults
 }
 
-func overwriteDefaultAddons(addons []KubernetesAddon, version, kubernetesImageBase, kubernetesImageBaseType string) []KubernetesAddon {
+func overwriteDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
 	overrideAddons := make(map[string]KubernetesAddon)
 	for _, addonOverride := range addons {
 		overrideAddons[addonOverride.Name] = addonOverride
 	}
 
 	var ret []KubernetesAddon
-	defaults := getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType)
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeGCR)
 
 	for _, addon := range defaults {
 		if _, exists := overrideAddons[addon.Name]; exists {
@@ -4049,20 +4215,6 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 					CPULimits:      "50m",
 					MemoryLimits:   "100Mi",
 					Image:          k8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
-				},
-			},
-		},
-		{
-			Name:    common.KeyVaultFlexVolumeAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:           common.KeyVaultFlexVolumeAddonName,
-					CPURequests:    "50m",
-					MemoryRequests: "100Mi",
-					CPULimits:      "50m",
-					MemoryLimits:   "100Mi",
-					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
 				},
 			},
 		},
@@ -4162,6 +4314,64 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		addons = append(addons, KubernetesAddon{
 			Name:    common.PodSecurityPolicyAddonName,
 			Enabled: to.BoolPtr(true),
+		})
+	}
+
+	if !common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.KeyVaultFlexVolumeAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.KeyVaultFlexVolumeAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "100Mi",
+					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+				},
+			},
+		})
+	}
+
+	if common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.SecretsStoreCSIDriverAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.CSILivenessProbeContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSILivenessProbeContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSINodeDriverRegistrarContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSINodeDriverRegistrarContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreDriverContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreDriverContainerName],
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreProviderAzureContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreProviderAzureContainerName],
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+			},
 		})
 	}
 

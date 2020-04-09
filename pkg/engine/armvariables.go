@@ -51,6 +51,11 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 		k8sVars[k] = v
 	}
 
+	windowsProfileVars := getWindowsProfileVars(cs.Properties.WindowsProfile)
+	for k, v := range windowsProfileVars {
+		k8sVars[k] = v
+	}
+
 	return k8sVars, nil
 }
 
@@ -64,15 +69,22 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
+	var userAssignedIDReference string
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedID = kubernetesConfig.UserAssignedIDEnabled()
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
 		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
 		provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
+
+		if kubernetesConfig.ShouldCreateNewUserAssignedIdentity() {
+			userAssignedIDReference = "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]"
+		} else {
+			userAssignedIDReference = "[variables('userAssignedID')]"
+		}
 	}
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
@@ -95,7 +107,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
 		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
-		"userAssignedIDReference":       "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+		"userAssignedIDReference":       userAssignedIDReference,
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
@@ -481,6 +493,13 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]",
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]",
 			}
+			masterVars["masterEtcdMetricURLs"] = []string{
+				"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]",
+			}
 		}
 	}
 
@@ -604,6 +623,21 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	return telemetryVars
+}
+
+func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
+	enableCSIProxy := common.DefaultEnableCSIProxyWindows
+	CSIProxyURL := ""
+
+	if wp != nil {
+		enableCSIProxy = wp.IsCSIProxyEnabled()
+		CSIProxyURL = wp.CSIProxyURL
+	}
+	vars := map[string]interface{}{
+		"windowsEnableCSIProxy": enableCSIProxy,
+		"windowsCSIProxyURL":    CSIProxyURL,
+	}
+	return vars
 }
 
 func getSizeMap() map[string]interface{} {

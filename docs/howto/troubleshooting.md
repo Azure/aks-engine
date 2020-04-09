@@ -31,7 +31,7 @@ From a vm node that did not provision successfully:
 
 How to determine the above?
 
-1. Look at the deployment error message. The error should include which VM extension failed the deployment. For example, `cse-master-0` means that the CSE extension of VM master 0 failed. It should also include the date that the extension started running at and the name of the VM it was running on.  
+1. Look at the deployment error message. The error should include which VM extension failed the deployment. For example, `cse-master-0` means that the CSE extension of VM master 0 failed. It should also include the date that the extension started running at and the name of the VM it was running on.
 
 2. From a master node: `kubectl get nodes`
 
@@ -48,7 +48,7 @@ How to determine the above?
 execute command: command terminated with exit status=20\n[stdout]\n\n[stderr]\n"."
 ```
 
-Look for the exit code. In the above example, the exit code is `20`. The list of exit codes and their meaning can be found [here](../../parts/k8s/cloud-init/artifacts/cse_helpers.sh).
+Look for the exit code. In the above example, the exit code is `20`. The list of exit codes and their meaning can be found [here](../../pkg/engine/cse.go).
 
 If after following the above you are still unable to troubleshoot your deployment error, please open a Github issue with title "CSE error: exit code <INSERT_YOUR_EXIT_CODE>" and include the following in the description:
 

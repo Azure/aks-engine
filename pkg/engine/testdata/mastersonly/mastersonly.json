@@ -3,11 +3,7 @@
     "properties": {
         "orchestratorProfile": {
             "orchestratorType": "Kubernetes",
-            "orchestratorRelease": "1.13",
-            "kubernetesConfig": {
-                "loadBalancerSku": "Standard",
-                "excludeMasterFromStandardLB": true
-            }
+            "orchestratorRelease": "1.13"
         },
         "masterProfile": {
             "count": 3,

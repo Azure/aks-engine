@@ -351,6 +351,11 @@ func (mc HTTPMockClient) RegisterGetAvailabilitySetFaultDomainCount() {
 	})
 }
 
+// RegisterListResourceSkus registers a mock response for ListResourceSkus.
+func (mc HTTPMockClient) RegisterListResourceSkus() {
+	// Not implemented on Azure Stack.
+}
+
 // RegisterVirtualMachineEndpoint registers mock responses for the Microsoft.Compute/virtualMachines endpoint
 func (mc *HTTPMockClient) RegisterVirtualMachineEndpoint() {
 	pattern := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachines/%s", mc.SubscriptionID, mc.ResourceGroup, mc.VirtualMachineName)

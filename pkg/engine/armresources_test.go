@@ -14,7 +14,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -525,7 +525,6 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 	roleAssignmentARM := RoleAssignmentARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionAuthorizationUser')]",
-			DependsOn:  []string{"[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]"},
 		},
 		RoleAssignment: authorization.RoleAssignment{
 			Name: to.StringPtr("[guid(concat(variables('userAssignedID'), 'roleAssignment', resourceGroup().id))]"),
@@ -533,7 +532,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 			RoleAssignmentPropertiesWithScope: &authorization.RoleAssignmentPropertiesWithScope{
 				Scope:            to.StringPtr("[resourceGroup().id]"),
 				RoleDefinitionID: to.StringPtr("[variables('contributorRoleDefinitionId')]"),
-				PrincipalID:      to.StringPtr("[reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))).principalId]"),
+				PrincipalID:      to.StringPtr("[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"),
 				PrincipalType:    authorization.PrincipalType("ServicePrincipal"),
 			},
 		},
@@ -574,7 +573,7 @@ func TestGenerateARMResourcesWithVMSSAgentPool(t *testing.T) {
 		Identity: msi.Identity{
 			Name:     to.StringPtr("[variables('userAssignedID')]"),
 			Location: to.StringPtr("[variables('location')]"),
-			Type:     msi.UserAssignedIdentities("Microsoft.ManagedIdentity/userAssignedIdentities"),
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 		},
 	}
 

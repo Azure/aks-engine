@@ -39,6 +39,8 @@ const (
 	MaxIPAddressCount = 256
 	// address relative to the first consecutive Kubernetes static IP
 	DefaultInternalLbStaticIPOffset = 10
+	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
+	DefaultEnableCSIProxyWindows = false
 )
 
 // Availability profiles
@@ -61,9 +63,9 @@ const (
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.13"
+	KubernetesDefaultRelease string = "1.15"
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release
-	KubernetesDefaultReleaseWindows string = "1.14"
+	KubernetesDefaultReleaseWindows string = "1.15"
 )
 
 const (
@@ -208,13 +210,13 @@ const (
 	CSIAttacherContainerName = "csi-attacher"
 	// CSIClusterDriverRegistrarContainerName is the name of the csi-cluster-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIClusterDriverRegistrarContainerName = "csi-cluster-driver-registrar"
-	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
 	CSILivenessProbeContainerName = "livenessprobe"
 	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver addon
 	CSISnapshotterContainerName = "csi-snapshotter"
 	// CSIResizerContainerName is the name of the csi-resizer container in the azuredisk-csi-driver addon
 	CSIResizerContainerName = "csi-resizer"
-	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
 	CSINodeDriverRegistrarContainerName = "csi-node-driver-registrar"
 	// CSIAzureDiskContainerName is the name of the azuredisk-csi container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIAzureDiskContainerName = "azuredisk-csi"
@@ -266,6 +268,12 @@ const (
 	PodSecurityPolicyAddonName = "pod-security-policy"
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
+	// SecretsStoreCSIDriverAddonName is the name of the secrets-store-csi-driver addon
+	SecretsStoreCSIDriverAddonName = "csi-secrets-store"
+	// CSISecretsStoreDriverContainerName is the name of the secrets-store container in the csi-secrets-store addon
+	CSISecretsStoreDriverContainerName = "secrets-store"
+	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
+	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
 )
 
 // Component name consts

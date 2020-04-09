@@ -96,7 +96,6 @@ func TestGetTemplateFuncMap(t *testing.T) {
 		"GetAgentSwarmModeCustomData",
 		"GetPodInfraContainerSpec",
 		"IsKubenet",
-		"IsKataContainerRuntime",
 		"WrapAsVariable",
 		"CloudInitData",
 		"WrapAsParameter",
@@ -157,6 +156,14 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		},
 	}
 	api.AzureCloudSpecEnvMap[api.AzureStackCloud] = azureStackCloudSpec
+	var errorCodeStrings []string
+	var errorCodes []int
+	for k, v := range cseErrorCodes {
+		errorCodeStrings = append(errorCodeStrings, k)
+		errorCodes = append(errorCodes, v)
+	}
+	errorCodeStrings = append(errorCodeStrings, "ERR_HOLD_MY_BEER")
+	errorCodes = append(errorCodes, -1)
 	cases := []struct {
 		name                                  string
 		cs                                    *api.ContainerService
@@ -168,10 +175,13 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedGetHyperkubeImageReference    string
 		expectedGetTargetEnvironment          string
 		expectedIsNSeriesSKU                  bool
-		expectedIsKataContainerRuntime        bool
 		expectedIsDockerContainerRuntime      bool
 		expectedHasPrivateAzureRegistryServer bool
 		expectedGetPrivateAzureRegistryServer string
+		expectedGetSysctlDConfigKeyVals       string
+		expectedGetCSEErrorCodeVals           []int
+		expectedHasVHDDistroNodes             bool
+		expectedIsVHDDistroForAllNodes        bool
 	}{
 		{
 			name: "1.15 release",
@@ -203,6 +213,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedGetCSEErrorCodeVals:          []int{-1},
 		},
 		{
 			name: "1.16 release",
@@ -234,6 +246,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "1.17 release",
@@ -265,6 +278,42 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+		},
+		{
+			name: "1.17 release w/ VHD distro",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							Distro:              api.AKSUbuntu1604,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedHasVHDDistroNodes:            true,
+			expectedIsVHDDistroForAllNodes:       true,
 		},
 		{
 			name: "custom search domain",
@@ -303,6 +352,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "custom nodes DNS",
@@ -339,6 +389,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -355,6 +406,13 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 							KubernetesImageBaseType:          common.KubernetesImageBaseTypeGCR,
 						},
 					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
 				},
 			},
 			expectedHasCustomSearchDomain:        false,
@@ -366,6 +424,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "china cloud",
@@ -398,6 +457,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureChinaCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "german cloud",
@@ -430,6 +490,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureGermanCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "usgov cloud",
@@ -462,6 +523,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureUSGovernmentCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "Azure Stack",
@@ -498,6 +560,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzureStackCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "N series SKU",
@@ -530,37 +593,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 true,
 			expectedIsDockerContainerRuntime:     true,
-		},
-		{
-			name: "kata-containers",
-			cs: &api.ContainerService{
-				Properties: &api.Properties{
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime:        api.KataContainers,
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-						},
-					},
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:                "pool1",
-							Count:               1,
-							AvailabilityProfile: api.VirtualMachineScaleSets,
-						},
-					},
-				},
-			},
-			expectedHasCustomSearchDomain:        false,
-			expectedGetSearchDomainName:          "",
-			expectedGetSearchDomainRealmUser:     "",
-			expectedGetSearchDomainRealmPassword: "",
-			expectedHasCustomNodesDNS:            false,
-			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
-			expectedGetTargetEnvironment:         "AzurePublicCloud",
-			expectedIsNSeriesSKU:                 false,
-			expectedIsKataContainerRuntime:       true,
+			expectedGetSysctlDConfigKeyVals:      "",
 		},
 		{
 			name: "PrivateAzureRegistryServer",
@@ -595,6 +628,71 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:      true,
 			expectedHasPrivateAzureRegistryServer: true,
 			expectedGetPrivateAzureRegistryServer: "my-server",
+			expectedGetSysctlDConfigKeyVals:       "",
+		},
+		{
+			name: "sysctl config",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.16.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					MasterProfile: &api.MasterProfile{
+						SysctlDConfig: map[string]string{
+							"net.ipv4.tcp_retries2":             "8",
+							"net.core.somaxconn":                "16384",
+							"net.ipv4.tcp_max_syn_backlog":      "16384",
+							"net.core.message_cost":             "40",
+							"net.core.message_burst":            "80",
+							"net.ipv4.neigh.default.gc_thresh1": "4096",
+							"net.ipv4.neigh.default.gc_thresh2": "8192",
+							"net.ipv4.neigh.default.gc_thresh3": "16384",
+							"net.ipv4.tcp_keepalive_time":       "7200",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							SysctlDConfig: map[string]string{
+								"net.ipv4.tcp_retries2":             "8",
+								"net.core.somaxconn":                "16384",
+								"net.ipv4.tcp_max_syn_backlog":      "16384",
+								"net.core.message_cost":             "40",
+								"net.core.message_burst":            "80",
+								"net.ipv4.neigh.default.gc_thresh1": "4096",
+								"net.ipv4.neigh.default.gc_thresh2": "8192",
+								"net.ipv4.neigh.default.gc_thresh3": "16384",
+								"net.ipv4.tcp_keepalive_time":       "7200",
+							},
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.16.1",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals: `net.core.message_burst = 80
+    net.core.message_cost = 40
+    net.core.somaxconn = 16384
+    net.ipv4.neigh.default.gc_thresh1 = 4096
+    net.ipv4.neigh.default.gc_thresh2 = 8192
+    net.ipv4.neigh.default.gc_thresh3 = 16384
+    net.ipv4.tcp_keepalive_time = 7200
+    net.ipv4.tcp_max_syn_backlog = 16384
+    net.ipv4.tcp_retries2 = 8`,
 		},
 	}
 
@@ -668,6 +766,16 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			if ret[0].Interface() != dhcpV6ConfigCSEScriptFilepath {
 				t.Errorf("expected funcMap invocation of GetDHCPv6ConfigCSEScriptFilepath to return %s, instead got %s", dhcpV6ConfigCSEScriptFilepath, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["HasVHDDistroNodes"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasVHDDistroNodes {
+				t.Errorf("expected funcMap invocation of HasVHDDistroNodes to return %t, instead got %t", c.expectedHasVHDDistroNodes, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsVHDDistroForAllNodes"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsVHDDistroForAllNodes {
+				t.Errorf("expected funcMap invocation of IsVHDDistroForAllNodes to return %t, instead got %t", c.expectedIsVHDDistroForAllNodes, ret[0].Interface())
+			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])
 				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
@@ -680,11 +788,6 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedIsDockerContainerRuntime {
 				t.Errorf("expected funcMap invocation of IsDockerContainerRuntime to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
 			}
-			v = reflect.ValueOf(funcMap["IsKataContainerRuntime"])
-			ret = v.Call(make([]reflect.Value, 0))
-			if ret[0].Interface() != c.expectedIsKataContainerRuntime {
-				t.Errorf("expected funcMap invocation of IsKataContainerRuntime to return %t, instead got %t", c.expectedIsKataContainerRuntime, ret[0].Interface())
-			}
 			v = reflect.ValueOf(funcMap["HasPrivateAzureRegistryServer"])
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasPrivateAzureRegistryServer {
@@ -694,6 +797,27 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetPrivateAzureRegistryServer {
 				t.Errorf("expected funcMap invocation of GetPrivateAzureRegistryServer to return %s, instead got %s", c.expectedGetPrivateAzureRegistryServer, ret[0].Interface())
+			}
+			if c.cs.Properties.MasterProfile != nil {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.MasterProfile.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for _, pool := range c.cs.Properties.AgentPoolProfiles {
+				v = reflect.ValueOf(funcMap["GetSysctlDConfigKeyVals"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(pool.SysctlDConfig)})
+				if ret[0].Interface() != c.expectedGetSysctlDConfigKeyVals {
+					t.Errorf("expected funcMap invocation of expectedGetSysctlDConfigKeyVals to return %s, instead got %s", c.expectedGetSysctlDConfigKeyVals, ret[0].Interface())
+				}
+			}
+			for i, errorCodeString := range errorCodeStrings {
+				v = reflect.ValueOf(funcMap["GetCSEErrorCode"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(errorCodeString)})
+				if ret[0].Interface() != errorCodes[i] {
+					t.Errorf("expected funcMap invocation of GetCSEErrorCode to return %d, instead got %d", errorCodes[i], ret[0].Interface())
+				}
 			}
 		})
 	}
@@ -718,20 +842,6 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 		{
 			Name:           "IsKubenet_IsFalseWhenNetworkPluginIsNotKubenet",
 			FuncName:       "IsKubenet",
-			ExpectedResult: false,
-		},
-		{
-			Name:     "IsKataContainerRuntime_IsTrueWhenContainerRuntimeIsKataContainers",
-			FuncName: "IsKataContainerRuntime",
-			MutateFunc: func(cs api.ContainerService) api.ContainerService {
-				cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = api.KataContainers
-				return cs
-			},
-			ExpectedResult: true,
-		},
-		{
-			Name:           "IsKataContainerRuntime_IsFalseWhenContainerRuntimeIsNotKataContainers",
-			FuncName:       "IsKataContainerRuntime",
 			ExpectedResult: false,
 		},
 		{

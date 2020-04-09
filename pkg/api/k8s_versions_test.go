@@ -96,6 +96,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 	}
 	g.Expect(oneDotEighteenDotZero).To(Equal(expected))
 
@@ -180,6 +182,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 	}
 	g.Expect(oneDotSeventeenDotZero).To(Equal(expected))
 
@@ -262,6 +266,8 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+		common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+		common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 	}
 	g.Expect(oneDotSixteenDotZero).To(Equal(expected))
 

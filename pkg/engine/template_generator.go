@@ -476,6 +476,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				kubernetesWindowsAgentFunctionsPS1,
 				kubernetesWindowsConfigFunctionsPS1,
 				kubernetesWindowsContainerdFunctionsPS1,
+				kubernetesWindowsCsiProxyFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
@@ -635,6 +636,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			return fmt.Sprintf("\"%s\"", cloudSpecConfig.OSImageConfig[profile.Distro].ImageVersion)
 		},
+		"HasVHDDistroNodes": func() bool {
+			return cs.Properties.HasVHDDistroNodes()
+		},
+		"IsVHDDistroForAllNodes": func() bool {
+			return cs.Properties.IsVHDDistroForAllNodes()
+		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
 		},
@@ -684,9 +691,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
 		},
-		"IsKataContainerRuntime": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
-		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
 		},
@@ -695,9 +699,6 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"HasDCSeriesSKU": func() bool {
 			return cs.Properties.HasDCSeriesSKU()
-		},
-		"HasCoreOS": func() bool {
-			return cs.Properties.HasCoreOS()
 		},
 		"RequiresDocker": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
@@ -756,6 +757,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
+		"GetCSEErrorCode": func(errorType string) int {
+			return GetCSEErrorCode(errorType)
+		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
 			if cs.Properties.TelemetryProfile != nil {
@@ -797,6 +801,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			sort.Strings(kvs)
 			return strings.Join(kvs, ",")
+		},
+		"GetSysctlDConfigKeyVals": func(sysctlDConfig map[string]string) string {
+			return common.GetOrderedNewlinedKeyValsStringForCloudInit(sysctlDConfig)
 		},
 		"OpenBraces": func() string {
 			return "{{"
@@ -885,7 +892,7 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 
 func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) string {
 	if isUserAssignedIdentity {
-		return "' USER_ASSIGNED_IDENTITY_ID=',reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID')), '2018-11-30').clientId, ' '"
+		return "' USER_ASSIGNED_IDENTITY_ID=',reference(variables('userAssignedID'), variables('apiVersionManagedIdentity')).clientId, ' '"
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
 }

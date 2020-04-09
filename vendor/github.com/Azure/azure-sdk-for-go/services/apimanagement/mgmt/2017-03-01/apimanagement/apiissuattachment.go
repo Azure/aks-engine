@@ -36,7 +36,9 @@ func NewAPIIssuAttachmentClient(subscriptionID string) APIIssuAttachmentClient {
 	return NewAPIIssuAttachmentClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewAPIIssuAttachmentClientWithBaseURI creates an instance of the APIIssuAttachmentClient client.
+// NewAPIIssuAttachmentClientWithBaseURI creates an instance of the APIIssuAttachmentClient client using a custom
+// endpoint.  Use this when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure
+// stack).
 func NewAPIIssuAttachmentClientWithBaseURI(baseURI string, subscriptionID string) APIIssuAttachmentClient {
 	return APIIssuAttachmentClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -127,8 +129,7 @@ func (client APIIssuAttachmentClient) HeadPreparer(ctx context.Context, resource
 // HeadSender sends the Head request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIIssuAttachmentClient) HeadSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // HeadResponder handles the response to the Head request. The method always

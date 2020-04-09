@@ -369,13 +369,11 @@
       "containerRuntime": {
         "allowedValues": [
           "docker",
-          "clear-containers",
-          "kata-containers",
           "containerd"
         ],
         "defaultValue": "docker",
         "metadata": {
-          "description": "The container runtime to use (docker|clear-containers|kata-containers|containerd)"
+          "description": "The container runtime to use (docker|containerd)"
         },
         "type": "string"
       },
