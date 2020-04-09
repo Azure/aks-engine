@@ -572,6 +572,7 @@ type MasterProfile struct {
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
@@ -658,6 +659,7 @@ type AgentPoolProfile struct {
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 	SysctlDConfig                       map[string]string    `json:"sysctldConfig,omitempty"`
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

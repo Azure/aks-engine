@@ -438,6 +438,7 @@ type MasterProfile struct {
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
 	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 
 	// subnet is internal
 	subnet string
@@ -509,6 +510,7 @@ type AgentPoolProfile struct {
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	// subnet is internal
 	subnet string
 
