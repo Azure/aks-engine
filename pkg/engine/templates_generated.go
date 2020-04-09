@@ -154,6 +154,7 @@
 // ../../parts/k8s/addons/coredns.yaml
 // ../../parts/k8s/addons/dns-autoscaler.yaml
 // ../../parts/k8s/addons/ip-masq-agent.yaml
+// ../../parts/k8s/addons/krustlet.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -203,6 +204,7 @@
 // ../../parts/k8s/cloud-init/artifacts/generateproxycerts.sh
 // ../../parts/k8s/cloud-init/artifacts/health-monitor.sh
 // ../../parts/k8s/cloud-init/artifacts/kms.service
+// ../../parts/k8s/cloud-init/artifacts/krustlet_generate_kubeconfig.sh
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.timer
 // ../../parts/k8s/cloud-init/artifacts/kubelet.service
@@ -32488,6 +32490,63 @@ func k8sAddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsKrustletYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: krustlet
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: krustlet
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["pods", "nodes", "pods/status"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: krustlet
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+subjects:
+  - kind: ServiceAccount
+    name: krustlet
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: krustlet
+  apiGroup: ""
+`)
+
+func k8sAddonsKrustletYamlBytes() ([]byte, error) {
+	return _k8sAddonsKrustletYaml, nil
+}
+
+func k8sAddonsKrustletYaml() (*asset, error) {
+	bytes, err := k8sAddonsKrustletYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/krustlet.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsKubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1beta1 # This is required.
 kind: Policy
 omitStages:
@@ -40130,6 +40189,51 @@ ensureK8sControlPlane() {
   fi
   retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
+{{- if HasKrustletNodePool}}
+ensureKrustlet() {
+  KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+  retrycmd_if_failure 120 5 30 $KUBECTL get serviceaccount,clusterrole,clusterrolebinding krustlet -n kube-system
+  cd /home/$ADMINUSER
+  runuser -u $ADMINUSER /etc/kubernetes/krustlet_generate_kubeconfig.sh
+  RANDFILE=$(mktemp)
+  export RANDFILE
+  openssl req -new -sha256 -newkey rsa:2048 -keyout krustlet.key -out krustlet.csr -nodes -subj "/C=US/ST=./L=./O=./OU=./CN=krustlet"
+  cat <<EOF | $KUBECTL apply -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: krustlet
+spec:
+  request: $(cat krustlet.csr | base64 | tr -d '\n')
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
+  $KUBECTL certificate approve krustlet
+  $KUBECTL get csr krustlet -o jsonpath='{.status.certificate}' | base64 --decode > krustlet.crt
+  openssl pkcs12 -export -out krustlet.pfx -inkey krustlet.key -in krustlet.crt -password "pass:password"
+  mkdir -p /etc/krustlet
+  chmod 700 /etc/krustlet
+  useradd -U krustlet
+  chage -E -1 -I -1 -m 0 -M 99999 krustlet
+  chage -l krustlet
+  id krustlet
+  mkhomedir_helper krustlet
+  mkdir -p /home/krustlet/.krustlet
+  chown krustlet:krustlet /etc/krustlet /home/krustlet/.krustlet
+  mv {krustlet.pfx,kubeconfig-sa} /etc/krustlet
+  chown krustlet:krustlet /etc/krustlet/*
+  chmod 600 /etc/krustlet
+  retrycmd_get_tarball 120 5 "/home/$ADMINUSER/krustlet.tar.gz" https://krustlet.blob.core.windows.net/releases/krustlet-v0.1.0-Linux-amd64.tar.gz
+  mkdir -p krustlet && tar -xzf krustlet.tar.gz -C krustlet
+  chown -R krustlet:krustlet krustlet/
+  mv krustlet/krustlet-wasi /usr/local/bin/
+  mv krustlet/lib /home/krustlet/.krustlet/
+  wait_for_file 1200 1 /etc/systemd/system/krustlet.service
+  systemctlEnableAndStart krustlet
+}
+{{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
   GATEKEEPER_NAMESPACE="gatekeeper-system"
@@ -41251,14 +41355,23 @@ fi
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
-time_metric "EnsureKubelet" ensureKubelet
-time_metric "EnsureJournal" ensureJournal
+time_metric "WriteKubeConfig" writeKubeConfig
 
+{{- if HasKrustletNodePool}}
+if [ -f /etc/systemd/system/krustlet.service ]; then
+  time_metric "EnsureKrustlet" ensureKrustlet
+else
+  time_metric "EnsureKubelet" ensureKubelet
+fi
+{{else}}
+  time_metric "EnsureKubelet" ensureKubelet
+{{end}}
+
+time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
   fi
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
@@ -41816,6 +41929,72 @@ func k8sCloudInitArtifactsKmsService() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/kms.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsKrustlet_generate_kubeconfigSh = []byte(`#!/bin/bash
+
+# Helpful script taken from the armory docs: https://docs.armory.io/spinnaker-install-admin-guides/manual-service-account/
+
+SERVICE_ACCOUNT_NAME=krustlet
+CONTEXT=$(kubectl config current-context)
+NAMESPACE=kube-system
+
+NEW_CONTEXT=default
+KUBECONFIG_FILE="kubeconfig-sa"
+
+SECRET_NAME=$(kubectl get serviceaccount ${SERVICE_ACCOUNT_NAME} \
+  --context ${CONTEXT} \
+  --namespace ${NAMESPACE} \
+  -o jsonpath='{.secrets[0].name}')
+TOKEN_DATA=$(kubectl get secret ${SECRET_NAME} \
+  --context ${CONTEXT} \
+  --namespace ${NAMESPACE} \
+  -o jsonpath='{.data.token}')
+
+TOKEN=$(echo ${TOKEN_DATA} | base64 -d)
+
+# Create dedicated kubeconfig
+# Create a full copy
+kubectl config view --raw > ${KUBECONFIG_FILE}.full.tmp
+# Switch working context to correct context
+kubectl --kubeconfig ${KUBECONFIG_FILE}.full.tmp config use-context ${CONTEXT}
+# Minify
+kubectl --kubeconfig ${KUBECONFIG_FILE}.full.tmp \
+  config view --flatten --minify > ${KUBECONFIG_FILE}.tmp
+# Rename context
+kubectl config --kubeconfig ${KUBECONFIG_FILE}.tmp \
+  rename-context ${CONTEXT} ${NEW_CONTEXT}
+# Create token user
+kubectl config --kubeconfig ${KUBECONFIG_FILE}.tmp \
+  set-credentials ${CONTEXT}-${NAMESPACE}-token-user \
+  --token ${TOKEN}
+# Set context to use token user
+kubectl config --kubeconfig ${KUBECONFIG_FILE}.tmp \
+  set-context ${NEW_CONTEXT} --user ${CONTEXT}-${NAMESPACE}-token-user
+# Set context to correct namespace
+kubectl config --kubeconfig ${KUBECONFIG_FILE}.tmp \
+  set-context ${NEW_CONTEXT} --namespace ${NAMESPACE}
+# Flatten/minify kubeconfig
+kubectl config --kubeconfig ${KUBECONFIG_FILE}.tmp \
+  view --flatten --minify > ${KUBECONFIG_FILE}
+# Remove tmp
+rm ${KUBECONFIG_FILE}.full.tmp
+rm ${KUBECONFIG_FILE}.tmp
+`)
+
+func k8sCloudInitArtifactsKrustlet_generate_kubeconfigShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsKrustlet_generate_kubeconfigSh, nil
+}
+
+func k8sCloudInitArtifactsKrustlet_generate_kubeconfigSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsKrustlet_generate_kubeconfigShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/krustlet_generate_kubeconfig.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -43197,6 +43376,30 @@ func k8sCloudInitMasternodecustomdataYml() (*asset, error) {
 var _k8sCloudInitNodecustomdataYml = []byte(`#cloud-config
 
 write_files:
+{{- if .IsKrustletNode}}
+- path: /etc/systemd/system/krustlet.service
+  permissions: "0644"
+  owner: "root"
+  content: |
+    [Unit]
+    Description=Krustlet, a kubelet implementation for running WASM
+
+    [Service]
+    Restart=on-failure
+    RestartSec=5s
+    Environment=KUBECONFIG=/etc/krustlet/kubeconfig-sa
+    Environment=PFX_PATH=/etc/krustlet/krustlet.pfx
+    Environment=PFX_PASSWORD=password
+    Environment=KRUSTLET_DATA_DIR=/etc/krustlet
+    Environment=RUST_LOG=wascc_provider=info,wasi_provider=info,main=info
+    ExecStart=/usr/local/bin/krustlet-wasi
+    User=krustlet
+    Group=krustlet
+
+    [Install]
+    WantedBy=multi-user.target
+    #EOF
+{{end}}
 {{- if .RequiresCloudproviderConfig}}
 - path: /etc/kubernetes/azure.json
   permissions: "0600"
@@ -43567,6 +43770,13 @@ write_files:
   content: |
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
+
+- path: /etc/kubernetes/krustlet_generate_kubeconfig.sh
+  permissions: "0755"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "generateKrustletKubeconfig"}}
 
 runcmd:
 - set -x
@@ -50697,6 +50907,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/coredns.yaml":                                                   k8sAddonsCorednsYaml,
 	"k8s/addons/dns-autoscaler.yaml":                                            k8sAddonsDnsAutoscalerYaml,
 	"k8s/addons/ip-masq-agent.yaml":                                             k8sAddonsIpMasqAgentYaml,
+	"k8s/addons/krustlet.yaml":                                                  k8sAddonsKrustletYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                             k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":        k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -50746,6 +50957,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/generateproxycerts.sh":                            k8sCloudInitArtifactsGenerateproxycertsSh,
 	"k8s/cloud-init/artifacts/health-monitor.sh":                                k8sCloudInitArtifactsHealthMonitorSh,
 	"k8s/cloud-init/artifacts/kms.service":                                      k8sCloudInitArtifactsKmsService,
+	"k8s/cloud-init/artifacts/krustlet_generate_kubeconfig.sh":                  k8sCloudInitArtifactsKrustlet_generate_kubeconfigSh,
 	"k8s/cloud-init/artifacts/kubelet-monitor.service":                          k8sCloudInitArtifactsKubeletMonitorService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                            k8sCloudInitArtifactsKubeletMonitorTimer,
 	"k8s/cloud-init/artifacts/kubelet.service":                                  k8sCloudInitArtifactsKubeletService,
@@ -51033,6 +51245,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"coredns.yaml":                       {k8sAddonsCorednsYaml, map[string]*bintree{}},
 			"dns-autoscaler.yaml":                {k8sAddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                 {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"krustlet.yaml":                      {k8sAddonsKrustletYaml, map[string]*bintree{}},
 			"kubernetesmaster-audit-policy.yaml": {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -51085,6 +51298,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
 				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
 				"kms.service":                               {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
+				"krustlet_generate_kubeconfig.sh":           {k8sCloudInitArtifactsKrustlet_generate_kubeconfigSh, map[string]*bintree{}},
 				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
 				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
 				"kubelet.service":                           {k8sCloudInitArtifactsKubeletService, map[string]*bintree{}},

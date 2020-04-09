@@ -274,6 +274,8 @@ const (
 	CSISecretsStoreDriverContainerName = "secrets-store"
 	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
 	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
+	// KrustletAddonName is the name of the krustlet addon
+	KrustletAddonName = "krustlet"
 )
 
 // Component name consts

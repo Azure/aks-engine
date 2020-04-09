@@ -754,6 +754,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetCSEErrorCode": func(errorType string) int {
 			return GetCSEErrorCode(errorType)
 		},
+		"HasKrustletNodePool": func() bool {
+			return cs.Properties.HasKrustletNodePool()
+		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
 			if cs.Properties.TelemetryProfile != nil {

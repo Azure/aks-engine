@@ -218,14 +218,23 @@ fi
 time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
-time_metric "EnsureKubelet" ensureKubelet
-time_metric "EnsureJournal" ensureJournal
+time_metric "WriteKubeConfig" writeKubeConfig
 
+{{- if HasKrustletNodePool}}
+if [ -f /etc/systemd/system/krustlet.service ]; then
+  time_metric "EnsureKrustlet" ensureKrustlet
+else
+  time_metric "EnsureKubelet" ensureKubelet
+fi
+{{else}}
+  time_metric "EnsureKubelet" ensureKubelet
+{{end}}
+
+time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
   fi
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd

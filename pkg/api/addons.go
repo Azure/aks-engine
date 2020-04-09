@@ -812,6 +812,11 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	defaultKrustletAddonsConfig := KubernetesAddon{
+		Name:    common.KrustletAddonName,
+		Enabled: to.BoolPtr(cs.Properties.HasKrustletNodePool()),
+	}
+
 	// Allow folks to simply enable kube-dns at cluster creation time without also requiring that coredns be explicitly disabled
 	if !isUpgrade && o.KubernetesConfig.IsAddonEnabled(common.KubeDNSAddonName) {
 		defaultCorednsAddonsConfig.Enabled = to.BoolPtr(false)
@@ -854,6 +859,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultFlannelAddonsConfig,
 		defaultScheduledMaintenanceAddonsConfig,
 		defaultSecretsStoreCSIDriverAddonsConfig,
+		defaultKrustletAddonsConfig,
 	}
 	// Add default addons specification, if no user-provided spec exists
 	if o.KubernetesConfig.Addons == nil {

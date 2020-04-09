@@ -388,6 +388,51 @@ ensureK8sControlPlane() {
   fi
   retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
+{{- if HasKrustletNodePool}}
+ensureKrustlet() {
+  KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+  retrycmd_if_failure 120 5 30 $KUBECTL get serviceaccount,clusterrole,clusterrolebinding krustlet -n kube-system
+  cd /home/$ADMINUSER
+  runuser -u $ADMINUSER /etc/kubernetes/krustlet_generate_kubeconfig.sh
+  RANDFILE=$(mktemp)
+  export RANDFILE
+  openssl req -new -sha256 -newkey rsa:2048 -keyout krustlet.key -out krustlet.csr -nodes -subj "/C=US/ST=./L=./O=./OU=./CN=krustlet"
+  cat <<EOF | $KUBECTL apply -f -
+apiVersion: certificates.k8s.io/v1beta1
+kind: CertificateSigningRequest
+metadata:
+  name: krustlet
+spec:
+  request: $(cat krustlet.csr | base64 | tr -d '\n')
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth
+EOF
+  $KUBECTL certificate approve krustlet
+  $KUBECTL get csr krustlet -o jsonpath='{.status.certificate}' | base64 --decode > krustlet.crt
+  openssl pkcs12 -export -out krustlet.pfx -inkey krustlet.key -in krustlet.crt -password "pass:password"
+  mkdir -p /etc/krustlet
+  chmod 700 /etc/krustlet
+  useradd -U krustlet
+  chage -E -1 -I -1 -m 0 -M 99999 krustlet
+  chage -l krustlet
+  id krustlet
+  mkhomedir_helper krustlet
+  mkdir -p /home/krustlet/.krustlet
+  chown krustlet:krustlet /etc/krustlet /home/krustlet/.krustlet
+  mv {krustlet.pfx,kubeconfig-sa} /etc/krustlet
+  chown krustlet:krustlet /etc/krustlet/*
+  chmod 600 /etc/krustlet
+  retrycmd_get_tarball 120 5 "/home/$ADMINUSER/krustlet.tar.gz" https://krustlet.blob.core.windows.net/releases/krustlet-v0.1.0-Linux-amd64.tar.gz
+  mkdir -p krustlet && tar -xzf krustlet.tar.gz -C krustlet
+  chown -R krustlet:krustlet krustlet/
+  mv krustlet/krustlet-wasi /usr/local/bin/
+  mv krustlet/lib /home/krustlet/.krustlet/
+  wait_for_file 1200 1 /etc/systemd/system/krustlet.service
+  systemctlEnableAndStart krustlet
+}
+{{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
   GATEKEEPER_NAMESPACE="gatekeeper-system"

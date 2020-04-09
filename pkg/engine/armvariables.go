@@ -93,15 +93,20 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	hasAgentPool := len(profiles) > 0
 	hasCosmosEtcd := masterProfile != nil && masterProfile.HasCosmosEtcd()
 	scriptParamsInput := api.ProvisionScriptParametersInput{
-		Location:             common.WrapAsARMVariable("location"),
-		ResourceGroup:        common.WrapAsARMVariable("resourceGroup"),
-		TenantID:             common.WrapAsARMVariable("tenantID"),
-		SubscriptionID:       common.WrapAsARMVariable("subscriptionId"),
-		ClientID:             common.WrapAsARMVariable("servicePrincipalClientId"),
-		ClientSecret:         common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
-		APIServerCertificate: common.WrapAsParameter("apiServerCertificate"),
-		KubeletPrivateKey:    common.WrapAsParameter("clientPrivateKey"),
-		ClusterKeyVaultName:  common.WrapAsARMVariable("clusterKeyVaultName"),
+		Location:              common.WrapAsARMVariable("location"),
+		ResourceGroup:         common.WrapAsARMVariable("resourceGroup"),
+		TenantID:              common.WrapAsARMVariable("tenantID"),
+		SubscriptionID:        common.WrapAsARMVariable("subscriptionId"),
+		ClientID:              common.WrapAsARMVariable("servicePrincipalClientId"),
+		ClientSecret:          common.WrapAsARMVariable("singleQuote") + common.WrapAsARMVariable("servicePrincipalClientSecret") + common.WrapAsARMVariable("singleQuote"),
+		APIServerCertificate:  common.WrapAsParameter("apiServerCertificate"),
+		KubeletPrivateKey:     common.WrapAsParameter("clientPrivateKey"),
+		ClusterKeyVaultName:   common.WrapAsARMVariable("clusterKeyVaultName"),
+		CACertificate:         common.WrapAsParameter("caCertificate"),
+		KubeConfigServer:      common.WrapAsARMVariable("kubeconfigServer"),
+		MasterFQDN:            common.WrapAsARMVariable("masterFqdnPrefix"),
+		KubeConfigCertificate: common.WrapAsParameter("kubeConfigCertificate"),
+		KubeConfigKey:         common.WrapAsParameter("kubeConfigPrivateKey"),
 	}
 
 	masterVars := map[string]interface{}{
@@ -140,17 +145,18 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	}
 
 	cloudInitFiles := map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
-		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
-		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
-		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
-		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"provisionScript":            getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":            getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":          getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":           getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":  getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":   getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"generateKrustletKubeconfig": getBase64EncodedGzippedCustomScript(generateKrustletKubeconfig, cs),
+		"mountEtcdScript":            getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
+		"etcdSystemdService":         getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6SystemdService":       getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"dhcpv6ConfigurationScript":  getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"kubeletSystemdService":      getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {

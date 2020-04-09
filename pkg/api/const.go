@@ -272,15 +272,10 @@ const (
 )
 
 const (
-	// AgentPoolProfileRoleEmpty is the empty role.  Deprecated; only used in
-	// aks-engine.
+	// AgentPoolProfileRoleEmpty is the default role.
 	AgentPoolProfileRoleEmpty AgentPoolProfileRole = ""
-	// AgentPoolProfileRoleCompute is the compute role
-	AgentPoolProfileRoleCompute AgentPoolProfileRole = "compute"
-	// AgentPoolProfileRoleInfra is the infra role
-	AgentPoolProfileRoleInfra AgentPoolProfileRole = "infra"
-	// AgentPoolProfileRoleMaster is the master role
-	AgentPoolProfileRoleMaster AgentPoolProfileRole = "master"
+	// AgentPoolProfileRoleKrustlet is the krustlet role
+	AgentPoolProfileRoleKrustlet AgentPoolProfileRole = "krustlet"
 )
 
 const (

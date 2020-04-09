@@ -140,10 +140,10 @@ const (
 )
 
 const (
-	// AgentPoolProfileRoleEmpty is the empty role
+	// AgentPoolProfileRoleEmpty is the default role
 	AgentPoolProfileRoleEmpty AgentPoolProfileRole = ""
-	// AgentPoolProfileRoleInfra is the infra role
-	AgentPoolProfileRoleInfra AgentPoolProfileRole = "infra"
+	// AgentPoolProfileRoleKrustlet is the krustlet role
+	AgentPoolProfileRoleKrustlet AgentPoolProfileRole = "krustlet"
 )
 
 const (

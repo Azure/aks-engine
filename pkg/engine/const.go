@@ -110,6 +110,7 @@ const (
 	labelNodesSystemdService                 = "k8s/cloud-init/artifacts/label-nodes.service"
 	kubernetesMountEtcd                      = "k8s/cloud-init/artifacts/mountetcd.sh"
 	kubernetesMasterGenerateProxyCertsScript = "k8s/cloud-init/artifacts/generateproxycerts.sh"
+	generateKrustletKubeconfig               = "k8s/cloud-init/artifacts/krustlet_generate_kubeconfig.sh"
 	kubernetesCustomSearchDomainsScript      = "k8s/cloud-init/artifacts/setup-custom-search-domains.sh"
 	kubeletSystemdService                    = "k8s/cloud-init/artifacts/kubelet.service"
 	kmsSystemdService                        = "k8s/cloud-init/artifacts/kms.service"
@@ -263,6 +264,8 @@ const (
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
 	secretsStoreCSIDriverAddonSourceFileName       string = "kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml"
 	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
+	krustletAddonSourceFileName                    string = "krustlet.yaml"
+	krustletAddonDestinationFileName               string = "krustlet.yaml"
 )
 
 // components source and destination file references
