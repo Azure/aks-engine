@@ -34,7 +34,7 @@ ensureCertificates() {
 
 configureK8sCustomCloud() {
   export -f ensureCertificates
-  retrycmd_if_failure 60 10 30 bash -c ensureCertificates
+  retrycmd 60 10 30 bash -c ensureCertificates
   set +x
   # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut,
   # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode

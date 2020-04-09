@@ -259,7 +259,7 @@ fi
 VALIDATION_ERR=0
 
 {{- if IsHostedMaster }}
-RES=$(retrycmd_if_failure 20 1 3 nslookup ${API_SERVER_NAME})
+RES=$(retrycmd 20 1 3 nslookup ${API_SERVER_NAME})
 STS=$?
 if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
@@ -268,7 +268,7 @@ if [[ $STS != 0 ]]; then
         VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL"}}
     fi
 fi
-retrycmd_if_failure 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
+retrycmd 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
 {{end}}
 
 if $REBOOTREQUIRED; then
