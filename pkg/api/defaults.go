@@ -39,7 +39,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 	properties := cs.Properties
 
 	// Set custom cloud profile defaults if this cluster configuration has custom cloud profile
-	if cs.Properties.CustomCloudProfile != nil {
+	if cs.Properties.IsCustomCloudProfile() {
 		err := cs.setCustomCloudProfileDefaults(CustomCloudProfileDefaultsParams{
 			IsUpgrade: params.IsUpgrade,
 			IsScale:   params.IsScale,

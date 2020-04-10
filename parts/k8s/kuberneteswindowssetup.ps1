@@ -293,7 +293,7 @@ try
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB `
             -TargetEnvironment $TargetEnvironment
 
-        {{if IsAzureStackCloud}}
+        {{if IsCustomCloudProfile}}
         $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
         $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
         [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))

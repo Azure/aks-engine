@@ -4977,7 +4977,7 @@ func TestGetKubernetesHyperkubeSpec(t *testing.T) {
 	mock1dot16dot3 := getMockAPIProperties("1.16.0")
 	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "k8s.gcr.io/"
 	mock1dot16dot3.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
-	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStack", true, true, true)
+	mock1dot15dot4azs := GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true)
 	mock1dot15dot4azs.OrchestratorProfile = &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
 		OrchestratorVersion: "1.15.4",
@@ -6321,7 +6321,69 @@ func TestKubernetesConfig_SystemAssignedIDEnabled(t *testing.T) {
 	}
 }
 
-func TestIsAzureStackCloud(t *testing.T) {
+func TestGetCustomCloudRootCertificates(t *testing.T) {
+	var emptyCustomRootCertsProfile = GetMockPropertiesWithCustomCloudProfile("CustomCloud", true, true, true)
+	emptyCustomRootCertsProfile.CustomCloudProfile.CustomCloudRootCertificates = ""
+
+	var nonEmptyCustomRootCertsProfile = GetMockPropertiesWithCustomCloudProfile("CustomCloud", true, true, true)
+	nonEmptyCustomRootCertsProfile.CustomCloudProfile.CustomCloudRootCertificates = "cert1,cert2,cert3"
+
+	testcases := []struct {
+		name       string
+		properties Properties
+		expected   string
+	}{
+		{
+			"Empty CustomCloudRootCertificates",
+			emptyCustomRootCertsProfile,
+			"",
+		},
+		{
+			"Non-Empty CustomCloudRootCertificates",
+			nonEmptyCustomRootCertsProfile,
+			"cert1,cert2,cert3",
+		},
+	}
+	for _, testcase := range testcases {
+		actual := testcase.properties.GetCustomCloudRootCertificates()
+		if testcase.expected != actual {
+			t.Errorf("Test \"%s\": expected GetCustomCloudRootCertificates() to return %s, but got %s . ", testcase.name, testcase.expected, actual)
+		}
+	}
+}
+
+func TestGetCustomCloudSourcesList(t *testing.T) {
+	var emptyCustomCloudSourcesListProfile = GetMockPropertiesWithCustomCloudProfile("CustomCloud", true, true, true)
+	emptyCustomCloudSourcesListProfile.CustomCloudProfile.CustomCloudSourcesList = ""
+
+	var nonEmptyCustomCloudSourcesListProfile = GetMockPropertiesWithCustomCloudProfile("CustomCloud", true, true, true)
+	nonEmptyCustomCloudSourcesListProfile.CustomCloudProfile.CustomCloudSourcesList = "test"
+
+	testcases := []struct {
+		name       string
+		properties Properties
+		expected   string
+	}{
+		{
+			"Empty CustomCloudSourcesList",
+			emptyCustomCloudSourcesListProfile,
+			"",
+		},
+		{
+			"Non-Empty CustomCloudSourcesList",
+			nonEmptyCustomCloudSourcesListProfile,
+			"test",
+		},
+	}
+	for _, testcase := range testcases {
+		actual := testcase.properties.GetCustomCloudSourcesList()
+		if testcase.expected != actual {
+			t.Errorf("Test \"%s\": expected GetCustomCloudSourcesList() to return %s, but got %s . ", testcase.name, testcase.expected, actual)
+		}
+	}
+}
+
+func TestIsCustomCloudProfile(t *testing.T) {
 	testcases := []struct {
 		name       string
 		properties Properties
@@ -6364,6 +6426,56 @@ func TestIsAzureStackCloud(t *testing.T) {
 		},
 	}
 	for _, testcase := range testcases {
+		actual := testcase.properties.IsCustomCloudProfile()
+		if testcase.expected != actual {
+			t.Errorf("Test \"%s\": expected IsCustomCloudProfile() to return %t, but got %t . ", testcase.name, testcase.expected, actual)
+		}
+	}
+}
+
+func TestIsAzureStackCloud(t *testing.T) {
+	testcases := []struct {
+		name       string
+		properties Properties
+		expected   bool
+	}{
+		{
+			"Empty environment name should be treated as AzureStackCloud",
+			GetMockPropertiesWithCustomCloudProfile("", true, true, false),
+			true,
+		},
+		{
+			"Empty environment name (with AzureEnvironmentSpecConfig) should be treated as AzureStackCloud",
+			GetMockPropertiesWithCustomCloudProfile("", true, true, true),
+			true,
+		},
+		{
+			"lower case AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			true,
+		},
+		{
+			"cammel case AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
+			true,
+		},
+		{
+			"incorrect AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("NotAzureStackCloud", true, true, true),
+			false,
+		},
+		{
+			"empty cloud profile",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", false, false, false),
+			false,
+		},
+		{
+			"empty environment should be treated as AzureStackCloud",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
+			true,
+		},
+	}
+	for _, testcase := range testcases {
 		actual := testcase.properties.IsAzureStackCloud()
 		if testcase.expected != actual {
 			t.Errorf("Test \"%s\": expected IsAzureStackCloud() to return %t, but got %t . ", testcase.name, testcase.expected, actual)
@@ -6397,7 +6509,9 @@ func TestGetCustomCloudName(t *testing.T) {
 }
 
 func TestGetCustomEnvironmentJSON(t *testing.T) {
-	expectedResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
+	expectedAzureStackResult := `{"name":"azurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
+	expectedNonAzureStackResult := `{"name":"nonazurestackcloud","managementPortalURL":"https://management.local.azurestack.external/","publishSettingsURL":"https://management.local.azurestack.external/publishsettings/index","serviceManagementEndpoint":"https://management.azurestackci15.onmicrosoft.com/36f71706-54df-4305-9847-5b038a4cf189","resourceManagerEndpoint":"https://management.local.azurestack.external/","activeDirectoryEndpoint":"https://login.windows.net/","galleryEndpoint":"https://portal.local.azurestack.external=30015/","keyVaultEndpoint":"https://vault.azurestack.external/","graphEndpoint":"https://graph.windows.net/","serviceBusEndpoint":"https://servicebus.azurestack.external/","batchManagementEndpoint":"https://batch.azurestack.external/","storageEndpointSuffix":"core.azurestack.external","sqlDatabaseDNSSuffix":"database.azurestack.external","trafficManagerDNSSuffix":"trafficmanager.cn","keyVaultDNSSuffix":"vault.azurestack.external","serviceBusEndpointSuffix":"servicebus.azurestack.external","serviceManagementVMDNSSuffix":"chinacloudapp.cn","resourceManagerVMDNSSuffix":"cloudapp.azurestack.external","containerRegistryDNSSuffix":"azurecr.io","cosmosDBDNSSuffix":"","tokenAudience":"https://management.azurestack.external/","resourceIdentifiers":{"graph":"","keyVault":"","datalake":"","batch":"","operationalInsights":"","storage":""}}`
+
 	testcases := []struct {
 		name       string
 		properties Properties
@@ -6405,16 +6519,28 @@ func TestGetCustomEnvironmentJSON(t *testing.T) {
 		expected   string
 	}{
 		{
-			"no escape",
+			"escape",
 			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
 			true,
-			strings.Replace(expectedResult, "\"", "\\\"", -1),
+			strings.Replace(expectedAzureStackResult, "\"", "\\\"", -1),
+		},
+		{
+			"no escape",
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			false,
+			expectedAzureStackResult,
 		},
 		{
 			"escape",
-			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			GetMockPropertiesWithCustomCloudProfile("nonazurestackcloud", true, true, true),
+			true,
+			strings.Replace(expectedNonAzureStackResult, "\"", "\\\"", -1),
+		},
+		{
+			"no escape",
+			GetMockPropertiesWithCustomCloudProfile("nonazurestackcloud", true, true, true),
 			false,
-			expectedResult,
+			expectedNonAzureStackResult,
 		},
 	}
 	for _, testcase := range testcases {

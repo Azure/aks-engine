@@ -2972,7 +2972,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile = mockCSPEmptyResourceManagerVMDNSSuffix.CustomCloudProfile
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ""
 
-	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetCustomCloudSpec(AzureCustomCloudSpecParams{
 		IsUpgrade: false,
 		IsScale:   false,
 	})
@@ -2986,7 +2986,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPNilEnvironment := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSNilEnvironment.Properties.CustomCloudProfile = mockCSPNilEnvironment.CustomCloudProfile
 	mockCSNilEnvironment.Properties.CustomCloudProfile.Environment = nil
-	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetCustomCloudSpec(AzureCustomCloudSpecParams{
 		IsUpgrade: false,
 		IsScale:   false,
 	})

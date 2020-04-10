@@ -768,6 +768,8 @@ func convertVLabsCustomCloudProfile(vlabs *vlabs.CustomCloudProfile, api *Custom
 	api.AuthenticationMethod = vlabs.AuthenticationMethod
 	api.DependenciesLocation = DependenciesLocation(vlabs.DependenciesLocation)
 	api.PortalURL = vlabs.PortalURL
+	api.CustomCloudRootCertificates = vlabs.CustomCloudRootCertificates
+	api.CustomCloudSourcesList = vlabs.CustomCloudSourcesList
 }
 
 func convertVLabsTelemetryProfile(vlabs *vlabs.TelemetryProfile, api *TelemetryProfile) {

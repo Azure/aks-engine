@@ -369,7 +369,7 @@ func TestAgentPoolIsNSeriesSKU(t *testing.T) {
 	}
 }
 
-func TestIsAzureStackCloud(t *testing.T) {
+func TestIsCustomCloudProfile(t *testing.T) {
 	testcases := []struct {
 		name       string
 		properties Properties
@@ -407,6 +407,56 @@ func TestIsAzureStackCloud(t *testing.T) {
 		},
 		{
 			"empty environment ",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
+			true,
+		},
+	}
+	for _, testcase := range testcases {
+		actual := testcase.properties.IsCustomCloudProfile()
+		if testcase.expected != actual {
+			t.Errorf("Test \"%s\": expected IsCustomCloudProfile() to return %t, but got %t . ", testcase.name, testcase.expected, actual)
+		}
+	}
+}
+
+func TestIsAzureStackCloud(t *testing.T) {
+	testcases := []struct {
+		name       string
+		properties Properties
+		expected   bool
+	}{
+		{
+			"Empty environment name should be treated as AzureStackCloud",
+			GetMockPropertiesWithCustomCloudProfile("", true, true, false),
+			true,
+		},
+		{
+			"Empty environment name (with AzureEnvironmentSpecConfig) should be treated as AzureStackCloud",
+			GetMockPropertiesWithCustomCloudProfile("", true, true, true),
+			true,
+		},
+		{
+			"lower case AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, true),
+			true,
+		},
+		{
+			"cammel case AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, true, true),
+			true,
+		},
+		{
+			"incorrect AzureStackCloud name",
+			GetMockPropertiesWithCustomCloudProfile("NotAzureStackCloud", true, true, true),
+			false,
+		},
+		{
+			"empty cloud profile",
+			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", false, false, false),
+			false,
+		},
+		{
+			"empty environment should be treated as AzureStackCloud",
 			GetMockPropertiesWithCustomCloudProfile("AzureStackCloud", true, false, true),
 			true,
 		},

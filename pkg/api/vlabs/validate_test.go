@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/pkg/errors"
@@ -4032,7 +4033,22 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "PortalURL is empty",
+			name: "PortalURL is empty for non-AzureStack CustomCloudProfile",
+			cs: &ContainerService{
+				Location: "testlocation",
+				Properties: &Properties{
+					CustomCloudProfile: &CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: "NonAzureStack",
+						},
+						AuthenticationMethod: "azure_ad",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "PortalURL is empty for AzureStack",
 			cs: &ContainerService{
 				Location: "testlocation",
 				Properties: &Properties{
@@ -4041,10 +4057,10 @@ func TestValidateCustomCloudProfile(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: errors.New("portalURL needs to be specified when CustomCloudProfile is provided"),
+			expectedErr: errors.New("portalURL needs to be specified when AzureStackCloud CustomCloudProfile is provided"),
 		},
 		{
-			name: "PortalURL is invalid",
+			name: "PortalURL is invalid for AzureStack",
 			cs: &ContainerService{
 				Location: "testlocation",
 				Properties: &Properties{

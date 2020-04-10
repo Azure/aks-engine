@@ -1740,7 +1740,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				kubernetesDockerMonitorSystemdTimer,
 				dockerClearMountPropagationFlags,
 				auditdRules,
-				kubernetesCSECustomCloud,
 				systemdBPFMount,
 			} {
 				ret := getBase64EncodedGzippedCustomScript(file, c.cs)

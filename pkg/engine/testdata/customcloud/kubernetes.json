@@ -1,0 +1,117 @@
+{
+    "apiVersion": "vlabs",
+    "location": "westus",
+    "properties": {
+        "orchestratorProfile": {
+            "orchestratorType": "Kubernetes",
+            "orchestratorRelease": "1.13",
+            "kubernetesConfig": {
+                "kubernetesImageBase": "k8s.gcr.io/",
+                "useInstanceMetadata": false,
+                "networkPolicy": "none"
+            }
+        },
+        "customCloudProfile": {
+            "environment": {
+                "name": "SomeCustomCloud",
+                "managementPortalURL": "https://manage.windowsazure.com/",
+                "publishSettingsURL": "https://manage.windowsazure.com/publishsettings/index",
+                "serviceManagementEndpoint": "https://management.core.windows.net/",
+                "resourceManagerEndpoint": "https://management.azure.com/",
+                "activeDirectoryEndpoint": "https://login.microsoftonline.com/",
+                "galleryEndpoint": "https://gallery.azure.com/",
+                "keyVaultEndpoint": "https://vault.azure.net/",
+                "graphEndpoint": "https://graph.windows.net/",
+                "serviceBusEndpoint": "https://servicebus.windows.net/",
+                "batchManagementEndpoint": "https://batch.core.windows.net/",
+                "storageEndpointSuffix": "core.windows.net",
+                "sqlDatabaseDNSSuffix": "database.windows.net",
+                "trafficManagerDNSSuffix": "trafficmanager.net",
+                "keyVaultDNSSuffix": "vault.azure.net",
+                "serviceBusEndpointSuffix": "servicebus.windows.net",
+                "serviceManagementVMDNSSuffix": "cloudapp.net",
+                "resourceManagerVMDNSSuffix": "cloudapp.azure.com",
+                "containerRegistryDNSSuffix": "azurecr.io",
+                "cosmosDBDNSSuffix": "documents.azure.com",
+                "tokenAudience": "https://management.azure.com/",
+                "resourceIdentifiers": {
+                    "graph": "https://graph.windows.net/",
+                    "keyVault": "https://vault.azure.net",
+                    "datalake": "https://datalake.azure.net/",
+                    "batch": "https://batch.core.windows.net/",
+                    "operationalInsights": "https://api.loganalytics.io",
+                    "storage": "https://storage.azure.com/"
+                }
+            },
+            "customCloudRootCertificates": "customCloudRootCertificate1,customCloudRootCertificate2",
+            "customCloudSourcesList": "customSources.list"
+        },
+        "masterProfile": {
+            "dnsPrefix": "k111007",
+            "distro": "ubuntu",
+            "osDiskSizeGB": 200,
+            "count": 3,
+            "availabilityProfile": "AvailabilitySet",
+            "vmSize": "Standard_D2_v2"
+        },
+        "agentPoolProfiles": [
+            {
+                "name": "linuxpool",
+                "osDiskSizeGB": 200,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "distro": "ubuntu",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            },
+            {
+                "name": "windowspool",
+                "osDiskSizeGB": 128,
+                "count": 3,
+                "vmSize": "Standard_D2_v2",
+                "osType": "Windows",
+                "availabilityProfile": "AvailabilitySet",
+                "AcceleratedNetworkingEnabled": false
+            }
+        ],
+        "linuxProfile": {
+            "adminUsername": "azureuser",
+            "ssh": {
+                "publicKeys": [
+                    {
+                        "keyData": "ssh-rsa publickey azure@linux"
+                    }
+                ]
+            }
+        },
+        "windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "myAdminPassword~1",
+            "sshEnabled": true
+        },
+        "servicePrincipalProfile": {
+            "clientId": "ServicePrincipalClientID",
+            "secret": "myServicePrincipalClientSecret"
+        },
+        "certificateProfile": {
+          "caCertificate": "caCertificate",
+          "caPrivateKey": "caPrivateKey",
+          "apiServerCertificate": "/subscriptions/my-sub/resourceGroups/my-rg/providers/Microsoft.KeyVault/vaults/my-kv/secrets/my-secret1/ver1",
+          "apiServerPrivateKey": "apiServerPrivateKey",
+          "clientCertificate": "clientCertificate",
+          "clientPrivateKey": "clientPrivateKey",
+          "kubeConfigCertificate": "kubeConfigCertificate",
+          "kubeConfigPrivateKey": "kubeConfigPrivateKey",
+          "etcdClientCertificate": "etcdClientCertificate",
+          "etcdClientPrivateKey": "etcdClientPrivateKey",
+          "etcdServerCertificate": "etcdServerCertificate",
+          "etcdServerPrivateKey": "etcdServerPrivateKey",
+          "etcdPeerCertificates": [
+            "etcdPeerCertificate0"
+          ],
+          "etcdPeerPrivateKeys": [
+            "etcdPeerPrivateKey0"
+          ]
+        }
+    }
+}

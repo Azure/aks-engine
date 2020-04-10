@@ -543,9 +543,9 @@ func TestGetTargetEnv(t *testing.T) {
 			"AzureStackCloud",
 		},
 		{
-			"azurestacklocation",
-			"azurestacklocation",
-			"AzurePublicCloud",
+			"customlocation",
+			"customcloud",
+			"AzureStackCloud",
 		},
 	}
 

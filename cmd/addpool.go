@@ -143,9 +143,9 @@ func (apc *addPoolCmd) load() error {
 		return errors.Wrap(err, "error parsing the agent pool")
 	}
 
-	if apc.containerService.Properties.IsAzureStackCloud() {
+	if apc.containerService.Properties.IsCustomCloudProfile() {
 		writeCustomCloudProfile(apc.containerService)
-		if err = apc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
+		if err = apc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 	}
