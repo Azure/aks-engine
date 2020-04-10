@@ -4202,9 +4202,9 @@ func TestValidateLocation(t *testing.T) {
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
-							Name:   "testpool",
-							Count:  1,
-							VMSize: "Standard_D2_v2",
+							Name:                         "testpool",
+							Count:                        1,
+							VMSize:                       "Standard_D2_v2",
 							AcceleratedNetworkingEnabled: to.BoolPtr(trueVal),
 						},
 					},
@@ -4228,9 +4228,9 @@ func TestValidateLocation(t *testing.T) {
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
-							Name:   "testpool",
-							Count:  1,
-							VMSize: "Standard_D2_v2",
+							Name:                                "testpool",
+							Count:                               1,
+							VMSize:                              "Standard_D2_v2",
 							AcceleratedNetworkingEnabledWindows: to.BoolPtr(trueVal),
 						},
 					},
@@ -4294,9 +4294,9 @@ func TestValidateAcceleratedNetworkingEnabledWindows(t *testing.T) {
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
-							Name:   "testpool",
-							Count:  1,
-							VMSize: "Standard_D2_v2",
+							Name:                                "testpool",
+							Count:                               1,
+							VMSize:                              "Standard_D2_v2",
 							AcceleratedNetworkingEnabledWindows: to.BoolPtr(true),
 						},
 					},
