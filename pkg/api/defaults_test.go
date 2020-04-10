@@ -2418,6 +2418,26 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
+	// agents with VMSS and Standard LB (default) should have SinglePlacementGroup set to false
+	mockCS = getMockBaseContainerService("1.12.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.AgentPoolProfiles[0].Count = 4
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
+	}
+	for _, profile := range properties.AgentPoolProfiles {
+		if to.Bool(profile.SinglePlacementGroup) {
+			t.Fatalf("pool did not have the expected SinglePlacementGroup configuration, got %t, expected %t",
+				to.Bool(profile.SinglePlacementGroup), false)
+		}
+	}
 	// agents with VMSS and zones
 	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
@@ -2437,7 +2457,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), true)
 	}
-	singlePlacementGroup = DefaultSinglePlacementGroup
+	singlePlacementGroup = false
 	if *properties.AgentPoolProfiles[0].SinglePlacementGroup != singlePlacementGroup {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup default did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, singlePlacementGroup)
