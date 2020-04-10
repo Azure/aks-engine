@@ -118,7 +118,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.13.8":         false,
 	"1.13.9":         false,
 	"1.13.10":        false,
-	"1.13.11":        true,
+	"1.13.11":        false,
 	"1.13.12":        false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.14.0-alpha.1": false,
 	"1.14.0-alpha.2": false,
