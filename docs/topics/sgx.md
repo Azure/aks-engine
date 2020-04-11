@@ -19,7 +19,7 @@ Refer to the [Quickstart Guide](../tutorials/quickstart.md) for details on how t
 
 | OS           | distro      | Notes |
 | ------------ | ----------- |-------|
-| Ubuntu 16.04 | `acc-16.04` | specially built image with UEFI BIOS support
+| Ubuntu 16.04 | `aks-ubuntu-16.04` | AKS-maintained Ubuntu 16.04 image with preinstalled components
 | Ubuntu 18.04 | `aks-ubuntu-18.04` | AKS-maintained Ubuntu 18.04 image with preinstalled components
 
 The following example is a fragment of a cluster definition (apimodel) file declaring two ACC agent pools, one running `Ubuntu 16.04` image on `2 vCPU` nodes, and another running `Ubuntu 18.04` image on `4 vCPU` nodes:
@@ -29,7 +29,7 @@ The following example is a fragment of a cluster definition (apimodel) file decl
     {
       "name": "agentpool1",
       "count": 3,
-      "distro": "acc-16.04",
+      "distro": "aks-ubuntu-16.04",
       "vmSize": "Standard_DC2s"
     },
     {

@@ -41186,7 +41186,7 @@ time_metric "EnsureRPC" ensureRPC
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
-if [[ ${SGX_NODE} == true ]]; then
+if [[ ${SGX_NODE} == true && ! -e "/dev/sgx" ]]; then
   time_metric "InstallSGXDrivers" installSGXDrivers
 fi
 {{end}}
