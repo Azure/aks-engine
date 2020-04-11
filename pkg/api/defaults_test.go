@@ -1521,7 +1521,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature.
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
@@ -1531,14 +1531,14 @@ func TestMasterProfileDefaults(t *testing.T) {
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
-	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, "fc00::/8"}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
@@ -1549,14 +1549,14 @@ func TestMasterProfileDefaults(t *testing.T) {
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
-	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", DefaultKubernetesClusterSubnetIPv6}, ",")
+	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", "fc00::/8"}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
@@ -1574,7 +1574,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for azure cni dual stack feature when both ipv4 and ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
@@ -1586,6 +1586,23 @@ func TestMasterProfileDefaults(t *testing.T) {
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature for k8s 1.17 version
+	mockCS = getMockBaseContainerService("1.17.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)

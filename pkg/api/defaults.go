@@ -211,7 +211,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				// Except when master is VMSS, then masters and agents have separate subnets within the same large subnet.
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
 				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, cs.getDefaultKubernetesClusterSubnetIPv6()}, ",")
 				}
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
