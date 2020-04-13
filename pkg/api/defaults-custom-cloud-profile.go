@@ -124,7 +124,7 @@ func (cs *ContainerService) SetCustomCloudProfileEnvironment() error {
 	return nil
 }
 
-// AzureCustomCloudSpecParams is the parameters when we set the azure stack cloud spec defaults for ContainerService.
+// AzureCustomCloudSpecParams is the parameters when we set the custom cloud spec defaults for ContainerService.
 type AzureCustomCloudSpecParams struct {
 	IsUpgrade bool
 	IsScale   bool

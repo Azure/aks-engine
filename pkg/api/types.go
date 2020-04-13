@@ -2082,7 +2082,7 @@ func (p *Properties) IsCustomCloudProfile() bool {
 
 // GetCustomCloudRootCertificates returns comma-separated list of base64-encoded custom root certificates
 func (p *Properties) GetCustomCloudRootCertificates() string {
-	if p.CustomCloudProfile != nil {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.CustomCloudRootCertificates
 	}
 	return ""
@@ -2090,7 +2090,7 @@ func (p *Properties) GetCustomCloudRootCertificates() string {
 
 // GetCustomCloudSourcesList returns a base64-encoded custom sources.list file
 func (p *Properties) GetCustomCloudSourcesList() string {
-	if p.CustomCloudProfile != nil {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.CustomCloudSourcesList
 	}
 	return ""
@@ -2121,7 +2121,7 @@ func (p *Properties) GetKubernetesHyperkubeSpec() string {
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
 	// For backward compatibility, treat nil Environment and empty Environment name as AzureStackCloud as well
-	return p.CustomCloudProfile != nil && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
+	return p.IsCustomCloudProfile() && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
