@@ -1,6 +1,7 @@
 #!/bin/bash
 
 {{- if IsCustomCloudProfile}}
+{{- if not IsAzureStackCloud}}
 ensureCustomCloudRootCertificates() {
     CUSTOM_CLOUD_ROOT_CERTIFICATES="{{GetCustomCloudRootCertificates}}"
 
@@ -37,6 +38,7 @@ ensureCustomCloudSourcesList() {
         echo $CUSTOM_CLOUD_SOURCES_LIST | base64 -d > /etc/apt/sources.list
     fi
 }
+{{end}}
 
 configureK8sCustomCloud() {
   KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
