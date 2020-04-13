@@ -1,10 +1,9 @@
-$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\Kubeclusterbridge.json" -ErrorAction Stop) | out-string)
+$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
 
 $KubeNetwork = "azure"
 if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
     $KubeNetwork = "l2bridge"
 }
-
 
 $env:KUBE_NETWORK = $KubeNetwork
 $global:HNSModule = "c:\k\hns.psm1"
@@ -12,7 +11,7 @@ $KubeDir = $Global:ClusterConfiguration.Install.Destination
 
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 while (!$hnsNetwork) {
-    Write-Host "Waiting for Network [$KubeNetwork] to be created . . ."
+    Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
     Start-Sleep 10
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 }

@@ -379,8 +379,6 @@ try
 
         New-ExternalHnsNetwork
 
-
-        Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
             -KubeDir $global:KubeDir
 

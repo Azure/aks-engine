@@ -225,7 +225,7 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\Kubeclusterbridge.json"
+    $ConfigFile = "c:\k\kubeclusterconfig.json"
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{

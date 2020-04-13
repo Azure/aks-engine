@@ -43635,7 +43635,7 @@ func k8sKubeconfigJson() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKubeletstartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\Kubeclusterbridge.json" -ErrorAction Stop) | out-string)
+var _k8sKubeletstartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
 
 $global:MasterIP = $Global:ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
 $global:KubeDnsSearchPath = "svc.cluster.local"
@@ -43651,7 +43651,7 @@ $global:CNIConfig = "$CNIConfig"
 $global:HNSModule = "c:\k\hns.psm1"
 #$global:VolumePluginDir = "$VolumePluginDir" TODO ksbrmnn remove as this seems to be calculated later 
 $global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
-$global:KubeletNodeLabels=$Global:ClusterConfiguration.Kubernetes.Kubelet.NodeLabels
+$global:KubeletNodeLabels = $Global:ClusterConfiguration.Kubernetes.Kubelet.NodeLabels
 $global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
 
 $global:AzureCNIDir = [Io.path]::Combine("$global:KubeDir", "azurecni")
@@ -43722,29 +43722,28 @@ $KubeletArgListStr = "@($KubeletArgListStr` + "`" + `)"
 # Used in Azure-CNI version of kubeletstart.ps1
 $KubeletCommandLine = "$global:KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
 
+# Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+netsh advfirewall set allprofiles state off
+
 function
-Get-DefaultGateway($CIDR)
-{
-    return $CIDR.substring(0,$CIDR.lastIndexOf(".")) + ".1"
+Get-DefaultGateway($CIDR) {
+    return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
 }
 function
-Get-PodCIDR()
-{
+Get-PodCIDR() {
     $podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
     return $podCIDR
 }
 
 function
-Test-PodCIDR($podCIDR)
-{
+Test-PodCIDR($podCIDR) {
     return $podCIDR.length -gt 0
 }
 
 function
-Update-CNIConfigKubenetDocker($podCIDR, $masterSubnetGW)
-{
+Update-CNIConfigKubenetDocker($podCIDR, $masterSubnetGW) {
     $jsonSampleConfig =
-"{
+    "{
     ""cniVersion"": ""0.2.0"",
     ""name"": ""<NetworkMode>"",
     ""type"": ""win-bridge"",
@@ -43770,10 +43769,9 @@ Update-CNIConfigKubenetDocker($podCIDR, $masterSubnetGW)
 
     $configJson.policies[0].Value.ExceptionList[0] = $global:KubeClusterCIDR
     $configJson.policies[0].Value.ExceptionList[1] = $global:MasterSubnet
-    $configJson.policies[1].Value.DestinationPrefix  = $global:KubeServiceCIDR
+    $configJson.policies[1].Value.DestinationPrefix = $global:KubeServiceCIDR
 
-    if (Test-Path $global:CNIConfig)
-    {
+    if (Test-Path $global:CNIConfig) {
         Clear-Content -Path $global:CNIConfig
     }
 
@@ -43782,10 +43780,9 @@ Update-CNIConfigKubenetDocker($podCIDR, $masterSubnetGW)
     Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
 }
 function
-Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW)
-{
+Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW) {
     $jsonSampleConfig =
-"{
+    "{
     ""cniVersion"": ""0.2.0"",
     ""name"": ""<NetworkMode>"",
     ""type"": ""sdnbridge.exe"",
@@ -43814,7 +43811,7 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW)
 
     $configJson = ConvertFrom-Json $jsonSampleConfig
     $configJson.name = $global:NetworkMode.ToLower()
-    $configJson.ipam.subnet=$podCIDR
+    $configJson.ipam.subnet = $podCIDR
     $configJson.ipam.routes[0].GW = $masterSubnetGW
     $configJson.dns.Nameservers[0] = $global:KubeDnsServiceIp
     $configJson.dns.Search[0] = $global:KubeDnsSearchPath
@@ -43822,10 +43819,9 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW)
 
     $configJson.AdditionalArgs[0].Value.Settings.Exceptions[0] = $global:KubeClusterCIDR
     $configJson.AdditionalArgs[0].Value.Settings.Exceptions[1] = $global:MasterSubnet
-    $configJson.AdditionalArgs[1].Value.Settings.DestinationPrefix  = $global:KubeServiceCIDR
+    $configJson.AdditionalArgs[1].Value.Settings.DestinationPrefix = $global:KubeServiceCIDR
 
-    if (Test-Path $global:CNIConfig)
-    {
+    if (Test-Path $global:CNIConfig) {
         Clear-Content -Path $global:CNIConfig
     }
 
@@ -43838,8 +43834,6 @@ Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW)
 if ($global:NetworkPlugin -eq "azure") {
     Write-Host "NetworkPlugin azure, starting kubelet."
 
-    # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
-    netsh advfirewall set allprofiles state off
     # startup the service
 
     # Find if network created by CNI exists, if yes, remove it
@@ -43847,10 +43841,9 @@ if ($global:NetworkPlugin -eq "azure") {
     # Going forward, this would be done by HNS automatically during restart of the node
 
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-    if ($hnsNetwork)
-    {
+    if ($hnsNetwork) {
         # Cleanup all containers
-        docker ps -q | foreach {docker rm $_ -f}
+        docker ps -q | foreach { docker rm $_ -f }
 
         Write-Host "Cleaning up old HNS network found"
         Remove-HnsNetwork $hnsNetwork
@@ -43859,24 +43852,20 @@ if ($global:NetworkPlugin -eq "azure") {
         taskkill /IM azure-vnet.exe /f
         taskkill /IM azure-vnet-ipam.exe /f
         $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-        if ((Test-Path $cnijson))
-        {
+        if ((Test-Path $cnijson)) {
             Remove-Item $cnijson
         }
         $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-        if ((Test-Path $cnilock))
-        {
+        if ((Test-Path $cnilock)) {
             Remove-Item $cnilock
         }
 
         $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-        if ((Test-Path $cnijson))
-        {
+        if ((Test-Path $cnijson)) {
             Remove-Item $cnijson
         }
         $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-        if ((Test-Path $cnilock))
-        {
+        if ((Test-Path $cnilock)) {
             Remove-Item $cnilock
         }
     }
@@ -43885,53 +43874,46 @@ if ($global:NetworkPlugin -eq "azure") {
     # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
     Restart-Service Kubeproxy
 
-    $env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+    $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
     Invoke-Expression $KubeletCommandLine
 }
 
 if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "docker")) {
     $KubeNetwork = "l2bridge"
-    try
-    {
-        $env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
+    try {
+        $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
 
         $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
-        $podCIDR=Get-PodCIDR
-        $podCidrDiscovered=Test-PodCIDR($podCIDR)
+        $podCIDR = Get-PodCIDR
+        $podCidrDiscovered = Test-PodCIDR($podCIDR)
 
         # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
-        if (-not $podCidrDiscovered)
-        {
+        if (-not $podCidrDiscovered) {
             $argList = $KubeletArgListStr
 
             $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
 
             # run kubelet until podCidr is discovered
             Write-Host "waiting to discover pod CIDR"
-            while (-not $podCidrDiscovered)
-            {
+            while (-not $podCidrDiscovered) {
                 Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
                 Start-Sleep 10
 
-                $podCIDR=Get-PodCIDR
-                $podCidrDiscovered=Test-PodCIDR($podCIDR)
+                $podCIDR = Get-PodCIDR
+                $podCidrDiscovered = Test-PodCIDR($podCIDR)
             }
 
             # stop the kubelet process now that we have our CIDR, discard the process output
             $process | Stop-Process | Out-Null
         }
 
-        # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
-        netsh advfirewall set allprofiles state off
-
         # startup the service
         $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
 
-        if ($hnsNetwork)
-        {
+        if ($hnsNetwork) {
             # Kubelet has been restarted with existing network.
             # Cleanup all containers
-            docker ps -q | foreach {docker rm $_ -f}
+            docker ps -q | foreach { docker rm $_ -f }
             # cleanup network
             Write-Host "Cleaning up old HNS network found"
             Remove-HnsNetwork $hnsNetwork
@@ -43952,8 +43934,7 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
 
         Invoke-Expression $KubeletCommandLine
     }
-    catch
-    {
+    catch {
         Write-Error $_
     }
 
@@ -43961,46 +43942,39 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
 
 if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "containerd")) {
     $KubeNetwork = "l2bridge"
-    try
-    {
+    try {
         $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
-        $podCIDR=Get-PodCIDR
-        $podCidrDiscovered=Test-PodCIDR($podCIDR)
+        $podCIDR = Get-PodCIDR
+        $podCidrDiscovered = Test-PodCIDR($podCIDR)
 
         # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
-        if (-not $podCidrDiscovered)
-        {
+        if (-not $podCidrDiscovered) {
             $argList = $KubeletArgListStr
 
             $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
 
             # run kubelet until podCidr is discovered
             Write-Host "waiting to discover pod CIDR"
-            while (-not $podCidrDiscovered)
-            {
+            while (-not $podCidrDiscovered) {
                 Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
                 Start-Sleep 10
 
-                $podCIDR=Get-PodCIDR
-                $podCidrDiscovered=Test-PodCIDR($podCIDR)
+                $podCIDR = Get-PodCIDR
+                $podCidrDiscovered = Test-PodCIDR($podCIDR)
             }
 
             # stop the kubelet process now that we have our CIDR, discard the process output
             $process | Stop-Process | Out-Null
         }
 
-        # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
-        netsh advfirewall set allprofiles state off
-
         # startup the service
         $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
 
-        if ($hnsNetwork)
-        {
+        if ($hnsNetwork) {
             # Kubelet has been restarted with existing network.
             # Cleanup all containers
             # TODO: convert this to ctr.exe -n k8s.io container list ; container rm
-            docker ps -q | foreach {docker rm $_ -f}
+            docker ps -q | foreach { docker rm $_ -f }
             # cleanup network
             Write-Host "Cleaning up old HNS network found"
             Remove-HnsNetwork $hnsNetwork
@@ -44021,8 +43995,7 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "co
 
         Invoke-Expression $KubeletCommandLine
     }
-    catch
-    {
+    catch {
         Write-Error $_
     }
 }
@@ -44043,13 +44016,12 @@ func k8sKubeletstartPs1() (*asset, error) {
 	return a, nil
 }
 
-var _k8sKubeproxystartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\Kubeclusterbridge.json" -ErrorAction Stop) | out-string)
+var _k8sKubeproxystartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
 
 $KubeNetwork = "azure"
 if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
     $KubeNetwork = "l2bridge"
 }
-
 
 $env:KUBE_NETWORK = $KubeNetwork
 $global:HNSModule = "c:\k\hns.psm1"
@@ -44057,7 +44029,7 @@ $KubeDir = $Global:ClusterConfiguration.Install.Destination
 
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 while (!$hnsNetwork) {
-    Write-Host "Waiting for Network [$KubeNetwork] to be created . . ."
+    Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
     Start-Sleep 10
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 }
@@ -44846,7 +44818,7 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\Kubeclusterbridge.json"
+    $ConfigFile = "c:\k\kubeclusterconfig.json"
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
@@ -45312,8 +45284,6 @@ try
 
         New-ExternalHnsNetwork
 
-
-        Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices ` + "`" + `
             -KubeDir $global:KubeDir
 
@@ -47031,7 +47001,7 @@ var _k8sWindowsnoderesetPs1 = []byte(`<#
 $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
-$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\Kubeclusterbridge.json" -ErrorAction Stop) | out-string)
+$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
 
 $global:CsiProxyEnabled = [System.Convert]::ToBoolean($Global:ClusterConfiguration.Csi.EnableProxy)
 $global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
