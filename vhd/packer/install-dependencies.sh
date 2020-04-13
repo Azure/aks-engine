@@ -161,7 +161,6 @@ done
 
 KUBE_ADDON_MANAGER_VERSIONS="
 9.0.2
-8.9.1
 "
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
@@ -217,7 +216,6 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.16.5
 1.15.6
 1.14.8
-1.13.9
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -357,8 +355,6 @@ K8S_VERSIONS="
 1.14.8
 1.14.7
 1.14.7-azs
-1.13.12
-1.13.11
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then

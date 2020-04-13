@@ -541,11 +541,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.13 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.13.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.14 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.14.json",
 			setArgs:      defaultSet,

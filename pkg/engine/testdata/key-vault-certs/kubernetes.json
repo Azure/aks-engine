@@ -3,8 +3,8 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.13",
-      "orchestratorVersion": "1.13.11",
+      "orchestratorRelease": "1.15",
+      "orchestratorVersion": "1.15.11",
       "kubernetesConfig": {
         "kubernetesImageBase": "k8s.gcr.io/",
         "clusterSubnet": "10.240.0.0/12",
