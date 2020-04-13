@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.25.0-go113
+    image: quay.io/deis/go-dev:v1.26.2
 
 jobs:
 - job: unit_tests

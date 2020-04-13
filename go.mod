@@ -1,6 +1,6 @@
 module github.com/Azure/aks-engine
 
-go 1.13
+go 1.14
 
 require (
 	github.com/Azure/azure-sdk-for-go v41.0.0+incompatible
