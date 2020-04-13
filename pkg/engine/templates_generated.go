@@ -40246,7 +40246,8 @@ configGPUDrivers() {
   echo blacklist nouveau >>/etc/modprobe.d/blacklist.conf
   retrycmd_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   wait_for_apt_locks
-  retrycmd 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  {{/* if the unattened upgrade is turned on, and it may takes 10 min to finish the installation, and we use the 1 second just to try to get the lock more aggressively */}}
+  retrycmd 600 1 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   tmpDir=$GPU_DEST/tmp
   (
     set -e -o pipefail
