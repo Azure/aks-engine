@@ -22,8 +22,8 @@ type CustomCloudProfileDefaultsParams struct {
 	IsScale   bool
 }
 
-func getAzureStackFQDNSuffix(portalUrl, location string) string {
-	azsFQDNSuffix := strings.Replace(portalUrl, fmt.Sprintf("https://portal.%s.", location), "", -1)
+func getAzureStackFQDNSuffix(portalURL, location string) string {
+	azsFQDNSuffix := strings.Replace(portalURL, fmt.Sprintf("https://portal.%s.", location), "", -1)
 	azsFQDNSuffix = strings.TrimSuffix(azsFQDNSuffix, "/")
 
 	return azsFQDNSuffix
