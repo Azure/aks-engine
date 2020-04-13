@@ -345,20 +345,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
-		Name: common.DNSAutoscalerAddonName,
-		// TODO enable this when it has been smoke tested
-		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.DNSAutoscalerAddonName,
-				Image:          kubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
-				CPURequests:    "20m",
-				MemoryRequests: "100Mi",
-			},
-		},
-	}
-
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.CalicoAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
@@ -680,6 +666,16 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
+	if !cs.Properties.IsAzureStackCloud() {
+		defaultCorednsAddonsConfig.Config["cores-per-replica"] = "256"
+		defaultCorednsAddonsConfig.Config["nodes-per-replica"] = "16"
+		defaultCorednsAddonsConfig.Config["min-replicas"] = "1"
+		defaultCorednsAddonsConfig.Containers = append(defaultCorednsAddonsConfig.Containers, KubernetesContainerSpec{
+			Name:  common.CoreDNSAutoscalerName,
+			Image: k8sComponents[common.CoreDNSAutoscalerName],
+		})
+	}
+
 	// set host network to true for single stack IPv6 as the the nameserver is currently
 	// IPv4 only. By setting it to host network, we can leverage the host routes to successfully
 	// resolve dns.
@@ -834,7 +830,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureNetworkPolicyAddonsConfig,
 		defaultCloudNodeManagerAddonsConfig,
 		defaultIPMasqAgentAddonsConfig,
-		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsCiliumAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,

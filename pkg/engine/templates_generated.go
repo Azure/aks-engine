@@ -140,7 +140,6 @@
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/azure-policy-deployment.yaml
 // ../../parts/k8s/addons/coredns.yaml
-// ../../parts/k8s/addons/dns-autoscaler.yaml
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml
@@ -29477,14 +29476,14 @@ metadata:
   namespace: kube-system
   labels:
       kubernetes.io/cluster-service: "true"
-      addonmanager.kubernetes.io/mode: Reconcile
+      addonmanager.kubernetes.io/mode: EnsureExists
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     kubernetes.io/bootstrapping: rbac-defaults
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
   name: system:coredns
 rules:
 - apiGroups:
@@ -29528,7 +29527,7 @@ metadata:
   name: coredns
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 data:
   Corefile: |
     import conf.d/Corefile*
@@ -29556,7 +29555,7 @@ metadata:
   name: coredns-custom
   namespace: kube-system
   labels:
-      addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: EnsureExists
 data:
   Corefile: |
     # Add custom CoreDNS configuration here.
@@ -29573,7 +29572,7 @@ metadata:
     k8s-app: kube-dns
     kubernetes.io/name: "CoreDNS"
     kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   {{- /* replicas: not specified here:
   1. In order to make Addon Manager do not reconcile this replicas parameter.
@@ -29711,7 +29710,7 @@ metadata:
     k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: CoreDNS
-    addonmanager.kubernetes.io/mode: Reconcile
+    addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   selector:
     k8s-app: kube-dns
@@ -29726,6 +29725,87 @@ spec:
   - name: metrics
     port: 9153
     protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coredns-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-addon: coredns.addons.k8s.io
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    k8s-addon: coredns.addons.k8s.io
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: coredns-autoscaler
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list","watch"]
+  - apiGroups: [""]
+    resources: ["replicationcontrollers/scale"]
+    verbs: ["get", "update"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments/scale", "replicasets/scale"]
+    verbs: ["get", "update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    k8s-addon: coredns.addons.k8s.io
+    addonmanager.kubernetes.io/mode: EnsureExists
+  name: coredns-autoscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: coredns-autoscaler
+subjects:
+- kind: ServiceAccount
+  name: coredns-autoscaler
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-app: coredns-autoscaler
+    addonmanager.kubernetes.io/mode: EnsureExists
+spec:
+  selector:
+    matchLabels:
+      k8s-app: coredns-autoscaler
+  template:
+    metadata:
+      labels:
+        k8s-app: coredns-autoscaler
+    spec:
+      containers:
+      - name: autoscaler
+        image: {{ContainerImage "coredns-autoscaler"}}
+        resources:
+          requests:
+            cpu: 20m
+            memory: 10Mi
+        command:
+        - /cluster-proportional-autoscaler
+        - --namespace=kube-system
+        - --configmap=coredns-autoscaler
+        - --target=Deployment/coredns
+        - --default-params={"linear":{"coresPerReplica":{{ContainerConfig "cores-per-replica"}},"nodesPerReplica":{{ContainerConfig "nodes-per-replica"}},"min":{{ContainerConfig "min-replicas"}}}}
+        - --logtostderr=true
+        - --v=2
+      serviceAccount: coredns-autoscaler
+      serviceAccountName: coredns-autoscaler
 `)
 
 func k8sAddonsCorednsYamlBytes() ([]byte, error) {
@@ -29739,58 +29819,6 @@ func k8sAddonsCorednsYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/coredns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsDnsAutoscalerYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dns-autoscaler
-  namespace: kube-system
-  labels:
-    k8s-app: dns-autoscaler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: dns-autoscaler
-  template:
-    metadata:
-      labels:
-        k8s-app: dns-autoscaler
-    spec:
-      containers:
-      - name: autoscaler
-        image: {{ContainerImage "dns-autoscaler"}}
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "dns-autoscaler"}}
-            memory: {{ContainerMemReqs "dns-autoscaler"}}
-        command:
-          - /cluster-proportional-autoscaler
-          - --namespace=kube-system
-          - --configmap=dns-autoscaler
-          - --target=Deployment/coredns
-          {{- /* When cluster is using large nodes(with more cores), "coresPerReplica" should dominate.
-          If using small nodes, "nodesPerReplica" should dominate. */}}
-          - --default-params={"linear":{"coresPerReplica":256,"nodesPerReplica":16,"min":1}}
-          - --logtostderr=true
-          - --v=2
-`)
-
-func k8sAddonsDnsAutoscalerYamlBytes() ([]byte, error) {
-	return _k8sAddonsDnsAutoscalerYaml, nil
-}
-
-func k8sAddonsDnsAutoscalerYaml() (*asset, error) {
-	bytes, err := k8sAddonsDnsAutoscalerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/dns-autoscaler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -48134,7 +48162,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/azure-cni-networkmonitor.yaml":                                  k8sAddonsAzureCniNetworkmonitorYaml,
 	"k8s/addons/azure-policy-deployment.yaml":                                   k8sAddonsAzurePolicyDeploymentYaml,
 	"k8s/addons/coredns.yaml":                                                   k8sAddonsCorednsYaml,
-	"k8s/addons/dns-autoscaler.yaml":                                            k8sAddonsDnsAutoscalerYaml,
 	"k8s/addons/ip-masq-agent.yaml":                                             k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                             k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml,
@@ -48442,7 +48469,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"azure-cni-networkmonitor.yaml":      {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"azure-policy-deployment.yaml":       {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"coredns.yaml":                       {k8sAddonsCorednsYaml, map[string]*bintree{}},
-			"dns-autoscaler.yaml":                {k8sAddonsDnsAutoscalerYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                 {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kubernetesmaster-audit-policy.yaml": {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-default-admin-group-rbac.yaml":       {k8sAddonsKubernetesmasteraddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},

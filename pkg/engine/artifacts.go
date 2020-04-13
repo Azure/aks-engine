@@ -155,11 +155,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.AzureCNINetworkMonitorAddonName),
 			destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 		},
-		common.DNSAutoscalerAddonName: {
-			sourceFile:      dnsAutoscalerAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.DNSAutoscalerAddonName),
-			destinationFile: dnsAutoscalerAddonDestinationFilename,
-		},
 		common.CalicoAddonName: {
 			sourceFile:      calicoAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.CalicoAddonName),

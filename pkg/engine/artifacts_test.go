@@ -131,10 +131,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.DNSAutoscalerAddonName,
-								Data: base64Data,
-							},
-							{
 								Name: common.CalicoAddonName,
 								Data: base64Data,
 							},
@@ -431,9 +427,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.AzureCNINetworkMonitorAddonName,
-							},
-							{
-								Name: common.DNSAutoscalerAddonName,
 							},
 							{
 								Name: common.CalicoAddonName,
@@ -1010,16 +1003,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					}
 					if c.expectedAzureCNINetworkMonitor.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCNINetworkMonitor.destinationFile)
-					}
-				case common.DNSAutoscalerAddonName:
-					if c.expectedDNSAutoscaler.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedDNSAutoscaler.sourceFile)
-					}
-					if c.expectedDNSAutoscaler.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedDNSAutoscaler.base64Data)
-					}
-					if c.expectedDNSAutoscaler.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDNSAutoscaler.destinationFile)
 					}
 				case common.CalicoAddonName:
 					if c.expectedCalico.sourceFile != componentFileSpec[addon].sourceFile {

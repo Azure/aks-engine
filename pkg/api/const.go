@@ -186,8 +186,6 @@ const (
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
 	DefaultContainerMonitoringAddonEnabled = false
-	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
-	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
