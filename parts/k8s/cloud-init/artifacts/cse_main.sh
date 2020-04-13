@@ -240,7 +240,7 @@ if [[ -n ${MASTER_NODE} ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
-{{end}}
+  {{end}}
 fi
 
 {{- if not IsVHDDistroForAllNodes}}
