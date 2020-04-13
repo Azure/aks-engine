@@ -755,7 +755,7 @@ func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
 // 2. azuredisk-csi-driver,
 // 3. azurefile-csi-driver.
 // For Linux clusters, we should enable CSI Drivers when using K8s 1.13+ and cloud-node-manager when using K8s 1.16+.
-// For Windwos clusters, we should enable them when using K8s 1.18+.
+// For Windows clusters, we should enable them when using K8s 1.18+.
 func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
 	o := p.OrchestratorProfile
 	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {

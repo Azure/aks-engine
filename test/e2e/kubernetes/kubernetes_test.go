@@ -644,13 +644,15 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, common.CloudControllerManagerComponentName)
-				if eng.ExpandedDefinition.Properties.ShouldEnableAzureCloudAddon(common.AzureDiskCSIDriverAddonName) &&
-					eng.ExpandedDefinition.Properties.ShouldEnableAzureCloudAddon(common.AzureFileCSIDriverAddonName) {
-					coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node", "csi-azurefile-controller", "csi-azurefile-node")
-				}
-				if eng.ExpandedDefinition.Properties.ShouldEnableAzureCloudAddon(common.CloudNodeManagerAddonName) {
-					coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
-				}
+			}
+			if hasAddon, _ := eng.HasAddon(common.AzureDiskCSIDriverAddonName); hasAddon {
+				coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node")
+			}
+			if hasAddon, _ := eng.HasAddon(common.AzureFileCSIDriverAddonName); hasAddon {
+				coreComponents = append(coreComponents, "csi-azurefile-controller", "csi-azurefile-node")
+			}
+			if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
+				coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
@@ -2109,7 +2111,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/exclude-disruption", "true"))
 				}
 				// Check node labels applied by cloud-node-manager
-				if eng.ExpandedDefinition.Properties.ShouldEnableAzureCloudAddon(common.CloudNodeManagerAddonName) {
+				if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
 					// Can't extract zone from API model, so just ensure that zone-related labels exist
 					Expect(labels).To(HaveKey("failure-domain.beta.kubernetes.io/zone"))
 					Expect(labels).To(HaveKey("topology.kubernetes.io/zone"))
