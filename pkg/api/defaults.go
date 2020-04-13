@@ -763,7 +763,7 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
 		if windowsProfile.SSHEnabled == nil {
-			sshEnabled := DefaultWindowsSshEnabled
+			sshEnabled := DefaultWindowsSSHEnabled
 			windowsProfile.SSHEnabled = &sshEnabled
 		}
 

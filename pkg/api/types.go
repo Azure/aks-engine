@@ -1780,12 +1780,12 @@ func (w *WindowsProfile) GetWindowsSku() string {
 	return KubernetesDefaultWindowsSku
 }
 
-// GetSshEnabled gets it ssh should be enabled for Windows nodes
-func (w *WindowsProfile) GetSshEnabled() bool {
+// GetSSHEnabled gets it ssh should be enabled for Windows nodes
+func (w *WindowsProfile) GetSSHEnabled() bool {
 	if w.SSHEnabled != nil {
 		return *w.SSHEnabled
 	}
-	return DefaultWindowsSshEnabled
+	return DefaultWindowsSSHEnabled
 }
 
 // GetEnableWindowsUpdate gets the flag for enable windows update or returns the default value

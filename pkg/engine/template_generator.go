@@ -610,7 +610,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.WindowsProfile.HasCustomImage()
 		},
 		"WindowsSSHEnabled": func() bool {
-			return cs.Properties.WindowsProfile.GetSshEnabled()
+			return cs.Properties.WindowsProfile.GetSSHEnabled()
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			linuxProfile := cs.Properties.LinuxProfile

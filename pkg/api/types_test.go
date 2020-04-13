@@ -3505,7 +3505,7 @@ func TestWindowsProfile(t *testing.T) {
 		t.Fatalf("Expected GetWindowsSku() to equal Datacenter-Core-1809-with-Containers-smalldisk, got %s", windowsSku)
 	}
 
-	se := w.GetSshEnabled()
+	se := w.GetSSHEnabled()
 	if !se {
 		t.Fatalf("Expected SSHEnabled to return true, got %v", se)
 	}
