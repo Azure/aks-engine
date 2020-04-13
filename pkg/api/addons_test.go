@@ -2416,7 +2416,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2457,7 +2457,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.18.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
@@ -2932,7 +2932,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.18.0",
 						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
