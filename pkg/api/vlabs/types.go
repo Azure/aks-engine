@@ -419,6 +419,7 @@ type MasterProfile struct {
 	PlatformFaultDomainCount  *int              `json:"platformFaultDomainCount,omitEmpty"`
 	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 
 	// subnet is internal
@@ -490,6 +491,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
+	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 
 	// subnet is internal
 	subnet string
