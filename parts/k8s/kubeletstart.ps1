@@ -86,6 +86,7 @@ $KubeletArgListStr = "@($KubeletArgListStr`)"
 $KubeletCommandLine = "$global:KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
 
 # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+# TODO move this to CSE
 netsh advfirewall set allprofiles state off
 
 function

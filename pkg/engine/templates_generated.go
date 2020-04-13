@@ -43723,6 +43723,7 @@ $KubeletArgListStr = "@($KubeletArgListStr` + "`" + `)"
 $KubeletCommandLine = "$global:KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
 
 # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+# TODO move this to CSE
 netsh advfirewall set allprofiles state off
 
 function
@@ -44823,11 +44824,6 @@ function Write-KubeClusterConfig {
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
-        Images = @{
-            Pause      = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0";
-            Nanoserver = "mcr.microsoft.com/windows/nanoserver:1809";
-            ServerCore = "mcr.microsoft.com/windows/servercore:ltsc2019";
-        }
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
