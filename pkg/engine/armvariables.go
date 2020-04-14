@@ -613,8 +613,8 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 		agentVars[agentSubnetName] = fmt.Sprintf("[parameters('%s')]", agentVnetSubnetID)
 		agentVars[agentVnetParts] = fmt.Sprintf("[split(parameters('%sVnetSubnetID'),'/subnets/')]", agentName)
 	} else {
-		agentVars[agentVnetSubnetID] = fmt.Sprintf("[variables('vnetSubnetID')]")
-		agentVars[agentSubnetName] = fmt.Sprintf("[variables('subnetName')]")
+		agentVars[agentVnetSubnetID] = "[variables('vnetSubnetID')]"
+		agentVars[agentSubnetName] = "[variables('subnetName')]"
 	}
 
 	agentVars[agentSubnetResourceGroup] = fmt.Sprintf("[split(variables('%sVnetSubnetID'), '/')[4]]", agentName)

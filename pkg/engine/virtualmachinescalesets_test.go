@@ -912,7 +912,7 @@ func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB, ipv6DualStackEnab
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
 					Subnet: &compute.APIEntityReference{
-						ID: to.StringPtr(fmt.Sprintf("[variables('agentpool1VnetSubnetID')]")),
+						ID: to.StringPtr("[variables('agentpool1VnetSubnetID')]"),
 					},
 					Primary:                 to.BoolPtr(false),
 					PrivateIPAddressVersion: "IPv6",

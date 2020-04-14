@@ -29,9 +29,8 @@ var _ = Describe("v20180331 test suite", func() {
 	translator := i18n.Translator{
 		Locale: locale,
 	}
-	apiloader := &api.Apiloader{
-		Translator: &translator,
-	}
+	apiloader := &api.Apiloader{}
+	apiloader.Translator = &translator
 	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false)
 	defaultK8sVersion := common.GetDefaultKubernetesVersion(false)
 

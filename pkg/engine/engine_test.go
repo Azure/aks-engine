@@ -774,8 +774,8 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 
 	actual = makeAgentExtensionScriptCommands(cs, profile)
 
-	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs  "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
-- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs  "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery"
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script
 - sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
 
 	if actual != expected {
@@ -787,8 +787,8 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 
 	actual = makeAgentExtensionScriptCommands(cs, profile)
 
-	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs --cacert /var/lib/waagent/Certificates.pem "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
-- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs --cacert /var/lib/waagent/Certificates.pem "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery"
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script
 - sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
 
 	if actual != expected {
@@ -1876,9 +1876,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -1959,9 +1959,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:10:k8s-pool2-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -2026,9 +2026,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -3106,7 +3106,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
 					},
 				},
 				{
@@ -3119,7 +3119,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
 					},
 				},
 				{
@@ -3132,7 +3132,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+						"command": "\"cloud-controller-manager\"",
 					},
 				},
 				{
@@ -3145,7 +3145,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
 					},
 				},
 				{
@@ -3192,17 +3192,17 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedIsAzureStackCloud: false,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
 			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
 			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
 			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
 			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
 			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 		{
@@ -3218,7 +3218,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
 					},
 				},
 				{
@@ -3231,7 +3231,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
 					},
 				},
 				{
@@ -3244,7 +3244,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+						"command": "\"cloud-controller-manager\"",
 					},
 				},
 				{
@@ -3257,7 +3257,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
 					},
 				},
 				{
@@ -3309,17 +3309,17 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedIsAzureStackCloud: true,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
 			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
 			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
 			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
 			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
 			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 		{
@@ -3335,7 +3335,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
 					},
 				},
 				{
@@ -3348,7 +3348,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
 					},
 				},
 				{
@@ -3361,7 +3361,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+						"command": "\"cloud-controller-manager\"",
 					},
 				},
 				{
@@ -3374,7 +3374,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
 					},
 				},
 				{
@@ -3421,17 +3421,17 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedIsAzureStackCloud: false,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: false,
 			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
 			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
 			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
 			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
 			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 	}
