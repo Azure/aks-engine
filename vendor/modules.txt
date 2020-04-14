@@ -48,6 +48,8 @@ github.com/BurntSushi/toml
 # github.com/Jeffail/gabs v1.1.1
 ## explicit
 github.com/Jeffail/gabs
+# github.com/Masterminds/godir v0.0.0-20160728192234-40ddaca750b2
+## explicit
 # github.com/blang/semver v3.5.1+incompatible
 ## explicit
 github.com/blang/semver
@@ -142,6 +144,8 @@ github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.10
 ## explicit
 github.com/mattn/go-isatty
+# github.com/mattn/goveralls v0.0.5
+## explicit
 # github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b
 ## explicit
 github.com/mgutz/ansi
@@ -208,6 +212,8 @@ github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.3
 ## explicit
 github.com/spf13/pflag
+# github.com/urfave/cli v1.22.4
+## explicit
 # github.com/x-cray/logrus-prefixed-formatter v0.5.2
 ## explicit
 github.com/x-cray/logrus-prefixed-formatter
@@ -221,7 +227,7 @@ golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/poly1305
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3
+# golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -235,7 +241,7 @@ golang.org/x/net/idna
 ## explicit
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
+# golang.org/x/sync v0.0.0-20190423024810-112230192c58
 ## explicit
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20191104094858-e8c54fb511f6
