@@ -774,8 +774,8 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 
 	actual = makeAgentExtensionScriptCommands(cs, profile)
 
-	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs  "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery"
-- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs  "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
 - sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
 
 	if actual != expected {
@@ -787,8 +787,8 @@ func TestMakeMasterExtensionScriptCommands(t *testing.T) {
 
 	actual = makeAgentExtensionScriptCommands(cs, profile)
 
-	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs --cacert /var/lib/waagent/Certificates.pem "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery"
-- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script
+	expected = `- sudo /usr/bin/curl --retry 5 --retry-delay 10 --retry-max-time 30 -o /opt/azure/containers/extensions/fooExtension/fooBar Script --create-dirs --cacert /var/lib/waagent/Certificates.pem "fooRootURLextensions/fooExtension/1.0/fooBar Script?fooURLQuery" 
+- sudo /bin/chmod 744 /opt/azure/containers/extensions/fooExtension/fooBar Script 
 - sudo /opt/azure/containers/extensions/fooExtension/fooBar Script ',parameters('fooExtensionParameters'),' > /var/log/fooExtension-output.log`
 
 	if actual != expected {
