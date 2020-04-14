@@ -4,7 +4,6 @@ run:
     - test/i18n
     - pkg/test
   skip-files:
-    - pkg/api/agentPoolOnlyApi/v20180331/apiloader_test.go
     - pkg/i18n/i18n.go
     - pkg/i18n/translations.go
 
