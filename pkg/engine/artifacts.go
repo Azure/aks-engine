@@ -52,6 +52,10 @@ func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesCom
 			base64Data:      k.GetComponentData(common.AddonManagerComponentName),
 			destinationFile: addonManagerComponentDestinationFilename,
 		},
+		common.ClusterInitComponentName: {
+			base64Data:      k.GetComponentData(common.ClusterInitComponentName),
+			destinationFile: clusterInitComponentDestinationFilename,
+		},
 	}
 }
 

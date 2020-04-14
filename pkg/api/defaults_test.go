@@ -227,34 +227,34 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	kubernetesVersion := "1.13.11"
-	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})[kubernetesVersion]
+	kubernetesVersion := "1.15.11"
+	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
 		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
 		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
-		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
 		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
 		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
 		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
-		common.DashboardAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
-		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
-		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.DashboardAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.DashboardAddonName],
+		common.ReschedulerAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+		common.MetricsServerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
 		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
-		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
-		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+		common.DNSAutoscalerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
+		common.HeapsterAddonName:               specConfig.MCRKubernetesImageBase + k8sComponents[common.HeapsterAddonName],
 		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
 		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
 		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
-		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
-		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
-		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.KubeDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
 		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
 	}
@@ -949,6 +949,114 @@ func TestKubernetesImageBaseAppendSlash(t *testing.T) {
 	mockCS.setOrchestratorDefaults(true, true)
 	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "mcr.microsoft.com/" {
 		t.Fatalf("defaults flow did not add a trailing '/' to KubernetesImageBase")
+	}
+}
+
+func TestKubernetesImageBase(t *testing.T) {
+	// Default public cloud
+	mockCS := getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig := mockCS.GetCloudSpecConfig()
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Default mooncake cloud
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "chinanorth"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// User-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
+	}
+
+	// User-customized MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-mcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-mcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-mcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade default scenario
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario forces GCR to MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario doesn't force user-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
 	}
 }
 
@@ -2310,6 +2418,26 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
+	// agents with VMSS and Standard LB (default) should have SinglePlacementGroup set to false
+	mockCS = getMockBaseContainerService("1.12.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.AgentPoolProfiles[0].Count = 4
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
+	}
+	for _, profile := range properties.AgentPoolProfiles {
+		if to.Bool(profile.SinglePlacementGroup) {
+			t.Fatalf("pool did not have the expected SinglePlacementGroup configuration, got %t, expected %t",
+				to.Bool(profile.SinglePlacementGroup), false)
+		}
+	}
 	// agents with VMSS and zones
 	mockCS = getMockBaseContainerService("1.13.12")
 	properties = mockCS.Properties
@@ -2329,7 +2457,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), true)
 	}
-	singlePlacementGroup = DefaultSinglePlacementGroup
+	singlePlacementGroup = false
 	if *properties.AgentPoolProfiles[0].SinglePlacementGroup != singlePlacementGroup {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup default did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, singlePlacementGroup)

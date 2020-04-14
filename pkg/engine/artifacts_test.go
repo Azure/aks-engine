@@ -1191,6 +1191,7 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 		expectedCloudControllerManager kubernetesComponentFileSpec
 		expectedAPIServer              kubernetesComponentFileSpec
 		expectedAddonManager           kubernetesComponentFileSpec
+		expectedClusterInit            kubernetesComponentFileSpec
 	}{
 		{
 			name: "components with data",
@@ -1218,6 +1219,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.AddonManagerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ClusterInitComponentName,
 								Data: base64Data,
 							},
 						},
@@ -1248,6 +1253,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				sourceFile:      addonManagerComponentSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: addonManagerComponentDestinationFilename,
+			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      base64Data,
+				destinationFile: clusterInitComponentDestinationFilename,
 			},
 		},
 		{
@@ -1302,6 +1311,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: addonManagerComponentDestinationFilename,
 			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      "",
+				destinationFile: clusterInitComponentDestinationFilename,
+			},
 		},
 		{
 			name: "no components in Properties object",
@@ -1330,6 +1343,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				sourceFile:      addonManagerComponentSourceFilename,
 				base64Data:      "",
 				destinationFile: addonManagerComponentDestinationFilename,
+			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      "",
+				destinationFile: clusterInitComponentDestinationFilename,
 			},
 		},
 	}
@@ -1390,6 +1407,13 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 					}
 					if c.expectedAddonManager.destinationFile != componentFileSpec[component].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedAddonManager.destinationFile)
+					}
+				case common.ClusterInitComponentName:
+					if c.expectedClusterInit.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedClusterInit.base64Data)
+					}
+					if c.expectedClusterInit.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedClusterInit.destinationFile)
 					}
 				}
 			}

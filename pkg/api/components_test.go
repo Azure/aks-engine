@@ -501,12 +501,12 @@ func TestSetComponentsConfig(t *testing.T) {
 				common.APIServerComponentName,
 				common.AddonManagerComponentName,
 			} {
-				component := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Components[getComponentsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Components, componentName)]
+				component := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Components[GetComponentsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Components, componentName)]
 				if component.IsEnabled() {
-					if i := getComponentsIndexByName(test.expectedComponents, componentName); i == -1 {
+					if i := GetComponentsIndexByName(test.expectedComponents, componentName); i == -1 {
 						t.Fatalf("got component %s that we weren't expecting", component.Name)
 					}
-					expectedComponent := test.expectedComponents[getComponentsIndexByName(test.expectedComponents, componentName)]
+					expectedComponent := test.expectedComponents[GetComponentsIndexByName(test.expectedComponents, componentName)]
 					if to.Bool(component.Enabled) != to.Bool(expectedComponent.Enabled) {
 						t.Fatalf("expected component %s to have Enabled value %t, instead got %t", expectedComponent.Name, to.Bool(expectedComponent.Enabled), to.Bool(component.Enabled))
 					}
@@ -550,7 +550,7 @@ func TestSetComponentsConfig(t *testing.T) {
 						}
 					}
 				} else {
-					if i := getComponentsIndexByName(test.expectedComponents, componentName); i > -1 {
+					if i := GetComponentsIndexByName(test.expectedComponents, componentName); i > -1 {
 						if to.Bool(test.expectedComponents[i].Enabled) {
 							t.Fatalf("expected component %s to be enabled, instead it was disabled", componentName)
 						}
@@ -681,9 +681,9 @@ func TestGetComponentsIndexByName(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			result := getComponentsIndexByName(c.components, c.componentName)
+			result := GetComponentsIndexByName(c.components, c.componentName)
 			if result != c.expected {
-				t.Fatalf("expected getComponentsIndexByName() result %d to be equal to %d", result, c.expected)
+				t.Fatalf("expected GetComponentsIndexByName() result %d to be equal to %d", result, c.expected)
 			}
 		})
 	}
@@ -692,7 +692,7 @@ func TestGetComponentsIndexByName(t *testing.T) {
 func TestAssignDefaultComponentVals(t *testing.T) {
 	containerServiceMap := getContainerServicesMap()
 	defaultOneDotFifteenComponents := getDefaultComponents(getContainerServicesMap()["1.15"])
-	controllerManagerComponent := defaultOneDotFifteenComponents[getComponentsIndexByName(defaultOneDotFifteenComponents, common.ControllerManagerComponentName)]
+	controllerManagerComponent := defaultOneDotFifteenComponents[GetComponentsIndexByName(defaultOneDotFifteenComponents, common.ControllerManagerComponentName)]
 	cases := []struct {
 		name             string
 		component        KubernetesComponent
@@ -884,7 +884,7 @@ func TestAssignDefaultComponentVals(t *testing.T) {
 
 func TestSynthesizeComponentsConfig(t *testing.T) {
 	defaultOneDotFifteenComponents := getDefaultComponents(getContainerServicesMap()["1.15"])
-	i := getComponentsIndexByName(defaultOneDotFifteenComponents, common.ControllerManagerComponentName)
+	i := GetComponentsIndexByName(defaultOneDotFifteenComponents, common.ControllerManagerComponentName)
 	defaultControllerManagerComponent := defaultOneDotFifteenComponents[i]
 	customOneDotFifteenComponents := defaultOneDotFifteenComponents
 	customControllerManagerComponent := KubernetesComponent{
@@ -934,7 +934,7 @@ func TestSynthesizeComponentsConfig(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 			synthesizeComponentsConfig(c.components, c.defaultComponent, c.isUpgrade)
-			i := getComponentsIndexByName(c.components, common.ControllerManagerComponentName)
+			i := GetComponentsIndexByName(c.components, common.ControllerManagerComponentName)
 			if !reflect.DeepEqual(c.components[i], c.expected) {
 				t.Fatalf("expected synthesizeComponentsConfig() result %v to be equal to %v", c.components[i], c.expected)
 			}
@@ -1082,7 +1082,7 @@ func TestGetContainerImages(t *testing.T) {
 	csOneDotEighteenAzureStack.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/azurestack/"
 	csOneDotEighteenAzureStack.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
 	orchestratorVersionOneDotEighteen := csOneDotEighteen.Properties.OrchestratorProfile.OrchestratorVersion
-	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
 	cases := []struct {
 		name                                      string
 		cs                                        *ContainerService
@@ -1095,10 +1095,10 @@ func TestGetContainerImages(t *testing.T) {
 		{
 			name:                                 "1.13",
 			cs:                                   csOneDotThirteen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
+			expectedAPIServerImageString:         specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
+			expectedControllerManagerImageString: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
 			expectedCloudControllerManagerImageString: csOneDotThirteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
+			expectedSchedulerImageString:              specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.Hyperkube],
 			expectedAddonManagerImageString:           csOneDotThirteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotThirteen][common.AddonManagerComponentName],
 		},
 		{
@@ -1113,10 +1113,10 @@ func TestGetContainerImages(t *testing.T) {
 		{
 			name:                                 "1.14",
 			cs:                                   csOneDotFourteen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
+			expectedAPIServerImageString:         specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
+			expectedControllerManagerImageString: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
 			expectedCloudControllerManagerImageString: csOneDotFourteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
+			expectedSchedulerImageString:              specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.Hyperkube],
 			expectedAddonManagerImageString:           csOneDotFourteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFourteen][common.AddonManagerComponentName],
 		},
 		{
@@ -1131,10 +1131,10 @@ func TestGetContainerImages(t *testing.T) {
 		{
 			name:                                 "1.15",
 			cs:                                   csOneDotFifteen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
+			expectedAPIServerImageString:         specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
+			expectedControllerManagerImageString: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
 			expectedCloudControllerManagerImageString: csOneDotFifteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
+			expectedSchedulerImageString:              specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.Hyperkube],
 			expectedAddonManagerImageString:           csOneDotFifteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotFifteen][common.AddonManagerComponentName],
 		},
 		{
@@ -1149,10 +1149,10 @@ func TestGetContainerImages(t *testing.T) {
 		{
 			name:                                 "1.16",
 			cs:                                   csOneDotSixteen,
-			expectedAPIServerImageString:         specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
-			expectedControllerManagerImageString: specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
+			expectedAPIServerImageString:         specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
+			expectedControllerManagerImageString: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
 			expectedCloudControllerManagerImageString: csOneDotSixteen.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.CloudControllerManagerComponentName],
-			expectedSchedulerImageString:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
+			expectedSchedulerImageString:              specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.Hyperkube],
 			expectedAddonManagerImageString:           csOneDotSixteen.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase + k8sComponentsByVersionMap[orchestratorVersionOneDotSixteen][common.AddonManagerComponentName],
 		},
 		{
@@ -1296,7 +1296,7 @@ func overwriteDefaultComponents(components []KubernetesComponent, cs *ContainerS
 	var ret []KubernetesComponent
 	defaults := getDefaultComponents(cs)
 	for _, defaultComponent := range defaults {
-		i := getComponentsIndexByName(components, defaultComponent.Name)
+		i := GetComponentsIndexByName(components, defaultComponent.Name)
 		if i > -1 {
 			ret = append(ret, components[i])
 		} else {
@@ -1389,8 +1389,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1401,8 +1401,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.13.11",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
@@ -1432,8 +1432,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1444,8 +1444,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.14.7",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
@@ -1475,8 +1475,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1487,8 +1487,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.15.9",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
@@ -1518,8 +1518,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1530,8 +1530,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.16.6",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
@@ -1561,8 +1561,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1573,8 +1573,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.17.2",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],
@@ -1606,8 +1606,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 					},
 				},
@@ -1618,8 +1618,8 @@ func getContainerServicesMap() map[string]*ContainerService {
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorVersion: "1.18.0",
 					KubernetesConfig: &KubernetesConfig{
-						KubernetesImageBase:     specConfig.KubernetesImageBase,
-						KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						KubernetesImageBase:     specConfig.MCRKubernetesImageBase,
+						KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 						MCRKubernetesImageBase:  specConfig.MCRKubernetesImageBase,
 						Components: []KubernetesComponent{
 							getUserConfiguredComponentMap()["user-configured kube-scheduler component"],

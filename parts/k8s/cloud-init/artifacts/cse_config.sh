@@ -4,6 +4,7 @@ NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -12,7 +13,7 @@ systemctlEnableAndStart() {
   if [ $RESTART_STATUS -ne 0 ]; then
     return 1
   fi
-  if ! retrycmd_if_failure 120 5 25 systemctl enable $1; then
+  if ! retrycmd 120 5 25 systemctl enable $1; then
     return 1
   fi
 }
@@ -95,7 +96,7 @@ configureEtcd() {
       sleep 1
     fi
   done
-  retrycmd_if_failure 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  retrycmd 120 5 25 sudo -E etcdctl member update $MEMBER ${ETCD_PEER_URL} || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
 }
 ensureNTP() {
   systemctlEnableAndStart ntp || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
@@ -228,7 +229,7 @@ installAzureCNI() {
 {{end}}
 configureCNI() {
   {{/* needed for the iptables rules to work on bridges */}}
-  retrycmd_if_failure 120 5 25 modprobe br_netfilter || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
+  retrycmd 120 5 25 modprobe br_netfilter || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
   echo -n "br_netfilter" >/etc/modules-load.d/br_netfilter.conf
   configureCNIIPTables
   {{if HasCiliumNetworkPlugin}}
@@ -271,9 +272,9 @@ installContainerd() {
     fi
     removeContainerd
     echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" >/tmp/microsoft-prod-testing.list
-    retrycmd_if_failure 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit 25
-    retrycmd_if_failure_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
-    retrycmd_if_failure 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
+    retrycmd 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit 25
+    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
+    retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
     apt_get_install 20 30 120 moby-containerd=${CONTAINERD_VERSION}* --allow-downgrades || exit 27
   fi
@@ -320,7 +321,7 @@ ensureDHCPv6() {
   wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart dhcpv6 || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
-  retrycmd_if_failure 120 5 25 modprobe ip6_tables || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
+  retrycmd 120 5 25 modprobe ip6_tables || exit {{GetCSEErrorCode "ERR_MODPROBE_FAIL"}}
 }
 {{end}}
 ensureKubelet() {
@@ -386,18 +387,18 @@ ensureK8sControlPlane() {
   if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
     return
   fi
-  retrycmd_if_failure 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL 2>/dev/null cluster-info || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
   GATEKEEPER_NAMESPACE="gatekeeper-system"
-  retrycmd_if_failure 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 
-  retrycmd_if_failure 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{end}}
 ensureEtcd() {
-  retrycmd_if_failure 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 curl --cacert /etc/kubernetes/certs/ca.crt --cert /etc/kubernetes/certs/etcdclient.crt --key /etc/kubernetes/certs/etcdclient.key ${ETCD_CLIENT_URL}/v2/machines || exit {{GetCSEErrorCode "ERR_ETCD_RUNNING_TIMEOUT"}}
 }
 createKubeManifestDir() {
   KUBEMANIFESTDIR=/etc/kubernetes/manifests
@@ -502,9 +503,10 @@ configGPUDrivers() {
   {{/* we will manually install nvidia-docker2 */}}
   rmmod nouveau
   echo blacklist nouveau >>/etc/modprobe.d/blacklist.conf
-  retrycmd_if_failure_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  retrycmd_no_stats 120 5 25 update-initramfs -u || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   wait_for_apt_locks
-  retrycmd_if_failure 30 5 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  {{/* if the unattened upgrade is turned on, and it may takes 10 min to finish the installation, and we use the 1 second just to try to get the lock more aggressively */}}
+  retrycmd 600 1 3600 apt-get -o Dpkg::Options::="--force-confold" install -y nvidia-container-runtime="${NVIDIA_CONTAINER_RUNTIME_VERSION}+${NVIDIA_DOCKER_SUFFIX}" || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   tmpDir=$GPU_DEST/tmp
   (
     set -e -o pipefail
@@ -514,17 +516,18 @@ configGPUDrivers() {
     cp -r ${tmpDir}/pkg/usr/* /usr/ || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   )
   rm -rf $GPU_DEST/tmp
-  retrycmd_if_failure 120 5 25 pkill -SIGHUP dockerd || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  retrycmd 120 5 25 pkill -SIGHUP dockerd || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   mkdir -p $GPU_DEST/lib64 $GPU_DEST/overlay-workdir
-  retrycmd_if_failure 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
+  retrycmd 120 5 25 mount -t overlay -o lowerdir=/usr/lib/x86_64-linux-gnu,upperdir=${GPU_DEST}/lib64,workdir=${GPU_DEST}/overlay-workdir none /usr/lib/x86_64-linux-gnu || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_CONFIG"}}
   export -f installNvidiaDrivers
-  retrycmd_if_failure 3 1 600 bash -c installNvidiaDrivers || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  retrycmd 3 1 600 bash -c installNvidiaDrivers || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  mv ${GPU_DEST}/bin/* /usr/bin
   echo "${GPU_DEST}/lib64" >/etc/ld.so.conf.d/nvidia.conf
-  retrycmd_if_failure 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  retrycmd 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
   umount -l /usr/lib/x86_64-linux-gnu
-  retrycmd_if_failure 120 5 25 nvidia-modprobe -u -c0 || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
-  retrycmd_if_failure 120 5 25 $GPU_DEST/bin/nvidia-smi || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
-  retrycmd_if_failure 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  retrycmd 120 5 25 nvidia-modprobe -u -c0 || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  retrycmd 120 5 25 nvidia-smi || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
+  retrycmd 120 5 25 ldconfig || exit {{GetCSEErrorCode "ERR_GPU_DRIVERS_START_FAIL"}}
 }
 ensureGPUDrivers() {
   configGPUDrivers
@@ -537,16 +540,16 @@ installSGXDrivers() {
 
   local packages="make gcc dkms"
   wait_for_apt_locks
-  retrycmd_if_failure 30 5 3600 apt-get -y install "$packages" || exit 90
+  retrycmd 30 5 3600 apt-get -y install "$packages" || exit 90
 
   local oe_dir=/opt/azure/containers/oe
   rm -rf ${oe_dir}
   mkdir -p ${oe_dir}
   pushd ${oe_dir} || exit
-  retrycmd_if_failure 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit 90
+  retrycmd 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit 90
   dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
   sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
-  retrycmd_if_failure 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit 90
+  retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit 90
   matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
   read -ra tmp_array <<<"$matched_line"
   sgx_driver_sha256sum_expected="${tmp_array[0]}"
@@ -554,7 +557,7 @@ installSGXDrivers() {
   sgx_driver_url="${sgx_driver_folder_url}/${sgx_driver_remote_path}"
   sgx_driver=$(basename "$sgx_driver_url")
 
-  retrycmd_if_failure 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit 90
+  retrycmd 10 10 120 curl -fsSL -O "${sgx_driver_url}" || exit 90
   read -ra tmp_array <<<"$(sha256sum ./"$sgx_driver")"
   sgx_driver_sha256sum_real="${tmp_array[0]}"
   [[ $sgx_driver_sha256sum_real == "$sgx_driver_sha256sum_expected" ]] || exit 93

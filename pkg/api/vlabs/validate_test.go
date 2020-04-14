@@ -102,7 +102,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.11",
+					OrchestratorVersion: "1.15.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableAggregatedAPIs: true,
 						EnableRbac:           &falseVal,
@@ -139,7 +139,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.11",
+					OrchestratorVersion: "1.15.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnableDataEncryptionAtRest: &trueVal,
 						EtcdEncryptionKey:          "fakeEncryptionKey",
@@ -176,7 +176,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.13.11",
+					OrchestratorVersion: "1.15.11",
 					KubernetesConfig: &KubernetesConfig{
 						EnablePodSecurityPolicy: &trueVal,
 					},
@@ -259,7 +259,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "v1.13.11",
+					OrchestratorVersion: "v1.15.11",
 				},
 			},
 		},
@@ -2213,7 +2213,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.13"
+	p.OrchestratorProfile.OrchestratorRelease = "1.15"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on nvidia-device-plugin with k8s >= 1.12",
@@ -2707,7 +2707,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 	}{
 		{
 			name:                "use managed identity with master vmas",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix: "dummy",
@@ -2723,7 +2723,7 @@ func TestProperties_ValidateManagedIdentity(t *testing.T) {
 		},
 		{
 			name:                "use master VMSS with empty user assigned ID",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			useManagedIdentity:  true,
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
@@ -2814,7 +2814,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and storage account",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -2826,7 +2826,7 @@ func TestMasterProfileValidate(t *testing.T) {
 		{
 			name:                "Master Profile with VMSS and agent profiles with VMAS",
 			orchestratorType:    Kubernetes,
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			masterProfile: MasterProfile{
 				DNSPrefix:           "dummy",
 				Count:               3,
@@ -2882,7 +2882,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 	}{
 		{
 			name:                "Agent profile with zones vmas",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -2904,7 +2904,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile with zones and Agent profile without zones",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			masterProfile: &MasterProfile{
 				Count:               5,
 				DNSPrefix:           "foo",
@@ -2925,7 +2925,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "Master profile without zones and Agent profile with zones",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			masterProfile: &MasterProfile{
 				Count:               3,
 				DNSPrefix:           "foo",
@@ -2946,7 +2946,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                "all zones and basic loadbalancer",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               5,
@@ -2969,7 +2969,7 @@ func TestProperties_ValidateZones(t *testing.T) {
 		},
 		{
 			name:                        "all zones with standard loadbalancer and false excludeMasterFromStandardLB",
-			orchestratorRelease:         "1.13",
+			orchestratorRelease:         "1.15",
 			loadBalancerSku:             StandardLoadBalancerSku,
 			excludeMasterFromStandardLB: false,
 			masterProfile: &MasterProfile{
@@ -3133,7 +3133,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 	}{
 		{
 			name:                "lowercase basic LB",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     "basic",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3144,7 +3144,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Basic LB",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     BasicLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3155,7 +3155,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "lowercase standard LB",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     "standard",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3166,7 +3166,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "Standard LB",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     StandardLoadBalancerSku,
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3177,7 +3177,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "empty string LB value",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     "",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3188,7 +3188,7 @@ func TestProperties_ValidateLoadBalancer(t *testing.T) {
 		},
 		{
 			name:                "invalid LB string value",
-			orchestratorRelease: "1.13",
+			orchestratorRelease: "1.15",
 			loadBalancerSku:     "foo",
 			masterProfile: &MasterProfile{
 				Count:               3,
@@ -3292,7 +3292,7 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.13"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -3466,7 +3466,7 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.13"
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
 			cs.Properties.MasterProfile = test.masterProfile
 			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
 			err := cs.Validate(true)
@@ -4111,7 +4111,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.11",
 						KubernetesConfig: &KubernetesConfig{
 							UseInstanceMetadata: to.BoolPtr(trueVal),
 						},
@@ -4132,7 +4132,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.11",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024",
 						},
@@ -4153,7 +4153,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.11",
 						KubernetesConfig: &KubernetesConfig{
 							EtcdDiskSizeGB: "1024GB",
 						},
@@ -4174,7 +4174,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.11",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4200,7 +4200,7 @@ func TestValidateLocation(t *testing.T) {
 					},
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.15.11",
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
@@ -4311,7 +4311,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 		isUpdate      bool
 		expectedError error
 	}{
-		"should error when masterProfile includes both an ImageRef and a Distro configuration": {
+		"should not error when masterProfile includes both an ImageRef and a Distro configuration": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4329,9 +4329,9 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+			expectedError: nil,
 		},
-		"should error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
+		"should not error when masterProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4349,7 +4349,7 @@ func TestValidateMasterProfileImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.New("masterProfile includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously"),
+			expectedError: nil,
 		},
 		"should not error when masterProfile includes an ImageRef configuration only": {
 			properties: &Properties{
@@ -4459,7 +4459,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 		isUpdate      bool
 		expectedError error
 	}{
-		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
+		"should not error when AgentPoolProfile includes both an ImageRef and a Distro configuration": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4479,9 +4479,9 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      false,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+			expectedError: nil,
 		},
-		"should error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
+		"should not error when AgentPoolProfile includes both an ImageRef and a Distro configuration in update context": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType: Kubernetes,
@@ -4501,7 +4501,7 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 				},
 			},
 			isUpdate:      true,
-			expectedError: errors.Errorf("agentPoolProfile %s includes a custom image configuration (imageRef) and an explicit distro configuration, you may use one of these but not both simultaneously", "foo"),
+			expectedError: nil,
 		},
 		"should not error when AgentPoolProfile includes an ImageRef configuration only": {
 			properties: &Properties{

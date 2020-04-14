@@ -182,7 +182,7 @@ type AgentPoolProfile struct {
 	Name           string `json:"name" validate:"required"`
 	Count          int    `json:"count" validate:"required,min=1,max=100"`
 	VMSize         string `json:"vmSize" validate:"required"`
-	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	StorageProfile string `json:"storageProfile" validate:"eq=ManagedDisks|len=0"`
 	VnetSubnetID   string `json:"vnetSubnetID,omitempty"`
 	MaxPods        *int   `json:"maxPods,omitempty"`

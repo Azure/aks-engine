@@ -161,7 +161,6 @@ done
 
 KUBE_ADDON_MANAGER_VERSIONS="
 9.0.2
-8.9.1
 "
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
@@ -212,15 +211,14 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.18.0
-1.17.1
-1.16.4
-1.15.5
-1.14.7
-1.13.9
+1.18.1
+1.17.2
+1.16.5
+1.15.6
+1.14.8
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -344,6 +342,7 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.18.1
 1.18.0
 1.17.4
 1.17.3
@@ -356,21 +355,15 @@ K8S_VERSIONS="
 1.14.8
 1.14.7
 1.14.7-azs
-1.13.12
-1.13.11
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    fi
+    HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
     for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
-      CONTAINER_IMAGE="k8s.gcr.io/${component}:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/${component}:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     done
@@ -378,7 +371,7 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     extractKubeBinaries
   fi
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
-    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/cloud-controller-manager:v${KUBERNETES_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   fi

@@ -295,7 +295,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.13", "", false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.15", "", false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"

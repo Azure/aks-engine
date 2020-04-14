@@ -7,7 +7,6 @@ DEBIAN_OS_NAME="DEBIAN"
 if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
-KUBECTL=/usr/local/bin/kubectl
 DOCKER=/usr/bin/docker
 export GPU_DV=418.40.04
 export GPU_DEST=/usr/local/nvidia
@@ -30,7 +29,7 @@ configure_prerequisites() {
 
 aptmarkWALinuxAgent() {
   wait_for_apt_locks
-  retrycmd_if_failure 120 5 25 apt-mark $1 walinuxagent ||
+  retrycmd 120 5 25 apt-mark $1 walinuxagent ||
     if [[ $1 == "hold" ]]; then
       exit 7
     elif [[ $1 == "unhold" ]]; then
@@ -38,7 +37,7 @@ aptmarkWALinuxAgent() {
     fi
 }
 
-retrycmd_if_failure() {
+retrycmd() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     timeout $timeout ${@} && break ||
@@ -51,7 +50,7 @@ retrycmd_if_failure() {
   done
   echo Executed \"$@\" $i times
 }
-retrycmd_if_failure_no_stats() {
+retrycmd_no_stats() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
   for i in $(seq 1 $retries); do
     timeout $timeout ${@} && break ||
@@ -127,7 +126,6 @@ apt_get_update() {
     fi
   done
   echo Executed apt-get update $i times
-  wait_for_apt_locks
 }
 apt_get_install() {
   retries=$1; wait_sleep=$2; timeout=$3; shift && shift && shift
@@ -144,7 +142,6 @@ apt_get_install() {
       fi
   done
   echo Executed apt-get install --no-install-recommends -y \"$@\" $i times
-  wait_for_apt_locks
 }
 apt_get_purge() {
   retries=20; wait_sleep=30; timeout=120
@@ -164,7 +161,6 @@ apt_get_purge() {
     fi
   done
   echo Executed apt-get purge -y \"$package\" $i times
-  wait_for_apt_locks
 }
 apt_get_dist_upgrade() {
   retries=10
@@ -184,7 +180,6 @@ apt_get_dist_upgrade() {
     fi
   done
   echo Executed apt-get dist-upgrade $i times
-  wait_for_apt_locks
 }
 systemctl_restart() {
   retries=$1; wait_sleep=$2; timeout=$3 svcname=$4

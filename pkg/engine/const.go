@@ -277,4 +277,5 @@ const (
 	apiServerComponentDestinationFilename              string = "kube-apiserver.yaml"
 	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
 	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
+	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
 )

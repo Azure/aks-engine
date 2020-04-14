@@ -523,6 +523,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
 	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
+	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
 	convertCustomFilesToVlabs(api, vlabsProfile)
 	vlabsProfile.SysctlDConfig = map[string]string{}
 	for key, val := range api.SysctlDConfig {
@@ -574,6 +575,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.AuditDEnabled = api.AuditDEnabled
 	p.UltraSSDEnabled = api.UltraSSDEnabled
 	p.DiskEncryptionSetID = api.DiskEncryptionSetID
+	p.EncryptionAtHost = api.EncryptionAtHost
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v

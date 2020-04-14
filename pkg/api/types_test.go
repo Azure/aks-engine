@@ -42,7 +42,7 @@ const exampleAKSAPIModel = `{
 	"properties": {
 		"dnsPrefix": "agents006",
 		"fqdn": "agents006.azmk8s.io",
-		"kubernetesVersion": "1.13.11",
+		"kubernetesVersion": "1.15.11",
 		"agentPoolProfiles": [ { "name": "agentpool1", "count": 2, "vmSize": "Standard_D2_v2" } ],
 		"linuxProfile": { "adminUsername": "azureuser", "ssh": { "publicKeys": [ { "keyData": "" } ] }
 	},
@@ -684,17 +684,18 @@ func TestMasterProfileGetCosmosEndPointURI(t *testing.T) {
 
 func TestHasStorageProfile(t *testing.T) {
 	cases := []struct {
-		name                    string
-		p                       Properties
-		expectedHasMD           bool
-		expectedHasSA           bool
-		expectedMasterMD        bool
-		expectedAgent0E         bool
-		expectedAgent0MD        bool
-		expectedPrivateJB       bool
-		expectedHasDisks        bool
-		expectedDesID           string
-		expectedUltraSSDEnabled bool
+		name                     string
+		p                        Properties
+		expectedHasMD            bool
+		expectedHasSA            bool
+		expectedMasterMD         bool
+		expectedAgent0E          bool
+		expectedAgent0MD         bool
+		expectedPrivateJB        bool
+		expectedHasDisks         bool
+		expectedDesID            string
+		expectedUltraSSDEnabled  bool
+		expectedEncryptionAtHost bool
 	}{
 		{
 			name: "Storage Account",
@@ -925,6 +926,35 @@ func TestHasStorageProfile(t *testing.T) {
 			expectedPrivateJB:       false,
 			expectedUltraSSDEnabled: true,
 		},
+		{
+			name: "EncryptionAtHost setting",
+			p: Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				MasterProfile: &MasterProfile{
+					StorageProfile:   ManagedDisks,
+					EncryptionAtHost: to.BoolPtr(true),
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						StorageProfile:   ManagedDisks,
+						EncryptionAtHost: to.BoolPtr(true),
+					},
+					{
+						StorageProfile:   ManagedDisks,
+						EncryptionAtHost: to.BoolPtr(true),
+					},
+				},
+			},
+			expectedHasMD:            true,
+			expectedHasSA:            false,
+			expectedMasterMD:         true,
+			expectedAgent0MD:         true,
+			expectedAgent0E:          false,
+			expectedPrivateJB:        false,
+			expectedEncryptionAtHost: true,
+		},
 	}
 
 	for _, c := range cases {
@@ -945,6 +975,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if to.Bool(c.p.MasterProfile.UltraSSDEnabled) != c.expectedUltraSSDEnabled {
 				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.MasterProfile.UltraSSDEnabled))
+			}
+			if to.Bool(c.p.MasterProfile.EncryptionAtHost) != c.expectedEncryptionAtHost {
+				t.Fatalf("expected EncryptionAtHost to return %v but instead returned %v", c.expectedEncryptionAtHost, to.Bool(c.p.MasterProfile.EncryptionAtHost))
 			}
 			if c.p.AgentPoolProfiles[0].IsManagedDisks() != c.expectedAgent0MD {
 				t.Fatalf("expected IsManagedDisks() to return %t but instead returned %t", c.expectedAgent0MD, c.p.AgentPoolProfiles[0].IsManagedDisks())
@@ -967,6 +1000,9 @@ func TestHasStorageProfile(t *testing.T) {
 			}
 			if to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled) != c.expectedUltraSSDEnabled {
 				t.Fatalf("expected UltraSSDEnabled to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled))
+			}
+			if to.Bool(c.p.AgentPoolProfiles[0].EncryptionAtHost) != c.expectedEncryptionAtHost {
+				t.Fatalf("expected EncryptionAtHost to return %v but instead returned %v", c.expectedUltraSSDEnabled, to.Bool(c.p.AgentPoolProfiles[0].UltraSSDEnabled))
 			}
 		})
 	}

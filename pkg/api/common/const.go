@@ -288,6 +288,8 @@ const (
 	APIServerComponentName = "kube-apiserver"
 	// AddonManagerComponentName is the name of the kube-addon-manager component
 	AddonManagerComponentName = "kube-addon-manager"
+	// ClusterInitComponentName is the name of the cluster-init component
+	ClusterInitComponentName = "cluster-init"
 )
 
 const WindowsArtifactComponentName = "windowszip"

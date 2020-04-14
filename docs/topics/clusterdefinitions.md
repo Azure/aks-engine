@@ -248,6 +248,7 @@ The reason for the unsightly base64-encoded input type is to optimize delivery p
 | kube-apiserver | true | 1 per master node | The Kubernetes API server validates and configures data for the api objects which include pods, services, replicationcontrollers, and others. The API Server services REST operations and provides the frontend to the cluster's shared state through which all other components interact. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-apiserver/). |
 | kube-scheduler | true | 1 per master node | The Kubernetes scheduler is a policy-rich, topology-aware, workload-specific function that significantly impacts availability, performance, and capacity. The scheduler needs to take into account individual and collective resource requirements, quality of service requirements, hardware/software/policy constraints, affinity and anti-affinity specifications, data locality, inter-workload interference, deadlines, and so on. Official docs [here](https://kubernetes.io/docs/reference/command-line-tools-reference/kube-scheduler/). |
 | kube-addon-manager | true | 1 per master node | Addon manager provides a standard way to deliver additional Kubernetes componentry. The addons supported by AKS Engine (documented [above](#addons)) are installed into the cluster using Addon manager. Official docs [here](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/addon-manager). |
+| cluster-init | false | n/a | This is an interface to deliver Kubernetes resource configuration that may be tightly coupled to an ARM deployment. For example, if you use AKS Engine in an automated pipeline and you can scale up a cluster quickly by loading a Kubernetes specification immediately after bootstrapping the control plane, give the base64-encoded YAML representation of that spec to `cluster-init`. That data is decoded at cluster creation time to the path `/opt/azure/containers/cluster-init.yaml` on the first master VM, and then loaded into the cluster via `kubectl apply -f`. See[`kubectl apply`](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands#apply) for more documentation on how to specify the source YAML. Note: the `cluster-init` spec is ignored during `aks-engine upgrade` and `aks-engine scale`operations. |
 
 To give a bit more info on the `components` property: Currently, there are two configuration vectors available for use. Firstly, you have the option to pass in a custom image reference for the container that the AKS Engine-provided specs implement (all components are implemented as single-container Pod resources); in addition you may provide an alternate command string to execute inside the container. E.g.:
 
@@ -330,6 +331,20 @@ dWJlcm5ldGVzCiAgICAgIGhvc3RQYXRoOgogICAgICAgIHBhdGg6IC9ldGMva3ViZXJuZXRlcwog
 ICAgLSBuYW1lOiB2YXItbGliLWt1YmVsZXQKICAgICAgaG9zdFBhdGg6CiAgICAgICAgcGF0aDog
 L3Zhci9saWIva3ViZWxldAogICAgLSBuYW1lOiBtc2kKICAgICAgaG9zdFBhdGg6CiAgICAgICAg
 cGF0aDogL3Zhci9saWIvd2FhZ2VudC9NYW5hZ2VkSWRlbnRpdHktU2V0dGluZ3MK"
+        }
+    ]
+}
+```
+
+The above is the pattern we use to pass in a `cluster-init` spec for loading at cluster bootstrap time. E.g.:
+
+```json
+"kubernetesConfig": {
+    "components": [
+        {
+            "name": "cluster-init",
+            "enabled": true,
+            "data": "YXBpVmVyc2lvbjogdjEKa2luZDogUG9kCm1ldGFkYXRhOgogIG5hbWU6IGFrcy1lbmdpbmUtcG9kLWluaXQKc3BlYzoKICBjb250YWluZXJzOgogIC0gbmFtZTogYWtzLWVuZ2luZS1wb2QtaW5pdAogICAgaW1hZ2U6IGJ1c3lib3g6MS4zMS4xCiAgICBhcmdzOgogICAgLSAvYmluL3NoCiAgICAtIC1jCiAgICAtIHdoaWxlIHRydWU7IGRvIHNsZWVwIDYwMDsgZG9uZQogIG5vZGVTZWxlY3RvcjoKICAgIGJldGEua3ViZXJuZXRlcy5pby9vczogbGludXgKLS0tCmFwaVZlcnNpb246IGJhdGNoL3YxCmtpbmQ6IEpvYgptZXRhZGF0YToKICBuYW1lOiBha3MtZW5naW5lLWpvYi1pbml0CnNwZWM6CiAgdGVtcGxhdGU6CiAgICBzcGVjOgogICAgICBjb250YWluZXJzOgogICAgICAtIGltYWdlOiBidXN5Ym94OjEuMzEuMQogICAgICAgIG5hbWU6IGJ1c3lib3gtYWdlbnQKICAgICAgICBjb21tYW5kOiBbJ3NoJywgJy1jJywgJ1sgJChlY2hvICJIZWxsbywgV29ybGQhIiB8IHNoYTI1NnN1bSB8IGN1dCAtZCIgIiAtZjEpID0gImM5OGMyNGI2NzdlZmY0NDg2MGFmZWE2ZjQ5M2JiYWVjNWJiMWM0Y2JiMjA5YzZmYzJiYmI0N2Y2NmZmMmFkMzEiIF0nXQogICAgICByZXN0YXJ0UG9saWN5OiBOZXZlcgogICAgICBub2RlU2VsZWN0b3I6CiAgICAgICAgYmV0YS5rdWJlcm5ldGVzLmlvL29zOiBsaW51eAogIGJhY2tvZmZMaW1pdDogMAo="
         }
     ]
 }
