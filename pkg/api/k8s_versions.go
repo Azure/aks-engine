@@ -55,7 +55,7 @@ const (
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
 	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.3"
 	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.9"
-	clusterProportionalAutoscalerImageReference       string = "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.7.1"
+	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{

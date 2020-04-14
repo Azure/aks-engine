@@ -283,11 +283,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      base64Data,
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
-			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      base64Data,
@@ -565,11 +560,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
-			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      "",
@@ -738,11 +728,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      azureCNINetworkMonitorAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
-			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
 			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
