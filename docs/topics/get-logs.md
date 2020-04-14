@@ -1,4 +1,4 @@
-# Retrieving node and cluster logs
+# Retrieving Node and Cluster Logs
 
 ## Prerequisites
 
@@ -10,17 +10,19 @@ This guide assumes you already have deployed a cluster using `aks-engine`. For m
 
 The `aks-engine get-logs` command can be useful to troubleshoot issues with your cluster. It will produce, collect and download to your workstation a set of files that include node configuration, cluster state and configuration, and provision log files.
 
-At a high level, it works by stablishing a SSH session into each node, executing a `log collection` script that collects and zips relevant files, and downloading the zip file to your local computer.
+At a high level, it works by establishing a SSH session into each node, executing a [log collection](#log-collection-scripts) script that collects and zips relevant files, and downloading the zip file to your local computer.
 
-### SSH Sessions
+### SSH Authentication
 
-A valid SSH private key is always required to stablish a SSH session to the cluster Linux nodes. Windows credentials are stored in the apimodel and will be loaded from there.
+A valid SSH private key is always required to stablish a SSH session to the cluster Linux nodes. Windows credentials are stored in the apimodel and will be loaded from there. Make sure `windowsprofile.sshEnabled` is set to `true` to enable SSH in your Windows nodes.
 
 ### Log Collection Scripts
 
-_TODO Specify starting AKSe version._ The [log collection script](/scripts/collect-logs.sh) will be available in Linux nodes that were provisioned using a flavor of the `aks-ubuntu-*` distro. If you chose a different distro for your linux pool or used an older version of AKS Engine for the initial deployment, then you can use your own script by setting [parameter](#Parameters) `--linux-script`.
+To collect Linux nodes logs, specify the path to the script-to-execute on each node by setting [parameter](#Parameters) `--linux-script`. A sample script can be found [here](/scripts/collect-logs.sh).
 
-The default distro for Windows node pools will also include the [log collection script](/scripts/collect-windows-logs.ps1). There is no support to pass your own custom script at this point.
+If you choose to pass your own custom log collection script, make sure it zips all relevant files to file `/tmp/logs.zip`. Needless to say, the custom script should only query for troubleshooting information and it should not change the cluster or node configuration.
+
+The default OS distro for Windows node pools already includes a [log collection script](./scripts/collect-windows-logs.ps1). There is no support to pass your own custom script at this point.
 
 ## Usage
 
@@ -29,9 +31,10 @@ Assuming that you have a cluster deployed and the apimodel originally used to de
 ```console
 $ aks-engine get-logs \
     --location <location> \
-    --api-model _output/mycluster/apimodel.json \
-    --apiserver mycluster.<location>.cloudapp.azure.com \
-    --linux-ssh-private-key ~/.ssh/id_rsa
+    --api-model _output/<dnsPrefix>/apimodel.json \
+    --apiserver <dnsPrefix>.<location>.cloudapp.azure.com \
+    --linux-ssh-private-key ~/.ssh/id_rsa \
+    --linux-script scripts/collect-logs.sh
 ```
 
 ### Parameters

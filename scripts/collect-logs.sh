@@ -5,7 +5,7 @@ source /opt/azure/containers/provision_source.sh
 clusterInfo() {
     FIRST_MASTER_READY=$(kubectl get nodes | grep k8s-master | grep Ready | sort | head -n 1 | cut -d ' ' -f 1)
     if [[ "${FIRST_MASTER_READY}" == "${HOSTNAME}" ]]; then
-        retrycmd_if_failure_no_stats 3 5 120 kubectl cluster-info dump --namespace=kube-system --output-directory=${OUTDIR}/cluster-info
+        retrycmd_no_stats 3 5 120 kubectl cluster-info dump --namespace=kube-system --output-directory=${OUTDIR}/cluster-info
     fi
 }
 

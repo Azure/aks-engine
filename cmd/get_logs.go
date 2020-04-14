@@ -81,6 +81,7 @@ func newGetLogsCmd() *cobra.Command {
 	command.MarkFlagRequired("api-model")
 	command.MarkFlagRequired("apiserver")
 	command.MarkFlagRequired("linux-ssh-private-key")
+	command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 
@@ -105,10 +106,11 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	} else if _, err := os.Stat(glc.linuxSSHPrivateKeyPath); os.IsNotExist(err) {
 		return errors.Errorf("specified --linux-ssh-private-key does not exist (%s)", glc.linuxSSHPrivateKeyPath)
 	}
-	if glc.linuxScriptPath != "" {
-		if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
-			return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
-		}
+	if glc.linuxScriptPath == "" {
+		// optional once in VHD
+		return errors.New("--linux-script must be specified")
+	} else if _, err := os.Stat(glc.linuxScriptPath); os.IsNotExist(err) {
+		return errors.Errorf("specified --linux-script does not exist (%s)", glc.linuxScriptPath)
 	}
 	if glc.outputDirectory == "" {
 		glc.outputDirectory = path.Join(filepath.Dir(glc.apiModelPath), "_logs")
@@ -140,7 +142,7 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	}
 	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
 
-	if glc.cs.Properties.WindowsProfile != nil {
+	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.SSHEnabled {
 		glc.windowsSSHConfig = helpers.SSHClientConfig(
 			glc.cs.Properties.WindowsProfile.AdminUsername,
 			ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword))
@@ -206,7 +208,11 @@ func (glc *getLogsCmd) getClusterNodes() error {
 				glc.linuxNodes = append(glc.linuxNodes, node)
 			}
 		} else if isWindowsNode(node) {
-			glc.windowsNodes = append(glc.windowsNodes, node)
+			if glc.windowsSSHConfig != nil {
+				glc.windowsNodes = append(glc.windowsNodes, node)
+			} else {
+				log.Warnf("skipping node %s, SSH not enabled", node.Name)
+			}
 		} else {
 			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}

@@ -21,6 +21,12 @@
 					"name": "agentpool1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
+				},
+				{
+					"name": "agentwin1",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows"
 				}
 			],
 			"linuxProfile": {
@@ -32,6 +38,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",
