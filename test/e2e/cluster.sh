@@ -112,6 +112,22 @@ docker run --rm \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
+if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
+    docker run --rm \
+    -v $(pwd):${WORK_DIR} \
+    -w ${WORK_DIR} \
+    -e RESOURCE_GROUP=$RESOURCE_GROUP \
+    -e REGION=$REGION \
+    ${DEV_IMAGE} \
+    ./bin/aks-engine get-logs \
+    --api-model _output/$RESOURCE_GROUP/apimodel.json \
+    --location $REGION \
+    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+    --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
+    --linux-script ./scripts/collect-logs.sh
+    # TODO remove --linux-script once collect-logs.sh is part of the VHD
+fi
+
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
@@ -352,20 +368,4 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
     ${DEV_IMAGE} make test-kubernetes || exit 1
-fi
-
-if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
-    docker run --rm \
-    -v $(pwd):${WORK_DIR} \
-    -w ${WORK_DIR} \
-    -e RESOURCE_GROUP=$RESOURCE_GROUP \
-    -e REGION=$REGION \
-    ${DEV_IMAGE} \
-    ./bin/aks-engine get-logs \
-    --api-model _output/$RESOURCE_GROUP/apimodel.json \
-    --location $REGION \
-    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
-    --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
-    --linux-script ./scripts/collect-logs.sh
-    # TODO remove --linux-script once collect-logs.sh is part of the VHD
 fi
