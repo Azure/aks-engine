@@ -1969,7 +1969,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				numNodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
-					if nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"]); nodesPerReplica >= len(numNodes) {
+					nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
+					minReplicas, _ := strconv.Atoi(addon.Config["min-replicas"])
+					if nodesPerReplica >= (len(numNodes) * minReplicas) {
 						testCoreDNSScaleOut = true
 						By("Getting the number of coredns pods prior to scaling out")
 						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
