@@ -2118,7 +2118,13 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					region := eng.ExpandedDefinition.Location
 					Expect(labels).To(HaveKeyWithValue("failure-domain.beta.kubernetes.io/region", region))
 					Expect(labels).To(HaveKeyWithValue("topology.kubernetes.io/region", region))
-					instanceType := eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].VMSize
+					var instanceType string
+					switch role {
+					case "master":
+						instanceType = eng.ExpandedDefinition.Properties.MasterProfile.VMSize
+					case "agent":
+						instanceType = eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].VMSize
+					}
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))
 				}
