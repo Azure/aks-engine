@@ -1744,8 +1744,8 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
-			AKSUbuntu1604,
-			AKSUbuntu1604,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
 			false,
 			false,
 			AzurePublicCloud,
@@ -1758,8 +1758,8 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
-			AKSUbuntu1604,
-			AKSUbuntu1604,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
 			false,
 			false,
 			AzureUSGovernmentCloud,
@@ -1784,10 +1784,24 @@ func TestDistroDefaults(t *testing.T) {
 				OrchestratorType: Kubernetes,
 				KubernetesConfig: &KubernetesConfig{},
 			},
+			"",
+			"",
+			Ubuntu1804,
+			Ubuntu1804,
+			false,
+			false,
+			AzureGermanCloud,
+		},
+		{
+			"germancloud_upgrade",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
+			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
-			Ubuntu,
-			Ubuntu,
+			Ubuntu1804,
+			Ubuntu1804,
 			true,
 			false,
 			AzureGermanCloud,
@@ -3621,7 +3635,7 @@ func TestPreserveNodesProperties(t *testing.T) {
 
 func TestUbuntu1804Flags(t *testing.T) {
 	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -3641,7 +3655,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu1804
 	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -4332,12 +4346,12 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4417,7 +4431,7 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
@@ -4432,7 +4446,7 @@ func TestImageReference(t *testing.T) {
 					},
 				},
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4531,12 +4545,12 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4558,11 +4572,11 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu,
+				Distro: Ubuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro: Ubuntu,
+					Distro: Ubuntu1804,
 				},
 			},
 		},
@@ -4609,7 +4623,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
 							Name:   "pool1",
-							Distro: Ubuntu1804,
+							Distro: Ubuntu,
 						},
 						{
 							Name: "pool2",
@@ -4618,14 +4632,14 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu,
+				Distro: Ubuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro: Ubuntu1804,
+					Distro: Ubuntu,
 				},
 				{
-					Distro: Ubuntu,
+					Distro: Ubuntu1804,
 				},
 			},
 		},
