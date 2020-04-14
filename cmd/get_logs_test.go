@@ -39,6 +39,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           missingFile,
 				linuxSSHPrivateKeyPath: "",
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "southcentralus",
 			},
@@ -49,6 +50,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: "",
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "southcentralus",
 			},
@@ -59,6 +61,29 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        "",
+				apiserverURI:           "servier.example.com",
+				location:               "southcentralus",
+			},
+			expectedErr: errors.New("--linux-script must be specified"),
+			name:        "NeedsLinuxScript",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        missingFile,
+				apiserverURI:           "servier.example.com",
+				location:               "southcentralus",
+			},
+			expectedErr: errors.Errorf("specified --linux-script does not exist (%s)", missingFile),
+			name:        "BadLinuxScript",
+		},
+		{
+			glc: &getLogsCmd{
+				apiModelPath:           existingFile,
+				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "",
 			},
@@ -69,6 +94,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "",
 				location:               "southcentralus",
 			},
@@ -79,6 +105,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           "",
 				linuxSSHPrivateKeyPath: missingFile,
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "southcentralus",
 			},
@@ -89,6 +116,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           missingFile,
 				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "southcentralus",
 			},
@@ -99,6 +127,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 			glc: &getLogsCmd{
 				apiModelPath:           existingFile,
 				linuxSSHPrivateKeyPath: existingFile,
+				linuxScriptPath:        existingFile,
 				apiserverURI:           "servier.example.com",
 				location:               "southcentralus",
 			},
