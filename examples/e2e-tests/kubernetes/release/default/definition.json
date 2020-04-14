@@ -76,10 +76,10 @@
         "storageProfile": "Ephemeral"
       },
       {
-        "name": "pool1804vhd",
+        "name": "pool1604vhd",
         "count": 1,
         "vmSize": "Standard_D2_v3",
-        "distro": "aks-ubuntu-18.04",
+        "distro": "aks-ubuntu-16.04",
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       },
