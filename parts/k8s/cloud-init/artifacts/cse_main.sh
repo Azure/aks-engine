@@ -235,6 +235,12 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{if IsAzurePolicyAddonEnabled}}
   time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
   {{end}}
+  {{- if HasClusterInitComponent}}
+  if [[ $NODE_INDEX == 0 ]]; then
+    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
+  fi
+  {{end}}
 fi
 
 {{- if not IsVHDDistroForAllNodes}}

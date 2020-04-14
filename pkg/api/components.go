@@ -99,7 +99,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 	// Honor custom{component}Image fields
 	useHyperkube := !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
 	for _, component := range defaultComponents {
-		if i := getComponentsIndexByName(kubernetesConfig.Components, component.Name); i > -1 {
+		if i := GetComponentsIndexByName(kubernetesConfig.Components, component.Name); i > -1 {
 			var customComponentImage string
 			switch component.Name {
 			case common.APIServerComponentName:
@@ -139,7 +139,7 @@ func (cs *ContainerService) setComponentsConfig(isUpgrade bool) {
 
 func appendComponentIfNotPresent(components []KubernetesComponent, component KubernetesComponent) []KubernetesComponent {
 	if component.Name != "" {
-		i := getComponentsIndexByName(components, component.Name)
+		i := GetComponentsIndexByName(components, component.Name)
 		if i < 0 {
 			return append(components, component)
 		}
@@ -147,7 +147,7 @@ func appendComponentIfNotPresent(components []KubernetesComponent, component Kub
 	return components
 }
 
-func getComponentsIndexByName(components []KubernetesComponent, name string) int {
+func GetComponentsIndexByName(components []KubernetesComponent, name string) int {
 	for i := range components {
 		if components[i].Name == name {
 			return i
@@ -214,7 +214,7 @@ func assignDefaultComponentVals(component, defaultComponent KubernetesComponent,
 }
 
 func synthesizeComponentsConfig(components []KubernetesComponent, defaultComponent KubernetesComponent, isUpgrade bool) {
-	i := getComponentsIndexByName(components, defaultComponent.Name)
+	i := GetComponentsIndexByName(components, defaultComponent.Name)
 	if i >= 0 {
 		components[i] = assignDefaultComponentVals(components[i], defaultComponent, isUpgrade)
 	}
