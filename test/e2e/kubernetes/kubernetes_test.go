@@ -653,6 +653,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
 				coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
+				if eng.HasWindowsAgents() {
+					coreComponents = append(coreComponents, common.CloudNodeManagerAddonName+"-windows")
+				}
 			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
@@ -2123,7 +2126,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					case "master":
 						instanceType = eng.ExpandedDefinition.Properties.MasterProfile.VMSize
 					case "agent":
-						instanceType = eng.ExpandedDefinition.Properties.AgentPoolProfiles[0].VMSize
+						osType := api.Linux
+						if n.IsWindows() {
+							osType = api.Windows
+						}
+						instanceType = util.GetAgentVMSize(eng.ExpandedDefinition.Properties.AgentPoolProfiles, osType)
 					}
 					Expect(labels).To(HaveKeyWithValue("beta.kubernetes.io/instance-type", instanceType))
 					Expect(labels).To(HaveKeyWithValue("node.kubernetes.io/instance-type", instanceType))
