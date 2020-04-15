@@ -674,6 +674,25 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	}
 }
 
+func TestPPGToVLabs(t *testing.T) {
+	ppgResourceID1 := "ppgResourceID1"
+	ppgResourceID2 := "ppgResourceID2"
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.ProximityPlacementGroupID = ppgResourceID1
+	cs.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID = ppgResourceID2
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID1)
+	}
+
+	if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID2)
+	}
+}
+
 func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	cs.Properties.MasterProfile.PlatformFaultDomainCount = to.IntPtr(3)

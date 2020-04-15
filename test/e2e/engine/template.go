@@ -245,6 +245,11 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
 			pool.DiskEncryptionSetID = str
 		}
+		if pool.ProximityPlacementGroupID != "" {
+			str := strings.Replace(pool.ProximityPlacementGroupID, "SUB_ID", config.SubscriptionID, 1)
+			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
+			pool.ProximityPlacementGroupID = str
+		}
 	}
 
 	return &Engine{

@@ -3117,6 +3117,121 @@ func TestProperties_ValidateSinglePlacementGroup(t *testing.T) {
 	}
 }
 
+func TestProperties_ValidatePPGID(t *testing.T) {
+
+	tests := []struct {
+		name              string
+		masterProfile     *MasterProfile
+		agentPoolProfiles []*AgentPoolProfile
+		expectedMsg       string
+	}{
+		{
+			name: "Master profile VMAs with faulty PPG",
+			masterProfile: &MasterProfile{
+				Count:                     1,
+				DNSPrefix:                 "foo",
+				VMSize:                    "Standard_DS2_v2",
+				AvailabilityProfile:       AvailabilitySet,
+				ProximityPlacementGroupID: "faultyPPG",
+			},
+			expectedMsg: `ProximityPlacementGroupID(faultyPPG) is of incorrect format, correct format: ^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/proximityPlacementGroups/[^/\s]+$`,
+		},
+		{
+			name: "Agent profile VMSS with faulty PPG",
+			masterProfile: &MasterProfile{
+				Count:               1,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: AvailabilitySet,
+			},
+			agentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:                      "agentpool",
+					VMSize:                    "Standard_DS2_v2",
+					Count:                     4,
+					AvailabilityProfile:       VirtualMachineScaleSets,
+					ProximityPlacementGroupID: "faultyPPG",
+				},
+			},
+			expectedMsg: `ProximityPlacementGroupID(faultyPPG) is of incorrect format, correct format: ^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/proximityPlacementGroups/[^/\s]+$`,
+		},
+		{
+			name: "Faulty PPG",
+			masterProfile: &MasterProfile{
+				Count:               1,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: AvailabilitySet,
+			},
+			agentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:                      "agentpool",
+					VMSize:                    "Standard_DS2_v2",
+					Count:                     4,
+					AvailabilityProfile:       VirtualMachineScaleSets,
+					ProximityPlacementGroupID: "/subscriptions/11111111-0000-1111-0000-111111111111/resourceGroups/test-nodepool-ppg-rg/providers/Microsoft.Compute/proximityPlacementGroups",
+				},
+			},
+			expectedMsg: `ProximityPlacementGroupID(/subscriptions/11111111-0000-1111-0000-111111111111/resourceGroups/test-nodepool-ppg-rg/providers/Microsoft.Compute/proximityPlacementGroups) is of incorrect format, correct format: ^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/proximityPlacementGroups/[^/\s]+$`,
+		},
+		{
+			name: "Correct PPGs in both master and nodepool",
+			masterProfile: &MasterProfile{
+				Count:                     1,
+				DNSPrefix:                 "foo",
+				VMSize:                    "Standard_DS2_v2",
+				AvailabilityProfile:       AvailabilitySet,
+				ProximityPlacementGroupID: "/subscriptions/11111111-0000-1111-0000-111111111111/resourceGroups/test-master-ppg-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-master-ppg",
+			},
+			agentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:                      "agentpool",
+					VMSize:                    "Standard_DS2_v2",
+					Count:                     4,
+					AvailabilityProfile:       VirtualMachineScaleSets,
+					ProximityPlacementGroupID: "/subscriptions/11111111-0000-1111-0000-111111111111/resourceGroups/test-nodepool-ppg-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-nodepool-ppg",
+				},
+			},
+			expectedMsg: ``,
+		},
+		{
+			name: "Without PPG settings",
+			masterProfile: &MasterProfile{
+				Count:               1,
+				DNSPrefix:           "foo",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: AvailabilitySet,
+			},
+			agentPoolProfiles: []*AgentPoolProfile{
+				{
+					Name:                "agentpool",
+					VMSize:              "Standard_DS2_v2",
+					Count:               4,
+					AvailabilityProfile: VirtualMachineScaleSets,
+				},
+			},
+			expectedMsg: ``,
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getK8sDefaultContainerService(true)
+			cs.Properties.OrchestratorProfile.OrchestratorRelease = "1.15"
+			cs.Properties.MasterProfile = test.masterProfile
+			cs.Properties.AgentPoolProfiles = test.agentPoolProfiles
+			err := cs.Validate(true)
+			if err != nil {
+				if err.Error() != test.expectedMsg {
+					t.Errorf("expected error message : %s, but got %s", test.expectedMsg, err.Error())
+				}
+			}
+		})
+	}
+}
+
 func TestProperties_ValidateVNET(t *testing.T) {
 	validVNetSubnetID := "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 	validVNetSubnetID2 := "/subscriptions/SUB_ID2/resourceGroups/RG_NAME2/providers/Microsoft.Network/virtualNetworks/VNET_NAME2/subnets/SUBNET_NAME"

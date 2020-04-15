@@ -640,6 +640,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 			Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
 			for _, pool := range cs.Properties.AgentPoolProfiles {
 				Expect(pool.PlatformFaultDomainCount).To(BeNil())
+				Expect(pool.ProximityPlacementGroupID).To(BeEmpty())
 			}
 		})
 	})
@@ -703,6 +704,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(cs.Properties.MasterProfile.PlatformFaultDomainCount).To(BeNil())
 		for _, pool := range cs.Properties.AgentPoolProfiles {
 			Expect(pool.PlatformFaultDomainCount).To(BeNil())
+			Expect(pool.ProximityPlacementGroupID).To(BeEmpty())
 		}
 	})
 

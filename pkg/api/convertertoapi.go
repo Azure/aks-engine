@@ -546,6 +546,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.CosmosEtcd = vlabs.CosmosEtcd
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
+	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
 	convertCustomFilesToAPI(vlabs, api)
 }
 
@@ -582,6 +583,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.DiskEncryptionSetID = vlabs.DiskEncryptionSetID
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
+	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {
