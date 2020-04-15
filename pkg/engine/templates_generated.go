@@ -46697,8 +46697,7 @@ Test-ContainerImageExists {
         $images = docker image list $target --format "{{json .}}"
         return $images.Count -gt 0
     }
-    else
-    {
+    else {
         return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
     }
 }
@@ -46719,7 +46718,8 @@ Build-PauseContainer {
     "CMD cmd /c ping -t localhost" | Out-File -encoding ascii -FilePath Dockerfile -Append
     if ($ContainerRuntime -eq "docker") {
         Invoke-Executable -Executable "docker" -ArgList @("build", "-t", "$DestinationTag", ".")
-    } else {
+    }
+    else {
         throw "Cannot build pause container without Docker"
     }
 }
@@ -46749,7 +46749,8 @@ New-InfraContainer {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
             }
             Invoke-Executable -Executable "docker" -ArgList @("tag", "$defaultPauseImage", "$DestinationTag")
-        } else {
+        }
+        else {
             # containerd
             if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
                 Invoke-Executable -Executable "ctr" -ArgList @("-n", "k8s.io", "image", "pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
@@ -46782,8 +46783,7 @@ Test-ContainerImageExists {
         $images = docker image list $target --format "{{json .}}"
         return $images.Count -gt 0
     }
-    else
-    {
+    else {
         return ( (ctr.exe -n k8s.io images list) | Select-String $target) -ne $Null
     }
 }
