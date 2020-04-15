@@ -2474,6 +2474,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedUsesCloudControllerManager        bool
 		expectedHasAvailabilityZones              bool
 		expectedGetZones                          string
+		expectedHasWindows                        bool
 	}{
 		{
 			name: "coredns as an example",
@@ -2841,6 +2842,77 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedHasAvailabilityZones:              true,
 			expectedGetZones:                          "\n    - eastus2-1\n    - eastus2-2",
 		},
+		{
+			name: "coredns as an example - Has Windows",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Location: "eastus2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Windows,
+						},
+					},
+				},
+			},
+			expectedImage:                          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:                        "100m",
+			expectedCPULimits:                      "100m",
+			expectedMemReqs:                        "300Mi",
+			expectedMemLimits:                      "300Mi",
+			expectedFoo:                            "bar",
+			expectedNeedsManagedDiskStorageClasses: true,
+			expectedUsesCloudControllerManager:     true,
+			expectedHasWindows:                     true,
+		},
 	}
 
 	for _, c := range cases {
@@ -2907,6 +2979,11 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetZones {
 				t.Errorf("expected funcMap invocation of GetZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasWindows"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasWindows {
+				t.Errorf("expected funcMap invocation of HasWindows to return %t, instead got %t", c.expectedHasWindows, ret[0].Interface())
 			}
 		})
 	}

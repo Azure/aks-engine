@@ -695,51 +695,6 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 	}
 }
 
-func Test_Properties_ValidatePrivateAzureRegistryServer(t *testing.T) {
-	p := &Properties{}
-	p.OrchestratorProfile = &OrchestratorProfile{}
-	p.OrchestratorProfile.OrchestratorType = Kubernetes
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
-
-	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
-	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
-	err := p.validatePrivateAzureRegistryServer()
-	expectedMsg := "customHyperkubeImage must be provided when privateAzureRegistryServer is provided"
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
-	err = p.validatePrivateAzureRegistryServer()
-	if err != nil {
-		t.Errorf("should not error because CustomHyperkubeImage is provided, got error : %s", err.Error())
-	}
-
-	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
-	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
-	err = p.validatePrivateAzureRegistryServer()
-	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage or customKubeSchedulerImage must be provided when privateAzureRegistryServer is provided"
-	if err.Error() != expectedMsg {
-		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = "example.azurecr.io"
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServerImage = "example.azurecr.io/kube-apiserver-amd64:tag"
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = "example.azurecr.io/kube-controller-manager-amd64:tag"
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = "example.azurecr.io/kube-proxy-amd64:tag"
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = "example.azurecr.io/kube-scheduler-amd64:tag"
-	err = p.validatePrivateAzureRegistryServer()
-	if err != nil {
-		t.Errorf("should not error because CustomKubeAPIServerImage, CustomKubeControllerManagerImage, CustomKubeProxyImage, and CustomKubeSchedulerImage are provided, got error : %s", err.Error())
-	}
-
-	p.OrchestratorProfile.KubernetesConfig.PrivateAzureRegistryServer = ""
-	err = p.validatePrivateAzureRegistryServer()
-	if err != nil {
-		t.Errorf("should not error because PrivateAzureRegistryServer is not provided, got error : %s", err.Error())
-	}
-}
-
 func Test_Properties_ValidateDistro(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}
@@ -1186,7 +1141,7 @@ func TestProperties_ValidateInvalidExtensions(t *testing.T) {
 					VMSize:              "Standard_D2_v2",
 					Count:               1,
 					AvailabilityProfile: AvailabilitySet,
-					OSType:              "Windows",
+					OSType:              Windows,
 					Extensions: []Extension{
 						{
 							Name: "prometheus-grafana-k8s",
@@ -2522,6 +2477,50 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error when useCloudControllerManager is enabled and k8s version is >= 1.16 for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.17.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			OSType: Windows,
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when using Windows cluster and k8s version is < 1.18 for cloud-node-manager",
+		)
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.18.0"
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		UseCloudControllerManager: to.BoolPtr(true),
+		Addons: []KubernetesAddon{
+			{
+				Name:    "cloud-node-manager",
+				Enabled: to.BoolPtr(false),
+			},
+		},
+	}
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			OSType: Windows,
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error when using Windows cluster and k8s version is >= 1.18 with cloud-node-manager disabled",
 		)
 	}
 

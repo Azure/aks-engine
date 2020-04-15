@@ -7707,3 +7707,173 @@ func TestGetProvisionScriptParametersCommon(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldEnableAzureCloudAddon(t *testing.T) {
+	cases := []struct {
+		name      string
+		addonName string
+		p         *Properties
+		expected  bool
+	}{
+		{
+			name: "useCloudControllerManager disabled",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.18.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(false),
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:      "unknown addon",
+			addonName: "unknown addon",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:      "[Linux] azuredisk-csi-driver with K8s 1.13",
+			addonName: common.AzureDiskCSIDriverAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.13.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Linux] azurefile-csi-driver with K8s 1.13",
+			addonName: common.AzureFileCSIDriverAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.13.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Linux] cloud-node-manager with K8s 1.15",
+			addonName: common.CloudNodeManagerAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.15.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:      "[Linux] cloud-node-manager with K8s 1.16",
+			addonName: common.CloudNodeManagerAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.16.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Windows] azuredisk-csi-driver with K8s 1.18",
+			addonName: common.AzureDiskCSIDriverAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.18.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Windows] azurefile-csi-driver with K8s 1.18",
+			addonName: common.AzureFileCSIDriverAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.18.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Windows] cloud-node-manager with K8s 1.18",
+			addonName: common.CloudNodeManagerAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.18.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						OSType: Windows,
+					},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:      "[Windows] cloud-node-manager with K8s 1.17",
+			addonName: common.CloudNodeManagerAddonName,
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorVersion: "1.17.0",
+					KubernetesConfig: &KubernetesConfig{
+						UseCloudControllerManager: to.BoolPtr(true),
+					},
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						OSType: Windows,
+					},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := c.p.ShouldEnableAzureCloudAddon(c.addonName)
+			if actual != c.expected {
+				t.Fatalf("expected p.ShouldEnableAzureCloudAddon(\"%s\") to return %t but instead returned %t", c.addonName, c.expected, actual)
+			}
+		})
+	}
+}
