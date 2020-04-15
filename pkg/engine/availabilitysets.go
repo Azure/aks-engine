@@ -34,6 +34,11 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 				p := int32(*cs.Properties.MasterProfile.PlatformUpdateDomainCount)
 				avSet.PlatformUpdateDomainCount = to.Int32Ptr(p)
 			}
+			if cs.Properties.MasterProfile.ProximityPlacementGroupID != "" {
+				avSet.ProximityPlacementGroup = &compute.SubResource{
+					ID: to.StringPtr(cs.Properties.MasterProfile.ProximityPlacementGroupID),
+				}
+			}
 			avSet.Sku = &compute.Sku{
 				Name: to.StringPtr("Aligned"),
 			}
@@ -70,6 +75,12 @@ func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetA
 			p := int32(*profile.PlatformUpdateDomainCount)
 			avSet.PlatformUpdateDomainCount = to.Int32Ptr(p)
 		}
+		if profile.ProximityPlacementGroupID != "" {
+			avSet.ProximityPlacementGroup = &compute.SubResource{
+				ID: to.StringPtr(profile.ProximityPlacementGroupID),
+			}
+		}
+
 		avSet.Sku = &compute.Sku{
 			Name: to.StringPtr("Aligned"),
 		}

@@ -242,6 +242,10 @@ func TestGetAvailabilitySet(t *testing.T) {
 	if *vmas.PlatformFaultDomainCount != expected {
 		t.Fatalf("expected PlatformFaultDomainCount of %d but got %v", expected, *vmas.PlatformFaultDomainCount)
 	}
+
+	if vmas.ProximityPlacementGroup != nil && vmas.ProximityPlacementGroup.ID != nil {
+		t.Fatalf("expected ProximityPlacementGroup of %q but got %v", "", *vmas.ProximityPlacementGroup.ID)
+	}
 	if *vmas.PlatformUpdateDomainCount != expected {
 		t.Fatalf("expected PlatformUpdateDomainCount of %d but got %v", expected, *vmas.PlatformUpdateDomainCount)
 	}

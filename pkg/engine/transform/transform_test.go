@@ -194,6 +194,9 @@ func TestNormalizeForK8sVMASScalingUp_ShouldRemoveVMAS(t *testing.T) {
 			"managed":                   "true",
 			"platformFaultDomainCount":  2,
 			"platformUpdateDomainCount": 3,
+			"proximityPlacementGroup": map[string]interface{}{
+				"id": "toremove",
+			},
 		},
 		"type": "Microsoft.Compute/availabilitySets",
 	}
@@ -231,6 +234,7 @@ func TestRemoveImmutableFields(t *testing.T) {
 			"overprovision":            false,
 			"platformFaultDomainCount": 3,
 			"singlePlacementGroup":     true,
+			"proximityPlacementGroup":  "resourceID",
 		},
 		"type": "Microsoft.Compute/virtualMachineScaleSets",
 	}
@@ -250,6 +254,7 @@ func TestRemoveImmutableFields(t *testing.T) {
 	Expect(transformedVmss["properties"]).ToNot(HaveKey("platformFaultDomainCount"))
 	Expect(transformedVmss["properties"]).ToNot(HaveKey("singlePlacementGroup"))
 	Expect(transformedVmas["properties"]).ToNot(HaveKey("singlePlacementGroup"))
+	Expect(transformedVmas["properties"]).ToNot(HaveKey("proximityPlacementGroup"))
 }
 
 func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents []byte, testFileName string) {

@@ -1,7 +1,7 @@
 {
 	"env": {
 		"REGION_OPTIONS": "northeurope",
-		"SKIP_TESTS": "true"
+		"SKIP_TESTS": "false"
 	},
 	"options": {
 		"allowedOrchestratorVersions": ["latestReleasedVersion"]
@@ -24,7 +24,8 @@
 					"count": 2,
 					"vmSize": "Standard_D2s_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"diskEncryptionSetID": "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/Microsoft.Compute/diskEncryptionSets/des-northeurope"
+					"diskEncryptionSetID": "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/Microsoft.Compute/diskEncryptionSets/des-northeurope",
+					"proximityPlacementGroupID": "/subscriptions/SUB_ID/resourceGroups/RESOURCE_GROUP/providers/Microsoft.Compute/proximityPlacementGroups/ppg-northeurope"
 				}
 			],
 			"linuxProfile": {
