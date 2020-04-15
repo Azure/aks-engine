@@ -4,6 +4,7 @@
   {{- if not IsAzureStackCloud}}
 ensureCustomCloudRootCertificates() {
     CUSTOM_CLOUD_ROOT_CERTIFICATES="{{GetCustomCloudRootCertificates}}"
+    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
 
     if [ ! -z $CUSTOM_CLOUD_ROOT_CERTIFICATES ]; then
         # Replace placeholder for ssl binding
@@ -41,8 +42,6 @@ ensureCustomCloudSourcesList() {
   {{end}}
 
 configureK8sCustomCloud() {
-  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
-
   {{- if IsAzureStackCloud}}
   export -f ensureAzureStackCertificates
   retrycmd 60 10 30 bash -c ensureAzureStackCertificates
@@ -103,7 +102,7 @@ ensureAzureStackCertificates() {
   AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
   curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
   CURL_RETURNCODE=$?
-
+  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
   if [ $CURL_RETURNCODE != 0 ]; then
     # Replace placeholder for ssl binding
     if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
