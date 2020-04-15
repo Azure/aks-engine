@@ -49,6 +49,7 @@ type KubernetesSpecConfig struct {
 	VnetCNILinuxPluginsDownloadURL   string `json:"vnetCNILinuxPluginsDownloadURL,omitempty"`
 	VnetCNIWindowsPluginsDownloadURL string `json:"vnetCNIWindowsPluginsDownloadURL,omitempty"`
 	ContainerdDownloadURLBase        string `json:"containerdDownloadURLBase,omitempty"`
+	CSIProxyDownloadURL              string `json:"csiProxyDownloadURL,omitempty"`
 }
 
 //AzureEndpointConfig describes an Azure endpoint

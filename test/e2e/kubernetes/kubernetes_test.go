@@ -647,9 +647,18 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 			if hasAddon, _ := eng.HasAddon(common.AzureDiskCSIDriverAddonName); hasAddon {
 				coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node")
+				if eng.HasWindowsAgents() {
+					coreComponents = append(coreComponents, "csi-azuredisk-node-windows")
+				}
+				if eng.HasLinuxAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+					coreComponents = append(coreComponents, "csi-snapshot-controller")
+				}
 			}
 			if hasAddon, _ := eng.HasAddon(common.AzureFileCSIDriverAddonName); hasAddon {
 				coreComponents = append(coreComponents, "csi-azurefile-controller", "csi-azurefile-node")
+				if eng.HasWindowsAgents() {
+					coreComponents = append(coreComponents, "csi-azurefile-node-windows")
+				}
 			}
 			if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
 				coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
@@ -1053,20 +1062,28 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if util.IsUsingEphemeralDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
 				Skip("no storage class is deployed when ephemeral disk is used, will not test")
 			}
-			var azureDiskProvisioner, azureFileProvisioner string
-			isUsingCSIDrivers := to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) &&
-				common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0")
-			if isUsingCSIDrivers {
+			var (
+				isUsingAzureDiskCSIDriver bool
+				isUsingAzureFileCSIDriver bool
+				azureDiskProvisioner      string
+				azureFileProvisioner      string
+			)
+
+			if isUsingAzureDiskCSIDriver, _ = eng.HasAddon(common.AzureDiskCSIDriverAddonName); isUsingAzureDiskCSIDriver {
 				azureDiskProvisioner = "disk.csi.azure.com"
-				azureFileProvisioner = "file.csi.azure.com"
 			} else {
 				azureDiskProvisioner = "kubernetes.io/azure-disk"
+			}
+
+			if isUsingAzureFileCSIDriver, _ = eng.HasAddon(common.AzureFileCSIDriverAddonName); isUsingAzureFileCSIDriver {
+				azureFileProvisioner = "file.csi.azure.com"
+			} else {
 				azureFileProvisioner = "kubernetes.io/azure-file"
 			}
 
 			azureDiskStorageClasses := []string{"default"}
-			// CSI driver uses managed disk by default
-			if isUsingCSIDrivers || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
+			// Managed disk is used by default when useCloudControllerManager is enabled
+			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) || util.IsUsingManagedDisks(eng.ExpandedDefinition.Properties.AgentPoolProfiles) {
 				azureDiskStorageClasses = append(azureDiskStorageClasses, "managed-premium", "managed-standard")
 			} else {
 				azureDiskStorageClasses = append(azureDiskStorageClasses, "unmanaged-premium", "unmanaged-standard")
@@ -1075,7 +1092,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				sc, err := storageclass.Get(azureDiskStorageClass)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureDiskProvisioner))
-				if isUsingCSIDrivers && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
+				if isUsingAzureDiskCSIDriver && eng.ExpandedDefinition.Properties.HasAvailabilityZones() {
 					Expect(sc.VolumeBindingMode).To(Equal("WaitForFirstConsumer"))
 					Expect(len(sc.AllowedTopologies)).To(Equal(1))
 					Expect(len(sc.AllowedTopologies[0].MatchLabelExpressions)).To(Equal(1))
@@ -1086,7 +1103,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
 				}
-				if isUsingCSIDrivers && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+				if isUsingAzureDiskCSIDriver && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 					Expect(sc.AllowVolumeExpansion).To(BeTrue())
 				}
 			}
@@ -1096,6 +1113,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				Expect(sc.Provisioner).To(Equal(azureFileProvisioner))
 				Expect(sc.VolumeBindingMode).To(Equal("Immediate"))
+				if isUsingAzureFileCSIDriver && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					Expect(sc.AllowVolumeExpansion).To(BeTrue())
+				}
 			}
 		})
 
@@ -1199,6 +1219,65 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					Skip("kubectl port-forward only works on Windows nodes with Kubernetes 1.15+")
 					// Reference: https://github.com/kubernetes/kubernetes/pull/75479
+				}
+			}
+		})
+
+		It("should have the correct pods and containers deployed for CSI drivers", func() {
+			addons := map[string]string{
+				common.AzureDiskCSIDriverAddonName: "azuredisk",
+				common.AzureFileCSIDriverAddonName: "azurefile",
+			}
+			for addonName, shortenedAddonName := range addons {
+				if hasAddon, _ := eng.HasAddon(addonName); !hasAddon {
+					continue
+				}
+
+				// Validate CSI controller pod
+				addonPod := fmt.Sprintf("csi-%s-controller", shortenedAddonName)
+				containers := []string{"csi-provisioner", "csi-attacher", "liveness-probe", shortenedAddonName}
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+					containers = append(containers, "csi-resizer")
+				}
+				if eng.HasLinuxAgents() {
+					switch addonName {
+					case common.AzureDiskCSIDriverAddonName:
+						if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+							containers = append(containers, "csi-snapshotter")
+						}
+					case common.AzureFileCSIDriverAddonName:
+						if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") &&
+							!common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+							containers = append(containers, "csi-snapshotter")
+						}
+					}
+				}
+				By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
+				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+
+				// Validate CSI node pod
+				addonPod = fmt.Sprintf("csi-%s-node", shortenedAddonName)
+				containers = []string{"liveness-probe", "node-driver-registrar", shortenedAddonName}
+				By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
+				Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+
+				// Validate CSI node windows pod
+				if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+					addonPod = fmt.Sprintf("csi-%s-node-windows", shortenedAddonName)
+					containers = []string{"liveness-probe", "node-driver-registrar", shortenedAddonName}
+					By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
+					Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+				}
+
+				// Validate CSI snapshot controller pod
+				switch addonName {
+				case common.AzureDiskCSIDriverAddonName:
+					if eng.HasLinuxAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+						addonPod = "csi-snapshot-controller"
+						containers = []string{"csi-snapshot-controller"}
+						By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
+						Expect(pod.EnsureContainersRunningInAllPods(containers, addonPod, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)).NotTo(HaveOccurred())
+					}
 				}
 			}
 		})

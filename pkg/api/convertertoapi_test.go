@@ -338,6 +338,7 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
 						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+						CSIProxyDownloadURL:              "CSIProxyDownloadURL",
 					},
 					DCOSSpecConfig: vlabs.DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -423,6 +424,9 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 	if csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
+	}
+	if csSpec.KubernetesSpecConfig.CSIProxyDownloadURL != vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL {
+		t.Errorf("incorrect CSIProxyDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL, csSpec.KubernetesSpecConfig.CSIProxyDownloadURL)
 	}
 
 	//DockerSpecConfig

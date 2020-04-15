@@ -3022,6 +3022,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
 			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:              "CSIProxyDownloadURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -3076,6 +3077,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
 			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
 			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:            "CSIProxyDownloadURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -4878,6 +4880,84 @@ func TestDefaultIPAddressCount(t *testing.T) {
 			}
 			if c.cs.Properties.AgentPoolProfiles[1].IPAddressCount != c.expectedPool1 {
 				t.Errorf("expected %d, but got %d", c.expectedPool1, c.cs.Properties.AgentPoolProfiles[1].IPAddressCount)
+			}
+		})
+	}
+}
+
+func TestSetCSIProxyDefaults(t *testing.T) {
+	cases := []struct {
+		name                      string
+		windowsProfile            *WindowsProfile
+		useCloudControllerManager bool
+		expectedEnableCSIProxy    bool
+		expectedCSIProxyURL       string
+	}{
+		{
+			name: "enabledCSIProxy is nil and useCloudControllerManager is disabled",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: false,
+			expectedEnableCSIProxy:    false,
+			expectedCSIProxyURL:       "",
+		},
+		{
+			name: "enabledCSIProxy is nil and useCloudControllerManager is enabled",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       DefaultKubernetesSpecConfig.CSIProxyDownloadURL,
+		},
+		{
+			name: "enabledCSIProxy is nil and CSIProxyURL is defined",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "CSIProxyURL",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       "CSIProxyURL",
+		},
+		{
+			name: "enabledCSIProxy is false",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: to.BoolPtr(false),
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    false,
+			expectedCSIProxyURL:       "",
+		},
+		{
+			name: "enabledCSIProxy is true",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: to.BoolPtr(true),
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       DefaultKubernetesSpecConfig.CSIProxyDownloadURL,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getMockBaseContainerService("1.18.0")
+			cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(c.useCloudControllerManager)
+			cs.Properties.WindowsProfile = c.windowsProfile
+			cs.setCSIProxyDefaults()
+			if to.Bool(cs.Properties.WindowsProfile.EnableCSIProxy) != c.expectedEnableCSIProxy {
+				t.Errorf("expected enableCSIProxy to be %t, but got %t", c.expectedEnableCSIProxy, to.Bool(cs.Properties.WindowsProfile.EnableCSIProxy))
+			}
+			if cs.Properties.WindowsProfile.CSIProxyURL != c.expectedCSIProxyURL {
+				t.Errorf("expected csiProxyURL to be %s, but got %s", DefaultKubernetesSpecConfig.CSIProxyDownloadURL, cs.Properties.WindowsProfile.CSIProxyURL)
 			}
 		})
 	}
