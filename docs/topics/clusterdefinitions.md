@@ -114,7 +114,7 @@ $ aks-engine get-versions
 | [azure-policy](../../examples/addons/azure-policy/README.md)                                              | false                                                                                | 2                               | Open Policy Agent Gatekeeper with Azure Policy integration                                                                                                                                                                     |
 | [node-problem-detector](../../examples/addons/node-problem-detector/README.md)                            | false                                                                                | as many as linux agent nodes    | Reports problems on Kubernetes nodes to kube-apiserver                                                                                                                                                                         |
 | [kube-dns](https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/dns/kube-dns)                            | false; if set to true, coredns must be set to false, i.e., only one cluster DNS addon may be used on a given cluster                                                                               | 1    | Cluster DNS services                                                                                                                                                                         |
-| [coredns](https://github.com/coredns/deployment/tree/master/kubernetes)                            | true; if set to false, kube-dns must be set to true, i.e., you need at least one (and only one) of kube-dns or coredns enabled                                                                                | 1    | Cluster DNS services                                                                                                                                                                         |
+| [coredns](https://github.com/coredns/deployment/tree/master/kubernetes)                            | true; if set to false, kube-dns must be set to true, i.e., you need at least one (and only one) of kube-dns or coredns enabled. For more configuration info, see `coredns` configuration [below](#coredns)                                                                                | 1    | Cluster DNS services                                                                                                                                                                         |
 | [kube-proxy](https://kubernetes.io/docs/concepts/overview/components/#kube-proxy)                            | true                                                                                | 1    | a network proxy that runs on each node in your cluster                                                                                                                                                                         |
 | [pod-security-policy](https://kubernetes.io/docs/concepts/policy/pod-security-policy/)                            | required for Kubernetes v1.15+; defaults to false for Kubernetes 1.14 and earlier                                                                                | 0    | a cluster-level resource that controls security-sensitive aspects of the pod specification                                                                                                                                                                         |
 | [audit-policy](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy)                            | true                                                                                | 0    | defines rules about what events should be recorded and what data they should include                                                                                                                                                                         |
@@ -234,6 +234,30 @@ Additionally above, we specified a custom docker image for tiller, let's say we 
 ```
 
 The reason for the unsightly base64-encoded input type is to optimize delivery payload, and to squash a human-maintainable yaml file representation into something that can be tightly pasted into a JSON string value without the arguably more unsightly carriage returns / whitespace that would be delivered with a literal copy/paste of a Kubernetes manifest.
+
+#### coredns
+
+The `coredns` addon includes integration with the `cluster-proportional-autoscaler` project to automatically scale out coredns pod replicas according to node, or core count. More information at the official docs [here](https://kubernetes.io/docs/tasks/administer-cluster/dns-horizontal-autoscaling/). The AKS Engine default configuration tunes the autoscaler thresholds to "32" nodes, and "512" cores (whichever threshold is crossed first engages scaling behaviors), with a minimum replica count of "1". The scale thresholds are higher than those seen in example docs due to observed (not catastrophic) increases in per-DNS resolution response times. In other words, for smaller clusters that aren't coredns pod-constrained, a single coredns pod is more responsive. These configurations are entirely user-configurable: you may tune them according to the operational DNS characteristics of your environment. E.g.:
+
+```
+"kubernetesConfig": {
+    "addons": [
+        ...
+        {
+          "name": "coredns",
+          "enabled": true,
+          "config": {
+            "cores-per-replica": "512",
+            "min-replicas": "3",
+            "nodes-per-replica": "32"
+          }
+        },
+        ...
+    ]
+}
+```
+
+The above example configuration would ship a coredns configuration that has at least 3 pod replicas at all times, and then scales out to 4 when the 97th node, or the 1537th core (whichever comes frirst) is observed running in the cluster (and so on and so on).
 
 #### components
 

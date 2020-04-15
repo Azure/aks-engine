@@ -2041,13 +2041,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIP,
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "1",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -3438,8 +3445,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Config: map[string]string{
 						"domain":            "cluster.local",
 						"clusterIP":         DefaultKubernetesDNSServiceIP,
-						"cores-per-replica": "256",
-						"nodes-per-replica": "16",
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
 						"min-replicas":      "3",
 					},
 					Containers: []KubernetesContainerSpec{
@@ -3797,8 +3804,8 @@ func TestSetAddonsConfig(t *testing.T) {
 						"domain":            "cluster.local",
 						"clusterIP":         DefaultKubernetesDNSServiceIPv6,
 						"use-host-network":  "true",
-						"cores-per-replica": "256",
-						"nodes-per-replica": "16",
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
 						"min-replicas":      "1",
 					},
 					Containers: []KubernetesContainerSpec{
@@ -4696,8 +4703,8 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Config: map[string]string{
 				"domain":            "cluster.local",
 				"clusterIP":         DefaultKubernetesDNSServiceIP,
-				"cores-per-replica": "256",
-				"nodes-per-replica": "16",
+				"cores-per-replica": "512",
+				"nodes-per-replica": "32",
 				"min-replicas":      "1",
 			},
 			Containers: []KubernetesContainerSpec{

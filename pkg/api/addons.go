@@ -655,25 +655,22 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.CoreDNSAddonName,
 		Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 		Config: map[string]string{
-			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
-			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+			"domain":            o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP":         o.KubernetesConfig.DNSServiceIP,
+			"cores-per-replica": "512",
+			"nodes-per-replica": "32",
+			"min-replicas":      "1",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CoreDNSAddonName,
 				Image: kubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
 			},
+			{
+				Name:  common.CoreDNSAutoscalerName,
+				Image: k8sComponents[common.CoreDNSAutoscalerName],
+			},
 		},
-	}
-
-	if !cs.Properties.IsAzureStackCloud() {
-		defaultCorednsAddonsConfig.Config["cores-per-replica"] = "256"
-		defaultCorednsAddonsConfig.Config["nodes-per-replica"] = "16"
-		defaultCorednsAddonsConfig.Config["min-replicas"] = "1"
-		defaultCorednsAddonsConfig.Containers = append(defaultCorednsAddonsConfig.Containers, KubernetesContainerSpec{
-			Name:  common.CoreDNSAutoscalerName,
-			Image: k8sComponents[common.CoreDNSAutoscalerName],
-		})
 	}
 
 	// set host network to true for single stack IPv6 as the the nameserver is currently
