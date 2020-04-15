@@ -581,6 +581,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.AuditDEnabled = vlabs.AuditDEnabled
+	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
 	convertCustomFilesToAPI(vlabs, api)
 	api.SysctlDConfig = map[string]string{}
 	for key, val := range vlabs.SysctlDConfig {
@@ -622,6 +623,7 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.DiskEncryptionSetID = vlabs.DiskEncryptionSetID
 	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
+	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
 
 	api.CustomNodeLabels = map[string]string{}
 	for k, v := range vlabs.CustomNodeLabels {

@@ -24,11 +24,12 @@ import (
 )
 
 var (
-	validate                 *validator.Validate
-	keyvaultIDRegex          *regexp.Regexp
-	labelValueRegex          *regexp.Regexp
-	labelKeyRegex            *regexp.Regexp
-	diskEncryptionSetIDRegex *regexp.Regexp
+	validate                       *validator.Validate
+	keyvaultIDRegex                *regexp.Regexp
+	labelValueRegex                *regexp.Regexp
+	labelKeyRegex                  *regexp.Regexp
+	diskEncryptionSetIDRegex       *regexp.Regexp
+	proximityPlacementGroupIDRegex *regexp.Regexp
 	// Any version has to be available in a container image from mcr.microsoft.com/oss/etcd-io/etcd:v[Version]
 	etcdValidVersions = [...]string{"2.2.5", "2.3.0", "2.3.1", "2.3.2", "2.3.3", "2.3.4", "2.3.5", "2.3.6", "2.3.7", "2.3.8",
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
@@ -114,6 +115,7 @@ func init() {
 	labelValueRegex = regexp.MustCompile(labelValueFormat)
 	labelKeyRegex = regexp.MustCompile(labelKeyFormat)
 	diskEncryptionSetIDRegex = regexp.MustCompile(`^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/diskEncryptionSets/[^/\s]+$`)
+	proximityPlacementGroupIDRegex = regexp.MustCompile(`^/subscriptions/\S+/resourceGroups/\S+/providers/Microsoft.Compute/proximityPlacementGroups/[^/\s]+$`)
 }
 
 // Validate implements APIObject
@@ -416,6 +418,10 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		return errors.New("singlePlacementGroup is only supported with VirtualMachineScaleSets")
 	}
 
+	if e := validateProximityPlacementGroupID(m.ProximityPlacementGroupID); e != nil {
+		return e
+	}
+
 	distroValues := DistroValues
 	if isUpdate {
 		distroValues = append(distroValues, AKSDockerEngine, AKS1604Deprecated, AKS1804Deprecated)
@@ -555,6 +561,10 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 
 		if agentPoolProfile.IsEphemeral() {
 			log.Warnf("Ephemeral disks are enabled for Agent Pool %s. This feature in AKS-Engine is experimental, and data could be lost in some cases.", agentPoolProfile.Name)
+		}
+
+		if e := validateProximityPlacementGroupID(agentPoolProfile.ProximityPlacementGroupID); e != nil {
+			return e
 		}
 	}
 
@@ -1226,6 +1236,15 @@ func (a *AgentPoolProfile) validateLoadBalancerBackendAddressPoolIDs() error {
 		}
 	}
 
+	return nil
+}
+
+func validateProximityPlacementGroupID(ppgID string) error {
+	if ppgID != "" {
+		if !proximityPlacementGroupIDRegex.MatchString(ppgID) {
+			return errors.Errorf("ProximityPlacementGroupID(%s) is of incorrect format, correct format: %s", ppgID, proximityPlacementGroupIDRegex.String())
+		}
+	}
 	return nil
 }
 

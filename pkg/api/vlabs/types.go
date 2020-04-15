@@ -451,7 +451,8 @@ type MasterProfile struct {
 	FQDN string `json:"fqdn,omitempty"`
 
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	CosmosEtcd *bool `json:"cosmosEtcd,omitempty"`
+	CosmosEtcd                *bool  `json:"cosmosEtcd,omitempty"`
+	ProximityPlacementGroupID string `json:"proximityPlacementGroupID,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -525,6 +526,7 @@ type AgentPoolProfile struct {
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 	SysctlDConfig                     map[string]string `json:"sysctldConfig,omitempty"`
+	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role

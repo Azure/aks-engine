@@ -110,6 +110,11 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	if masterProfile.PlatformFaultDomainCount != nil {
 		vmProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*masterProfile.PlatformFaultDomainCount))
 	}
+	if masterProfile.ProximityPlacementGroupID != "" {
+		vmProperties.ProximityPlacementGroup = &compute.SubResource{
+			ID: to.StringPtr(masterProfile.ProximityPlacementGroupID),
+		}
+	}
 	vmProperties.SinglePlacementGroup = masterProfile.SinglePlacementGroup
 	vmProperties.Overprovision = to.BoolPtr(false)
 	vmProperties.UpgradePolicy = &compute.UpgradePolicy{
@@ -439,6 +444,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	if profile.PlatformFaultDomainCount != nil {
 		vmssProperties.PlatformFaultDomainCount = to.Int32Ptr(int32(*profile.PlatformFaultDomainCount))
+	}
+
+	if profile.ProximityPlacementGroupID != "" {
+		vmssProperties.ProximityPlacementGroup = &compute.SubResource{
+			ID: to.StringPtr(profile.ProximityPlacementGroupID),
+		}
 	}
 
 	if to.Bool(profile.VMSSOverProvisioningEnabled) {
