@@ -37,7 +37,7 @@ type getLogsCmd struct {
 	// user input
 	location               string
 	apiModelPath           string
-	apiserverURI           string
+	sshHostURI             string
 	linuxSSHPrivateKeyPath string
 	linuxScriptPath        string
 	outputDirectory        string
@@ -72,14 +72,14 @@ func newGetLogsCmd() *cobra.Command {
 	}
 	command.Flags().StringVarP(&glc.location, "location", "l", "", "Azure location where the cluster is deployed (required)")
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
-	command.Flags().StringVar(&glc.apiserverURI, "apiserver", "", "apiserver endpoint (required)")
-	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private ssh key to access the cluster's Linux nodes (required)")
-	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes")
+	command.Flags().StringVar(&glc.sshHostURI, "sshHost", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
+	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
+	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	command.MarkFlagRequired("location")
 	command.MarkFlagRequired("api-model")
-	command.MarkFlagRequired("apiserver")
+	command.MarkFlagRequired("sshHost")
 	command.MarkFlagRequired("linux-ssh-private-key")
 	command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
@@ -93,8 +93,8 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 	if glc.location == "" {
 		return errors.New("--location must be specified")
 	}
-	if glc.apiserverURI == "" {
-		return errors.New("--apiserver must be specified")
+	if glc.sshHostURI == "" {
+		return errors.New("--sshHost must be specified")
 	}
 	if glc.apiModelPath == "" {
 		return errors.New("--api-model must be specified")
@@ -138,7 +138,7 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 
 	lauth, err := helpers.PublicKeyAuth(glc.linuxSSHPrivateKeyPath)
 	if err != nil {
-		return errors.Wrap(err, "creating linux ssh config")
+		return errors.Wrap(err, "creating linux SSH config")
 	}
 	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
 
@@ -223,7 +223,7 @@ func (glc *getLogsCmd) getClusterNodes() error {
 
 func (glc *getLogsCmd) collectLogs(node v1.Node, config *ssh.ClientConfig) (string, error) {
 	jumpboxPort := "22"
-	client, err := helpers.SSHClient(glc.apiserverURI, jumpboxPort, node.Name, glc.linuxSSHConfig, config)
+	client, err := helpers.SSHClient(glc.sshHostURI, jumpboxPort, node.Name, glc.linuxSSHConfig, config)
 	if err != nil {
 		return "", errors.Wrap(err, "creating SSH client")
 	}
@@ -314,7 +314,7 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 
 	stdout, err := session.StdoutPipe()
 	if err != nil {
-		return "", errors.Wrap(err, "opening ssh session stdout pipe")
+		return "", errors.Wrap(err, "opening SSH session stdout pipe")
 	}
 
 	var cmd string
