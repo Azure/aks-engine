@@ -43680,15 +43680,6 @@ $KubeletArgList += "--volume-plugin-dir=$global:VolumePluginDir"
 # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
 # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
 
-
-# Regex to strip version to Major.Minor.Build format such that the following check does not crash for version like x.y.z-alpha
-[regex]$regex = "^[0-9.]+"
-$KubeBinariesVersionStripped = $regex.Matches($KubeBinariesVersion).Value
-if ([System.Version]$KubeBinariesVersionStripped -lt [System.Version]"1.8.0") {
-    # --api-server deprecates from 1.8.0
-    $KubeletArgList += "--api-servers=https://${global:MasterIP}:443"
-}
-
 # Configure kubelet to use CNI plugins if enabled.
 if ($NetworkPlugin -eq "azure") {
     $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
