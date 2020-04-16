@@ -793,7 +793,7 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 
 			switch csiDriverName {
 			case common.AzureDiskCSIDriverAddonName:
-				// Snapshot feature for Azure File CSI Driver is in beta, requiring K8s 1.17+
+				// Snapshot feature for Azure Disk CSI Driver is in beta, requiring K8s 1.17+
 				return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
 			case common.AzureFileCSIDriverAddonName:
 				// Snapshot feature for Azure File CSI Driver is in alpha, requiring K8s 1.13-1.16

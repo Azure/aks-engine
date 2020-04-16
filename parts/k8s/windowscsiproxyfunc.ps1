@@ -18,7 +18,7 @@ function New-CsiProxyService {
 
     & "$KubeDir\nssm.exe" install csi-proxy "$KubeDir\csi-proxy.exe" | RemoveNulls
     & "$KubeDir\nssm.exe" set csi-proxy AppDirectory "$KubeDir" | RemoveNulls
-    & "$KubeDir\nssm.exe" set csi-proxy AppRestartDekay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set csi-proxy AppRestartDelay 5000 | RemoveNulls
     & "$KubeDir\nssm.exe" set csi-proxy Description csi-proxy | RemoveNulls
     & "$KubeDir\nssm.exe" set csi-proxy Start SERVICE_DEMAND_START | RemoveNulls
     & "$KubeDir\nssm.exe" set csi-proxy ObjectName LocalSystem | RemoveNulls
