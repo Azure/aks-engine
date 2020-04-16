@@ -53,7 +53,7 @@ const (
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
-	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.3"
+	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.4"
 	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.9"
 )
 
