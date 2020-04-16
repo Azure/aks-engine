@@ -98,7 +98,7 @@ func TestGetLogsCmdValidateArgs(t *testing.T) {
 				sshHostURI:             "",
 				location:               "southcentralus",
 			},
-			expectedErr: errors.New("--sshHost must be specified"),
+			expectedErr: errors.New("--ssh-host must be specified"),
 			name:        "NeedsSSHHost",
 		},
 		{

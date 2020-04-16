@@ -32,7 +32,7 @@ Assuming that you have a cluster deployed and the apimodel originally used to de
 $ aks-engine get-logs \
     --location <location> \
     --api-model _output/<dnsPrefix>/apimodel.json \
-    --sshHost <dnsPrefix>.<location>.cloudapp.azure.com \
+    --ssh-host <dnsPrefix>.<location>.cloudapp.azure.com \
     --linux-ssh-private-key ~/.ssh/id_rsa \
     --linux-script scripts/collect-logs.sh
 ```
@@ -43,7 +43,7 @@ $ aks-engine get-logs \
 |---|---|---|
 |--location|yes|Azure location of the cluster's resource group.|
 |--api-model|yes|Path to the generated api model for the cluster.|
-|--sshHost|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
+|--ssh-host|yes|FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster.|
 |--linux-ssh-private-key|yes|Path to a SSH private key that can be use to create a remote session on the cluster Linux nodes.|
 |--linux-script|yes|Custom log collection script. It should produce file `/tmp/logs.zip`.|
 |--output-directory|no|Output directory, derived from `--api-model` if missing.|

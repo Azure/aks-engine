@@ -72,14 +72,14 @@ func newGetLogsCmd() *cobra.Command {
 	}
 	command.Flags().StringVarP(&glc.location, "location", "l", "", "Azure location where the cluster is deployed (required)")
 	command.Flags().StringVarP(&glc.apiModelPath, "api-model", "m", "", "path to the generated apimodel.json file (required)")
-	command.Flags().StringVar(&glc.sshHostURI, "sshHost", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
+	command.Flags().StringVar(&glc.sshHostURI, "ssh-host", "", "FQDN, or IP address, of an SSH listener that can reach all nodes in the cluster (required)")
 	command.Flags().StringVar(&glc.linuxSSHPrivateKeyPath, "linux-ssh-private-key", "", "path to a valid private SSH key to access the cluster's Linux nodes (required)")
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
 	command.MarkFlagRequired("location")
 	command.MarkFlagRequired("api-model")
-	command.MarkFlagRequired("sshHost")
+	command.MarkFlagRequired("ssh-host")
 	command.MarkFlagRequired("linux-ssh-private-key")
 	command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
@@ -94,7 +94,7 @@ func (glc *getLogsCmd) validateArgs() (err error) {
 		return errors.New("--location must be specified")
 	}
 	if glc.sshHostURI == "" {
-		return errors.New("--sshHost must be specified")
+		return errors.New("--ssh-host must be specified")
 	}
 	if glc.apiModelPath == "" {
 		return errors.New("--api-model must be specified")
