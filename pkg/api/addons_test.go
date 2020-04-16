@@ -60,7 +60,7 @@ func TestGetAddonsIndexByName(t *testing.T) {
 }
 
 func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.8.0")
+	mockCS := getMockBaseContainerService("1.18.1")
 	o := mockCS.Properties.OrchestratorProfile
 
 	isUpgrade := true
@@ -3267,7 +3267,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
@@ -3283,14 +3283,14 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeMCR),
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "upgrade w/ manual kube-dns enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
@@ -3322,26 +3322,26 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.KubeDNSAddonName],
 						},
 						{
 							Name:  common.DNSMasqComponentName,
-							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSMasqComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.DNSMasqComponentName],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.13.11"][common.DNSSidecarComponentName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.DNSSidecarComponentName],
 						},
 					},
 				},
-			}, "1.13.11")),
+			}, "1.18.1")),
 		},
 		{
 			name: "upgrade w/ manual coredns enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
@@ -3362,7 +3362,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11", "", common.KubernetesImageBaseTypeMCR),
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "kube-dns enabled",
