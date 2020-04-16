@@ -258,6 +258,9 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 					{
 						ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
 					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID2')]"),
+					},
 				},
 				BackendAddressPool: &network.SubResource{
 					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
@@ -295,6 +298,14 @@ func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) L
 						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
 							PublicIPAddress: &network.PublicIPAddress{
 								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+							},
+						},
+					},
+					{
+						Name: to.StringPtr("[variables('agentLbIPConfigName2')]"),
+						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+							PublicIPAddress: &network.PublicIPAddress{
+								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName2'))]"),
 							},
 						},
 					},

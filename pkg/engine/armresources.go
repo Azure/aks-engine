@@ -64,8 +64,9 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		isForMaster := false
 		includeDNS := false
 		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
+		publicIPAddress2 := CreatePublicIPAddress2(isForMaster, includeDNS)
 		loadBalancer := CreateStandardLoadBalancerForNodePools(cs.Properties, true)
-		armResources = append(armResources, publicIPAddress, loadBalancer)
+		armResources = append(armResources, publicIPAddress, publicIPAddress2, loadBalancer)
 	}
 
 	profiles := cs.Properties.AgentPoolProfiles

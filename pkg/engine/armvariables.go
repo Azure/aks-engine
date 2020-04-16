@@ -388,9 +388,12 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	} else {
 		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
 			masterVars["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
+			masterVars["agentPublicIPAddressName2"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound2')]"
 			masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
 			masterVars["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
 			masterVars["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
+			masterVars["agentLbIPConfigID2"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName2'))]"
+			masterVars["agentLbIPConfigName2"] = "[concat(parameters('orchestratorName'), '-agent-outbound2')]"
 			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 		}
