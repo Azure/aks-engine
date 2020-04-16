@@ -327,7 +327,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that should pass across all versions
 	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false) {
 		c := KubernetesConfig{}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Errorf("should not error on empty KubernetesConfig: %v, version %s", err, k8sVersion)
 		}
 
@@ -352,21 +352,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": ValidKubernetesCtrlMgrRouteReconciliationPeriod,
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Errorf("should not error on a KubernetesConfig with valid param values: %v", err)
 		}
 
 		c = KubernetesConfig{
 			ClusterSubnet: "10.16.x.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid ClusterSubnet")
 		}
 
 		c = KubernetesConfig{
 			DockerBridgeSubnet: "10.120.1.0/invalid",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid DockerBridgeSubnet")
 		}
 
@@ -375,7 +375,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--non-masquerade-cidr": "10.120.1.0/24",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Error("should not error on valid --non-masquerade-cidr")
 		}
 
@@ -392,7 +392,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c = KubernetesConfig{
 			MaxPods: KubernetesMinMaxPods - 1,
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid MaxPods")
 		}
 
@@ -401,7 +401,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid --node-status-update-frequency kubelet config")
 		}
 
@@ -410,7 +410,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-monitor-grace-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid --node-monitor-grace-period")
 		}
 
@@ -422,7 +422,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--node-status-update-frequency": "10s",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when --node-monitor-grace-period is not sufficiently larger than --node-status-update-frequency kubelet config")
 		}
 
@@ -431,7 +431,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--pod-eviction-timeout": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid --pod-eviction-timeout")
 		}
 
@@ -440,21 +440,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				"--route-reconciliation-period": "invalid",
 			},
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error on invalid --route-reconciliation-period")
 		}
 
 		c = KubernetesConfig{
 			DNSServiceIP: "192.168.0.10",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP but not ServiceCidr")
 		}
 
 		c = KubernetesConfig{
 			ServiceCidr: "192.168.0.10/24",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when ServiceCidr but not DNSServiceIP")
 		}
 
@@ -462,7 +462,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "invalid",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is invalid")
 		}
 
@@ -470,7 +470,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/not-a-len",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when ServiceCidr is invalid")
 		}
 
@@ -478,7 +478,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "192.168.1.10",
 			ServiceCidr:  "192.168.0.0/24",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is outside of ServiceCidr")
 		}
 
@@ -486,7 +486,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.255",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is broadcast address of ServiceCidr")
 		}
 
@@ -494,7 +494,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.0.1",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when DNSServiceIP is first IP of ServiceCidr")
 		}
 
@@ -502,7 +502,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP: "172.99.255.10",
 			ServiceCidr:  "172.99.0.1/16",
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Error("should not error when DNSServiceIP and ServiceCidr are valid")
 		}
 
@@ -511,7 +511,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPlugin: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
 		}
 
@@ -519,7 +519,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ProxyMode: KubeProxyMode("invalid"),
 		}
 
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when ProxyMode has an invalid string value")
 		}
 
@@ -528,7 +528,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 
@@ -536,7 +536,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 				ProxyMode: validProxyModeValue,
 			}
 
-			if err := c.Validate(k8sVersion, false, false); err != nil {
+			if err := c.Validate(k8sVersion, false, false, false); err != nil {
 				t.Error("should error when ProxyMode has a valid string value")
 			}
 		}
@@ -548,7 +548,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			CloudProviderBackoff:   to.BoolPtr(true),
 			CloudProviderRateLimit: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Error("should not error when basic backoff and rate limiting are set to true with no options")
 		}
 	}
@@ -558,7 +558,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		c := KubernetesConfig{
 			UseCloudControllerManager: to.BoolPtr(true),
 		}
-		if err := c.Validate(k8sVersion, false, false); err != nil {
+		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Error("should not error because UseCloudControllerManager is available since v1.8")
 		}
 	}
@@ -570,7 +570,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
 
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when more than 1 cluster subnet provided with ipv6dualstack feature disabled")
 		}
 
@@ -579,7 +579,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			NetworkPlugin: "azure",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
 			t.Error("should error when network plugin is not kubenet")
 		}
 
@@ -588,7 +588,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8,fec0::/7",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
 			t.Error("should error when more than 2 cluster subnets provided")
 		}
 
@@ -597,7 +597,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
 			t.Error("should error when proxy mode is not set to ipvs")
 		}
 
@@ -605,7 +605,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			ServiceCidr: "10.0.0.0/16,fe80:20d::/112",
 		}
 
-		if err := c.Validate(k8sVersion, false, false); err == nil {
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when more than 1 service cidr provided with ipv6dualstack feature disabled")
 		}
 
@@ -617,7 +617,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
 			t.Error("should error when more than 2 service cidr provided with ipv6dualstack feature enabled")
 		}
 
@@ -629,7 +629,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err == nil {
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
 			t.Error("should error when secondary cidr is invalid with ipv6dualstack feature enabled")
 		}
 
@@ -641,8 +641,21 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 			DNSServiceIP:  "10.0.0.10",
 		}
 
-		if err := c.Validate(k8sVersion, false, true); err != nil {
+		if err := c.Validate(k8sVersion, false, true, false); err != nil {
 			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
+		}
+	}
+
+	// Tests that apply to single stack IPv6 with 1.18 and later releases
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0-alpha.4", true, true) {
+		c := KubernetesConfig{
+			NetworkPlugin: "azure",
+		}
+		if err := c.Validate(k8sVersion, false, false, true); err == nil {
+			t.Error("should error when network plugin is not kubenet for single stack IPv6")
+		}
+		if err := c.Validate(k8sVersion, false, true, true); err == nil {
+			t.Error("should error when dual stack and single stack IPv6 enabled simultaneously")
 		}
 	}
 }
@@ -3455,31 +3468,34 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		}
 	})
 
-	t.Run("Should not support os type other than linux for ipv6 dual stack feature", func(t *testing.T) {
+	t.Run("Should not support os type other than linux for single stack ipv6 and dual stack feature", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(true)
-		cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
-		masterProfile := cs.Properties.MasterProfile
-		masterProfile.Distro = CoreOS
-		expectedMsg := fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
-		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
+			cs.Properties.FeatureFlags = &featureFlags
+			masterProfile := cs.Properties.MasterProfile
+			masterProfile.Distro = CoreOS
+			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
+			if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
+
+			masterProfile.Distro = Ubuntu
+			agentPoolProfiles := cs.Properties.AgentPoolProfiles
+			agentPoolProfiles[0].OSType = Windows
+			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
+
+			agentPoolProfiles[0].OSType = Linux
+			agentPoolProfiles[0].Distro = CoreOS
+			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
+			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
 		}
 
-		masterProfile.Distro = Ubuntu
-		agentPoolProfiles := cs.Properties.AgentPoolProfiles
-		agentPoolProfiles[0].OSType = Windows
-		expectedMsg = fmt.Sprintf("Dual stack feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
-		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
-
-		agentPoolProfiles[0].OSType = Linux
-		agentPoolProfiles[0].Distro = CoreOS
-		expectedMsg = fmt.Sprintf("Dual stack feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
-		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
-			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-		}
 	})
 }
 
