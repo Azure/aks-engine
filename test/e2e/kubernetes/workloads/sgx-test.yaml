@@ -18,6 +18,5 @@ spec:
       - name: dev-sgx
         hostPath:
           path: /dev/sgx
-          type: CharDevice
       restartPolicy: Never
   backoffLimit: 0
