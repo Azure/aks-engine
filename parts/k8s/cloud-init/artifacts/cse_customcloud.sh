@@ -1,40 +1,50 @@
 #!/bin/bash
 
-ensureCertificates() {
-  AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
-  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
-  AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
-  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
-  CURL_RETURNCODE=$?
-  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
-  if [ $CURL_RETURNCODE != 0 ]; then
-    # Replace placeholder for ssl binding
-    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
-      sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
-      sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
-    fi
+{{- if IsCustomCloudProfile}}
+  {{- if not IsAzureStackCloud}}
+ensureCustomCloudRootCertificates() {
+    CUSTOM_CLOUD_ROOT_CERTIFICATES="{{GetCustomCloudRootCertificates}}"
+    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
 
-    # Copying the AzureStack root certificate to the appropriate store to be updated.
-    AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
-    AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
-    cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
-    update-ca-certificates
-  else
-    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
-      # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
-      sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
-      sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
-    fi
-  fi
+    if [ ! -z $CUSTOM_CLOUD_ROOT_CERTIFICATES ]; then
+        # Replace placeholder for ssl binding
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
 
-  # ensureCertificates will be retried if the exit code is not 0
-  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
-  exit $?
+        local i=1
+        for cert in $(echo $CUSTOM_CLOUD_ROOT_CERTIFICATES | tr ',' '\n')
+        do
+            echo $cert | base64 -d > "/usr/local/share/ca-certificates/customCloudRootCertificate$i.crt"
+            ((i++))
+        done
+
+        update-ca-certificates
+    else
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            # remove the placeholder for ssl binding
+            sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
+    fi
 }
 
+ensureCustomCloudSourcesList() {
+    CUSTOM_CLOUD_SOURCES_LIST="{{GetCustomCloudSourcesList}}"
+
+    if [ ! -z $CUSTOM_CLOUD_SOURCES_LIST ]; then
+        # Just in case, let's take a back up before we overwrite
+        cp /etc/apt/sources.list /etc/apt/sources.list.backup
+        echo $CUSTOM_CLOUD_SOURCES_LIST | base64 -d > /etc/apt/sources.list
+    fi
+}
+  {{end}}
+
 configureK8sCustomCloud() {
-  export -f ensureCertificates
-  retrycmd 60 10 30 bash -c ensureCertificates
+  {{- if IsAzureStackCloud}}
+  export -f ensureAzureStackCertificates
+  retrycmd 60 10 30 bash -c ensureAzureStackCertificates
   set +x
   # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut,
   # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
@@ -78,6 +88,44 @@ configureK8sCustomCloud() {
   ifconfig eth0 mtu 1350
 
   set -x
+  {{else}}
+  ensureCustomCloudRootCertificates
+  ensureCustomCloudSourcesList
+  {{end}}
+}
+{{end}}
+
+{{- if IsAzureStackCloud}}
+ensureAzureStackCertificates() {
+  AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
+  AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
+  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+  CURL_RETURNCODE=$?
+  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
+  if [ $CURL_RETURNCODE != 0 ]; then
+    # Replace placeholder for ssl binding
+    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+      sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
+      sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+    fi
+
+    # Copying the AzureStack root certificate to the appropriate store to be updated.
+    AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
+    AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
+    cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
+    update-ca-certificates
+  else
+    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+      # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
+      sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+      sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+    fi
+  fi
+
+  # ensureAzureStackCertificates will be retried if the exit code is not 0
+  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+  exit $?
 }
 
 configureAzureStackInterfaces() {
@@ -174,4 +222,5 @@ configureAzureStackInterfaces() {
 
   set -x
 }
+{{end}}
 #EOF

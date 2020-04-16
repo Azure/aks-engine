@@ -685,6 +685,9 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 		"ContainerConfig": func(name string) string {
 			return component.Config[name]
 		},
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
@@ -742,6 +745,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		},
 		"HasWindows": func() bool {
 			return cs.Properties.HasWindows()
+		},
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
 		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()

@@ -67,7 +67,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -347,7 +347,7 @@ write_files:
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsAzureStackCloud }}
+{{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -364,7 +364,7 @@ write_files:
 {{end}}
     #EOF
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"

@@ -30,7 +30,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	k8sComponents := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]
 	omsagentImage := "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020"
 	var workspaceDomain string
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsCustomCloudProfile() {
 		dependenciesLocation := string(cs.Properties.CustomCloudProfile.DependenciesLocation)
 		workspaceDomain = helpers.GetLogAnalyticsWorkspaceDomain(dependenciesLocation)
 		if strings.EqualFold(dependenciesLocation, "china") {

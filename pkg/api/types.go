@@ -824,12 +824,14 @@ type DependenciesLocation string
 
 // CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
-	Environment                *azure.Environment          `json:"environment,omitempty"`
-	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
-	IdentitySystem             string                      `json:"identitySystem,omitempty"`
-	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
-	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
-	PortalURL                  string                      `json:"portalURL,omitempty"`
+	Environment                 *azure.Environment          `json:"environment,omitempty"`
+	AzureEnvironmentSpecConfig  *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
+	IdentitySystem              string                      `json:"identitySystem,omitempty"`
+	AuthenticationMethod        string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation        DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                   string                      `json:"portalURL,omitempty"`
+	CustomCloudRootCertificates string                      `json:"customCloudRootCertificates,omitempty"`
+	CustomCloudSourcesList      string                      `json:"customCloudSourcesList,omitempty"`
 }
 
 // TelemetryProfile contains settings for collecting telemtry.
@@ -2073,6 +2075,27 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
+// IsCustomCloudProfile returns true if user has provided a custom cloud profile
+func (p *Properties) IsCustomCloudProfile() bool {
+	return p.CustomCloudProfile != nil
+}
+
+// GetCustomCloudRootCertificates returns comma-separated list of base64-encoded custom root certificates
+func (p *Properties) GetCustomCloudRootCertificates() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudRootCertificates
+	}
+	return ""
+}
+
+// GetCustomCloudSourcesList returns a base64-encoded custom sources.list file
+func (p *Properties) GetCustomCloudSourcesList() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudSourcesList
+	}
+	return ""
+}
+
 // GetKubernetesVersion returns the cluster Kubernetes version, with the Azure Stack suffix if Azure Stack Cloud.
 func (p *Properties) GetKubernetesVersion() string {
 	if p.IsAzureStackCloud() {
@@ -2097,13 +2120,14 @@ func (p *Properties) GetKubernetesHyperkubeSpec() string {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil
+	// For backward compatibility, treat nil Environment and empty Environment name as AzureStackCloud as well
+	return p.IsCustomCloudProfile() && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
 func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 	var environmentJSON string
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		bytes, err := json.Marshal(p.CustomCloudProfile.Environment)
 		if err != nil {
 			return "", fmt.Errorf("Could not serialize Environment object - %s", err.Error())
@@ -2121,7 +2145,7 @@ func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 // the return value will be empty string for those clouds
 func (p *Properties) GetCustomCloudName() string {
 	var cloudProfileName string
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		cloudProfileName = p.CustomCloudProfile.Environment.Name
 	}
 	return cloudProfileName
@@ -2132,7 +2156,7 @@ func (p *Properties) GetCustomCloudName() string {
 // If AzurePublicCloud, AzureChinaCloud,AzureGermanCloud or AzureUSGovernmentCloud, GetLocations provides all azure regions in prod.
 func (cs *ContainerService) GetLocations() []string {
 	var allLocations []string
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsCustomCloudProfile() {
 		allLocations = []string{cs.Location}
 	} else {
 		allLocations = helpers.GetAzureLocations()
@@ -2144,7 +2168,7 @@ func (cs *ContainerService) GetLocations() []string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be client_secret
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is client_secret.
 func (p *Properties) GetCustomCloudAuthenticationMethod() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.AuthenticationMethod
 	}
 	return ClientSecretAuthMethod
@@ -2154,7 +2178,7 @@ func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be AzureAD
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is AzureAD.
 func (p *Properties) GetCustomCloudIdentitySystem() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.IdentitySystem
 	}
 	return AzureADIdentitySystem

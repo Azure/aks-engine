@@ -40508,41 +40508,51 @@ func k8sCloudInitArtifactsCse_configSh() (*asset, error) {
 
 var _k8sCloudInitArtifactsCse_customcloudSh = []byte(`#!/bin/bash
 
-ensureCertificates() {
-  AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
-  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
-  AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
-  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
-  CURL_RETURNCODE=$?
-  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
-  if [ $CURL_RETURNCODE != 0 ]; then
-    # Replace placeholder for ssl binding
-    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
-      sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
-      sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
-    fi
+{{- if IsCustomCloudProfile}}
+  {{- if not IsAzureStackCloud}}
+ensureCustomCloudRootCertificates() {
+    CUSTOM_CLOUD_ROOT_CERTIFICATES="{{GetCustomCloudRootCertificates}}"
+    KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
 
-    # Copying the AzureStack root certificate to the appropriate store to be updated.
-    AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
-    AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
-    cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
-    update-ca-certificates
-  else
-    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
-      # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
-      sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
-      sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
-    fi
-  fi
+    if [ ! -z $CUSTOM_CLOUD_ROOT_CERTIFICATES ]; then
+        # Replace placeholder for ssl binding
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
 
-  # ensureCertificates will be retried if the exit code is not 0
-  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
-  exit $?
+        local i=1
+        for cert in $(echo $CUSTOM_CLOUD_ROOT_CERTIFICATES | tr ',' '\n')
+        do
+            echo $cert | base64 -d > "/usr/local/share/ca-certificates/customCloudRootCertificate$i.crt"
+            ((i++))
+        done
+
+        update-ca-certificates
+    else
+        if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+            # remove the placeholder for ssl binding
+            sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+            sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+        fi
+    fi
 }
 
+ensureCustomCloudSourcesList() {
+    CUSTOM_CLOUD_SOURCES_LIST="{{GetCustomCloudSourcesList}}"
+
+    if [ ! -z $CUSTOM_CLOUD_SOURCES_LIST ]; then
+        # Just in case, let's take a back up before we overwrite
+        cp /etc/apt/sources.list /etc/apt/sources.list.backup
+        echo $CUSTOM_CLOUD_SOURCES_LIST | base64 -d > /etc/apt/sources.list
+    fi
+}
+  {{end}}
+
 configureK8sCustomCloud() {
-  export -f ensureCertificates
-  retrycmd 60 10 30 bash -c ensureCertificates
+  {{- if IsAzureStackCloud}}
+  export -f ensureAzureStackCertificates
+  retrycmd 60 10 30 bash -c ensureAzureStackCertificates
   set +x
   # When AUTHENTICATION_METHOD is client_certificate, the certificate is stored into key valut,
   # And SERVICE_PRINCIPAL_CLIENT_SECRET will be the following json payload with based64 encode
@@ -40586,6 +40596,44 @@ configureK8sCustomCloud() {
   ifconfig eth0 mtu 1350
 
   set -x
+  {{else}}
+  ensureCustomCloudRootCertificates
+  ensureCustomCloudSourcesList
+  {{end}}
+}
+{{end}}
+
+{{- if IsAzureStackCloud}}
+ensureAzureStackCertificates() {
+  AZURESTACK_ENVIRONMENT_JSON_PATH="/etc/kubernetes/azurestackcloud.json"
+  AZURESTACK_RESOURCE_MANAGER_ENDPOINT=$(jq .resourceManagerEndpoint $AZURESTACK_ENVIRONMENT_JSON_PATH | tr -d '"')
+  AZURESTACK_RESOURCE_METADATA_ENDPOINT="$AZURESTACK_RESOURCE_MANAGER_ENDPOINT/metadata/endpoints?api-version=2015-01-01"
+  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+  CURL_RETURNCODE=$?
+  KUBE_CONTROLLER_MANAGER_FILE=/etc/kubernetes/manifests/kube-controller-manager.yaml
+  if [ $CURL_RETURNCODE != 0 ]; then
+    # Replace placeholder for ssl binding
+    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+      sed -i "s|<volumessl>|- name: ssl\n      hostPath:\n        path: \\/etc\\/ssl\\/certs|g" $KUBE_CONTROLLER_MANAGER_FILE
+      sed -i "s|<volumeMountssl>|- name: ssl\n          mountPath: \\/etc\\/ssl\\/certs\n          readOnly: true|g" $KUBE_CONTROLLER_MANAGER_FILE
+    fi
+
+    # Copying the AzureStack root certificate to the appropriate store to be updated.
+    AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH="/var/lib/waagent/Certificates.pem"
+    AZURESTACK_ROOT_CERTIFICATE__DEST_PATH="/usr/local/share/ca-certificates/azsCertificate.crt"
+    cp $AZURESTACK_ROOT_CERTIFICATE_SOURCE_PATH $AZURESTACK_ROOT_CERTIFICATE__DEST_PATH
+    update-ca-certificates
+  else
+    if [ -f $KUBE_CONTROLLER_MANAGER_FILE ]; then
+      # the ARM resource manager endpoint binding certificate is trusted, remove the placeholder for ssl binding
+      sed -i "/<volumessl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+      sed -i "/<volumeMountssl>/d" $KUBE_CONTROLLER_MANAGER_FILE
+    fi
+  fi
+
+  # ensureAzureStackCertificates will be retried if the exit code is not 0
+  curl $AZURESTACK_RESOURCE_METADATA_ENDPOINT
+  exit $?
 }
 
 configureAzureStackInterfaces() {
@@ -40682,6 +40730,7 @@ configureAzureStackInterfaces() {
 
   set -x
 }
+{{end}}
 #EOF
 `)
 
@@ -41213,7 +41262,7 @@ eval "$(apmz bash -d)"
 wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCSEConfigScriptFilepath}}
 
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
 wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
@@ -41365,9 +41414,9 @@ time_metric "EnsureDocker" ensureDocker
 
 time_metric "ConfigureK8s" configureK8s
 
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
 time_metric "ConfigureK8sCustomCloud" configureK8sCustomCloud
-{{- if IsAzureCNI}}
+{{- if and IsAzureStackCloud IsAzureCNI}}
 time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 {{end}}
 {{end}}
@@ -42876,7 +42925,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -43200,7 +43249,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{else}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsAzureStackCloud }}
+{{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
 {{if AnyAgentIsLinux}}
@@ -43315,7 +43364,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     #EOF
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
@@ -43413,7 +43462,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -43693,7 +43742,7 @@ write_files:
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsAzureStackCloud }}
+{{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -43710,7 +43759,7 @@ write_files:
 {{end}}
     #EOF
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
@@ -44871,7 +44920,7 @@ try
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB ` + "`" + `
             -TargetEnvironment $TargetEnvironment
 
-        {{if IsAzureStackCloud}}
+        {{if IsCustomCloudProfile}}
         $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
         $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
         [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))
@@ -45237,7 +45286,7 @@ spec:
       imagePullPolicy: IfNotPresent
       command: [{{ContainerConfig "command"}}]
       args: [{{GetControllerManagerArgs}}]
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
@@ -45255,7 +45304,7 @@ spec:
         - name: msi
           mountPath: /var/lib/waagent/ManagedIdentity-Settings
           readOnly: true
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
         <volumeMountssl>
 {{end}}
   volumes:
@@ -45273,7 +45322,7 @@ spec:
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
     <volumessl>
 {{end}}
 `)

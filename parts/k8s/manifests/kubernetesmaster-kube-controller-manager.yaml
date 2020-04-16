@@ -15,7 +15,7 @@ spec:
       imagePullPolicy: IfNotPresent
       command: [{{ContainerConfig "command"}}]
       args: [{{GetControllerManagerArgs}}]
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
       env:
       - name: AZURE_ENVIRONMENT_FILEPATH
         value: "/etc/kubernetes/azurestackcloud.json"
@@ -33,7 +33,7 @@ spec:
         - name: msi
           mountPath: /var/lib/waagent/ManagedIdentity-Settings
           readOnly: true
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
         <volumeMountssl>
 {{end}}
   volumes:
@@ -51,6 +51,6 @@ spec:
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
     <volumessl>
 {{end}}

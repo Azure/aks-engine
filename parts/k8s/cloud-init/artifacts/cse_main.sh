@@ -36,7 +36,7 @@ eval "$(apmz bash -d)"
 wait_for_file 3600 1 {{GetCSEConfigScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCSEConfigScriptFilepath}}
 
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
 wait_for_file 3600 1 {{GetCustomCloudConfigCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 source {{GetCustomCloudConfigCSEScriptFilepath }}
 {{end}}
@@ -188,9 +188,9 @@ time_metric "EnsureDocker" ensureDocker
 
 time_metric "ConfigureK8s" configureK8s
 
-{{- if IsAzureStackCloud}}
+{{- if IsCustomCloudProfile}}
 time_metric "ConfigureK8sCustomCloud" configureK8sCustomCloud
-{{- if IsAzureCNI}}
+{{- if and IsAzureStackCloud IsAzureCNI}}
 time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 {{end}}
 {{end}}

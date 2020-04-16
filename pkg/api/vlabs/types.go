@@ -582,12 +582,14 @@ type DependenciesLocation string
 
 // CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
-	Environment                *azure.Environment          `json:"environment,omitempty"`
-	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
-	IdentitySystem             string                      `json:"identitySystem,omitempty"`
-	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
-	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
-	PortalURL                  string                      `json:"portalURL,omitempty"`
+	Environment                 *azure.Environment          `json:"environment,omitempty"`
+	AzureEnvironmentSpecConfig  *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
+	IdentitySystem              string                      `json:"identitySystem,omitempty"`
+	AuthenticationMethod        string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation        DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                   string                      `json:"portalURL,omitempty"`
+	CustomCloudRootCertificates string                      `json:"customCloudRootCertificates,omitempty"`
+	CustomCloudSourcesList      string                      `json:"customCloudSourcesList,omitempty"`
 }
 
 // TelemetryProfile contains settings for collecting telemtry.
@@ -620,9 +622,31 @@ func (p *Properties) HasAvailabilityZones() bool {
 	return hasZones
 }
 
+// IsCustomCloudProfile return true if user has provided a custom cloud profile
+func (p *Properties) IsCustomCloudProfile() bool {
+	return p.CustomCloudProfile != nil
+}
+
+// GetCustomCloudRootCertificates returns comma-separated list of base64-encoded custom root certificates
+func (p *Properties) GetCustomCloudRootCertificates() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudRootCertificates
+	}
+	return ""
+}
+
+// GetCustomCloudSourcesList returns a base64-encoded custom sources.list file
+func (p *Properties) GetCustomCloudSourcesList() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudSourcesList
+	}
+	return ""
+}
+
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil
+	// For backward compatibility, treat nil Environment and empty Environment name as AzureStackCloud as well
+	return p.IsCustomCloudProfile() && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // HasAADAdminGroupID returns true if the cluster has an AADProfile w/ a valid AdminGroupID

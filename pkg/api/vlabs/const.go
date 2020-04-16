@@ -103,7 +103,7 @@ var (
 	DistroValues = []Distro{"", Ubuntu, Ubuntu1804, Ubuntu1804Gen2, RHEL, AKSUbuntu1604, AKSUbuntu1804, ACC1604}
 
 	// DependenciesLocationValues holds the valid values for dependencies location
-	DependenciesLocationValues = []DependenciesLocation{"", AzureStackDependenciesLocationPublic, AzureStackDependenciesLocationChina, AzureStackDependenciesLocationGerman, AzureStackDependenciesLocationUSGovernment}
+	DependenciesLocationValues = []DependenciesLocation{"", AzureCustomCloudDependenciesLocationPublic, AzureCustomCloudDependenciesLocationChina, AzureCustomCloudDependenciesLocationGerman, AzureCustomCloudDependenciesLocationUSGovernment}
 
 	// NetworkModeValues holds the valid values for network mode implementation for cni
 	NetworkModeValues = [...]string{"", NetworkModeBridge, NetworkModeTransparent}
@@ -161,14 +161,14 @@ const (
 )
 
 const (
-	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
-	AzureStackDependenciesLocationPublic = "public"
-	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
-	AzureStackDependenciesLocationChina = "china"
-	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
-	AzureStackDependenciesLocationGerman = "german"
-	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
-	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+	// AzureCustomCloudDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureCustomCloudDependenciesLocationPublic = "public"
+	// AzureCustomCloudDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureCustomCloudDependenciesLocationChina = "china"
+	// AzureCustomCloudDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureCustomCloudDependenciesLocationGerman = "german"
+	// AzureCustomCloudDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureCustomCloudDependenciesLocationUSGovernment = "usgovernment"
 )
 
 const (

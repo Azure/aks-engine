@@ -513,14 +513,14 @@ const (
 )
 
 const (
-	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
-	AzureStackDependenciesLocationPublic = "public"
-	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
-	AzureStackDependenciesLocationChina = "china"
-	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
-	AzureStackDependenciesLocationGerman = "german"
-	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
-	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+	// AzureCustomCloudDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureCustomCloudDependenciesLocationPublic = "public"
+	// AzureCustomCloudDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureCustomCloudDependenciesLocationChina = "china"
+	// AzureCustomCloudDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureCustomCloudDependenciesLocationGerman = "german"
+	// AzureCustomCloudDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureCustomCloudDependenciesLocationUSGovernment = "usgovernment"
 )
 
 const (

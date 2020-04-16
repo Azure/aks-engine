@@ -1852,18 +1852,24 @@ func (i *ImageReference) validateImageNameAndGroup() error {
 
 func (cs *ContainerService) validateCustomCloudProfile() error {
 	a := cs.Properties
-	if a.CustomCloudProfile != nil {
-		if a.CustomCloudProfile.PortalURL == "" {
-			return errors.New("portalURL needs to be specified when CustomCloudProfile is provided")
-		}
-		if !strings.HasPrefix(a.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
-			return errors.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
-		}
-		if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
-			return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)
-		}
-		if a.CustomCloudProfile.IdentitySystem != "" && !(a.CustomCloudProfile.IdentitySystem == AzureADIdentitySystem || a.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem) {
-			return errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)
+
+	if a.IsCustomCloudProfile() {
+		if a.IsAzureStackCloud() {
+			if a.CustomCloudProfile.PortalURL == "" {
+				return errors.New("portalURL needs to be specified when AzureStackCloud CustomCloudProfile is provided")
+			}
+
+			if !strings.HasPrefix(a.CustomCloudProfile.PortalURL, fmt.Sprintf("https://portal.%s.", cs.Location)) {
+				return errors.Errorf("portalURL needs to start with https://portal.%s. ", cs.Location)
+			}
+
+			if a.CustomCloudProfile.AuthenticationMethod != "" && !(a.CustomCloudProfile.AuthenticationMethod == ClientSecretAuthMethod || a.CustomCloudProfile.AuthenticationMethod == ClientCertificateAuthMethod) {
+				return errors.Errorf("authenticationMethod allowed values are '%s' and '%s'", ClientCertificateAuthMethod, ClientSecretAuthMethod)
+			}
+
+			if a.CustomCloudProfile.IdentitySystem != "" && !(a.CustomCloudProfile.IdentitySystem == AzureADIdentitySystem || a.CustomCloudProfile.IdentitySystem == ADFSIdentitySystem) {
+				return errors.Errorf("identitySystem allowed values are '%s' and '%s'", AzureADIdentitySystem, ADFSIdentitySystem)
+			}
 		}
 
 		dependenciesLocationValues := DependenciesLocationValues
@@ -1892,7 +1898,7 @@ func (cs *ContainerService) Validate(isUpdate bool) error {
 }
 
 func (cs *ContainerService) validateLocation() error {
-	if cs.Properties != nil && cs.Properties.IsAzureStackCloud() && cs.Location == "" {
+	if cs.Properties != nil && cs.Properties.IsCustomCloudProfile() && cs.Location == "" {
 		return errors.New("missing ContainerService Location")
 	}
 	return nil
