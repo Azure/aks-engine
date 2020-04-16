@@ -7501,6 +7501,7 @@ spec:
         k8s-app: metrics-server
     spec:
       serviceAccountName: metrics-server
+      priorityClassName: system-cluster-critical
       containers:
       - name: metrics-server
         image: {{ContainerImage "metrics-server"}}
