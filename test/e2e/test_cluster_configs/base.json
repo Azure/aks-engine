@@ -2,6 +2,7 @@
 	"env": {
 		"SCALE_CLUSTER": true,
 		"UPGRADE_CLUSTER": true,
+		"GET_CLUSTER_LOGS": true,
 		"GINKGO_SKIP_AFTER_SCALE_DOWN": "should report all nodes in a Ready state"
 	},
 	"apiModel": {
@@ -20,6 +21,12 @@
 					"name": "agentpool1",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
+				},
+				{
+					"name": "agentwin1",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows"
 				}
 			],
 			"linuxProfile": {
@@ -31,6 +38,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"servicePrincipalProfile": {
 				"clientId": "",
