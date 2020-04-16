@@ -18,12 +18,12 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agentpool1",
+					"name": "poollinux",
 					"count": 1,
 					"vmSize": "Standard_D2_v3"
 				},
 				{
-					"name": "agentwin1",
+					"name": "poolwin",
 					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"osType": "Windows"
