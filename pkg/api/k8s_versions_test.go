@@ -308,7 +308,6 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.CSIAttacherContainerName:                   csiAttacherImageReference,
 		common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 		common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-		common.CSIResizerContainerName:                    csiResizerImageReference,
 		common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 		common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 		common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
