@@ -2019,7 +2019,6 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 	// Test with > 1 LB outbound IP address
 	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs = to.IntPtr(3)
 	armResources = GenerateARMResources(&cs)
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
 	agentPublicIPAddress2 := PublicIPAddressARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -2052,6 +2051,32 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
+	agentLoadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName2')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName2'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName3')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName3'))]"),
+				},
+			},
+		},
+	}
 	expected = []interface{}{
 		agentLoadBalancer,
 		agentPublicIPAddress,
@@ -2072,18 +2097,34 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 	expectedMap = resourceSliceToMap(expected)
 	actualMap = resourceSliceToMap(armResources)
 
+	if diff := cmp.Diff(actualMap, expectedMap); diff != "" {
+		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
+	}
+
 	// Now test with a validate K8s version for EnableTCPReset
 	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.18.1"
-	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs = nil
 	armResources = GenerateARMResources(&cs)
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 	(*agentLoadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules)[0].OutboundRulePropertiesFormat.EnableTCPReset = to.BoolPtr(true)
+	(*agentLoadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules)[0].OutboundRulePropertiesFormat.FrontendIPConfigurations = &[]network.SubResource{
+		{
+			ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+		},
+		{
+			ID: to.StringPtr("[variables('agentLbIPConfigID2')]"),
+		},
+		{
+			ID: to.StringPtr("[variables('agentLbIPConfigID3')]"),
+		},
+	}
 	masterVM.VirtualMachine.VirtualMachineProperties.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
 	agentVMWithAgentLb.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.OsProfile.CustomData = to.StringPtr(expectedCustomDataStr)
 	expected = []interface{}{
 		agentLoadBalancer,
 		agentPublicIPAddress,
+		agentPublicIPAddress2,
+		agentPublicIPAddress3,
 		agentVMWithAgentLb,
 		masterAvSet,
 		virtualNetwork,
