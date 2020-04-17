@@ -173,6 +173,32 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			},
 			expectedError: "loadBalancerSku is only available in Kubernetes version 1.11.0 or greater; unable to validate for Kubernetes version 1.6.9",
 		},
+		"should error when KubernetesConfig has Basic loadBalancerSku with loadBalancerOutboundIPs config": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: "1.18.1",
+					KubernetesConfig: &KubernetesConfig{
+						LoadBalancerSku:             BasicLoadBalancerSku,
+						ExcludeMasterFromStandardLB: to.BoolPtr(true),
+						LoadBalancerOutboundIPs:     to.IntPtr(3),
+					},
+				},
+			},
+			expectedError: "kubernetesConfig.loadBalancerOutboundIPs configuration only supported for Standard loadBalancerSku=Standard",
+		},
+		"should error when too many loadBalancerOutboundIPs are configured": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType:    "Kubernetes",
+					OrchestratorVersion: "1.18.1",
+					KubernetesConfig: &KubernetesConfig{
+						LoadBalancerOutboundIPs: to.IntPtr(17),
+					},
+				},
+			},
+			expectedError: fmt.Sprintf("kubernetesConfig.loadBalancerOutboundIPs was set to %d, the maximum allowed is %d", 17, common.MaxLoadBalancerOutboundIPs),
+		},
 		"should error when KubernetesConfig has enablePodSecurity enabled with invalid settings": {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{

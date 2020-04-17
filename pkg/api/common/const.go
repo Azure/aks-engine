@@ -41,6 +41,8 @@ const (
 	DefaultInternalLbStaticIPOffset = 10
 	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
 	DefaultEnableCSIProxyWindows = false
+	// MaxLoadBalancerOutboundIPs is the maximum number of outbound IPs in a Standard LoadBalancer frontend configuration
+	MaxLoadBalancerOutboundIPs = 16
 )
 
 // Availability profiles

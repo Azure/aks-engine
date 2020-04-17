@@ -315,6 +315,12 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 					}
 				}
 
+				if o.KubernetesConfig.LoadBalancerSku == BasicLoadBalancerSku {
+					if o.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+						return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs configuration only supported for Standard loadBalancerSku=Standard")
+					}
+				}
+
 				if o.KubernetesConfig.DockerEngineVersion != "" {
 					log.Warnf("docker-engine is deprecated in favor of moby, but you passed in a dockerEngineVersion configuration. This will be ignored.")
 				}
@@ -322,6 +328,13 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				if o.KubernetesConfig.MaximumLoadBalancerRuleCount < 0 {
 					return errors.New("maximumLoadBalancerRuleCount shouldn't be less than 0")
 				}
+
+				if o.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+					if to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs) > common.MaxLoadBalancerOutboundIPs {
+						return errors.Errorf("kubernetesConfig.loadBalancerOutboundIPs was set to %d, the maximum allowed is %d", to.Int(o.KubernetesConfig.LoadBalancerOutboundIPs), common.MaxLoadBalancerOutboundIPs)
+					}
+				}
+
 				// https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-rules-overview
 				if o.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku && o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != 0 && (o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes < 4 || o.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes > 120) {
 					return errors.New("outboundRuleIdleTimeoutInMinutes shouldn't be less than 4 or greater than 120")
