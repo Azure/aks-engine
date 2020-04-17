@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"regexp"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
@@ -332,11 +334,20 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	return f.SaveFile(dir, file, b)
 }
 
+// isVMSSNameInAgentPoolsArray is a helper func to filter out any VMSS in the cluster resource group
+// that are not participating in the aks-engine-created Kubernetes cluster
 func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		if pool.AvailabilityProfile == api.VirtualMachineScaleSets {
-			if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
-				return true
+			if pool.OSType == api.Windows {
+				re := regexp.MustCompile(`^[0-9]{4}k8s[0]+`)
+				if re.FindString(vmss) != "" {
+					return true
+				}
+			} else {
+				if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
+					return true
+				}
 			}
 		}
 	}
