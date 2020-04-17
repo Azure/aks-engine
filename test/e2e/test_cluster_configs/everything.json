@@ -111,7 +111,7 @@
 					"vmSize": "Standard_D16_v3",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
-					"distro": "ubuntu1804"
+					"distro": "ubuntu-1804"
 				},
 				{
 					"name": "poolwin",
