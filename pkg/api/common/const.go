@@ -182,8 +182,6 @@ const (
 	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
 	CloudNodeManagerAddonName = "cloud-node-manager"
-	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DNSAutoscalerAddonName = "dns-autoscaler"
 	// CalicoAddonName is the name of calico daemonset addon
 	CalicoAddonName = "calico-daemonset"
 	// CalicoTyphaComponentName is the name of calico-typha component
@@ -238,6 +236,8 @@ const (
 	PauseComponentName = "pause"
 	// CoreDNSAddonName is the name of the coredns addon
 	CoreDNSAddonName = "coredns"
+	// CoreDNSAutoscalerName is the name of the coredns-autoscaler container in the coredns addon
+	CoreDNSAutoscalerName = "coredns-autoscaler"
 	// KubeProxyAddonName is the name of the kube-proxy config addon
 	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon

@@ -345,20 +345,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	defaultDNSAutoScalerAddonsConfig := KubernetesAddon{
-		Name: common.DNSAutoscalerAddonName,
-		// TODO enable this when it has been smoke tested
-		Enabled: to.BoolPtr(DefaultDNSAutoscalerAddonEnabled),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.DNSAutoscalerAddonName,
-				Image:          kubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
-				CPURequests:    "20m",
-				MemoryRequests: "100Mi",
-			},
-		},
-	}
-
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.CalicoAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
@@ -669,13 +655,20 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.CoreDNSAddonName,
 		Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 		Config: map[string]string{
-			"domain":    o.KubernetesConfig.KubeletConfig["--cluster-domain"],
-			"clusterIP": o.KubernetesConfig.DNSServiceIP,
+			"domain":            o.KubernetesConfig.KubeletConfig["--cluster-domain"],
+			"clusterIP":         o.KubernetesConfig.DNSServiceIP,
+			"cores-per-replica": "512",
+			"nodes-per-replica": "32",
+			"min-replicas":      "1",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CoreDNSAddonName,
 				Image: kubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+			},
+			{
+				Name:  common.CoreDNSAutoscalerName,
+				Image: k8sComponents[common.CoreDNSAutoscalerName],
 			},
 		},
 	}
@@ -834,7 +827,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		defaultAzureNetworkPolicyAddonsConfig,
 		defaultCloudNodeManagerAddonsConfig,
 		defaultIPMasqAgentAddonsConfig,
-		defaultDNSAutoScalerAddonsConfig,
 		defaultsCalicoDaemonSetAddonsConfig,
 		defaultsCiliumAddonsConfig,
 		defaultsAADPodIdentityAddonsConfig,

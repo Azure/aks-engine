@@ -1674,47 +1674,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.16.0"),
 		},
 		{
-			name: "dns-autoscaler addon enabled",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.DNSAutoscalerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.DNSAutoscalerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DNSAutoscalerAddonName,
-							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
-							CPURequests:    "20m",
-							MemoryRequests: "100Mi",
-						},
-					},
-				},
-			}, "1.15.4"),
-		},
-		{
 			name: "calico addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -2082,13 +2041,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIP,
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "1",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -3444,6 +3410,59 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
+			name: "coredns w/ user configuration",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.1",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"min-replicas": "3",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIP,
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "3",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.18.1"][common.CoreDNSAutoscalerName],
+						},
+					},
+				},
+			}, "1.18.1"),
+		},
+		{
 			name: "kube-proxy w/ user configuration",
 			cs: &ContainerService{
 				Properties: &Properties{
@@ -3782,14 +3801,21 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 					Config: map[string]string{
-						"domain":           "cluster.local",
-						"clusterIP":        DefaultKubernetesDNSServiceIPv6,
-						"use-host-network": "true",
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIPv6,
+						"use-host-network":  "true",
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "1",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
 							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -4118,7 +4144,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.IPMASQAgentAddonName,
 				common.AzureCNINetworkMonitorAddonName,
 				common.AzureNetworkPolicyAddonName,
-				common.DNSAutoscalerAddonName,
 				common.CalicoAddonName,
 				common.AADPodIdentityAddonName,
 				common.AzurePolicyAddonName,
@@ -4676,13 +4701,20 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Name:    common.CoreDNSAddonName,
 			Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 			Config: map[string]string{
-				"domain":    "cluster.local",
-				"clusterIP": DefaultKubernetesDNSServiceIP,
+				"domain":            "cluster.local",
+				"clusterIP":         DefaultKubernetesDNSServiceIP,
+				"cores-per-replica": "512",
+				"nodes-per-replica": "32",
+				"min-replicas":      "1",
 			},
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.CoreDNSAddonName,
 					Image: imageBase + k8sComponentsByVersionMap[version][common.CoreDNSAddonName],
+				},
+				{
+					Name:  common.CoreDNSAutoscalerName,
+					Image: k8sComponentsByVersionMap[version][common.CoreDNSAutoscalerName],
 				},
 			},
 		},

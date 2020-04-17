@@ -1963,7 +1963,25 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to autoscale", func() {
+			var numCoreDNSPods int
+			var testCoreDNSScaleOut bool
 			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
+				numNodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
+					nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
+					minReplicas, _ := strconv.Atoi(addon.Config["min-replicas"])
+					if nodesPerReplica >= (len(numNodes) * minReplicas) {
+						testCoreDNSScaleOut = true
+						By("Getting the number of coredns pods prior to scaling out")
+						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						pods, err := d.PodsRunning()
+						Expect(err).NotTo(HaveOccurred())
+						numCoreDNSPods = len(pods)
+						log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
+					}
+				}
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
@@ -2039,6 +2057,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring at least one more node was added by cluster-autoscaler")
 					ready := node.WaitOnReadyMin(eng.NodeCount()+1, 10*time.Second, cfg.Timeout)
 					Expect(ready).To(BeTrue())
+					if testCoreDNSScaleOut {
+						By("Ensuring at least one more coredns pod was added by coredns-autoscaler")
+						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						_, err = d.WaitForReplicas(numCoreDNSPods+1, -1, 5*time.Second, cfg.Timeout)
+						if err != nil {
+							pod.PrintPodsLogs("coredns-autoscaler", "kube-system", 5*time.Second, 1*time.Minute)
+						}
+						Expect(err).NotTo(HaveOccurred())
+						pods, err := d.PodsRunning()
+						log.Printf("%d coredns pods after scaling out\n", len(pods))
+						Expect(err).NotTo(HaveOccurred())
+						Expect(len(pods) > numCoreDNSPods).To(BeTrue())
+					}
 				}
 
 				By("Stopping load")

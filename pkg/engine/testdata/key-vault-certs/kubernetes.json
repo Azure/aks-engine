@@ -244,18 +244,6 @@
               "non-masq-cni-cidr": "168.63.129.16/32",
               "non-masquerade-cidr": "10.0.0.0/8"
             }
-          },
-          {
-            "name": "dns-autoscaler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "dns-autoscaler",
-                "image": "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-                "cpuRequests": "20m",
-                "memoryRequests": "10Mi"
-              }
-            ]
           }
         ],
         "kubeletConfig": {

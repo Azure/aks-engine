@@ -229,8 +229,6 @@ const (
 	ipMasqAgentAddonDestinationFilename            string = "ip-masq-agent.yaml"
 	azureCNINetworkMonitorAddonSourceFilename      string = "azure-cni-networkmonitor.yaml"
 	azureCNINetworkMonitorAddonDestinationFilename string = "azure-cni-networkmonitor.yaml"
-	dnsAutoscalerAddonSourceFilename               string = "dns-autoscaler.yaml"
-	dnsAutoscalerAddonDestinationFilename          string = "dns-autoscaler.yaml"
 	calicoAddonSourceFilename                      string = "kubernetesmasteraddons-calico-daemonset.yaml"
 	calicoAddonDestinationFilename                 string = "calico-daemonset.yaml"
 	azureNetworkPolicyAddonSourceFilename          string = "kubernetesmasteraddons-azure-npm-daemonset.yaml"
