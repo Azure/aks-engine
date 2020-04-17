@@ -223,7 +223,7 @@ const (
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
-	DefaultEnableAutomaticUpdates = true
+	DefaultEnableAutomaticUpdates = false
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
 	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
