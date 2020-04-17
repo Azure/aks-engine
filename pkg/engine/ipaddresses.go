@@ -8,24 +8,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-// CreatePublicIPAddress returns public ipv4 address resource for masters or agents
-// When it's for master, this public ip address is created and added to the loadbalancer's frontendIPConfigurations
-// and it's created with the fqdn as name.
-// When it's for agent, this public ip address is created and added to the loadbalancer's frontendIPConfigurations.
-func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
-	var dnsSettings *network.PublicIPAddressDNSSettings
-	name := "agentPublicIPAddressName"
-
-	if isForMaster {
-		name = "masterPublicIPAddressName"
-	}
-
-	if includeDNS {
-		dnsSettings = &network.PublicIPAddressDNSSettings{
-			DomainNameLabel: to.StringPtr("[variables('masterFqdnPrefix')]"),
-		}
-	}
-
+// CreatePublicIPAddressForNodePools returns public ipv4 address resource for node pool Load Balancer
+func CreatePublicIPAddressForNodePools(name string) PublicIPAddressARM {
 	return PublicIPAddressARM{
 		ARMResource: ARMResource{
 			APIVersion: "[variables('apiVersionNetwork')]",
@@ -34,7 +18,6 @@ func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
 			Location: to.StringPtr("[variables('location')]"),
 			Name:     to.StringPtr("[variables('" + name + "')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
-				DNSSettings:              dnsSettings,
 				PublicIPAllocationMethod: network.Static,
 			},
 			Sku: &network.PublicIPAddressSku{
@@ -45,17 +28,10 @@ func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
 	}
 }
 
-// CreatePublicIPAddress2 returns public ipv4 address resource for masters or agents
-// When it's for master, this public ip address is created and added to the loadbalancer's frontendIPConfigurations
-// and it's created with the fqdn as name.
-// When it's for agent, this public ip address is created and added to the loadbalancer's frontendIPConfigurations.
-func CreatePublicIPAddress2(isForMaster, includeDNS bool) PublicIPAddressARM {
+// CreatePublicIPAddressForMaster returns public ipv4 address resource for master Load Balancer
+// Includes optional DNS configuration for public clusters
+func CreatePublicIPAddressForMaster(includeDNS bool) PublicIPAddressARM {
 	var dnsSettings *network.PublicIPAddressDNSSettings
-	name := "agentPublicIPAddressName2"
-
-	if isForMaster {
-		name = "masterPublicIPAddressName"
-	}
 
 	if includeDNS {
 		dnsSettings = &network.PublicIPAddressDNSSettings{
@@ -69,7 +45,7 @@ func CreatePublicIPAddress2(isForMaster, includeDNS bool) PublicIPAddressARM {
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('" + name + "')]"),
+			Name:     to.StringPtr("[variables('masterPublicIPAddressName')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 				DNSSettings:              dnsSettings,
 				PublicIPAllocationMethod: network.Static,

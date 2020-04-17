@@ -387,15 +387,32 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	} else {
 		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
-			masterVars["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
-			masterVars["agentPublicIPAddressName2"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound2')]"
 			masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
-			masterVars["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
-			masterVars["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
-			masterVars["agentLbIPConfigID2"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName2'))]"
-			masterVars["agentLbIPConfigName2"] = "[concat(parameters('orchestratorName'), '-agent-outbound2')]"
 			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+			numIps := 1
+			ipAddressNameVarPrefix := "agentPublicIPAddressName"
+			outboundIPNamePrefix := "agent-ip-outbound"
+			outboundConfigNamePrefix := "agent-outbound"
+			agentLbIPConfigIDVarPrefix := "agentLbIPConfigID"
+			agentLbIPConfigNameVarPrefix := "agentLbIPConfigName"
+			for i := 0; i < numIps; i++ {
+				ipAddressNameVar := ipAddressNameVarPrefix
+				outboundIPName := outboundIPNamePrefix
+				agentLbIPConfigIDVar := agentLbIPConfigIDVarPrefix
+				agentLbIPConfigNameVar := agentLbIPConfigNameVarPrefix
+				outboundConfigName := outboundConfigNamePrefix
+				if i > 0 {
+					ipAddressNameVar += strconv.Itoa(i)
+					outboundIPName += strconv.Itoa(i)
+					outboundConfigName += strconv.Itoa(i)
+					agentLbIPConfigIDVar += strconv.Itoa(i)
+					agentLbIPConfigNameVar += strconv.Itoa(i)
+				}
+				masterVars[ipAddressNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundIPName)
+				masterVars[agentLbIPConfigIDVar] = fmt.Sprintf("[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('%s'))]", agentLbIPConfigNameVar)
+				masterVars[agentLbIPConfigNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundConfigName)
+			}
 		}
 		// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
 		// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access

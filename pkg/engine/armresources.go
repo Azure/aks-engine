@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -61,12 +62,21 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 		!isHostedMaster &&
 		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
-		isForMaster := false
-		includeDNS := false
-		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
-		publicIPAddress2 := CreatePublicIPAddress2(isForMaster, includeDNS)
+		var publicIPAddresses []PublicIPAddressARM
+		numIps := 1
+		ipAddressNamePrefix := "agentPublicIPAddressName"
+		for i := 0; i < numIps; i++ {
+			name := ipAddressNamePrefix
+			if i > 0 {
+				name += strconv.Itoa(i)
+			}
+			publicIPAddresses = append(publicIPAddresses, CreatePublicIPAddressForNodePools(name))
+		}
 		loadBalancer := CreateStandardLoadBalancerForNodePools(cs.Properties, true)
-		armResources = append(armResources, publicIPAddress, publicIPAddress2, loadBalancer)
+		for _, publicIPAddress := range publicIPAddresses {
+			armResources = append(armResources, publicIPAddress)
+		}
+		armResources = append(armResources, loadBalancer)
 	}
 
 	profiles := cs.Properties.AgentPoolProfiles
