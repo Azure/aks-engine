@@ -85,7 +85,6 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DNSSidecarComponentName:        "oss/kubernetes/k8s-dns-sidecar:1.14.10",
 		common.ReschedulerAddonName:           "oss/kubernetes/rescheduler:v0.4.0",
 		common.IPMASQAgentAddonName:           "oss/kubernetes/ip-masq-agent:v2.5.0",
-		common.DNSAutoscalerAddonName:         "oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.1.1",
 		common.KubeProxyAddonName:             "oss/kubernetes/kube-proxy",
 		common.ControllerManagerComponentName: "oss/kubernetes/kube-controller-manager",
 		common.APIServerComponentName:         "oss/kubernetes/kube-apiserver",
