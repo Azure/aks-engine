@@ -212,7 +212,7 @@ const (
 	CSILivenessProbeWindowsContainerName = "livenessprobe-windows"
 	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSISnapshotterContainerName = "csi-snapshotter"
-	// CSISnapshotControllerContainerName is the name of the csi-snapshot-controller container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSISnapshotControllerContainerName is the name of the csi-snapshot-controller container
 	CSISnapshotControllerContainerName = "csi-snapshot-controller"
 	// CSIResizerContainerName is the name of the csi-resizer container in the azuredisk-csi-driver addon
 	CSIResizerContainerName = "csi-resizer"

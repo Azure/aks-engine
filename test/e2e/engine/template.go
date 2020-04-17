@@ -359,11 +359,6 @@ func (e *Engine) HasWindowsAgents() bool {
 	return e.ExpandedDefinition.Properties.HasWindows()
 }
 
-// HasLinuxAgents will return true is there is at least 1 linux agent pool
-func (e *Engine) HasLinuxAgents() bool {
-	return e.ExpandedDefinition.Properties.AnyAgentIsLinux()
-}
-
 // WindowsTestImages holds the Windows container image names used in this test pass
 type WindowsTestImages struct {
 	IIS        string

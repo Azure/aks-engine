@@ -5130,3 +5130,140 @@ func TestKubeProxyImageSuffix(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCSISidecarComponent(t *testing.T) {
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
+	k8sComponents := k8sComponentsByVersionMap["1.18.0"]
+	cases := []struct {
+		name                        string
+		csiDriverName               string
+		csiSidecarName              string
+		expectedCSISidecarComponent string
+	}{
+		{
+			name:                        "unknown csi driver name",
+			csiDriverName:               "unknown",
+			csiSidecarName:              "unknown",
+			expectedCSISidecarComponent: "",
+		},
+		{
+			name:                        "unknown csi sidecar name",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              "unknown",
+			expectedCSISidecarComponent: "",
+		},
+		{
+			name:                        "get csi-provisioner image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIProvisionerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIProvisionerContainerName],
+		},
+		{
+			name:                        "get csi-attacher image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIAttacherContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIAttacherContainerName],
+		},
+		{
+			name:                        "get livenessprobe image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeContainerName],
+		},
+		{
+			name:                        "get livenessprobe-windows image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeWindowsContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar-windows image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarWindowsContainerName],
+		},
+		{
+			name:                        "get csi-resizer image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIResizerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIResizerContainerName],
+		},
+		{
+			name:                        "get csi-snapshotter image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotterContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSISnapshotterContainerName],
+		},
+		{
+			name:                        "get snapshot-controller image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotControllerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSISnapshotControllerContainerName],
+		},
+		{
+			name:                        "get csi-provisioner image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIProvisionerContainerName,
+			expectedCSISidecarComponent: csiSidecarComponentsOverrides[common.AzureFileCSIDriverAddonName][common.CSIProvisionerContainerName],
+		},
+		{
+			name:                        "get csi-attacher image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIAttacherContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIAttacherContainerName],
+		},
+		{
+			name:                        "get livenessprobe image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeContainerName],
+		},
+		{
+			name:                        "get livenessprobe-windows image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeWindowsContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar-windows image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarWindowsContainerName],
+		},
+		{
+			name:                        "get csi-resizer image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIResizerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIResizerContainerName],
+		},
+		{
+			name:                        "get csi-snapshotter image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotterContainerName,
+			expectedCSISidecarComponent: csiSidecarComponentsOverrides[common.AzureFileCSIDriverAddonName][common.CSISnapshotterContainerName],
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := getCSISidecarComponent(c.csiDriverName, c.csiSidecarName, k8sComponents)
+			if c.expectedCSISidecarComponent != actual {
+				t.Errorf("expected %s to be %s", c.expectedCSISidecarComponent, actual)
+			}
+		})
+	}
+}

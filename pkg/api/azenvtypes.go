@@ -100,7 +100,7 @@ var (
 		VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
 		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
-		CSIProxyDownloadURL:              "https://k8sreleases.blob.core.windows.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
+		CSIProxyDownloadURL:              "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 	}
 
 	//DefaultDCOSSpecConfig is the default DC/OS binary download URL.

@@ -650,7 +650,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if eng.HasWindowsAgents() {
 					coreComponents = append(coreComponents, "csi-azuredisk-node-windows")
 				}
-				if eng.HasLinuxAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+				if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 					coreComponents = append(coreComponents, "csi-snapshot-controller")
 				}
 			}
@@ -1239,7 +1239,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 					containers = append(containers, "csi-resizer")
 				}
-				if eng.HasLinuxAgents() {
+				if eng.AnyAgentIsLinux() {
 					switch addonName {
 					case common.AzureDiskCSIDriverAddonName:
 						if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
@@ -1272,7 +1272,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Validate CSI snapshot controller pod
 				switch addonName {
 				case common.AzureDiskCSIDriverAddonName:
-					if eng.HasLinuxAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+					if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
 						addonPod = "csi-snapshot-controller"
 						containers = []string{"csi-snapshot-controller"}
 						By(fmt.Sprintf("Ensuring that %s are running within %s pod", containers, addonPod))
