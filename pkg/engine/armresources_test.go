@@ -2016,8 +2016,65 @@ func TestGenerateARMResourcesWithVMSSAgentPoolAndSLB(t *testing.T) {
 		t.Errorf("unexpected error while comparing ARM resources: %s", diff)
 	}
 
+	// Test with > 1 LB outbound IP address
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs = to.IntPtr(3)
+	armResources = GenerateARMResources(&cs)
+	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesLinuxNodeCustomDataJSONObject(&cs, cs.Properties.AgentPoolProfiles[0]))
+	agentPublicIPAddress2 := PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentPublicIPAddressName2')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+	agentPublicIPAddress3 := PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('agentPublicIPAddressName3')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
+	}
+	expected = []interface{}{
+		agentLoadBalancer,
+		agentPublicIPAddress,
+		agentPublicIPAddress2,
+		agentPublicIPAddress3,
+		agentVMWithAgentLb,
+		masterAvSet,
+		virtualNetwork,
+		networkSecurityGroup,
+		publicIPAddress,
+		loadBalancer,
+		networkInterface,
+		masterVM,
+		masterVMExtension,
+		aksBillingExtension,
+	}
+
+	expectedMap = resourceSliceToMap(expected)
+	actualMap = resourceSliceToMap(armResources)
+
 	// Now test with a validate K8s version for EnableTCPReset
-	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.14.4"
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.18.1"
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs = nil
 	armResources = GenerateARMResources(&cs)
 	expectedCustomDataStr = getCustomDataFromJSON(tg.GetMasterCustomDataJSONObject(&cs))
 	(*agentLoadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules)[0].OutboundRulePropertiesFormat.EnableTCPReset = to.BoolPtr(true)

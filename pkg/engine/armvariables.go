@@ -391,18 +391,21 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			numIps := 1
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+				numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+			}
 			ipAddressNameVarPrefix := "agentPublicIPAddressName"
 			outboundIPNamePrefix := "agent-ip-outbound"
 			outboundConfigNamePrefix := "agent-outbound"
 			agentLbIPConfigIDVarPrefix := "agentLbIPConfigID"
 			agentLbIPConfigNameVarPrefix := "agentLbIPConfigName"
-			for i := 0; i < numIps; i++ {
+			for i := 1; i <= numIps; i++ {
 				ipAddressNameVar := ipAddressNameVarPrefix
 				outboundIPName := outboundIPNamePrefix
 				agentLbIPConfigIDVar := agentLbIPConfigIDVarPrefix
 				agentLbIPConfigNameVar := agentLbIPConfigNameVarPrefix
 				outboundConfigName := outboundConfigNamePrefix
-				if i > 0 {
+				if i > 1 {
 					ipAddressNameVar += strconv.Itoa(i)
 					outboundIPName += strconv.Itoa(i)
 					outboundConfigName += strconv.Itoa(i)

@@ -64,10 +64,13 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
 		var publicIPAddresses []PublicIPAddressARM
 		numIps := 1
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+			numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+		}
 		ipAddressNamePrefix := "agentPublicIPAddressName"
-		for i := 0; i < numIps; i++ {
+		for i := 1; i <= numIps; i++ {
 			name := ipAddressNamePrefix
-			if i > 0 {
+			if i > 1 {
 				name += strconv.Itoa(i)
 			}
 			publicIPAddresses = append(publicIPAddresses, CreatePublicIPAddressForNodePools(name))

@@ -264,11 +264,14 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 		},
 	}
 	numIps := 1
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+		numIps = *prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+	}
 	agentLbIPConfigIDPrefix := "agentLbIPConfigID"
 	frontendIPConfigurations := &[]network.SubResource{}
-	for i := 0; i < numIps; i++ {
+	for i := 1; i <= numIps; i++ {
 		name := agentLbIPConfigIDPrefix
-		if i > 0 {
+		if i > 1 {
 			name += strconv.Itoa(i)
 		}
 		*frontendIPConfigurations = append(*frontendIPConfigurations, network.SubResource{
@@ -307,13 +310,16 @@ func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) L
 	}
 
 	numIps := 1
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+		numIps = *prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+	}
 	agentPublicIPAddressNamePrefix := "agentPublicIPAddressName"
 	agentLbIPConfigNamePrefix := "agentLbIPConfigName"
 	frontendIPConfigurations := &[]network.FrontendIPConfiguration{}
-	for i := 0; i < numIps; i++ {
+	for i := 1; i <= numIps; i++ {
 		agentPublicIPAddressName := agentPublicIPAddressNamePrefix
 		agentLbIPConfigName := agentLbIPConfigNamePrefix
-		if i > 0 {
+		if i > 1 {
 			agentPublicIPAddressName += strconv.Itoa(i)
 			agentLbIPConfigName += strconv.Itoa(i)
 		}
