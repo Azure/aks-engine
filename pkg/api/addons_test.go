@@ -1986,7 +1986,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(false),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.DashboardAddonName,
@@ -4638,7 +4638,7 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		},
 		{
 			Name:    common.DashboardAddonName,
-			Enabled: to.BoolPtr(true),
+			Enabled: to.BoolPtr(false),
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:           common.DashboardAddonName,

@@ -155,7 +155,7 @@ const (
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
 	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
-	DefaultDashboardAddonEnabled = true
+	DefaultDashboardAddonEnabled = false
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
