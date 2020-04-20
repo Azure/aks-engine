@@ -10,7 +10,6 @@ run:
 linters:
   disable-all: true
   enable:
-    - gofmt
     - goimports
     - gosimple
     - golint
