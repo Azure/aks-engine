@@ -1717,7 +1717,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:  common.CalicoClusterAutoscalerComponentName,
-							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},
@@ -1795,7 +1795,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:  common.CalicoClusterAutoscalerComponentName,
-							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},

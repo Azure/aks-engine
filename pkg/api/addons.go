@@ -367,7 +367,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			},
 			{
 				Name:  common.CalicoClusterAutoscalerComponentName,
-				Image: kubernetesImageBase + k8sComponents[common.CalicoClusterAutoscalerComponentName],
+				Image: k8sComponents[common.CalicoClusterAutoscalerComponentName],
 			},
 		},
 	}
