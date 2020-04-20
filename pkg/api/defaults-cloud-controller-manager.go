@@ -5,27 +5,18 @@ package api
 
 import (
 	"strconv"
-	"strings"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 func (cs *ContainerService) setCloudControllerManagerConfig() {
 	o := cs.Properties.OrchestratorProfile
-	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
-	clusterCidr := o.KubernetesConfig.ClusterSubnet
-	if isAzureCNIDualStack {
-		clusterSubnets := strings.Split(clusterCidr, ",")
-		if len(clusterSubnets) > 1 {
-			clusterCidr = clusterSubnets[1]
-		}
-	}
 	staticCloudControllerManagerConfig := map[string]string{
-		"--allocate-node-cidrs":         strconv.FormatBool(!o.IsAzureCNI() || isAzureCNIDualStack),
-		"--configure-cloud-routes":      strconv.FormatBool(cs.Properties.RequireRouteTable()),
+		"--allocate-node-cidrs":         strconv.FormatBool(!o.IsAzureCNI()),
+		"--configure-cloud-routes":      strconv.FormatBool(o.RequireRouteTable()),
 		"--cloud-provider":              "azure",
 		"--cloud-config":                "/etc/kubernetes/azure.json",
-		"--cluster-cidr":                clusterCidr,
+		"--cluster-cidr":                o.KubernetesConfig.ClusterSubnet,
 		"--kubeconfig":                  "/var/lib/kubelet/kubeconfig",
 		"--leader-elect":                "true",
 		"--route-reconciliation-period": "10s",

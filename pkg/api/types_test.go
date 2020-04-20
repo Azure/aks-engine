@@ -3227,8 +3227,8 @@ func TestRequireRouteTable(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if c.p.RequireRouteTable() != c.expected {
-			t.Fatalf("expected RequireRouteTable() to return %t but instead got %t", c.expected, c.p.RequireRouteTable())
+		if c.p.OrchestratorProfile.RequireRouteTable() != c.expected {
+			t.Fatalf("expected RequireRouteTable() to return %t but instead got %t", c.expected, c.p.OrchestratorProfile.RequireRouteTable())
 		}
 	}
 }

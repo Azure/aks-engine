@@ -217,9 +217,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 				// When Azure CNI is enabled, all masters, agents and pods share the same large subnet.
 				// Except when master is VMSS, then masters and agents have separate subnets within the same large subnet.
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesSubnet
-				if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
-					o.KubernetesConfig.ClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, cs.getDefaultKubernetesClusterSubnetIPv6()}, ",")
-				}
 			} else {
 				o.KubernetesConfig.ClusterSubnet = DefaultKubernetesClusterSubnet
 				// ipv6 only cluster
@@ -233,7 +230,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			}
 		} else {
 			// ensure 2 subnets exists if ipv6 dual stack feature is enabled
-			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") && !o.IsAzureCNI() {
 				clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
 				if len(clusterSubnets) == 1 {
 					// if error exists, then it'll be caught by validate
@@ -244,15 +241,11 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 							clusterSubnets = append(clusterSubnets, cs.getDefaultKubernetesClusterSubnetIPv6())
 						} else {
 							// first cidr has to be ipv4
-							if o.IsAzureCNI() {
-								clusterSubnets = append([]string{DefaultKubernetesSubnet}, clusterSubnets...)
-							} else {
-								clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
-							}
+							clusterSubnets = append([]string{DefaultKubernetesClusterSubnet}, clusterSubnets...)
 						}
 						// only set the cluster subnet if no error has been encountered
+						o.KubernetesConfig.ClusterSubnet = strings.Join(clusterSubnets, ",")
 					}
-					o.KubernetesConfig.ClusterSubnet = strings.Join(clusterSubnets, ",")
 				}
 			}
 		}
@@ -431,12 +424,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			if !cs.Properties.MasterProfile.IsCustomVNET() {
 				if cs.Properties.OrchestratorProfile.IsAzureCNI() {
 					// When VNET integration is enabled, all masters, agents and pods share the same large subnet.
-					cs.Properties.MasterProfile.Subnet = o.KubernetesConfig.ClusterSubnet
-					clusterSubnets := strings.Split(o.KubernetesConfig.ClusterSubnet, ",")
-					if cs.Properties.IsAzureCNIDualStack() && len(clusterSubnets) > 1 {
-						cs.Properties.MasterProfile.Subnet = clusterSubnets[0]
-					}
-					cs.Properties.MasterProfile.SubnetIPv6 = DefaultKubernetesMasterSubnetIPv6
+					cs.Properties.MasterProfile.Subnet = cs.Properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet
 					// FirstConsecutiveStaticIP is not reset if it is upgrade and some value already exists
 					if !isUpgrade || len(cs.Properties.MasterProfile.FirstConsecutiveStaticIP) == 0 {
 						if cs.Properties.MasterProfile.IsVirtualMachineScaleSets() {
