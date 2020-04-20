@@ -1,5 +1,5 @@
 run:
-  deadline: 10m
+  deadline: 5m
   skip-dirs:
     - test/i18n
     - pkg/test
