@@ -164,7 +164,7 @@ type WindowsProfile struct {
 	AdminPassword          string            `json:"adminPassword,omitempty"`
 	CSIProxyURL            string            `json:"csiProxyURL,omitempty"`
 	EnableCSIProxy         *bool             `json:"enableCSIProxy,omitempty"`
-	ImageRef               *ImageReference   `json:"imageReference,omiteempty"`
+	ImageRef               *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion           string            `json:"imageVersion,omitempty"`
 	WindowsImageSourceURL  string            `json:"WindowsImageSourceUrl"`
 	WindowsPublisher       string            `json:"WindowsPublisher"`
@@ -433,7 +433,7 @@ type MasterProfile struct {
 	AgentSubnet               string            `json:"agentSubnet,omitempty"`
 	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
-	PlatformFaultDomainCount  *int              `json:"platformFaultDomainCount,omitEmpty"`
+	PlatformFaultDomainCount  *int              `json:"platformFaultDomainCount,omitempty"`
 	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
@@ -521,7 +521,7 @@ type AgentPoolProfile struct {
 	PreProvisionExtension             *Extension        `json:"preProvisionExtension"`
 	Extensions                        []Extension       `json:"extensions"`
 	SinglePlacementGroup              *bool             `json:"singlePlacementGroup,omitempty"`
-	PlatformFaultDomainCount          *int              `json:"platformFaultDomainCount,omitEmpty"`
+	PlatformFaultDomainCount          *int              `json:"platformFaultDomainCount,omitempty"`
 	PlatformUpdateDomainCount         *int              `json:"platformUpdateDomainCount"`
 	AvailabilityZones                 []string          `json:"availabilityZones,omitempty"`
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
