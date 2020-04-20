@@ -305,6 +305,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
 		},
+		"GetServiceCidr": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+		},
+		"GetKubeProxyMode": func() string {
+			return string(cs.Properties.OrchestratorProfile.KubernetesConfig.ProxyMode)
+		},
 		"HasPrivateRegistry": func() bool {
 			if cs.Properties.OrchestratorProfile.DcosConfig != nil {
 				return cs.Properties.OrchestratorProfile.DcosConfig.HasPrivateRegistry()

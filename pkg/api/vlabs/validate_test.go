@@ -533,6 +533,15 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 		}
 
 		c = KubernetesConfig{
+			ClusterSubnet: "192.168.0.1/24",
+			NetworkPlugin: "azure",
+		}
+
+		if err := c.Validate(k8sVersion, false, false, false); err == nil {
+			t.Error("should error when ClusterSubnet has a mask of 24 bits or higher")
+		}
+
+		c = KubernetesConfig{
 			ProxyMode: KubeProxyMode("invalid"),
 		}
 
@@ -589,15 +598,6 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		if err := c.Validate(k8sVersion, false, false, false); err == nil {
 			t.Error("should error when more than 1 cluster subnet provided with ipv6dualstack feature disabled")
-		}
-
-		// validate config when ipv6 dual stack feature is enabled
-		c = KubernetesConfig{
-			NetworkPlugin: "azure",
-		}
-
-		if err := c.Validate(k8sVersion, false, true, false); err == nil {
-			t.Error("should error when network plugin is not kubenet")
 		}
 
 		c = KubernetesConfig{
@@ -661,6 +661,30 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 
 		if err := c.Validate(k8sVersion, false, true, false); err != nil {
 			t.Error("shouldn't have errored with ipv6 dual stack feature enabled")
+		}
+
+		// validate config with azure cni dual stack and network policy enabled.
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+			ClusterSubnet: "10.240.0.0/12,fe80:20d::/112",
+			NetworkPolicy: "azure",
+		}
+
+		if err := c.Validate(k8sVersion, false, true, false); err == nil {
+			t.Errorf("should error when network policy defined for azure cni dual stack: %v", err)
+		}
+
+		//validate azure cni dual stack enabled scenario
+		c = KubernetesConfig{
+			NetworkPlugin: "azure",
+			ClusterSubnet: "10.240.0.0/16,ace:cab:deca::/8",
+			ProxyMode:     "ipvs",
+			ServiceCidr:   "10.0.0.0/16,fe80:20d::/112",
+			DNSServiceIP:  "10.0.0.10",
+		}
+
+		if err := c.Validate(k8sVersion, false, true, false); err != nil {
+			t.Errorf("shouldn't have errored with azure cni ipv6 dual stack feature enabled: %v", err)
 		}
 	}
 
@@ -3521,11 +3545,11 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid MasterProfile FirstConsecutiveStaticIP when master is VMAS",
 			masterProfile: &MasterProfile{
+				FirstConsecutiveStaticIP: "10.0.0.invalid",
 				VnetSubnetID:             validVNetSubnetID,
 				Count:                    1,
 				DNSPrefix:                "foo",
 				VMSize:                   "Standard_DS2_v2",
-				FirstConsecutiveStaticIP: "10.0.0.invalid",
 			},
 			agentPoolProfiles: []*AgentPoolProfile{
 				{
@@ -3582,11 +3606,11 @@ func TestProperties_ValidateVNET(t *testing.T) {
 		{
 			name: "Invalid vnetcidr",
 			masterProfile: &MasterProfile{
+				FirstConsecutiveStaticIP: "10.0.0.1",
 				VnetSubnetID:             validVNetSubnetID,
 				Count:                    1,
 				DNSPrefix:                "foo",
 				VMSize:                   "Standard_DS2_v2",
-				FirstConsecutiveStaticIP: "10.0.0.1",
 				VnetCidr:                 "10.1.0.0/invalid",
 			},
 			agentPoolProfiles: []*AgentPoolProfile{
