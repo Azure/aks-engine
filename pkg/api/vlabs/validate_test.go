@@ -3679,7 +3679,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+			case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateAgentPoolProfiles(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}
@@ -3702,7 +3702,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
-			case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
+			case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804, ACC1604:
 				if err := cs.Properties.validateMasterProfile(false); err != nil {
 					t.Errorf("AuditDEnabled should work with distro %s, got error %s", distro, err.Error())
 				}
