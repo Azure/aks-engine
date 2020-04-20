@@ -135,10 +135,10 @@ var (
 
 	//Ubuntu1804Gen2OSImageConfig is Gen2 flavor the Ubunutu 18.04-LTS Linux distribution.
 	Ubuntu1804Gen2OSImageConfig = AzureOSImageConfig{
-		ImageOffer:     "UbuntuServer",
-		ImageSku:       "18_04-lts-gen2",
-		ImagePublisher: "Canonical",
-		ImageVersion:   "latest",
+		ImageOffer:     "aks",
+		ImageSku:       "aks-ubuntu-1804-gen2-202004",
+		ImagePublisher: "microsoft-aks",
+		ImageVersion:   "2020.04.16",
 	}
 
 	//RHELOSImageConfig is the RHEL Linux distribution.
