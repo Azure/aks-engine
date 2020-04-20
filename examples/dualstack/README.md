@@ -96,7 +96,7 @@ nginx-ipv6    LoadBalancer   fd00::6283       2603:1030:805:3::3   80:31140/TCP 
 
 ## Limitations
 
-- Dual stack clusters are supported only with kubenet.
+- Dual stack clusters are supported only with kubenet and azurecni.
 - Dual stack clusters are supported only with Linux.
 - Dual stack clusters are currently only supported with ipvs kube-proxy mode.
 - Dual stack clusters are currently only supported with Availability sets.
