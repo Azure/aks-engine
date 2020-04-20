@@ -1,1 +1,4 @@
 * -crlf
+
+# Fix misidentification of Go templates as Raku or Perl
+*.t linguist-language=Go
