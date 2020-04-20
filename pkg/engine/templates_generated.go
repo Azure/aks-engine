@@ -37264,8 +37264,8 @@ installContainerd() {
       exit 25
     fi
     removeContainerd
-    echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" >/tmp/microsoft-prod-testing.list
-    retrycmd 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit 25
+    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
     retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
