@@ -8,17 +8,30 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-// CreatePublicIPAddress returns public ipv4 address resource for masters or agents
-// When it's for master, this public ip address is created and added to the loadbalancer's frontendIPConfigurations
-// and it's created with the fqdn as name.
-// When it's for agent, this public ip address is created and added to the loadbalancer's frontendIPConfigurations.
-func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
-	var dnsSettings *network.PublicIPAddressDNSSettings
-	name := "agentPublicIPAddressName"
-
-	if isForMaster {
-		name = "masterPublicIPAddressName"
+// CreatePublicIPAddressForNodePools returns public ipv4 address resource for node pool Load Balancer
+func CreatePublicIPAddressForNodePools(name string) PublicIPAddressARM {
+	return PublicIPAddressARM{
+		ARMResource: ARMResource{
+			APIVersion: "[variables('apiVersionNetwork')]",
+		},
+		PublicIPAddress: network.PublicIPAddress{
+			Location: to.StringPtr("[variables('location')]"),
+			Name:     to.StringPtr("[variables('" + name + "')]"),
+			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
+				PublicIPAllocationMethod: network.Static,
+			},
+			Sku: &network.PublicIPAddressSku{
+				Name: "[variables('loadBalancerSku')]",
+			},
+			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
+		},
 	}
+}
+
+// CreatePublicIPAddressForMaster returns public ipv4 address resource for master Load Balancer
+// Includes optional DNS configuration for public clusters
+func CreatePublicIPAddressForMaster(includeDNS bool) PublicIPAddressARM {
+	var dnsSettings *network.PublicIPAddressDNSSettings
 
 	if includeDNS {
 		dnsSettings = &network.PublicIPAddressDNSSettings{
@@ -32,7 +45,7 @@ func CreatePublicIPAddress(isForMaster, includeDNS bool) PublicIPAddressARM {
 		},
 		PublicIPAddress: network.PublicIPAddress{
 			Location: to.StringPtr("[variables('location')]"),
-			Name:     to.StringPtr("[variables('" + name + "')]"),
+			Name:     to.StringPtr("[variables('masterPublicIPAddressName')]"),
 			PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 				DNSSettings:              dnsSettings,
 				PublicIPAllocationMethod: network.Static,

@@ -368,6 +368,7 @@ type KubernetesConfig struct {
 	CloudProviderDisableOutboundSNAT  *bool                 `json:"cloudProviderDisableOutboundSNAT,omitempty"`
 	LoadBalancerSku                   string                `json:"loadBalancerSku,omitempty"`
 	ExcludeMasterFromStandardLB       *bool                 `json:"excludeMasterFromStandardLB,omitempty"`
+	LoadBalancerOutboundIPs           *int                  `json:"loadBalancerOutboundIPs,omitempty"`
 	AzureCNIVersion                   string                `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                  string                `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows                string                `json:"azureCNIURLWindows,omitempty"`

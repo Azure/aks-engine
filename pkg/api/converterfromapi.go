@@ -304,6 +304,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.UseInstanceMetadata = apiCfg.UseInstanceMetadata
 	vlabsCfg.LoadBalancerSku = apiCfg.LoadBalancerSku
 	vlabsCfg.ExcludeMasterFromStandardLB = apiCfg.ExcludeMasterFromStandardLB
+	vlabsCfg.LoadBalancerOutboundIPs = apiCfg.LoadBalancerOutboundIPs
 	vlabsCfg.EnableRbac = apiCfg.EnableRbac
 	vlabsCfg.EnableSecureKubelet = apiCfg.EnableSecureKubelet
 	vlabsCfg.EnableAggregatedAPIs = apiCfg.EnableAggregatedAPIs

@@ -5,6 +5,7 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
@@ -250,25 +251,35 @@ func createOutboundRules(prop *api.Properties) *[]network.OutboundRule {
 			},
 		}
 	}
-	return &[]network.OutboundRule{
-		{
-			Name: to.StringPtr("LBOutboundRule"),
-			OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
-				FrontendIPConfigurations: &[]network.SubResource{
-					{
-						ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
-					},
-				},
-				BackendAddressPool: &network.SubResource{
-					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
-				},
-				Protocol:               network.Protocol1All,
-				IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
-				EnableTCPReset:         to.BoolPtr(true),
-				AllocatedOutboundPorts: to.Int32Ptr(0),
+	outboundRule := network.OutboundRule{
+		Name: to.StringPtr("LBOutboundRule"),
+		OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+			BackendAddressPool: &network.SubResource{
+				ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
 			},
+			Protocol:               network.Protocol1All,
+			IdleTimeoutInMinutes:   to.Int32Ptr(prop.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+			EnableTCPReset:         to.BoolPtr(true),
+			AllocatedOutboundPorts: to.Int32Ptr(0),
 		},
 	}
+	numIps := 1
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+		numIps = *prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+	}
+	agentLbIPConfigIDPrefix := "agentLbIPConfigID"
+	frontendIPConfigurations := &[]network.SubResource{}
+	for i := 1; i <= numIps; i++ {
+		name := agentLbIPConfigIDPrefix
+		if i > 1 {
+			name += strconv.Itoa(i)
+		}
+		*frontendIPConfigurations = append(*frontendIPConfigurations, network.SubResource{
+			ID: to.StringPtr(fmt.Sprintf("[variables('%s')]", name)),
+		})
+	}
+	outboundRule.OutboundRulePropertiesFormat.FrontendIPConfigurations = frontendIPConfigurations
+	return &[]network.OutboundRule{outboundRule}
 }
 
 // CreateStandardLoadBalancerForNodePools returns an ARM resource for the Standard LB that has all nodes in its backend pool
@@ -289,16 +300,6 @@ func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) L
 						Name: to.StringPtr("[variables('agentLbBackendPoolName')]"),
 					},
 				},
-				FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
-					{
-						Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
-						FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
-							PublicIPAddress: &network.PublicIPAddress{
-								ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
-							},
-						},
-					},
-				},
 				OutboundRules: createOutboundRules(prop),
 			},
 			Sku: &network.LoadBalancerSku{
@@ -308,6 +309,30 @@ func CreateStandardLoadBalancerForNodePools(prop *api.Properties, isVMSS bool) L
 		},
 	}
 
+	numIps := 1
+	if prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+		numIps = *prop.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+	}
+	agentPublicIPAddressNamePrefix := "agentPublicIPAddressName"
+	agentLbIPConfigNamePrefix := "agentLbIPConfigName"
+	frontendIPConfigurations := &[]network.FrontendIPConfiguration{}
+	for i := 1; i <= numIps; i++ {
+		agentPublicIPAddressName := agentPublicIPAddressNamePrefix
+		agentLbIPConfigName := agentLbIPConfigNamePrefix
+		if i > 1 {
+			agentPublicIPAddressName += strconv.Itoa(i)
+			agentLbIPConfigName += strconv.Itoa(i)
+		}
+		*frontendIPConfigurations = append(*frontendIPConfigurations, network.FrontendIPConfiguration{
+			Name: to.StringPtr(fmt.Sprintf("[variables('%s')]", agentLbIPConfigName)),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr(fmt.Sprintf("[resourceId('Microsoft.Network/publicIpAddresses',variables('%s'))]", agentPublicIPAddressName)),
+				},
+			},
+		})
+	}
+	loadBalancer.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations = frontendIPConfigurations
 	return loadBalancer
 }
 
