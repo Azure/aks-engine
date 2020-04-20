@@ -19,7 +19,7 @@ const (
 	calicoCNIImageReference                           string = "cni:v3.8.0"
 	calicoNodeImageReference                          string = "node:v3.8.0"
 	calicoPod2DaemonImageReference                    string = "pod2daemon-flexvol:v3.8.0"
-	calicoClusterProportionalAutoscalerImageReference string = "cluster-proportional-autoscaler-amd64:1.1.2-r2"
+	calicoClusterProportionalAutoscalerImageReference string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.1.2-r2"
 	ciliumAgentImageReference                         string = "docker.io/cilium/cilium:v1.4"
 	ciliumCleanStateImageReference                    string = "docker.io/cilium/cilium-init:2018-10-16"
 	ciliumOperatorImageReference                      string = "docker.io/cilium/operator:v1.4"
