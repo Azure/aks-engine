@@ -308,6 +308,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: coredns-autoscaler
+    kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
 spec:
   selector:
@@ -318,6 +319,18 @@ spec:
       labels:
         k8s-app: coredns-autoscaler
     spec:
+      priorityClassName: system-cluster-critical
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: "Exists"
+        - operator: "Exists"
+          effect: NoExecute
+        - operator: "Exists"
+          effect: NoSchedule
+      nodeSelector:
+        beta.kubernetes.io/os: linux
       containers:
       - name: autoscaler
         image: {{ContainerImage "coredns-autoscaler"}}
