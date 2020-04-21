@@ -931,7 +931,7 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 
 func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) string {
 	if isUserAssignedIdentity {
-		return "' USER_ASSIGNED_IDENTITY_ID=',reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID')), '2018-11-30').clientId, ' '"
+		return "' USER_ASSIGNED_IDENTITY_ID=',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId, ' '"
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
 }
