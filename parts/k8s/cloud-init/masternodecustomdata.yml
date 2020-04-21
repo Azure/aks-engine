@@ -182,14 +182,7 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    {
-      "live-restore": true,
-      "log-driver": "json-file",
-      "log-opts":  {
-         "max-size": "50m",
-         "max-file": "5"
-      }
-    }
+{{IndentString (GetDockerConfig false) 4}}
 {{end}}
 
 {{if HasCiliumNetworkPlugin}}
@@ -221,27 +214,9 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    version = 2
-    subreaper = false
-    oom_score = 0
-
-    [plugins]
-      [plugins."io.containerd.grpc.v1.cri"]
-        sandbox_image = "{{GetPodInfraContainerSpec}}"
-        [plugins."io.containerd.grpc.v1.cri".cni]
-          {{if IsKubenet}}
-          conf_template = "/etc/containerd/kubenet_template.conf"
-          {{end}}
-        [plugins."io.containerd.grpc.v1.cri".containerd]
-          default_runtime_name = "runc"
-         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-              runtime_type = "io.containerd.runc.v2"
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.untrusted]
-              {{/* note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before */}}
-              runtime_type = "io.containerd.runc.v2"
+{{IndentString GetContainerdConfig 4}}
     #EOF
-
+    
   {{if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
