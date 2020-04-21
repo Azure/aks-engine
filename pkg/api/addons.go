@@ -402,7 +402,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea),
 		Config: map[string]string{
 			"serviceCidr":      o.KubernetesConfig.ServiceCIDR,
-			"tunnelType":       common.AntreaDefaultTunnelType,
 			"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
 			"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 		},
@@ -426,11 +425,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	if getAddonsIndexByName(o.KubernetesConfig.Addons, common.AntreaAddonName) != -1 {
-		// Update cni install command when network plugin is set to azure cni
-		if o.KubernetesConfig.IsAddonEnabled(common.AntreaAddonName) && o.IsAzureCNI() {
-			defaultsAntreaDaemonSetAddonsConfig.Config["installCniCmd"] = common.AntreaInstallCniChainCmd
-		}
+	// Set NetworkPolicyOnly mode when azure cni is enabled
+	if o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea && o.IsAzureCNI() {
+		defaultsAntreaDaemonSetAddonsConfig.Config["trafficEncapMode"] = common.AntreaNetworkPolicyOnlyMode
+		defaultsAntreaDaemonSetAddonsConfig.Config["installCniCmd"] = common.AntreaInstallCniChainCmd
 	}
 
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{

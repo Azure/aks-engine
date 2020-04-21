@@ -27100,7 +27100,7 @@ data:
     # - geneve
     # - gre
     # - stt
-    tunnelType: {{ContainerConfig "tunnelType"}}
+    #tunnelType: vxlan
 
     # Default MTU to use for the host gateway interface and the network interface of each Pod. If
     # omitted, antrea-agent will default this value to 1450 to accommodate for tunnel encapsulate
@@ -37232,38 +37232,27 @@ configureCNI() {
   fi
 {{end}}
 }
-<<<<<<< HEAD
 configureAzureCNI() {
-    if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
-        mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
-        chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
-            echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
-        fi
-    if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
-        serviceCidrs={{GetServiceCidr}}
-        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
-    fi
-    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-=======
-configureCNIIPTables() {
-  if [[ ${NETWORK_PLUGIN} == "azure" ]]; then
+  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
     chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-    if [[ ${NETWORK_POLICY} == "calico" ]]; then
+    if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" ]]; then
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    fi
+    if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
+      serviceCidrs={{GetServiceCidr}}
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
+    fi
+    if [[ "${NETWORK_POLICY}" == "calico" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
       echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins += [{"type": "antrea"}]') > "$CNI_CONFIG_DIR/10-azure.conflist"
-    elif [[ ${NETWORK_POLICY} == "" || ${NETWORK_POLICY} == "none" ]] && [[ ${NETWORK_MODE} == "transparent" ]]; then
+    elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
->>>>>>> Enable Antrea in NetworkPolicyOnly mode with Azure CNI
     fi
     /sbin/ebtables -t nat --list
-    fi
+  fi
 }
 {{- if NeedsContainerd}}
 installContainerd() {

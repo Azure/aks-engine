@@ -10,16 +10,7 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "antrea",
-					"networkPlugin": "azure",
-					"addons": [
-						{
-							"name": "antrea",
-							"enabled": true,
-							"config": {
-								"trafficEncapMode": "networkPolicyOnly"
-							}
-						}
-					]
+					"networkPlugin": "azure"
 				}
 			},
 			"masterProfile": {

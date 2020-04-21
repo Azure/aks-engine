@@ -124,16 +124,7 @@ Antrea also supports `NetworkPolicyOnly` mode with Azure CNI. In this mode, Antr
       "orchestratorType": "Kubernetes",
       "kubernetesConfig": {
         "networkPlugin": "azure",
-        "networkPolicy": "antrea",
-        "addons": [
-          {
-            "name": "antrea",
-            "enabled": true,
-            "config": {
-              "trafficEncapMode": "networkPolicyOnly"
-            }
-          }
-        ]
+        "networkPolicy": "antrea"
       }
 ```
 

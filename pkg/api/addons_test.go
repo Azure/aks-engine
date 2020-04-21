@@ -4035,7 +4035,6 @@ func TestSetAddonsConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 									Config: map[string]string{
 										"serviceCidr":      DefaultKubernetesServiceCIDR,
-										"tunnelType":       common.AntreaDefaultTunnelType,
 										"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
 										"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 									},
@@ -4052,7 +4051,6 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"serviceCidr":      DefaultKubernetesServiceCIDR,
-						"tunnelType":       common.AntreaDefaultTunnelType,
 						"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
 						"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 					},
@@ -4081,8 +4079,6 @@ func TestSetAddonsConfig(t *testing.T) {
 									Enabled: to.BoolPtr(true),
 									Config: map[string]string{
 										"serviceCidr":      DefaultKubernetesServiceCIDR,
-										"tunnelType":       common.AntreaDefaultTunnelType,
-										"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
 									},
 								},
 							},
@@ -4096,7 +4092,6 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AntreaAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"tunnelType":       common.AntreaDefaultTunnelType,
 						"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
 						"installCniCmd":    common.AntreaInstallCniChainCmd,
 						"serviceCidr":      DefaultKubernetesServiceCIDR,
