@@ -1,0 +1,46 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "orchestratorRelease": "1.17",
+      "kubernetesConfig": {
+        "containerRuntime": "docker",
+        "containerRuntimeConfig": {
+          "dataDir": "/mnt/docker"
+        }
+      }
+    },
+    "masterProfile": {
+      "count": 1,
+      "dnsPrefix": "",
+      "vmSize": "Standard_D8s_v3",
+      "osDiskSizeGb": 1024,
+      "distro": "ubuntu-18.04"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentpool1",
+        "count": 1,
+        "vmSize": "Standard_NC12s_v3",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "osDiskSizeGb": 1024,
+        "distro": "ubuntu-18.04"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
+    }
+  }
+}

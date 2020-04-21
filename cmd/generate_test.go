@@ -781,6 +781,16 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "docker tmp dir",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-docker-tmpdir.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "containerd tmp dir",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-containerd-tmpdir.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "e2e gpu",
 			apiModelPath: "../examples/e2e-tests/kubernetes/gpu-enabled/definition.json",
 			setArgs:      defaultSet,

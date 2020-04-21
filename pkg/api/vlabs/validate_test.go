@@ -4914,3 +4914,69 @@ func TestValidateKubernetesImageBaseType(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateContainerRuntimeConfig(t *testing.T) {
+	tests := map[string]struct {
+		k             *KubernetesConfig
+		expectedError error
+	}{
+		"should succeed if unspecified with docker": {
+			k:             &KubernetesConfig{},
+			expectedError: nil,
+		},
+		"should succeed if unspecified with containerd": {
+			k: &KubernetesConfig{
+				ContainerRuntime: Containerd,
+			},
+			expectedError: nil,
+		},
+		"should succeed if config is defined but key not present": {
+			k: &KubernetesConfig{
+				ContainerRuntimeConfig: map[string]string{},
+			},
+			expectedError: nil,
+		},
+		"should succeed with containerd if config is defined but key not present": {
+			k: &KubernetesConfig{
+				ContainerRuntime:       Containerd,
+				ContainerRuntimeConfig: map[string]string{},
+			},
+			expectedError: nil,
+		},
+		"should fail on empty string": {
+			k: &KubernetesConfig{
+				ContainerRuntimeConfig: map[string]string{
+					ContainerDataDirKey: "",
+				},
+			},
+			expectedError: errors.Errorf("OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig.DataDir '' is invalid: must not be empty"),
+		},
+		"should fail on relative path": {
+			k: &KubernetesConfig{
+				ContainerRuntimeConfig: map[string]string{
+					ContainerDataDirKey: "mnt/docker",
+				},
+			},
+			expectedError: errors.Errorf("OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig.DataDir 'mnt/docker' is invalid: must be absolute path"),
+		},
+		"should pass with absolute path": {
+			k: &KubernetesConfig{
+				ContainerRuntimeConfig: map[string]string{
+					ContainerDataDirKey: "/mnt/docker",
+				},
+			},
+			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.k.validateContainerRuntimeConfig()
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
