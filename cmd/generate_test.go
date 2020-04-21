@@ -796,8 +796,13 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "e2e coreos",
-			apiModelPath: "../examples/e2e-tests/kubernetes/coreos/coreos.json",
+			name:         "docker tmp dir",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-docker-tmpdir.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "containerd tmp dir",
+			apiModelPath: "../examples/kubernetes-config/kubernetes-containerd-tmpdir.json",
 			setArgs:      defaultSet,
 		},
 		{
