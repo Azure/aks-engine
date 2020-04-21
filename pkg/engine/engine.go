@@ -749,6 +749,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsCustomCloudProfile": func() bool {
 			return cs.Properties.IsCustomCloudProfile()
 		},
+		"HasLinux": func() bool {
+			return cs.Properties.AnyAgentIsLinux()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
@@ -774,6 +777,33 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 				zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
 			}
 			return zones
+		},
+		"CSIControllerReplicas": func() string {
+			replicas := "2"
+			if cs.Properties.HasWindows() && !cs.Properties.AnyAgentIsLinux() {
+				replicas = "1"
+			}
+			return replicas
+		},
+		"ShouldEnableCSISnapshotFeature": func(csiDriverName string) bool {
+			// Snapshot is not available for Windows clusters
+			if cs.Properties.HasWindows() && !cs.Properties.AnyAgentIsLinux() {
+				return false
+			}
+
+			switch csiDriverName {
+			case common.AzureDiskCSIDriverAddonName:
+				// Snapshot feature for Azure Disk CSI Driver is in beta, requiring K8s 1.17+
+				return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+			case common.AzureFileCSIDriverAddonName:
+				// Snapshot feature for Azure File CSI Driver is in alpha, requiring K8s 1.13-1.16
+				return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") &&
+					!common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+			}
+			return false
+		},
+		"IsKubernetesVersionGe": func(version string) bool {
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 	}
 }

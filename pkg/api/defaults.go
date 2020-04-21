@@ -67,6 +67,7 @@ func (cs *ContainerService) SetPropertiesDefaults(params PropertiesDefaultsParam
 
 	if cs.Properties.WindowsProfile != nil {
 		properties.setWindowsProfileDefaults(params.IsUpgrade, params.IsScale)
+		cs.setCSIProxyDefaults()
 	}
 
 	properties.setTelemetryProfileDefaults()
@@ -1108,4 +1109,27 @@ func (cs *ContainerService) getDefaultKubernetesClusterSubnetIPv6() string {
 	// In 1.16, the default mask size for IPv6 is /24 which forces the cluster
 	// subnet mask size to be strictly >= /8
 	return "fc00::/8"
+}
+
+func (cs *ContainerService) setCSIProxyDefaults() {
+	p := cs.Properties
+	useCloudControllerManager := p.OrchestratorProfile.KubernetesConfig != nil && to.Bool(p.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager)
+	k8sVersion := p.OrchestratorProfile.OrchestratorVersion
+	w := p.WindowsProfile
+	// We should enable CSI proxy if:
+	// 1. enableCSIProxy is not defined and cloud-controller-manager
+	//    is being used on a Windows cluster with K8s >= 1.18.0 or
+	// 2. enabledCSIProxy is true
+	// 3. csiProxyURL is defined
+	shouldEnableCSIProxy := (w.EnableCSIProxy == nil && useCloudControllerManager && common.IsKubernetesVersionGe(k8sVersion, "1.18.0")) ||
+		w.IsCSIProxyEnabled() ||
+		w.CSIProxyURL != ""
+
+	if shouldEnableCSIProxy {
+		w.EnableCSIProxy = to.BoolPtr(true)
+		if w.CSIProxyURL == "" {
+			cloudSpecConfig := cs.GetCloudSpecConfig()
+			w.CSIProxyURL = cloudSpecConfig.KubernetesSpecConfig.CSIProxyDownloadURL
+		}
+	}
 }

@@ -1,7 +1,4 @@
 {
-    "env": {
-        "GINKGO_SKIP": "should be able to attach azure file"
-    },
     "options": {
         "allowedOrchestratorVersions": [
             "1.18",

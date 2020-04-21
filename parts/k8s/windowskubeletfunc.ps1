@@ -328,7 +328,6 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService "$kubeletDependOnServices" | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
@@ -342,6 +341,9 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1 | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400 | RemoveNulls
     & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
+    # Do not use & when calling DependOnService since 'docker csi-proxy'
+    # is parsed as a single string instead of two separate strings
+    Invoke-Expression "$KubeDir\nssm.exe set Kubelet DependOnService $kubeletDependOnServices | RemoveNulls"
 
     # setup kubeproxy
     & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
@@ -364,9 +366,9 @@ New-NSSMService {
 
 # Renamed from Write-KubernetesStartFiles
 function
-Install-KubernetesServices {  
-    param(		
-        [Parameter(Mandatory = $true)][string]	
+Install-KubernetesServices {
+    param(
+        [Parameter(Mandatory = $true)][string]
         $KubeDir
     )
 

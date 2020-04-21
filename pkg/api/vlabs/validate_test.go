@@ -1128,17 +1128,6 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			},
 			expectedError: errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater"),
 		},
-		{
-			name:       "CSI Proxy no URL",
-			k8sRelease: "1.18",
-			wp: &WindowsProfile{
-				AdminUsername:  "AzureUser",
-				AdminPassword:  "replacePassword1234$",
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "",
-			},
-			expectedError: errors.New("windowsProfile.csiProxyURL must be specified if enableCSIProxy is set"),
-		},
 	}
 
 	for _, test := range tests {
