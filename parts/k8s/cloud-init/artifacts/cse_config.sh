@@ -249,7 +249,7 @@ configureAzureCNI() {
     if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
         mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
         chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" ]]; then
+        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
             echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
         fi
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
