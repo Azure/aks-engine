@@ -169,7 +169,7 @@ spec:
         key: node-role.kubernetes.io/master
       nodeSelector:
         kubernetes.io/role: master
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
         imagePullPolicy: IfNotPresent
