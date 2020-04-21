@@ -4078,7 +4078,7 @@ func TestSetAddonsConfig(t *testing.T) {
 									Name:    common.AntreaAddonName,
 									Enabled: to.BoolPtr(true),
 									Config: map[string]string{
-										"serviceCidr":      DefaultKubernetesServiceCIDR,
+										"serviceCidr": DefaultKubernetesServiceCIDR,
 									},
 								},
 							},

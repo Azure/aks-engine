@@ -122,7 +122,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		case NetworkPolicyAntrea:
 			if o.KubernetesConfig.NetworkPlugin == "" {
-				o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
 			}
 		}
 
