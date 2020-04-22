@@ -97,4 +97,4 @@ spec:
             cpu: {{ContainerCPULimits "tiller"}}
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

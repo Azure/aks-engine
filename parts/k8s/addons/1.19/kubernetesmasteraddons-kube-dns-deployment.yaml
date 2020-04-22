@@ -206,4 +206,4 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

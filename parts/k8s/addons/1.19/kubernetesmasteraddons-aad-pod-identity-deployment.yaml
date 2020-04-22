@@ -138,7 +138,7 @@ spec:
             add:
             - NET_ADMIN
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: ServiceAccount
