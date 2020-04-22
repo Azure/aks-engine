@@ -36991,6 +36991,7 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+MOUNT_ETCD_SCRIPT=/opt/azure/containers/mountetcd.sh
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -37000,6 +37001,21 @@ systemctlEnableAndStart() {
     return 1
   fi
   if ! retrycmd 120 5 25 systemctl enable $1; then
+    return 1
+  fi
+}
+systemctlEtcd() {
+  for i in $(seq 1 60); do
+    timeout 30 systemctl daemon-reload
+    timeout 30 systemctl restart etcd && break ||
+      if [ $i -eq 60 ]; then
+        return 1
+      else
+        $MOUNT_ETCD_SCRIPT
+        sleep 5
+      fi
+  done
+  if ! retrycmd 120 5 25 systemctl enable etcd; then
     return 1
   fi
 }
@@ -37070,10 +37086,9 @@ configureEtcd() {
     done
   fi
 
-  MOUNT_ETCD_FILE=/opt/azure/containers/mountetcd.sh
-  wait_for_file 1200 1 $MOUNT_ETCD_FILE || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
-  $MOUNT_ETCD_FILE || exit {{GetCSEErrorCode "ERR_ETCD_VOL_MOUNT_FAIL"}}
-  systemctlEnableAndStart etcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
+  wait_for_file 1200 1 $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
+  $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_VOL_MOUNT_FAIL"}}
+  systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
   for i in $(seq 1 600); do
     MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
     if [ "$MEMBER" != "" ]; then
@@ -39330,7 +39345,7 @@ udevadm settle
 mkdir -p $MOUNTPOINT
 if mount | grep $MOUNTPOINT; then
   echo "disk is already mounted"
-  exit 0
+  umount /dev/sdc1
 fi
 if ! grep "/dev/sdc1" /etc/fstab; then
   echo "$PARTITION       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
