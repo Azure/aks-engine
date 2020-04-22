@@ -84,6 +84,10 @@ var (
 			networkPolicy: NetworkPolicyAntrea,
 		},
 		{
+			networkPlugin: "azure",
+			networkPolicy: NetworkPolicyAntrea,
+		},
+		{
 			networkPlugin: "",
 			networkPolicy: NetworkPolicyAntrea,
 		},

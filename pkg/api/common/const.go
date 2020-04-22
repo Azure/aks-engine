@@ -363,3 +363,11 @@ func GetDefaultContainerdConfig() ContainerdConfig {
 const (
 	ContainerDataDirKey = "dataDir"
 )
+
+// Antrea Plugin Const
+const (
+	AntreaDefaultTrafficEncapMode = "Encap"
+	AntreaDefaultInstallCniCmd    = "install_cni"
+	AntreaInstallCniChainCmd      = "install_cni_chaining"
+	AntreaNetworkPolicyOnlyMode   = "networkPolicyOnly"
+)

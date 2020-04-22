@@ -880,9 +880,9 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
 	mockCS.setOrchestratorDefaults(true, true)
-	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea {
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAzure {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAntrea)
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAzure)
 	}
 
 	mockCS = getMockBaseContainerService("1.8.10")

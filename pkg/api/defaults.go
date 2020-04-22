@@ -121,7 +121,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		case NetworkPolicyCilium:
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		case NetworkPolicyAntrea:
-			o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+			if o.KubernetesConfig.NetworkPlugin == "" {
+				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
+			}
 		}
 
 		if a.IsAzureStackCloud() {

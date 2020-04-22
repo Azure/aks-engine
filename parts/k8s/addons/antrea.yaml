@@ -296,7 +296,7 @@ data:
     # hybrid: noEncap if worker Nodes on same subnet, otherwise encap.
     # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod IPAM and connectivity to primary CNI.
     #
-    #trafficEncapMode: encap
+    trafficEncapMode: {{ContainerConfig "trafficEncapMode"}}
   antrea-cni.conf: |
     {
         "cniVersion":"0.3.0",
@@ -561,6 +561,7 @@ spec:
         - install_cni
         image: {{ContainerImage "install-cni"}}
         name: install-cni
+        command: [{{ContainerConfig "installCniCmd"}}]
         securityContext:
           capabilities:
             add:

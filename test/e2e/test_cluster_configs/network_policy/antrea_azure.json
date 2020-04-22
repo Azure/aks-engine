@@ -1,0 +1,46 @@
+{
+	"env": {},
+	"options": {
+		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16"]
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"networkPolicy": "antrea",
+					"networkPlugin": "azure"
+				}
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "agent1",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Spot"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}

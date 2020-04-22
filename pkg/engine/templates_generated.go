@@ -27121,7 +27121,7 @@ data:
     # hybrid: noEncap if worker Nodes on same subnet, otherwise encap.
     # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod IPAM and connectivity to primary CNI.
     #
-    #trafficEncapMode: encap
+    trafficEncapMode: {{ContainerConfig "trafficEncapMode"}}
   antrea-cni.conf: |
     {
         "cniVersion":"0.3.0",
@@ -27386,6 +27386,7 @@ spec:
         - install_cni
         image: {{ContainerImage "install-cni"}}
         name: install-cni
+        command: [{{ContainerConfig "installCniCmd"}}]
         securityContext:
           capabilities:
             add:
@@ -37232,23 +37233,25 @@ configureCNI() {
 {{end}}
 }
 configureAzureCNI() {
-    if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
-        mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
-        chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
-            echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
-        fi
+  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+    mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
+    chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
+    if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    fi
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
-        serviceCidrs={{GetServiceCidr}}
-        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
+      serviceCidrs={{GetServiceCidr}}
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
     fi
     if [[ "${NETWORK_POLICY}" == "calico" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
-    fi
+  fi
 }
 {{- if NeedsContainerd}}
 installContainerd() {
@@ -37333,9 +37336,15 @@ ensureKubelet() {
   done
   {{end}}
   {{if HasAntreaNetworkPolicy}}
-  while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
-    sleep 3
-  done
+  if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+    while ! $(grep -sq "antrea" $CNI_CONFIG_DIR/10-azure.conflist); do
+      sleep 3
+    done
+  else
+    while [ ! -f $CNI_CONFIG_DIR/10-antrea.conf ]; do
+      sleep 3
+    done
+  fi
   {{end}}
   {{if HasFlannelNetworkPlugin}}
   while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do
