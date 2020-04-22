@@ -37247,7 +37247,6 @@ configureAzureCNI() {
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
-      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins += [{"type": "antrea"}]') > "$CNI_CONFIG_DIR/10-azure.conflist"
     elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
       sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
