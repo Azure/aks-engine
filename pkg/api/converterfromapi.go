@@ -206,7 +206,9 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		convertKeyVaultSecretsToVlabs(&s, secret)
 		vlabsProfile.Secrets = append(vlabsProfile.Secrets, *secret)
 	}
-	vlabsProfile.SSHEnabled = api.SSHEnabled
+	if api.SSHEnabled != nil {
+		vlabsProfile.SSHEnabled = api.SSHEnabled
+	}
 	vlabsProfile.EnableAutomaticUpdates = api.EnableAutomaticUpdates
 }
 

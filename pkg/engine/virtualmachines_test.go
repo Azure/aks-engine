@@ -191,6 +191,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	}
 
 	// Test with OSDiskSize specified, Windows, StorageAccount, and DiskSizes
+	trueVar := true
 	profile := cs.Properties.AgentPoolProfiles[0]
 	profile.OSType = api.Windows
 	profile.DiskSizesGB = []int{256, 256, 256}
@@ -198,7 +199,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	profile.StorageProfile = api.StorageAccount
 	profile.UltraSSDEnabled = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		SSHEnabled: true,
+		SSHEnabled: &trueVar,
 	}
 
 	tg, _ := InitializeTemplateGenerator(Context{})

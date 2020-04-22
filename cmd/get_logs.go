@@ -142,7 +142,7 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	}
 	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
 
-	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.SSHEnabled {
+	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.GetSSHEnabled() {
 		glc.windowsSSHConfig = helpers.SSHClientConfig(
 			glc.cs.Properties.WindowsProfile.AdminUsername,
 			ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword))
