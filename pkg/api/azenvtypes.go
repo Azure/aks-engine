@@ -158,7 +158,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1604-202004",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.04.09",
+		ImageVersion:   "2020.04.21",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -166,7 +166,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-engine-ubuntu-1804-202004",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.04.09",
+		ImageVersion:   "2020.04.21",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
