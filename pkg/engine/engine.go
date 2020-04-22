@@ -374,7 +374,7 @@ func getDCOSWindowsAgentCustomAttributes(profile *api.AgentPoolProfile) string {
 	if len(profile.OSType) > 0 {
 		attrstring = fmt.Sprintf("os:%s", profile.OSType)
 	} else {
-		attrstring = fmt.Sprintf("os:windows")
+		attrstring = "os:windows"
 	}
 	if len(profile.Ports) > 0 {
 		attrstring += ";public_ip:yes"
@@ -848,19 +848,19 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 		},
 		"GetVolumeMounts": func() string {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-				return fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true")
+				return "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"
 			}
 			return ""
 		},
 		"GetVolumes": func() string {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-				return fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent")
+				return "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"
 			}
 			return ""
 		},
 		"GetHostNetwork": func() string {
 			if cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-				return fmt.Sprintf("\n      hostNetwork: true")
+				return "\n      hostNetwork: true"
 			}
 			return ""
 		},
@@ -1247,7 +1247,7 @@ func getSSHPublicKeysPowerShell(linuxProfile *api.LinuxProfile) string {
 
 func getWindowsMasterSubnetARMParam(masterProfile *api.MasterProfile) string {
 	if masterProfile != nil && masterProfile.IsCustomVNET() {
-		return fmt.Sprintf("',parameters('vnetCidr'),'")
+		return "',parameters('vnetCidr'),'"
 	}
-	return fmt.Sprintf("',parameters('masterSubnet'),'")
+	return "',parameters('masterSubnet'),'"
 }

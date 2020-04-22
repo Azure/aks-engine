@@ -75,12 +75,12 @@ func CreatePki(pkiParams PkiParams) (*PkiKeyCertPair, *PkiKeyCertPair, *PkiKeyCe
 	defer func(s time.Time) {
 		log.Debugf("pki: PKI asset creation took %s", time.Since(s))
 	}(start)
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, "kubernetes")
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, "kubernetes.default")
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, "kubernetes.default.svc")
 	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.default.svc.%s", pkiParams.ClusterDomain))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system"))
-	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc"))
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, "kubernetes.kube-system")
+	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, "kubernetes.kube-system.svc")
 	pkiParams.ExtraFQDNs = append(pkiParams.ExtraFQDNs, fmt.Sprintf("kubernetes.kube-system.svc.%s", pkiParams.ClusterDomain))
 
 	var (
