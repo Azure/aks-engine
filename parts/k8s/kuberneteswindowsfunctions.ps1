@@ -1,4 +1,5 @@
-# This is a temporary file to test dot-sourcing functions stored in separate scripts in a zip file
+# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
@@ -31,7 +32,7 @@ function DownloadFileOverHttp
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Move-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    else 
+    else
     {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
@@ -203,4 +204,32 @@ function Register-LogsCleanupScriptTask {
     $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
     $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "log-cleanup-task"
     Register-ScheduledTask -TaskName "log-cleanup-task" -InputObject $definition
+}
+
+function Register-NodeResetScriptTask {
+    Write-Log "Creating a startup task to run windowsnodereset.ps1"
+
+    (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
+    Foreach-Object { $_ -replace '{{CsiProxyEnabled}}', $global:EnableCsiProxy } |
+    Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
+    Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
+    Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
+    Out-File 'c:\k\windowsnodereset.ps1'
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File `"c:\k\windowsnodereset.ps1`""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
+    Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
+}
+
+function Assert-FileExists {
+    Param(
+        [Parameter(Mandatory=$true,Position=0)][string]
+        $Filename
+    )
+    
+    if (-Not (Test-Path $Filename)) {
+        throw "$Filename does not exist"
+    }
 }
