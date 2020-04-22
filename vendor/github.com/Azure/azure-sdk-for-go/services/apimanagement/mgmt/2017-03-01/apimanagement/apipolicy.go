@@ -36,7 +36,8 @@ func NewAPIPolicyClient(subscriptionID string) APIPolicyClient {
 	return NewAPIPolicyClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewAPIPolicyClientWithBaseURI creates an instance of the APIPolicyClient client.
+// NewAPIPolicyClientWithBaseURI creates an instance of the APIPolicyClient client using a custom endpoint.  Use this
+// when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure stack).
 func NewAPIPolicyClientWithBaseURI(baseURI string, subscriptionID string) APIPolicyClient {
 	return APIPolicyClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -126,8 +127,7 @@ func (client APIPolicyClient) CreateOrUpdatePreparer(ctx context.Context, resour
 // CreateOrUpdateSender sends the CreateOrUpdate request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIPolicyClient) CreateOrUpdateSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // CreateOrUpdateResponder handles the response to the CreateOrUpdate request. The method always
@@ -222,8 +222,7 @@ func (client APIPolicyClient) DeletePreparer(ctx context.Context, resourceGroupN
 // DeleteSender sends the Delete request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIPolicyClient) DeleteSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // DeleteResponder handles the response to the Delete request. The method always
@@ -314,8 +313,7 @@ func (client APIPolicyClient) GetPreparer(ctx context.Context, resourceGroupName
 // GetSender sends the Get request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIPolicyClient) GetSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // GetResponder handles the response to the Get request. The method always
@@ -406,8 +404,7 @@ func (client APIPolicyClient) GetEntityTagPreparer(ctx context.Context, resource
 // GetEntityTagSender sends the GetEntityTag request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIPolicyClient) GetEntityTagSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // GetEntityTagResponder handles the response to the GetEntityTag request. The method always
@@ -496,8 +493,7 @@ func (client APIPolicyClient) ListByAPIPreparer(ctx context.Context, resourceGro
 // ListByAPISender sends the ListByAPI request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIPolicyClient) ListByAPISender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // ListByAPIResponder handles the response to the ListByAPI request. The method always

@@ -5,10 +5,11 @@ package engine
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -27,24 +28,30 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 		}
 	}
 
-	var useManagedIdentity, userAssignedIDEnabled bool
+	var useManagedIdentity, userAssignedIDEnabled, createNewUserAssignedIdentity bool
 	kubernetesConfig := cs.Properties.OrchestratorProfile.KubernetesConfig
 
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
+		createNewUserAssignedIdentity = kubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	}
 
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	if userAssignedIDEnabled {
-		userAssignedID := createUserAssignedIdentities()
+		if createNewUserAssignedIdentity {
+			userAssignedID := createUserAssignedIdentities()
+			armResources = append(armResources, userAssignedID)
+		}
+
 		var msiRoleAssignment RoleAssignmentARM
 		if isHostedMaster {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityReaderRole)
 		} else {
 			msiRoleAssignment = createMSIRoleAssignment(IdentityContributorRole)
 		}
-		armResources = append(armResources, userAssignedID, msiRoleAssignment)
+
+		armResources = append(armResources, msiRoleAssignment)
 	}
 
 	// Create the Standard Load Balancer resource spec, so long as:
@@ -55,11 +62,24 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 	if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku &&
 		!isHostedMaster &&
 		!cs.Properties.AnyAgentHasLoadBalancerBackendAddressPoolIDs() {
-		isForMaster := false
-		includeDNS := false
-		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
+		var publicIPAddresses []PublicIPAddressARM
+		numIps := 1
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+			numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+		}
+		ipAddressNamePrefix := "agentPublicIPAddressName"
+		for i := 1; i <= numIps; i++ {
+			name := ipAddressNamePrefix
+			if i > 1 {
+				name += strconv.Itoa(i)
+			}
+			publicIPAddresses = append(publicIPAddresses, CreatePublicIPAddressForNodePools(name))
+		}
 		loadBalancer := CreateStandardLoadBalancerForNodePools(cs.Properties, true)
-		armResources = append(armResources, publicIPAddress, loadBalancer)
+		for _, publicIPAddress := range publicIPAddresses {
+			armResources = append(armResources, publicIPAddress)
+		}
+		armResources = append(armResources, loadBalancer)
 	}
 
 	profiles := cs.Properties.AgentPoolProfiles
@@ -86,6 +106,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 
 	isCustomVnet := cs.Properties.AreAgentProfilesCustomVNET()
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
+	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
 
 	if isHostedMaster {
 		if !isCustomVnet {
@@ -93,7 +114,7 @@ func GenerateARMResources(cs *api.ContainerService) []interface{} {
 			armResources = append(armResources, hostedMasterVnet)
 		}
 
-		if !isAzureCNI {
+		if !isAzureCNI || isAzureCNIDualStack {
 			armResources = append(armResources, createRouteTable())
 		}
 
@@ -160,7 +181,7 @@ func createKubernetesAgentVMASResources(cs *api.ContainerService, profile *api.A
 	agentVMASResources = append(agentVMASResources, agentVMASVM)
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {
 		agentVMASSysRoleAssignment := createAgentVMASSysRoleAssignment(profile)

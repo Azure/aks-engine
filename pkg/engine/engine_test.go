@@ -1740,7 +1740,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				kubernetesDockerMonitorSystemdTimer,
 				dockerClearMountPropagationFlags,
 				auditdRules,
-				kubernetesCSECustomCloud,
 				systemdBPFMount,
 			} {
 				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
@@ -2459,21 +2458,27 @@ func TestGetAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
-		name                                      string
-		addon                                     api.KubernetesAddon
-		cs                                        *api.ContainerService
-		expectedImage                             string
-		expectedCPUReqs                           string
-		expectedCPULimits                         string
-		expectedMemReqs                           string
-		expectedMemLimits                         string
-		expectedFoo                               string
-		expectedIsAzureStackCloud                 bool
-		expectedNeedsStorageAccountStorageClasses bool
-		expectedNeedsManagedDiskStorageClasses    bool
-		expectedUsesCloudControllerManager        bool
-		expectedHasAvailabilityZones              bool
-		expectedGetZones                          string
+		name                                              string
+		addon                                             api.KubernetesAddon
+		cs                                                *api.ContainerService
+		expectedImage                                     string
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedFoo                                       string
+		expectedIsAzureStackCloud                         bool
+		expectedNeedsStorageAccountStorageClasses         bool
+		expectedNeedsManagedDiskStorageClasses            bool
+		expectedUsesCloudControllerManager                bool
+		expectedHasAvailabilityZones                      bool
+		expectedGetZones                                  string
+		expectedHasWindows                                bool
+		expectedHasLinux                                  bool
+		expectedCSIControllerReplicas                     string
+		expectedShouldEnableAzureDiskCSISnapshotFeature   bool
+		expectedShouldEnableAzureFileCSISnapshotFeature   bool
+		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
 	}{
 		{
 			name: "coredns as an example",
@@ -2529,6 +2534,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 				},
@@ -2540,11 +2546,17 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2600,6 +2612,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 					CustomCloudProfile: &api.CustomCloudProfile{
@@ -2615,11 +2628,17 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: true,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - StorageAccount",
@@ -2675,6 +2694,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.StorageAccount,
+							OSType:              api.Linux,
 						},
 					},
 				},
@@ -2686,11 +2706,17 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: true,
-			expectedNeedsManagedDiskStorageClasses:    false,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         true,
+			expectedNeedsManagedDiskStorageClasses:            false,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2747,6 +2773,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 				},
@@ -2758,11 +2785,17 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        true,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                true,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - Availability Zones",
@@ -2789,7 +2822,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
+						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &api.KubernetesConfig{
 							UseCloudControllerManager: to.BoolPtr(true),
 							NetworkPlugin:             api.NetworkPluginAzure,
@@ -2824,6 +2857,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 								"1",
 								"2",
 							},
+							OSType: api.Linux,
 						},
 					},
 				},
@@ -2835,11 +2869,100 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        true,
-			expectedHasAvailabilityZones:              true,
-			expectedGetZones:                          "\n    - eastus2-1\n    - eastus2-2",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                true,
+			expectedHasAvailabilityZones:                      true,
+			expectedGetZones:                                  "\n    - eastus2-1\n    - eastus2-2",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+		},
+		{
+			name: "coredns as an example - hybrid cluster",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Location: "eastus2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Windows,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
+						},
+					},
+				},
+			},
+			expectedImage:                          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:                        "100m",
+			expectedCPULimits:                      "100m",
+			expectedMemReqs:                        "300Mi",
+			expectedMemLimits:                      "300Mi",
+			expectedFoo:                            "bar",
+			expectedNeedsManagedDiskStorageClasses: true,
+			expectedUsesCloudControllerManager:     true,
+			expectedHasWindows:                     true,
+			expectedHasLinux:                       true,
+			expectedCSIControllerReplicas:          "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
 		},
 	}
 
@@ -2907,6 +3030,36 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetZones {
 				t.Errorf("expected funcMap invocation of GetZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasWindows"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasWindows {
+				t.Errorf("expected funcMap invocation of HasWindows to return %t, instead got %t", c.expectedHasWindows, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasLinux"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasLinux {
+				t.Errorf("expected funcMap invocation of HasLinux to return %t, instead got %t", c.expectedHasLinux, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["CSIControllerReplicas"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedCSIControllerReplicas {
+				t.Errorf("expected funcMap invocation of CSIControllerReplicas to return %s, instead got %s", c.expectedCSIControllerReplicas, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ShouldEnableCSISnapshotFeature"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.AzureDiskCSIDriverAddonName)})
+			if ret[0].Interface() != c.expectedShouldEnableAzureDiskCSISnapshotFeature {
+				t.Errorf("expected funcMap invocation of ShouldEnableCSISnapshotFeature for %s to return %t, instead got %t", common.AzureDiskCSIDriverAddonName, c.expectedShouldEnableAzureDiskCSISnapshotFeature, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ShouldEnableCSISnapshotFeature"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.AzureFileCSIDriverAddonName)})
+			if ret[0].Interface() != c.expectedShouldEnableAzureFileCSISnapshotFeature {
+				t.Errorf("expected funcMap invocation of ShouldEnableCSISnapshotFeature for %s to return %t, instead got %t", common.AzureFileCSIDriverAddonName, c.expectedShouldEnableAzureFileCSISnapshotFeature, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("1.16.0")})
+			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
+				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
 			}
 		})
 	}

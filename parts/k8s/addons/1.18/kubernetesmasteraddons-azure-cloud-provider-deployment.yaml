@@ -163,6 +163,7 @@ provisioner: file.csi.azure.com
 parameters:
   skuName: Standard_LRS
 reclaimPolicy: Delete
+allowVolumeExpansion: true
 volumeBindingMode: Immediate
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}

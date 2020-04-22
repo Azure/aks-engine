@@ -25,10 +25,12 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - cifs-utils
   - conntrack
   - cracklib-runtime
+  - dkms
   - dbus
   - ebtables
   - ethtool
   - fuse
+  - gcc
   - git
   - glusterfs-client
   - init-system-helpers
@@ -38,6 +40,8 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - jq
   - libpam-pwquality
   - libpwquality-tools
+  - linux-headers-$(uname -r)
+  - make
   - mount
   - nfs-common
   - pigz socat
@@ -46,6 +50,12 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
   - xz-utils
   - zip
 EOF
+if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
+  echo "  - ntp" >> ${VHD_LOGS_FILEPATH}
+  echo "  - ntpstat" >> ${VHD_LOGS_FILEPATH}
+fi
+
+chmod a-x /etc/update-motd.d/??-{motd-news,release-upgrade}
 
 if [[ ${UBUNTU_RELEASE} == "18.04" ]]; then
   overrideNetworkConfig
@@ -61,10 +71,10 @@ echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 MOBY_VERSION="3.0.11"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
-installGPUDrivers
+downloadGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
-ETCD_VERSION="3.3.18"
+ETCD_VERSION="3.3.19"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -76,9 +86,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.1.0
 1.0.33
 1.0.30
-1.0.29
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -151,7 +161,6 @@ done
 
 KUBE_ADDON_MANAGER_VERSIONS="
 9.0.2
-8.9.1
 "
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
@@ -202,14 +211,14 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.17.1
-1.16.4
-1.15.5
-1.14.7
-1.13.9
+1.18.1
+1.17.2
+1.16.5
+1.15.6
+1.14.8
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -259,7 +268,7 @@ done
 
 AZURE_CNIIMAGEBASE="mcr.microsoft.com/containernetworking"
 AZURE_CNI_NETWORKMONITOR_VERSIONS="
-0.0.6
+0.0.8
 "
 for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/networkmonitor:v${AZURE_CNI_NETWORKMONITOR_VERSION}"
@@ -333,35 +342,27 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.18.0-beta.1
-1.17.3
-1.17.2
-1.16.7
-1.16.7-azs
-1.16.6
-1.16.6-azs
+1.18.2
+1.18.1
+1.17.5
+1.17.4
+1.16.9
+1.16.8
+1.15.11
 1.15.10
 1.15.10-azs
-1.15.9
-1.15.9-azs
 1.14.8
 1.14.7
 1.14.7-azs
-1.13.12
-1.13.11
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
-    if [[ $KUBERNETES_VERSION == *"azs"* ]]; then
-      HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
-    else
-      HYPERKUBE_URL="k8s.gcr.io/hyperkube-amd64:v${KUBERNETES_VERSION}"
-    fi
+    HYPERKUBE_URL="mcr.microsoft.com/oss/kubernetes/hyperkube:v${KUBERNETES_VERSION}"
     extractHyperkube "docker"
     echo "  - ${HYPERKUBE_URL}" >> ${VHD_LOGS_FILEPATH}
   else
     for component in kube-apiserver kube-controller-manager kube-proxy kube-scheduler; do
-      CONTAINER_IMAGE="k8s.gcr.io/${component}:v${KUBERNETES_VERSION}"
+      CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/${component}:v${KUBERNETES_VERSION}"
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     done
@@ -369,15 +370,15 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
     extractKubeBinaries
   fi
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
-    CONTAINER_IMAGE="k8s.gcr.io/cloud-controller-manager-amd64:v${KUBERNETES_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/cloud-controller-manager:v${KUBERNETES_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
   fi
 done
 
-# Starting with 1.16 we pull a common cloud-controller-manager image
+# Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
-0.4.1
+0.5.0
 "
 for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
   for COMPONENT in azure-cloud-controller-manager azure-cloud-node-manager; do
@@ -388,7 +389,7 @@ for CLOUD_MANAGER_VERSION in ${CLOUD_MANAGER_VERSIONS}; do
 done
 
 AZUREDISK_CSI_VERSIONS="
-0.5.0
+0.7.0
 "
 for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/azuredisk-csi:v${AZUREDISK_CSI_VERSION}"
@@ -397,7 +398,7 @@ for AZUREDISK_CSI_VERSION in ${AZUREDISK_CSI_VERSIONS}; do
 done
 
 AZUREFILE_CSI_VERSIONS="
-0.3.0
+0.6.0
 "
 for AZUREFILE_CSI_VERSION in ${AZUREFILE_CSI_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/azurefile-csi:v${AZUREFILE_CSI_VERSION}"
@@ -414,17 +415,8 @@ for CSI_ATTACHER_VERSION in ${CSI_ATTACHER_VERSIONS}; do
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-CSI_CLUSTER_DRIVER_REGISTRAR_VERSIONS="
-1.0.1
-"
-for CSI_CLUSTER_DRIVER_REGISTRAR_VERSION in ${CSI_CLUSTER_DRIVER_REGISTRAR_VERSIONS}; do
-  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-cluster-driver-registrar:v${CSI_CLUSTER_DRIVER_REGISTRAR_VERSION}"
-  pullContainerImage "docker" ${CONTAINER_IMAGE}
-  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-done
-
 CSI_NODE_DRIVER_REGISTRAR_VERSIONS="
-1.1.0
+1.2.0
 "
 for CSI_NODE_DRIVER_REGISTRAR_VERSION in ${CSI_NODE_DRIVER_REGISTRAR_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v${CSI_NODE_DRIVER_REGISTRAR_VERSION}"
@@ -434,6 +426,7 @@ done
 
 CSI_PROVISIONER_VERSIONS="
 1.4.0
+1.5.0
 "
 for CSI_PROVISIONER_VERSION in ${CSI_PROVISIONER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-provisioner:v${CSI_PROVISIONER_VERSION}"
@@ -461,9 +454,19 @@ done
 
 CSI_SNAPSHOTTER_VERSIONS="
 1.1.0
+2.0.0
 "
 for CSI_SNAPSHOTTER_VERSION in ${CSI_SNAPSHOTTER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/csi-snapshotter:v${CSI_SNAPSHOTTER_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+SNAPSHOT_CONTROLLER_VERSIONS="
+2.0.0
+"
+for SNAPSHOT_CONTROLLER_VERSION in ${SNAPSHOT_CONTROLLER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes-csi/snapshot-controller:v${SNAPSHOT_CONTROLLER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -473,6 +476,34 @@ NODE_PROBLEM_DETECTOR_VERSIONS="
 "
 for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS="
+0.0.4
+"
+for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CSI_SECRETS_STORE_DRIVER_VERSIONS="
+0.0.9
+"
+for CSI_SECRETS_STORE_DRIVER_VERSION in ${CSI_SECRETS_STORE_DRIVER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/driver:v${CSI_SECRETS_STORE_DRIVER_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
+CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS="
+1.7.1
+1.1.2-r2
+"
+for CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION in ${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:${CLUSTER_PROPORTIONAL_AUTOSCALER_VERSION}"
   pullContainerImage "docker" ${CONTAINER_IMAGE}
   echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done

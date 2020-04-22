@@ -36,7 +36,8 @@ func NewAPIOperationClient(subscriptionID string) APIOperationClient {
 	return NewAPIOperationClientWithBaseURI(DefaultBaseURI, subscriptionID)
 }
 
-// NewAPIOperationClientWithBaseURI creates an instance of the APIOperationClient client.
+// NewAPIOperationClientWithBaseURI creates an instance of the APIOperationClient client using a custom endpoint.  Use
+// this when interacting with an Azure cloud that uses a non-standard base URI (sovereign clouds, Azure stack).
 func NewAPIOperationClientWithBaseURI(baseURI string, subscriptionID string) APIOperationClient {
 	return APIOperationClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
@@ -138,8 +139,7 @@ func (client APIOperationClient) CreateOrUpdatePreparer(ctx context.Context, res
 // CreateOrUpdateSender sends the CreateOrUpdate request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) CreateOrUpdateSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // CreateOrUpdateResponder handles the response to the CreateOrUpdate request. The method always
@@ -240,8 +240,7 @@ func (client APIOperationClient) DeletePreparer(ctx context.Context, resourceGro
 // DeleteSender sends the Delete request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) DeleteSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // DeleteResponder handles the response to the Delete request. The method always
@@ -338,8 +337,7 @@ func (client APIOperationClient) GetPreparer(ctx context.Context, resourceGroupN
 // GetSender sends the Get request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) GetSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // GetResponder handles the response to the Get request. The method always
@@ -436,8 +434,7 @@ func (client APIOperationClient) GetEntityTagPreparer(ctx context.Context, resou
 // GetEntityTagSender sends the GetEntityTag request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) GetEntityTagSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // GetEntityTagResponder handles the response to the GetEntityTag request. The method always
@@ -488,10 +485,10 @@ func (client APIOperationClient) ListByAPI(ctx context.Context, resourceGroupNam
 				{Target: "apiid", Name: validation.Pattern, Rule: `^[^*#&+:<>?]+$`, Chain: nil}}},
 		{TargetValue: top,
 			Constraints: []validation.Constraint{{Target: "top", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: 1, Chain: nil}}}}},
+				Chain: []validation.Constraint{{Target: "top", Name: validation.InclusiveMinimum, Rule: int64(1), Chain: nil}}}}},
 		{TargetValue: skip,
 			Constraints: []validation.Constraint{{Target: "skip", Name: validation.Null, Rule: false,
-				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: 0, Chain: nil}}}}}}); err != nil {
+				Chain: []validation.Constraint{{Target: "skip", Name: validation.InclusiveMinimum, Rule: int64(0), Chain: nil}}}}}}); err != nil {
 		return result, validation.NewError("apimanagement.APIOperationClient", "ListByAPI", err.Error())
 	}
 
@@ -551,8 +548,7 @@ func (client APIOperationClient) ListByAPIPreparer(ctx context.Context, resource
 // ListByAPISender sends the ListByAPI request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) ListByAPISender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // ListByAPIResponder handles the response to the ListByAPI request. The method always
@@ -693,8 +689,7 @@ func (client APIOperationClient) UpdatePreparer(ctx context.Context, resourceGro
 // UpdateSender sends the Update request. The method will close the
 // http.Response Body if it receives an error.
 func (client APIOperationClient) UpdateSender(req *http.Request) (*http.Response, error) {
-	sd := autorest.GetSendDecorators(req.Context(), azure.DoRetryWithRegistration(client.Client))
-	return autorest.SendWithSender(client, req, sd...)
+	return client.Send(req, azure.DoRetryWithRegistration(client.Client))
 }
 
 // UpdateResponder handles the response to the Update request. The method always

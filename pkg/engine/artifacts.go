@@ -52,6 +52,10 @@ func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesCom
 			base64Data:      k.GetComponentData(common.AddonManagerComponentName),
 			destinationFile: addonManagerComponentDestinationFilename,
 		},
+		common.ClusterInitComponentName: {
+			base64Data:      k.GetComponentData(common.ClusterInitComponentName),
+			destinationFile: clusterInitComponentDestinationFilename,
+		},
 	}
 }
 
@@ -151,11 +155,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.AzureCNINetworkMonitorAddonName),
 			destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 		},
-		common.DNSAutoscalerAddonName: {
-			sourceFile:      dnsAutoscalerAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.DNSAutoscalerAddonName),
-			destinationFile: dnsAutoscalerAddonDestinationFilename,
-		},
 		common.CalicoAddonName: {
 			sourceFile:      calicoAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.CalicoAddonName),
@@ -235,6 +234,11 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			sourceFile:      scheduledMaintenanceAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
 			destinationFile: scheduledMaintenanceAddonSourceFilename,
+		},
+		common.SecretsStoreCSIDriverAddonName: {
+			sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+			base64Data:      k.GetAddonScript(common.SecretsStoreCSIDriverAddonName),
+			destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 		},
 	}
 }

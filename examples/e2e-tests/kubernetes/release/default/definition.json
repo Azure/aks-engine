@@ -23,7 +23,7 @@
             "enabled": true,
             "pools": [
               {
-                "name": "pool1",
+                "name": "poollinux",
                 "config": {
                   "min-nodes": "1",
                   "max-nodes": "3"
@@ -39,10 +39,16 @@
           {
             "name": "aad-pod-identity",
             "enabled": true
+          },
+          {
+            "name": "coredns",
+            "enabled": true,
+            "config": {
+              "min-replicas": "1",
+              "nodes-per-replica": "10"
+            }
           }
-        ],
-        "loadBalancerSku": "Standard",
-        "excludeMasterFromStandardLB": true
+        ]
       }
     },
     "masterProfile": {
@@ -57,7 +63,7 @@
     },
     "agentPoolProfiles": [
       {
-        "name": "pool1",
+        "name": "poollinux",
         "count": 1,
         "vmSize": "Standard_D2_v3",
         "OSDiskSizeGB": 200,
@@ -66,18 +72,56 @@
           128
         ],
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
-        "availabilityZones": ["1"]
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       },
       {
-        "name": "agentwfast",
+        "name": "poolwin",
         "count": 1,
         "vmSize": "Standard_D2s_v3",
         "availabilityProfile": "VirtualMachineScaleSets",
         "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
         "osType": "Windows",
-        "storageProfile": "Ephemeral",
-        "availabilityZones": ["1"]
+        "storageProfile": "Ephemeral"
+      },
+      {
+        "name": "pool1604vhd",
+        "count": 1,
+        "vmSize": "Standard_D2_v3",
+        "distro": "aks-ubuntu-16.04",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      },
+      {
+        "name": "pool1604",
+        "count": 1,
+        "vmSize": "Standard_D2_v3",
+        "distro": "ubuntu",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      },
+      {
+        "name": "pool1804",
+        "count": 1,
+        "vmSize": "Standard_D2_v3",
+        "distro": "ubuntu-18.04",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      },
+      {
+        "name": "pool1804gen2",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3",
+        "distro": "ubuntu-18.04-gen2",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      },
+      {
+        "name": "poolwingen2",
+        "count": 1,
+        "vmSize": "Standard_D2s_v3",
+        "osType": "Windows",
+        "availabilityProfile": "VirtualMachineScaleSets",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
       }
     ],
     "linuxProfile": {

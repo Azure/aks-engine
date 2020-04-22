@@ -39,6 +39,10 @@ const (
 	MaxIPAddressCount = 256
 	// address relative to the first consecutive Kubernetes static IP
 	DefaultInternalLbStaticIPOffset = 10
+	// DefaultEnableCSIProxyWindows determines if CSI proxy should be enabled by default for Windows nodes
+	DefaultEnableCSIProxyWindows = false
+	// MaxLoadBalancerOutboundIPs is the maximum number of outbound IPs in a Standard LoadBalancer frontend configuration
+	MaxLoadBalancerOutboundIPs = 16
 )
 
 // Availability profiles
@@ -61,9 +65,9 @@ const (
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.13"
+	KubernetesDefaultRelease string = "1.15"
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release
-	KubernetesDefaultReleaseWindows string = "1.14"
+	KubernetesDefaultReleaseWindows string = "1.15"
 )
 
 const (
@@ -180,8 +184,6 @@ const (
 	GatekeeperContainerName = "gatekeeper"
 	// CloudNodeManagerAddonName is the name of the cloud node manager addon
 	CloudNodeManagerAddonName = "cloud-node-manager"
-	// DNSAutoscalerAddonName is the name of the dns-autoscaler addon
-	DNSAutoscalerAddonName = "dns-autoscaler"
 	// CalicoAddonName is the name of calico daemonset addon
 	CalicoAddonName = "calico-daemonset"
 	// CalicoTyphaComponentName is the name of calico-typha component
@@ -206,16 +208,20 @@ const (
 	CSIProvisionerContainerName = "csi-provisioner"
 	// CSIAttacherContainerName is the name of the csi-attacher container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIAttacherContainerName = "csi-attacher"
-	// CSIClusterDriverRegistrarContainerName is the name of the csi-cluster-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
-	CSIClusterDriverRegistrarContainerName = "csi-cluster-driver-registrar"
-	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSILivenessProbeContainerName is the name of the livenessprobe container in the azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
 	CSILivenessProbeContainerName = "livenessprobe"
-	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver addon
+	// CSILivenessProbeWindowsContainerName is the name of the livenessprobe-windows container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSILivenessProbeWindowsContainerName = "livenessprobe-windows"
+	// CSISnapshotterContainerName is the name of the csi-snapshotter container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSISnapshotterContainerName = "csi-snapshotter"
+	// CSISnapshotControllerContainerName is the name of the csi-snapshot-controller container
+	CSISnapshotControllerContainerName = "csi-snapshot-controller"
 	// CSIResizerContainerName is the name of the csi-resizer container in the azuredisk-csi-driver addon
 	CSIResizerContainerName = "csi-resizer"
-	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	// CSINodeDriverRegistrarContainerName is the name of the csi-node-driver-registrar container in the azuredisk-csi-driver, azurefile-csi-driver and secrets-store-csi-driver addons
 	CSINodeDriverRegistrarContainerName = "csi-node-driver-registrar"
+	// CSINodeDriverRegistrarWindowsContainerName is the name of the csi-node-driver-registrar-windows container in the azuredisk-csi-driver and azurefile-csi-driver addons
+	CSINodeDriverRegistrarWindowsContainerName = "csi-node-driver-registrar-windows"
 	// CSIAzureDiskContainerName is the name of the azuredisk-csi container in the azuredisk-csi-driver and azurefile-csi-driver addons
 	CSIAzureDiskContainerName = "azuredisk-csi"
 	// AzureFileCSIDriverAddonName is the name of Azure File CSI Driver addon
@@ -236,6 +242,8 @@ const (
 	PauseComponentName = "pause"
 	// CoreDNSAddonName is the name of the coredns addon
 	CoreDNSAddonName = "coredns"
+	// CoreDNSAutoscalerName is the name of the coredns-autoscaler container in the coredns addon
+	CoreDNSAutoscalerName = "coredns-autoscaler"
 	// KubeProxyAddonName is the name of the kube-proxy config addon
 	KubeProxyAddonName = "kube-proxy"
 	// CiliumAddonName is the name of cilium daemonset addon
@@ -266,6 +274,12 @@ const (
 	PodSecurityPolicyAddonName = "pod-security-policy"
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
+	// SecretsStoreCSIDriverAddonName is the name of the secrets-store-csi-driver addon
+	SecretsStoreCSIDriverAddonName = "csi-secrets-store"
+	// CSISecretsStoreDriverContainerName is the name of the secrets-store container in the csi-secrets-store addon
+	CSISecretsStoreDriverContainerName = "secrets-store"
+	// CSISecretsStoreProviderAzureContainerName is the name of the provider-azure-installer container in csi-secrets-store addon
+	CSISecretsStoreProviderAzureContainerName = "provider-azure-installer"
 )
 
 // Component name consts
@@ -280,6 +294,8 @@ const (
 	APIServerComponentName = "kube-apiserver"
 	// AddonManagerComponentName is the name of the kube-addon-manager component
 	AddonManagerComponentName = "kube-addon-manager"
+	// ClusterInitComponentName is the name of the cluster-init component
+	ClusterInitComponentName = "cluster-init"
 )
 
 const WindowsArtifactComponentName = "windowszip"
@@ -296,4 +312,54 @@ const (
 const (
 	KubernetesImageBaseTypeGCR = "gcr"
 	KubernetesImageBaseTypeMCR = "mcr"
+)
+
+var (
+	// DefaultDockerConfig describes the default configuration of the docker daemon.
+	DefaultDockerConfig = DockerConfig{
+		LiveRestore: true,
+		LogDriver:   "json-file",
+		LogOpts: LogOpts{
+			MaxSize: "50m",
+			MaxFile: "5",
+		},
+	}
+
+	// DefaultContainerdConfig describes the default configuration of the containerd daemon.
+	DefaultContainerdConfig = ContainerdConfig{
+		Version:  2,
+		OomScore: 0,
+		Plugins: Plugins{
+			IoContainerdGrpcV1Cri: IoContainerdGrpcV1Cri{
+				CNI: ContainerdCNIPlugin{},
+				Containerd: ContainerdPlugin{
+					DefaultRuntimeName: "runc",
+					Runtimes: map[string]ContainerdRuntime{
+						"runc": {
+							RuntimeType: "io.containerd.runc.v2",
+						},
+						// note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before
+						"untrusted": {
+							RuntimeType: "io.containerd.runc.v2",
+						},
+					},
+				},
+			},
+		},
+	}
+)
+
+// GetDefaultDockerConfig returns the default docker config for processing.
+func GetDefaultDockerConfig() DockerConfig {
+	return DefaultDockerConfig
+}
+
+// GetDefaultContainerdConfig returns the default containerd config for processing.
+func GetDefaultContainerdConfig() ContainerdConfig {
+	return DefaultContainerdConfig
+}
+
+// Known container runtime configuration keys
+const (
+	ContainerDataDirKey = "dataDir"
 )

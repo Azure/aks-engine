@@ -14,7 +14,7 @@ func createUserAssignedIdentities() UserAssignedIdentitiesARM {
 			APIVersion: "[variables('apiVersionManagedIdentity')]",
 		},
 		Identity: msi.Identity{
-			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 			Name:     to.StringPtr("[variables('userAssignedID')]"),
 			Location: to.StringPtr("[variables('location')]"),
 		},
@@ -27,7 +27,7 @@ func createAppGwUserAssignedIdentities() UserAssignedIdentitiesARM {
 			APIVersion: "[variables('apiVersionManagedIdentity')]",
 		},
 		Identity: msi.Identity{
-			Type:     "Microsoft.ManagedIdentity/userAssignedIdentities",
+			Type:     to.StringPtr("Microsoft.ManagedIdentity/userAssignedIdentities"),
 			Name:     to.StringPtr("[variables('appGwICIdentityName')]"),
 			Location: to.StringPtr("[variables('location')]"),
 		},

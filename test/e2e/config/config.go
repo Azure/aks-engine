@@ -36,6 +36,8 @@ type Config struct {
 	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
 	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
+	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
+	ClusterInitJobName  string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
@@ -44,6 +46,7 @@ type Config struct {
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
 	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
 	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
+	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
@@ -106,6 +109,13 @@ func (c *Config) GetKubeConfig() string {
 		kubeconfigPath = filepath.Join(c.CurrentWorkingDir, "_output", c.Name, "kubeconfig", file)
 	}
 	return kubeconfigPath
+}
+
+// IsCustomCloudProfile returns true if the cloud is a custom cloud
+func (c *Config) IsCustomCloudProfile() bool {
+	clusterDefinitionFullPath := fmt.Sprintf("%s/%s", c.CurrentWorkingDir, c.ClusterDefinition)
+	cs := parseVlabsContainerSerice(clusterDefinitionFullPath)
+	return cs.Properties.IsCustomCloudProfile()
 }
 
 // IsAzureStackCloud returns true if the cloud is AzureStack

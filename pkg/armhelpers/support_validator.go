@@ -52,7 +52,7 @@ func requiredImages(p *api.Properties) map[api.Distro]api.AzureOSImageConfig {
 	images[p.MasterProfile.Distro] = toImageConfig(p.MasterProfile.Distro)
 	for _, app := range p.AgentPoolProfiles {
 		if app.OSType == api.Windows {
-			images[app.Distro] = api.WindowsServer2019OSImageConfig
+			images[app.Distro] = toImageConfigWindows(p.WindowsProfile)
 		} else {
 			images[app.Distro] = toImageConfig(app.Distro)
 		}
@@ -78,10 +78,10 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 		return api.Ubuntu1604OSImageConfig
 	case api.Ubuntu1804:
 		return api.Ubuntu1804OSImageConfig
+	case api.Ubuntu1804Gen2:
+		return api.Ubuntu1804Gen2OSImageConfig
 	case api.RHEL:
 		return api.RHELOSImageConfig
-	case api.CoreOS:
-		return api.CoreOSImageConfig
 	case api.AKSUbuntu1604:
 		return api.AKSUbuntu1604OSImageConfig
 	case api.AKSUbuntu1804:
@@ -90,5 +90,15 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 		return api.ACC1604OSImageConfig
 	default:
 		return api.Ubuntu1604OSImageConfig
+	}
+}
+
+func toImageConfigWindows(profile *api.WindowsProfile) api.AzureOSImageConfig {
+	if profile == nil {
+		return api.AKSWindowsServer2019OSImageConfig
+	} else if profile.WindowsOffer == api.WindowsServer2019OSImageConfig.ImageOffer && profile.WindowsPublisher == api.WindowsServer2019OSImageConfig.ImagePublisher && profile.WindowsSku == api.WindowsServer2019OSImageConfig.ImageSku {
+		return api.WindowsServer2019OSImageConfig
+	} else {
+		return api.AKSWindowsServer2019OSImageConfig
 	}
 }

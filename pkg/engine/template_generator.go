@@ -245,6 +245,15 @@ func (t *TemplateGenerator) getTemplateFuncMap(cs *api.ContainerService) templat
 // all business logic is implemented in the underlying func
 func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 	return template.FuncMap{
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
+		},
+		"GetCustomCloudRootCertificates": func() string {
+			return cs.Properties.GetCustomCloudRootCertificates()
+		},
+		"GetCustomCloudSourcesList": func() string {
+			return cs.Properties.GetCustomCloudSourcesList()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
@@ -296,6 +305,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
 		},
+		"GetServiceCidr": func() string {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR
+		},
+		"GetKubeProxyMode": func() string {
+			return string(cs.Properties.OrchestratorProfile.KubernetesConfig.ProxyMode)
+		},
 		"HasPrivateRegistry": func() bool {
 			if cs.Properties.OrchestratorProfile.DcosConfig != nil {
 				return cs.Properties.OrchestratorProfile.DcosConfig.HasPrivateRegistry()
@@ -313,6 +328,10 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"IsAzureCNI": func() bool {
 			return cs.Properties.OrchestratorProfile.IsAzureCNI()
+		},
+		"HasClusterInitComponent": func() bool {
+			_, enabled := cs.Properties.OrchestratorProfile.KubernetesConfig.IsComponentEnabled(common.ClusterInitComponentName)
+			return enabled
 		},
 		"HasCosmosEtcd": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.HasCosmosEtcd()
@@ -470,12 +489,15 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				kubernetesWindowsAgentFunctionsPS1,
 				kubernetesWindowsConfigFunctionsPS1,
 				kubernetesWindowsContainerdFunctionsPS1,
+				kubernetesWindowsCsiProxyFunctionsPS1,
 				kubernetesWindowsKubeletFunctionsPS1,
 				kubernetesWindowsCniFunctionsPS1,
 				kubernetesWindowsAzureCniFunctionsPS1,
 				kubernetesWindowsLogsCleanupPS1,
 				kubernetesWindowsNodeResetPS1,
 				kubernetesWindowsOpenSSHFunctionPS1,
+				kubeletStartPS1,
+				kubeproxyStartPS1,
 			}
 
 			// Create a buffer, new zip
@@ -536,8 +558,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"AnyAgentIsLinux": func() bool {
 			return cs.Properties.AnyAgentIsLinux()
 		},
-		"IsNSeriesSKU": func(profile *api.AgentPoolProfile) bool {
-			return common.IsNvidiaEnabledSKU(profile.VMSize)
+		"IsNSeriesSKU": func(vmSKU string) bool {
+			return common.IsNvidiaEnabledSKU(vmSKU)
 		},
 		"HasAvailabilityZones": func(profile *api.AgentPoolProfile) bool {
 			return profile.HasAvailabilityZones()
@@ -629,6 +651,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			cloudSpecConfig := cs.GetCloudSpecConfig()
 			return fmt.Sprintf("\"%s\"", cloudSpecConfig.OSImageConfig[profile.Distro].ImageVersion)
 		},
+		"HasVHDDistroNodes": func() bool {
+			return cs.Properties.HasVHDDistroNodes()
+		},
+		"IsVHDDistroForAllNodes": func() bool {
+			return cs.Properties.IsVHDDistroForAllNodes()
+		},
 		"UseCloudControllerManager": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager != nil && *cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager
 		},
@@ -663,7 +691,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return base64.StdEncoding.EncodeToString([]byte(customEnvironmentJSON))
 		},
 		"GetIdentitySystem": func() string {
-			if cs.Properties.IsAzureStackCloud() {
+			if cs.Properties.IsCustomCloudProfile() {
 				return cs.Properties.CustomCloudProfile.IdentitySystem
 			}
 
@@ -678,20 +706,28 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"NeedsContainerd": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd()
 		},
-		"IsKataContainerRuntime": func() bool {
-			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.KataContainers
-		},
 		"IsDockerContainerRuntime": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime == api.Docker
+		},
+		"GetDockerConfig": func(hasGPU bool) string {
+			val, err := getDockerConfig(cs, hasGPU)
+			if err != nil {
+				return ""
+			}
+			return val
+		},
+		"GetContainerdConfig": func() string {
+			val, err := getContainerdConfig(cs)
+			if err != nil {
+				return ""
+			}
+			return val
 		},
 		"HasNSeriesSKU": func() bool {
 			return cs.Properties.HasNSeriesSKU()
 		},
 		"HasDCSeriesSKU": func() bool {
 			return cs.Properties.HasDCSeriesSKU()
-		},
-		"HasCoreOS": func() bool {
-			return cs.Properties.HasCoreOS()
 		},
 		"RequiresDocker": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
@@ -750,6 +786,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
+		"GetCSEErrorCode": func(errorType string) int {
+			return GetCSEErrorCode(errorType)
+		},
 		"GetApplicationInsightsTelemetryKeys": func() string {
 			userSuppliedAIKey := ""
 			if cs.Properties.TelemetryProfile != nil {
@@ -800,6 +839,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"CloseBraces": func() string {
 			return "}}"
+		},
+		"IndentString": func(original string, spaces int) string {
+			return common.IndentString(original, spaces)
 		},
 	}
 }
@@ -882,7 +924,39 @@ func (t *TemplateGenerator) getParameterDescMap(containerService *api.ContainerS
 
 func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) string {
 	if isUserAssignedIdentity {
-		return "' USER_ASSIGNED_IDENTITY_ID=',reference(concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID')), '2018-11-30').clientId, ' '"
+		return "' USER_ASSIGNED_IDENTITY_ID=',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId, ' '"
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
+}
+
+func getDockerConfig(cs *api.ContainerService, hasGPU bool) (string, error) {
+	var overrides []func(*common.DockerConfig) error
+
+	if hasGPU {
+		overrides = append(overrides, common.DockerNvidiaOverride)
+	}
+
+	val, err := common.GetDockerConfig(cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig, overrides)
+	if err != nil {
+		return "", err
+	}
+
+	return val, nil
+}
+
+func getContainerdConfig(cs *api.ContainerService) (string, error) {
+	var overrides = []func(*common.ContainerdConfig) error{
+		common.ContainerdSandboxImageOverrider(cs.Properties.OrchestratorProfile.GetPodInfraContainerSpec()),
+	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin == NetworkPluginKubenet {
+		overrides = append(overrides, common.ContainerdKubenetOverride)
+	}
+
+	val, err := common.GetContainerdConfig(cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig, overrides)
+	if err != nil {
+		return "", err
+	}
+
+	return val, nil
 }

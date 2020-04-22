@@ -779,4 +779,111 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 		t.Errorf("unexpected error while comparing load balancers: %s", diff)
 	}
 
+	// Test with > 1 LB outbound IP address
+	cs = &api.ContainerService{
+		Properties: &api.Properties{
+			MasterProfile: &api.MasterProfile{
+				Count: 1,
+			},
+			OrchestratorProfile: &api.OrchestratorProfile{
+				OrchestratorVersion: "1.14.4",
+				KubernetesConfig: &api.KubernetesConfig{
+					LoadBalancerSku:         StandardLoadBalancerSku,
+					LoadBalancerOutboundIPs: to.IntPtr(6),
+				},
+			},
+		},
+	}
+	actual = CreateStandardLoadBalancerForNodePools(cs.Properties, false)
+
+	expected.LoadBalancer.LoadBalancerPropertiesFormat.FrontendIPConfigurations = &[]network.FrontendIPConfiguration{
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName2')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName2'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName3')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName3'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName4')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName4'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName5')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName5'))]"),
+				},
+			},
+		},
+		{
+			Name: to.StringPtr("[variables('agentLbIPConfigName6')]"),
+			FrontendIPConfigurationPropertiesFormat: &network.FrontendIPConfigurationPropertiesFormat{
+				PublicIPAddress: &network.PublicIPAddress{
+					ID: to.StringPtr("[resourceId('Microsoft.Network/publicIpAddresses',variables('agentPublicIPAddressName6'))]"),
+				},
+			},
+		},
+	}
+	expected.LoadBalancer.LoadBalancerPropertiesFormat.OutboundRules = &[]network.OutboundRule{
+		{
+			Name: to.StringPtr("LBOutboundRule"),
+			OutboundRulePropertiesFormat: &network.OutboundRulePropertiesFormat{
+				FrontendIPConfigurations: &[]network.SubResource{
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID')]"),
+					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID2')]"),
+					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID3')]"),
+					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID4')]"),
+					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID5')]"),
+					},
+					{
+						ID: to.StringPtr("[variables('agentLbIPConfigID6')]"),
+					},
+				},
+				BackendAddressPool: &network.SubResource{
+					ID: to.StringPtr("[concat(variables('agentLbID'), '/backendAddressPools/', variables('agentLbBackendPoolName'))]"),
+				},
+				Protocol:               network.Protocol1All,
+				IdleTimeoutInMinutes:   to.Int32Ptr(cs.Properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes),
+				EnableTCPReset:         to.BoolPtr(true),
+				AllocatedOutboundPorts: to.Int32Ptr(0),
+			},
+		},
+	}
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected error while comparing load balancers: %s", diff)
+	}
 }

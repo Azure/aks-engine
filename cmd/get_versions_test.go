@@ -31,7 +31,7 @@ func TestGetVersionsCmd_ShouldSupportJSON(t *testing.T) {
 
 	command := &getVersionsCmd{
 		orchestrator: "kubernetes",
-		version:      "1.13.3",
+		version:      "1.15.11",
 		output:       "json",
 	}
 	err := command.run(nil, nil)
@@ -44,7 +44,7 @@ func TestGetVersionsCmd_ShouldBeHumanReadable(t *testing.T) {
 
 	command := &getVersionsCmd{
 		orchestrator: "kubernetes",
-		version:      "1.13.3",
+		version:      "1.15.11",
 		output:       "human",
 	}
 	err := command.run(nil, nil)
@@ -57,7 +57,7 @@ func TestGetVersionsCmd_ShouldErrorIfInvalidOption(t *testing.T) {
 
 	command := &getVersionsCmd{
 		orchestrator: "kubernetes",
-		version:      "1.13.3",
+		version:      "1.15.11",
 		output:       "yaml",
 	}
 	err := command.run(nil, nil)

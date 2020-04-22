@@ -19,40 +19,45 @@ const (
 	calicoCNIImageReference                           string = "cni:v3.8.0"
 	calicoNodeImageReference                          string = "node:v3.8.0"
 	calicoPod2DaemonImageReference                    string = "pod2daemon-flexvol:v3.8.0"
-	calicoClusterProportionalAutoscalerImageReference string = "cluster-proportional-autoscaler-amd64:1.1.2-r2"
+	calicoClusterProportionalAutoscalerImageReference string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.1.2-r2"
 	ciliumAgentImageReference                         string = "docker.io/cilium/cilium:v1.4"
 	ciliumCleanStateImageReference                    string = "docker.io/cilium/cilium-init:2018-10-16"
 	ciliumOperatorImageReference                      string = "docker.io/cilium/operator:v1.4"
 	ciliumEtcdOperatorImageReference                  string = "docker.io/cilium/cilium-etcd-operator:v2.0.5"
-	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.3.0"
+	antreaControllerImageReference                    string = "antrea/antrea-ubuntu:v0.5.1"
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
 	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.33"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
-	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1"
-	gatekeeperImageReference                          string = "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2"
+	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200227.1"
+	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.7-hotfix.20200327"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.1"
-	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.4.0"
+	csiProvisionerImageReference                      string = "oss/kubernetes-csi/csi-provisioner:v1.5.0"
 	csiAttacherImageReference                         string = "oss/kubernetes-csi/csi-attacher:v1.2.0"
-	csiClusterDriverRegistrarImageReference           string = "oss/kubernetes-csi/csi-cluster-driver-registrar:v1.0.1"
 	csiLivenessProbeImageReference                    string = "oss/kubernetes-csi/livenessprobe:v1.1.0"
-	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.1.0"
-	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v1.1.0"
+	csiLivenessProbeWindowsImageReference             string = "oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64"
+	csiNodeDriverRegistrarImageReference              string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0"
+	csiNodeDriverRegistrarWindowsImageReference       string = "oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64"
 	csiResizerImageReference                          string = "oss/kubernetes-csi/csi-resizer:v0.3.0"
-	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.5.0"
-	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.3.0"
-	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.4.1"
-	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.4.1"
+	csiSnapshotterImageReference                      string = "oss/kubernetes-csi/csi-snapshotter:v2.0.0"
+	csiSnapshotControllerImageReference               string = "oss/kubernetes-csi/snapshot-controller:v2.0.0"
+	csiAzureDiskImageReference                        string = "k8s/csi/azuredisk-csi:v0.7.0"
+	csiAzureFileImageReference                        string = "k8s/csi/azurefile-csi:v0.6.0"
+	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.5.0"
+	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.5.0"
 	kubeFlannelImageReference                         string = "quay.io/coreos/flannel:v0.8.0-amd64"
 	flannelInstallCNIImageReference                   string = "quay.io/coreos/flannel:v0.10.0-amd64"
 	KubeRBACProxyImageReference                       string = "gcr.io/kubebuilder/kube-rbac-proxy:v0.4.0"
 	ScheduledMaintenanceManagerImageReference         string = "quay.io/awesomenix/drainsafe-manager:latest"
 	nvidiaDevicePluginImageReference                  string = "k8s-device-plugin:1.11"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
-	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.6"
+	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
+	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.4"
+	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.9"
+	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 )
 
 var kubernetesImageBaseDefaultImages = map[string]map[string]string{
@@ -66,7 +71,6 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DNSSidecarComponentName:        "k8s-dns-sidecar-amd64:1.14.10",
 		common.ReschedulerAddonName:           "rescheduler:v0.4.0",
 		common.IPMASQAgentAddonName:           "ip-masq-agent-amd64:v2.5.0",
-		common.DNSAutoscalerAddonName:         "cluster-proportional-autoscaler-amd64:1.1.1",
 		common.KubeProxyAddonName:             "kube-proxy",
 		common.ControllerManagerComponentName: "kube-controller-manager",
 		common.APIServerComponentName:         "kube-apiserver",
@@ -83,12 +87,18 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.DNSSidecarComponentName:        "oss/kubernetes/k8s-dns-sidecar:1.14.10",
 		common.ReschedulerAddonName:           "oss/kubernetes/rescheduler:v0.4.0",
 		common.IPMASQAgentAddonName:           "oss/kubernetes/ip-masq-agent:v2.5.0",
-		common.DNSAutoscalerAddonName:         "oss/kubernetes/cluster-proportional-autoscaler:1.1.1",
 		common.KubeProxyAddonName:             "oss/kubernetes/kube-proxy",
 		common.ControllerManagerComponentName: "oss/kubernetes/kube-controller-manager",
 		common.APIServerComponentName:         "oss/kubernetes/kube-apiserver",
 		common.SchedulerComponentName:         "oss/kubernetes/kube-scheduler",
 		common.Hyperkube:                      "oss/kubernetes/hyperkube",
+	},
+}
+
+var csiSidecarComponentsOverrides = map[string]map[string]string{
+	common.AzureFileCSIDriverAddonName: {
+		common.CSIProvisionerContainerName: "oss/kubernetes-csi/csi-provisioner:v1.4.0",
+		common.CSISnapshotterContainerName: "oss/kubernetes-csi/csi-snapshotter:v1.1.0",
 	},
 }
 
@@ -101,11 +111,17 @@ func getDefaultImage(image, kubernetesImageBaseType string) string {
 // The map supports GCR or MCR image string flavors
 var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string{
 	common.KubernetesImageBaseTypeGCR: {
+		"1.19": {
+			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
+			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
+			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.0.2",
+			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
+		},
 		"1.18": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.0.2",
-			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
+			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
@@ -204,36 +220,42 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 		},
 	},
 	common.KubernetesImageBaseTypeMCR: {
+		"1.19": {
+			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
+			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.0.2",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.0",
+		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.0.2",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.1",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.0.2",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.0",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.2",
 		},
 		"1.16": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.4",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.0.2",
-			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.3",
+			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.16.5",
 		},
 		"1.15": {
 			common.AddonResizerComponentName:           "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
 			common.MetricsServerAddonName:              "oss/kubernetes/metrics-server:v0.2.1",
 			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.0.2",
-			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.4",
+			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.15.6",
 			common.CloudControllerManagerComponentName: "oss/kubernetes/cloud-controller-manager",
 		},
 		"1.14": {
 			common.AddonResizerComponentName:           "oss/kubernetes/autoscaler/addon-resizer:1.8.4",
 			common.MetricsServerAddonName:              "oss/kubernetes/metrics-server:v0.2.1",
 			common.AddonManagerComponentName:           "oss/kubernetes/kube-addon-manager:v9.0.2",
-			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.14.7",
+			common.ClusterAutoscalerAddonName:          "oss/kubernetes/autoscaler/cluster-autoscaler:v1.14.8",
 			common.CloudControllerManagerComponentName: "oss/kubernetes/cloud-controller-manager",
 		},
 		"1.13": {
@@ -380,7 +402,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 	var ret map[string]string
 	k8sComponent := kubernetesImageBaseVersionedImages[kubernetesImageBaseType][majorMinor]
 	switch majorMinor {
-	case "1.18":
+	case "1.19":
 		ret = map[string]string{
 			common.APIServerComponentName:                     getDefaultImage(common.APIServerComponentName, kubernetesImageBaseType) + ":v" + version,
 			common.ControllerManagerComponentName:             getDefaultImage(common.ControllerManagerComponentName, kubernetesImageBaseType) + ":v" + version,
@@ -395,6 +417,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -409,7 +432,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -431,10 +453,12 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
+			common.CSILivenessProbeWindowsContainerName:       csiLivenessProbeWindowsImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSINodeDriverRegistrarWindowsContainerName: csiNodeDriverRegistrarWindowsImageReference,
 			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSISnapshotControllerContainerName:         csiSnapshotControllerImageReference,
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
@@ -457,6 +481,90 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
+		}
+	case "1.18":
+		ret = map[string]string{
+			common.APIServerComponentName:                     getDefaultImage(common.APIServerComponentName, kubernetesImageBaseType) + ":v" + version,
+			common.ControllerManagerComponentName:             getDefaultImage(common.ControllerManagerComponentName, kubernetesImageBaseType) + ":v" + version,
+			common.KubeProxyAddonName:                         getDefaultImage(common.KubeProxyAddonName, kubernetesImageBaseType) + ":v" + version,
+			common.SchedulerComponentName:                     getDefaultImage(common.SchedulerComponentName, kubernetesImageBaseType) + ":v" + version,
+			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
+			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
+			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
+			common.DashboardAddonName:                         getDefaultImage(common.DashboardAddonName, kubernetesImageBaseType),
+			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
+			common.AddonResizerComponentName:                  k8sComponent[common.AddonResizerComponentName],
+			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
+			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
+			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
+			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
+			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
+			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
+			common.PauseComponentName:                         pauseImageReference,
+			common.TillerAddonName:                            tillerImageReference,
+			common.ReschedulerAddonName:                       getDefaultImage(common.ReschedulerAddonName, kubernetesImageBaseType),
+			common.ACIConnectorAddonName:                      virtualKubeletImageReference,
+			common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
+			common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
+			common.DNSSidecarComponentName:                    getDefaultImage(common.DNSSidecarComponentName, kubernetesImageBaseType),
+			common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
+			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
+			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
+			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
+			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
+			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
+			common.CalicoCNIComponentName:                     calicoCNIImageReference,
+			common.CalicoNodeComponentName:                    calicoNodeImageReference,
+			common.CalicoPod2DaemonComponentName:              calicoPod2DaemonImageReference,
+			common.CalicoClusterAutoscalerComponentName:       calicoClusterProportionalAutoscalerImageReference,
+			common.CiliumAgentContainerName:                   ciliumAgentImageReference,
+			common.CiliumCleanStateContainerName:              ciliumCleanStateImageReference,
+			common.CiliumOperatorContainerName:                ciliumOperatorImageReference,
+			common.CiliumEtcdOperatorContainerName:            ciliumEtcdOperatorImageReference,
+			common.AntreaControllerContainerName:              antreaControllerImageReference,
+			common.AntreaAgentContainerName:                   antreaAgentImageReference,
+			common.AntreaOVSContainerName:                     antreaOVSImageReference,
+			"antrea" + common.AntreaInstallCNIContainerName:   antreaInstallCNIImageReference,
+			common.NMIContainerName:                           aadPodIdentityNMIImageReference,
+			common.MICContainerName:                           aadPodIdentityMICImageReference,
+			common.AzurePolicyAddonName:                       azurePolicyImageReference,
+			common.GatekeeperContainerName:                    gatekeeperImageReference,
+			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
+			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
+			common.CSIAttacherContainerName:                   csiAttacherImageReference,
+			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
+			common.CSILivenessProbeWindowsContainerName:       csiLivenessProbeWindowsImageReference,
+			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
+			common.CSINodeDriverRegistrarWindowsContainerName: csiNodeDriverRegistrarWindowsImageReference,
+			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSISnapshotControllerContainerName:         csiSnapshotControllerImageReference,
+			common.CSIResizerContainerName:                    csiResizerImageReference,
+			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
+			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
+			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
+			"flannel" + common.FlannelInstallCNIContainerName: flannelInstallCNIImageReference,
+			common.KubeRBACProxyContainerName:                 KubeRBACProxyImageReference,
+			common.ScheduledMaintenanceManagerContainerName:   ScheduledMaintenanceManagerImageReference,
+			"nodestatusfreq":                                  DefaultKubernetesNodeStatusUpdateFrequency,
+			"nodegraceperiod":                                 DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
+			"podeviction":                                     DefaultKubernetesCtrlMgrPodEvictionTimeout,
+			"routeperiod":                                     DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+			"backoffretries":                                  strconv.Itoa(DefaultKubernetesCloudProviderBackoffRetries),
+			"backoffjitter":                                   strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffJitter, 'f', -1, 64),
+			"backoffduration":                                 strconv.Itoa(DefaultKubernetesCloudProviderBackoffDuration),
+			"backoffexponent":                                 strconv.FormatFloat(DefaultKubernetesCloudProviderBackoffExponent, 'f', -1, 64),
+			"ratelimitqps":                                    strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPS, 'f', -1, 64),
+			"ratelimitqpswrite":                               strconv.FormatFloat(DefaultKubernetesCloudProviderRateLimitQPSWrite, 'f', -1, 64),
+			"ratelimitbucket":                                 strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucket),
+			"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
+			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
+			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
+			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 		}
 	case "1.17":
 		ret = map[string]string{
@@ -473,6 +581,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -487,7 +596,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -509,10 +617,10 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
 			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
+			common.CSISnapshotControllerContainerName:         csiSnapshotControllerImageReference,
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
@@ -535,6 +643,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 		}
 	case "1.16":
 		ret = map[string]string{
@@ -549,6 +659,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -563,7 +674,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -585,10 +695,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
 			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
@@ -611,6 +719,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
 			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
+			common.CSISecretsStoreProviderAzureContainerName:  csiSecretsStoreProviderAzureImageReference,
+			common.CSISecretsStoreDriverContainerName:         csiSecretsStoreDriverImageReference,
 		}
 	case "1.15":
 		ret = map[string]string{
@@ -624,6 +734,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -638,7 +749,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -660,11 +770,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
-			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -699,6 +806,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -713,7 +821,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -735,11 +842,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
-			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -774,6 +878,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -788,7 +893,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -810,11 +914,8 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.NodeProblemDetectorAddonName:               nodeProblemDetectorImageReference,
 			common.CSIProvisionerContainerName:                csiProvisionerImageReference,
 			common.CSIAttacherContainerName:                   csiAttacherImageReference,
-			common.CSIClusterDriverRegistrarContainerName:     csiClusterDriverRegistrarImageReference,
 			common.CSILivenessProbeContainerName:              csiLivenessProbeImageReference,
 			common.CSINodeDriverRegistrarContainerName:        csiNodeDriverRegistrarImageReference,
-			common.CSISnapshotterContainerName:                csiSnapshotterImageReference,
-			common.CSIResizerContainerName:                    csiResizerImageReference,
 			common.CSIAzureDiskContainerName:                  csiAzureDiskImageReference,
 			common.CSIAzureFileContainerName:                  csiAzureFileImageReference,
 			common.KubeFlannelContainerName:                   kubeFlannelImageReference,
@@ -849,6 +950,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
 			common.MetricsServerAddonName:                     k8sComponent[common.MetricsServerAddonName],
 			common.CoreDNSAddonName:                           getDefaultImage(common.CoreDNSAddonName, kubernetesImageBaseType),
+			common.CoreDNSAutoscalerName:                      clusterProportionalAutoscalerImageReference,
 			common.KubeDNSAddonName:                           getDefaultImage(common.KubeDNSAddonName, kubernetesImageBaseType),
 			common.AddonManagerComponentName:                  k8sComponent[common.AddonManagerComponentName],
 			common.DNSMasqComponentName:                       getDefaultImage(common.DNSMasqComponentName, kubernetesImageBaseType),
@@ -863,7 +965,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -928,7 +1029,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -993,7 +1093,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -1058,7 +1157,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,
@@ -1120,7 +1218,6 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
 			common.KeyVaultFlexVolumeAddonName:                keyvaultFlexVolumeImageReference,
 			common.IPMASQAgentAddonName:                       getDefaultImage(common.IPMASQAgentAddonName, kubernetesImageBaseType),
-			common.DNSAutoscalerAddonName:                     getDefaultImage(common.DNSAutoscalerAddonName, kubernetesImageBaseType),
 			common.AzureNetworkPolicyAddonName:                azureNPMContainerImageReference,
 			common.CalicoTyphaComponentName:                   calicoTyphaImageReference,
 			common.CalicoCNIComponentName:                     calicoCNIImageReference,

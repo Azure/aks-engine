@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: blobfuse-flexvol-installer
+  namespace: kube-system
+  labels:
+    k8s-app: blobfuse
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      name: blobfuse
+  template:
+    metadata:
+      labels:
+        name: blobfuse
+        kubernetes.io/cluster-service: "true"
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-cluster-critical
+      containers:
+      - name: blobfuse-flexvol-installer
+        image: {{ContainerImage "blobfuse-flexvolume"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
+            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
+          limits:
+            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
+            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
+        volumeMounts:
+        - name: volplugins
+          mountPath: /etc/kubernetes/volumeplugins/
+        - name: varlog
+          mountPath: /var/log/
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log/
+      - name: volplugins
+        hostPath:
+          path: /etc/kubernetes/volumeplugins/
+      nodeSelector:
+        beta.kubernetes.io/os: linux

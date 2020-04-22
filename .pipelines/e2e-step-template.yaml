@@ -24,3 +24,8 @@ steps:
       artifactName: '${{ parameters.job }}-$(timestamp)_logs'
       targetPath: './_logs'
     condition: always()
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: JUnit
+      testResultsFiles: '**/junit.xml'
+    condition: always()

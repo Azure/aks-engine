@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	. "github.com/onsi/gomega"
 )
@@ -74,6 +74,9 @@ func TestMarshalJSONAvailabilitySetARM(t *testing.T) {
 					AvailabilitySetProperties: &compute.AvailabilitySetProperties{
 						PlatformFaultDomainCount:  to.Int32Ptr(3),
 						PlatformUpdateDomainCount: to.Int32Ptr(3),
+						ProximityPlacementGroup: &compute.SubResource{
+							ID: to.StringPtr("ProximityPlacementGroupResourceID"),
+						},
 					},
 				},
 			},
@@ -81,7 +84,10 @@ func TestMarshalJSONAvailabilitySetARM(t *testing.T) {
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"properties": {
 				"platformFaultDomainCount": 3,
-				"platformUpdateDomainCount": 3
+				"platformUpdateDomainCount": 3,
+				"proximityPlacementGroup": {
+					"id": "ProximityPlacementGroupResourceID"
+				}
 			},
 			"sku": {
 				"name": "Aligned"
@@ -105,6 +111,9 @@ func TestMarshalJSONAvailabilitySetARM(t *testing.T) {
 					},
 					AvailabilitySetProperties: &compute.AvailabilitySetProperties{
 						PlatformUpdateDomainCount: to.Int32Ptr(3),
+						ProximityPlacementGroup: &compute.SubResource{
+							ID: to.StringPtr("ProximityPlacementGroupResourceID"),
+						},
 					},
 				},
 			},
@@ -112,7 +121,10 @@ func TestMarshalJSONAvailabilitySetARM(t *testing.T) {
 			"apiVersion": "[variables('apiVersionCompute')]",
 			"properties": {
 				"platformFaultDomainCount": "[if(contains(split('canadacentral,centralus,eastus,eastus2,northcentralus,northeurope,southcentralus,westeurope,westus',','),variables('location')),3,if(equals('centraluseuap',variables('location')),1,2))]",
-				"platformUpdateDomainCount": 3
+				"platformUpdateDomainCount": 3,
+				"proximityPlacementGroup": {  
+					"id": "ProximityPlacementGroupResourceID"
+   				}
 			},
 			"sku": {
 				"name": "Aligned"

@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/google/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -257,7 +257,7 @@ func TestWriteArtifacts(t *testing.T) {
 	t.Parallel()
 
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.13.12", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "1.15.11", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,

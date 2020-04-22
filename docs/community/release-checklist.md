@@ -87,7 +87,7 @@ Save the markdown that it prints so it can be pasted into the GitHub release.
 Make sure your repository has no local changes, then build the aks-engine distribution archives:
 
 ```
-$ make generate && make info  # check that the git tree state is clean after a build, and that the tag is correct
+$ make generate info  # check that the git tree state is clean after a build, and that the tag is correct
 $ make clean dist
 ```
 
@@ -131,11 +131,6 @@ The [gofish][] package manager has automation in place to create an update when 
 
 Adding new versions to [choco][] is automated, but you can check the status of package approval and publishing at the [aks-engine chocolatey page][choco-status].
 
-Note that it can take a while for the NuGet machinery to submit the current release, and it may be reviewed for several days before it is actually made available.
-
-#### The official Docker image
-
-(Coming soon).
 
 [aks-engine]: https://github.com/Azure/aks-engine/releases
 [brew]: https://brew.sh/

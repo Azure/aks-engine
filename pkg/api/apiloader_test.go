@@ -197,7 +197,7 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.13",
+				"orchestratorRelease": "1.15",
 				"kubernetesConfig": {
 					"kubernetesImageBase": "msazurestackqa/",
 					"useInstanceMetadata": false,
@@ -281,7 +281,7 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 		"properties": {
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
-				"orchestratorRelease": "1.13",
+				"orchestratorRelease": "1.15",
 				"kubernetesConfig": {
 					"kubernetesImageBase": "msazurestackqa/",
 					"useInstanceMetadata": false,
@@ -430,7 +430,7 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 		Translator: &i18n.Translator{},
 	}
 
-	cs, _, err := apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON, v20170831.APIVersion, true, false, "1.13.11", nil)
+	cs, _, err := apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON, v20170831.APIVersion, true, false, "1.15.11", nil)
 
 	if err != nil {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())
@@ -456,7 +456,7 @@ func TestLoadContainerServiceForAgentPoolOnlyClusterWithRawJSON(t *testing.T) {
 	rawJSON20180331 := []byte(`{"id":"sampleID","location":"westus2","plan":{"name":"sampleRPPlan","product":"fooProduct","promotionCode":"barPromoCode","publisher":"bazPublisher"},"tags":{"123":"456","abc":"def"},"type":"sampleType","properties":{"provisioningState":"Succeeded","kubernetesVersion":"","dnsPrefix":"blueorange","fqdn":"blueorange.azure.com","agentPoolProfiles":[{"name":"sampleagent","count":0,"vmSize":"Standard_DS1_v1","osDiskSizeGB":512,"storageProfile":"ManagedDisks","vnetSubnetID":"/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/sampleVnet/subnets/sampleVnetSubnetID","osType":"Linux"}],"windowsProfile":{"adminUsername":"azureuser","adminPassword":"azurepassword"},"servicePrincipalProfile":{"clientId":"sampleClientID","secret":"sampleSecret"}}}`)
 
 	//Test with version v20180331
-	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON20180331, v20180331.APIVersion, true, false, "1.13.11", nil)
+	cs, _, err = apiloader.LoadContainerServiceForAgentPoolOnlyCluster(rawJSON20180331, v20180331.APIVersion, true, false, "1.15.11", nil)
 
 	if err != nil {
 		t.Errorf("unexpected error while executing LoadContainerServiceForAgentPoolOnlyCluster: %s", err.Error())

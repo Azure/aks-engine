@@ -1,15 +1,16 @@
 module github.com/Azure/aks-engine
 
-go 1.14
+go 1.13
 
 require (
-	github.com/Azure/azure-sdk-for-go v36.2.0+incompatible
-	github.com/Azure/go-autorest/autorest v0.9.2
-	github.com/Azure/go-autorest/autorest/adal v0.8.0
+	github.com/Azure/azure-sdk-for-go v41.0.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.9.6
+	github.com/Azure/go-autorest/autorest/adal v0.8.2
 	github.com/Azure/go-autorest/autorest/azure/cli v0.3.0
 	github.com/Azure/go-autorest/autorest/date v0.2.0
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/BurntSushi/toml v0.3.1
 	github.com/Jeffail/gabs v1.1.1
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/davecgh/go-spew v1.1.1
@@ -47,7 +48,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3
 	github.com/x-cray/logrus-prefixed-formatter v0.5.2
-	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
 	golang.org/x/sys v0.0.0-20191104094858-e8c54fb511f6 // indirect
@@ -57,7 +58,7 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.25.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.41.0
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v10.0.0+incompatible

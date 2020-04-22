@@ -81,12 +81,15 @@ const (
 	kubernetesWindowsAgentFunctionsPS1      = "k8s/kuberneteswindowsfunctions.ps1"
 	kubernetesWindowsConfigFunctionsPS1     = "k8s/windowsconfigfunc.ps1"
 	kubernetesWindowsContainerdFunctionsPS1 = "k8s/windowscontainerdfunc.ps1"
+	kubernetesWindowsCsiProxyFunctionsPS1   = "k8s/windowscsiproxyfunc.ps1"
 	kubernetesWindowsKubeletFunctionsPS1    = "k8s/windowskubeletfunc.ps1"
 	kubernetesWindowsCniFunctionsPS1        = "k8s/windowscnifunc.ps1"
 	kubernetesWindowsAzureCniFunctionsPS1   = "k8s/windowsazurecnifunc.ps1"
 	kubernetesWindowsOpenSSHFunctionPS1     = "k8s/windowsinstallopensshfunc.ps1"
 	kubernetesWindowsLogsCleanupPS1         = "k8s/windowslogscleanup.ps1"
 	kubernetesWindowsNodeResetPS1           = "k8s/windowsnodereset.ps1"
+	kubeletStartPS1                         = "k8s/kubeletstart.ps1"
+	kubeproxyStartPS1                       = "k8s/kubeproxystart.ps1"
 )
 
 // cloud-init (i.e. ARM customData) source file references
@@ -226,8 +229,6 @@ const (
 	ipMasqAgentAddonDestinationFilename            string = "ip-masq-agent.yaml"
 	azureCNINetworkMonitorAddonSourceFilename      string = "azure-cni-networkmonitor.yaml"
 	azureCNINetworkMonitorAddonDestinationFilename string = "azure-cni-networkmonitor.yaml"
-	dnsAutoscalerAddonSourceFilename               string = "dns-autoscaler.yaml"
-	dnsAutoscalerAddonDestinationFilename          string = "dns-autoscaler.yaml"
 	calicoAddonSourceFilename                      string = "kubernetesmasteraddons-calico-daemonset.yaml"
 	calicoAddonDestinationFilename                 string = "calico-daemonset.yaml"
 	azureNetworkPolicyAddonSourceFilename          string = "kubernetesmasteraddons-azure-npm-daemonset.yaml"
@@ -260,6 +261,8 @@ const (
 	flannelAddonDestinationFilename                string = "flannel-daemonset.yaml"
 	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
+	secretsStoreCSIDriverAddonSourceFileName       string = "kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml"
+	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
 )
 
 // components source and destination file references
@@ -274,4 +277,5 @@ const (
 	apiServerComponentDestinationFilename              string = "kube-apiserver.yaml"
 	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
 	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
+	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
 )

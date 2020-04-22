@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: azure-ip-masq-agent
+  namespace: kube-system
+  labels:
+    component: azure-ip-masq-agent
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    tier: node
+spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
+  template:
+    metadata:
+      labels:
+        k8s-app: azure-ip-masq-agent
+        tier: node
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: azure-ip-masq-agent
+        image: {{ContainerImage "ip-masq-agent"}}
+        imagePullPolicy: IfNotPresent
+        args:
+          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: azure-ip-masq-agent-config-volume
+            mountPath: /etc/config
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
+            memory: {{ContainerMemReqs "ip-masq-agent"}}
+          limits:
+            cpu: {{ContainerCPULimits "ip-masq-agent"}}
+            memory: {{ContainerMemLimits "ip-masq-agent"}}
+      volumes:
+        - name: azure-ip-masq-agent-config-volume
+          configMap:
+            name: azure-ip-masq-agent-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-ip-masq-agent-config
+  namespace: kube-system
+  labels:
+    component: azure-ip-masq-agent
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  ip-masq-agent: |-
+    nonMasqueradeCIDRs:
+      - {{ContainerConfig "non-masquerade-cidr"}}
+    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
+    {{end -}}
+    {{- if ContainerConfig "non-masq-cni-cidr"}}
+      - {{ContainerConfig "non-masq-cni-cidr"}}
+    masqLinkLocal: true
+    {{else}}
+    masqLinkLocal: false
+    {{end -}}
+    resyncInterval: 60s

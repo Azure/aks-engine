@@ -210,6 +210,8 @@ type CustomNodesDNS struct {
 type WindowsProfile struct {
 	AdminUsername             string            `json:"adminUsername"`
 	AdminPassword             string            `json:"adminPassword" conform:"redact"`
+	CSIProxyURL               string            `json:"csiProxyURL,omitempty"`
+	EnableCSIProxy            *bool             `json:"enableCSIProxy,omitempty"`
 	ImageRef                  *ImageReference   `json:"imageReference,omitempty"`
 	ImageVersion              string            `json:"imageVersion"`
 	WindowsImageSourceURL     string            `json:"windowsImageSourceURL"`
@@ -372,7 +374,7 @@ type PrivateCluster struct {
 type PrivateJumpboxProfile struct {
 	Name           string `json:"name" validate:"required"`
 	VMSize         string `json:"vmSize" validate:"required"`
-	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	Username       string `json:"username,omitempty"`
 	PublicKey      string `json:"publicKey" validate:"required"`
 	StorageProfile string `json:"storageProfile,omitempty"`
@@ -465,6 +467,7 @@ type KubernetesConfig struct {
 	Addons                            []KubernetesAddon     `json:"addons,omitempty"`
 	Components                        []KubernetesComponent `json:"components,omitempty"`
 	KubeletConfig                     map[string]string     `json:"kubeletConfig,omitempty"`
+	ContainerRuntimeConfig            map[string]string     `json:"containerRuntimeConfig"`
 	ControllerManagerConfig           map[string]string     `json:"controllerManagerConfig,omitempty"`
 	CloudControllerManagerConfig      map[string]string     `json:"cloudControllerManagerConfig,omitempty"`
 	APIServerConfig                   map[string]string     `json:"apiServerConfig,omitempty"`
@@ -490,6 +493,7 @@ type KubernetesConfig struct {
 	CtrlMgrRouteReconciliationPeriod  string                `json:"ctrlMgrRouteReconciliationPeriod,omitempty"`
 	LoadBalancerSku                   string                `json:"loadBalancerSku,omitempty"`
 	ExcludeMasterFromStandardLB       *bool                 `json:"excludeMasterFromStandardLB,omitempty"`
+	LoadBalancerOutboundIPs           *int                  `json:"loadBalancerOutboundIPs,omitempty"`
 	AzureCNIVersion                   string                `json:"azureCNIVersion,omitempty"`
 	AzureCNIURLLinux                  string                `json:"azureCNIURLLinux,omitempty"`
 	AzureCNIURLWindows                string                `json:"azureCNIURLWindows,omitempty"`
@@ -569,14 +573,17 @@ type MasterProfile struct {
 	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
 	// The format will be FQDN:2376
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	CosmosEtcd    *bool             `json:"cosmosEtcd,omitempty"`
-	SysctlDConfig map[string]string `json:"sysctldConfig,omitempty"`
+	CosmosEtcd                *bool             `json:"cosmosEtcd,omitempty"`
+	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
+	ProximityPlacementGroupID string            `json:"proximityPlacementGroupID,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
@@ -654,6 +661,9 @@ type AgentPoolProfile struct {
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
 	SysctlDConfig                       map[string]string    `json:"sysctldConfig,omitempty"`
+	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
+	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
+	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 }
 
 // AgentPoolProfileRole represents an agent role
@@ -816,28 +826,20 @@ type DependenciesLocation string
 
 // CustomCloudProfile represents the custom cloud profile
 type CustomCloudProfile struct {
-	Environment                *azure.Environment          `json:"environment,omitempty"`
-	AzureEnvironmentSpecConfig *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
-	IdentitySystem             string                      `json:"identitySystem,omitempty"`
-	AuthenticationMethod       string                      `json:"authenticationMethod,omitempty"`
-	DependenciesLocation       DependenciesLocation        `json:"dependenciesLocation,omitempty"`
-	PortalURL                  string                      `json:"portalURL,omitempty"`
+	Environment                 *azure.Environment          `json:"environment,omitempty"`
+	AzureEnvironmentSpecConfig  *AzureEnvironmentSpecConfig `json:"azureEnvironmentSpecConfig,omitempty"`
+	IdentitySystem              string                      `json:"identitySystem,omitempty"`
+	AuthenticationMethod        string                      `json:"authenticationMethod,omitempty"`
+	DependenciesLocation        DependenciesLocation        `json:"dependenciesLocation,omitempty"`
+	PortalURL                   string                      `json:"portalURL,omitempty"`
+	CustomCloudRootCertificates string                      `json:"customCloudRootCertificates,omitempty"`
+	CustomCloudSourcesList      string                      `json:"customCloudSourcesList,omitempty"`
 }
 
 // TelemetryProfile contains settings for collecting telemtry.
 // Note telemtry is currently enabled/disabled with the 'EnableTelemetry' feature flag.
 type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
-}
-
-// HasCoreOS returns true if the cluster contains coreos nodes
-func (p *Properties) HasCoreOS() bool {
-	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.Distro == CoreOS {
-			return true
-		}
-	}
-	return false
 }
 
 // HasWindows returns true if the cluster contains windows
@@ -1199,17 +1201,32 @@ func (p *Properties) IsVHDDistroForAllNodes() bool {
 	return true
 }
 
+// HasVHDDistroNodes returns true if any one Linux node pool, including masters, are running a VHD image
+func (p *Properties) HasVHDDistroNodes() bool {
+	if len(p.AgentPoolProfiles) > 0 {
+		for _, ap := range p.AgentPoolProfiles {
+			if ap.IsVHDDistro() {
+				return true
+			}
+		}
+	}
+	if p.MasterProfile != nil {
+		return p.MasterProfile.IsVHDDistro()
+	}
+	return false
+}
+
 // IsUbuntuDistroForAllNodes returns true if all of the agent pools plus masters are running the base Ubuntu image
 func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro != Ubuntu && ap.Distro != Ubuntu1804 {
+			if !ap.IsUbuntuNonVHD() {
 				return false
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return true
 }
@@ -1218,13 +1235,13 @@ func (p *Properties) IsUbuntuDistroForAllNodes() bool {
 func (p *Properties) HasUbuntuDistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu || ap.Distro == Ubuntu1804 {
+			if ap.IsUbuntuNonVHD() {
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu || p.MasterProfile.Distro == Ubuntu1804
+		return p.MasterProfile.IsUbuntuNonVHD()
 	}
 	return false
 }
@@ -1248,13 +1265,17 @@ func (p *Properties) HasUbuntu1604DistroNodes() bool {
 func (p *Properties) HasUbuntu1804DistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu1804 {
+			switch ap.Distro {
+			case Ubuntu1804, Ubuntu1804Gen2:
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu1804
+		switch p.MasterProfile.Distro {
+		case Ubuntu1804, Ubuntu1804Gen2:
+			return true
+		}
 	}
 	return false
 }
@@ -1368,6 +1389,30 @@ func (p *Properties) GetAADAdminGroupID() string {
 	return ""
 }
 
+// ShouldEnableAzureCloudAddon determines whether or not we should enable the following addons:
+// 1. cloud-node-manager,
+// 2. azuredisk-csi-driver,
+// 3. azurefile-csi-driver.
+// For Linux clusters, we should enable CSI Drivers when using K8s 1.13+ and cloud-node-manager when using K8s 1.16+.
+// For Windows clusters, we should enable them when using K8s 1.18+.
+func (p *Properties) ShouldEnableAzureCloudAddon(addonName string) bool {
+	o := p.OrchestratorProfile
+	if !to.Bool(o.KubernetesConfig.UseCloudControllerManager) {
+		return false
+	}
+	if !p.HasWindows() {
+		switch addonName {
+		case common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName:
+			return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.13.0")
+		case common.CloudNodeManagerAddonName:
+			return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0")
+		default:
+			return false
+		}
+	}
+	return common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.18.0")
+}
+
 // IsValid returns true if ImageRefernce contains at least Name and ResourceGroup
 func (i *ImageReference) IsValid() bool {
 	return len(i.Name) > 0 && len(i.ResourceGroup) > 0
@@ -1406,11 +1451,6 @@ func (m *MasterProfile) IsStorageAccount() bool {
 // IsRHEL returns true if the master specified a RHEL distro
 func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
-}
-
-// IsCoreOS returns true if the master specified a CoreOS distro
-func (m *MasterProfile) IsCoreOS() bool {
-	return m.Distro == CoreOS
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
@@ -1480,7 +1520,7 @@ func (m *MasterProfile) IsUbuntu1604() bool {
 // IsUbuntu1804 returns true if the master profile distro is based on Ubuntu 18.04
 func (m *MasterProfile) IsUbuntu1804() bool {
 	switch m.Distro {
-	case AKSUbuntu1804, Ubuntu1804:
+	case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 		return true
 	default:
 		return false
@@ -1545,11 +1585,6 @@ func (a *AgentPoolProfile) IsLinux() bool {
 // IsRHEL returns true if the agent pool specified a RHEL distro
 func (a *AgentPoolProfile) IsRHEL() bool {
 	return a.OSType == Linux && a.Distro == RHEL
-}
-
-// IsCoreOS returns true if the agent specified a CoreOS distro
-func (a *AgentPoolProfile) IsCoreOS() bool {
-	return a.OSType == Linux && a.Distro == CoreOS
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
@@ -1624,7 +1659,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
 	if a.OSType != Windows {
 		switch a.Distro {
-		case AKSUbuntu1804, Ubuntu1804:
+		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
 		default:
 			return false
@@ -1700,6 +1735,14 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 		buf.WriteString(fmt.Sprintf(",%s=%s", key, a.CustomNodeLabels[key]))
 	}
 	return buf.String()
+}
+
+// IsCSIProxyEnabled returns true if csi proxy service should be enable for Windows nodes
+func (w *WindowsProfile) IsCSIProxyEnabled() bool {
+	if w.EnableCSIProxy != nil {
+		return *w.EnableCSIProxy
+	}
+	return common.DefaultEnableCSIProxyWindows
 }
 
 // HasSecrets returns true if the customer specified secrets to install
@@ -1807,22 +1850,6 @@ func (o *OrchestratorProfile) IsAzureCNI() bool {
 		return o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure
 	}
 	return false
-}
-
-// RequireRouteTable returns true if this deployment requires routing table
-func (o *OrchestratorProfile) RequireRouteTable() bool {
-	switch o.OrchestratorType {
-	case Kubernetes:
-		if o.IsAzureCNI() ||
-			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
-			"flannel" == o.KubernetesConfig.NetworkPlugin ||
-			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
-			return false
-		}
-		return true
-	default:
-		return false
-	}
 }
 
 // IsPrivateCluster returns true if this deployment is a private cluster
@@ -1963,25 +1990,8 @@ func (k *KubernetesConfig) SystemAssignedIDEnabled() bool {
 	return k.UseManagedIdentity && k.UserAssignedID == ""
 }
 
-// UserAssignedClientIDEnabled checks if the user assigned client ID is enabled or not.
-func (k *KubernetesConfig) UserAssignedClientIDEnabled() bool {
-	return k.UseManagedIdentity && k.UserAssignedClientID != ""
-}
-
-// GetUserAssignedID returns the user assigned ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedID() string {
-	if k.UserAssignedIDEnabled() {
-		return k.UserAssignedID
-	}
-	return ""
-}
-
-// GetUserAssignedClientID returns the user assigned client ID if it is enabled.
-func (k *KubernetesConfig) GetUserAssignedClientID() string {
-	if k.UserAssignedClientIDEnabled() {
-		return k.UserAssignedClientID
-	}
-	return ""
+func (k *KubernetesConfig) ShouldCreateNewUserAssignedIdentity() bool {
+	return !(k.UserAssignedIDEnabled() && strings.Contains(k.UserAssignedID, "/"))
 }
 
 // GetOrderedKubeletConfigString returns an ordered string of key/val pairs
@@ -2013,9 +2023,8 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 }
 
 // NeedsContainerd returns whether or not we need the containerd runtime configuration
-// E.g., kata configuration requires containerd config
 func (k *KubernetesConfig) NeedsContainerd() bool {
-	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
+	return k.ContainerRuntime == Containerd
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
@@ -2052,6 +2061,27 @@ func (p *Properties) IsNVIDIADevicePluginEnabled() bool {
 	return p.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 }
 
+// IsCustomCloudProfile returns true if user has provided a custom cloud profile
+func (p *Properties) IsCustomCloudProfile() bool {
+	return p.CustomCloudProfile != nil
+}
+
+// GetCustomCloudRootCertificates returns comma-separated list of base64-encoded custom root certificates
+func (p *Properties) GetCustomCloudRootCertificates() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudRootCertificates
+	}
+	return ""
+}
+
+// GetCustomCloudSourcesList returns a base64-encoded custom sources.list file
+func (p *Properties) GetCustomCloudSourcesList() string {
+	if p.IsCustomCloudProfile() {
+		return p.CustomCloudProfile.CustomCloudSourcesList
+	}
+	return ""
+}
+
 // GetKubernetesVersion returns the cluster Kubernetes version, with the Azure Stack suffix if Azure Stack Cloud.
 func (p *Properties) GetKubernetesVersion() string {
 	if p.IsAzureStackCloud() {
@@ -2076,13 +2106,14 @@ func (p *Properties) GetKubernetesHyperkubeSpec() string {
 
 // IsAzureStackCloud return true if the cloud is AzureStack
 func (p *Properties) IsAzureStackCloud() bool {
-	return p.CustomCloudProfile != nil
+	// For backward compatibility, treat nil Environment and empty Environment name as AzureStackCloud as well
+	return p.IsCustomCloudProfile() && (p.CustomCloudProfile.Environment == nil || p.CustomCloudProfile.Environment.Name == "" || strings.EqualFold(p.CustomCloudProfile.Environment.Name, "AzureStackCloud"))
 }
 
 // GetCustomEnvironmentJSON return the JSON format string for custom environment
 func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 	var environmentJSON string
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		bytes, err := json.Marshal(p.CustomCloudProfile.Environment)
 		if err != nil {
 			return "", fmt.Errorf("Could not serialize Environment object - %s", err.Error())
@@ -2100,7 +2131,7 @@ func (p *Properties) GetCustomEnvironmentJSON(escape bool) (string, error) {
 // the return value will be empty string for those clouds
 func (p *Properties) GetCustomCloudName() string {
 	var cloudProfileName string
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		cloudProfileName = p.CustomCloudProfile.Environment.Name
 	}
 	return cloudProfileName
@@ -2111,7 +2142,7 @@ func (p *Properties) GetCustomCloudName() string {
 // If AzurePublicCloud, AzureChinaCloud,AzureGermanCloud or AzureUSGovernmentCloud, GetLocations provides all azure regions in prod.
 func (cs *ContainerService) GetLocations() []string {
 	var allLocations []string
-	if cs.Properties.IsAzureStackCloud() {
+	if cs.Properties.IsCustomCloudProfile() {
 		allLocations = []string{cs.Location}
 	} else {
 		allLocations = helpers.GetAzureLocations()
@@ -2123,7 +2154,7 @@ func (cs *ContainerService) GetLocations() []string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be client_secret
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is client_secret.
 func (p *Properties) GetCustomCloudAuthenticationMethod() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.AuthenticationMethod
 	}
 	return ClientSecretAuthMethod
@@ -2133,7 +2164,7 @@ func (p *Properties) GetCustomCloudAuthenticationMethod() string {
 // For AzurePublicCloud,AzureChinaCloud,azureGermanCloud,AzureUSGovernmentCloud, it will be always be AzureAD
 // For AzureStackCloud, if it is specified in configuration, the value will be used, if not ,the default value is AzureAD.
 func (p *Properties) GetCustomCloudIdentitySystem() string {
-	if p.IsAzureStackCloud() {
+	if p.IsCustomCloudProfile() {
 		return p.CustomCloudProfile.IdentitySystem
 	}
 	return AzureADIdentitySystem
@@ -2142,6 +2173,31 @@ func (p *Properties) GetCustomCloudIdentitySystem() string {
 // IsNvidiaDevicePluginCapable determines if the cluster definition is compatible with the nvidia-device-plugin daemonset
 func (p *Properties) IsNvidiaDevicePluginCapable() bool {
 	return p.HasNSeriesSKU()
+}
+
+// IsAzureCNIDualStack determines if azure cni dual stack is enabled
+func (p *Properties) IsAzureCNIDualStack() bool {
+	o := p.OrchestratorProfile
+	f := p.FeatureFlags
+	return o.IsAzureCNI() && f.IsFeatureEnabled("EnableIPv6DualStack")
+}
+
+// RequireRouteTable returns true if this deployment requires routing table
+func (p *Properties) RequireRouteTable() bool {
+	o := p.OrchestratorProfile
+	f := p.FeatureFlags
+	switch o.OrchestratorType {
+	case Kubernetes:
+		if o.IsAzureCNI() && !f.IsFeatureEnabled("EnableIPv6DualStack") ||
+			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
+			"flannel" == o.KubernetesConfig.NetworkPlugin ||
+			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
+			return false
+		}
+		return true
+	default:
+		return false
+	}
 }
 
 // SetCloudProviderRateLimitDefaults sets default cloudprovider rate limiter config
@@ -2375,6 +2431,10 @@ func (cs *ContainerService) GetProvisionScriptParametersCommon(input ProvisionSc
 		"NETWORK_API_VERSION":                  APIVersionNetwork,
 		"NETWORK_MODE":                         kubernetesConfig.NetworkMode,
 		"KUBE_BINARY_URL":                      kubernetesConfig.CustomKubeBinaryURL,
+	}
+
+	if cs.Properties.IsHostedMasterProfile() && cs.Properties.HostedMasterProfile.FQDN != "" {
+		parameters["API_SERVER_NAME"] = cs.Properties.HostedMasterProfile.FQDN
 	}
 
 	keys := make([]string, 0)

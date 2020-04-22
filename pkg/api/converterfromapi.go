@@ -184,6 +184,8 @@ func convertLinuxProfileToVLabs(obj *LinuxProfile, vlabsProfile *vlabs.LinuxProf
 func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.WindowsProfile) {
 	vlabsProfile.AdminUsername = api.AdminUsername
 	vlabsProfile.AdminPassword = api.AdminPassword
+	vlabsProfile.CSIProxyURL = api.CSIProxyURL
+	vlabsProfile.EnableCSIProxy = api.EnableCSIProxy
 	if api.ImageRef != nil {
 		vlabsProfile.ImageRef = &vlabs.ImageReference{}
 		vlabsProfile.ImageRef.Gallery = api.ImageRef.Gallery
@@ -302,6 +304,7 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	vlabsCfg.UseInstanceMetadata = apiCfg.UseInstanceMetadata
 	vlabsCfg.LoadBalancerSku = apiCfg.LoadBalancerSku
 	vlabsCfg.ExcludeMasterFromStandardLB = apiCfg.ExcludeMasterFromStandardLB
+	vlabsCfg.LoadBalancerOutboundIPs = apiCfg.LoadBalancerOutboundIPs
 	vlabsCfg.EnableRbac = apiCfg.EnableRbac
 	vlabsCfg.EnableSecureKubelet = apiCfg.EnableSecureKubelet
 	vlabsCfg.EnableAggregatedAPIs = apiCfg.EnableAggregatedAPIs
@@ -331,6 +334,14 @@ func convertKubernetesConfigToVLabs(apiCfg *KubernetesConfig, vlabsCfg *vlabs.Ku
 	convertSchedulerConfigToVlabs(apiCfg, vlabsCfg)
 	convertPrivateClusterToVlabs(apiCfg, vlabsCfg)
 	convertPodSecurityPolicyConfigToVlabs(apiCfg, vlabsCfg)
+	convertContainerRuntimeConfigToVlabs(apiCfg, vlabsCfg)
+}
+
+func convertContainerRuntimeConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
+	v.ContainerRuntimeConfig = map[string]string{}
+	for key, val := range a.ContainerRuntimeConfig {
+		v.ContainerRuntimeConfig[key] = val
+	}
 }
 
 func convertKubeletConfigToVlabs(a *KubernetesConfig, v *vlabs.KubernetesConfig) {
@@ -520,6 +531,9 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
+	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
+	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
+	vlabsProfile.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 	convertCustomFilesToVlabs(api, vlabsProfile)
 	vlabsProfile.SysctlDConfig = map[string]string{}
 	for key, val := range api.SysctlDConfig {
@@ -569,7 +583,10 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
 	p.AuditDEnabled = api.AuditDEnabled
+	p.UltraSSDEnabled = api.UltraSSDEnabled
 	p.DiskEncryptionSetID = api.DiskEncryptionSetID
+	p.EncryptionAtHost = api.EncryptionAtHost
+	p.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 
 	for k, v := range api.CustomNodeLabels {
 		p.CustomNodeLabels[k] = v
@@ -685,6 +702,8 @@ func convertCloudProfileToVLabs(api *CustomCloudProfile, vlabsccp *vlabs.CustomC
 	vlabsccp.AuthenticationMethod = api.AuthenticationMethod
 	vlabsccp.DependenciesLocation = vlabs.DependenciesLocation(api.DependenciesLocation)
 	vlabsccp.PortalURL = api.PortalURL
+	vlabsccp.CustomCloudRootCertificates = api.CustomCloudRootCertificates
+	vlabsccp.CustomCloudSourcesList = api.CustomCloudSourcesList
 }
 
 func convertTelemetryProfileToVLabs(api *TelemetryProfile, vlabstp *vlabs.TelemetryProfile) {
@@ -728,6 +747,7 @@ func convertAzureEnvironmentSpecConfigToVLabs(api *AzureEnvironmentSpecConfig, v
 		VnetCNILinuxPluginsDownloadURL:   api.KubernetesSpecConfig.VnetCNILinuxPluginsDownloadURL,
 		VnetCNIWindowsPluginsDownloadURL: api.KubernetesSpecConfig.VnetCNIWindowsPluginsDownloadURL,
 		ContainerdDownloadURLBase:        api.KubernetesSpecConfig.ContainerdDownloadURLBase,
+		CSIProxyDownloadURL:              api.KubernetesSpecConfig.CSIProxyDownloadURL,
 	}
 	vlabses.OSImageConfig = map[vlabs.Distro]vlabs.AzureOSImageConfig{}
 	for k, v := range api.OSImageConfig {

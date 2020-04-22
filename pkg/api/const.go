@@ -27,8 +27,9 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"
+	CoreOS            Distro = "coreos"            // deprecated
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -109,7 +110,7 @@ const (
 // Supported container runtimes
 const (
 	Docker         = "docker"
-	KataContainers = "kata-containers"
+	KataContainers = "kata-containers" // Deprecated
 	Containerd     = "containerd"
 )
 
@@ -154,7 +155,7 @@ const (
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
 	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
-	DefaultDashboardAddonEnabled = true
+	DefaultDashboardAddonEnabled = false
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
@@ -165,6 +166,8 @@ const (
 	DefaultCoreDNSAddonEnabled = true
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
+	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
+	DefaultSecretStoreCSIDriverAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -173,8 +176,6 @@ const (
 	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -185,8 +186,6 @@ const (
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
 	DefaultContainerMonitoringAddonEnabled = false
-	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
-	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
@@ -222,7 +221,7 @@ const (
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
-	DefaultEnableAutomaticUpdates = true
+	DefaultEnableAutomaticUpdates = false
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
 	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
@@ -247,7 +246,7 @@ const (
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
-	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
 )
@@ -266,6 +265,8 @@ const (
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// DefaultAzureStackLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU on Azure Stack
+	DefaultAzureStackLoadBalancerSku = BasicLoadBalancerSku
 )
 
 const (
@@ -333,11 +334,11 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.0.33"
+	AzureCniPluginVerLinux = "v1.1.0"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.0.33"
+	AzureCniPluginVerWindows = "v1.1.0"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
 	CNIPluginVer = "v0.8.5"
@@ -427,7 +428,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.18"
+	DefaultEtcdVersion = "3.3.19"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -510,14 +511,14 @@ const (
 )
 
 const (
-	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
-	AzureStackDependenciesLocationPublic = "public"
-	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
-	AzureStackDependenciesLocationChina = "china"
-	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
-	AzureStackDependenciesLocationGerman = "german"
-	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
-	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+	// AzureCustomCloudDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureCustomCloudDependenciesLocationPublic = "public"
+	// AzureCustomCloudDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureCustomCloudDependenciesLocationChina = "china"
+	// AzureCustomCloudDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureCustomCloudDependenciesLocationGerman = "german"
+	// AzureCustomCloudDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureCustomCloudDependenciesLocationUSGovernment = "usgovernment"
 )
 
 const (

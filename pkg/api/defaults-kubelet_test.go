@@ -295,7 +295,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 }
 
 func TestKubeletConfigDefaultsRemovals(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.13", "", false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.15", "", false, false), 3, 2, false)
 	poolProfile := &AgentPoolProfile{}
 	poolProfile.Count = 1
 	poolProfile.Name = "agentpool2"
@@ -740,7 +740,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 			}
 
 		// Validate that --protect-kernel-defaults is not enabled for relevant distros
-		case Ubuntu, Ubuntu1804, ACC1604, CoreOS:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, ACC1604:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
@@ -785,7 +785,7 @@ func TestProtectKernelDefaults(t *testing.T) {
 	// Validate that --protect-kernel-defaults is overridable
 	for _, distro := range DistroValues {
 		switch distro {
-		case Ubuntu, Ubuntu1804, AKSUbuntu1604, AKSUbuntu1804:
+		case Ubuntu, Ubuntu1804, Ubuntu1804Gen2, AKSUbuntu1604, AKSUbuntu1804:
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = "ubuntu"
 			cs.Properties.AgentPoolProfiles[0].Distro = "ubuntu"

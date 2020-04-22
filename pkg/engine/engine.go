@@ -685,6 +685,9 @@ func getComponentFuncMap(component api.KubernetesComponent, cs *api.ContainerSer
 		"ContainerConfig": func(name string) string {
 			return component.Config[name]
 		},
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
+		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
 		},
@@ -721,28 +724,33 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].Image
 		},
-
 		"ContainerCPUReqs": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].CPURequests
 		},
-
 		"ContainerCPULimits": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].CPULimits
 		},
-
 		"ContainerMemReqs": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].MemoryRequests
 		},
-
 		"ContainerMemLimits": func(name string) string {
 			i := addon.GetAddonContainersIndexByName(name)
 			return addon.Containers[i].MemoryLimits
 		},
 		"ContainerConfig": func(name string) string {
 			return addon.Config[name]
+		},
+		"HasWindows": func() bool {
+			return cs.Properties.HasWindows()
+		},
+		"IsCustomCloudProfile": func() bool {
+			return cs.Properties.IsCustomCloudProfile()
+		},
+		"HasLinux": func() bool {
+			return cs.Properties.AnyAgentIsLinux()
 		},
 		"IsAzureStackCloud": func() bool {
 			return cs.Properties.IsAzureStackCloud()
@@ -769,6 +777,33 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 				zones += fmt.Sprintf("\n    - %s-%s", cs.Location, zone)
 			}
 			return zones
+		},
+		"CSIControllerReplicas": func() string {
+			replicas := "2"
+			if cs.Properties.HasWindows() && !cs.Properties.AnyAgentIsLinux() {
+				replicas = "1"
+			}
+			return replicas
+		},
+		"ShouldEnableCSISnapshotFeature": func(csiDriverName string) bool {
+			// Snapshot is not available for Windows clusters
+			if cs.Properties.HasWindows() && !cs.Properties.AnyAgentIsLinux() {
+				return false
+			}
+
+			switch csiDriverName {
+			case common.AzureDiskCSIDriverAddonName:
+				// Snapshot feature for Azure Disk CSI Driver is in beta, requiring K8s 1.17+
+				return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+			case common.AzureFileCSIDriverAddonName:
+				// Snapshot feature for Azure File CSI Driver is in alpha, requiring K8s 1.13-1.16
+				return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.13.0") &&
+					!common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0")
+			}
+			return false
+		},
+		"IsKubernetesVersionGe": func(version string) bool {
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
 	}
 }
@@ -865,7 +900,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				if err != nil {
 					return ""
 				}
-			} else {
+			} else if setting.sourceFile != "" {
 				orchProfile := properties.OrchestratorProfile
 				versions := strings.Split(orchProfile.OrchestratorVersion, ".")
 				templ := template.New("component resolver template").Funcs(getComponentFuncMap(component, cs))
@@ -882,7 +917,11 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 				templ.Execute(&buffer, component)
 				input = buffer.String()
 			}
-			result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
+			if componentName == common.ClusterInitComponentName {
+				result += getComponentString(input, "/opt/azure/containers", setting.destinationFile)
+			} else {
+				result += getComponentString(input, "/etc/kubernetes/manifests", setting.destinationFile)
+			}
 		}
 	}
 	return result

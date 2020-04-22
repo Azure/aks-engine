@@ -34,6 +34,7 @@ type Config struct {
 	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
+	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
@@ -54,7 +55,7 @@ type Config struct {
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
 	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                         string `envconfig:"DISTRO"`
+	Distro                         string `envconfig:"DISTRO" default:""`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
 	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
 	Location                       string `envconfig:"LOCATION"`
@@ -307,6 +308,25 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
 			pool.DiskEncryptionSetID = str
 		}
+		if pool.ProximityPlacementGroupID != "" {
+			str := strings.Replace(pool.ProximityPlacementGroupID, "SUB_ID", config.SubscriptionID, 1)
+			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
+			pool.ProximityPlacementGroupID = str
+		}
+	}
+
+	if config.Distro != "" {
+		prop.MasterProfile.Distro = vlabs.Distro(config.Distro)
+		for _, pool := range prop.AgentPoolProfiles {
+			if !pool.IsWindows() {
+				pool.Distro = vlabs.Distro(config.Distro)
+			}
+		}
+	}
+
+	if config.MSIUserAssignedID != "" {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
 	return &Engine{

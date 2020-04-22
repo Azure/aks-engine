@@ -3,8 +3,8 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.13",
-      "orchestratorVersion": "1.13.11",
+      "orchestratorRelease": "1.15",
+      "orchestratorVersion": "1.15.11",
       "kubernetesConfig": {
         "kubernetesImageBase": "k8s.gcr.io/",
         "clusterSubnet": "10.240.0.0/12",
@@ -244,18 +244,6 @@
               "non-masq-cni-cidr": "168.63.129.16/32",
               "non-masquerade-cidr": "10.0.0.0/8"
             }
-          },
-          {
-            "name": "dns-autoscaler",
-            "enabled": false,
-            "containers": [
-              {
-                "name": "dns-autoscaler",
-                "image": "k8s.gcr.io/cluster-proportional-autoscaler-amd64:1.1.1",
-                "cpuRequests": "20m",
-                "memoryRequests": "10Mi"
-              }
-            ]
           }
         ],
         "kubeletConfig": {

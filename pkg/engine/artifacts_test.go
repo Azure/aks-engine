@@ -52,6 +52,7 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		expectedAuditPolicy            kubernetesComponentFileSpec
 		expectedAzureCloudProvider     kubernetesComponentFileSpec
 		expectedFlannel                kubernetesComponentFileSpec
+		expectedSecretsStoreCSIDriver  kubernetesComponentFileSpec
 	}{
 		{
 			name: "addons with data",
@@ -130,10 +131,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Data: base64Data,
 							},
 							{
-								Name: common.DNSAutoscalerAddonName,
-								Data: base64Data,
-							},
-							{
 								Name: common.CalicoAddonName,
 								Data: base64Data,
 							},
@@ -191,6 +188,10 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.FlannelAddonName,
+								Data: base64Data,
+							},
+							{
+								Name: common.SecretsStoreCSIDriverAddonName,
 								Data: base64Data,
 							},
 						},
@@ -282,11 +283,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      base64Data,
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
-			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      base64Data,
@@ -361,6 +357,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      base64Data,
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 		{
@@ -423,9 +424,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 								Name: common.AzureCNINetworkMonitorAddonName,
 							},
 							{
-								Name: common.DNSAutoscalerAddonName,
-							},
-							{
 								Name: common.CalicoAddonName,
 							},
 							{
@@ -469,6 +467,9 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.FlannelAddonName,
+							},
+							{
+								Name: common.SecretsStoreCSIDriverAddonName,
 							},
 						},
 					},
@@ -559,11 +560,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
-			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      "",
@@ -638,6 +634,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      "",
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 		{
@@ -728,11 +729,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 			},
-			expectedDNSAutoscaler: kubernetesComponentFileSpec{
-				sourceFile:      dnsAutoscalerAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: dnsAutoscalerAddonDestinationFilename,
-			},
 			expectedCalico: kubernetesComponentFileSpec{
 				sourceFile:      calicoAddonSourceFilename,
 				base64Data:      "",
@@ -807,6 +803,11 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 				sourceFile:      flannelAddonSourceFilename,
 				base64Data:      "",
 				destinationFile: flannelAddonDestinationFilename,
+			},
+			expectedSecretsStoreCSIDriver: kubernetesComponentFileSpec{
+				sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+				base64Data:      base64Data,
+				destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 			},
 		},
 	}
@@ -988,16 +989,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					if c.expectedAzureCNINetworkMonitor.destinationFile != componentFileSpec[addon].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedAzureCNINetworkMonitor.destinationFile)
 					}
-				case common.DNSAutoscalerAddonName:
-					if c.expectedDNSAutoscaler.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedDNSAutoscaler.sourceFile)
-					}
-					if c.expectedDNSAutoscaler.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedDNSAutoscaler.base64Data)
-					}
-					if c.expectedDNSAutoscaler.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedDNSAutoscaler.destinationFile)
-					}
 				case common.CalicoAddonName:
 					if c.expectedCalico.sourceFile != componentFileSpec[addon].sourceFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedCalico.sourceFile)
@@ -1168,6 +1159,7 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 		expectedCloudControllerManager kubernetesComponentFileSpec
 		expectedAPIServer              kubernetesComponentFileSpec
 		expectedAddonManager           kubernetesComponentFileSpec
+		expectedClusterInit            kubernetesComponentFileSpec
 	}{
 		{
 			name: "components with data",
@@ -1195,6 +1187,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 							},
 							{
 								Name: common.AddonManagerComponentName,
+								Data: base64Data,
+							},
+							{
+								Name: common.ClusterInitComponentName,
 								Data: base64Data,
 							},
 						},
@@ -1225,6 +1221,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				sourceFile:      addonManagerComponentSourceFilename,
 				base64Data:      base64Data,
 				destinationFile: addonManagerComponentDestinationFilename,
+			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      base64Data,
+				destinationFile: clusterInitComponentDestinationFilename,
 			},
 		},
 		{
@@ -1279,6 +1279,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				base64Data:      "",
 				destinationFile: addonManagerComponentDestinationFilename,
 			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      "",
+				destinationFile: clusterInitComponentDestinationFilename,
+			},
 		},
 		{
 			name: "no components in Properties object",
@@ -1307,6 +1311,10 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 				sourceFile:      addonManagerComponentSourceFilename,
 				base64Data:      "",
 				destinationFile: addonManagerComponentDestinationFilename,
+			},
+			expectedClusterInit: kubernetesComponentFileSpec{
+				base64Data:      "",
+				destinationFile: clusterInitComponentDestinationFilename,
 			},
 		},
 	}
@@ -1367,6 +1375,13 @@ func TestKubernetesComponentSettingsInit(t *testing.T) {
 					}
 					if c.expectedAddonManager.destinationFile != componentFileSpec[component].destinationFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedAddonManager.destinationFile)
+					}
+				case common.ClusterInitComponentName:
+					if c.expectedClusterInit.base64Data != componentFileSpec[component].base64Data {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].base64Data, c.expectedClusterInit.base64Data)
+					}
+					if c.expectedClusterInit.destinationFile != componentFileSpec[component].destinationFile {
+						t.Fatalf("Expected %s to be %s", componentFileSpec[component].destinationFile, c.expectedClusterInit.destinationFile)
 					}
 				}
 			}

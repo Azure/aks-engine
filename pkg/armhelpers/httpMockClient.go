@@ -10,7 +10,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers/testserver"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -18,13 +18,14 @@ const (
 	subscriptionID                             = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
 	tenantID                                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 	resourceGroup                              = "TestResourceGroup"
-	computeAPIVersion                          = "2019-07-01"
-	diskAPIVersion                             = "2019-07-01"
+	computeAPIVersion                          = "2019-12-01"
+	diskAPIVersion                             = "2019-11-01"
 	networkAPIVersion                          = "2018-08-01"
 	deploymentAPIVersion                       = "2018-05-01"
 	resourceGroupAPIVersion                    = "2018-05-01"
 	logAnalyticsAPIVersion                     = "2015-11-01-preview"
 	subscriptionsAPIVersion                    = "2016-06-01"
+	resourceSkusAPIVersion                     = "2019-04-01"
 	deploymentName                             = "testDeplomentName"
 	deploymentStatus                           = "08586474508192185203"
 	virtualMachineScaleSetName                 = "vmscalesetName"
@@ -63,6 +64,7 @@ const (
 	filePathCreateOrUpdateWorkspaceInMC        = "httpMockClientData/createOrUpdateWorkspace.json"
 	filePathGetVirtualMachineImage             = "httpMockClientData/getVirtualMachineImage.json"
 	filePathListVirtualMachineImages           = "httpMockClientData/listVirtualMachineImages.json"
+	filePathListResourceSkus                   = "httpMockClientData/listResourceSkus.json"
 )
 
 //HTTPMockClient is an wrapper of httpmock
@@ -77,6 +79,7 @@ type HTTPMockClient struct {
 	DeploymentAPIVersion                       string
 	LogAnalyticsAPIVersion                     string
 	SubscriptionsAPIVersion                    string
+	ResourceSkusAPIVersion                     string
 	DeploymentName                             string
 	DeploymentStatus                           string
 	VirtualMachineScaleSetName                 string
@@ -114,6 +117,7 @@ type HTTPMockClient struct {
 	ResponseCreateOrUpdateWorkspaceInMC        string
 	ResponseGetVirtualMachineImage             string
 	ResponseListVirtualMachineImages           string
+	ResponseListResourceSkus                   string
 	mux                                        *http.ServeMux
 	server                                     *testserver.TestServer
 }
@@ -147,6 +151,7 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 		NetworkAPIVersion:                   networkAPIVersion,
 		DeploymentAPIVersion:                deploymentAPIVersion,
 		SubscriptionsAPIVersion:             subscriptionsAPIVersion,
+		ResourceSkusAPIVersion:              resourceSkusAPIVersion,
 		DeploymentName:                      deploymentName,
 		DeploymentStatus:                    deploymentStatus,
 		VirtualMachineScaleSetName:          virtualMachineScaleSetName,
@@ -239,6 +244,11 @@ func NewHTTPMockClient() (HTTPMockClient, error) {
 	}
 
 	client.ResponseListLocations, err = readFromFile(filePathListLocations)
+	if err != nil {
+		return client, err
+	}
+
+	client.ResponseListResourceSkus, err = readFromFile(filePathListResourceSkus)
 	if err != nil {
 		return client, err
 	}
@@ -371,6 +381,18 @@ func (mc HTTPMockClient) RegisterGetAvailabilitySetFaultDomainCount() {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			_, _ = fmt.Fprint(w, mc.ResponseGetAvailabilitySet)
+		}
+	})
+}
+
+// RegisterListResourceSkus registers a mock response for ListResourceSkus.
+func (mc HTTPMockClient) RegisterListResourceSkus() {
+	pattern := fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/skus", mc.SubscriptionID)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ResourceSkusAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseListResourceSkus)
 		}
 	})
 }
@@ -664,6 +686,15 @@ func (mc *HTTPMockClient) RegisterVMImageFetcherInterface() {
 	})
 
 	pattern = fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, api.WindowsServer2019OSImageConfig.ImagePublisher, api.WindowsServer2019OSImageConfig.ImageOffer, api.WindowsServer2019OSImageConfig.ImageSku, api.WindowsServer2019OSImageConfig.ImageVersion)
+	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			_, _ = fmt.Fprint(w, mc.ResponseGetVirtualMachineImage)
+		}
+	})
+
+	pattern = fmt.Sprintf("/subscriptions/%s/providers/Microsoft.Compute/locations/%s/publishers/%s/artifacttypes/vmimage/offers/%s/skus/%s/versions/%s", mc.SubscriptionID, mc.Location, api.AKSWindowsServer2019OSImageConfig.ImagePublisher, api.AKSWindowsServer2019OSImageConfig.ImageOffer, api.AKSWindowsServer2019OSImageConfig.ImageSku, api.AKSWindowsServer2019OSImageConfig.ImageVersion)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
 			w.WriteHeader(http.StatusNotFound)

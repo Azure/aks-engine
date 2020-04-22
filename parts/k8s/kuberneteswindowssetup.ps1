@@ -136,6 +136,10 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
+# CSI Proxy settings
+$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
+$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
+
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -143,12 +147,13 @@ $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 [io.file]::WriteAllBytes("scripts.zip", [System.Convert]::FromBase64String($zippedFiles))
 Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 
-# Dot-source contents of zip. This should match the list in template_generator.go GetKubernetesWindowsAgentFunctions
+# Dot-source scripts with functions that are called in this script
 . c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
 . c:\AzureData\k8s\windowsconfigfunc.ps1
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
+. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 
@@ -163,6 +168,9 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+
+        $configAppInsightsClientTimer = [System.Diagnostics.Stopwatch]::StartNew()
         # Get app insights binaries and set up app insights client
         mkdir c:\k\appinsights
         DownloadFileOverHttp -Url "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg" -DestinationPath "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip"
@@ -198,13 +206,18 @@ try
             $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
         }
 
-        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+        $configAppInsightsClientTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Config-AppInsightsClient", $configAppInsightsClientTimer.Elapsed.TotalSeconds)
 
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
         if ( $sshEnabled ) {
+            Write-Log "Install OpenSSH"
+            $installOpenSSHTimer = [System.Diagnostics.Stopwatch]::StartNew()
             Install-OpenSSH -SSHKeys $SSHKeys
+            $installOpenSSHTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-OpenSSH", $installOpenSSHTimer.Elapsed.TotalSeconds)
         }
 
         Write-Log "Apply telemetry data setting"
@@ -222,11 +235,18 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
+        Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
 
         if ($useContainerD) {
             Write-Log "Installing ContainerD"
             $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl
+            $cniBinPath = $global:AzureCNIBinDir
+            $cniConfigPath = $global:AzureCNIConfDir
+            if ($global:NetworkPlugin -eq "kubenet") {
+                $cniBinPath = $global:CNIPath
+                $cniConfigPath = $global:CNIConfigPath
+            }
+            Install-Containerd -ContainerdUrl $global:ContainerdUrl -CNIBinDir $cniBinPath -CNIConfDir $cniConfigPath
             $containerdTimer.Stop()
             $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
             # TODO: disable/uninstall Docker later
@@ -274,7 +294,7 @@ try
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB `
             -TargetEnvironment $TargetEnvironment
 
-        {{if IsAzureStackCloud}}
+        {{if IsCustomCloudProfile}}
         $azureStackConfigFile = [io.path]::Combine($global:KubeDir, "azurestackcloud.json")
         $envJSON = "{{ GetBase64EncodedEnvironmentJSON }}"
         [io.file]::WriteAllBytes($azureStackConfigFile, [System.Convert]::FromBase64String($envJSON))
@@ -283,6 +303,10 @@ try
         Write-Log "Write ca root"
         Write-CACert -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir
+
+        if ($global:EnableCsiProxy) {
+            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
+        }
 
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate `
@@ -351,32 +375,12 @@ try
             } else {
                 Update-WinCNI -CNIPath $global:CNIPath
             }
-            Get-HnsPsm1 -HNSModule $global:HNSModule
         }
 
         New-ExternalHnsNetwork
 
-
-        Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
-            -KubeletConfigArgs $global:KubeletConfigArgs `
-            -KubeBinariesVersion $global:KubeBinariesVersion `
-            -NetworkPlugin $global:NetworkPlugin `
-            -NetworkMode $global:NetworkMode `
-            -KubeDir $global:KubeDir `
-            -AzureCNIBinDir $global:AzureCNIBinDir `
-            -AzureCNIConfDir $global:AzureCNIConfDir `
-            -CNIPath $global:CNIPath `
-            -CNIConfig $global:CNIConfig `
-            -CNIConfigPath $global:CNIConfigPath `
-            -MasterIP $MasterIP `
-            -KubeDnsServiceIp $KubeDnsServiceIp `
-            -MasterSubnet $global:MasterSubnet `
-            -KubeClusterCIDR $global:KubeClusterCIDR `
-            -KubeServiceCIDR $global:KubeServiceCIDR `
-            -HNSModule $global:HNSModule `
-            -KubeletNodeLabels $global:KubeletNodeLabels `
-            -UseContainerD $useContainerD
+            -KubeDir $global:KubeDir
 
         Get-LogCollectionScripts
 
@@ -395,6 +399,13 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
+        Update-DefenderPreferences
+
+        # Output kubelet and kube-proxy scripts
+        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
+        Out-File "c:\k\kubeletstart.ps1"
+        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
+        Out-File "c:\k\kubeproxystart.ps1"
         
         if (Test-Path $CacheDir)
         {

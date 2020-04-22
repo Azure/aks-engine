@@ -4,7 +4,7 @@ Azure Policy integrates with the AKS Engine to apply at-scale enforcements and s
 
 
 > [!NOTE]
-> Azure Policy for AKS Engine is in Public Preview. The service only supports built-in policy definitions 
+> Azure Policy for AKS Engine is in Public Preview. The service only supports built-in policy definitions
 > and a single AKS Engine cluster for each resource group configured with a Service Principal.
 > Gatekeeper v3 is in Beta and is supported by the open source community.
 
@@ -25,8 +25,8 @@ The following is a sample API definition with azure-policy addon.
             "name": "azure-policy",
             "enabled": true,
             "config": {
-              "auditInterval": "30",
-              "constraintViolationsLimit": "20"
+              "auditInterval": "60",
+              "constraintViolationsLimit": "100"
             }
           }
         ]
@@ -74,15 +74,15 @@ kubectl get pods -n kube-system
 
 | Name                      | Required | Description                 | Default Value |
 | ------------------------- | -------- | --------------------------- | ------------- |
-| auditInterval             | no       | audit interval (in seconds) | 30            |
-| constraintViolationsLimit | no       | constraint violations limit | 20            |
+| auditInterval             | no       | audit interval (in seconds) | 60            |
+| constraintViolationsLimit | no       | constraint violations limit | 100            |
 
 ### Azure Policy
 
 | Name           | Required | Description                       | Default Value                                                                 |
 | -------------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
 | name           | no       | container name                    | "azure-policy"                                                                |
-| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20191011.1" |
+| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200227.1" |
 | cpuRequests    | no       | cpu requests for the container    | "30m"                                                                         |
 | memoryRequests | no       | memory requests for the container | "50Mi"                                                                        |
 | cpuLimits      | no       | cpu limits for the container      | "100m"                                                                        |
@@ -93,11 +93,24 @@ kubectl get pods -n kube-system
 | Name           | Required | Description                       | Default Value                                        |
 | -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
 | name           | no       | container name                    | "gatekeeper"                                         |
-| image          | no       | image                             | "quay.io/open-policy-agent/gatekeeper:v3.0.4-beta.2" |
+| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.7-hotfix.20200327" |
 | cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
 | memoryRequests | no       | memory requests for the container | "256Mi"                                              |
-| cpuLimits      | no       | cpu limits for the container      | "100m"                                               |
+| cpuLimits      | no       | cpu limits for the container      | "1000m"                                              |
 | memoryLimits   | no       | memory limits for the container   | "512Mi"                                              |
+
+## Disable Azure Policy Add-on
+
+### Option 1
+
+- Update `apimodel.json` and set `azure-policy` addon `enabled` to `false`.
+- Run `aks-engine upgrade` with the updated `apimodel.json`
+- Run `kubectl delete deployments.apps -n kube-system gatekeeper-controller-manager azure-policy` to remove running deployments and pods
+
+### Option 2
+
+- SSH into AKS-Engine Kubernetes master node
+- Run `kubectl delete -f /etc/kubernetes/addons/azure-policy-deployment.yaml && sudo rm /etc/kubernetes/addons/azure-policy-deployment.yaml` to remove all resources created by addon
 
 ## Supported Orchestrators
 

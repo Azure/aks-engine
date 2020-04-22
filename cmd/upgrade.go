@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
@@ -37,17 +39,18 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName           string
-	apiModelPath                string
-	deploymentDirectory         string
-	upgradeVersion              string
-	location                    string
-	kubeconfigPath              string
-	timeoutInMinutes            int
-	cordonDrainTimeoutInMinutes int
-	force                       bool
-	controlPlaneOnly            bool
-	agentPoolToUpgrade          string
+	resourceGroupName                        string
+	apiModelPath                             string
+	deploymentDirectory                      string
+	upgradeVersion                           string
+	location                                 string
+	kubeconfigPath                           string
+	timeoutInMinutes                         int
+	cordonDrainTimeoutInMinutes              int
+	force                                    bool
+	controlPlaneOnly                         bool
+	disableClusterInitComponentDuringUpgrade bool
+	agentPoolToUpgrade                       string
 
 	// derived
 	containerService    *api.ContainerService
@@ -169,9 +172,17 @@ func (uc *upgradeCmd) loadCluster() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if uc.containerService.Properties.IsAzureStackCloud() {
+	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
+	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
+			uc.disableClusterInitComponentDuringUpgrade = true
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(false)
+		}
+	}
+
+	if uc.containerService.Properties.IsCustomCloudProfile() {
 		writeCustomCloudProfile(uc.containerService)
-		if err = uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
+		if err = uc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
 		}); err != nil {
@@ -332,6 +343,12 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save the new apimodel to reflect the cluster's state.
+	// Restore the original cluster-init component enabled value, if it was disabled during upgrade
+	if uc.disableClusterInitComponentDuringUpgrade {
+		if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(true)
+		}
+	}
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
 			Locale: uc.locale,
@@ -351,11 +368,20 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	return f.SaveFile(dir, file, b)
 }
 
+// isVMSSNameInAgentPoolsArray is a helper func to filter out any VMSS in the cluster resource group
+// that are not participating in the aks-engine-created Kubernetes cluster
 func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService, targetPools map[string]bool) bool {
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		if pool.AvailabilityProfile == api.VirtualMachineScaleSets {
-			if poolName, _, _ := utils.VmssNameParts(vmss); targetPools[poolName] {
-				return true
+			if pool.OSType == api.Windows {
+				re := regexp.MustCompile(`^[0-9]{4}k8s[0]+`)
+				if re.FindString(vmss) != "" {
+					return targetPools[pool.Name]
+				}
+			} else {
+				if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
+					return targetPools[pool.Name]
+				}
 			}
 		}
 	}

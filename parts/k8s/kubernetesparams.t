@@ -175,12 +175,6 @@
       },
       "type": "string"
     },
-    "kubeProxySpec": {
-      "metadata": {
-        "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -300,11 +294,10 @@
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
-        "description": "The container runtime to use (docker|kata-containers|containerd)"
+        "description": "The container runtime to use (docker|containerd)"
       },
       "allowedValues": [
         "docker",
-        "kata-containers",
         "containerd"
       ],
       "type": "string"
