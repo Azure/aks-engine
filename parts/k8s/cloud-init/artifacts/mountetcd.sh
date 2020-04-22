@@ -9,7 +9,7 @@ udevadm settle
 mkdir -p $MOUNTPOINT
 if mount | grep $MOUNTPOINT; then
   echo "disk is already mounted"
-  exit 0
+  umount /dev/sdc1
 fi
 if ! grep "/dev/sdc1" /etc/fstab; then
   echo "$PARTITION       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
