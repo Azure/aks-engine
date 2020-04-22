@@ -41062,6 +41062,25 @@ function Register-NodeResetScriptTask {
     $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
+
+function Assert-FileExists {
+    Param(
+        [Parameter(Mandatory=$true,Position=0)][string]
+        $Filename
+    )
+    
+    if (-Not (Test-Path $Filename)) {
+        throw "$Filename does not exist"
+    }
+}
+
+function Update-DefenderPreferences {
+    Add-MpPreference -ExclusionProcess "c:\k\kubelet.exe"
+
+    if ($global:EnableCsiProxy) {
+        Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+}
 `)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
@@ -41462,7 +41481,8 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
-        
+        Update-DefenderPreferences
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
