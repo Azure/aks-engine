@@ -58,11 +58,11 @@
                 "AcceleratedNetworkingEnabled": false
             }
         ],
-        "windowsProfile": { 
+        "windowsProfile": {
             "adminUsername": "azureuser",
             "adminPassword": "",
             "sshEnabled": true
-          },
+        },
         "linuxProfile": {
             "adminUsername": "azureuser",
             "ssh": {
