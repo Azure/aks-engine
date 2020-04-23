@@ -215,7 +215,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          kubernetesImageBase + k8sComponents[common.DashboardAddonName],
+				Image:          k8sComponents[common.DashboardAddonName],
 			},
 			{
 				Name:           common.DashboardMetricsScraperContainerName,
@@ -223,7 +223,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          kubernetesImageBase + k8sComponents[common.DashboardMetricsScraperContainerName],
+				Image:          k8sComponents[common.DashboardMetricsScraperContainerName],
 			},
 		},
 	}
