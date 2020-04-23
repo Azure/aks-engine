@@ -13,13 +13,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
 	"github.com/jarcoal/httpmock"
 	"github.com/pkg/errors"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
 func TestCertsAlreadyPresent(t *testing.T) {
@@ -124,16 +125,18 @@ func TestCertsAlreadyPresent(t *testing.T) {
 func TestSetMissingKubeletValues(t *testing.T) {
 	config := &KubernetesConfig{}
 	defaultKubeletConfig := map[string]string{
-		"--network-plugin":               "1",
-		"--pod-infra-container-image":    "2",
-		"--max-pods":                     "3",
-		"--eviction-hard":                "4",
-		"--node-status-update-frequency": "5",
-		"--image-gc-high-threshold":      "6",
-		"--image-gc-low-threshold":       "7",
-		"--non-masquerade-cidr":          "8",
-		"--cloud-provider":               "9",
-		"--pod-max-pids":                 "10",
+		"--network-plugin":                  "1",
+		"--pod-infra-container-image":       "2",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "azure",
+		"--cloud-config":                    "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
 	}
 	setMissingKubeletValues(config, defaultKubeletConfig)
 	for key, val := range defaultKubeletConfig {
@@ -146,20 +149,50 @@ func TestSetMissingKubeletValues(t *testing.T) {
 		KubeletConfig: map[string]string{
 			"--network-plugin":            "a",
 			"--pod-infra-container-image": "b",
-			"--cloud-provider":            "c",
+			"--cloud-provider":            "",
 		},
 	}
 	expectedResult := map[string]string{
-		"--network-plugin":               "a",
-		"--pod-infra-container-image":    "b",
-		"--max-pods":                     "3",
-		"--eviction-hard":                "4",
-		"--node-status-update-frequency": "5",
-		"--image-gc-high-threshold":      "6",
-		"--image-gc-low-threshold":       "7",
-		"--non-masquerade-cidr":          "8",
-		"--cloud-provider":               "c",
-		"--pod-max-pids":                 "10",
+		"--network-plugin":                  "a",
+		"--pod-infra-container-image":       "b",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "",
+		"--cloud-config":                    "/etc/kubernetes/azure.json",
+		"--azure-container-registry-config": "/etc/kubernetes/azure.json",
+	}
+	setMissingKubeletValues(config, defaultKubeletConfig)
+	for key, val := range expectedResult {
+		if config.KubeletConfig[key] != val {
+			t.Fatalf("setMissingKubeletValue() did not return the expected value %s for key %s, instead returned: %s", val, key, config.KubeletConfig[key])
+		}
+	}
+
+	config = &KubernetesConfig{
+		KubeletConfig: map[string]string{
+			"--cloud-provider":                  "",
+			"--cloud-config":                    "",
+			"--azure-container-registry-config": "",
+		},
+	}
+	expectedResult = map[string]string{
+		"--network-plugin":                  "1",
+		"--pod-infra-container-image":       "2",
+		"--max-pods":                        "3",
+		"--eviction-hard":                   "4",
+		"--node-status-update-frequency":    "5",
+		"--image-gc-high-threshold":         "6",
+		"--image-gc-low-threshold":          "7",
+		"--non-masquerade-cidr":             "8",
+		"--pod-max-pids":                    "10",
+		"--cloud-provider":                  "",
+		"--cloud-config":                    "",
+		"--azure-container-registry-config": "",
 	}
 	setMissingKubeletValues(config, defaultKubeletConfig)
 	for key, val := range expectedResult {
@@ -194,34 +227,33 @@ func TestAddonsIndexByName(t *testing.T) {
 }
 
 func TestAssignDefaultAddonImages(t *testing.T) {
-	kubernetesVersion := "1.13.11"
-	k8sComponents := K8sComponentsByVersionMap[kubernetesVersion]
+	kubernetesVersion := "1.15.11"
+	k8sComponents := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})[kubernetesVersion]
 	customImage := "myimage"
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	defaultAddonImages := map[string]string{
 		common.TillerAddonName:                 specConfig.TillerImageBase + k8sComponents[common.TillerAddonName],
 		common.ACIConnectorAddonName:           specConfig.ACIConnectorImageBase + k8sComponents[common.ACIConnectorAddonName],
-		common.ClusterAutoscalerAddonName:      specConfig.KubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
+		common.ClusterAutoscalerAddonName:      specConfig.MCRKubernetesImageBase + k8sComponents[common.ClusterAutoscalerAddonName],
 		common.BlobfuseFlexVolumeAddonName:     k8sComponents[common.BlobfuseFlexVolumeAddonName],
 		common.SMBFlexVolumeAddonName:          k8sComponents[common.SMBFlexVolumeAddonName],
 		common.KeyVaultFlexVolumeAddonName:     k8sComponents[common.KeyVaultFlexVolumeAddonName],
-		common.DashboardAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.DashboardAddonName],
-		common.ReschedulerAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
-		common.MetricsServerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
+		common.DashboardAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.DashboardAddonName],
+		common.ReschedulerAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.ReschedulerAddonName],
+		common.MetricsServerAddonName:          specConfig.MCRKubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 		common.NVIDIADevicePluginAddonName:     specConfig.NVIDIAImageBase + k8sComponents[common.NVIDIADevicePluginAddonName],
-		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
-		common.IPMASQAgentAddonName:            specConfig.KubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
+		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
+		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-		common.DNSAutoscalerAddonName:          specConfig.KubernetesImageBase + k8sComponents[common.DNSAutoscalerAddonName],
-		common.HeapsterAddonName:               specConfig.KubernetesImageBase + k8sComponents[common.HeapsterAddonName],
-		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents["calico-typha"],
+		common.HeapsterAddonName:               specConfig.MCRKubernetesImageBase + k8sComponents[common.HeapsterAddonName],
+		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],
 		common.AzurePolicyAddonName:            k8sComponents[common.AzurePolicyAddonName],
 		common.NodeProblemDetectorAddonName:    k8sComponents[common.NodeProblemDetectorAddonName],
-		common.KubeDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
-		common.CoreDNSAddonName:                specConfig.KubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
-		common.KubeProxyAddonName:              specConfig.KubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
+		common.KubeDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeDNSAddonName],
+		common.CoreDNSAddonName:                specConfig.MCRKubernetesImageBase + k8sComponents[common.CoreDNSAddonName],
+		common.KubeProxyAddonName:              specConfig.MCRKubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 		common.AntreaAddonName:                 k8sComponents[common.AntreaControllerContainerName],
 		common.FlannelAddonName:                k8sComponents[common.KubeFlannelContainerName],
 	}
@@ -284,7 +316,7 @@ func getFakeAddons(defaultAddonMap map[string]string, customImage string) []Kube
 			containerName = "omsagent"
 		}
 		if addonName == common.CalicoAddonName {
-			containerName = "calico-typha"
+			containerName = common.CalicoTyphaComponentName
 		}
 		if addonName == common.AADPodIdentityAddonName {
 			containerName = "nmi"
@@ -848,9 +880,9 @@ func TestNetworkPolicyDefaults(t *testing.T) {
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy = NetworkPolicyAntrea
 	mockCS.setOrchestratorDefaults(true, true)
-	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea {
+	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginAzure {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAntrea)
+			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginAzure)
 	}
 
 	mockCS = getMockBaseContainerService("1.8.10")
@@ -905,6 +937,148 @@ func TestNetworkPluginDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin != NetworkPluginFlannel {
 		t.Fatalf("NetworkPlugin did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, NetworkPluginFlannel)
+	}
+}
+
+func TestKubernetesImageBaseAppendSlash(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com"
+	mockCS.setOrchestratorDefaults(true, true)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "mcr.microsoft.com/" {
+		t.Fatalf("defaults flow did not add a trailing '/' to KubernetesImageBase")
+	}
+}
+
+func TestKubernetesImageBase(t *testing.T) {
+	// Default public cloud
+	mockCS := getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig := mockCS.GetCloudSpecConfig()
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Default mooncake cloud
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "chinanorth"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// User-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
+	}
+
+	// User-customized MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-mcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeMCR
+	mockCS.setOrchestratorDefaults(false, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-mcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-mcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade default scenario
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario forces GCR to MCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = cloudSpecConfig.KubernetesSpecConfig.KubernetesImageBase
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, cloudSpecConfig.KubernetesSpecConfig.MCRKubernetesImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeMCR)
+	}
+
+	// Upgrade scenario doesn't force user-customized GCR
+	mockCS = getMockBaseContainerService("1.17.4")
+	mockCS.Location = "westus2"
+	cloudSpecConfig = mockCS.GetCloudSpecConfig()
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "my-custom-gcr/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	mockCS.setOrchestratorDefaults(true, false)
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != "my-custom-gcr/" {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBase value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase, "my-custom-gcr/")
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeGCR {
+		t.Fatalf("defaults flow did assign the expected KubernetesImageBaseType value, got %s, expected %s", properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType, common.KubernetesImageBaseTypeGCR)
+	}
+}
+
+func TestAzureStackKubernetesConfigDefaults(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.15.7")
+	properties := mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = "mcr.microsoft.com/k8s/azurestack/core/"
+	properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = common.KubernetesImageBaseTypeGCR
+	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
+	properties.CustomCloudProfile = &CustomCloudProfile{}
+	properties.CustomCloudProfile.Environment = &azure.Environment{}
+	mockCS.setOrchestratorDefaults(true, true)
+
+	expectedImageBase := "mcr.microsoft.com/"
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase != expectedImageBase {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBase to its expect value (%s) for Azure Stack clouds", expectedImageBase)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType != common.KubernetesImageBaseTypeMCR {
+		t.Fatalf("setOrchestratorDefaults did not set KubernetesImageBaseType to its expect value (%s) for Azure Stack clouds", common.KubernetesImageBaseTypeMCR)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultAzureStackLoadBalancerSku {
+		t.Fatalf("setOrchestratorDefaults did not set LoadBalancerSku to its expect value (%s) for Azure Stack clouds", DefaultAzureStackLoadBalancerSku)
 	}
 }
 
@@ -973,24 +1147,6 @@ func TestContainerRuntime(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != Containerd {
 		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, Containerd)
-	}
-	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
-		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.MobyVersion, "")
-	}
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion != DefaultContainerdVersion {
-		t.Fatalf("Containerd did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerdVersion, DefaultContainerdVersion)
-	}
-
-	mockCS = getMockBaseContainerService("1.10.13")
-	properties = mockCS.Properties
-	properties.OrchestratorProfile.OrchestratorType = Kubernetes
-	properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = KataContainers
-	mockCS.setOrchestratorDefaults(false, false)
-	if properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime != KataContainers {
-		t.Fatalf("ContainerRuntime did not have the expected value, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime, KataContainers)
 	}
 	if properties.OrchestratorProfile.KubernetesConfig.MobyVersion != "" {
 		t.Fatalf("MobyVersion did not have the expected value, got %s, expected %s",
@@ -1389,8 +1545,8 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.MaximumLoadBalancerRuleCount, DefaultMaximumLoadBalancerRuleCount)
 	}
 
-	// this validates cluster subnet default configuration for dual stack feature.
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	// this validates cluster subnet default configuration for dual stack feature with 1.16
+	mockCS = getMockBaseContainerService("1.16.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
@@ -1399,14 +1555,46 @@ func TestMasterProfileDefaults(t *testing.T) {
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
-	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
+	expectedClusterSubnet := strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for dual stack feature in 1.16 when only ipv4 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for dual stack feature.
+	mockCS = getMockBaseContainerService("1.17.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv4 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.17.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.244.0.0/16"
@@ -1423,7 +1611,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates cluster subnet default configuration for dual stack feature when only ipv6 subnet provided
-	mockCS = getMockBaseContainerService("1.15.0-beta.1")
+	mockCS = getMockBaseContainerService("1.17.0")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
@@ -1434,6 +1622,94 @@ func TestMasterProfileDefaults(t *testing.T) {
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
 	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesClusterSubnet, "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature.
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv4 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.240.1.0/24"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", "fc00::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature when only ipv6 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "ace:cab:deca::/8"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature when both ipv4 and ipv6 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet = "10.240.1.0/24,ace:cab:deca::/8"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{"10.240.1.0/24", "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
+	}
+
+	// this validates cluster subnet default configuration for azure cni dual stack feature for k8s 1.17 version
+	mockCS = getMockBaseContainerService("1.17.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	expectedClusterSubnet = strings.Join([]string{DefaultKubernetesSubnet, DefaultKubernetesClusterSubnetIPv6}, ",")
 	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != expectedClusterSubnet {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
@@ -1452,6 +1728,29 @@ func TestMasterProfileDefaults(t *testing.T) {
 	if properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes != DefaultOutboundRuleIdleTimeoutInMinutes {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes did not have the expected configuration, got %d, expected %d",
 			properties.OrchestratorProfile.KubernetesConfig.OutboundRuleIdleTimeoutInMinutes, DefaultOutboundRuleIdleTimeoutInMinutes)
+	}
+
+	// this validates cluster subnet default configuration for single stack IPv6 only cluster
+	mockCS = getMockBaseContainerService("1.18.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP != DefaultKubernetesDNSServiceIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.DNSServiceIP did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.DNSServiceIP, DefaultKubernetesDNSServiceIPv6)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != DefaultKubernetesServiceCIDRIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, DefaultKubernetesServiceCIDRIPv6)
+	}
+	if properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet != DefaultKubernetesClusterSubnetIPv6 {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ClusterSubnet did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, DefaultKubernetesClusterSubnetIPv6)
 	}
 }
 
@@ -1532,8 +1831,8 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
-			AKSUbuntu1604,
-			AKSUbuntu1604,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
 			false,
 			false,
 			AzurePublicCloud,
@@ -1546,8 +1845,8 @@ func TestDistroDefaults(t *testing.T) {
 			},
 			"",
 			"",
-			AKSUbuntu1604,
-			AKSUbuntu1604,
+			AKSUbuntu1804,
+			AKSUbuntu1804,
 			false,
 			false,
 			AzureUSGovernmentCloud,
@@ -1572,10 +1871,24 @@ func TestDistroDefaults(t *testing.T) {
 				OrchestratorType: Kubernetes,
 				KubernetesConfig: &KubernetesConfig{},
 			},
+			"",
+			"",
+			Ubuntu1804,
+			Ubuntu1804,
+			false,
+			false,
+			AzureGermanCloud,
+		},
+		{
+			"germancloud_upgrade",
+			OrchestratorProfile{
+				OrchestratorType: Kubernetes,
+				KubernetesConfig: &KubernetesConfig{},
+			},
 			AKS1604Deprecated,
 			AKS1604Deprecated,
-			Ubuntu,
-			Ubuntu,
+			Ubuntu1804,
+			Ubuntu1804,
 			true,
 			false,
 			AzureGermanCloud,
@@ -1688,6 +2001,7 @@ func TestDistroDefaults(t *testing.T) {
 }
 
 func TestWindowsProfileDefaults(t *testing.T) {
+	trueVar := true
 
 	var tests = []struct {
 		name                   string // test case name
@@ -1709,18 +2023,17 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
 			false,
 		},
 		{
-			"aks vhd current version in creating",
+			"aks vhd current version and ImageSku in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
 			},
 			WindowsProfile{
 				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
@@ -1731,18 +2044,39 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
 			false,
 		},
 		{
-			"aks vhd specific version in creating",
+			"aks vhd override sku in creating",
 			WindowsProfile{
 				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       AKSWindowsServer2019OSImageConfig.ImageSku,
+				WindowsSku:       "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          AKSWindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "latest",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            &trueVar,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"aks vhd override version in creating",
+			WindowsProfile{
+				WindowsPublisher: AKSWindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
@@ -1754,18 +2088,17 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
 			false,
 		},
 		{
-			"vanilla vhd current version in creating",
+			"vanilla vhd version and ImageSku in creating",
 			WindowsProfile{
 				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
-				WindowsSku:       WindowsServer2019OSImageConfig.ImageSku,
 			},
 			WindowsProfile{
 				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
@@ -1776,7 +2109,51 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"vanilla vhd override sku in creating",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:       "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            "override",
+				ImageVersion:          "latest",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            &trueVar,
+			},
+			false,
+			false,
+			false,
+		},
+		{
+			"vanilla vhd override version in creating",
+			WindowsProfile{
+				WindowsPublisher: WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
+				ImageVersion:     "override",
+			},
+			WindowsProfile{
+				WindowsPublisher:      WindowsServer2019OSImageConfig.ImagePublisher,
+				WindowsOffer:          WindowsServer2019OSImageConfig.ImageOffer,
+				WindowsSku:            WindowsServer2019OSImageConfig.ImageSku,
+				ImageVersion:          "override",
+				AdminUsername:         "",
+				AdminPassword:         "",
+				WindowsImageSourceURL: "",
+				WindowsDockerVersion:  "",
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
@@ -1799,7 +2176,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
@@ -1821,7 +2198,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
@@ -1844,7 +2221,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            &trueVar,
 			},
 			false,
 			false,
@@ -1867,7 +2244,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -1890,7 +2267,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -1913,7 +2290,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -1936,7 +2313,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -1959,7 +2336,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -1982,7 +2359,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			true,
@@ -2005,7 +2382,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				AdminPassword:         "",
 				WindowsImageSourceURL: "",
 				WindowsDockerVersion:  "",
-				SSHEnabled:            false,
+				SSHEnabled:            nil,
 			},
 			false,
 			false,
@@ -2092,9 +2469,9 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("MasterProfile.HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.MasterProfile.HasAvailabilityZones(), false)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultLoadBalancerSku {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
 	}
 	// masters with VMSS and zones
 	mockCS = getMockBaseContainerService("1.12.0")
@@ -2139,9 +2516,29 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), false)
 	}
-	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != DefaultLoadBalancerSku {
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
 		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
-			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, DefaultLoadBalancerSku)
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
+	}
+	// agents with VMSS and Standard LB (default) should have SinglePlacementGroup set to false
+	mockCS = getMockBaseContainerService("1.12.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.AgentPoolProfiles[0].Count = 4
+	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != StandardLoadBalancerSku {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.LoadBalancerSku did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku)
+	}
+	for _, profile := range properties.AgentPoolProfiles {
+		if to.Bool(profile.SinglePlacementGroup) {
+			t.Fatalf("pool did not have the expected SinglePlacementGroup configuration, got %t, expected %t",
+				to.Bool(profile.SinglePlacementGroup), false)
+		}
 	}
 	// agents with VMSS and zones
 	mockCS = getMockBaseContainerService("1.13.12")
@@ -2162,7 +2559,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), true)
 	}
-	singlePlacementGroup = DefaultSinglePlacementGroup
+	singlePlacementGroup = false
 	if *properties.AgentPoolProfiles[0].SinglePlacementGroup != singlePlacementGroup {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup default did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, singlePlacementGroup)
@@ -2319,6 +2716,31 @@ func TestCloudProviderBackoff(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+				},
+			},
+			expected: KubernetesConfig{
+				CloudProviderBackoffMode:          "v2",
+				CloudProviderBackoff:              to.BoolPtr(true),
+				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
+				CloudProviderBackoffJitter:        0,
+				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
+				CloudProviderBackoffExponent:      0,
+				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
+				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
+				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
+				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
+				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
+			},
+		},
+		{
+			name: "Kubernetes 1.13.0",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.13.0",
+						OrchestratorType:    Kubernetes,
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -2638,7 +3060,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile = mockCSPEmptyResourceManagerVMDNSSuffix.CustomCloudProfile
 	mockCSEmptyResourceManagerVMDNSSuffix.Properties.CustomCloudProfile.Environment.ResourceManagerVMDNSSuffix = ""
 
-	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+	acutalerr := mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetCustomCloudSpec(AzureCustomCloudSpecParams{
 		IsUpgrade: false,
 		IsScale:   false,
 	})
@@ -2652,7 +3074,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 	mockCSPNilEnvironment := GetMockPropertiesWithCustomCloudProfile("azurestackcloud", true, true, false)
 	mockCSNilEnvironment.Properties.CustomCloudProfile = mockCSPNilEnvironment.CustomCloudProfile
 	mockCSNilEnvironment.Properties.CustomCloudProfile.Environment = nil
-	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetAzureStackCloudSpec(AzureStackCloudSpecParams{
+	acutalerr = mockCSEmptyResourceManagerVMDNSSuffix.Properties.SetCustomCloudSpec(AzureCustomCloudSpecParams{
 		IsUpgrade: false,
 		IsScale:   false,
 	})
@@ -2689,6 +3111,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
 			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:              "CSIProxyDownloadURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -2743,6 +3166,7 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
 			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
 			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:            "CSIProxyDownloadURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -3301,7 +3725,7 @@ func TestPreserveNodesProperties(t *testing.T) {
 
 func TestUbuntu1804Flags(t *testing.T) {
 	// Validate --resolv-conf is missing with 16.04 distro and present with 18.04
-	cs := CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].Distro = AKSUbuntu1804
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -3321,7 +3745,7 @@ func TestUbuntu1804Flags(t *testing.T) {
 			ka["--resolv-conf"], "/run/systemd/resolve/resolv.conf")
 	}
 
-	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.17.4", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = Ubuntu1804
 	cs.Properties.AgentPoolProfiles[0].Distro = Ubuntu
 	cs.Properties.AgentPoolProfiles[0].OSType = Linux
@@ -3480,7 +3904,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 					MasterProfile: &MasterProfile{},
 				},
 			},
-			expected: BasicLoadBalancerSku,
+			expected: StandardLoadBalancerSku,
 		},
 		{
 			name: "basic",
@@ -3499,7 +3923,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: BasicLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "basic using const",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -3515,7 +3939,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: BasicLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "standard",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -3531,7 +3955,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 			expected: StandardLoadBalancerSku,
 		},
 		{
-			name: "default",
+			name: "standard using const",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -3893,14 +4317,14 @@ func TestSetTelemetryProfileDefaults(t *testing.T) {
 			name:             "default",
 			telemetryProfile: nil,
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{
 			name:             "key not set",
 			telemetryProfile: &TelemetryProfile{},
 			expected: &TelemetryProfile{
-				ApplicationInsightsKey: DefaultApplicationInsightsKey,
+				ApplicationInsightsKey: "",
 			},
 		},
 		{
@@ -4012,12 +4436,12 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4097,7 +4521,7 @@ func TestImageReference(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
@@ -4112,7 +4536,7 @@ func TestImageReference(t *testing.T) {
 					},
 				},
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4211,12 +4635,12 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro:   AKSUbuntu1604,
+				Distro:   AKSUbuntu1804,
 				ImageRef: nil,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4238,11 +4662,11 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu,
+				Distro: Ubuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro: Ubuntu,
+					Distro: Ubuntu1804,
 				},
 			},
 		},
@@ -4289,7 +4713,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
 							Name:   "pool1",
-							Distro: Ubuntu1804,
+							Distro: Ubuntu,
 						},
 						{
 							Name: "pool2",
@@ -4298,14 +4722,14 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				},
 			},
 			expectedMasterProfile: MasterProfile{
-				Distro: Ubuntu,
+				Distro: Ubuntu1804,
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro: Ubuntu1804,
+					Distro: Ubuntu,
 				},
 				{
-					Distro: Ubuntu,
+					Distro: Ubuntu1804,
 				},
 			},
 		},
@@ -4545,6 +4969,84 @@ func TestDefaultIPAddressCount(t *testing.T) {
 			}
 			if c.cs.Properties.AgentPoolProfiles[1].IPAddressCount != c.expectedPool1 {
 				t.Errorf("expected %d, but got %d", c.expectedPool1, c.cs.Properties.AgentPoolProfiles[1].IPAddressCount)
+			}
+		})
+	}
+}
+
+func TestSetCSIProxyDefaults(t *testing.T) {
+	cases := []struct {
+		name                      string
+		windowsProfile            *WindowsProfile
+		useCloudControllerManager bool
+		expectedEnableCSIProxy    bool
+		expectedCSIProxyURL       string
+	}{
+		{
+			name: "enabledCSIProxy is nil and useCloudControllerManager is disabled",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: false,
+			expectedEnableCSIProxy:    false,
+			expectedCSIProxyURL:       "",
+		},
+		{
+			name: "enabledCSIProxy is nil and useCloudControllerManager is enabled",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       DefaultKubernetesSpecConfig.CSIProxyDownloadURL,
+		},
+		{
+			name: "enabledCSIProxy is nil and CSIProxyURL is defined",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: nil,
+				CSIProxyURL:    "CSIProxyURL",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       "CSIProxyURL",
+		},
+		{
+			name: "enabledCSIProxy is false",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: to.BoolPtr(false),
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    false,
+			expectedCSIProxyURL:       "",
+		},
+		{
+			name: "enabledCSIProxy is true",
+			windowsProfile: &WindowsProfile{
+				EnableCSIProxy: to.BoolPtr(true),
+				CSIProxyURL:    "",
+			},
+			useCloudControllerManager: true,
+			expectedEnableCSIProxy:    true,
+			expectedCSIProxyURL:       DefaultKubernetesSpecConfig.CSIProxyDownloadURL,
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			cs := getMockBaseContainerService("1.18.0")
+			cs.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager = to.BoolPtr(c.useCloudControllerManager)
+			cs.Properties.WindowsProfile = c.windowsProfile
+			cs.setCSIProxyDefaults()
+			if to.Bool(cs.Properties.WindowsProfile.EnableCSIProxy) != c.expectedEnableCSIProxy {
+				t.Errorf("expected enableCSIProxy to be %t, but got %t", c.expectedEnableCSIProxy, to.Bool(cs.Properties.WindowsProfile.EnableCSIProxy))
+			}
+			if cs.Properties.WindowsProfile.CSIProxyURL != c.expectedCSIProxyURL {
+				t.Errorf("expected csiProxyURL to be %s, but got %s", DefaultKubernetesSpecConfig.CSIProxyDownloadURL, cs.Properties.WindowsProfile.CSIProxyURL)
 			}
 		})
 	}

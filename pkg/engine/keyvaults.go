@@ -18,14 +18,17 @@ func CreateKeyVaultVMAS(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
+	creatingNewUserAssignedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 	masterCount := cs.Properties.MasterProfile.Count
 
 	if useManagedIdentity {
 		var dependencies []string
 
 		if userAssignedIDEnabled {
-			dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
+			if creatingNewUserAssignedIdentity {
+				dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
+			}
 		} else {
 			for i := 0; i < masterCount; i++ {
 				dependencies = append(dependencies, fmt.Sprintf("[concat('Microsoft.Compute/virtualMachines/', variables('masterVMNamePrefix'), '%d')]", i))
@@ -101,7 +104,8 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	useManagedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled := useManagedIdentity && cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled := cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()
+	creatingNewUserAssignedIdentity := cs.Properties.OrchestratorProfile.KubernetesConfig.ShouldCreateNewUserAssignedIdentity()
 
 	accessPolicy := map[string]interface{}{
 		"tenantId": "[variables('tenantID')]",
@@ -115,7 +119,9 @@ func CreateKeyVaultVMSS(cs *api.ContainerService) map[string]interface{} {
 			"[concat('Microsoft.Compute/virtualMachineScaleSets/', variables('masterVMNamePrefix'), 'vmss')]",
 		}
 		if userAssignedIDEnabled {
-			dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
+			if creatingNewUserAssignedIdentity {
+				dependencies = append(dependencies, "[variables('userAssignedIDReference')]")
+			}
 			accessPolicy["objectId"] = "[reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).principalId]"
 		}
 		keyVaultMap["dependsOn"] = dependencies

@@ -33,7 +33,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		switch key {
 		case "--anonymous-auth", "--client-ca-file":
 			if !to.Bool(o.KubernetesConfig.EnableSecureKubelet) { // Don't add if EnableSecureKubelet is disabled
-				staticLinuxKubeletConfig[key] = ""
+				delete(staticLinuxKubeletConfig, key)
 			}
 		}
 	}
@@ -75,14 +75,19 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 	staticWindowsKubeletConfig["--resolv-conf"] = "\"\"\"\""
 	staticWindowsKubeletConfig["--eviction-hard"] = "\"\"\"\""
 
+	nodeStatusUpdateFrequency := GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion]["nodestatusfreq"]
+	if cs.Properties.IsAzureStackCloud() {
+		nodeStatusUpdateFrequency = DefaultAzureStackKubernetesNodeStatusUpdateFrequency
+	}
+
 	// Default Kubelet config
 	defaultKubeletConfig := map[string]string{
 		"--cluster-domain":                    "cluster.local",
 		"--network-plugin":                    "cni",
-		"--pod-infra-container-image":         o.KubernetesConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap[o.OrchestratorVersion]["pause"],
+		"--pod-infra-container-image":         o.KubernetesConfig.MCRKubernetesImageBase + GetK8sComponentsByVersionMap(o.KubernetesConfig)[o.OrchestratorVersion][common.PauseComponentName],
 		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
 		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
-		"--node-status-update-frequency":      K8sComponentsByVersionMap[o.OrchestratorVersion]["nodestatusfreq"],
+		"--node-status-update-frequency":      nodeStatusUpdateFrequency,
 		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
 		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
 		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
@@ -262,13 +267,6 @@ func removeKubeletFlags(k map[string]string, v string) {
 	// Get rid of values not supported in v1.15 and up
 	if common.IsKubernetesVersionGe(v, "1.15.0-beta.1") {
 		for _, key := range []string{"--allow-privileged"} {
-			delete(k, key)
-		}
-	}
-
-	// Get rid of keys with empty string values
-	for key, val := range k {
-		if val == "" {
 			delete(k, key)
 		}
 	}

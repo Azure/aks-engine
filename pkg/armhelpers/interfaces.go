@@ -8,16 +8,27 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
+
 	azStorage "github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/Azure/go-autorest/autorest"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 )
+
+// ResourceSkusResultPage
+type ResourceSkusResultPage interface {
+	Next() error
+	NextWithContext(ctx context.Context) (err error)
+	NotDone() bool
+	Response() compute.ResourceSkusResult
+	Values() []compute.ResourceSku
+}
 
 // VirtualMachineListResultPage is an interface for compute.VirtualMachineListResultPage to aid in mocking
 type VirtualMachineListResultPage interface {
@@ -108,10 +119,16 @@ type AKSEngineClient interface {
 	// EnsureResourceGroup ensures the specified resource group exists in the specified location
 	EnsureResourceGroup(ctx context.Context, resourceGroup, location string, managedBy *string) (*resources.Group, error)
 
+	// ListLocations returns all the Azure locations to which AKS Engine can deploy
+	ListLocations(ctx context.Context) (*[]subscriptions.Location, error)
+
 	//
 	// COMPUTE
 
-	// List lists VM resources
+	// ListResourceSkus lists Microsoft.Compute SKUs available for a subscription
+	ListResourceSkus(ctx context.Context, filter string) (ResourceSkusResultPage, error)
+
+	// ListVirtualMachines lists VM resources
 	ListVirtualMachines(ctx context.Context, resourceGroup string) (VirtualMachineListResultPage, error)
 
 	// GetVirtualMachine retrieves the specified virtual machine.

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/go-cmp/cmp"
@@ -171,6 +172,7 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
 						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+						CSIProxyDownloadURL:              "CSIProxyDownloadURL",
 					},
 					DCOSSpecConfig: DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -252,6 +254,9 @@ func TestConvertAzureEnvironmentSpecConfigToVLabs(t *testing.T) {
 	}
 	if vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase != csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase {
 		t.Errorf("incorrect ContainerdDownloadURLBase, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.ContainerdDownloadURLBase, vlabscsSpec.KubernetesSpecConfig.ContainerdDownloadURLBase)
+	}
+	if vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL != csSpec.KubernetesSpecConfig.CSIProxyDownloadURL {
+		t.Errorf("incorrect CSIProxyDownloadURL, expect: '%s', actual: '%s'", csSpec.KubernetesSpecConfig.CSIProxyDownloadURL, vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL)
 	}
 
 	//DockerSpecConfig
@@ -507,11 +512,14 @@ func getDefaultContainerService() *ContainerService {
 					ResourceGroup: "FooImageRefResourceGroup",
 				},
 				KubernetesConfig: &KubernetesConfig{
-					KubernetesImageBase:             "quay.io",
-					ClusterSubnet:                   "fooClusterSubnet",
-					NetworkPolicy:                   "calico",
-					NetworkPlugin:                   "azure-cni",
-					ContainerRuntime:                "docker",
+					KubernetesImageBase: "quay.io",
+					ClusterSubnet:       "fooClusterSubnet",
+					NetworkPolicy:       "calico",
+					NetworkPlugin:       "azure-cni",
+					ContainerRuntime:    "docker",
+					ContainerRuntimeConfig: map[string]string{
+						common.ContainerDataDirKey: "/mnt/docker",
+					},
 					MaxPods:                         3,
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
@@ -540,7 +548,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.0.30",
+					AzureCNIVersion:                 "1.1.0",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -674,6 +682,25 @@ func TestTelemetryDefaultToVLabs(t *testing.T) {
 	}
 }
 
+func TestPPGToVLabs(t *testing.T) {
+	ppgResourceID1 := "ppgResourceID1"
+	ppgResourceID2 := "ppgResourceID2"
+	cs := getDefaultContainerService()
+	cs.Properties.MasterProfile.ProximityPlacementGroupID = ppgResourceID1
+	cs.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID = ppgResourceID2
+	vlabsCS := ConvertContainerServiceToVLabs(cs)
+	if vlabsCS == nil {
+		t.Errorf("expected the converted containerService struct to be non-nil")
+	}
+	if vlabsCS.Properties.MasterProfile.ProximityPlacementGroupID != ppgResourceID1 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID1)
+	}
+
+	if vlabsCS.Properties.AgentPoolProfiles[0].ProximityPlacementGroupID != ppgResourceID2 {
+		t.Errorf("expected the agent pool profile proximity placement group to be %s", ppgResourceID2)
+	}
+}
+
 func TestPlatformFaultDomainCountToVLabs(t *testing.T) {
 	cs := getDefaultContainerService()
 	cs.Properties.MasterProfile.PlatformFaultDomainCount = to.IntPtr(3)
@@ -745,7 +772,7 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
@@ -756,7 +783,7 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
@@ -801,5 +828,109 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				t.Errorf("unexpected diff testing convertWindowsProfileToVLabs: %s", diff)
 			}
 		})
+	}
+}
+
+func TestConvertComponentsToVlabs(t *testing.T) {
+	k := &KubernetesConfig{
+		Components: []KubernetesComponent{
+			{
+				Name:    "component-0",
+				Enabled: to.BoolPtr(true),
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           "component-0-container-0",
+						Image:          "baz",
+						CPURequests:    "1",
+						MemoryRequests: "200m",
+						CPULimits:      "2",
+						MemoryLimits:   "400m",
+					},
+					{
+						Name:           "component-0-container-1",
+						Image:          "baz-1",
+						CPURequests:    "1-1",
+						MemoryRequests: "200m-1",
+						CPULimits:      "2-1",
+						MemoryLimits:   "400m-1",
+					},
+				},
+				Config: map[string]string{
+					"foo":     "bar",
+					"command": "my-command",
+				},
+				Data: "my-data",
+			},
+			{
+				Name:    "component-1",
+				Enabled: to.BoolPtr(false),
+				Containers: []KubernetesContainerSpec{
+					{
+						Name:           "component-1-container-0",
+						Image:          "baz",
+						CPURequests:    "1",
+						MemoryRequests: "200m",
+						CPULimits:      "2",
+						MemoryLimits:   "400m",
+					},
+					{
+						Name:           "component-1-container-1",
+						Image:          "baz-1",
+						CPURequests:    "1-1",
+						MemoryRequests: "200m-1",
+						CPULimits:      "2-1",
+						MemoryLimits:   "400m-1",
+					},
+				},
+				Config: map[string]string{
+					"foo":     "bar",
+					"command": "my-command",
+				},
+				Data: "my-data",
+			},
+		},
+	}
+	vk := &vlabs.KubernetesConfig{}
+	convertComponentsToVlabs(k, vk)
+	for i, component := range k.Components {
+		if vk.Components[i].Name != component.Name {
+			t.Errorf("unexpected Component.Name property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Name, component.Name)
+		}
+		if to.Bool(vk.Components[i].Enabled) != to.Bool(component.Enabled) {
+			t.Errorf("unexpected Component.Enabled property %t after convertComponentsToVlabs conversion, expected %t", to.Bool(vk.Components[i].Enabled), to.Bool(component.Enabled))
+		}
+		if vk.Components[i].Data != component.Data {
+			t.Errorf("unexpected Component.Data property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Data, component.Data)
+		}
+		for j, container := range component.Containers {
+			if vk.Components[i].Containers[j].Name != container.Name {
+				t.Errorf("unexpected Container.Name property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].Name, container.Name)
+			}
+			if vk.Components[i].Containers[j].Image != container.Image {
+				t.Errorf("unexpected Container.Image property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].Image, container.Image)
+			}
+			if vk.Components[i].Containers[j].CPURequests != container.CPURequests {
+				t.Errorf("unexpected Container.CPURequests property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].CPURequests, container.CPURequests)
+			}
+			if vk.Components[i].Containers[j].MemoryRequests != container.MemoryRequests {
+				t.Errorf("unexpected Container.MemoryRequests property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].MemoryRequests, container.MemoryRequests)
+			}
+			if vk.Components[i].Containers[j].CPULimits != container.CPULimits {
+				t.Errorf("unexpected Container.CPULimits property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].CPULimits, container.CPULimits)
+			}
+			if vk.Components[i].Containers[j].MemoryLimits != container.MemoryLimits {
+				t.Errorf("unexpected Container.MemoryLimits property %s after convertComponentsToVlabs conversion, expected %s", vk.Components[i].Containers[j].MemoryLimits, container.MemoryLimits)
+			}
+		}
+		for key, val := range component.Config {
+			if vk.Components[i].Config[key] != val {
+				t.Errorf("unexpected Component.Config %s=%s after convertComponentsToVlabs conversion, expected %s=%s", key, vk.Components[i].Config[key], key, val)
+			}
+		}
+		for key, val := range vk.Components[i].Config {
+			if component.Config[key] != val {
+				t.Errorf("unexpected Component.Config %s=%s after convertComponentsToVlabs conversion, expected %s=%s", key, component.Config[key], key, val)
+			}
+		}
 	}
 }

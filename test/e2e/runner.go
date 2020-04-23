@@ -39,7 +39,7 @@ func main() {
 	}
 	cfg.CurrentWorkingDir = cwd
 
-	if cfg.IsAzureStackCloud() {
+	if cfg.IsCustomCloudProfile() {
 		cccfg, err = config.ParseCustomCloudConfig()
 
 		if err != nil {
@@ -78,21 +78,23 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error while trying to build CLI Provisioner:%s", err)
 	}
-	// Store the hosts for future introspection
-	hosts, err := cliProvisioner.Account.GetHosts(cliProvisioner.Config.Name)
-	if err != nil {
-		log.Fatalf("Error while trying to get hosts in resource group:%s", err)
-	}
-	var masters, agents []azure.VM
-	for _, host := range hosts {
-		if strings.Contains(host.Name, "master") {
-			masters = append(masters, host)
-		} else if strings.Contains(host.Name, "agent") {
-			agents = append(agents, host)
+	if cliProvisioner.Config.Name != "" {
+		// Store the hosts for future introspection
+		hosts, err := cliProvisioner.Account.GetHosts(cliProvisioner.Config.Name)
+		if err != nil {
+			log.Fatalf("Error while trying to get hosts in resource group:%s", err)
 		}
+		var masters, agents []azure.VM
+		for _, host := range hosts {
+			if strings.Contains(host.Name, "master") {
+				masters = append(masters, host)
+			} else if strings.Contains(host.Name, "agent") {
+				agents = append(agents, host)
+			}
+		}
+		cliProvisioner.Masters = masters
+		cliProvisioner.Agents = agents
 	}
-	cliProvisioner.Masters = masters
-	cliProvisioner.Agents = agents
 
 	sa := acct.StorageAccount
 

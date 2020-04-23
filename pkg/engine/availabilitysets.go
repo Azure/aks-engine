@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -33,6 +33,11 @@ func CreateAvailabilitySet(cs *api.ContainerService, isManagedDisks bool) Availa
 			if cs.Properties.MasterProfile.PlatformUpdateDomainCount != nil {
 				p := int32(*cs.Properties.MasterProfile.PlatformUpdateDomainCount)
 				avSet.PlatformUpdateDomainCount = to.Int32Ptr(p)
+			}
+			if cs.Properties.MasterProfile.ProximityPlacementGroupID != "" {
+				avSet.ProximityPlacementGroup = &compute.SubResource{
+					ID: to.StringPtr(cs.Properties.MasterProfile.ProximityPlacementGroupID),
+				}
 			}
 			avSet.Sku = &compute.Sku{
 				Name: to.StringPtr("Aligned"),
@@ -70,6 +75,12 @@ func createAgentAvailabilitySets(profile *api.AgentPoolProfile) AvailabilitySetA
 			p := int32(*profile.PlatformUpdateDomainCount)
 			avSet.PlatformUpdateDomainCount = to.Int32Ptr(p)
 		}
+		if profile.ProximityPlacementGroupID != "" {
+			avSet.ProximityPlacementGroup = &compute.SubResource{
+				ID: to.StringPtr(profile.ProximityPlacementGroupID),
+			}
+		}
+
 		avSet.Sku = &compute.Sku{
 			Name: to.StringPtr("Aligned"),
 		}

@@ -60,7 +60,7 @@ jobs:
       -e CLIENT_SECRET="$(CLIENT_SECRET)" \
       -e CLUSTER_DEFINITION="examples/e2e-tests/kubernetes/windows/hybrid/definition.json" \
       -e LOCATION=${AZURE_LOCATION} \
-      -e ORCHESTRATOR_RELEASE="1.15" \
+      -e ORCHESTRATOR_RELEASE="1.17" \
       -e SUBSCRIPTION_ID=${SUBSCRIPTION_ID} \
       -e TENANT_ID=${TENANT_ID} \
       -e WINDOWS_NODE_VHD_URL=${OS_DISK_URI} \

@@ -11,25 +11,46 @@ spec:
   hostNetwork: true
   containers:
     - name: kube-controller-manager
-      image: {{GetHyperkubeImageReference}}
+      image: {{ContainerImage "kube-controller-manager"}}
       imagePullPolicy: IfNotPresent
-      command: ["/hyperkube", "kube-controller-manager"]
-      args: [{{GetK8sRuntimeConfigKeyVals .Properties.OrchestratorProfile.KubernetesConfig.ControllerManagerConfig}}]
+      command: [{{ContainerConfig "command"}}]
+      args: [{{GetControllerManagerArgs}}]
+{{- if IsCustomCloudProfile}}
+      env:
+      - name: AZURE_ENVIRONMENT_FILEPATH
+        value: "/etc/kubernetes/azurestackcloud.json"
+{{end}}
       volumeMounts:
         - name: etc-kubernetes
           mountPath: /etc/kubernetes
+{{- if IsKubernetesVersionGe "1.17.0"}}
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
+{{end}}
         - name: var-lib-kubelet
           mountPath: /var/lib/kubelet
         - name: msi
           mountPath: /var/lib/waagent/ManagedIdentity-Settings
           readOnly: true
+{{- if IsCustomCloudProfile}}
+        <volumeMountssl>
+{{end}}
   volumes:
     - name: etc-kubernetes
       hostPath:
         path: /etc/kubernetes
+{{- if IsKubernetesVersionGe "1.17.0"}}
+    - name: etc-ssl
+      hostPath:
+        path: /etc/ssl
+{{end}}
     - name: var-lib-kubelet
       hostPath:
         path: /var/lib/kubelet
     - name: msi
       hostPath:
         path: /var/lib/waagent/ManagedIdentity-Settings
+{{- if IsCustomCloudProfile}}
+    <volumessl>
+{{end}}

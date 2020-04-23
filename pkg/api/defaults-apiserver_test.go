@@ -21,9 +21,9 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableDataEncryptionAtRest=true: %s",
-			a["--experimental-encryption-provider-config"])
+	if a["--encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableDataEncryptionAtRest=true: %s",
+			a["--encryption-provider-config"])
 	}
 
 	// Test EnableDataEncryptionAtRest = false
@@ -31,9 +31,9 @@ func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableDataEncryptionAtRest = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--experimental-encryption-provider-config"]; ok {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableDataEncryptionAtRest=false: %s",
-			a["--experimental-encryption-provider-config"])
+	if _, ok := a["--encryption-provider-config"]; ok {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableDataEncryptionAtRest=false: %s",
+			a["--encryption-provider-config"])
 	}
 }
 
@@ -43,9 +43,9 @@ func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(true)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--experimental-encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=true: %s",
-			a["--experimental-encryption-provider-config"])
+	if a["--encryption-provider-config"] != "/etc/kubernetes/encryption-config.yaml" {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=true: %s",
+			a["--encryption-provider-config"])
 	}
 
 	// Test EnableEncryptionWithExternalKms = false
@@ -53,9 +53,9 @@ func TestAPIServerConfigEnableEncryptionWithExternalKms(t *testing.T) {
 	cs.Properties.OrchestratorProfile.KubernetesConfig.EnableEncryptionWithExternalKms = to.BoolPtr(false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if _, ok := a["--experimental-encryption-provider-config"]; ok {
-		t.Fatalf("got unexpected '--experimental-encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=false: %s",
-			a["--experimental-encryption-provider-config"])
+	if _, ok := a["--encryption-provider-config"]; ok {
+		t.Fatalf("got unexpected '--encryption-provider-config' API server config value for EnableEncryptionWithExternalKms=false: %s",
+			a["--encryption-provider-config"])
 	}
 }
 
@@ -504,5 +504,24 @@ func TestAPIServerFeatureGates(t *testing.T) {
 	if a["--feature-gates"] != "" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
 			"1.17.0", a["--feature-gates"])
+	}
+}
+
+func TestAPIServerIPv6Only(t *testing.T) {
+	cs := CreateMockContainerService("testcluster", "1.18.0", 3, 2, false)
+	cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
+	cs.setAPIServerConfig()
+
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	// bind address should be :: for single stack IPv6 cluster
+	if a["--bind-address"] != "::" {
+		t.Fatalf("got unexpected default value for '--bind-address' API server config: %s",
+			a["--bind-address"])
+	}
+	for _, key := range []string{"--advertise-address"} {
+		if _, ok := a[key]; ok {
+			t.Fatalf("got unexpected '%s' API server config value for '--advertise-address' %s",
+				key, a[key])
+		}
 	}
 }

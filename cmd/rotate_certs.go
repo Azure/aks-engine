@@ -22,6 +22,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
@@ -313,7 +314,7 @@ func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 	}
 	for _, sa := range saList.Items {
 		switch sa.Name {
-		case "kube-dns", "kubernetes-dashboard", "metrics-server":
+		case common.KubeDNSAddonName, "kubernetes-dashboard", common.MetricsServerAddonName:
 			log.Debugf("Deleting service account %s", sa.Name)
 			err = kubeClient.DeleteServiceAccount(&sa)
 			if err != nil {

@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/go-autorest/autorest/to"
-
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 )
@@ -18,7 +16,47 @@ type kubernetesComponentFileSpec struct {
 	sourceFile      string // filename to source spec data from
 	base64Data      string // if not "", this base64-encoded string will take precedent over sourceFile
 	destinationFile string // the filename to write to disk on the destination OS
-	isEnabled       bool   // is this spec enabled?
+}
+
+func kubernetesComponentSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
+	if p.OrchestratorProfile == nil {
+		p.OrchestratorProfile = &api.OrchestratorProfile{}
+	}
+	if p.OrchestratorProfile.KubernetesConfig == nil {
+		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
+	}
+	k := p.OrchestratorProfile.KubernetesConfig
+	return map[string]kubernetesComponentFileSpec{
+		common.SchedulerComponentName: {
+			sourceFile:      schedulerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.SchedulerComponentName),
+			destinationFile: schedulerComponentDestinationFilename,
+		},
+		common.ControllerManagerComponentName: {
+			sourceFile:      controllerManagerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.ControllerManagerComponentName),
+			destinationFile: controllerManagerComponentDestinationFilename,
+		},
+		common.CloudControllerManagerComponentName: {
+			sourceFile:      cloudControllerManagerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.CloudControllerManagerComponentName),
+			destinationFile: cloudControllerManagerComponentDestinationFilename,
+		},
+		common.APIServerComponentName: {
+			sourceFile:      apiServerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.APIServerComponentName),
+			destinationFile: apiServerComponentDestinationFilename,
+		},
+		common.AddonManagerComponentName: {
+			sourceFile:      addonManagerComponentSourceFilename,
+			base64Data:      k.GetComponentData(common.AddonManagerComponentName),
+			destinationFile: addonManagerComponentDestinationFilename,
+		},
+		common.ClusterInitComponentName: {
+			base64Data:      k.GetComponentData(common.ClusterInitComponentName),
+			destinationFile: clusterInitComponentDestinationFilename,
+		},
+	}
 }
 
 func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesComponentFileSpec {
@@ -117,11 +155,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.AzureCNINetworkMonitorAddonName),
 			destinationFile: azureCNINetworkMonitorAddonDestinationFilename,
 		},
-		common.DNSAutoscalerAddonName: {
-			sourceFile:      dnsAutoscalerAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.DNSAutoscalerAddonName),
-			destinationFile: dnsAutoscalerAddonDestinationFilename,
-		},
 		common.CalicoAddonName: {
 			sourceFile:      calicoAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.CalicoAddonName),
@@ -202,102 +235,17 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
 			destinationFile: scheduledMaintenanceAddonSourceFilename,
 		},
-	}
-}
-
-func kubernetesManifestSettingsInit(p *api.Properties) []kubernetesComponentFileSpec {
-	if p.OrchestratorProfile == nil {
-		p.OrchestratorProfile = &api.OrchestratorProfile{}
-	}
-	if p.OrchestratorProfile.KubernetesConfig == nil {
-		p.OrchestratorProfile.KubernetesConfig = &api.KubernetesConfig{}
-	}
-	o := p.OrchestratorProfile
-	k := o.KubernetesConfig
-	if k.SchedulerConfig == nil {
-		k.SchedulerConfig = map[string]string{}
-	}
-	if k.ControllerManagerConfig == nil {
-		k.ControllerManagerConfig = map[string]string{}
-	}
-	if k.CloudControllerManagerConfig == nil {
-		k.CloudControllerManagerConfig = map[string]string{}
-	}
-	if k.APIServerConfig == nil {
-		k.APIServerConfig = map[string]string{}
-	}
-	kubeControllerManagerYaml := kubeControllerManagerManifestFilename
-
-	if p.IsAzureStackCloud() {
-		kubeControllerManagerYaml = kubeControllerManagerCustomManifestFilename
-	}
-
-	return []kubernetesComponentFileSpec{
-		{
-			sourceFile:      kubeSchedulerManifestFilename,
-			base64Data:      k.SchedulerConfig["data"],
-			destinationFile: "kube-scheduler.yaml",
-			isEnabled:       true,
-		},
-		{
-			sourceFile:      kubeControllerManagerYaml,
-			base64Data:      k.ControllerManagerConfig["data"],
-			destinationFile: "kube-controller-manager.yaml",
-			isEnabled:       true,
-		},
-		{
-			sourceFile:      ccmManifestFilename,
-			base64Data:      k.CloudControllerManagerConfig["data"],
-			destinationFile: "cloud-controller-manager.yaml",
-			isEnabled:       to.Bool(k.UseCloudControllerManager),
-		},
-		{
-			sourceFile:      kubeAPIServerManifestFilename,
-			base64Data:      k.APIServerConfig["data"],
-			destinationFile: "kube-apiserver.yaml",
-			isEnabled:       true,
-		},
-		{
-			sourceFile:      kubeAddonManagerManifestFilename,
-			base64Data:      "", // arbitrary user-provided data not enabled for kube-addon-manager spec
-			destinationFile: "kube-addon-manager.yaml",
-			isEnabled:       true,
+		common.SecretsStoreCSIDriverAddonName: {
+			sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
+			base64Data:      k.GetAddonScript(common.SecretsStoreCSIDriverAddonName),
+			destinationFile: secretsStoreCSIDriverAddonDestinationFileName,
 		},
 	}
 }
 
-func getAddonString(input, destinationPath, destinationFile string) string {
+func getComponentString(input, destinationPath, destinationFile string) string {
 	addonString := getBase64EncodedGzippedCustomScriptFromStr(input)
 	return buildConfigString(addonString, destinationFile, destinationPath)
-}
-
-func substituteConfigString(input string, kubernetesFeatureSettings []kubernetesComponentFileSpec, sourcePath string, destinationPath string, placeholder string, orchestratorVersion string, cs *api.ContainerService) string {
-	var config string
-
-	versions := strings.Split(orchestratorVersion, ".")
-	for _, setting := range kubernetesFeatureSettings {
-		if setting.isEnabled {
-			var cscript string
-			if setting.base64Data != "" {
-				var err error
-				cscript, err = getStringFromBase64(setting.base64Data)
-				if err != nil {
-					return ""
-				}
-				config += getAddonString(cscript, destinationPath, setting.destinationFile)
-			} else {
-				cscript = getCustomScriptFromFile(setting.sourceFile,
-					sourcePath,
-					versions[0]+"."+versions[1], cs)
-				config += buildConfigString(
-					cscript,
-					setting.destinationFile,
-					destinationPath)
-			}
-		}
-	}
-
-	return strings.Replace(input, placeholder, config, -1)
 }
 
 func buildConfigString(configString, destinationFile, destinationPath string) string {
@@ -311,11 +259,6 @@ func buildConfigString(configString, destinationFile, destinationPath string) st
 	}
 
 	return strings.Join(contents, "\\n")
-}
-
-func getCustomScriptFromFile(sourceFile, sourcePath, version string, cs *api.ContainerService) string {
-	customDataFilePath := getCustomDataFilePath(sourceFile, sourcePath, version)
-	return getBase64EncodedGzippedCustomScript(customDataFilePath, cs)
 }
 
 func getCustomDataFilePath(sourceFile, sourcePath, version string) string {

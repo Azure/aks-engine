@@ -89,3 +89,12 @@ func IsUsingEphemeralDisks(agentPools []*api.AgentPoolProfile) bool {
 	}
 	return false
 }
+
+func GetAgentVMSize(agentPools []*api.AgentPoolProfile, osType api.OSType) string {
+	for _, a := range agentPools {
+		if a.OSType == osType {
+			return a.VMSize
+		}
+	}
+	return ""
+}

@@ -1,0 +1,80 @@
+trigger: none
+
+# steps:
+# - create an VHD in Packer to normal storage account
+# - copy from Packer storage account to classic storage account using AzCopy
+# - generate SAS link from azure CLI
+# - POST a new SKU to azure marketplace
+
+variables:
+  CONTAINER_IMAGE:  'quay.io/deis/go-dev:v1.26.2'
+
+phases:
+- phase: build_vhd
+  queue:
+    name: Hosted Ubuntu 1604
+    timeoutInMinutes: 120
+  steps:
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e AZURE_VM_SIZE=${AZURE_VM_SIZE} \
+      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
+      -e AZURE_LOCATION=${AZURE_LOCATION} \
+      -e FEATURE_FLAGS=${FEATURE_FLAGS} \
+      -e GIT_VERSION=$(Build.SourceVersion) \
+      -e BUILD_ID=$(Build.BuildId) \
+      -e BUILD_NUMBER=$(Build.BuildNumber) \
+      -e UBUNTU_SKU=${UBUNTU_SKU} \
+      ${CONTAINER_IMAGE} make run-packer-ubuntu-gen2
+    displayName: Building VHD
+  - task: PublishPipelineArtifact@0
+    inputs:
+      artifactName: 'vhd-release-notes'
+      targetPath: 'release-notes.txt'
+  - script: |
+      OS_DISK_SAS="$(cat packer-output | grep "OSDiskUriReadOnlySas:" | cut -d " " -f 2)" && \
+      VHD_NAME="$(echo $OS_DISK_SAS | cut -d "/" -f 8 | cut -d "?" -f 1)" && \
+      printf "COPY ME ----> ${CLASSIC_BLOB}/${VHD_NAME}?" | tee -a vhd-sas && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e CLASSIC_BLOB=${CLASSIC_BLOB} \
+      -e CLASSIC_SAS_TOKEN="$(SAS_TOKEN)" \
+      -e OS_DISK_SAS=${OS_DISK_SAS} \
+      -e VHD_NAME=${VHD_NAME} \
+      ${CONTAINER_IMAGE} make az-copy
+    displayName: Copying resource to Classic Storage Account
+    condition: eq(variables.DRY_RUN, 'False')
+  - script: |
+      SA_NAME="$(cat packer-output | grep "storage name:" | cut -d " " -f 3)" && \
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e SA_NAME=${SA_NAME} \
+      -e AZURE_RESOURCE_GROUP_NAME=${AZURE_RESOURCE_GROUP_NAME} \
+      ${CONTAINER_IMAGE} make delete-sa
+    displayName: Clean-up Storage Account
+    condition: always()
+  - script: |
+      docker run --rm \
+      -v ${PWD}:/go/src/github.com/Azure/aks-engine \
+      -w /go/src/github.com/Azure/aks-engine \
+      -e CLIENT_ID=${CLIENT_ID} \
+      -e CLIENT_SECRET="$(CLIENT_SECRET)" \
+      -e TENANT_ID=${TENANT_ID} \
+      -e CLASSIC_SA_CONNECTION_STRING="$(CLASSIC_SA_CONNECTION_STRING)" \
+      -e START_DATE=${START_DATE} \
+      -e EXPIRY_DATE=${EXPIRY_DATE} \
+      ${CONTAINER_IMAGE} make generate-sas
+    displayName: Getting Shared Access Signature URI

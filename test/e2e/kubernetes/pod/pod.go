@@ -294,7 +294,7 @@ func GetAll(namespace string) (*List, error) {
 }
 
 // GetWithRetry gets a pod, allowing for retries
-func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*Pod, error) {
+func GetWithRetry(podName, namespace string, sleep, timeout time.Duration) (*Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -306,7 +306,7 @@ func GetWithRetry(podPrefix, namespace string, sleep, timeout time.Duration) (*P
 			case <-ctx.Done():
 				return
 			default:
-				ch <- GetAsync(podPrefix, namespace)
+				ch <- GetAsync(podName, namespace)
 				time.Sleep(sleep)
 			}
 		}
@@ -915,8 +915,8 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 						return false, err
 					}
 					duration := t2.Sub(t1)
-					if duration > containerExecutionTimeout {
-						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration, containerExecutionTimeout)
+					if duration >= containerExecutionTimeout {
+						return false, errors.Errorf("execution time %s is greater than timeout %s\n", duration.String(), containerExecutionTimeout.String())
 					}
 					return true, nil
 				}
@@ -935,6 +935,31 @@ func WaitOnTerminated(name, namespace, containerName string, sleep, containerExe
 			return false, errors.Errorf("WaitOnTerminated timed out: %s\n", mostRecentWaitOnTerminatedPodError)
 		}
 	}
+}
+
+func EnsureContainersRunningInAllPods(containers []string, podPrefix, namespace string, successesNeeded int, sleep, timeout time.Duration) error {
+	running, err := WaitOnSuccesses(podPrefix, namespace, successesNeeded, sleep, timeout)
+	if err != nil {
+		return err
+	}
+	if !running {
+		return errors.Errorf("%s is not in Running state", podPrefix)
+	}
+
+	pods, err := GetAllRunningByPrefixWithRetry(podPrefix, namespace, 3*time.Second, timeout)
+	if err != nil {
+		return err
+	}
+
+	for _, p := range pods {
+		for _, c := range containers {
+			if !p.HasContainer(c) {
+				return errors.Errorf("%s is not running in %s", c, p.Metadata.Name)
+			}
+		}
+	}
+
+	return nil
 }
 
 // WaitOnReady will call the static method WaitOnReady passing in p.Metadata.Name and p.Metadata.Namespace
@@ -1079,6 +1104,15 @@ func (p *Pod) ContainerStatus(name string) (ContainerStatus, error) {
 		}
 	}
 	return ContainerStatus{}, errors.Errorf("no container status object found for name %s in pod %s", name, p.Metadata.Name)
+}
+
+func (p *Pod) HasContainer(containerName string) bool {
+	for _, c := range p.Spec.Containers {
+		if c.Name == containerName {
+			return true
+		}
+	}
+	return false
 }
 
 // ExitCode returns a ContainerStatus's terminal exit code

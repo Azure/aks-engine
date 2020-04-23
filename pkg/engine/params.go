@@ -78,6 +78,14 @@ func getParameters(cs *api.ContainerService, generatorCode string, aksEngineVers
 	}
 	if properties.HostedMasterProfile != nil {
 		addValue(parametersMap, "masterSubnet", properties.HostedMasterProfile.Subnet)
+
+		// For AKS, VnetCidrs of the default (the first) agent pool will be set when users create a k8s
+		// cluster with a custom vnet. Set vnetCidr if a custom vnet is used so the address space can be
+		// added into the ExceptionList of Windows nodes. Otherwise, the default value `10.0.0.0/8` will
+		// be added into the ExceptionList and it does not work if users use other ip address ranges.
+		if len(properties.AgentPoolProfiles) > 0 && len(properties.AgentPoolProfiles[0].VnetCidrs) > 0 {
+			addValue(parametersMap, "vnetCidr", properties.AgentPoolProfiles[0].VnetCidrs[0])
+		}
 	}
 
 	if linuxProfile != nil {

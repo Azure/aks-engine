@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/google/uuid"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
@@ -133,7 +134,7 @@ func TestDeleteAllPods(t *testing.T) {
 		Items: []v1.Pod{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-dns",
+					Name:      common.KubeDNSAddonName,
 					Namespace: "kube-system",
 				},
 			},
@@ -220,7 +221,7 @@ func TestDeleteServiceAccounts(t *testing.T) {
 		Items: []v1.ServiceAccount{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "kube-dns",
+					Name:      common.KubeDNSAddonName,
 					Namespace: "kube-system",
 				},
 			},
@@ -256,7 +257,7 @@ func TestWriteArtifacts(t *testing.T) {
 	t.Parallel()
 
 	g := NewGomegaWithT(t)
-	cs := api.CreateMockContainerService("testcluster", "1.13.12", 3, 2, false)
+	cs := api.CreateMockContainerService("testcluster", "1.15.11", 3, 2, false)
 	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,

@@ -35,7 +35,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	masterNsg := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNsg)
 
-	if cs.Properties.OrchestratorProfile.RequireRouteTable() {
+	if cs.Properties.RequireRouteTable() {
 		masterResources = append(masterResources, createRouteTable())
 	}
 
@@ -69,17 +69,11 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 	if !(cs.Properties.OrchestratorProfile.IsPrivateCluster() && !p.MasterProfile.HasMultipleNodes()) &&
 		// And we don't create a master load balancer in a private cluster + Basic LB scenario
 		!(cs.Properties.OrchestratorProfile.IsPrivateCluster() && cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.BasicLoadBalancerSku) {
-		isForMaster := true
-		var includeDNS bool
 		loadBalancer := CreateMasterLoadBalancer(cs.Properties, false)
 		// In a private cluster scenario, the master NIC spec is different,
 		// and the master LB is for outbound access only and doesn't require a DNS record for the public IP
-		if cs.Properties.OrchestratorProfile.IsPrivateCluster() {
-			includeDNS = false
-		} else {
-			includeDNS = true
-		}
-		publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
+		includeDNS := !cs.Properties.OrchestratorProfile.IsPrivateCluster()
+		publicIPAddress := CreatePublicIPAddressForMaster(includeDNS)
 		masterResources = append(masterResources, publicIPAddress, loadBalancer)
 	}
 
@@ -114,7 +108,7 @@ func createKubernetesMasterResourcesVMAS(cs *api.ContainerService) []interface{}
 
 	var useManagedIdentity, userAssignedIDEnabled bool
 	useManagedIdentity = kubernetesConfig.UseManagedIdentity
-	userAssignedIDEnabled = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+	userAssignedIDEnabled = kubernetesConfig.UserAssignedIDEnabled()
 
 	if useManagedIdentity && !userAssignedIDEnabled {
 		vmasRoleAssignment := createVMASRoleAssignment()
@@ -167,7 +161,7 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 	masterNSG := CreateNetworkSecurityGroup(cs)
 	masterResources = append(masterResources, masterNSG)
 
-	if cs.Properties.OrchestratorProfile.RequireRouteTable() {
+	if cs.Properties.RequireRouteTable() {
 		masterResources = append(masterResources, createRouteTable())
 	}
 	if !cs.Properties.MasterProfile.IsCustomVNET() {
@@ -180,9 +174,8 @@ func createKubernetesMasterResourcesVMSS(cs *api.ContainerService) []interface{}
 		masterResources = append(masterResources, internalLb)
 	}
 
-	isForMaster := true
 	includeDNS := !cs.Properties.OrchestratorProfile.IsPrivateCluster()
-	publicIPAddress := CreatePublicIPAddress(isForMaster, includeDNS)
+	publicIPAddress := CreatePublicIPAddressForMaster(includeDNS)
 	loadBalancer := CreateMasterLoadBalancer(cs.Properties, true)
 	masterResources = append(masterResources, publicIPAddress, loadBalancer)
 

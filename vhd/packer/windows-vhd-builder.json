@@ -25,7 +25,7 @@
             "image_publisher": "MicrosoftWindowsServer",
             "image_offer": "WindowsServer",
             "image_sku": "2019-Datacenter-Core-smalldisk",
-            "image_version": "17763.973.2001110547",
+            "image_version": "17763.1158.2004131759",
             "resource_group_name": "{{user `resource_group_name`}}",
             "capture_container_name": "aksengine-vhds-windows-ws2019",
             "capture_name_prefix": "aksengine-{{user `create_time`}}",

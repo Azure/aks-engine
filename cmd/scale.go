@@ -159,10 +159,10 @@ func (sc *scaleCmd) load() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if sc.containerService.Properties.IsAzureStackCloud() {
+	if sc.containerService.Properties.IsCustomCloudProfile() {
 		writeCustomCloudProfile(sc.containerService)
 
-		if err = sc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
+		if err = sc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
 	}
@@ -269,8 +269,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 					continue
 				}
 
-				osPublisher := vm.StorageProfile.ImageReference.Publisher
-				if osPublisher != nil && (strings.EqualFold(*osPublisher, "MicrosoftWindowsServer") || strings.EqualFold(*osPublisher, "microsoft-aks")) {
+				if sc.agentPool.OSType == api.Windows {
 					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
 				} else {
 					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)

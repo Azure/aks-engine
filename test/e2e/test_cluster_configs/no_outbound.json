@@ -1,7 +1,7 @@
 {
 	"env": {},
 	"options": {
-		"allowedOrchestratorVersions": ["1.13", "1.14", "1.15", "1.16", "1.17"]
+		"allowedOrchestratorVersions": ["1.14", "1.15", "1.16", "1.17", "1.18"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -16,11 +16,25 @@
 			},
 			"agentPoolProfiles": [
 				{
-					"name": "agentpool1",
-					"count": 3,
+					"name": "pool1604vhd",
+					"count": 1,
 					"vmSize": "Standard_D2_v3",
 					"availabilityProfile": "VirtualMachineScaleSets",
-					"scalesetPriority": "Spot"
+					"distro": "aks-ubuntu-16.04"
+				},
+				{
+					"name": "pool1804vhd",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"distro": "aks-ubuntu-18.04"
+				},
+				{
+					"name": "poolwinvhd",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"osType": "Windows"
 				}
 			],
 			"linuxProfile": {
@@ -32,6 +46,12 @@
 						}
 					]
 				}
+			},
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true
 			},
 			"featureFlags": {
 				"BlockOutboundInternet": true

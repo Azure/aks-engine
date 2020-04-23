@@ -9,7 +9,7 @@ parameters:
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: unit_tests
-  timeoutInMinutes: 90
+  timeoutInMinutes: 120
   cancelTimeoutInMinutes: 5
   strategy:
     maxParallel: 0
@@ -33,6 +33,7 @@ jobs:
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}
     SUBSCRIPTION_ID: '$(SUBSCRIPTION_ID_E2E_KUBERNETES)'
+    MSI_USER_ASSIGNED_ID: '$(MSI_USER_ASSIGNED_ID_AKS_ENGINE_E2E)'
 
   steps:
     - template: e2e-step-template.yaml

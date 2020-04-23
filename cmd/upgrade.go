@@ -9,15 +9,19 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"regexp"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
@@ -35,15 +39,17 @@ type upgradeCmd struct {
 	authProvider
 
 	// user input
-	resourceGroupName           string
-	apiModelPath                string
-	deploymentDirectory         string
-	upgradeVersion              string
-	location                    string
-	kubeconfigPath              string
-	timeoutInMinutes            int
-	cordonDrainTimeoutInMinutes int
-	force                       bool
+	resourceGroupName                        string
+	apiModelPath                             string
+	deploymentDirectory                      string
+	upgradeVersion                           string
+	location                                 string
+	kubeconfigPath                           string
+	timeoutInMinutes                         int
+	cordonDrainTimeoutInMinutes              int
+	force                                    bool
+	controlPlaneOnly                         bool
+	disableClusterInitComponentDuringUpgrade bool
 
 	// derived
 	containerService    *api.ContainerService
@@ -78,6 +84,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.IntVar(&uc.timeoutInMinutes, "vm-timeout", -1, "how long to wait for each vm to be upgraded in minutes")
 	f.IntVar(&uc.cordonDrainTimeoutInMinutes, "cordon-drain-timeout", -1, "how long to wait for each vm to be cordoned in minutes")
 	f.BoolVarP(&uc.force, "force", "f", false, "force upgrading the cluster to desired version. Allows same version upgrades and downgrades.")
+	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
 	addAuthFlags(uc.getAuthArgs(), f)
 
 	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
@@ -159,10 +166,17 @@ func (uc *upgradeCmd) loadCluster() error {
 		return errors.Wrap(err, "error parsing the api model")
 	}
 
-	if uc.containerService.Properties.IsAzureStackCloud() {
-		writeCustomCloudProfile(uc.containerService)
+	// The cluster-init component is a cluster create-only feature, temporarily disable if enabled
+	if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+		if uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].IsEnabled() {
+			uc.disableClusterInitComponentDuringUpgrade = true
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(false)
+		}
+	}
 
-		if err = uc.containerService.Properties.SetAzureStackCloudSpec(api.AzureStackCloudSpecParams{
+	if uc.containerService.Properties.IsCustomCloudProfile() {
+		writeCustomCloudProfile(uc.containerService)
+		if err = uc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,
 		}); err != nil {
@@ -266,6 +280,7 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	upgradeCluster.NameSuffix = uc.nameSuffix
 	upgradeCluster.AgentPoolsToUpgrade = uc.agentPoolsToUpgrade
 	upgradeCluster.Force = uc.force
+	upgradeCluster.ControlPlaneOnly = uc.controlPlaneOnly
 
 	var kubeConfig string
 	if uc.kubeconfigPath != "" {
@@ -294,6 +309,12 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Save the new apimodel to reflect the cluster's state.
+	// Restore the original cluster-init component enabled value, if it was disabled during upgrade
+	if uc.disableClusterInitComponentDuringUpgrade {
+		if i := api.GetComponentsIndexByName(uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components, common.ClusterInitComponentName); i > -1 {
+			uc.containerService.Properties.OrchestratorProfile.KubernetesConfig.Components[i].Enabled = to.BoolPtr(true)
+		}
+	}
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
 			Locale: uc.locale,
@@ -313,11 +334,20 @@ func (uc *upgradeCmd) run(cmd *cobra.Command, args []string) error {
 	return f.SaveFile(dir, file, b)
 }
 
+// isVMSSNameInAgentPoolsArray is a helper func to filter out any VMSS in the cluster resource group
+// that are not participating in the aks-engine-created Kubernetes cluster
 func isVMSSNameInAgentPoolsArray(vmss string, cs *api.ContainerService) bool {
 	for _, pool := range cs.Properties.AgentPoolProfiles {
 		if pool.AvailabilityProfile == api.VirtualMachineScaleSets {
-			if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
-				return true
+			if pool.OSType == api.Windows {
+				re := regexp.MustCompile(`^[0-9]{4}k8s[0]+`)
+				if re.FindString(vmss) != "" {
+					return true
+				}
+			} else {
+				if poolName, _, _ := utils.VmssNameParts(vmss); poolName == pool.Name {
+					return true
+				}
 			}
 		}
 	}

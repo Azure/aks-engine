@@ -1,6 +1,14 @@
 #cloud-config
 
 write_files:
+{{- if .RequiresCloudproviderConfig}}
+- path: /etc/kubernetes/azure.json
+  permissions: "0600"
+  owner: root
+  content: |
+    #EOF
+{{end}}
+
 - path: {{GetCSEHelpersScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -49,7 +57,17 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsAzureStackCloud}}
+{{- if .IsUbuntu1804}}
+  {{- if not .IsVHDDistro}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
+  {{end}}
+{{end}}
+
+{{if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -66,11 +84,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{if not .IsVHDDistro}}
-    {{if .IsCoreOS}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -113,7 +127,16 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsIPv6DualStackFeatureEnabled}}
+- path: /etc/apt/apt.conf.d/99periodic
+  permissions: "0644"
+  owner: root
+  content: |
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
+
+{{if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -130,15 +153,13 @@ write_files:
 {{end}}
 
 {{if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsCoreOS}}
-        {{if not .IsVHDDistro}}
+    {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -147,11 +168,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -159,21 +176,7 @@ write_files:
   permissions: "0644"
   owner: root
   content: |
-    {
-      "live-restore": true,
-      "log-driver": "json-file",
-      "log-opts":  {
-         "max-size": "50m",
-         "max-file": "5"
-      }{{if IsNSeriesSKU .}}
-      ,"default-runtime": "nvidia",
-      "runtimes": {
-         "nvidia": {
-             "path": "/usr/bin/nvidia-container-runtime",
-             "runtimeArgs": []
-        }
-      }{{end}}
-    }
+{{IndentString (GetDockerConfig (IsNSeriesSKU .VMSize)) 4}}
 {{end}}
 
 {{if HasCiliumNetworkPlugin}}
@@ -185,33 +188,30 @@ write_files:
     {{CloudInitData "systemdBPFMount"}}
 {{end}}
 
+- path: /etc/sysctl.d/11-aks-engine.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    {{GetSysctlDConfigKeyVals .SysctlDConfig}}
+    #EOF
+
 {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
 - path: /etc/containerd/config.toml
   permissions: "0644"
   owner: root
   content: |
-    subreaper = false
-    oom_score = 0
-    [plugins.cri]
-    sandbox_image = "{{GetPodInfraContainerSpec}}"
-    [plugins.cri.containerd.untrusted_workload_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    [plugins.cri.containerd.default_runtime]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    {{if IsKataContainerRuntime }}
-    runtime_engine = "/usr/bin/kata-runtime"
-    {{else}}
-    runtime_engine = "/usr/local/sbin/runc"
-    {{end}}
-    {{if IsKubenet }}
-    [plugins.cri.cni]
-    conf_template = "/etc/containerd/kubenet_template.conf"
+{{IndentString GetContainerdConfig 4}}
+    #EOF
 
+  {{if IsKubenet }}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
   owner: root
@@ -234,10 +234,10 @@ write_files:
             }
           }]
       }
-    {{end}}
+  {{end}}
 {{end}}
 
-{{if IsNSeriesSKU .}}
+{{if IsNSeriesSKU .VMSize}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
   owner: root
@@ -315,7 +315,7 @@ write_files:
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsAzureStackCloud }}
+{{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -332,7 +332,7 @@ write_files:
 {{end}}
     #EOF
 
-{{if IsAzureStackCloud}}
+{{if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
@@ -340,55 +340,7 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsCoreOS}}
-- path: "/etc/kubernetes/manifests/.keep"
-
-{{if .KubernetesConfig.RequiresDocker}}
-groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
-
-coreos:
-  units:
-    - name: kubelet.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Unit]
-            Requires=rpc-statd.service
-            ConditionPathExists=
-            ConditionPathExists=/opt/kubelet
-            [Service]
-            ExecStart=
-            ExecStart=/opt/kubelet \
-              --enable-server \
-              --node-labels="${KUBELET_NODE_LABELS}" \
-              --v=2 \
-              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-              $KUBELET_CONFIG $KUBELET_OPTS \
-              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
-    - name: kubelet-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh kubelet
-    - name: docker-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-coreos.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh container-runtime
-    - name: rpcbind.service
-      enable: true
-{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
-{{end}}

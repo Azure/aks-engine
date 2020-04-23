@@ -1,0 +1,383 @@
+{
+  "value":
+  [
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/australiacentral",
+      "name": "australiacentral",
+      "displayName": "Australia Central",
+      "latitude": "-35.3075",
+      "longitude": "149.1244"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/australiacentral2",
+      "name": "australiacentral2",
+      "displayName": "Australia Central 2",
+      "latitude": "-35.3075",
+      "longitude": "149.1244"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/australiaeast",
+      "name": "australiaeast",
+      "displayName": "Australia East",
+      "latitude": "-33.86",
+      "longitude": "151.2094"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/australiasoutheast",
+      "name": "australiasoutheast",
+      "displayName": "Australia Southeast",
+      "latitude": "-37.8136",
+      "longitude": "144.9631"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/brazilsouth",
+      "name": "brazilsouth",
+      "displayName": "Brazil South",
+      "latitude": "-23.55",
+      "longitude": "-46.633"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/canadacentral",
+      "name": "canadacentral",
+      "displayName": "Canada Central",
+      "latitude": "43.653",
+      "longitude": "-79.383"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/canadaeast",
+      "name": "canadaeast",
+      "displayName": "Canada East",
+      "latitude": "46.817",
+      "longitude": "-71.217"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/centralindia",
+      "name": "centralindia",
+      "displayName": "Central India",
+      "latitude": "18.5822",
+      "longitude": "73.9197"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/centralus",
+      "name": "centralus",
+      "displayName": "Central US",
+      "latitude": "41.5908",
+      "longitude": "-93.6208"
+    },
+    {
+      "id": "N/A",
+      "name": "centraluseuap",
+      "displayName": "Central US EUAP (Canary)",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "chinaeast",
+      "displayName": "China East",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "chinaeast2",
+      "displayName": "China East 2",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "chinanorth",
+      "displayName": "China North",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "chinanorth2",
+      "displayName": "China North 2",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/eastasia",
+      "name": "eastasia",
+      "displayName": "East Asia",
+      "latitude": "22.267",
+      "longitude": "114.188"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/eastus",
+      "name": "eastus",
+      "displayName": "East US",
+      "latitude": "37.3719",
+      "longitude": "-79.8164"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/eastus2",
+      "name": "eastus2",
+      "displayName": "East US 2",
+      "latitude": "36.6681",
+      "longitude": "-78.3889"
+    },
+    {
+      "id": "N/A",
+      "name": "eastus2euap",
+      "displayName": "East US 2 EUAP (Canary)",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/francecentral",
+      "name": "francecentral",
+      "displayName": "France Central",
+      "latitude": "46.3772",
+      "longitude": "2.3730"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/francesouth",
+      "name": "francesouth",
+      "displayName": "France South",
+      "latitude": "43.8345",
+      "longitude": "2.1972"
+    },
+    {
+      "id": "N/A",
+      "name": "germanycentral",
+      "displayName": "Germany Central",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/germanynorth",
+      "name": "germanynorth",
+      "displayName": "Germany North",
+      "latitude": "53.073635",
+      "longitude": "8.806422"
+    },
+    {
+      "id": "N/A",
+      "name": "germanynortheast",
+      "displayName": "Germany Northeast",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/germanywestcentral",
+      "name": "germanywestcentral",
+      "displayName": "Germany West Central",
+      "latitude": "50.110924",
+      "longitude": "8.682127"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/japaneast",
+      "name": "japaneast",
+      "displayName": "Japan East",
+      "latitude": "35.68",
+      "longitude": "139.77"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/japanwest",
+      "name": "japanwest",
+      "displayName": "Japan West",
+      "latitude": "34.6939",
+      "longitude": "135.5022"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/koreacentral",
+      "name": "koreacentral",
+      "displayName": "Korea Central",
+      "latitude": "37.5665",
+      "longitude": "126.9780"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/koreasouth",
+      "name": "koreasouth",
+      "displayName": "Korea South",
+      "latitude": "35.1796",
+      "longitude": "129.0756"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/northcentralus",
+      "name": "northcentralus",
+      "displayName": "North Central US",
+      "latitude": "41.8819",
+      "longitude": "-87.6278"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/northeurope",
+      "name": "northeurope",
+      "displayName": "North Europe",
+      "latitude": "53.3478",
+      "longitude": "-6.2597"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/norwayeast",
+      "name": "norwayeast",
+      "displayName": "Norway East",
+      "latitude": "59.913868",
+      "longitude": "10.752245"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/norwaywest",
+      "name": "norwaywest",
+      "displayName": "Norway West",
+      "latitude": "58.969975",
+      "longitude": "5.733107"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/southafricanorth",
+      "name": "southafricanorth",
+      "displayName": "South Africa North",
+      "latitude": "-25.731340",
+      "longitude": "28.218370"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/southafricawest",
+      "name": "southafricawest",
+      "displayName": "South Africa West",
+      "latitude": "-34.075691",
+      "longitude": "18.843266"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/southcentralus",
+      "name": "southcentralus",
+      "displayName": "South Central US",
+      "latitude": "29.4167",
+      "longitude": "-98.5"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/southeastasia",
+      "name": "southeastasia",
+      "displayName": "Southeast Asia",
+      "latitude": "1.283",
+      "longitude": "103.833"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/southindia",
+      "name": "southindia",
+      "displayName": "South India",
+      "latitude": "12.9822",
+      "longitude": "80.1636"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/switzerlandnorth",
+      "name": "switzerlandnorth",
+      "displayName": "Switzerland North",
+      "latitude": "47.451542",
+      "longitude": "8.564572"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/switzerlandwest",
+      "name": "switzerlandwest",
+      "displayName": "Switzerland West",
+      "latitude": "46.204391",
+      "longitude": "6.143158"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/uaecentral",
+      "name": "uaecentral",
+      "displayName": "UAE Central",
+      "latitude": "24.466667",
+      "longitude": "54.366669"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/uaenorth",
+      "name": "uaenorth",
+      "displayName": "UAE North",
+      "latitude": "25.266666",
+      "longitude": "55.316666"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/uksouth",
+      "name": "uksouth",
+      "displayName": "UK South",
+      "latitude": "50.941",
+      "longitude": "-0.799"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/ukwest",
+      "name": "ukwest",
+      "displayName": "UK West",
+      "latitude": "53.427",
+      "longitude": "-3.084"
+    },
+    {
+      "id": "N/A",
+      "name": "usdodcentral",
+      "displayName": "US DoD Central",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "usdodeast",
+      "displayName": "US Dod East",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "usgovarizona",
+      "displayName": "US Gov Arizona",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "usgoviowa",
+      "displayName": "US Gov Iowa",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "usgovtexas",
+      "displayName": "US Gov Texas",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "N/A",
+      "name": "usgovvirginia",
+      "displayName": "US Gov Virginia",
+      "latitude": "N/A",
+      "longitude": "N/A"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/westcentralus",
+      "name": "westcentralus",
+      "displayName": "West Central US",
+      "latitude": "40.890",
+      "longitude": "-110.234"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/westeurope",
+      "name": "westeurope",
+      "displayName": "West Europe",
+      "latitude": "52.3667",
+      "longitude": "4.9"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/westindia",
+      "name": "westindia",
+      "displayName": "West India",
+      "latitude": "19.088",
+      "longitude": "72.868"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/westus",
+      "name": "westus",
+      "displayName": "West US",
+      "latitude": "37.783",
+      "longitude": "-122.417"
+    },
+    {
+      "id": "/subscriptions/6dc93fae-9a76-421f-bbe5-cc6460ea81cb/locations/westus2",
+      "name": "westus2",
+      "displayName": "West US 2",
+      "latitude": "47.233",
+      "longitude": "-119.852"
+    }
+  ]
+}

@@ -3,10 +3,12 @@
   "properties": {
     "orchestratorProfile": {
       "orchestratorType": "Kubernetes",
-      "orchestratorRelease": "1.13",
+      "orchestratorRelease": "1.15",
       "kubernetesConfig": {
         "useInstanceMetadata": false,
-        "windowsNodeBinariesURL": "http://test/test.tar.gz"
+        "windowsNodeBinariesURL": "http://test/test.tar.gz",
+        "windowsContainerdURL": "http://test/testcontainerd.tar.gz",
+        "windowsSdnPluginURL": "http://test/testsdnplugin.tar.gz"
       }
     },
     "masterProfile": {

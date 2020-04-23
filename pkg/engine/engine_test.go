@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/leonelquinteros/gotext"
@@ -1739,7 +1740,6 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 				kubernetesDockerMonitorSystemdTimer,
 				dockerClearMountPropagationFlags,
 				auditdRules,
-				kubernetesCSECustomCloud,
 				systemdBPFMount,
 			} {
 				ret := getBase64EncodedGzippedCustomScript(file, c.cs)
@@ -1790,6 +1790,7 @@ func TestWrapAsVariableObject(t *testing.T) {
 
 func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
 		name                       string
 		addon                      api.KubernetesAddon
@@ -1827,7 +1828,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1865,7 +1866,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1875,9 +1876,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -1898,7 +1899,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1948,7 +1949,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1958,9 +1959,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:10:k8s-pool2-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -1981,7 +1982,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -2015,7 +2016,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2025,9 +2026,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -2048,7 +2049,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2097,7 +2098,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2130,7 +2131,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2180,7 +2181,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "chinanorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2213,7 +2214,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2263,7 +2264,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "germanynortheast",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2296,7 +2297,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -2346,7 +2347,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				},
 				Location: "usgovnorth",
 			},
-			expectedImage:              specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -2455,22 +2456,29 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 
 func TestGetAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
-		name                                      string
-		addon                                     api.KubernetesAddon
-		cs                                        *api.ContainerService
-		expectedImage                             string
-		expectedCPUReqs                           string
-		expectedCPULimits                         string
-		expectedMemReqs                           string
-		expectedMemLimits                         string
-		expectedFoo                               string
-		expectedIsAzureStackCloud                 bool
-		expectedNeedsStorageAccountStorageClasses bool
-		expectedNeedsManagedDiskStorageClasses    bool
-		expectedUsesCloudControllerManager        bool
-		expectedHasAvailabilityZones              bool
-		expectedGetZones                          string
+		name                                              string
+		addon                                             api.KubernetesAddon
+		cs                                                *api.ContainerService
+		expectedImage                                     string
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedFoo                                       string
+		expectedIsAzureStackCloud                         bool
+		expectedNeedsStorageAccountStorageClasses         bool
+		expectedNeedsManagedDiskStorageClasses            bool
+		expectedUsesCloudControllerManager                bool
+		expectedHasAvailabilityZones                      bool
+		expectedGetZones                                  string
+		expectedHasWindows                                bool
+		expectedHasLinux                                  bool
+		expectedCSIControllerReplicas                     string
+		expectedShouldEnableAzureDiskCSISnapshotFeature   bool
+		expectedShouldEnableAzureFileCSISnapshotFeature   bool
+		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
 	}{
 		{
 			name: "coredns as an example",
@@ -2488,7 +2496,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2513,7 +2521,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2526,22 +2534,29 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2559,7 +2574,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2584,7 +2599,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2597,6 +2612,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 					CustomCloudProfile: &api.CustomCloudProfile{
@@ -2605,18 +2621,24 @@ func TestGetAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: true,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - StorageAccount",
@@ -2634,7 +2656,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2659,7 +2681,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2672,22 +2694,29 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.StorageAccount,
+							OSType:              api.Linux,
 						},
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: true,
-			expectedNeedsManagedDiskStorageClasses:    false,
-			expectedUsesCloudControllerManager:        false,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         true,
+			expectedNeedsManagedDiskStorageClasses:            false,
+			expectedUsesCloudControllerManager:                false,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2705,7 +2734,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2731,7 +2760,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2744,22 +2773,29 @@ func TestGetAddonFuncMap(t *testing.T) {
 							Count:               1,
 							AvailabilityProfile: api.VirtualMachineScaleSets,
 							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
 						},
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        true,
-			expectedHasAvailabilityZones:              false,
-			expectedGetZones:                          "",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                true,
+			expectedHasAvailabilityZones:                      false,
+			expectedGetZones:                                  "",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
 		},
 		{
 			name: "coredns as an example - Availability Zones",
@@ -2777,7 +2813,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 					},
 				},
 			},
@@ -2786,7 +2822,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
+						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &api.KubernetesConfig{
 							UseCloudControllerManager: to.BoolPtr(true),
 							NetworkPlugin:             api.NetworkPluginAzure,
@@ -2804,7 +2840,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 											MemoryRequests: "300Mi",
 											CPULimits:      "100m",
 											MemoryLimits:   "300Mi",
-											Image:          specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 										},
 									},
 								},
@@ -2821,22 +2857,112 @@ func TestGetAddonFuncMap(t *testing.T) {
 								"1",
 								"2",
 							},
+							OSType: api.Linux,
 						},
 					},
 				},
 			},
-			expectedImage:             specConfig.KubernetesImageBase + api.K8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedImage:             specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
 			expectedCPUReqs:           "100m",
 			expectedCPULimits:         "100m",
 			expectedMemReqs:           "300Mi",
 			expectedMemLimits:         "300Mi",
 			expectedFoo:               "bar",
 			expectedIsAzureStackCloud: false,
-			expectedNeedsStorageAccountStorageClasses: false,
-			expectedNeedsManagedDiskStorageClasses:    true,
-			expectedUsesCloudControllerManager:        true,
-			expectedHasAvailabilityZones:              true,
-			expectedGetZones:                          "\n    - eastus2-1\n    - eastus2-2",
+			expectedNeedsStorageAccountStorageClasses:         false,
+			expectedNeedsManagedDiskStorageClasses:            true,
+			expectedUsesCloudControllerManager:                true,
+			expectedHasAvailabilityZones:                      true,
+			expectedGetZones:                                  "\n    - eastus2-1\n    - eastus2-2",
+			expectedHasWindows:                                false,
+			expectedHasLinux:                                  true,
+			expectedCSIControllerReplicas:                     "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+		},
+		{
+			name: "coredns as an example - hybrid cluster",
+			addon: api.KubernetesAddon{
+				Name:    common.CoreDNSAddonName,
+				Enabled: to.BoolPtr(true),
+				Mode:    api.AddonModeEnsureExists,
+				Config: map[string]string{
+					"foo": "bar",
+				},
+				Containers: []api.KubernetesContainerSpec{
+					{
+						Name:           common.CoreDNSAddonName,
+						CPURequests:    "100m",
+						MemoryRequests: "300Mi",
+						CPULimits:      "100m",
+						MemoryLimits:   "300Mi",
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Location: "eastus2",
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &api.KubernetesConfig{
+							UseCloudControllerManager: to.BoolPtr(true),
+							NetworkPlugin:             api.NetworkPluginAzure,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"foo": "bar",
+									},
+									Containers: []api.KubernetesContainerSpec{
+										{
+											Name:           common.CoreDNSAddonName,
+											CPURequests:    "100m",
+											MemoryRequests: "300Mi",
+											CPULimits:      "100m",
+											MemoryLimits:   "300Mi",
+											Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+										},
+									},
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Windows,
+						},
+						{
+							Name:                "pool2",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							StorageProfile:      api.ManagedDisks,
+							OSType:              api.Linux,
+						},
+					},
+				},
+			},
+			expectedImage:                          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.CoreDNSAddonName],
+			expectedCPUReqs:                        "100m",
+			expectedCPULimits:                      "100m",
+			expectedMemReqs:                        "300Mi",
+			expectedMemLimits:                      "300Mi",
+			expectedFoo:                            "bar",
+			expectedNeedsManagedDiskStorageClasses: true,
+			expectedUsesCloudControllerManager:     true,
+			expectedHasWindows:                     true,
+			expectedHasLinux:                       true,
+			expectedCSIControllerReplicas:          "2",
+			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
+			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
 		},
 	}
 
@@ -2904,6 +3030,511 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetZones {
 				t.Errorf("expected funcMap invocation of GetZones to return %s, instead got %s", c.expectedGetZones, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasWindows"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasWindows {
+				t.Errorf("expected funcMap invocation of HasWindows to return %t, instead got %t", c.expectedHasWindows, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasLinux"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasLinux {
+				t.Errorf("expected funcMap invocation of HasLinux to return %t, instead got %t", c.expectedHasLinux, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["CSIControllerReplicas"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedCSIControllerReplicas {
+				t.Errorf("expected funcMap invocation of CSIControllerReplicas to return %s, instead got %s", c.expectedCSIControllerReplicas, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ShouldEnableCSISnapshotFeature"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.AzureDiskCSIDriverAddonName)})
+			if ret[0].Interface() != c.expectedShouldEnableAzureDiskCSISnapshotFeature {
+				t.Errorf("expected funcMap invocation of ShouldEnableCSISnapshotFeature for %s to return %t, instead got %t", common.AzureDiskCSIDriverAddonName, c.expectedShouldEnableAzureDiskCSISnapshotFeature, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["ShouldEnableCSISnapshotFeature"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf(common.AzureFileCSIDriverAddonName)})
+			if ret[0].Interface() != c.expectedShouldEnableAzureFileCSISnapshotFeature {
+				t.Errorf("expected funcMap invocation of ShouldEnableCSISnapshotFeature for %s to return %t, instead got %t", common.AzureFileCSIDriverAddonName, c.expectedShouldEnableAzureFileCSISnapshotFeature, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("1.16.0")})
+			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
+				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
+			}
+		})
+	}
+}
+
+func TestGetComponentFuncMap(t *testing.T) {
+	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	//specConfigAzureStack := api.AzureCloudSpecEnvMap["AzureStackCloud"].KubernetesSpecConfig
+	cases := []struct {
+		name                                              string
+		components                                        []api.KubernetesComponent
+		cs                                                *api.ContainerService
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedIsAzureStackCloud                         bool
+		expectedIsKubernetesVersionGeOneDotFifteenDotZero bool
+		expectedAPIServerImage                            string
+		expectedAPIServerCommand                          string
+		expectedAPIServerArgs                             string
+		expectedControllerManagerImage                    string
+		expectedControllerManagerCommand                  string
+		expectedControllerManagerArgs                     string
+		expectedCloudControllerManagerImage               string
+		expectedCloudControllerManagerCommand             string
+		expectedCloudControllerManagerArgs                string
+		expectedSchedulerImage                            string
+		expectedSchedulerCommand                          string
+		expectedSchedulerArgs                             string
+		expectedAddonManagerImage                         string
+	}{
+		{
+			name: "1.15",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"cloud-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: false,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+		{
+			name: "Azure Stack",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"cloud-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+					CustomCloudProfile: &api.CustomCloudProfile{
+						Environment: &azure.Environment{
+							Name: "AzureStackCloud",
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: true,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+		{
+			name: "1.14",
+			components: []api.KubernetesComponent{
+				{
+					Name:    common.APIServerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.APIServerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
+					},
+				},
+				{
+					Name:    common.ControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.ControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.CloudControllerManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.CloudControllerManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"cloud-controller-manager\"",
+					},
+				},
+				{
+					Name:    common.SchedulerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.SchedulerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+						},
+					},
+					Config: map[string]string{
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
+					},
+				},
+				{
+					Name:    common.AddonManagerComponentName,
+					Enabled: to.BoolPtr(true),
+					Containers: []api.KubernetesContainerSpec{
+						{
+							Name:  common.AddonManagerComponentName,
+							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+						},
+					},
+				},
+			},
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.14.7",
+						KubernetesConfig: &api.KubernetesConfig{
+							APIServerConfig: map[string]string{
+								"foo": "bar",
+								"baz": "bang",
+							},
+							ControllerManagerConfig: map[string]string{
+								"this": "that",
+								"quid": "ergo",
+							},
+							CloudControllerManagerConfig: map[string]string{
+								"bugs": "bunny",
+							},
+							SchedulerConfig: map[string]string{
+								"daffy": "duck",
+								"porky": "pig",
+								"elmer": "fudd",
+							},
+						},
+					},
+				},
+			},
+			expectedCPUReqs:           "",
+			expectedCPULimits:         "",
+			expectedMemReqs:           "",
+			expectedMemLimits:         "",
+			expectedIsAzureStackCloud: false,
+			expectedIsKubernetesVersionGeOneDotFifteenDotZero: false,
+			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
+			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
+			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
+			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
+			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
+		},
+	}
+
+	for _, c := range cases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			for _, component := range c.components {
+				funcMap := getComponentFuncMap(component, c.cs)
+				v := reflect.ValueOf(funcMap["ContainerCPUReqs"])
+				ret := v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedCPUReqs {
+					t.Errorf("expected funcMap invocation of ContainerCPUReqs %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCPUReqs, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerCPULimits"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedCPULimits {
+					t.Errorf("expected funcMap invocation of ContainerCPULimits %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCPULimits, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerMemReqs"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedMemReqs {
+					t.Errorf("expected funcMap invocation of ContainerMemReqs %s to return %s, instead got %s", component.Containers[0].Name, c.expectedMemReqs, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerMemLimits"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				if ret[0].Interface() != c.expectedMemLimits {
+					t.Errorf("expected funcMap invocation of ContainerMemLimits %s to return %s, instead got %s", component.Containers[0].Name, c.expectedMemLimits, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["IsAzureStackCloud"])
+				ret = v.Call(make([]reflect.Value, 0))
+				if ret[0].Interface() != c.expectedIsAzureStackCloud {
+					t.Errorf("expected funcMap invocation of IsAzureStackCloud to return %t, instead got %t", c.expectedIsAzureStackCloud, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf("1.15.0")})
+				if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotFifteenDotZero {
+					t.Errorf("expected funcMap invocation of IsKubernetesVersionGe %s to return %t, instead got %t", c.cs.Properties.OrchestratorProfile.OrchestratorVersion, c.expectedIsKubernetesVersionGeOneDotFifteenDotZero, ret[0].Interface())
+				}
+				v = reflect.ValueOf(funcMap["ContainerConfig"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf("command")})
+				command := ret[0].Interface()
+				v = reflect.ValueOf(funcMap["ContainerImage"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(component.Containers[0].Name)})
+				image := ret[0].Interface()
+				if component.Name == common.APIServerComponentName {
+					if command != c.expectedAPIServerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedAPIServerCommand, ret[0].Interface())
+					}
+					if image != c.expectedAPIServerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedAPIServerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetAPIServerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedAPIServerArgs {
+						t.Errorf("expected funcMap invocation of GetAPIServerArgs to return %s, instead got %s", c.expectedAPIServerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.ControllerManagerComponentName {
+					if command != c.expectedControllerManagerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedControllerManagerCommand, ret[0].Interface())
+					}
+					if image != c.expectedControllerManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedControllerManagerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetControllerManagerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedControllerManagerArgs {
+						t.Errorf("expected funcMap invocation of GetControllerManagerArgs to return %s, instead got %s", c.expectedControllerManagerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.CloudControllerManagerComponentName {
+					if command != c.expectedCloudControllerManagerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedCloudControllerManagerCommand, ret[0].Interface())
+					}
+					if image != c.expectedCloudControllerManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedCloudControllerManagerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetCloudControllerManagerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedCloudControllerManagerArgs {
+						t.Errorf("expected funcMap invocation of GetCloudControllerManagerArgs to return %s, instead got %s", c.expectedCloudControllerManagerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.SchedulerComponentName {
+					if command != c.expectedSchedulerCommand {
+						t.Errorf("expected funcMap invocation of ContainerConfig %s to return %s, instead got %s", "command", c.expectedSchedulerCommand, ret[0].Interface())
+					}
+					if image != c.expectedSchedulerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedSchedulerImage, ret[0].Interface())
+					}
+					v = reflect.ValueOf(funcMap["GetSchedulerArgs"])
+					ret = v.Call(make([]reflect.Value, 0))
+					if ret[0].Interface() != c.expectedSchedulerArgs {
+						t.Errorf("expected funcMap invocation of GetSchedulerArgs to return %s, instead got %s", c.expectedSchedulerArgs, ret[0].Interface())
+					}
+				}
+				if component.Name == common.AddonManagerComponentName {
+					if image != c.expectedAddonManagerImage {
+						t.Errorf("expected funcMap invocation of ContainerImage %s to return %s, instead got %s", component.Containers[0].Name, c.expectedAddonManagerImage, ret[0].Interface())
+					}
+				}
 			}
 		})
 	}

@@ -16,7 +16,7 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
 	}
 
-	requireRouteTable := cs.Properties.OrchestratorProfile.RequireRouteTable()
+	requireRouteTable := cs.Properties.RequireRouteTable()
 	if requireRouteTable {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
@@ -38,7 +38,8 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnet.AddressPrefix = nil
 		subnet.AddressPrefixes = &masterAddressPrefixes
@@ -52,7 +53,8 @@ func CreateVirtualNetwork(cs *api.ContainerService) VirtualNetworkARM {
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 
@@ -94,7 +96,7 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 		"[concat('Microsoft.Network/networkSecurityGroups/', variables('nsgName'))]",
 	}
 
-	requireRouteTable := cs.Properties.OrchestratorProfile.RequireRouteTable()
+	requireRouteTable := cs.Properties.RequireRouteTable()
 	if requireRouteTable {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
@@ -115,7 +117,8 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 	}
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnetMaster.AddressPrefix = nil
 		subnetMaster.AddressPrefixes = &masterAddressPrefixes
@@ -145,7 +148,8 @@ func createVirtualNetworkVMSS(cs *api.ContainerService) VirtualNetworkARM {
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 
@@ -191,7 +195,8 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 	}
 
 	isAzureCNI := cs.Properties.OrchestratorProfile.IsAzureCNI()
-	if !isAzureCNI {
+	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
+	if !isAzureCNI || isAzureCNIDualStack {
 		dependencies = append(dependencies, "[concat('Microsoft.Network/routeTables/', variables('routeTableName'))]")
 	}
 
@@ -208,13 +213,14 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 	}
 	masterAddressPrefixes := []string{"[parameters('masterSubnet')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		masterAddressPrefixes = append(masterAddressPrefixes, "[parameters('masterSubnetIPv6')]")
 		subnet.AddressPrefix = nil
 		subnet.AddressPrefixes = &masterAddressPrefixes
 	}
 
-	if !isAzureCNI {
+	if !isAzureCNI || isAzureCNIDualStack {
 		subnet.RouteTable = &network.RouteTable{
 			ID: to.StringPtr("[variables('routeTableID')]"),
 		}
@@ -222,7 +228,8 @@ func createHostedMasterVirtualNetwork(cs *api.ContainerService) VirtualNetworkAR
 
 	addressPrefixes := []string{"[parameters('vnetCidr')]"}
 	// add ipv6 vnet cidr if dual stack enabled
-	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") ||
+		cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 		addressPrefixes = append(addressPrefixes, "[parameters('vnetCidrIPv6')]")
 	}
 

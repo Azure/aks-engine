@@ -25,6 +25,9 @@ END
 if [ "$ADD_NODE_POOL_INPUT" == "null" ]; then
   ADD_NODE_POOL_INPUT=""
 fi
+if [ "$LB_TEST_TIMEOUT" == "" ]; then
+  LB_TEST_TIMEOUT="${E2E_TEST_TIMEOUT}"
+fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   cat > ${TMP_DIR}/addpool-input.json <<END
@@ -80,6 +83,9 @@ docker run --rm \
 -e ORCHESTRATOR_RELEASE="${ORCHESTRATOR_RELEASE}" \
 -e CREATE_VNET="${CREATE_VNET}" \
 -e TIMEOUT="${E2E_TEST_TIMEOUT}" \
+-e LB_TIMEOUT="${LB_TEST_TIMEOUT}" \
+-e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
+-e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
 -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_DEPLOYMENT} \
 -e SKIP_LOGS_COLLECTION="${SKIP_LOGS_COLLECTION}" \
 -e REGIONS="${REGION_OPTIONS}" \
@@ -89,15 +95,24 @@ docker run --rm \
 -e WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID="${WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID}" \
 -e WINDOWS_NODE_IMAGE_VERSION="${WINDOWS_NODE_IMAGE_VERSION}" \
 -e WINDOWS_NODE_VHD_URL="${WINDOWS_NODE_VHD_URL}" \
+-e LINUX_NODE_IMAGE_GALLERY=$LINUX_NODE_IMAGE_GALLERY \
+-e LINUX_NODE_IMAGE_NAME=$LINUX_NODE_IMAGE_NAME \
+-e LINUX_NODE_IMAGE_RESOURCE_GROUP=$LINUX_NODE_IMAGE_RESOURCE_GROUP \
+-e LINUX_NODE_IMAGE_SUBSCRIPTION_ID=$LINUX_NODE_IMAGE_SUBSCRIPTION_ID \
+-e LINUX_NODE_IMAGE_VERSION=$LINUX_NODE_IMAGE_VERSION \
+-e OS_DISK_SIZE_GB=$OS_DISK_SIZE_GB \
+-e DISTRO=$DISTRO \
+-e CONTAINER_RUNTIME=$CONTAINER_RUNTIME \
 -e LOG_ANALYTICS_WORKSPACE_KEY="${LOG_ANALYTICS_WORKSPACE_KEY}" \
 -e CUSTOM_HYPERKUBE_IMAGE="${CUSTOM_HYPERKUBE_IMAGE}" \
 -e IS_JENKINS="${IS_JENKINS}" \
 -e SKIP_TEST="${SKIP_TESTS}" \
+-e GINKGO_FAIL_FAST=true \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
-if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ]; then
+if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
   # shellcheck disable=SC2012
   RESOURCE_GROUP=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2)
   docker run --rm \
@@ -108,6 +123,23 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
     /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
+
+  if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
+      docker run --rm \
+      -v $(pwd):${WORK_DIR} \
+      -w ${WORK_DIR} \
+      -e RESOURCE_GROUP=$RESOURCE_GROUP \
+      -e REGION=$REGION \
+      ${DEV_IMAGE} \
+      ./bin/aks-engine get-logs \
+      --api-model _output/$RESOURCE_GROUP/apimodel.json \
+      --location $REGION \
+      --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+      --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
+      --linux-script ./scripts/collect-logs.sh
+      # TODO remove --linux-script once collect-logs.sh is part of the VHD
+  fi
+
   if [ $(( RANDOM % 4 )) -eq 3 ]; then
     echo Removing bookkeeping tags from VMs in resource group $RESOURCE_GROUP ...
     az login --username ${AZURE_CLIENT_ID} --password ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID} --service-principal > /dev/null
@@ -167,10 +199,14 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
+    -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
+    -e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
     -e CLEANUP_ON_EXIT=${CLEANUP_AFTER_ADD_NODE_POOL} \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
+    -e GINKGO_FAIL_FAST=true \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
@@ -211,10 +247,14 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
+    -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
+    -e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
     -e CLEANUP_ON_EXIT=false \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=true \
+    -e GINKGO_FAIL_FAST=true \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_DOWN}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
@@ -267,10 +307,14 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e ORCHESTRATOR=kubernetes \
       -e NAME=$RESOURCE_GROUP \
       -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+      -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
+      -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
+      -e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
       -e CLEANUP_ON_EXIT=false \
       -e REGIONS=$REGION \
       -e IS_JENKINS=${IS_JENKINS} \
-      -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION}  \
+      -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
+      -e GINKGO_FAIL_FAST=true \
       -e GINKGO_SKIP="${SKIP_AFTER_UPGRADE}" \
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
@@ -312,10 +356,14 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e ORCHESTRATOR=kubernetes \
     -e NAME=$RESOURCE_GROUP \
     -e TIMEOUT=${E2E_TEST_TIMEOUT} \
+    -e LB_TIMEOUT=${LB_TEST_TIMEOUT} \
+    -e KUBERNETES_IMAGE_BASE=$KUBERNETES_IMAGE_BASE \
+    -e KUBERNETES_IMAGE_BASE_TYPE=$KUBERNETES_IMAGE_BASE_TYPE \
     -e CLEANUP_ON_EXIT=${CLEANUP_ON_EXIT} \
     -e REGIONS=$REGION \
     -e IS_JENKINS=${IS_JENKINS} \
     -e SKIP_LOGS_COLLECTION=${SKIP_LOGS_COLLECTION} \
+    -e GINKGO_FAIL_FAST=true \
     -e GINKGO_SKIP="${SKIP_AFTER_SCALE_UP}" \
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \

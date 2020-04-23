@@ -175,12 +175,6 @@
       },
       "type": "string"
     },
-    "kubeProxySpec": {
-      "metadata": {
-        "description": "The container spec for kube-proxy."
-      },
-      "type": "string"
-    },
     "kubeBinaryURL": {
       "defaultValue": "",
       "metadata": {
@@ -228,7 +222,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.10",
+      "defaultValue": "3.0.11",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -241,19 +235,18 @@
          "3.0.6",
          "3.0.7",
          "3.0.8",
-         "3.0.10"
+         "3.0.10",
+         "3.0.11"
        ],
       "type": "string"
     },
     "containerdVersion": {
-      "defaultValue": "1.1.5",
+      "defaultValue": "1.3.2",
       "metadata": {
         "description": "The Azure Moby build version"
       },
       "allowedValues": [
-         "1.1.5",
-         "1.1.6",
-         "1.2.4"
+         "1.3.2"
        ],
       "type": "string"
     },
@@ -301,11 +294,10 @@
     "containerRuntime": {
       "defaultValue": "{{.OrchestratorProfile.KubernetesConfig.ContainerRuntime}}",
       "metadata": {
-        "description": "The container runtime to use (docker|kata-containers|containerd)"
+        "description": "The container runtime to use (docker|containerd)"
       },
       "allowedValues": [
         "docker",
-        "kata-containers",
         "containerd"
       ],
       "type": "string"

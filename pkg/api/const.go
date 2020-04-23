@@ -27,8 +27,9 @@ const (
 const (
 	Ubuntu            Distro = "ubuntu"
 	Ubuntu1804        Distro = "ubuntu-18.04"
+	Ubuntu1804Gen2    Distro = "ubuntu-18.04-gen2"
 	RHEL              Distro = "rhel"
-	CoreOS            Distro = "coreos"
+	CoreOS            Distro = "coreos"            // deprecated
 	AKS1604Deprecated Distro = "aks"               // deprecated AKS 16.04 distro. Equivalent to aks-ubuntu-16.04.
 	AKS1804Deprecated Distro = "aks-1804"          // deprecated AKS 18.04 distro. Equivalent to aks-ubuntu-18.04.
 	AKSDockerEngine   Distro = "aks-docker-engine" // deprecated docker-engine distro.
@@ -47,7 +48,7 @@ const (
 	// DockerCEDockerComposeVersion is the Docker Compose version
 	DockerCEDockerComposeVersion = "1.14.0"
 	// KubernetesWindowsDockerVersion is the default version for docker on Windows nodes in kubernetes
-	KubernetesWindowsDockerVersion = "19.03.2"
+	KubernetesWindowsDockerVersion = "19.03.5"
 	// KubernetesDefaultWindowsSku is the default SKU for Windows VMs in kubernetes
 	KubernetesDefaultWindowsSku = "Datacenter-Core-1809-with-Containers-smalldisk"
 )
@@ -109,7 +110,7 @@ const (
 // Supported container runtimes
 const (
 	Docker         = "docker"
-	KataContainers = "kata-containers"
+	KataContainers = "kata-containers" // Deprecated
 	Containerd     = "containerd"
 )
 
@@ -154,7 +155,7 @@ const (
 	// DefaultKeyVaultFlexVolumeAddonEnabled determines the aks-engine provided default for enabling key vault flexvolume addon
 	DefaultKeyVaultFlexVolumeAddonEnabled = true
 	// DefaultDashboardAddonEnabled determines the aks-engine provided default for enabling kubernetes-dashboard addon
-	DefaultDashboardAddonEnabled = true
+	DefaultDashboardAddonEnabled = false
 	// DefaultReschedulerAddonEnabled determines the aks-engine provided default for enabling kubernetes-rescheduler addon
 	DefaultReschedulerAddonEnabled = false
 	// DefaultAzureCNIMonitoringAddonEnabled determines the aks-engine provided default for enabling azurecni-network monitoring addon
@@ -165,6 +166,8 @@ const (
 	DefaultCoreDNSAddonEnabled = true
 	// DefaultKubeProxyAddonEnabled determines the aks-engine provided default for enabling kube-proxy addon
 	DefaultKubeProxyAddonEnabled = true
+	// DefaultSecretStoreCSIDriverAddonEnabled determines the aks-engine provided default for enabling secrets-store-csi-driver addon
+	DefaultSecretStoreCSIDriverAddonEnabled = true
 	// DefaultRBACEnabled determines the aks-engine provided default for enabling kubernetes RBAC
 	DefaultRBACEnabled = true
 	// DefaultUseInstanceMetadata determines the aks-engine provided default for enabling Azure cloudprovider instance metadata service
@@ -173,8 +176,6 @@ const (
 	BasicLoadBalancerSku = "Basic"
 	// StandardLoadBalancerSku is the string const for Azure Standard Load Balancer
 	StandardLoadBalancerSku = "Standard"
-	// DefaultLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU
-	DefaultLoadBalancerSku = BasicLoadBalancerSku
 	// DefaultExcludeMasterFromStandardLB determines the aks-engine provided default for excluding master nodes from standard load balancer.
 	DefaultExcludeMasterFromStandardLB = true
 	// DefaultSecureKubeletEnabled determines the aks-engine provided default for securing kubelet communications
@@ -185,8 +186,6 @@ const (
 	DefaultNVIDIADevicePluginAddonEnabled = false
 	// DefaultContainerMonitoringAddonEnabled determines the aks-engine provided default for enabling kubernetes container monitoring addon
 	DefaultContainerMonitoringAddonEnabled = false
-	// DefaultDNSAutoscalerAddonEnabled determines the aks-engine provided default for dns-autoscaler addon
-	DefaultDNSAutoscalerAddonEnabled = false
 	// DefaultIPMasqAgentAddonEnabled enables the ip-masq-agent addon
 	DefaultIPMasqAgentAddonEnabled = true
 	// DefaultPrivateClusterEnabled determines the aks-engine provided default for enabling kubernetes Private Cluster
@@ -222,7 +221,7 @@ const (
 	// https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits#load-balancer.
 	DefaultMaximumLoadBalancerRuleCount = 250
 	// DefaultEnableAutomaticUpdates determines the aks-engine provided default for enabling automatic updates
-	DefaultEnableAutomaticUpdates = true
+	DefaultEnableAutomaticUpdates = false
 	// DefaultPreserveNodesProperties determines the aks-engine provided default for preserving nodes properties
 	DefaultPreserveNodesProperties = true
 	// DefaultEnableVMSSNodePublicIP determines the aks-engine provided default for enable VMSS node public IP
@@ -247,7 +246,7 @@ const (
 	APIVersionCompute             = "2019-07-01"
 	APIVersionDeployments         = "2018-06-01"
 	APIVersionKeyVault            = "2018-02-14"
-	APIVersionManagedIdentity     = "2015-08-31-preview"
+	APIVersionManagedIdentity     = "2018-11-30"
 	APIVersionNetwork             = "2018-08-01"
 	APIVersionStorage             = "2018-07-01"
 )
@@ -256,17 +255,18 @@ const (
 const (
 	// DefaultUseInstanceMetadata set to false as Azure Stack today doesn't support instance metadata service
 	DefaultAzureStackUseInstanceMetadata = false
-
 	// DefaultAzureStackAcceleratedNetworking set to false as Azure Stack today doesn't support accelerated networking
 	DefaultAzureStackAcceleratedNetworking = false
-
-	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment.
+	// DefaultAzureStackAvailabilityProfile set to AvailabilitySet as VMSS clusters are not suppored on Azure Stack
+	DefaultAzureStackAvailabilityProfile = AvailabilitySet
+	// DefaultAzureStackFaultDomainCount set to 3 as Azure Stack today has minimum 4 node deployment
 	DefaultAzureStackFaultDomainCount = 3
-
-	// MaxAzureStackManagedDiskSize = size for Kubernetes master etcd disk volumes in GB if > 10 nodes as this is max what Azure Stack supports today.
+	// MaxAzureStackManagedDiskSize is the size in GB of the etcd disk volumes when total nodes count is greater than 10
 	MaxAzureStackManagedDiskSize = "1023"
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
 	AzureStackSuffix = "-azs"
+	// DefaultAzureStackLoadBalancerSku determines the aks-engine provided default for enabling Azure cloudprovider load balancer SKU on Azure Stack
+	DefaultAzureStackLoadBalancerSku = BasicLoadBalancerSku
 )
 
 const (
@@ -306,6 +306,22 @@ const (
 	DefaultKubernetesCloudProviderRateLimitBucketWrite = DefaultKubernetesCloudProviderRateLimitBucket
 )
 
+// Azure Stack configures all clusters as if they were large clusters.
+const (
+	DefaultAzureStackKubernetesCloudProviderBackoffRetries       = 1
+	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
+	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
+	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
+	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
+	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
+	DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout         = "5m"
+)
+
 const (
 	//AzureEdgeDCOSBootstrapDownloadURL is the azure edge CDN download url
 	AzureEdgeDCOSBootstrapDownloadURL = "https://dcosio.azureedge.net/dcos/%s/bootstrap/%s.bootstrap.tar.xz"
@@ -318,14 +334,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.0.30"
+	AzureCniPluginVerLinux = "v1.1.0"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.0.30"
+	AzureCniPluginVerWindows = "v1.1.0"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.7.6"
+	CNIPluginVer = "v0.8.5"
 )
 
 const (
@@ -412,7 +428,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.18"
+	DefaultEtcdVersion = "3.3.19"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -438,15 +454,19 @@ const (
 	// DefaultKubernetesClusterSubnet specifies the default subnet for pods.
 	DefaultKubernetesClusterSubnet = "10.244.0.0/16"
 	// DefaultKubernetesClusterSubnetIPv6 specifies the IPv6 default subnet for pods.
-	DefaultKubernetesClusterSubnetIPv6 = "fc00::/8"
+	DefaultKubernetesClusterSubnetIPv6 = "fc00::/48"
 	// DefaultKubernetesServiceCIDR specifies the IP subnet that kubernetes will create Service IPs within.
 	DefaultKubernetesServiceCIDR = "10.0.0.0/16"
 	// DefaultKubernetesDNSServiceIP specifies the IP address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIP = "10.0.0.10"
+	// DefaultKubernetesServiceCIDRIPv6 specifies the IPv6 subnet that kubernetes will create Service IPs within.
+	DefaultKubernetesServiceCIDRIPv6 = "fd00::/108"
+	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
+	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.10"
+	DefaultMobyVersion = "3.0.11"
 	// DefaultContainerdVersion specifies the default containerd version to install.
-	DefaultContainerdVersion = "1.1.5"
+	DefaultContainerdVersion = "1.3.2"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
 	DefaultDockerBridgeSubnet = "172.17.0.1/16"
 	// DefaultKubernetesMaxPodsKubenet is the maximum number of pods to run on a node for Kubenet.
@@ -463,6 +483,8 @@ const (
 	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 	// DefaultKubeProxyMode is the default KubeProxyMode value
 	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
+	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
+	DefaultWindowsSSHEnabled = true
 )
 
 const (
@@ -491,14 +513,14 @@ const (
 )
 
 const (
-	// AzureStackDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
-	AzureStackDependenciesLocationPublic = "public"
-	// AzureStackDependenciesLocationChina indicates to get dependencies from AzureChina cloud
-	AzureStackDependenciesLocationChina = "china"
-	// AzureStackDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
-	AzureStackDependenciesLocationGerman = "german"
-	// AzureStackDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
-	AzureStackDependenciesLocationUSGovernment = "usgovernment"
+	// AzureCustomCloudDependenciesLocationPublic indicates to get dependencies from in AzurePublic cloud
+	AzureCustomCloudDependenciesLocationPublic = "public"
+	// AzureCustomCloudDependenciesLocationChina indicates to get dependencies from AzureChina cloud
+	AzureCustomCloudDependenciesLocationChina = "china"
+	// AzureCustomCloudDependenciesLocationGerman indicates to get dependencies from AzureGerman cloud
+	AzureCustomCloudDependenciesLocationGerman = "german"
+	// AzureCustomCloudDependenciesLocationUSGovernment indicates to get dependencies from AzureUSGovernment cloud
+	AzureCustomCloudDependenciesLocationUSGovernment = "usgovernment"
 )
 
 const (
@@ -513,7 +535,3 @@ const TLSStrongCipherSuitesAPIServer = "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS
 
 // TLSStrongCipherSuitesKubelet is a kube-bench-recommended allowed cipher suites for kubelet
 const TLSStrongCipherSuitesKubelet = "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256"
-
-// Default instrmentation key used for routing Application Insights data
-// NOTE! this is in a test sub and needs to be switched to a production sub before collecting user data!
-const DefaultApplicationInsightsKey = "c92d8284-b550-4b06-b7ba-e80fd7178faa"

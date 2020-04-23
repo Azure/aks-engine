@@ -93,7 +93,7 @@
       "id": "kubernetesVersion",
       "type": "promptString",
       "description": "Kubernetes version:",
-      "default": "1.13.6"
+      "default": "1.18.1"
     },
     {
       "id": "location",

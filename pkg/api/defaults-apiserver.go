@@ -61,7 +61,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	// Data Encryption at REST configuration conditions
 	if to.Bool(o.KubernetesConfig.EnableDataEncryptionAtRest) || to.Bool(o.KubernetesConfig.EnableEncryptionWithExternalKms) {
-		staticAPIServerConfig["--experimental-encryption-provider-config"] = "/etc/kubernetes/encryption-config.yaml"
+		staticAPIServerConfig["--encryption-provider-config"] = "/etc/kubernetes/encryption-config.yaml"
 	}
 
 	// Aggregated API configuration
@@ -159,6 +159,14 @@ func (cs *ContainerService) setAPIServerConfig() {
 	// Remove flags that are not compatible with 1.14
 	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0-alpha.1") {
 		for _, key := range []string{"--repair-malformed-updates"} {
+			delete(o.KubernetesConfig.APIServerConfig, key)
+		}
+	}
+	// Set bind address to prefer IPv6 address for single stack IPv6 cluster
+	// Remove --advertise-address so that --bind-address will be used
+	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		o.KubernetesConfig.APIServerConfig["--bind-address"] = "::"
+		for _, key := range []string{"--advertise-address"} {
 			delete(o.KubernetesConfig.APIServerConfig, key)
 		}
 	}

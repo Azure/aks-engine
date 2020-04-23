@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 )
 
 func Test_SplitBlobURI(t *testing.T) {
@@ -130,6 +130,14 @@ func Test_WindowsVMNameParts(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
+	}
+}
+
+func Test_GetVMNameIndexUnknown(t *testing.T) {
+	var ostype compute.OperatingSystemTypes
+	_, err := GetVMNameIndex(ostype, "k8s-agentpool1-38988164-65")
+	if err == nil {
+		t.Fatalf("unexpected error but got none")
 	}
 }
 

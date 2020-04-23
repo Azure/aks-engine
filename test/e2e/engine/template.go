@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
@@ -33,20 +34,28 @@ type Config struct {
 	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
 	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
 	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
+	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID"`
 	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
 	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
 	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
 	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
 	WindowsNodeImageSubscriptionID string `envconfig:"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
-	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" deault:""`
+	WindowsNodeImageVersion        string `envconfig:"WINDOWS_NODE_IMAGE_VERSION" default:""`
 	WindowsNodeVhdURL              string `envconfig:"WINDOWS_NODE_VHD_URL" default:""`
+	LinuxNodeImageGallery          string `envconfig:"LINUX_NODE_IMAGE_GALLERY" default:""`
+	LinuxNodeImageName             string `envconfig:"LINUX_NODE_IMAGE_NAME" default:""`
+	LinuxNodeImageResourceGroup    string `envconfig:"LINUX_NODE_IMAGE_RESOURCE_GROUP" default:""`
+	LinuxNodeImageSubscriptionID   string `envconfig:"LINUX_NODE_IMAGE_SUBSCRIPTION_ID" default:""`
+	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
+	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
+	ContainerRuntime               string `envconfig:"CONTAINER_RUNTIME" default:""`
 	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
 	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
 	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
-	Distro                         string `envconfig:"DISTRO"`
+	Distro                         string `envconfig:"DISTRO" default:""`
 	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
 	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
 	Location                       string `envconfig:"LOCATION"`
@@ -56,6 +65,8 @@ type Config struct {
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE"`
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
+	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
+	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
 
 	ClusterDefinitionPath     string // The original template we want to use to build the cluster from.
 	ClusterDefinitionTemplate string // This is the template after we splice in the environment variables
@@ -132,6 +143,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 		}
 	}
 
+	if prop.OrchestratorProfile.KubernetesConfig == nil {
+		prop.OrchestratorProfile.KubernetesConfig = &vlabs.KubernetesConfig{}
+	}
+
 	if prop.LinuxProfile != nil {
 		if config.PublicSSHKey != "" {
 			prop.LinuxProfile.SSH.PublicKeys[0].KeyData = config.PublicSSHKey
@@ -139,6 +154,13 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 				prop.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.PublicKey = config.PublicSSHKey
 			}
 		}
+	}
+
+	if config.KubernetesImageBase != "" {
+		prop.OrchestratorProfile.KubernetesConfig.KubernetesImageBase = config.KubernetesImageBase
+	}
+	if config.KubernetesImageBaseType != "" {
+		prop.OrchestratorProfile.KubernetesConfig.KubernetesImageBaseType = config.KubernetesImageBaseType
 	}
 
 	if config.WindowsAdminPasssword != "" {
@@ -160,6 +182,47 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.WindowsProfile.ImageRef.Version = config.WindowsNodeImageVersion
 		}
 		log.Printf("Windows nodes will use image reference name:%s, rg:%s, sub:%s, gallery:%s, version:%s for test pass", config.WindowsNodeImageName, config.WindowsNodeImageResourceGroup, config.WindowsNodeImageSubscriptionID, config.WindowsNodeImageGallery, config.WindowsNodeImageVersion)
+	}
+
+	if config.LinuxNodeImageName != "" && config.LinuxNodeImageResourceGroup != "" {
+		prop.MasterProfile.ImageRef = &vlabs.ImageReference{
+			Name:          config.LinuxNodeImageName,
+			ResourceGroup: config.LinuxNodeImageResourceGroup,
+		}
+		prop.MasterProfile.ImageRef.Gallery = config.LinuxNodeImageGallery
+		prop.MasterProfile.ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
+		prop.MasterProfile.ImageRef.Version = config.LinuxNodeImageVersion
+		if len(prop.AgentPoolProfiles) == 1 {
+			prop.AgentPoolProfiles[0].ImageRef = &vlabs.ImageReference{
+				Name:          config.LinuxNodeImageName,
+				ResourceGroup: config.LinuxNodeImageResourceGroup,
+			}
+			if config.LinuxNodeImageGallery != "" && config.LinuxNodeImageSubscriptionID != "" && config.LinuxNodeImageVersion != "" {
+				prop.AgentPoolProfiles[0].ImageRef.Gallery = config.LinuxNodeImageGallery
+				prop.AgentPoolProfiles[0].ImageRef.SubscriptionID = config.LinuxNodeImageSubscriptionID
+				prop.AgentPoolProfiles[0].ImageRef.Version = config.LinuxNodeImageVersion
+			}
+		}
+	}
+
+	if config.OSDiskSizeGB != "" {
+		if osDiskSizeGB, err := strconv.Atoi(config.OSDiskSizeGB); err == nil {
+			prop.MasterProfile.OSDiskSizeGB = osDiskSizeGB
+			for _, pool := range prop.AgentPoolProfiles {
+				pool.OSDiskSizeGB = osDiskSizeGB
+			}
+		}
+	}
+
+	if config.ContainerRuntime == "containerd" &&
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" &&
+		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
+		prop.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip"
+		prop.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL = "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+	}
+
+	if config.ContainerRuntime != "" {
+		prop.OrchestratorProfile.KubernetesConfig.ContainerRuntime = config.ContainerRuntime
 	}
 
 	// If the parsed api model input has no expressed version opinion, we check if ENV does have an opinion
@@ -245,6 +308,25 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
 			pool.DiskEncryptionSetID = str
 		}
+		if pool.ProximityPlacementGroupID != "" {
+			str := strings.Replace(pool.ProximityPlacementGroupID, "SUB_ID", config.SubscriptionID, 1)
+			str = strings.Replace(str, "RESOURCE_GROUP", config.InfraResourceGroup, 1)
+			pool.ProximityPlacementGroupID = str
+		}
+	}
+
+	if config.Distro != "" {
+		prop.MasterProfile.Distro = vlabs.Distro(config.Distro)
+		for _, pool := range prop.AgentPoolProfiles {
+			if !pool.IsWindows() {
+				pool.Distro = vlabs.Distro(config.Distro)
+			}
+		}
+	}
+
+	if config.MSIUserAssignedID != "" {
+		prop.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
+		prop.OrchestratorProfile.KubernetesConfig.UserAssignedID = config.MSIUserAssignedID
 	}
 
 	return &Engine{
@@ -297,7 +379,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1903",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1903"}, nil
 	case strings.Contains(windowsSku, "1809"), strings.Contains(windowsSku, "2019"):
-		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019",
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:20191112-windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1803",

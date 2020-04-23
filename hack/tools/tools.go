@@ -5,8 +5,8 @@
 package tools
 
 import (
+	_ "github.com/devigned/pub"
 	_ "github.com/go-bindata/go-bindata"
 	_ "github.com/mitchellh/gox"
 	_ "github.com/onsi/ginkgo"
-	_ "github.com/devigned/pub"
 )

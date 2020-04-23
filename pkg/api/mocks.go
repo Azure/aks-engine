@@ -7,6 +7,8 @@ import (
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/uuid"
+
+	"github.com/Azure/aks-engine/pkg/api/common"
 )
 
 // CreateMockAgentPoolProfile creates a mock AgentPoolResource for testing
@@ -85,9 +87,10 @@ func CreateMockContainerService(containerServiceName, orchestratorVersion string
 		EtcdVersion:             DefaultEtcdVersion,
 		MobyVersion:             DefaultMobyVersion,
 		ContainerdVersion:       DefaultContainerdVersion,
-		LoadBalancerSku:         DefaultLoadBalancerSku,
+		LoadBalancerSku:         BasicLoadBalancerSku,
 		KubeletConfig:           make(map[string]string),
 		ControllerManagerConfig: make(map[string]string),
+		KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
 	}
 
 	cs.Properties.CertificateProfile = &CertificateProfile{}
@@ -223,7 +226,6 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 				OSImageConfig: map[Distro]AzureOSImageConfig{
 					Ubuntu:        Ubuntu1604OSImageConfig,
 					RHEL:          RHELOSImageConfig,
-					CoreOS:        CoreOSImageConfig,
 					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 				},
 			}

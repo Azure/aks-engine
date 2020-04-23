@@ -6,6 +6,7 @@ package api
 import (
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/api/common"
@@ -59,7 +60,7 @@ func TestGetAddonsIndexByName(t *testing.T) {
 }
 
 func TestPodSecurityPolicyConfigUpgrade(t *testing.T) {
-	mockCS := getMockBaseContainerService("1.8.0")
+	mockCS := getMockBaseContainerService("1.18.1")
 	o := mockCS.Properties.OrchestratorProfile
 
 	isUpgrade := true
@@ -185,6 +186,7 @@ func TestSetAddonsConfig(t *testing.T) {
 		CloudName: "AzureStackCloud",
 		KubernetesSpecConfig: KubernetesSpecConfig{
 			KubernetesImageBase:              "KubernetesImageBase",
+			MCRKubernetesImageBase:           "MCRKubernetesImageBase",
 			TillerImageBase:                  "TillerImageBase",
 			ACIConnectorImageBase:            "ACIConnectorImageBase",
 			NVIDIAImageBase:                  "NVIDIAImageBase",
@@ -197,12 +199,14 @@ func TestSetAddonsConfig(t *testing.T) {
 			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
 			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
 			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:              "CSIProxyDownloadURL",
 		},
 		EndpointConfig: AzureEndpointConfig{
 			ResourceManagerVMDNSSuffix: "ResourceManagerVMDNSSuffix",
 		},
 	}
 	AzureCloudSpecEnvMap[AzureStackCloud] = azureStackCloudSpec
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
 	tests := []struct {
 		name           string
 		cs             *ContainerService
@@ -216,7 +220,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -228,7 +233,53 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: getDefaultAddons("1.15.4"),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
+		},
+		{
+			name: "default addons w/ custom MCR KubernetesImageBase",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase:     "custommcr.microsoft.com/",
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4", "custommcr.microsoft.com/", common.KubernetesImageBaseTypeMCR),
+		},
+		{
+			name: "default addons w/ custom GCR KubernetesImageBase",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBase:     "customgcr.example.com/",
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+						},
+					},
+				},
+			},
+			isUpgrade:      false,
+			expectedAddons: getDefaultAddons("1.15.4", "customgcr.example.com/", common.KubernetesImageBaseTypeGCR),
 		},
 		{
 			name: "tiller addon is enabled",
@@ -237,7 +288,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -266,7 +318,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.TillerImageBase + K8sComponentsByVersionMap["1.15.4"][common.TillerAddonName],
+							Image:          specConfig.TillerImageBase + k8sComponentsByVersionMap["1.15.4"][common.TillerAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -282,7 +334,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -317,7 +370,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "150Mi",
-							Image:          specConfig.ACIConnectorImageBase + K8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
+							Image:          specConfig.ACIConnectorImageBase + k8sComponentsByVersionMap["1.15.4"][common.ACIConnectorAddonName],
 						},
 					},
 				},
@@ -330,7 +383,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -410,7 +464,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -423,7 +477,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -507,7 +562,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -520,7 +575,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -622,7 +678,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -635,7 +691,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -741,7 +798,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -754,7 +811,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -915,7 +973,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -928,7 +986,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1089,7 +1148,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1102,7 +1161,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1213,7 +1273,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1226,7 +1286,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1337,7 +1398,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
 							MemoryLimits:   "300Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 						},
 					},
 				},
@@ -1350,7 +1411,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1379,7 +1441,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.SMBFlexVolumeAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.SMBFlexVolumeAddonName],
 						},
 					},
 				},
@@ -1392,7 +1454,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1421,7 +1484,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "10m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ReschedulerAddonName],
 						},
 					},
 				},
@@ -1434,7 +1497,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1462,7 +1526,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "100Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "100Mi",
-							Image:          specConfig.NVIDIAImageBase + K8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
+							Image:          specConfig.NVIDIAImageBase + k8sComponentsByVersionMap["1.15.4"][common.NVIDIADevicePluginAddonName],
 						},
 					},
 				},
@@ -1475,7 +1539,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1499,7 +1564,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
 						"omsAgentVersion":       "1.10.0.1",
-						"dockerProviderVersion": "8.0.0-2",
+						"dockerProviderVersion": "8.0.0-3",
 						"schema-versions":       "v1",
 						"clusterName":           "aks-engine-cluster",
 						"workspaceDomain":       "b3BpbnNpZ2h0cy5henVyZS5jb20=",
@@ -1511,7 +1576,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "250Mi",
 							CPULimits:      "1",
 							MemoryLimits:   "750Mi",
-							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod01072020",
+							Image:          "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
 						},
 					},
 				},
@@ -1524,7 +1589,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1544,7 +1610,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.AzureNetworkPolicyAddonName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "100m",
@@ -1561,7 +1627,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.0",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1576,11 +1643,11 @@ func TestSetAddonsConfig(t *testing.T) {
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.AzureNetworkPolicyAddonName,
-											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+											Image: k8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 										},
 										{
 											Name:  common.AzureVnetTelemetryContainerName,
-											Image: K8sComponentsByVersionMap["1.16.0"][common.AzureVnetTelemetryContainerName],
+											Image: k8sComponentsByVersionMap["1.16.0"][common.AzureVnetTelemetryContainerName],
 										},
 									},
 								},
@@ -1597,7 +1664,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzureNetworkPolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.AzureNetworkPolicyAddonName],
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "100m",
@@ -1608,53 +1675,14 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.16.0"),
 		},
 		{
-			name: "dns-autoscaler addon enabled",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-							Addons: []KubernetesAddon{
-								{
-									Name:    common.DNSAutoscalerAddonName,
-									Enabled: to.BoolPtr(true),
-								},
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.DNSAutoscalerAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.DNSAutoscalerAddonName,
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.DNSAutoscalerAddonName],
-							CPURequests:    "20m",
-							MemoryRequests: "100Mi",
-						},
-					},
-				},
-			}, "1.15.4"),
-		},
-		{
 			name: "calico addon enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1673,24 +1701,24 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
+							Name:  common.CalicoTyphaComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoTyphaComponentName],
 						},
 						{
-							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
+							Name:  common.CalicoCNIComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoCNIComponentName],
 						},
 						{
-							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
+							Name:  common.CalicoNodeComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoNodeComponentName],
 						},
 						{
-							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
+							Name:  common.CalicoPod2DaemonComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoPod2DaemonComponentName],
 						},
 						{
-							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
+							Name:  common.CalicoClusterAutoscalerComponentName,
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},
@@ -1703,7 +1731,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1717,24 +1746,24 @@ func TestSetAddonsConfig(t *testing.T) {
 									Enabled: to.BoolPtr(false),
 									Containers: []KubernetesContainerSpec{
 										{
-											Name:  "calico-typha",
+											Name:  common.CalicoTyphaComponentName,
 											Image: specConfig.CalicoImageBase + "typha:old", // confirm that upgrade will change this to default image
 										},
 										{
-											Name:  "calico-cni",
+											Name:  common.CalicoCNIComponentName,
 											Image: specConfig.CalicoImageBase + "cni:v3.8.0",
 										},
 										{
-											Name:  "calico-node",
+											Name:  common.CalicoNodeComponentName,
 											Image: specConfig.CalicoImageBase + "node:v3.8.0",
 										},
 										{
-											Name:  "calico-pod2daemon",
+											Name:  common.CalicoPod2DaemonComponentName,
 											Image: specConfig.CalicoImageBase + "pod2daemon-flexvol:v3.8.0",
 										},
 										{
-											Name:  "calico-cluster-proportional-autoscaler",
-											Image: specConfig.KubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
+											Name:  common.CalicoClusterAutoscalerComponentName,
+											Image: specConfig.MCRKubernetesImageBase + "cluster-proportional-autoscaler-amd64:1.1.2-r2",
 										},
 									},
 								},
@@ -1750,24 +1779,24 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  "calico-typha",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-typha"],
+							Name:  common.CalicoTyphaComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoTyphaComponentName],
 						},
 						{
-							Name:  "calico-cni",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cni"],
+							Name:  common.CalicoCNIComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoCNIComponentName],
 						},
 						{
-							Name:  "calico-node",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-node"],
+							Name:  common.CalicoNodeComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoNodeComponentName],
 						},
 						{
-							Name:  "calico-pod2daemon",
-							Image: specConfig.CalicoImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-pod2daemon"],
+							Name:  common.CalicoPod2DaemonComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoPod2DaemonComponentName],
 						},
 						{
-							Name:  "calico-cluster-proportional-autoscaler",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["calico-cluster-proportional-autoscaler"],
+							Name:  common.CalicoClusterAutoscalerComponentName,
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
 						},
 					},
 				},
@@ -1780,7 +1809,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1805,7 +1835,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.NMIContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.NMIContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.NMIContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
@@ -1813,7 +1843,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.MICContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.MICContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.MICContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "300Mi",
 							CPULimits:      "100m",
@@ -1830,7 +1860,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1853,13 +1884,13 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.AzurePolicyAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"auditInterval":             "30",
-						"constraintViolationsLimit": "20",
+						"auditInterval":             "60",
+						"constraintViolationsLimit": "100",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzurePolicyAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.AzurePolicyAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.AzurePolicyAddonName],
 							CPURequests:    "30m",
 							MemoryRequests: "50Mi",
 							CPULimits:      "100m",
@@ -1867,10 +1898,10 @@ func TestSetAddonsConfig(t *testing.T) {
 						},
 						{
 							Name:           common.GatekeeperContainerName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.GatekeeperContainerName],
 							CPURequests:    "100m",
 							MemoryRequests: "256Mi",
-							CPULimits:      "100m",
+							CPULimits:      "1000m",
 							MemoryLimits:   "512Mi",
 						},
 					},
@@ -1884,7 +1915,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1904,19 +1936,19 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CiliumAgentContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumAgentContainerName],
 						},
 						{
 							Name:  common.CiliumCleanStateContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumCleanStateContainerName],
 						},
 						{
 							Name:  common.CiliumOperatorContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumOperatorContainerName],
 						},
 						{
 							Name:  common.CiliumEtcdOperatorContainerName,
-							Image: K8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CiliumEtcdOperatorContainerName],
 						},
 					},
 				},
@@ -1929,7 +1961,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -1954,7 +1987,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			expectedAddons: []KubernetesAddon{
 				{
 					Name:    common.DashboardAddonName,
-					Enabled: to.BoolPtr(true),
+					Enabled: to.BoolPtr(false),
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.DashboardAddonName,
@@ -1962,7 +1995,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -1972,7 +2005,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -1986,7 +2019,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2001,7 +2034,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: "AzureCNIImageBase" + K8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							Image: "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
 						},
 					},
 				},
@@ -2009,13 +2042,20 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CoreDNSAddonName,
 					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 					Config: map[string]string{
-						"domain":    "cluster.local",
-						"clusterIP": DefaultKubernetesDNSServiceIP,
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIP,
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "1",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -2030,38 +2070,11 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "KubernetesImageBase" + K8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
 						},
 					},
 				},
 			},
-		},
-		{
-			name: "CoreOS addons",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							Distro: CoreOS,
-							VMSize: "Standard_NC6", // to validate that CoreOS distro does not get nvidia addon
-						},
-					},
-				},
-			},
-			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.BlobfuseFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName}, getDefaultAddons("1.15.4")),
 		},
 		{
 			name: "azure disk and azure file csi driver enabled for k8s >= 1.13.0 and UseCloudControllerManager is true",
@@ -2070,7 +2083,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2090,51 +2104,75 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2144,67 +2182,83 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.15.4"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.15.4"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2217,7 +2271,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2237,51 +2292,75 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2291,67 +2370,83 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2362,13 +2457,252 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.16.1"),
 		},
 		{
+			name: "azure cloud-node-manager disabled for Windows cluster with k8s < 1.18 and useCloudControllerManager is true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.17.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(false),
+				},
+			}, "1.17.0"),
+		},
+		{
+			name: "azure cloud-node-manager enabled for Windows cluster with k8s == 1.18 and useCloudControllerManager is true",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAzureFileContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+					},
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAzureDiskContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+					},
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.18.0"),
+		},
+		{
 			name: "azure cloud-node-manager enabled for k8s == 1.17.0 and useCloudControllerManager is true",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2388,51 +2722,75 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2442,67 +2800,83 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2519,7 +2893,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.17.0",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2553,51 +2928,75 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2607,67 +3006,83 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.17.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.17.0"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2678,13 +3093,225 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.17.0"),
 		},
 		{
+			name: "azure cloud-node-manager enabled for Windows cluster with k8s >= 1.18.0 - upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(true),
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AzureDiskCSIDriverAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+								{
+									Name:    common.AzureFileCSIDriverAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+								{
+									Name:    common.CloudNodeManagerAddonName,
+									Enabled: to.BoolPtr(false),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							OSType: Windows,
+						},
+					},
+				},
+			},
+			isUpgrade: true,
+			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AzureFileCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAzureFileContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+					},
+				},
+				{
+					Name:    common.AzureDiskCSIDriverAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.CSIProvisionerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAttacherContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIAzureDiskContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.18.0"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+					},
+				},
+				{
+					Name:    common.CloudNodeManagerAddonName,
+					Enabled: to.BoolPtr(true),
+				},
+			}, "1.18.0"),
+		},
+		{
 			name: "azure cloud-node-manager enabled for k8s == 1.16.1 upgrade",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.16.1",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2718,51 +3345,75 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotterContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSIResizerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureFileContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureFileContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureFileCSIDriverAddonName, common.CSIAzureFileContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2772,67 +3423,83 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.CSIProvisionerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIProvisionerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIProvisionerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAttacherContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAttacherContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAttacherContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
-						},
-						{
-							Name:           common.CSIClusterDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIClusterDriverRegistrarContainerName],
-							CPURequests:    "10m",
-							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSILivenessProbeContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSILivenessProbeContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSINodeDriverRegistrarContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSINodeDriverRegistrarContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSILivenessProbeWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSILivenessProbeWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSINodeDriverRegistrarWindowsContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSINodeDriverRegistrarWindowsContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSISnapshotterContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSISnapshotterContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotterContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
+						},
+						{
+							Name:           common.CSISnapshotControllerContainerName,
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSISnapshotControllerContainerName, k8sComponentsByVersionMap["1.16.1"]),
+							CPURequests:    "10m",
+							MemoryRequests: "20Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIResizerContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.17.0"][common.CSIResizerContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIResizerContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 						{
 							Name:           common.CSIAzureDiskContainerName,
-							Image:          specConfig.MCRKubernetesImageBase + K8sComponentsByVersionMap["1.16.1"][common.CSIAzureDiskContainerName],
+							Image:          specConfig.MCRKubernetesImageBase + getCSISidecarComponent(common.AzureDiskCSIDriverAddonName, common.CSIAzureDiskContainerName, k8sComponentsByVersionMap["1.16.1"]),
 							CPURequests:    "10m",
 							MemoryRequests: "20Mi",
-							CPULimits:      "200m",
-							MemoryLimits:   "200Mi",
+							CPULimits:      "2",
+							MemoryLimits:   "2Gi",
 						},
 					},
 				},
@@ -2847,9 +3514,10 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2862,16 +3530,17 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11"),
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "upgrade w/ manual kube-dns enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2900,28 +3569,29 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"][common.KubeDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.KubeDNSAddonName],
 						},
 						{
-							Name:  "dnsmasq",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["dnsmasq"],
+							Name:  common.DNSMasqComponentName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.DNSMasqComponentName],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.13.11"]["k8s-dns-sidecar"],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.DNSSidecarComponentName],
 						},
 					},
 				},
-			}, "1.13.11")),
+			}, "1.18.1")),
 		},
 		{
 			name: "upgrade w/ manual coredns enabled",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.11",
+						OrchestratorVersion: "1.18.1",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2939,7 +3609,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.13.11"),
+			expectedAddons: getDefaultAddons("1.18.1", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "kube-dns enabled",
@@ -2948,7 +3618,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -2977,15 +3648,15 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  "kubedns",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.KubeDNSAddonName],
 						},
 						{
-							Name:  "dnsmasq",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["dnsmasq"],
+							Name:  common.DNSMasqComponentName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSMasqComponentName],
 						},
 						{
 							Name:  "sidecar",
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"]["k8s-dns-sidecar"],
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.DNSSidecarComponentName],
 						},
 					},
 				},
@@ -2998,7 +3669,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3016,7 +3688,60 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: getDefaultAddons("1.15.4"),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
+		},
+		{
+			name: "coredns w/ user configuration",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.1",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.CoreDNSAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"min-replicas": "3",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIP,
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "3",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.1"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.18.1"][common.CoreDNSAutoscalerName],
+						},
+					},
+				},
+			}, "1.18.1"),
 		},
 		{
 			name: "kube-proxy w/ user configuration",
@@ -3025,7 +3750,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3079,7 +3805,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3097,7 +3824,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.KubeProxyAddonName}, getDefaultAddons("1.15.4")),
+			expectedAddons: omitFromAddons([]string{common.KubeProxyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "node-problem-detector addon enabled",
@@ -3106,7 +3833,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3132,12 +3860,12 @@ func TestSetAddonsConfig(t *testing.T) {
 						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
 						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
 						"systemStatsMonitor":  "/config/system-stats-monitor.json",
-						"versionLabel":        "v0.8.0",
+						"versionLabel":        "v0.8.1",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.NodeProblemDetectorAddonName,
-							Image:          K8sComponentsByVersionMap["1.15.4"][common.NodeProblemDetectorAddonName],
+							Image:          k8sComponentsByVersionMap["1.15.4"][common.NodeProblemDetectorAddonName],
 							CPURequests:    "20m",
 							MemoryRequests: "20Mi",
 							CPULimits:      "200m",
@@ -3154,7 +3882,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3166,7 +3895,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: getDefaultAddons("1.15.4"),
+			expectedAddons: getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR),
 		},
 		{
 			name: "pod-security-policy disabled",
@@ -3175,7 +3904,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3193,7 +3923,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "pod-security-policy disabled during upgrade",
@@ -3202,7 +3932,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3220,7 +3951,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      true,
-			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4")),
+			expectedAddons: omitFromAddons([]string{common.PodSecurityPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "audit-policy disabled",
@@ -3229,7 +3960,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3247,7 +3979,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			},
 			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4")),
+			expectedAddons: omitFromAddons([]string{common.AuditPolicyAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeMCR)),
 		},
 		{
 			name: "aad-default-aad-admin-group addon enabled",
@@ -3256,7 +3988,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
@@ -3288,13 +4021,309 @@ func TestSetAddonsConfig(t *testing.T) {
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorVersion: "1.15.4",
 						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP: DefaultKubernetesDNSServiceIP,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAntrea,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr":      DefaultKubernetesServiceCIDR,
+										"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+										"installCniCmd":    common.AntreaDefaultInstallCniCmd,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+						"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+						"installCniCmd":    common.AntreaDefaultInstallCniCmd,
+					},
+				},
+			}, "1.15.4")),
+		},
+		{
+			name: "antrea addon enabled with azure",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPolicy: NetworkPolicyAntrea,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr": DefaultKubernetesServiceCIDR,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
+						"installCniCmd":    common.AntreaInstallCniChainCmd,
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+					},
+				},
+			}, "1.15.4")),
+		},
+		{
+			name: "addons with IPv6 single stack",
+			cs: &ContainerService{
+				Properties: &Properties{
+					FeatureFlags: &FeatureFlags{
+						EnableIPv6Only: true,
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIPv6,
+							NetworkPlugin:           NetworkPluginKubenet,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+								"--node-ip":        "::",
+							},
+							ClusterSubnet: DefaultKubernetesClusterSubnetIPv6,
+							ProxyMode:     KubeProxyModeIPTables,
+							APIServerConfig: map[string]string{
+								"--bind-address": "::",
+							},
+							ControllerManagerConfig: map[string]string{
+								"--bind-address": "::",
+							},
+							SchedulerConfig: map[string]string{
+								"--bind-address": "::",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CoreDNSAddonName,
+					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
+					Config: map[string]string{
+						"domain":            "cluster.local",
+						"clusterIP":         DefaultKubernetesDNSServiceIPv6,
+						"use-host-network":  "true",
+						"cores-per-replica": "512",
+						"nodes-per-replica": "32",
+						"min-replicas":      "1",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CoreDNSAddonName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAddonName],
+						},
+						{
+							Name:  common.CoreDNSAutoscalerName,
+							Image: k8sComponentsByVersionMap["1.18.0"][common.CoreDNSAutoscalerName],
+						},
+					},
+				},
+				{
+					Name:    common.IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr":           DefaultKubernetesClusterSubnetIPv6,
+						"enable-ipv6":                   "true",
+						"non-masq-cni-cidr":             "",
+						"secondary-non-masquerade-cidr": "",
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr":         DefaultKubernetesClusterSubnetIPv6,
+						"proxy-mode":           string(KubeProxyModeIPTables),
+						"featureGates":         "{}",
+						"bind-address":         "::",
+						"healthz-bind-address": "::",
+						"metrics-bind-address": "::1",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
+			}, "1.18.0")),
+		},
+		{
+			name: "addons with dual stack",
+			cs: &ContainerService{
+				Properties: &Properties{
+					FeatureFlags: &FeatureFlags{
+						EnableIPv6DualStack: true,
+					},
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.18.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							NetworkPlugin:           NetworkPluginKubenet,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+								"--feature-gates":  "IPv6DualStack=true",
+							},
+							ClusterSubnet: DefaultKubernetesClusterSubnet + "," + DefaultKubernetesClusterSubnetIPv6,
+							ServiceCIDR:   DefaultKubernetesServiceCIDR + "," + DefaultKubernetesServiceCIDRIPv6,
+							ProxyMode:     KubeProxyModeIPVS,
+							APIServerConfig: map[string]string{
+								"--feature-gates": "IPv6DualStack=true",
+							},
+							ControllerManagerConfig: map[string]string{
+								"--feature-gates": "IPv6DualStack=true",
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.IPMASQAgentAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.IPMASQAgentAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "50Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "250Mi",
+							Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
+						},
+					},
+					Config: map[string]string{
+						"non-masquerade-cidr":           DefaultKubernetesClusterSubnet,
+						"enable-ipv6":                   "true",
+						"non-masq-cni-cidr":             "",
+						"secondary-non-masquerade-cidr": DefaultKubernetesClusterSubnetIPv6,
+					},
+				},
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesClusterSubnet + "," + DefaultKubernetesClusterSubnetIPv6,
+						"proxy-mode":   string(KubeProxyModeIPVS),
+						"featureGates": "IPv6DualStack: true",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
+						},
+					},
+				},
+			}, "1.18.0")),
+		},
+		{
+			name: "kube proxy w/ customKubeProxyImage",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:        DefaultKubernetesSubnet,
+							ProxyMode:            KubeProxyModeIPTables,
+							NetworkPlugin:        NetworkPluginAzure,
+							CustomKubeProxyImage: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: overwriteDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KubeProxyAddonName,
+					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
+					Config: map[string]string{
+						"cluster-cidr": DefaultKubernetesSubnet,
+						"proxy-mode":   string(KubeProxyModeIPTables),
+						"featureGates": "{}",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.KubeProxyAddonName,
+							Image: "my-custom-kube-proxy-image",
+						},
+					},
+				},
+			}, "1.15.4"),
+		},
+		{
+			name: "csi-secrets-store addon enabled",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
 							KubeletConfig: map[string]string{
 								"--cluster-domain": "cluster.local",
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
 							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.SecretsStoreCSIDriverAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
 						},
 					},
 				},
@@ -3302,13 +4331,131 @@ func TestSetAddonsConfig(t *testing.T) {
 			isUpgrade: false,
 			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
 				{
-					Name:    common.AntreaAddonName,
+					Name:    common.SecretsStoreCSIDriverAddonName,
 					Enabled: to.BoolPtr(true),
-					Config: map[string]string{
-						"serviceCidr": DefaultKubernetesServiceCIDR,
-					},
 				},
 			}, "1.15.4"),
+		},
+		{
+			name: "keyvault-flexvolume enabled for k8s >= 1.16.0 - upgrade",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet:             DefaultKubernetesSubnet,
+							ProxyMode:                 KubeProxyModeIPTables,
+							NetworkPlugin:             NetworkPluginAzure,
+							UseCloudControllerManager: to.BoolPtr(false),
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KeyVaultFlexVolumeAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: true,
+			expectedAddons: omitFromAddons([]string{common.SecretsStoreCSIDriverAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
+						},
+					},
+				},
+			}, "1.16.0")),
+		},
+		{
+			name: "keyvault-flexvolume enabled for 1.16+",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.0",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.KeyVaultFlexVolumeAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.SecretsStoreCSIDriverAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.KeyVaultFlexVolumeAddonName,
+					Enabled: to.BoolPtr(true),
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:           common.KeyVaultFlexVolumeAddonName,
+							CPURequests:    "50m",
+							MemoryRequests: "100Mi",
+							CPULimits:      "50m",
+							MemoryLimits:   "100Mi",
+							Image:          k8sComponentsByVersionMap["1.16.0"][common.KeyVaultFlexVolumeAddonName],
+						},
+					},
+				},
+			}, "1.16.0")),
+		},
+		{
+			name: "ip-masq-agent upgrade to 1.1.16 overrides custom image",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.16.8",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.IPMASQAgentAddonName,
+									Enabled: to.BoolPtr(true),
+									Containers: []KubernetesContainerSpec{
+										{
+											Name:  common.IPMASQAgentAddonName,
+											Image: "my-custom-image",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade:      true,
+			expectedAddons: getDefaultAddons("1.16.8", "", common.KubernetesImageBaseTypeMCR), // the default addons will include the default image
 		},
 	}
 
@@ -3333,7 +4480,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.IPMASQAgentAddonName,
 				common.AzureCNINetworkMonitorAddonName,
 				common.AzureNetworkPolicyAddonName,
-				common.DNSAutoscalerAddonName,
 				common.CalicoAddonName,
 				common.AADPodIdentityAddonName,
 				common.AzurePolicyAddonName,
@@ -3346,6 +4492,8 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.NodeProblemDetectorAddonName,
 				common.PodSecurityPolicyAddonName,
 				common.AADAdminGroupAddonName,
+				common.SecretsStoreCSIDriverAddonName,
+				common.AntreaAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
@@ -3558,6 +4706,7 @@ func TestMakeDefaultClusterAutoscalerAddonPoolsConfig(t *testing.T) {
 
 func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
 	cases := []struct {
 		name                string
 		addon               KubernetesAddon
@@ -3581,7 +4730,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -3638,7 +4787,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []AddonNodePoolsConfig{
@@ -3707,7 +4856,7 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
 					},
 				},
 			},
@@ -3758,23 +4907,28 @@ func TestGetClusterAutoscalerNodesConfig(t *testing.T) {
 }
 
 func concatenateDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
-	defaults := getDefaultAddons(version)
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeMCR)
 	defaults = append(defaults, addons...)
 	return defaults
 }
 
 func overwriteDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
-	var ret []KubernetesAddon
-	defaults := getDefaultAddons(version)
+	overrideAddons := make(map[string]KubernetesAddon)
 	for _, addonOverride := range addons {
-		for _, addon := range defaults {
-			if addon.Name == addonOverride.Name {
-				ret = append(ret, addonOverride)
-			} else {
-				ret = append(ret, addon)
-			}
-		}
+		overrideAddons[addonOverride.Name] = addonOverride
 	}
+
+	var ret []KubernetesAddon
+	defaults := getDefaultAddons(version, "", common.KubernetesImageBaseTypeMCR)
+
+	for _, addon := range defaults {
+		if _, exists := overrideAddons[addon.Name]; exists {
+			ret = append(ret, overrideAddons[addon.Name])
+			continue
+		}
+		ret = append(ret, addon)
+	}
+
 	return ret
 }
 
@@ -3797,8 +4951,13 @@ func isInStrSlice(name string, names []string) bool {
 	return false
 }
 
-func getDefaultAddons(version string) []KubernetesAddon {
+func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType string) []KubernetesAddon {
 	specConfig := AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
+	imageBase := specConfig.MCRKubernetesImageBase
+	if kubernetesImageBase != "" {
+		imageBase = kubernetesImageBase
+	}
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: kubernetesImageBaseType})
 	addons := []KubernetesAddon{
 		{
 			Name:    common.BlobfuseFlexVolumeAddonName,
@@ -3810,27 +4969,13 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "100Mi",
 					CPULimits:      "50m",
 					MemoryLimits:   "100Mi",
-					Image:          K8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
-				},
-			},
-		},
-		{
-			Name:    common.KeyVaultFlexVolumeAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:           common.KeyVaultFlexVolumeAddonName,
-					CPURequests:    "50m",
-					MemoryRequests: "100Mi",
-					CPULimits:      "50m",
-					MemoryLimits:   "100Mi",
-					Image:          K8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+					Image:          k8sComponentsByVersionMap[version][common.BlobfuseFlexVolumeAddonName],
 				},
 			},
 		},
 		{
 			Name:    common.DashboardAddonName,
-			Enabled: to.BoolPtr(true),
+			Enabled: to.BoolPtr(false),
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:           common.DashboardAddonName,
@@ -3838,7 +4983,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "150Mi",
 					CPULimits:      "300m",
 					MemoryLimits:   "150Mi",
-					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.DashboardAddonName],
+					Image:          imageBase + k8sComponentsByVersionMap[version][common.DashboardAddonName],
 				},
 			},
 		},
@@ -3848,7 +4993,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.MetricsServerAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.MetricsServerAddonName],
+					Image: imageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
 				},
 			},
 		},
@@ -3862,7 +5007,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 					MemoryRequests: "50Mi",
 					CPULimits:      "50m",
 					MemoryLimits:   "250Mi",
-					Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.IPMASQAgentAddonName],
+					Image:          imageBase + k8sComponentsByVersionMap[version][common.IPMASQAgentAddonName],
 				},
 			},
 			Config: map[string]string{
@@ -3877,7 +5022,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.AzureCNINetworkMonitorAddonName,
-					Image: specConfig.AzureCNIImageBase + K8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					Image: specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
 				},
 			},
 		},
@@ -3893,13 +5038,20 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Name:    common.CoreDNSAddonName,
 			Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
 			Config: map[string]string{
-				"domain":    "cluster.local",
-				"clusterIP": DefaultKubernetesDNSServiceIP,
+				"domain":            "cluster.local",
+				"clusterIP":         DefaultKubernetesDNSServiceIP,
+				"cores-per-replica": "512",
+				"nodes-per-replica": "32",
+				"min-replicas":      "1",
 			},
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.CoreDNSAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.CoreDNSAddonName],
+					Image: imageBase + k8sComponentsByVersionMap[version][common.CoreDNSAddonName],
+				},
+				{
+					Name:  common.CoreDNSAutoscalerName,
+					Image: k8sComponentsByVersionMap[version][common.CoreDNSAutoscalerName],
 				},
 			},
 		},
@@ -3914,7 +5066,7 @@ func getDefaultAddons(version string) []KubernetesAddon {
 			Containers: []KubernetesContainerSpec{
 				{
 					Name:  common.KubeProxyAddonName,
-					Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap[version][common.KubeProxyAddonName],
+					Image: imageBase + k8sComponentsByVersionMap[version][common.KubeProxyAddonName],
 				},
 			},
 		},
@@ -3927,5 +5079,247 @@ func getDefaultAddons(version string) []KubernetesAddon {
 		})
 	}
 
+	if !common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.KeyVaultFlexVolumeAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.KeyVaultFlexVolumeAddonName,
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "50m",
+					MemoryLimits:   "100Mi",
+					Image:          k8sComponentsByVersionMap[version][common.KeyVaultFlexVolumeAddonName],
+				},
+			},
+		})
+	}
+
+	if common.IsKubernetesVersionGe(version, "1.16.0") {
+		addons = append(addons, KubernetesAddon{
+			Name:    common.SecretsStoreCSIDriverAddonName,
+			Enabled: to.BoolPtr(true),
+			Containers: []KubernetesContainerSpec{
+				{
+					Name:           common.CSILivenessProbeContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSILivenessProbeContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSINodeDriverRegistrarContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSINodeDriverRegistrarContainerName],
+					CPURequests:    "10m",
+					MemoryRequests: "20Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreDriverContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreDriverContainerName],
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+				{
+					Name:           common.CSISecretsStoreProviderAzureContainerName,
+					Image:          specConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[version][common.CSISecretsStoreProviderAzureContainerName],
+					CPURequests:    "50m",
+					MemoryRequests: "100Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "200Mi",
+				},
+			},
+		})
+	}
+
 	return addons
+}
+
+func TestKubeProxyImageSuffix(t *testing.T) {
+	cases := []struct {
+		name       string
+		cs         ContainerService
+		azurestack bool
+		expected   string
+	}{
+		{
+			name:       "return empty string if target cloud is NOT Azure Stack",
+			cs:         getMockBaseContainerService("1.16.0"),
+			azurestack: false,
+			expected:   "",
+		},
+		{
+			name:       "return empty string if target cloud is NOT Azure Stack",
+			cs:         getMockBaseContainerService("1.17.0"),
+			azurestack: false,
+			expected:   "",
+		},
+		{
+			name:       "return empty string if target version is v1.17 or greater",
+			cs:         getMockBaseContainerService("1.17.0"),
+			azurestack: true,
+			expected:   "",
+		},
+		{
+			name:       "return '-azs' if target cloud is Azure Stack and K8s version lower than v1.17",
+			cs:         getMockBaseContainerService("1.16.0"),
+			azurestack: true,
+			expected:   common.AzureStackSuffix,
+		},
+	}
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if c.azurestack {
+				c.cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
+			}
+			actual := kubeProxyImageSuffix(c.cs)
+			if !strings.EqualFold(actual, c.expected) {
+				t.Errorf("expected %s to be %s", actual, c.expected)
+			}
+		})
+	}
+}
+
+func TestGetCSISidecarComponent(t *testing.T) {
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR})
+	k8sComponents := k8sComponentsByVersionMap["1.18.0"]
+	cases := []struct {
+		name                        string
+		csiDriverName               string
+		csiSidecarName              string
+		expectedCSISidecarComponent string
+	}{
+		{
+			name:                        "unknown csi driver name",
+			csiDriverName:               "unknown",
+			csiSidecarName:              "unknown",
+			expectedCSISidecarComponent: "",
+		},
+		{
+			name:                        "unknown csi sidecar name",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              "unknown",
+			expectedCSISidecarComponent: "",
+		},
+		{
+			name:                        "get csi-provisioner image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIProvisionerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIProvisionerContainerName],
+		},
+		{
+			name:                        "get csi-attacher image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIAttacherContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIAttacherContainerName],
+		},
+		{
+			name:                        "get livenessprobe image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeContainerName],
+		},
+		{
+			name:                        "get livenessprobe-windows image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeWindowsContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar-windows image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarWindowsContainerName],
+		},
+		{
+			name:                        "get csi-resizer image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSIResizerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIResizerContainerName],
+		},
+		{
+			name:                        "get csi-snapshotter image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotterContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSISnapshotterContainerName],
+		},
+		{
+			name:                        "get snapshot-controller image for azuredisk-csi-driver",
+			csiDriverName:               common.AzureDiskCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotControllerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSISnapshotControllerContainerName],
+		},
+		{
+			name:                        "get csi-provisioner image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIProvisionerContainerName,
+			expectedCSISidecarComponent: csiSidecarComponentsOverrides[common.AzureFileCSIDriverAddonName][common.CSIProvisionerContainerName],
+		},
+		{
+			name:                        "get csi-attacher image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIAttacherContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIAttacherContainerName],
+		},
+		{
+			name:                        "get livenessprobe image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeContainerName],
+		},
+		{
+			name:                        "get livenessprobe-windows image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSILivenessProbeWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSILivenessProbeWindowsContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarContainerName],
+		},
+		{
+			name:                        "get node-driver-registrar-windows image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSINodeDriverRegistrarWindowsContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSINodeDriverRegistrarWindowsContainerName],
+		},
+		{
+			name:                        "get csi-resizer image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSIResizerContainerName,
+			expectedCSISidecarComponent: k8sComponents[common.CSIResizerContainerName],
+		},
+		{
+			name:                        "get csi-snapshotter image for azurefile-csi-driver",
+			csiDriverName:               common.AzureFileCSIDriverAddonName,
+			csiSidecarName:              common.CSISnapshotterContainerName,
+			expectedCSISidecarComponent: csiSidecarComponentsOverrides[common.AzureFileCSIDriverAddonName][common.CSISnapshotterContainerName],
+		},
+	}
+
+	for _, tc := range cases {
+		c := tc
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			actual := getCSISidecarComponent(c.csiDriverName, c.csiSidecarName, k8sComponents)
+			if c.expectedCSISidecarComponent != actual {
+				t.Errorf("expected %s to be %s", c.expectedCSISidecarComponent, actual)
+			}
+		})
+	}
 }

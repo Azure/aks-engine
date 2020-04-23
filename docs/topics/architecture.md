@@ -35,7 +35,7 @@ Once the input is validated, the template generator is invoked which will conver
     {{if .HasWindows}}
       "kubeBinariesSASURL": {
         "metadata": {
-          "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
+          "description": "The download url for kubernetes windows binaries package"
         },
         "type": "string"
       },
@@ -66,7 +66,7 @@ Once the input is validated, the template generator is invoked which will conver
     {{range $index, $agent := .AgentPoolProfiles}}
         "{{.Name}}Index": {{$index}},
         {{template "k8s/kubernetesagentvars.t" .}}
-        {{if IsNSeriesSKU .}}
+        {{if IsNSeriesSKU .VMSize}}
           {{if IsNVIDIADevicePluginEnabled}}
           "registerWithGpuTaints": "nvidia.com/gpu=true:NoSchedule",
           {{end}}

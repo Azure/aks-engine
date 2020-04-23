@@ -1,7 +1,7 @@
  {{if IsKubernetes}}
     "kubeBinariesSASURL": {
       "metadata": {
-        "description": "The download url for kubernetes windows binaries package that is created by scripts/build-windows-k8s.sh"
+        "description": "The download url for kubernetes windows binaries package"
       },
       "type": "string"
     },
@@ -14,6 +14,18 @@
     "kubeBinariesVersion": {
       "metadata": {
         "description": "Kubernetes windows binaries version"
+      },
+      "type": "string"
+    },
+    "windowsContainerdURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
+      },
+      "type": "string"
+    },
+    "windowsSdnPluginURL": {
+      "metadata": {
+        "description": "TODO: containerd - these binaries are not available yet"
       },
       "type": "string"
     },

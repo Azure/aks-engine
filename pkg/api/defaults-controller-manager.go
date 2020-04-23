@@ -5,17 +5,26 @@ package api
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
 func (cs *ContainerService) setControllerManagerConfig() {
 	o := cs.Properties.OrchestratorProfile
+	isAzureCNIDualStack := cs.Properties.IsAzureCNIDualStack()
+	clusterCidr := o.KubernetesConfig.ClusterSubnet
+	if isAzureCNIDualStack {
+		clusterSubnets := strings.Split(clusterCidr, ",")
+		if len(clusterSubnets) > 1 {
+			clusterCidr = clusterSubnets[1]
+		}
+	}
 	staticControllerManagerConfig := map[string]string{
 		"--kubeconfig":                       "/var/lib/kubelet/kubeconfig",
-		"--allocate-node-cidrs":              strconv.FormatBool(!o.IsAzureCNI()),
-		"--configure-cloud-routes":           strconv.FormatBool(o.RequireRouteTable()),
-		"--cluster-cidr":                     o.KubernetesConfig.ClusterSubnet,
+		"--allocate-node-cidrs":              strconv.FormatBool(!o.IsAzureCNI() || isAzureCNIDualStack),
+		"--configure-cloud-routes":           strconv.FormatBool(cs.Properties.RequireRouteTable()),
+		"--cluster-cidr":                     clusterCidr,
 		"--root-ca-file":                     "/etc/kubernetes/certs/ca.crt",
 		"--cluster-signing-cert-file":        "/etc/kubernetes/certs/ca.crt",
 		"--cluster-signing-key-file":         "/etc/kubernetes/certs/ca.key",
@@ -40,11 +49,21 @@ func (cs *ContainerService) setControllerManagerConfig() {
 		staticControllerManagerConfig["--cloud-provider"] = "external"
 	}
 
+	ctrlMgrNodeMonitorGracePeriod := DefaultKubernetesCtrlMgrNodeMonitorGracePeriod
+	ctrlMgrPodEvictionTimeout := DefaultKubernetesCtrlMgrPodEvictionTimeout
+	ctrlMgrRouteReconciliationPeriod := DefaultKubernetesCtrlMgrRouteReconciliationPeriod
+
+	if cs.Properties.IsAzureStackCloud() {
+		ctrlMgrNodeMonitorGracePeriod = DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod
+		ctrlMgrPodEvictionTimeout = DefaultAzureStackKubernetesCtrlMgrPodEvictionTimeout
+		ctrlMgrRouteReconciliationPeriod = DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod
+	}
+
 	// Default controller-manager config
 	defaultControllerManagerConfig := map[string]string{
-		"--node-monitor-grace-period":       DefaultKubernetesCtrlMgrNodeMonitorGracePeriod,
-		"--pod-eviction-timeout":            DefaultKubernetesCtrlMgrPodEvictionTimeout,
-		"--route-reconciliation-period":     DefaultKubernetesCtrlMgrRouteReconciliationPeriod,
+		"--node-monitor-grace-period":       ctrlMgrNodeMonitorGracePeriod,
+		"--pod-eviction-timeout":            ctrlMgrPodEvictionTimeout,
+		"--route-reconciliation-period":     ctrlMgrRouteReconciliationPeriod,
 		"--terminated-pod-gc-threshold":     DefaultKubernetesCtrlMgrTerminatedPodGcThreshold,
 		"--use-service-account-credentials": DefaultKubernetesCtrlMgrUseSvcAccountCreds,
 		"--profiling":                       DefaultKubernetesCtrMgrEnableProfiling,

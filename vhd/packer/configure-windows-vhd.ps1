@@ -42,7 +42,7 @@ function Get-ContainerImages
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/k8s/core/pause:1.2.0")
+        "mcr.microsoft.com/oss/kubernetes/pause:1.3.0")
 
     foreach ($image in $imagesToPull) {
         docker pull $image
@@ -71,23 +71,28 @@ function Get-FilesToCacheOnVHD
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.8-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.5-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.7-1int.zip",
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.15.9-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.14.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.14.8-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.5-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.15.9-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.4-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.16.6-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.17.1-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/v1.17.2-1int.zip"
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.7/windowszip/v1.14.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.8/windowszip/v1.14.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.9/windowszip/v1.15.9-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10/windowszip/v1.15.10-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11/windowszip/v1.15.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.7/windowszip/v1.16.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.8/windowszip/v1.16.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.9/windowszip/v1.16.9-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.3/windowszip/v1.17.3-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.4/windowszip/v1.17.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.5/windowszip/v1.17.5-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.0/windowszip/v1.18.0-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.1/windowszip/v1.18.1-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.2/windowszip/v1.18.2-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.0-alpha.2/windowszip/v1.19.0-alpha.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.28/binaries/azure-vnet-cni-windows-amd64-v1.0.28.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.29/binaries/azure-vnet-cni-windows-amd64-v1.0.29.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.33/binaries/azure-vnet-cni-windows-amd64-v1.0.33.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.0/binaries/azure-vnet-cni-windows-amd64-v1.1.0.zip"
         )
     }
 
@@ -108,7 +113,7 @@ function Get-FilesToCacheOnVHD
 
 function Install-Docker
 {
-    $defaultDockerVersion = "19.03.2"
+    $defaultDockerVersion = "19.03.5"
 
     Write-Log "Attempting to install Docker version $defaultDockerVersion"
     Install-PackageProvider -Name DockerMsftProvider -Force -ForceBootstrap | Out-null

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -34,6 +34,7 @@ const (
 	windowsConfigurationFieldName     = "windowsConfiguration"
 	platformFaultDomainCountFieldName = "platformFaultDomainCount"
 	singlePlacementGroupFieldName     = "singlePlacementGroup"
+	proximityPlacementGroupFieldName  = "proximityPlacementGroup"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -138,6 +139,7 @@ func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, te
 		if resource.Type() == vmssResourceType {
 			resource.RemoveProperty(logger, platformFaultDomainCountFieldName)
 			resource.RemoveProperty(logger, singlePlacementGroupFieldName)
+			resource.RemoveProperty(logger, proximityPlacementGroupFieldName)
 		}
 	}
 }
@@ -616,17 +618,100 @@ func RemoveNsgDependency(logger *logrus.Entry, resourceName string, resourceMap 
 
 // NormalizeResourcesForK8sAgentUpgrade takes a template and removes elements that are unwanted in any scale/upgrade case
 func (t *Transformer) NormalizeResourcesForK8sAgentUpgrade(logger *logrus.Entry, templateMap map[string]interface{}, isMasterManagedDisk bool, agentPoolsToPreserve map[string]bool) error {
-	logger.Infoln(fmt.Sprintf("Running NormalizeResourcesForK8sMasterUpgrade...."))
+	logger.Infoln("Running NormalizeResourcesForK8sMasterUpgrade....")
 	if err := t.NormalizeResourcesForK8sMasterUpgrade(logger, templateMap, isMasterManagedDisk, agentPoolsToPreserve); err != nil {
 		log.Fatalln(err)
 		return err
 	}
 
-	logger.Infoln(fmt.Sprintf("Running NormalizeForK8sVMASScalingUp...."))
+	logger.Infoln("Running NormalizeForK8sVMASScalingUp....")
 	if err := t.NormalizeForK8sVMASScalingUp(logger, templateMap); err != nil {
 		log.Fatalln(err)
 		return err
 	}
 
 	return nil
+}
+
+// NormalizeForK8sAddVMASPool takes a template and removes elements that are unwanted in a K8s VMAS add pool case
+func (t *Transformer) NormalizeForK8sAddVMASPool(l *logrus.Entry, templateMap map[string]interface{}) error {
+	t.RemoveImmutableResourceProperties(l, templateMap)
+	if err := t.RemoveJumpboxResourcesFromTemplate(l, templateMap); err != nil {
+		return err
+	}
+	if err := t.NormalizeMasterResourcesForScaling(l, templateMap); err != nil {
+		return err
+	}
+	if err := removeSingleOfType(l, templateMap, vnetResourceType); err != nil {
+		return err
+	}
+	if err := removeSingleOfType(l, templateMap, rtResourceType); err != nil {
+		return err
+	}
+	if err := removeSingleOfType(l, templateMap, nsgResourceType); err != nil {
+		return err
+	}
+	return nil
+}
+
+// removeSingleOfType takes a template and removes references to resources of the given type
+func removeSingleOfType(logger *logrus.Entry, templateMap map[string]interface{}, typeToRemove string) error {
+	logger.Debugf("Looking for resources of type %s from the template.", typeToRemove)
+	indexToRemove := -1
+
+	templateResources := templateMap[resourcesFieldName].([]interface{})
+	for i, r := range templateResources {
+		resource, ok := r.(map[string]interface{})
+		if !ok {
+			logger.Warnf("Template improperly formatted for resource")
+			continue
+		}
+
+		resourceType, found := resource[typeFieldName].(string)
+		if found && resourceType == typeToRemove {
+			if indexToRemove != -1 {
+				err := errors.Errorf("Found at least 2 resources of type %s in the template but only 1 is expected", vnetResourceType)
+				logger.Warnf(err.Error())
+				return err
+			}
+			indexToRemove = i
+		}
+
+		deps, found := resource[dependsOnFieldName].([]interface{})
+		if !found {
+			continue
+		}
+		for idep := len(deps) - 1; idep >= 0; idep-- {
+			dep := deps[idep].(string)
+			if strings.Contains(dep, typeToRemove) || containsResourceID(dep, typeToRemove) {
+				deps = append(deps[:idep], deps[idep+1:]...)
+			}
+		}
+		if len(deps) > 0 {
+			resource[dependsOnFieldName] = deps
+		} else {
+			delete(resource, dependsOnFieldName)
+		}
+	}
+
+	if indexToRemove != -1 {
+		logger.Debugf("Removing resource of type %s from the template.", typeToRemove)
+		templateMap[resourcesFieldName] = removeIndexesFromArray(templateResources, []int{indexToRemove})
+	} else {
+		logger.Debugf("No resources of type %s were found.", typeToRemove)
+	}
+	return nil
+}
+
+func containsResourceID(dep, typeToRemove string) bool {
+	switch typeToRemove {
+	case nsgResourceType:
+		return strings.Contains(dep, nsgID)
+	case rtResourceType:
+		return strings.Contains(dep, rtID)
+	case vnetResourceType:
+		return strings.Contains(dep, vnetID)
+	default:
+		return false
+	}
 }

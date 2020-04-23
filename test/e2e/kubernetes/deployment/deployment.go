@@ -8,7 +8,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"math/rand"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -71,8 +74,8 @@ type Container struct {
 }
 
 // CreateLinuxDeployAsync wraps CreateLinuxDeploy with a struct response for goroutine + channel usage
-func CreateLinuxDeployAsync(ctx context.Context, image, name, namespace, miscOpts string) GetResult {
-	d, err := CreateLinuxDeploy(image, name, namespace, miscOpts)
+func CreateLinuxDeployAsync(ctx context.Context, image, name, namespace, app, role string) GetResult {
+	d, err := CreateLinuxDeploy(image, name, namespace, app, role)
 	return GetResult{
 		deployment: d,
 		err:        err,
@@ -80,7 +83,7 @@ func CreateLinuxDeployAsync(ctx context.Context, image, name, namespace, miscOpt
 }
 
 // CreateLinuxDeployWithRetry will create a deployment for a given image with a name in a namespace, with retry
-func CreateLinuxDeployWithRetry(image, name, namespace, miscOpts string, sleep, timeout time.Duration) (*Deployment, error) {
+func CreateLinuxDeployWithRetry(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -92,7 +95,7 @@ func CreateLinuxDeployWithRetry(image, name, namespace, miscOpts string, sleep, 
 			case <-ctx.Done():
 				return
 			default:
-				ch <- CreateLinuxDeployAsync(ctx, image, name, namespace, miscOpts)
+				ch <- CreateLinuxDeployAsync(ctx, image, name, namespace, app, role)
 				time.Sleep(sleep)
 			}
 		}
@@ -111,17 +114,59 @@ func CreateLinuxDeployWithRetry(image, name, namespace, miscOpts string, sleep, 
 	}
 }
 
+const webDeploymentTmpl = `---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: %s
+    role: %s
+  name: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: %s
+      role: %s
+  template:
+    metadata:
+      labels:
+        app: %s
+        role: %s
+    spec:
+      containers:
+      - image: %s
+        name: %s
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10M
+      nodeSelector:
+        beta.kubernetes.io/os: %s
+`
+
 // CreateLinuxDeploy will create a deployment for a given image with a name in a namespace
-// --overrides='{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
-func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, error) {
+func CreateLinuxDeploy(image, name, namespace, app, role string) (*Deployment, error) {
 	var commandTimeout time.Duration
-	var cmd *exec.Cmd
-	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
-	if miscOpts != "" {
-		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides, miscOpts)
-	} else {
-		cmd = exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--overrides", overrides)
+
+	tmpFile, err := ioutil.TempFile("", "e2e-linux-deployment-*.yaml")
+	if err != nil {
+		return nil, err
 	}
+	defer os.Remove(tmpFile.Name())
+
+	if app == "" {
+		app = "webapp"
+	}
+	if role == "" {
+		role = "any"
+	}
+	manifest := fmt.Sprintf(webDeploymentTmpl,
+		app, role, name, app, role, app, role, image, name, "linux")
+	fmt.Fprintln(tmpFile, manifest)
+
+	cmd := exec.Command("k", "apply", "-n", namespace, "-f", tmpFile.Name())
+
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -137,16 +182,16 @@ func CreateLinuxDeploy(image, name, namespace, miscOpts string) (*Deployment, er
 
 // CreateLinuxDeployIfNotExist first checks if a deployment already exists, and return it if so
 // If not, we call CreateLinuxDeploy
-func CreateLinuxDeployIfNotExist(image, name, namespace, miscOpts string) (*Deployment, error) {
+func CreateLinuxDeployIfNotExist(image, name, namespace, app, role string) (*Deployment, error) {
 	deployment, err := Get(name, namespace, validateDeploymentNotExistRetries)
 	if err != nil {
-		return CreateLinuxDeploy(image, name, namespace, miscOpts)
+		return CreateLinuxDeploy(image, name, namespace, app, role)
 	}
 	return deployment, nil
 }
 
 // CreateLinuxDeployDeleteIfExists will create a deployment, deleting any pre-existing deployment with the same name
-func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts string, timeout time.Duration) (*Deployment, error) {
+func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, app, role string, timeout time.Duration) (*Deployment, error) {
 	deployments, err := GetAllByPrefixWithRetry(pattern, namespace, 5*time.Second, timeout)
 	if err != nil {
 		return nil, err
@@ -154,15 +199,53 @@ func CreateLinuxDeployDeleteIfExists(pattern, image, name, namespace, miscOpts s
 	for _, d := range deployments {
 		d.Delete(util.DefaultDeleteRetries)
 	}
-	return CreateLinuxDeployWithRetry(image, name, namespace, miscOpts, 3*time.Minute, timeout)
+	return CreateLinuxDeployWithRetry(image, name, namespace, app, role, 3*time.Minute, timeout)
 }
 
+const runDeploymentTmpl = `---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: %s
+  name: %s
+spec:
+  replicas: %d
+  selector:
+    matchLabels:
+      run: %s
+  template:
+    metadata:
+      labels:
+        run: %s
+    spec:
+      containers:
+      - image: %s
+        name: %s
+        command:
+        - /bin/sh
+        - -c
+        - "%s"
+      nodeSelector:
+        beta.kubernetes.io/os: %s
+`
+
 // RunLinuxDeploy will create a deployment that runs a bash command in a pod
-// --overrides=' "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}'
 func RunLinuxDeploy(image, name, namespace, command string, replicas int) (*Deployment, error) {
 	var commandTimeout time.Duration
-	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}}}`
-	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--replicas", strconv.Itoa(replicas), "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
+
+	tmpFile, err := ioutil.TempFile("", "e2e-linux-deployment-*.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	manifest := fmt.Sprintf(runDeploymentTmpl,
+		name, name, replicas, name, name, image, name, command, "linux")
+	fmt.Fprintln(tmpFile, manifest)
+
+	cmd := exec.Command("k", "apply", "-n", namespace, "-f", tmpFile.Name())
+
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -189,9 +272,57 @@ func RunLinuxDeployDeleteIfExists(pattern, image, name, namespace, command strin
 	return RunLinuxDeploy(image, name, namespace, command, replicas)
 }
 
+type deployRunnerCmd func(string, string, string, string, int) (*Deployment, error)
+
+// RunDeploymentMultipleTimes runs the same command 'desiredAttempts' times
+func RunDeploymentMultipleTimes(deployRunnerCmd deployRunnerCmd, image, name, command string, replicas, desiredAttempts int, sleep, podTimeout, timeout time.Duration) (int, error) {
+	var successfulAttempts int
+	var actualAttempts int
+	logResults := func() {
+		log.Printf("Ran command on %d of %d desired attempts with %d successes\n\n", actualAttempts, desiredAttempts, successfulAttempts)
+	}
+	defer logResults()
+	for i := 0; i < desiredAttempts; i++ {
+		actualAttempts++
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		deploymentName := fmt.Sprintf("%s-%d", name, r.Intn(99999))
+		var d *Deployment
+		var err error
+		d, err = deployRunnerCmd(image, deploymentName, "default", command, replicas)
+		if err != nil {
+			return successfulAttempts, err
+		}
+		pods, err := d.WaitForReplicas(replicas, replicas, sleep, timeout)
+		if err != nil {
+			log.Printf("deployment %s did not have the expected replica count %d in time\n", deploymentName, replicas)
+			return successfulAttempts, err
+		}
+		var podsSucceeded int
+		for _, p := range pods {
+			running, err := pod.WaitOnSuccesses(p.Metadata.Name, p.Metadata.Namespace, 6, sleep, podTimeout)
+			if err != nil {
+				log.Printf("pod %s did not succeed in time\n", p.Metadata.Name)
+				return successfulAttempts, err
+			}
+			if running {
+				podsSucceeded++
+			}
+		}
+		err = d.Delete(util.DefaultDeleteRetries)
+		if err != nil {
+			return successfulAttempts, err
+		}
+		if podsSucceeded == replicas {
+			successfulAttempts++
+		}
+	}
+
+	return successfulAttempts, nil
+}
+
 // CreateWindowsDeployAsync wraps CreateWindowsDeploy with a struct response for goroutine + channel usage
-func CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts string) GetResult {
-	d, err := CreateWindowsDeploy(pattern, image, name, namespace, miscOpts)
+func CreateWindowsDeployAsync(image, name, namespace, app, role string) GetResult {
+	d, err := CreateWindowsDeploy(image, name, namespace, app, role)
 	return GetResult{
 		deployment: d,
 		err:        err,
@@ -199,7 +330,7 @@ func CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts string) 
 }
 
 // CreateWindowsDeployWithRetry will return all deployments in a given namespace that match a prefix, retrying if error up to a timeout
-func CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts string, sleep, timeout time.Duration) (*Deployment, error) {
+func CreateWindowsDeployWithRetry(image, name, namespace, app, role string, sleep, timeout time.Duration) (*Deployment, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -211,7 +342,7 @@ func CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts stri
 			case <-ctx.Done():
 				return
 			default:
-				ch <- CreateWindowsDeployAsync(pattern, image, name, namespace, miscOpts)
+				ch <- CreateWindowsDeployAsync(image, name, namespace, app, role)
 				time.Sleep(sleep)
 			}
 		}
@@ -231,18 +362,28 @@ func CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts stri
 }
 
 // CreateWindowsDeploy will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
-func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Deployment, error) {
+func CreateWindowsDeploy(image, name, namespace, app, role string) (*Deployment, error) {
 	var commandTimeout time.Duration
-	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
-	var args []string
-	args = append(args, "run", name)
-	args = append(args, "-n", namespace)
-	args = append(args, "--image", image, "--image-pull-policy=IfNotPresent")
-	args = append(args, "--overrides", overrides)
-	if miscOpts != "" {
-		args = append(args, miscOpts)
+	var cmd *exec.Cmd
+
+	tmpFile, err := ioutil.TempFile("", "e2e-windows-deployment-*.yaml")
+	if err != nil {
+		return nil, err
 	}
-	cmd := exec.Command("k", args[:]...)
+	defer os.Remove(tmpFile.Name())
+
+	if app == "" {
+		app = "webapp"
+	}
+	if role == "" {
+		role = "any"
+	}
+	manifest := fmt.Sprintf(webDeploymentTmpl,
+		app, role, name, app, role, app, role, image, name, "windows")
+	fmt.Fprintln(tmpFile, manifest)
+
+	cmd = exec.Command("k", "apply", "-n", namespace, "-f", tmpFile.Name())
+
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -256,11 +397,53 @@ func CreateWindowsDeploy(pattern, image, name, namespace, miscOpts string) (*Dep
 	return d, nil
 }
 
+const hostportDeploymentTmpl = `---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: %s
+  name: %s
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: %s
+  template:
+    metadata:
+      labels:
+        run: %s
+    spec:
+      containers:
+      - image: %s
+        name: %s
+        ports:
+        - containerPort: %d%s
+      nodeSelector:
+        beta.kubernetes.io/os: %s
+`
+
 // CreateWindowsDeployWithHostport will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort
 func CreateWindowsDeployWithHostport(image, name, namespace string, port int, hostport int) (*Deployment, error) {
 	var commandTimeout time.Duration
-	overrides := `{ "spec":{"template":{"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}}}`
-	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--port", strconv.Itoa(port), "--hostport", strconv.Itoa(hostport), "--overrides", overrides)
+
+	tmpFile, err := ioutil.TempFile("", "e2e-windows-deployment-*.yaml")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	var hostportStr string
+	if hostport != -1 {
+		hostportStr = fmt.Sprintf("\n          hostPort: %d", hostport)
+	}
+
+	manifest := fmt.Sprintf(hostportDeploymentTmpl,
+		name, name, name, name, image, name, port, hostportStr, "windows")
+	fmt.Fprintln(tmpFile, manifest)
+
+	cmd := exec.Command("k", "apply", "-n", namespace, "-f", tmpFile.Name())
+
 	out, err := util.RunAndLogCommand(cmd, commandTimeout)
 	if err != nil {
 		log.Printf("Error trying to deploy %s [%s] in namespace %s:%s\n", name, image, namespace, string(out))
@@ -299,7 +482,7 @@ func CreateWindowsDeployWithHostportDeleteIfExist(pattern, image, name, namespac
 
 // CreateWindowsDeployDeleteIfExist first checks if a deployment already exists according to a naming pattern
 // If a pre-existing deployment is found matching that pattern, it is deleted
-func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts string, timeout time.Duration) (*Deployment, error) {
+func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, app, role string, timeout time.Duration) (*Deployment, error) {
 	deployments, err := GetAllByPrefixWithRetry(pattern, namespace, 5*time.Second, timeout)
 	if err != nil {
 		return nil, err
@@ -307,7 +490,7 @@ func CreateWindowsDeployDeleteIfExist(pattern, image, name, namespace, miscOpts 
 	for _, d := range deployments {
 		d.Delete(util.DefaultDeleteRetries)
 	}
-	return CreateWindowsDeployWithRetry(pattern, image, name, namespace, miscOpts, 3*time.Minute, timeout)
+	return CreateWindowsDeployWithRetry(image, name, namespace, app, role, 3*time.Minute, timeout)
 }
 
 // Get returns a deployment from a name and namespace

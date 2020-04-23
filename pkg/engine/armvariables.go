@@ -12,6 +12,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/aks-engine/pkg/telemetry"
+
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
@@ -49,6 +51,11 @@ func GetKubernetesVariables(cs *api.ContainerService) (map[string]interface{}, e
 		k8sVars[k] = v
 	}
 
+	windowsProfileVars := getWindowsProfileVars(cs.Properties.WindowsProfile)
+	for k, v := range windowsProfileVars {
+		k8sVars[k] = v
+	}
+
 	return k8sVars, nil
 }
 
@@ -62,15 +69,22 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	var excludeMasterFromStandardLB, provisionJumpbox bool
 	var maxLoadBalancerCount int
 	var useInstanceMetadata *bool
+	var userAssignedIDReference string
 	if kubernetesConfig != nil {
 		useManagedIdentity = kubernetesConfig.UseManagedIdentity
-		userAssignedID = useManagedIdentity && kubernetesConfig.UserAssignedID != ""
+		userAssignedID = kubernetesConfig.UserAssignedIDEnabled()
 		userAssignedClientID = useManagedIdentity && kubernetesConfig.UserAssignedClientID != ""
 		enableEncryptionWithExternalKms = to.Bool(kubernetesConfig.EnableEncryptionWithExternalKms)
 		useInstanceMetadata = kubernetesConfig.UseInstanceMetadata
 		excludeMasterFromStandardLB = to.Bool(kubernetesConfig.ExcludeMasterFromStandardLB)
 		maxLoadBalancerCount = kubernetesConfig.MaximumLoadBalancerRuleCount
 		provisionJumpbox = kubernetesConfig.PrivateJumpboxProvision()
+
+		if kubernetesConfig.ShouldCreateNewUserAssignedIdentity() {
+			userAssignedIDReference = "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]"
+		} else {
+			userAssignedIDReference = "[variables('userAssignedID')]"
+		}
 	}
 	isHostedMaster := cs.Properties.IsHostedMasterProfile()
 	isMasterVMSS := masterProfile != nil && masterProfile.IsVirtualMachineScaleSets()
@@ -93,7 +107,7 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 	masterVars := map[string]interface{}{
 		"maxVMsPerPool":                 100,
 		"useManagedIdentityExtension":   strconv.FormatBool(useManagedIdentity),
-		"userAssignedIDReference":       "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('userAssignedID'))]",
+		"userAssignedIDReference":       userAssignedIDReference,
 		"useInstanceMetadata":           strconv.FormatBool(to.Bool(useInstanceMetadata)),
 		"loadBalancerSku":               kubernetesConfig.LoadBalancerSku,
 		"excludeMasterFromStandardLB":   strconv.FormatBool(excludeMasterFromStandardLB),
@@ -173,11 +187,13 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		cosmosEndPointURI = ""
 	}
 
-	if cs.Properties.IsAzureStackCloud() {
-		masterVars["apiVersionCompute"] = "2017-03-30"
-		masterVars["apiVersionStorage"] = "2017-10-01"
-		masterVars["apiVersionNetwork"] = "2017-10-01"
-		masterVars["apiVersionKeyVault"] = "2016-10-01"
+	if cs.Properties.IsCustomCloudProfile() {
+		if cs.Properties.IsAzureStackCloud() {
+			masterVars["apiVersionCompute"] = "2017-03-30"
+			masterVars["apiVersionStorage"] = "2017-10-01"
+			masterVars["apiVersionNetwork"] = "2017-10-01"
+			masterVars["apiVersionKeyVault"] = "2016-10-01"
+		}
 
 		environmentJSON, err := cs.Properties.GetCustomEnvironmentJSON(false)
 		if err != nil {
@@ -371,12 +387,35 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		masterVars["agentNamePrefix"] = "[concat(parameters('orchestratorName'), '-agentpool-', parameters('nameSuffix'), '-')]"
 	} else {
 		if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == api.StandardLoadBalancerSku && hasAgentPool {
-			masterVars["agentPublicIPAddressName"] = "[concat(parameters('orchestratorName'), '-agent-ip-outbound')]"
 			masterVars["agentLbID"] = "[resourceId('Microsoft.Network/loadBalancers',variables('agentLbName'))]"
-			masterVars["agentLbIPConfigID"] = "[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('agentLbIPConfigName'))]"
-			masterVars["agentLbIPConfigName"] = "[concat(parameters('orchestratorName'), '-agent-outbound')]"
 			masterVars["agentLbName"] = "[parameters('masterEndpointDNSNamePrefix')]"
 			masterVars["agentLbBackendPoolName"] = "[parameters('masterEndpointDNSNamePrefix')]"
+			numIps := 1
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs != nil {
+				numIps = *cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerOutboundIPs
+			}
+			ipAddressNameVarPrefix := "agentPublicIPAddressName"
+			outboundIPNamePrefix := "agent-ip-outbound"
+			outboundConfigNamePrefix := "agent-outbound"
+			agentLbIPConfigIDVarPrefix := "agentLbIPConfigID"
+			agentLbIPConfigNameVarPrefix := "agentLbIPConfigName"
+			for i := 1; i <= numIps; i++ {
+				ipAddressNameVar := ipAddressNameVarPrefix
+				outboundIPName := outboundIPNamePrefix
+				agentLbIPConfigIDVar := agentLbIPConfigIDVarPrefix
+				agentLbIPConfigNameVar := agentLbIPConfigNameVarPrefix
+				outboundConfigName := outboundConfigNamePrefix
+				if i > 1 {
+					ipAddressNameVar += strconv.Itoa(i)
+					outboundIPName += strconv.Itoa(i)
+					outboundConfigName += strconv.Itoa(i)
+					agentLbIPConfigIDVar += strconv.Itoa(i)
+					agentLbIPConfigNameVar += strconv.Itoa(i)
+				}
+				masterVars[ipAddressNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundIPName)
+				masterVars[agentLbIPConfigIDVar] = fmt.Sprintf("[concat(variables('agentLbID'),'/frontendIPConfigurations/', variables('%s'))]", agentLbIPConfigNameVar)
+				masterVars[agentLbIPConfigNameVar] = fmt.Sprintf("[concat(parameters('orchestratorName'), '-%s')]", outboundConfigName)
+			}
 		}
 		// private cluster + basic LB configurations do not need these vars (which serve the master LB and public IP resources), because:
 		// - private cluster + basic LB + 1 master uses NIC outbound rules for master outbound access
@@ -479,6 +518,13 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2])]",
 				"[concat(variables('masterVMNames')[0], '=', variables('masterEtcdPeerURLs')[0], ',', variables('masterVMNames')[1], '=', variables('masterEtcdPeerURLs')[1], ',', variables('masterVMNames')[2], '=', variables('masterEtcdPeerURLs')[2], ',', variables('masterVMNames')[3], '=', variables('masterEtcdPeerURLs')[3], ',', variables('masterVMNames')[4], '=', variables('masterEtcdPeerURLs')[4])]",
 			}
+			masterVars["masterEtcdMetricURLs"] = []string{
+				"[concat('http://', variables('masterPrivateIpAddrs')[0], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[1], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[2], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[3], ':2480')]",
+				"[concat('http://', variables('masterPrivateIpAddrs')[4], ':2480')]",
+			}
 		}
 	}
 
@@ -567,8 +613,8 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 		agentVars[agentSubnetName] = fmt.Sprintf("[parameters('%s')]", agentVnetSubnetID)
 		agentVars[agentVnetParts] = fmt.Sprintf("[split(parameters('%sVnetSubnetID'),'/subnets/')]", agentName)
 	} else {
-		agentVars[agentVnetSubnetID] = fmt.Sprintf("[variables('vnetSubnetID')]")
-		agentVars[agentSubnetName] = fmt.Sprintf("[variables('subnetName')]")
+		agentVars[agentVnetSubnetID] = "[variables('vnetSubnetID')]"
+		agentVars[agentSubnetName] = "[variables('subnetName')]"
 	}
 
 	agentVars[agentSubnetResourceGroup] = fmt.Sprintf("[split(variables('%sVnetSubnetID'), '/')[4]]", agentName)
@@ -593,7 +639,7 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 
 	applicationInsightsKey := ""
 	if cs.Properties.TelemetryProfile != nil {
-		applicationInsightsKey = cs.Properties.TelemetryProfile.ApplicationInsightsKey
+		applicationInsightsKey = telemetry.AKSEngineAppInsightsKey
 	}
 
 	telemetryVars := map[string]interface{}{
@@ -602,6 +648,21 @@ func getTelemetryVars(cs *api.ContainerService) map[string]interface{} {
 	}
 
 	return telemetryVars
+}
+
+func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
+	enableCSIProxy := common.DefaultEnableCSIProxyWindows
+	CSIProxyURL := ""
+
+	if wp != nil {
+		enableCSIProxy = wp.IsCSIProxyEnabled()
+		CSIProxyURL = wp.CSIProxyURL
+	}
+	vars := map[string]interface{}{
+		"windowsEnableCSIProxy": enableCSIProxy,
+		"windowsCSIProxyURL":    CSIProxyURL,
+	}
+	return vars
 }
 
 func getSizeMap() map[string]interface{} {

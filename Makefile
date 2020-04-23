@@ -20,13 +20,14 @@ PROJECT         := aks-engine
 VERSION         ?= $(shell git rev-parse HEAD)
 VERSION_SHORT   ?= $(shell git rev-parse --short HEAD)
 GITTAG          := $(shell git describe --exact-match --tags $(shell git log -n1 --pretty='%h') 2> /dev/null)
-GOBIN			?= $(shell $(GO) env GOPATH)/bin
-TOOLSBIN		:= $(CURDIR)/hack/tools/bin
+GOBIN           ?= $(shell $(GO) env GOPATH)/bin
+TOOLSBIN        := $(CURDIR)/hack/tools/bin
+AIKey           ?= c92d8284-b550-4b06-b7ba-e80fd7178faa
 ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.25.0
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.26.2
 DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -35,7 +36,7 @@ DEV_CMD_RUN := docker run $(DEV_ENV_OPTS)
 ifdef DEBUG
 LDFLAGS := -X main.version=$(VERSION)
 else
-LDFLAGS := -s -X main.version=$(VERSION)
+LDFLAGS := -s -X main.version=$(VERSION) -X github.com/Azure/$(PROJECT)/pkg/telemetry.AKSEngineAppInsightsKey=$(AIKey)
 endif
 BINARY_DEST_DIR ?= bin
 
@@ -84,7 +85,10 @@ generate: bootstrap
 
 .PHONY: generate-azure-constants
 generate-azure-constants:
-	python pkg/helpers/generate_azure_constants.py
+	aks-engine get-locations -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	  > pkg/helpers/azure_locations.go
+	aks-engine get-skus -o code --client-id=$(AZURE_CLIENT_ID) --client-secret=$(AZURE_CLIENT_SECRET) --subscription-id=$(AZURE_SUBSCRIPTION_ID) \
+	  > pkg/helpers/azure_skus_const.go
 
 .PHONY: build
 build: generate go-build
@@ -110,10 +114,6 @@ build-cross: build
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
 	CGO_ENABLED=0 gox -output="_dist/aks-engine-$(GITTAG)-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
-
-.PHONY: build-windows-k8s
-build-windows-k8s:
-	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION)
 
 .PHONY: build-azs-windows-k8s
 build-azs-windows-k8s:
@@ -160,7 +160,7 @@ ginkgoBuild: generate
 	make -C ./test/e2e ginkgo-build
 
 test: generate ginkgoBuild
-	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast .
+	ginkgo -mod=vendor -skipPackage test/e2e -failFast -r -v -tags=fast -ldflags '$(LDFLAGS)' .
 
 .PHONY: test-style
 test-style: validate-go validate-shell validate-copyright-headers
@@ -199,7 +199,7 @@ ci: bootstrap test-style build test lint
 
 .PHONY: coverage
 coverage:
-	@scripts/ginkgo.coverage.sh --codecov
+	LDFLAGS="$(LDFLAGS)" ./scripts/ginkgo.coverage.sh --codecov
 
 include versioning.mk
 include test.mk

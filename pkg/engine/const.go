@@ -75,25 +75,21 @@ const (
 )
 
 const (
-	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
-	AzureStackSuffix = "-azs"
-	// AzureStackPrefix is appended to windows binary version for Azure Stack instances
-	AzureStackPrefix = "azs-"
-	// AzureStackCaCertLocation is where Azure Stack's CRP drops the stamp CA certificate
-	AzureStackCaCertLocation = "/var/lib/waagent/Certificates.pem"
-)
-
-const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
-	// Windows custom scripts
-	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
-	kubernetesWindowsAgentFunctionsPS1    = "k8s/kuberneteswindowsfunctions.ps1"
-	kubernetesWindowsConfigFunctionsPS1   = "k8s/windowsconfigfunc.ps1"
-	kubernetesWindowsKubeletFunctionsPS1  = "k8s/windowskubeletfunc.ps1"
-	kubernetesWindowsCniFunctionsPS1      = "k8s/windowscnifunc.ps1"
-	kubernetesWindowsAzureCniFunctionsPS1 = "k8s/windowsazurecnifunc.ps1"
-	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
-	kubernetesWindowsLogsCleanupPS1       = "k8s/windowslogscleanup.ps1"
+	// Windows custom scripts. These should all be listed in template_generator.go:func GetKubernetesWindowsAgentFunctions
+	kubernetesWindowsAgentCustomDataPS1     = "k8s/kuberneteswindowssetup.ps1"
+	kubernetesWindowsAgentFunctionsPS1      = "k8s/kuberneteswindowsfunctions.ps1"
+	kubernetesWindowsConfigFunctionsPS1     = "k8s/windowsconfigfunc.ps1"
+	kubernetesWindowsContainerdFunctionsPS1 = "k8s/windowscontainerdfunc.ps1"
+	kubernetesWindowsCsiProxyFunctionsPS1   = "k8s/windowscsiproxyfunc.ps1"
+	kubernetesWindowsKubeletFunctionsPS1    = "k8s/windowskubeletfunc.ps1"
+	kubernetesWindowsCniFunctionsPS1        = "k8s/windowscnifunc.ps1"
+	kubernetesWindowsAzureCniFunctionsPS1   = "k8s/windowsazurecnifunc.ps1"
+	kubernetesWindowsOpenSSHFunctionPS1     = "k8s/windowsinstallopensshfunc.ps1"
+	kubernetesWindowsLogsCleanupPS1         = "k8s/windowslogscleanup.ps1"
+	kubernetesWindowsNodeResetPS1           = "k8s/windowsnodereset.ps1"
+	kubeletStartPS1                         = "k8s/kubeletstart.ps1"
+	kubeproxyStartPS1                       = "k8s/kubeproxystart.ps1"
 )
 
 // cloud-init (i.e. ARM customData) source file references
@@ -138,16 +134,6 @@ const (
 	customSearchDomainsCSEScriptFilepath = "/opt/azure/containers/setup-custom-search-domains.sh"
 	dhcpV6ServiceCSEScriptFilepath       = "/etc/systemd/system/dhcpv6.service"
 	dhcpV6ConfigCSEScriptFilepath        = "/opt/azure/containers/enable-dhcpv6.sh"
-)
-
-// Kubernetes manifests file references
-const (
-	kubeSchedulerManifestFilename               = "kubernetesmaster-kube-scheduler.yaml"
-	kubeControllerManagerManifestFilename       = "kubernetesmaster-kube-controller-manager.yaml"
-	kubeControllerManagerCustomManifestFilename = "kubernetesmaster-kube-controller-manager-custom.yaml"
-	ccmManifestFilename                         = "kubernetesmaster-cloud-controller-manager.yaml"
-	kubeAPIServerManifestFilename               = "kubernetesmaster-kube-apiserver.yaml"
-	kubeAddonManagerManifestFilename            = "kubernetesmaster-kube-addon-manager.yaml"
 )
 
 const (
@@ -243,8 +229,6 @@ const (
 	ipMasqAgentAddonDestinationFilename            string = "ip-masq-agent.yaml"
 	azureCNINetworkMonitorAddonSourceFilename      string = "azure-cni-networkmonitor.yaml"
 	azureCNINetworkMonitorAddonDestinationFilename string = "azure-cni-networkmonitor.yaml"
-	dnsAutoscalerAddonSourceFilename               string = "dns-autoscaler.yaml"
-	dnsAutoscalerAddonDestinationFilename          string = "dns-autoscaler.yaml"
 	calicoAddonSourceFilename                      string = "kubernetesmasteraddons-calico-daemonset.yaml"
 	calicoAddonDestinationFilename                 string = "calico-daemonset.yaml"
 	azureNetworkPolicyAddonSourceFilename          string = "kubernetesmasteraddons-azure-npm-daemonset.yaml"
@@ -277,4 +261,21 @@ const (
 	flannelAddonDestinationFilename                string = "flannel-daemonset.yaml"
 	scheduledMaintenanceAddonSourceFilename        string = "kubernetesmasteraddons-scheduled-maintenance-deployment.yaml"
 	scheduledMaintenanceAddonDestinationFilename   string = "scheduled-maintenance-deployment.yaml"
+	secretsStoreCSIDriverAddonSourceFileName       string = "kubernetesmasteraddons-secrets-store-csi-driver-daemonset.yaml"
+	secretsStoreCSIDriverAddonDestinationFileName  string = "secrets-store-csi-driver.yaml"
+)
+
+// components source and destination file references
+const (
+	schedulerComponentSourceFilename                   string = "kubernetesmaster-kube-scheduler.yaml"
+	schedulerComponentDestinationFilename              string = "kube-scheduler.yaml"
+	controllerManagerComponentSourceFilename           string = "kubernetesmaster-kube-controller-manager.yaml"
+	controllerManagerComponentDestinationFilename      string = "kube-controller-manager.yaml"
+	cloudControllerManagerComponentSourceFilename      string = "kubernetesmaster-cloud-controller-manager.yaml"
+	cloudControllerManagerComponentDestinationFilename string = "cloud-controller-manager.yaml"
+	apiServerComponentSourceFilename                   string = "kubernetesmaster-kube-apiserver.yaml"
+	apiServerComponentDestinationFilename              string = "kube-apiserver.yaml"
+	addonManagerComponentSourceFilename                string = "kubernetesmaster-kube-addon-manager.yaml"
+	addonManagerComponentDestinationFilename           string = "kube-addon-manager.yaml"
+	clusterInitComponentDestinationFilename            string = "cluster-init.yaml"
 )

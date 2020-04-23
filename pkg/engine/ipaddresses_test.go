@@ -32,9 +32,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-	isForMaster := true
 	includeDNS := true
-	actual := CreatePublicIPAddress(isForMaster, includeDNS)
+	actual := CreatePublicIPAddressForMaster(includeDNS)
 
 	diff := cmp.Diff(actual, expected)
 
@@ -59,9 +58,7 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-	isForMaster = false
-	includeDNS = false
-	actual = CreatePublicIPAddress(isForMaster, includeDNS)
+	actual = CreatePublicIPAddressForNodePools("agentPublicIPAddressName")
 
 	diff = cmp.Diff(actual, expected)
 
@@ -87,9 +84,8 @@ func TestCreatePublicIPAddress(t *testing.T) {
 			Type: to.StringPtr("Microsoft.Network/publicIPAddresses"),
 		},
 	}
-	isForMaster = true
 	includeDNS = false
-	actual = CreatePublicIPAddress(isForMaster, includeDNS)
+	actual = CreatePublicIPAddressForMaster(includeDNS)
 
 	diff = cmp.Diff(actual, expected)
 
