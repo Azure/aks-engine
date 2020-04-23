@@ -506,22 +506,3 @@ func TestAPIServerFeatureGates(t *testing.T) {
 			"1.17.0", a["--feature-gates"])
 	}
 }
-
-func TestAPIServerIPv6Only(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", "1.18.0", 3, 2, false)
-	cs.Properties.FeatureFlags = &FeatureFlags{EnableIPv6Only: true}
-	cs.setAPIServerConfig()
-
-	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	// bind address should be :: for single stack IPv6 cluster
-	if a["--bind-address"] != "::" {
-		t.Fatalf("got unexpected default value for '--bind-address' API server config: %s",
-			a["--bind-address"])
-	}
-	for _, key := range []string{"--advertise-address"} {
-		if _, ok := a[key]; ok {
-			t.Fatalf("got unexpected '%s' API server config value for '--advertise-address' %s",
-				key, a[key])
-		}
-	}
-}

@@ -14,20 +14,6 @@ This example shows you how to configure a dual stack cluster:
 
 1. **kubernetes.json** - deploying and using [Kubernetes](kubernetes.json).
 
-**Note** 
-
-When using kubernetes version 1.16, the IPv6 cluster subnet needs to be /8 as the default node CIDR mask size for IPv6 is /24
-
-For kubernetes version 1.17+, the default node CIDR mask size for IPv6 is /64 and the default clusters subnet is `fc00::/48`. In 1.17+ node CIDR mask size can be configured by 
-
-```
-        "controllerManagerConfig" : {
-                "--node-cidr-mask-size-ipv6": <value>
-        }
-```
-
-**The difference between node CIDR mask size and cluster subnet mask size can't be > 16**
-
 Things to try out after the cluster is deployed -
 
 - Nodes are Kubernetes version 1.16.0 or later

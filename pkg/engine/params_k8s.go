@@ -112,8 +112,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				addValue(parametersMap, "kubeServiceCidr", kubernetesConfig.ServiceCIDR)
 				addValue(parametersMap, "kubeBinariesVersion", k8sVersion)
 				addValue(parametersMap, "windowsTelemetryGUID", cloudSpecConfig.KubernetesSpecConfig.WindowsTelemetryGUID)
-				addValue(parametersMap, "windowsContainerdURL", kubernetesConfig.WindowsContainerdURL)
-				addValue(parametersMap, "windowsSdnPluginURL", kubernetesConfig.WindowsSdnPluginURL)
 			}
 		}
 

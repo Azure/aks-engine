@@ -130,22 +130,6 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 				WindowsNodeBinariesURL: "http://test/test.tar.gz",
 			},
 		},
-		"WindowsContainerdURL": {
-			props: &vlabs.KubernetesConfig{
-				WindowsContainerdURL: "http://test/testcontainerd.tar.gz",
-			},
-			expect: &KubernetesConfig{
-				WindowsContainerdURL: "http://test/testcontainerd.tar.gz",
-			},
-		},
-		"WindowsSdnPluginURL": {
-			props: &vlabs.KubernetesConfig{
-				WindowsSdnPluginURL: "http://test/testsdnplugin.tar.gz",
-			},
-			expect: &KubernetesConfig{
-				WindowsSdnPluginURL: "http://test/testsdnplugin.tar.gz",
-			},
-		},
 	}
 
 	for name, test := range tests {

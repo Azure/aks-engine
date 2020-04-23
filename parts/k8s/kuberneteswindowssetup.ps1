@@ -65,14 +65,9 @@ $global:AgentCertificate = "{{WrapAsParameter "clientCertificate"}}"
 $global:KubeBinariesPackageSASURL = "{{WrapAsParameter "kubeBinariesSASURL"}}"
 $global:WindowsKubeBinariesURL = "{{WrapAsParameter "windowsKubeBinariesURL"}}"
 $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
-$global:ContainerdUrl = "{{WrapAsParameter "windowsContainerdURL"}}"
-$global:ContainerdSdnPluginUrl = "{{WrapAsParameter "windowsSdnPluginURL"}}"
 
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
-
-## ContainerD Usage
-$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -136,10 +131,6 @@ $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
 $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 
-# CSI Proxy settings
-$global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
-$global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
-
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 
@@ -153,11 +144,15 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowskubeletfunc.ps1
 . c:\AzureData\k8s\windowscnifunc.ps1
 . c:\AzureData\k8s\windowsazurecnifunc.ps1
-. c:\AzureData\k8s\windowscsiproxyfunc.ps1
 . c:\AzureData\k8s\windowsinstallopensshfunc.ps1
-. c:\AzureData\k8s\windowscontainerdfunc.ps1
 
-$useContainerD = ($global:ContainerRuntime -eq "containerd")
+function
+Update-ServiceFailureActions()
+{
+    sc.exe failure "kubelet" actions= restart/60000/restart/60000/restart/60000 reset= 900
+    sc.exe failure "kubeproxy" actions= restart/60000/restart/60000/restart/60000 reset= 900
+    sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
+}
 
 try
 {
@@ -227,22 +222,12 @@ try
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
 
-
-        if ($useContainerD) {
-            Write-Log "Installing ContainerD"
-            $containerdTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Containerd -ContainerdUrl $global:ContainerdUrl
-            $containerdTimer.Stop()
-            $global:AppInsightsClient.TrackMetric("Install-ContainerD", $containerdTimer.Elapsed.TotalSeconds)
-            # TODO: disable/uninstall Docker later
-        } else {
-            Write-Log "Install docker"
-            $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
-            Install-Docker -DockerVersion $global:DockerVersion
-            Set-DockerLogFileOptions
-            $dockerTimer.Stop()
-            $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
-        }
+        Write-Log "Install docker"
+        $dockerTimer = [System.Diagnostics.Stopwatch]::StartNew()
+        Install-Docker -DockerVersion $global:DockerVersion
+        Set-DockerLogFileOptions
+        $dockerTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
 
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
@@ -289,10 +274,6 @@ try
         Write-CACert -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir
 
-        if ($global:EnableCsiProxy) {
-            New-CsiProxyService -CsiProxyPackageUrl $global:CsiProxyUrl -KubeDir $global:KubeDir
-        }
-
         Write-Log "Write kube config"
         Write-KubeConfig -CACertificate $global:CACertificate `
             -KubeDir $global:KubeDir `
@@ -303,19 +284,14 @@ try
 
         Write-Log "Create the Pause Container kubletwin/pause"
         $infraContainerTimer = [System.Diagnostics.Stopwatch]::StartNew()
-        New-InfraContainer -KubeDir $global:KubeDir -ContainerRuntime $global:ContainerRuntime
+        New-InfraContainer -KubeDir $global:KubeDir
         $infraContainerTimer.Stop()
         $global:AppInsightsClient.TrackMetric("New-InfraContainer", $infraContainerTimer.Elapsed.TotalSeconds)
 
-        if (-not (Test-ContainerImageExists -Image "kubletwin/pause" -ContainerRuntime $global:ContainerRuntime)) {
+        if (-not (Test-ContainerImageExists -Image "kubletwin/pause")) {
             Write-Log "Could not find container with name kubletwin/pause"
-            if ($useContainerD) {
-                $o = ctr -n k8s.io image list
-                Write-Log $o
-            } else {
-                $o = docker image list
-                Write-Log $o
-            }
+            $o = docker image list
+            Write-Log $o
             throw "kubletwin/pause container does not exist!"
         }
 
@@ -354,13 +330,7 @@ try
         }
         elseif ($global:NetworkPlugin -eq "kubenet") {
             Write-Log "Fetching additional files needed for kubenet"
-            if ($useContainerD) {
-                # TODO: CNI may need to move to c:\program files\containerd\cni\bin with ContainerD
-                Install-SdnBridge -Url $global:ContainerdSdnPluginUrl -CNIPath $global:CNIPath
-            } else {
-                Update-WinCNI -CNIPath $global:CNIPath
-            }
-            Get-HnsPsm1 -HNSModule $global:HNSModule
+            Update-WinCNI -CNIPath $global:CNIPath
         }
 
         New-ExternalHnsNetwork
@@ -384,10 +354,7 @@ try
             -KubeClusterCIDR $global:KubeClusterCIDR `
             -KubeServiceCIDR $global:KubeServiceCIDR `
             -HNSModule $global:HNSModule `
-            -KubeletNodeLabels $global:KubeletNodeLabels `
-            -UseContainerD $useContainerD
-
-
+            -KubeletNodeLabels $global:KubeletNodeLabels
 
         Get-LogCollectionScripts
 
@@ -401,12 +368,11 @@ try
         PREPROVISION_EXTENSION
 
         Write-Log "Update service failure actions"
-        Update-ServiceFailureActions -ContainerRuntime $global:ContainerRuntime
+        Update-ServiceFailureActions
 
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
-        Register-NodeResetScriptTask
-        
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -423,7 +389,7 @@ try
     else
     {
         # keep for debugging purposes
-        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret -NetworkAPIVersion $NetworkAPIVersion -TargetEnvironment $TargetEnvironment"
+        Write-Log ".\CustomDataSetupScript.ps1 -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp -MasterFQDNPrefix $MasterFQDNPrefix -Location $Location -AgentKey $AgentKey -AADClientId $AADClientId -AADClientSecret $AADClientSecret"
     }
 }
 catch

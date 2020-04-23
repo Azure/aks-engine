@@ -3310,162 +3310,6 @@ func TestSetAddonsConfig(t *testing.T) {
 				},
 			}, "1.15.4"),
 		},
-		{
-			name: "addons with IPv6 single stack",
-			cs: &ContainerService{
-				Properties: &Properties{
-					FeatureFlags: &FeatureFlags{
-						EnableIPv6Only: true,
-					},
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.18.0",
-						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP:  DefaultKubernetesDNSServiceIPv6,
-							NetworkPlugin: NetworkPluginKubenet,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-								"--node-ip":        "::",
-							},
-							ClusterSubnet: DefaultKubernetesClusterSubnetIPv6,
-							ProxyMode:     KubeProxyModeIPTables,
-							APIServerConfig: map[string]string{
-								"--bind-address": "::",
-							},
-							ControllerManagerConfig: map[string]string{
-								"--bind-address": "::",
-							},
-							SchedulerConfig: map[string]string{
-								"--bind-address": "::",
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.CoreDNSAddonName,
-					Enabled: to.BoolPtr(DefaultCoreDNSAddonEnabled),
-					Config: map[string]string{
-						"domain":           "cluster.local",
-						"clusterIP":        DefaultKubernetesDNSServiceIPv6,
-						"use-host-network": "true",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.CoreDNSAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.18.0"][common.CoreDNSAddonName],
-						},
-					},
-				},
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr":           DefaultKubernetesClusterSubnetIPv6,
-						"enable-ipv6":                   "true",
-						"non-masq-cni-cidr":             "",
-						"secondary-non-masquerade-cidr": "",
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr":         DefaultKubernetesClusterSubnetIPv6,
-						"proxy-mode":           string(KubeProxyModeIPTables),
-						"featureGates":         "{}",
-						"bind-address":         "::",
-						"healthz-bind-address": "::",
-						"metrics-bind-address": "::1",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			}, "1.18.0")),
-		},
-		{
-			name: "addons with dual stack",
-			cs: &ContainerService{
-				Properties: &Properties{
-					FeatureFlags: &FeatureFlags{
-						EnableIPv6DualStack: true,
-					},
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.18.0",
-						KubernetesConfig: &KubernetesConfig{
-							DNSServiceIP:  DefaultKubernetesDNSServiceIP,
-							NetworkPlugin: NetworkPluginKubenet,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-								"--feature-gates":  "IPv6DualStack=true",
-							},
-							ClusterSubnet: DefaultKubernetesClusterSubnet + "," + DefaultKubernetesClusterSubnetIPv6,
-							ServiceCIDR:   DefaultKubernetesServiceCIDR + "," + DefaultKubernetesServiceCIDRIPv6,
-							ProxyMode:     KubeProxyModeIPVS,
-							APIServerConfig: map[string]string{
-								"--feature-gates": "IPv6DualStack=true",
-							},
-							ControllerManagerConfig: map[string]string{
-								"--feature-gates": "IPv6DualStack=true",
-							},
-						},
-					},
-				},
-			},
-			isUpgrade: false,
-			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, overwriteDefaultAddons([]KubernetesAddon{
-				{
-					Name:    common.IPMASQAgentAddonName,
-					Enabled: to.BoolPtr(true),
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:           common.IPMASQAgentAddonName,
-							CPURequests:    "50m",
-							MemoryRequests: "50Mi",
-							CPULimits:      "50m",
-							MemoryLimits:   "250Mi",
-							Image:          specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.18.0"][common.IPMASQAgentAddonName],
-						},
-					},
-					Config: map[string]string{
-						"non-masquerade-cidr":           DefaultKubernetesClusterSubnet,
-						"enable-ipv6":                   "true",
-						"non-masq-cni-cidr":             "",
-						"secondary-non-masquerade-cidr": DefaultKubernetesClusterSubnetIPv6,
-					},
-				},
-				{
-					Name:    common.KubeProxyAddonName,
-					Enabled: to.BoolPtr(DefaultKubeProxyAddonEnabled),
-					Config: map[string]string{
-						"cluster-cidr": DefaultKubernetesClusterSubnet + "," + DefaultKubernetesClusterSubnetIPv6,
-						"proxy-mode":   string(KubeProxyModeIPVS),
-						"featureGates": "IPv6DualStack: true",
-					},
-					Containers: []KubernetesContainerSpec{
-						{
-							Name:  common.KubeProxyAddonName,
-							Image: specConfig.KubernetesImageBase + K8sComponentsByVersionMap["1.18.0"][common.KubeProxyAddonName],
-						},
-					},
-				},
-			}, "1.18.0")),
-		},
 	}
 
 	for _, test := range tests {
@@ -3920,22 +3764,17 @@ func concatenateDefaultAddons(addons []KubernetesAddon, version string) []Kubern
 }
 
 func overwriteDefaultAddons(addons []KubernetesAddon, version string) []KubernetesAddon {
-	overrideAddons := make(map[string]KubernetesAddon)
-	for _, addonOverride := range addons {
-		overrideAddons[addonOverride.Name] = addonOverride
-	}
-
 	var ret []KubernetesAddon
 	defaults := getDefaultAddons(version)
-
-	for _, addon := range defaults {
-		if _, exists := overrideAddons[addon.Name]; exists {
-			ret = append(ret, overrideAddons[addon.Name])
-			continue
+	for _, addonOverride := range addons {
+		for _, addon := range defaults {
+			if addon.Name == addonOverride.Name {
+				ret = append(ret, addonOverride)
+			} else {
+				ret = append(ret, addon)
+			}
 		}
-		ret = append(ret, addon)
 	}
-
 	return ret
 }
 

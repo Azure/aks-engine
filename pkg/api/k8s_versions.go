@@ -73,7 +73,7 @@ var k8sComponentVersions = map[string]map[string]string{
 		"addon-resizer":                   "addon-resizer:1.8.7",
 		"metrics-server":                  "metrics-server-amd64:v0.3.5",
 		"addon-manager":                   "kube-addon-manager-amd64:v9.0.2",
-		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
+		common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.0",
 	},
 	"1.17": {
 		"addon-resizer":                   "addon-resizer:1.8.7",

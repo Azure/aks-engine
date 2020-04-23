@@ -155,9 +155,6 @@ spec:
           effect: NoSchedule
       nodeSelector:
         beta.kubernetes.io/os: linux
-        {{- if ContainerConfig "use-host-network"}}
-        kubernetes.azure.com/role: agent
-        {{end}}
       containers:
       - name: coredns
         image: {{ContainerImage "coredns"}}
@@ -209,9 +206,6 @@ spec:
             - all
           readOnlyRootFilesystem: true
       dnsPolicy: Default
-      {{- if ContainerConfig "use-host-network"}}
-      hostNetwork: {{ContainerConfig "use-host-network"}}
-      {{end}}
       volumes:
         - name: config-volume
           configMap:

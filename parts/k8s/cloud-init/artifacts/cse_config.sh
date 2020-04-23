@@ -295,7 +295,7 @@ ensureKMS() {
 }
 {{end}}
 
-{{if IsIPv6Enabled}}
+{{if IsIPv6DualStackFeatureEnabled}}
 ensureDHCPv6() {
     wait_for_file 3600 1 {{GetDHCPv6ServiceCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT
     wait_for_file 3600 1 {{GetDHCPv6ConfigCSEScriptFilepath}} || exit $ERR_FILE_WATCH_TIMEOUT

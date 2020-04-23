@@ -224,7 +224,6 @@ for TILLER_VERSION in ${TILLER_VERSIONS}; do
 done
 
 CLUSTER_AUTOSCALER_VERSIONS="
-1.18.0
 1.17.0
 1.16.3
 1.16.2
@@ -423,8 +422,6 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
-1.18.1
-1.18.0
 1.17.3
 1.17.2
 1.16.7

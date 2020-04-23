@@ -182,8 +182,6 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"customCloudAuthenticationMethod":           cs.Properties.GetCustomCloudAuthenticationMethod(),
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
-		"windowsCSIProxyURL":                        "",
-		"windowsEnableCSIProxy":                     false,
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -750,8 +748,6 @@ func TestK8sVars(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-		"windowsCSIProxyURL":                        "",
-		"windowsEnableCSIProxy":                     false,
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -1001,63 +997,10 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetNameResourceSegmentIndex":              8,
 		"vnetResourceGroupNameResourceSegmentIndex": 4,
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
-		"windowsCSIProxyURL":                        "",
-		"windowsEnableCSIProxy":                     false,
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-}
-
-func TestK8sVarsWindowsProfile(t *testing.T) {
-	var trueVar = true
-	cases := []struct {
-		name         string
-		wp           *api.WindowsProfile
-		expectedVars map[string]interface{}
-	}{
-		{
-			name: "No windows profile",
-			wp:   nil,
-			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
-			},
-		},
-		{
-			name: "Defaults",
-			wp:   &api.WindowsProfile{},
-			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
-			},
-		},
-		{
-			name: "Non-defaults",
-			wp: &api.WindowsProfile{
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "http://some/package.tar",
-			},
-			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": true,
-				"windowsCSIProxyURL":    "http://some/package.tar",
-			},
-		},
-	}
-
-	for _, c := range cases {
-		test := c
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
-
-			vars := getWindowsProfileVars(test.wp)
-
-			diff := cmp.Diff(test.expectedVars, vars)
-			if diff != "" {
-				t.Errorf("unexpected diff in vars: %s", diff)
-			}
-		})
 	}
 }
