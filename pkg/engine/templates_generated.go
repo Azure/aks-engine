@@ -40889,7 +40889,7 @@ function DownloadFileOverHttp
     if ($search.Count -ne 0)
     {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
-        Copy-Item -Path $search[0] -Destination $DestinationPath -Force
+        Move-Item -Path $search[0] -Destination $DestinationPath -Force
     }
     else
     {
@@ -41092,14 +41092,6 @@ function Assert-FileExists {
         throw "$Filename does not exist"
     }
 }
-
-function Update-DefenderPreferences {
-    Add-MpPreference -ExclusionProcess "c:\k\kubelet.exe"
-
-    if ($global:EnableCsiProxy) {
-        Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
-    }
-}
 `)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
@@ -41287,9 +41279,6 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
-        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
-
-        $configAppInsightsClientTimer = [System.Diagnostics.Stopwatch]::StartNew()
         # Get app insights binaries and set up app insights client
         mkdir c:\k\appinsights
         DownloadFileOverHttp -Url "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg" -DestinationPath "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip"
@@ -41325,18 +41314,13 @@ try
             $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
         }
 
-        $configAppInsightsClientTimer.Stop()
-        $global:AppInsightsClient.TrackMetric("Config-AppInsightsClient", $configAppInsightsClientTimer.Elapsed.TotalSeconds)
+        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
 
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
         if ( $sshEnabled ) {
-            Write-Log "Install OpenSSH"
-            $installOpenSSHTimer = [System.Diagnostics.Stopwatch]::StartNew()
             Install-OpenSSH -SSHKeys $SSHKeys
-            $installOpenSSHTimer.Stop()
-            $global:AppInsightsClient.TrackMetric("Install-OpenSSH", $installOpenSSHTimer.Elapsed.TotalSeconds)
         }
 
         Write-Log "Apply telemetry data setting"
@@ -41533,8 +41517,7 @@ try
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
         Register-NodeResetScriptTask
-        Update-DefenderPreferences
-
+        
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -43090,7 +43073,7 @@ Install-OpenSSH {
     $sshdService = Get-Service | ? Name -like 'sshd'
     if ($sshdService.Count -eq 0)
     {
-        Write-Log "Installing OpenSSH"
+        Write-Host "Installing OpenSSH"
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
@@ -43101,29 +43084,29 @@ Install-OpenSSH {
     }
     else
     {
-        Write-Log "OpenSSH Server service detected - skipping online install..."
+        Write-Host "OpenSSH Server service detected - skipping online install..."
     }
 
     Start-Service sshd
 
     if (!(Test-Path "$adminpath")) {
-        Write-Log "Created new file and text content added"
+        Write-Host "Created new file and text content added"
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
-    Write-Log "$adminpath found."
-    Write-Log "Adding keys to: $adminpath\$adminfile ..."
+    Write-Host "$adminpath found."
+    Write-Host "Adding keys to: $adminpath\$adminfile ..."
     $SSHKeys | foreach-object {
         Add-Content $adminpath\$adminfile $_
     }
 
-    Write-Log "Setting required permissions..."
+    Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
     icacls $adminpath\$adminfile /grant SYSTEM:` + "`" + `(F` + "`" + `)
     icacls $adminpath\$adminfile /grant BUILTIN\Administrators:` + "`" + `(F` + "`" + `)
 
-    Write-Log "Restarting sshd service..."
+    Write-Host "Restarting sshd service..."
     Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
@@ -43134,7 +43117,7 @@ Install-OpenSSH {
     if (!$firewall) {
         throw "OpenSSH is firewall is not configured properly"
     }
-    Write-Log "OpenSSH installed and configured successfully"
+    Write-Host "OpenSSH installed and configured successfully"
 }
 `)
 
@@ -43347,7 +43330,7 @@ New-InfraContainer {
         $ContainerRuntime = "docker"
     )
     cd $KubeDir
-    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
+    $computerInfo = Get-ComputerInfo
 
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
@@ -43356,7 +43339,7 @@ New-InfraContainer {
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
-    if ($pauseImageVersions -icontains $windowsVersion) {
+    if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
         if ($ContainerRuntime -eq "docker") {
             if (-not (Test-ContainerImageExists -Image $defaultPauseImage -ContainerRuntime $ContainerRuntime)) {
                 Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
@@ -43457,9 +43440,6 @@ Get-KubeBinaries {
     del $tempdir -Recurse
 }
 
-# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
-filter RemoveNulls { $_ -replace '\0', '' }
-
 # TODO: replace KubeletStartFile with a Kubelet config, remove NSSM, and use built-in service integration
 function
 New-NSSMService {
@@ -43502,22 +43482,22 @@ New-NSSMService {
     & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
 
     # setup kubeproxy
-    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400 | RemoveNulls
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760 | RemoveNulls
+    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir
+    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile
+    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy
+    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet
+    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy
+    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START
+    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem
+    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS
+    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
 }
 
 # Renamed from Write-KubernetesStartFiles

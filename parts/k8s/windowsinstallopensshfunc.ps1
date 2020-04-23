@@ -11,7 +11,7 @@ Install-OpenSSH {
     $sshdService = Get-Service | ? Name -like 'sshd'
     if ($sshdService.Count -eq 0)
     {
-        Write-Log "Installing OpenSSH"
+        Write-Host "Installing OpenSSH"
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
@@ -22,29 +22,29 @@ Install-OpenSSH {
     }
     else
     {
-        Write-Log "OpenSSH Server service detected - skipping online install..."
+        Write-Host "OpenSSH Server service detected - skipping online install..."
     }
 
     Start-Service sshd
 
     if (!(Test-Path "$adminpath")) {
-        Write-Log "Created new file and text content added"
+        Write-Host "Created new file and text content added"
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
-    Write-Log "$adminpath found."
-    Write-Log "Adding keys to: $adminpath\$adminfile ..."
+    Write-Host "$adminpath found."
+    Write-Host "Adding keys to: $adminpath\$adminfile ..."
     $SSHKeys | foreach-object {
         Add-Content $adminpath\$adminfile $_
     }
 
-    Write-Log "Setting required permissions..."
+    Write-Host "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
     icacls $adminpath\$adminfile /grant SYSTEM:`(F`)
     icacls $adminpath\$adminfile /grant BUILTIN\Administrators:`(F`)
 
-    Write-Log "Restarting sshd service..."
+    Write-Host "Restarting sshd service..."
     Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
@@ -55,5 +55,5 @@ Install-OpenSSH {
     if (!$firewall) {
         throw "OpenSSH is firewall is not configured properly"
     }
-    Write-Log "OpenSSH installed and configured successfully"
+    Write-Host "OpenSSH installed and configured successfully"
 }
