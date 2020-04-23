@@ -42087,7 +42087,7 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
-        Name   = $global:ContainerRuntime;
+        Name = $global:ContainerRuntime;
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
@@ -42098,7 +42098,7 @@ function Write-KubeClusterConfig {
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Csi -Value @{
-        EnableProxy = "true"
+        EnableProxy = $global:EnableCsiProxy
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Kubernetes -Value @{
@@ -42106,16 +42106,16 @@ function Write-KubeClusterConfig {
             Release = $global:KubeBinariesVersion;
         };
         ControlPlane = @{
-            IpAddress = $MasterIP;
-            Username  = "azureuser"
+            IpAddress    = $MasterIP;
+            Username     = "azureuser"
             MasterSubnet = $global:MasterSubnet
         };
-        Network = @{
+        Network      = @{
             ServiceCidr = $global:KubeServiceCIDR;
             ClusterCidr = $global:KubeClusterCIDR;
-            DnsIp = $KubeDnsServiceIp
+            DnsIp       = $KubeDnsServiceIp
         };
-        Kubelet = @{
+        Kubelet      = @{
             NodeLabels = $global:KubeletNodeLabels;
             ConfigArgs = $global:KubeletConfigArgs
         };
