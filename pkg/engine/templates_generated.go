@@ -225,6 +225,7 @@
 // ../../parts/k8s/windowsinstallopensshfunc.ps1
 // ../../parts/k8s/windowskubeletfunc.ps1
 // ../../parts/k8s/windowslogscleanup.ps1
+// ../../parts/k8s/windowsnodereset.ps1
 // ../../parts/masteroutputs.t
 // ../../parts/masterparams.t
 // ../../parts/swarm/Install-ContainerHost-And-Join-Swarm.ps1
@@ -40870,9 +40871,9 @@ function DownloadFileOverHttp
     if ($search.Count -ne 0)
     {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
-        Move-Item -Path $search[0] -Destination $DestinationPath -Force
+        Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    else 
+    else
     {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
@@ -41044,7 +41045,43 @@ function Register-LogsCleanupScriptTask {
     $trigger = New-JobTrigger -Daily -At "00:00" -DaysInterval 1
     $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "log-cleanup-task"
     Register-ScheduledTask -TaskName "log-cleanup-task" -InputObject $definition
-}`)
+}
+
+function Register-NodeResetScriptTask {
+    Write-Log "Creating a startup task to run windowsnodereset.ps1"
+
+    (Get-Content 'c:\AzureData\k8s\windowsnodereset.ps1') |
+    Foreach-Object { $_ -replace '{{MasterSubnet}}', $global:MasterSubnet } |
+    Foreach-Object { $_ -replace '{{NetworkMode}}', $global:NetworkMode } |
+    Foreach-Object { $_ -replace '{{NetworkPlugin}}', $global:NetworkPlugin } |
+    Out-File 'c:\k\windowsnodereset.ps1'
+
+    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-File ` + "`" + `"c:\k\windowsnodereset.ps1` + "`" + `""
+    $principal = New-ScheduledTaskPrincipal -UserId SYSTEM -LogonType ServiceAccount -RunLevel Highest
+    $trigger = New-JobTrigger -AtStartup -RandomDelay 00:00:05
+    $definition = New-ScheduledTask -Action $action -Principal $principal -Trigger $trigger -Description "k8s-restart-job"
+    Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
+}
+
+function Assert-FileExists {
+    Param(
+        [Parameter(Mandatory=$true,Position=0)][string]
+        $Filename
+    )
+    
+    if (-Not (Test-Path $Filename)) {
+        throw "$Filename does not exist"
+    }
+}
+
+function Update-DefenderPreferences {
+    Add-MpPreference -ExclusionProcess "c:\k\kubelet.exe"
+
+    if ($global:EnableCsiProxy) {
+        Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+}
+`)
 
 func k8sKuberneteswindowsfunctionsPs1Bytes() ([]byte, error) {
 	return _k8sKuberneteswindowsfunctionsPs1, nil
@@ -41226,6 +41263,9 @@ try
     if ($true) {
         Write-Log "Provisioning $global:DockerServiceName... with IP $MasterIP"
 
+        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+
+        $configAppInsightsClientTimer = [System.Diagnostics.Stopwatch]::StartNew()
         # Get app insights binaries and set up app insights client
         mkdir c:\k\appinsights
         DownloadFileOverHttp -Url "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg" -DestinationPath "c:\k\appinsights\microsoft.applicationinsights.2.11.0.zip"
@@ -41261,13 +41301,18 @@ try
             $global:AppInsightsClient.Context.Properties[$key] = $imdsProperties[$key]
         }
 
-        $global:globalTimer = [System.Diagnostics.Stopwatch]::StartNew()
+        $configAppInsightsClientTimer.Stop()
+        $global:AppInsightsClient.TrackMetric("Config-AppInsightsClient", $configAppInsightsClientTimer.Elapsed.TotalSeconds)
 
         # Install OpenSSH if SSH enabled
         $sshEnabled = [System.Convert]::ToBoolean("{{ WindowsSSHEnabled }}")
 
         if ( $sshEnabled ) {
+            Write-Log "Install OpenSSH"
+            $installOpenSSHTimer = [System.Diagnostics.Stopwatch]::StartNew()
             Install-OpenSSH -SSHKeys $SSHKeys
+            $installOpenSSHTimer.Stop()
+            $global:AppInsightsClient.TrackMetric("Install-OpenSSH", $installOpenSSHTimer.Elapsed.TotalSeconds)
         }
 
         Write-Log "Apply telemetry data setting"
@@ -41435,6 +41480,8 @@ try
 
         Adjust-DynamicPortRange
         Register-LogsCleanupScriptTask
+        Register-NodeResetScriptTask
+        Update-DefenderPreferences
 
         if (Test-Path $CacheDir)
         {
@@ -42720,7 +42767,7 @@ Install-OpenSSH {
     $sshdService = Get-Service | ? Name -like 'sshd'
     if ($sshdService.Count -eq 0)
     {
-        Write-Host "Installing OpenSSH"
+        Write-Log "Installing OpenSSH"
         $isAvailable = Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
 
         if (!$isAvailable) {
@@ -42731,29 +42778,29 @@ Install-OpenSSH {
     }
     else
     {
-        Write-Host "OpenSSH Server service detected - skipping online install..."
+        Write-Log "OpenSSH Server service detected - skipping online install..."
     }
 
     Start-Service sshd
 
     if (!(Test-Path "$adminpath")) {
-        Write-Host "Created new file and text content added"
+        Write-Log "Created new file and text content added"
         New-Item -path $adminpath -name $adminfile -type "file" -value ""
     }
 
-    Write-Host "$adminpath found."
-    Write-Host "Adding keys to: $adminpath\$adminfile ..."
+    Write-Log "$adminpath found."
+    Write-Log "Adding keys to: $adminpath\$adminfile ..."
     $SSHKeys | foreach-object {
         Add-Content $adminpath\$adminfile $_
     }
 
-    Write-Host "Setting required permissions..."
+    Write-Log "Setting required permissions..."
     icacls $adminpath\$adminfile /remove "NT AUTHORITY\Authenticated Users"
     icacls $adminpath\$adminfile /inheritance:r
     icacls $adminpath\$adminfile /grant SYSTEM:` + "`" + `(F` + "`" + `)
     icacls $adminpath\$adminfile /grant BUILTIN\Administrators:` + "`" + `(F` + "`" + `)
 
-    Write-Host "Restarting sshd service..."
+    Write-Log "Restarting sshd service..."
     Restart-Service sshd
     # OPTIONAL but recommended:
     Set-Service -Name sshd -StartupType 'Automatic'
@@ -42764,7 +42811,7 @@ Install-OpenSSH {
     if (!$firewall) {
         throw "OpenSSH is firewall is not configured properly"
     }
-    Write-Host "OpenSSH installed and configured successfully"
+    Write-Log "OpenSSH installed and configured successfully"
 }
 `)
 
@@ -42939,7 +42986,7 @@ New-InfraContainer {
         $DestinationTag = "kubletwin/pause"
     )
     cd $KubeDir
-    $computerInfo = Get-ComputerInfo
+    $windowsVersion = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ReleaseId
 
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
@@ -42948,7 +42995,7 @@ New-InfraContainer {
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
-    if ($pauseImageVersions -icontains $computerInfo.WindowsVersion) {
+    if ($pauseImageVersions -icontains $windowsVersion) {
         $imageList = docker images $defaultPauseImage --format "{{.Repository}}:{{.Tag}}"
         if (-not $imageList) {
             Invoke-Executable -Executable "docker" -ArgList @("pull", "$defaultPauseImage") -Retries 5 -RetryDelaySeconds 30
@@ -43036,6 +43083,9 @@ Get-KubeBinaries {
     del $tempdir -Recurse
 }
 
+# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
+filter RemoveNulls { $_ -replace '\0', '' }
+
 # TODO: replace KubeletStartFile with a Kubelet config, remove NSSM, and use built-in service integration
 function
 New-NSSMService {
@@ -43052,43 +43102,43 @@ New-NSSMService {
     )
 
     # setup kubelet
-    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir
-    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile
-    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000
-    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker
-    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet
-    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_AUTO_START
-    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500
-    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log
-    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install Kubelet C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppParameters $KubeletStartFile | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DisplayName Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRestartDelay 5000 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet DependOnService docker | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Description Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdout C:\k\kubelet.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderr C:\k\kubelet.err.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStdoutCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppStderrCreationDisposition 4 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubelet AppRotateBytes 10485760 | RemoveNulls
 
     # setup kubeproxy
-    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir
-    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile
-    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy
-    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet
-    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy
-    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_AUTO_START
-    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem
-    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS
-    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log
-    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400
-    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760
+    & "$KubeDir\nssm.exe" install Kubeproxy C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppDirectory $KubeDir | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppParameters $KubeProxyStartFile | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy DisplayName Kubeproxy | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy DependOnService Kubelet | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Description Kubeproxy | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Start SERVICE_DEMAND_START | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy ObjectName LocalSystem | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy Type SERVICE_WIN32_OWN_PROCESS | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppThrottle 1500 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStdout C:\k\kubeproxy.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppStderr C:\k\kubeproxy.err.log | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateFiles 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateOnline 1 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateSeconds 86400 | RemoveNulls
+    & "$KubeDir\nssm.exe" set Kubeproxy AppRotateBytes 10485760 | RemoveNulls
 }
 
 # Renamed from Write-KubernetesStartFiles
@@ -43478,6 +43528,115 @@ func k8sWindowslogscleanupPs1() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/windowslogscleanup.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sWindowsnoderesetPs1 = []byte(`<#
+.DESCRIPTION
+    This script is intended to be run each time a windows nodes is restarted and performs
+    cleanup actions to help ensure the node comes up cleanly.
+#>
+
+$global:LogPath = "c:\k\windowsnodereset.log"
+$global:HNSModule = "c:\k\hns.psm1"
+
+# Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
+$global:MasterSubnet = "{{MasterSubnet}}"
+$global:NetworkMode = "{{NetworkMode}}"
+$global:NetworkPlugin = "{{NetworkPlugin}}"
+
+filter Timestamp { "$(Get-Date -Format o): $_" }
+
+function Write-Log ($message) {
+    $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
+}
+
+Write-Log "Entering windowsnodecleanup.ps1"
+
+Import-Module $global:HNSModule
+
+#
+# Stop services
+#
+Write-Log "Stopping kubeproxy service"
+Stop-Service kubeproxy
+
+Write-Log "Stopping kubelet service"
+Stop-Service kubelet
+
+#
+# Perform cleanup
+#
+
+$hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
+if ($hnsNetwork) {
+    Write-Log "Cleaning up containers"
+    docker ps -q | ForEach-Object { docker rm $_ -f }
+
+    Write-Log "Removing old HNS network 'azure'"
+    Remove-HnsNetwork $hnsNetwork
+
+    taskkill /IM azure-vnet.exe /f
+    taskkill /IM azure-vnet-ipam.exe /f
+
+    $filesToRemove = @(
+        "c:\k\azure-vnet.json",
+        "c:\k\azure-vnet.json.lock",
+        "c:\k\azure-vnet-ipam.json",
+        "c:\k\azure-vnet-ipam.json.lock"
+    )
+
+    foreach ($file in $filesToRemove) {
+        if (Test-Path $file) {
+            Write-Log "Deleting stale file at $file"
+            Remove-Item $file
+        }
+    }
+}
+
+Write-Log "Cleaning up persisted HNS policy lists"
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
+Get-HnsPolicyList | Remove-HnsPolicyList
+
+#
+# Create required networks
+#
+
+# If using kubenet create the HSN network here.
+# (The kubelet creates the HSN network when using azure-cni + azure cloud provider)
+if ($global:NetworkPlugin -eq 'kubenet') {
+    Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
+    $podCIDR = Get-PodCIDR
+    $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
+    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
+    Start-sleep 10
+}
+
+#
+# Start Services
+#
+Write-Log "Starting kubelet service"
+Start-Service kubelet
+
+Write-Log "Starting kubeproxy service"
+Start-Service kubeproxy
+
+Write-Log "Exiting windowsnodecleanup.ps1"
+`)
+
+func k8sWindowsnoderesetPs1Bytes() ([]byte, error) {
+	return _k8sWindowsnoderesetPs1, nil
+}
+
+func k8sWindowsnoderesetPs1() (*asset, error) {
+	bytes, err := k8sWindowsnoderesetPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/windowsnodereset.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -47110,6 +47269,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/windowsinstallopensshfunc.ps1":                                       k8sWindowsinstallopensshfuncPs1,
 	"k8s/windowskubeletfunc.ps1":                                              k8sWindowskubeletfuncPs1,
 	"k8s/windowslogscleanup.ps1":                                              k8sWindowslogscleanupPs1,
+	"k8s/windowsnodereset.ps1":                                                k8sWindowsnoderesetPs1,
 	"masteroutputs.t":                                                         masteroutputsT,
 	"masterparams.t":                                                          masterparamsT,
 	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                          swarmInstallContainerhostAndJoinSwarmPs1,
@@ -47437,6 +47597,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"windowsinstallopensshfunc.ps1": {k8sWindowsinstallopensshfuncPs1, map[string]*bintree{}},
 		"windowskubeletfunc.ps1":        {k8sWindowskubeletfuncPs1, map[string]*bintree{}},
 		"windowslogscleanup.ps1":        {k8sWindowslogscleanupPs1, map[string]*bintree{}},
+		"windowsnodereset.ps1":          {k8sWindowsnoderesetPs1, map[string]*bintree{}},
 	}},
 	"masteroutputs.t": {masteroutputsT, map[string]*bintree{}},
 	"masterparams.t":  {masterparamsT, map[string]*bintree{}},
