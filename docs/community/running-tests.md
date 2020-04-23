@@ -33,3 +33,4 @@ The E2E test runner is designed to be flexible across a wide range of cluster co
 | `CLUSTER_DEFINITION` | yes      | The api model to use as cluster configuration input for creating a new cluster. E.g., `CLUSTER_DEFINITION=examples/kubernetes.json`. Not required if `NAME` is provided. |
 | `CLEANUP_ON_EXIT` | no      | Delete cluster after running E2E. E.g., `CLEANUP_ON_EXIT=true`. Default is false. |
 | `CLEANUP_IF_FAIL` | no      | Delete cluster only if E2E failed. E.g., `CLEANUP_IF_FAIL=false`. Default is false. |
+| `STABILITY_ITERATIONS` | no      | How many basic functional cluster tests to run in rapid succession as a part of E2E validation. This is useful for simulation continual usage of basic cluster reconciliation functionality (schedule/delete a pod, resolve a DNS lookup, etc). E.g., `STABILITY_ITERATIONS=100`. Default is 3. |
