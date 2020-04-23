@@ -26,27 +26,27 @@ import (
 // Config holds global test configuration
 type Config struct {
 	SkipTest            bool          `envconfig:"SKIP_TEST" default:"false"`
-	SkipLogsCollection  bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"false"`
+	SkipLogsCollection  bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"true"`
 	Orchestrator        string        `envconfig:"ORCHESTRATOR" default:"kubernetes"`
-	Name                string        `envconfig:"NAME"`                                                                  // Name allows you to set the name of a cluster already created
-	Location            string        `envconfig:"LOCATION"`                                                              // Location where you want to create the cluster
-	Regions             []string      `envconfig:"REGIONS"`                                                               // A whitelist of availableregions
+	Name                string        `envconfig:"NAME" default:""`                                                       // Name allows you to set the name of a cluster already created
+	Location            string        `envconfig:"LOCATION" default:""`                                                   // Location where you want to create the cluster
+	Regions             []string      `envconfig:"REGIONS" default:""`                                                    // A whitelist of availableregions
 	ClusterDefinition   string        `envconfig:"CLUSTER_DEFINITION" required:"true" default:"examples/kubernetes.json"` // ClusterDefinition is the path on disk to the json template these are normally located in examples/
 	CleanUpOnExit       bool          `envconfig:"CLEANUP_ON_EXIT" default:"false"`                                       // if true the tests will clean up rgs when tests finish
-	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
+	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
-	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
+	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS" default:"3"`
 	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
 	ClusterInitJobName  string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
-	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
-	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`
-	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
-	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
-	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
-	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
+	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
+	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
+	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
+	GinkgoFocus         string `envconfig:"GINKGO_FOCUS" default:""`
+	GinkgoSkip          string `envconfig:"GINKGO_SKIP" default:""`
+	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"true"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
@@ -55,23 +55,23 @@ type Config struct {
 
 // CustomCloudConfig holds configurations for custom clould
 type CustomCloudConfig struct {
-	ServiceManagementEndpoint    string `envconfig:"SERVICE_MANAGEMENT_ENDPOINT"`
-	ResourceManagerEndpoint      string `envconfig:"RESOURCE_MANAGER_ENDPOINT"`
-	ActiveDirectoryEndpoint      string `envconfig:"ACTIVE_DIRECTORY_ENDPOINT"`
-	GalleryEndpoint              string `envconfig:"GALLERY_ENDPOINT"`
-	StorageEndpointSuffix        string `envconfig:"STORAGE_ENDPOINT_SUFFIX"`
-	KeyVaultDNSSuffix            string `envconfig:"KEY_VAULT_DNS_SUFFIX"`
-	GraphEndpoint                string `envconfig:"GRAPH_ENDPOINT"`
-	ServiceManagementVMDNSSuffix string `envconfig:"SERVICE_MANAGEMENT_VM_DNS_SUFFIX"`
-	ResourceManagerVMDNSSuffix   string `envconfig:"RESOURCE_MANAGER_VM_DNS_SUFFIX"`
-	IdentitySystem               string `envconfig:"IDENTITY_SYSTEM"`
-	AuthenticationMethod         string `envconfig:"AUTHENTICATION_METHOD"`
-	VaultID                      string `envconfig:"VAULT_ID"`
-	SecretName                   string `envconfig:"SECRET_NAME"`
-	CustomCloudClientID          string `envconfig:"CUSTOM_CLOUD_CLIENT_ID"`
-	CustomCloudSecret            string `envconfig:"CUSTOM_CLOUD_SECRET"`
-	APIProfile                   string `envconfig:"API_PROFILE"`
-	PortalURL                    string `envconfig:"PORTAL_ENDPOINT"`
+	ServiceManagementEndpoint    string `envconfig:"SERVICE_MANAGEMENT_ENDPOINT" default:""`
+	ResourceManagerEndpoint      string `envconfig:"RESOURCE_MANAGER_ENDPOINT" default:""`
+	ActiveDirectoryEndpoint      string `envconfig:"ACTIVE_DIRECTORY_ENDPOINT" default:""`
+	GalleryEndpoint              string `envconfig:"GALLERY_ENDPOINT" default:""`
+	StorageEndpointSuffix        string `envconfig:"STORAGE_ENDPOINT_SUFFIX" default:""`
+	KeyVaultDNSSuffix            string `envconfig:"KEY_VAULT_DNS_SUFFIX" default:""`
+	GraphEndpoint                string `envconfig:"GRAPH_ENDPOINT" default:""`
+	ServiceManagementVMDNSSuffix string `envconfig:"SERVICE_MANAGEMENT_VM_DNS_SUFFIX" default:""`
+	ResourceManagerVMDNSSuffix   string `envconfig:"RESOURCE_MANAGER_VM_DNS_SUFFIX" default:""`
+	IdentitySystem               string `envconfig:"IDENTITY_SYSTEM" default:""`
+	AuthenticationMethod         string `envconfig:"AUTHENTICATION_METHOD" default:""`
+	VaultID                      string `envconfig:"VAULT_ID" default:""`
+	SecretName                   string `envconfig:"SECRET_NAME" default:""`
+	CustomCloudClientID          string `envconfig:"CUSTOM_CLOUD_CLIENT_ID" default:""`
+	CustomCloudSecret            string `envconfig:"CUSTOM_CLOUD_SECRET" default:""`
+	APIProfile                   string `envconfig:"API_PROFILE" default:""`
+	PortalURL                    string `envconfig:"PORTAL_ENDPOINT" default:""`
 	TimeoutCommands              bool
 	CustomCloudName              string `envconfig:"CUSTOM_CLOUD_NAME"`
 }
