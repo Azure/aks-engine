@@ -48,7 +48,7 @@ const (
 	azureCloudControllerManagerImageReference         string = "oss/kubernetes/azure-cloud-controller-manager:v0.5.0"
 	azureCloudNodeManagerImageReference               string = "oss/kubernetes/azure-cloud-node-manager:v0.5.0"
 	dashboardImageReference                           string = "mcr.microsoft.com/oss/kubernetes/dashboard:v2.0.0"
-	dashboardMetricsScraperImageReference             string = "mcr.microsoft.com/oss/kubernetes/dashboard-metrics-scraper:v1.0.4"
+	dashboardMetricsScraperImageReference             string = "mcr.microsoft.com/oss/kubernetes/metrics-scraper:v1.0.4"
 	kubeFlannelImageReference                         string = "quay.io/coreos/flannel:v0.8.0-amd64"
 	flannelInstallCNIImageReference                   string = "quay.io/coreos/flannel:v0.10.0-amd64"
 	KubeRBACProxyImageReference                       string = "gcr.io/kubebuilder/kube-rbac-proxy:v0.4.0"
@@ -737,6 +737,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        k8sComponent[common.CloudControllerManagerComponentName] + ":v" + version,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
+			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
 			common.AddonResizerComponentName:                  k8sComponent[common.AddonResizerComponentName],
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),
@@ -809,6 +810,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			common.CloudControllerManagerComponentName:        k8sComponent[common.CloudControllerManagerComponentName] + ":v" + version,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
 			common.DashboardAddonName:                         dashboardImageReference,
+			common.DashboardMetricsScraperContainerName:       dashboardMetricsScraperImageReference,
 			common.ExecHealthZComponentName:                   getDefaultImage(common.ExecHealthZComponentName, kubernetesImageBaseType),
 			common.AddonResizerComponentName:                  k8sComponent[common.AddonResizerComponentName],
 			common.HeapsterAddonName:                          getDefaultImage(common.HeapsterAddonName, kubernetesImageBaseType),

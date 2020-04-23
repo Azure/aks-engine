@@ -110,12 +110,20 @@ echo "  - img" >> ${VHD_LOGS_FILEPATH}
 
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
-DASHBOARD_VERSIONS="1.10.1"
+DASHBOARD_VERSIONS="
+2.0.0
+"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kubernetes-dashboard-amd64:v${DASHBOARD_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetes-dashboard:v${DASHBOARD_VERSION}"
+done
+
+DASHBOARD_METRICS_SCRAPER_VERSIONS="
+1.0.4
+"
+for DASHBOARD_METRICS_SCRAPER_VERSION in ${DASHBOARD_METRICS_SCRAPER_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard-metrics-scraper:v${DASHBOARD_METRICS_SCRAPER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
