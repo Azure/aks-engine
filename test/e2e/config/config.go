@@ -116,8 +116,7 @@ func (c *Config) GetKubeConfig() string {
 func (c *Config) IsCustomCloudProfile() bool {
 	// c.ClusterDefinition is only set for new deployments
 	// Not for upgrade/scale operations
-	_, ok := os.LookupEnv("CUSTOM_CLOUD_NAME")
-	return ok
+	return os.Getenv("CUSTOM_CLOUD_NAME") != ""
 }
 
 // UpdateCustomCloudClusterDefinition updates the cluster definition from environment variables
