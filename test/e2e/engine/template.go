@@ -28,15 +28,15 @@ import (
 
 // Config represents the configuration values of a template stored as env vars
 type Config struct {
-	ClientID                       string `envconfig:"CLIENT_ID"`
-	ClientSecret                   string `envconfig:"CLIENT_SECRET"`
-	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID"`
-	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY"`
-	MasterDNSPrefix                string `envconfig:"DNS_PREFIX"`
-	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX"`
-	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID"`
-	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY"`
-	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD"`
+	ClientID                       string `envconfig:"CLIENT_ID" required:"true"`
+	ClientSecret                   string `envconfig:"CLIENT_SECRET" required:"true"`
+	ClientObjectID                 string `envconfig:"CLIENT_OBJECTID" default:""`
+	LogAnalyticsWorkspaceKey       string `envconfig:"LOG_ANALYTICS_WORKSPACE_KEY" default:""`
+	MasterDNSPrefix                string `envconfig:"DNS_PREFIX" default:""`
+	AgentDNSPrefix                 string `envconfig:"DNS_PREFIX" default:""`
+	MSIUserAssignedID              string `envconfig:"MSI_USER_ASSIGNED_ID" default:""`
+	PublicSSHKey                   string `envconfig:"PUBLIC_SSH_KEY" default:""`
+	WindowsAdminPasssword          string `envconfig:"WINDOWS_ADMIN_PASSWORD" default:""`
 	WindowsNodeImageGallery        string `envconfig:"WINDOWS_NODE_IMAGE_GALLERY" default:""`
 	WindowsNodeImageName           string `envconfig:"WINDOWS_NODE_IMAGE_NAME" default:""`
 	WindowsNodeImageResourceGroup  string `envconfig:"WINDOWS_NODE_IMAGE_RESOURCE_GROUP" default:""`
@@ -50,20 +50,20 @@ type Config struct {
 	LinuxNodeImageVersion          string `envconfig:"LINUX_NODE_IMAGE_VERSION" default:""`
 	OSDiskSizeGB                   string `envconfig:"OS_DISK_SIZE_GB" default:""`
 	ContainerRuntime               string `envconfig:"CONTAINER_RUNTIME" default:""`
-	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE"`
-	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION"`
+	OrchestratorRelease            string `envconfig:"ORCHESTRATOR_RELEASE" default:""`
+	OrchestratorVersion            string `envconfig:"ORCHESTRATOR_VERSION" default:""`
 	OutputDirectory                string `envconfig:"OUTPUT_DIR" default:"_output"`
 	CreateVNET                     bool   `envconfig:"CREATE_VNET" default:"false"`
 	EnableKMSEncryption            bool   `envconfig:"ENABLE_KMS_ENCRYPTION" default:"false"`
 	Distro                         string `envconfig:"DISTRO" default:""`
-	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID"`
-	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP"`
-	Location                       string `envconfig:"LOCATION"`
-	TenantID                       string `envconfig:"TENANT_ID"`
-	ImageName                      string `envconfig:"IMAGE_NAME"`
-	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP"`
+	SubscriptionID                 string `envconfig:"SUBSCRIPTION_ID" required:"true"`
+	InfraResourceGroup             string `envconfig:"INFRA_RESOURCE_GROUP" default:""`
+	Location                       string `envconfig:"LOCATION" default:""`
+	TenantID                       string `envconfig:"TENANT_ID" required:"true"`
+	ImageName                      string `envconfig:"IMAGE_NAME" default:""`
+	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
-	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE"`
+	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
