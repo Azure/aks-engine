@@ -44276,7 +44276,7 @@ function Write-Log ($message) {
     $message | Timestamp | Tee-Object -FilePath $global:LogPath -Append
 }
 
-Write-Log "Entering windowsnodecleanup.ps1"
+Write-Log "Entering windowsnodereset.ps1"
 
 Import-Module $global:HNSModule
 
@@ -44358,7 +44358,7 @@ Start-Service kubelet
 Write-Log "Starting kubeproxy service"
 Start-Service kubeproxy
 
-Write-Log "Exiting windowsnodecleanup.ps1"
+Write-Log "Exiting windowsnodereset.ps1"
 `)
 
 func k8sWindowsnoderesetPs1Bytes() ([]byte, error) {
