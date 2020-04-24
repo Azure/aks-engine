@@ -187,6 +187,13 @@ More usefully, let's add some custom configuration to the above addons:
                   "memoryRequests": "512Mi",
                   "cpuLimits": "50m",
                   "memoryLimits": "512Mi"
+                },
+                {
+                  "name": "kubernetes-dashboard-metrics-scraper",
+                  "cpuRequests": "50m",
+                  "memoryRequests": "512Mi",
+                  "cpuLimits": "50m",
+                  "memoryLimits": "512Mi"
                 }
               ]
         },
