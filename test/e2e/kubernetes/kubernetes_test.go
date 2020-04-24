@@ -1026,7 +1026,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
 					By("Ensuring that the kubernetes-dashboard service is Running")
-					s, err := service.Get("kubernetes-dashboard", "kube-system")
+					s, err := service.Get("kubernetes-dashboard", "kubernetes-dashboard")
 					Expect(err).NotTo(HaveOccurred())
 					By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
 					dashboardPort := 443
