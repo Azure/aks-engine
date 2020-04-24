@@ -314,6 +314,9 @@ write_files:
 {{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
+{{if IsAADPodIdentityAddonEnabled}}
+    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node.kubernetes.io/aad-pod-identity-not-ready=true:NoSchedule
+{{end}}
     #EOF
 
 - path: /opt/azure/containers/kubelet.sh

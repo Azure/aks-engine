@@ -153,6 +153,11 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 	}
 
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) {
+		cloudInitFiles["untaintNodesScript"] = getBase64EncodedGzippedCustomScript(untaintNodesScript, cs)
+		cloudInitFiles["untaintNodesSystemdService"] = getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs)
+	}
+
 	if !cs.Properties.IsVHDDistroForAllNodes() {
 		cloudInitFiles["provisionCIS"] = getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs)
 		cloudInitFiles["kmsSystemdService"] = getBase64EncodedGzippedCustomScript(kmsSystemdService, cs)
