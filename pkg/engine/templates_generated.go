@@ -8199,6 +8199,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: node.kubernetes.io/aad-pod-identity-not-ready
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -12756,6 +12761,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: node.kubernetes.io/aad-pod-identity-not-ready
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -17334,7 +17344,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - key: node.kubernetes.io/aad-pod-identity-not-ready
+      - key: {{GetAADPodIdentityTaint}}
         operator: Equal
         value: "true"
         effect: NoSchedule
@@ -21981,6 +21991,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+      - key: node.kubernetes.io/aad-pod-identity-not-ready
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -28695,6 +28710,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: node.kubernetes.io/aad-pod-identity-not-ready
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -36985,10 +37005,8 @@ ensureLabelNodes() {
 }
 {{- if IsAADPodIdentityAddonEnabled}}
 ensureTaints() {
-  UNTAINT_NODES_SCRIPT_FILE=/opt/azure/containers/untaint-nodes.sh
-  wait_for_file 1200 1 $UNTAINT_NODES_SCRIPT_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  UNTAINT_NODES_SYSTEMD_FILE=/etc/systemd/system/untaint-nodes.service
-  wait_for_file 1200 1 $UNTAINT_NODES_SYSTEMD_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /opt/azure/containers/untaint-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/untaint-nodes.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart untaint-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 {{end}}
@@ -39602,7 +39620,7 @@ var _k8sCloudInitArtifactsUntaintNodesSh = []byte(`#!/usr/bin/env bash
 
 KUBECONFIG="$(find /home/*/.kube/config)"
 KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
-AAD_POD_IDENTITY_TAINT=node.kubernetes.io/aad-pod-identity-not-ready=true:NoSchedule
+AAD_POD_IDENTITY_TAINT={{GetAADPodIdentityTaint}}=true:NoSchedule
 
 if ! ${KUBECTL} get daemonsets -n kube-system -o json | jq -e -r '.items[] | select(.metadata.name == "nmi")' > /dev/null; then
   for node in $(${KUBECTL} get nodes -o json | jq -e -r '.items[] | .metadata.name'); do
@@ -39615,6 +39633,7 @@ for pod in $(${KUBECTL} get pods -n kube-system -o json | jq -r '.items[] | sele
     ${KUBECTL} taint nodes $(${KUBECTL} get pod ${pod} -n kube-system -o json | jq -r '.spec.nodeName') $AAD_POD_IDENTITY_TAINT- 2>&1 | grep -v 'not found';
   fi;
 done
+exit 0
 #EOF
 `)
 
@@ -40506,7 +40525,7 @@ write_files:
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
 {{if IsAADPodIdentityAddonEnabled}}
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node.kubernetes.io/aad-pod-identity-not-ready=true:NoSchedule
+    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints={{GetAADPodIdentityTaint}}=true:NoSchedule
 {{end}}
     #EOF
 

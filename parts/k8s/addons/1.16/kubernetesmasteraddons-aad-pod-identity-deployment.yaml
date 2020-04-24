@@ -137,6 +137,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: node.kubernetes.io/aad-pod-identity-not-ready
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount

@@ -375,3 +375,4 @@ const (
 )
 
 const MasterNodeTaint string = "node-role.kubernetes.io/master=true:NoSchedule"
+const AADPodIdentityTaint string = "node.kubernetes.io/aad-pod-identity-not-ready"
