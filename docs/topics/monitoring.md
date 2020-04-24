@@ -6,14 +6,14 @@ There are five main options to monitor your cluster:
 
 1. [Kubectl](#kubectl)
 1. [Azure Monitor for containers](#azure-monitor-for-containers)
-1. [Kubernetes dashboard](#kubernetes-dashboard)
+1. [Kubernetes Dashboard](#kubernetes-dashboard)
 1. [Monitoring extension](#monitoring-extension)
 1. [Grafana and Influx DB](#grafana-and-influx-db)
 1. [Heapster REST API](#heapster-rest-api)
 
 ## Intro to Heapster
 
-Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in the Kubernetes dashboard as well as in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
+Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
 1. Ensure you have set up a [working kubernetes cluster](../tutorials/quickstart.md) and are able to use kubectl
 2. Run `kubectl get pods --namespace=kube-system`
 
@@ -75,11 +75,11 @@ Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-d
 
 If you have any questions or feedback regarding the monitoring of your AKS Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
 
-## Kubernetes dashboard
+## Kubernetes Dashboard
 
-The Kubernetes dashboard is an easy way to visualize your cluster metrics. The Kubernetes dashboard displays all the metrics that are collected by the Heapster. The dashboard comes preinstalled on your cluster. To access the dashboard:
+The Kubernetes Dashboard is an easy way to visualize your cluster metrics. The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
 
-1. On Linux, run `kubectl proxy`. This will allow you to access the dashboard at `http://localhost:8001/ui`
+1. On Linux, run `kubectl proxy`. This will allow you to access the Kubernetes Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
 
 Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.

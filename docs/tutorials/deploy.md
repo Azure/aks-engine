@@ -61,9 +61,8 @@ aks-engine generates kubeconfig files for each possible region. Access the new c
 ```sh
 $ KUBECONFIG=_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json kubectl cluster-info
 Kubernetes master is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com
-Heapster is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/heapster
-KubeDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kube-dns
-kubernetes-dashboard is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard
+CoreDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
