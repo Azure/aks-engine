@@ -912,7 +912,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					addonPods = []string{"omsagent"}
 				case "azure-npm-daemonset":
 					addonPods = []string{"azure-npm"}
+				case "kubernetes-dashboard":
+					addonPods = []string{"kubernetes-dashboard", "dashboard-metrics-scraper"}
+					addonNamespace = "kubernetes-dashboard"
 				}
+
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
 						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
@@ -924,6 +928,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
 							pod := pods[0]
+							if len(pod.Spec.Containers) == i {
+								break
+							}
 							container := pod.Spec.Containers[i]
 							err := container.ValidateResources(c)
 							Expect(err).NotTo(HaveOccurred())
