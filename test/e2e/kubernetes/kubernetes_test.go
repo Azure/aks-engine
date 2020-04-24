@@ -916,7 +916,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					addonPods = []string{"kubernetes-dashboard", "dashboard-metrics-scraper"}
 					addonNamespace = "kubernetes-dashboard"
 				}
-
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
 						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
