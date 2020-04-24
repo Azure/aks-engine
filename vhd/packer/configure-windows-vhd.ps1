@@ -10,6 +10,10 @@ param()
 
 $ErrorActionPreference = "Stop"
 
+
+$global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/0.0.87-public.zip"
+
+
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
 function Write-Log($Message)
@@ -111,6 +115,37 @@ function Get-FilesToCacheOnVHD
     }
 }
 
+function Install-ContainerD {
+    Write-Log "Getting containerD binaries from $global:containerdPackageUrl"
+
+    $installDir = "c:\program files\containerd"
+    $zipPath = [IO.Path]::Combine($installDir, "containerd.zip")
+    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
+
+    Write-Log "Installing containerd to $installDir"
+    New-Item -ItemType Directory $installDir -Force | Out-Null
+    Expand-Archive -Path $zipPath -DestinationPath $installDir
+    Remove-Item -Path $zipPath | Out-null
+
+    [Environment]::SetEnvironmentVariable(
+        "Path", 
+        [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine + $installDir),
+        [EnvironmentVariableTarget]::Machine)
+
+    Write-Log "Registering containerd service"
+    & containerd.exe --register-service
+    $svc | Get-Service -Name "containerd" -ErrorAction SilentlyContinue
+    if ($null -eq $svc) {
+        throw "containerd.exe did not get installed as a service correctly."
+    }
+
+    Write-Log "Starting containerd service"
+    $svc | Start-Service
+    if ($svc.Status -ne "Running") {
+        throw "containerd service is not running"
+    }
+}
+
 function Install-Docker
 {
     $defaultDockerVersion = "19.03.5"
@@ -122,6 +157,7 @@ function Install-Docker
     $package | Install-Package -Force | Out-Null
     Start-Service docker
 }
+
 
 function Install-OpenSSH
 {
