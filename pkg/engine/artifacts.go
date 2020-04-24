@@ -233,7 +233,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 		common.ScheduledMaintenanceAddonName: {
 			sourceFile:      scheduledMaintenanceAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
-			destinationFile: scheduledMaintenanceAddonSourceFilename,
+			destinationFile: scheduledMaintenanceAddonDestinationFilename,
 		},
 		common.SecretsStoreCSIDriverAddonName: {
 			sourceFile:      secretsStoreCSIDriverAddonSourceFileName,
