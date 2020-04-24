@@ -744,8 +744,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsAADPodIdentityAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName)
 		},
-		"GetAADPodIdentityTaint": func() string {
-			return common.AADPodIdentityTaint
+		"GetAADPodIdentityTaintKey": func() string {
+			return common.AADPodIdentityTaintKey
 		},
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase

@@ -140,7 +140,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - key: {{GetAADPodIdentityTaint}}
+      - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
         value: "true"
         effect: NoSchedule
