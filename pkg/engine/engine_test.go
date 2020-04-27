@@ -3061,6 +3061,11 @@ func TestGetAddonFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
 				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["GetAADPodIdentityTaintKey"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != common.AADPodIdentityTaintKey {
+				t.Errorf("expected funcMap invocation of GetAADPodIdentityTaintKey to return %s, instead got %s", common.AADPodIdentityTaintKey, ret[0].Interface())
+			}
 		})
 	}
 }

@@ -805,6 +805,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"IsKubernetesVersionGe": func(version string) bool {
 			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
 		},
+		"GetAADPodIdentityTaintKey": func() string {
+			return common.AADPodIdentityTaintKey
+		},
 	}
 }
 
