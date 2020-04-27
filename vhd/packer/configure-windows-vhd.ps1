@@ -48,9 +48,15 @@ function Get-ContainerImages
         "mcr.microsoft.com/windows/nanoserver:1809",
         "mcr.microsoft.com/oss/kubernetes/pause:1.3.0")
 
+    <#
     foreach ($image in $imagesToPull) {
         docker pull $image
     }
+    #>
+    foreach ($image in $imagesToPull) {
+        & ctr.exe -n k8s.io images pull $image
+    }
+
 }
 
 function Get-FilesToCacheOnVHD
@@ -120,21 +126,20 @@ function Install-ContainerD {
 
     $installDir = "c:\program files\containerd"
     $zipPath = [IO.Path]::Combine($installDir, "containerd.zip")
-    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
 
     Write-Log "Installing containerd to $installDir"
     New-Item -ItemType Directory $installDir -Force | Out-Null
+    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
     Expand-Archive -Path $zipPath -DestinationPath $installDir
     Remove-Item -Path $zipPath | Out-null
 
-    [Environment]::SetEnvironmentVariable(
-        "Path", 
-        [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine + $installDir),
-        [EnvironmentVariableTarget]::Machine)
+    $newPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine) + ";$installDir"
+    [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::Machine)
+    $env:Path += ";$installDir"
 
-    Write-Log "Registering containerd service"
+    Write-Log "Registering containerd as a service"
     & containerd.exe --register-service
-    $svc | Get-Service -Name "containerd" -ErrorAction SilentlyContinue
+    $svc = Get-Service -Name "containerd" -ErrorAction SilentlyContinue
     if ($null -eq $svc) {
         throw "containerd.exe did not get installed as a service correctly."
     }
@@ -287,6 +292,7 @@ switch ($env:ProvisioningPhase)
         Write-Log "Performing actions for provisioning phase 2"
         Set-WinRmServiceAutoStart
         Install-Docker
+        Install-ContainerD
         Get-ContainerImages
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
