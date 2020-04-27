@@ -225,11 +225,14 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\kubeclusterconfig.json"
+
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
-        Name = $global:ContainerRuntime;
+        Name   = $global:ContainerRuntime;
+        Images = @{
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+        }
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
@@ -267,7 +270,7 @@ function Write-KubeClusterConfig {
         Destination = "c:\k";
     }
     
-    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigFile
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
 function Assert-FileExists {
