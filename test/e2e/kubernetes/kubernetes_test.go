@@ -1028,36 +1028,41 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					By("Ensuring that the kubernetes-dashboard service is Running")
 					s, err := service.Get("kubernetes-dashboard", "kubernetes-dashboard")
 					Expect(err).NotTo(HaveOccurred())
-					By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
-					dashboardPort := 443
-					port := s.GetNodePort(dashboardPort)
-					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					Expect(s).NotTo(BeNil())
+					By("Ensuring that the dashboard responds to requests")
+					// start `kubectl proxy` in the background on a random port
+					var proxyStdout io.ReadCloser
+					var proxyStdoutReader *bufio.Reader
+					proxyCmd := exec.Command("k", "proxy", "-p", "0")
+					proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+					proxyStdout, err = proxyCmd.StdoutPipe()
 					Expect(err).NotTo(HaveOccurred())
-					var success bool
-					for _, n := range nodes {
-						if success {
-							break
+					util.PrintCommand(proxyCmd)
+					err = proxyCmd.Start()
+					Expect(err).NotTo(HaveOccurred())
+					defer func() {
+						syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
+						if _, waiterr := proxyCmd.Process.Wait(); waiterr != nil {
+							log.Printf("kubectl proxy - wait returned err: %v\n", waiterr)
 						}
-						if n.IsLinux() {
-							// Allow 3 retries for each node
-							for i := 0; i < 3; i++ {
-								address := n.Status.GetAddressByType("InternalIP")
-								if address == nil {
-									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", n.Metadata.Name)
-								}
-								Expect(address).NotTo(BeNil())
-								dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
-								curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-								err := sshConn.Execute(curlCMD, false)
-								if err == nil {
-									success = true
-									break
-								}
-								time.Sleep(1 * time.Second)
-							}
-						}
-					}
-					Expect(success).To(BeTrue())
+					}()
+					proxyStdoutReader = bufio.NewReader(proxyStdout)
+					proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+					Expect(outErr).NotTo(HaveOccurred())
+					log.Printf("kubectl proxy stdout: %s\n", proxyOutStr)
+					serverStartPrefix := "Starting to serve on "
+					Expect(proxyOutStr).To(HavePrefix(serverStartPrefix))
+					dashboardHost := strings.TrimSpace(strings.TrimPrefix(proxyOutStr, serverStartPrefix))
+					// get an HTTP response from the dashboard login URL
+					url := fmt.Sprintf("http://%s/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login", dashboardHost)
+					cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
+					util.PrintCommand(cmd)
+					var out []byte
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(out).To(ContainSubstring("<!doctype html>"))
+					Expect(out).To(ContainSubstring("<title>Kubernetes Dashboard</title>"))
 				} else {
 					Skip("kubernetes-dashboard disabled for this cluster, will not test")
 				}
