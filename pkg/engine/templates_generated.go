@@ -8200,7 +8200,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - key: node.kubernetes.io/aad-pod-identity-not-ready
+      - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
         value: "true"
         effect: NoSchedule
@@ -12762,7 +12762,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - key: node.kubernetes.io/aad-pod-identity-not-ready
+      - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
         value: "true"
         effect: NoSchedule
@@ -21992,7 +21992,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
       tolerations:
-      - key: node.kubernetes.io/aad-pod-identity-not-ready
+      - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
         value: "true"
         effect: NoSchedule
@@ -28711,7 +28711,7 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - key: node.kubernetes.io/aad-pod-identity-not-ready
+      - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
         value: "true"
         effect: NoSchedule
