@@ -39620,7 +39620,7 @@ var _k8sCloudInitArtifactsUntaintNodesSh = []byte(`#!/usr/bin/env bash
 
 KUBECONFIG="$(find /home/*/.kube/config)"
 KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
-AAD_POD_ID_TAINT_KEY={{GetAADPodIdentityTaintKey}}=true:NoSchedule
+AAD_POD_ID_TAINT_KEY={{GetAADPodIdentityTaintKey}}
 
 if ! ${KUBECTL} get daemonsets -n kube-system -o json | jq -e -r '.items[] | select(.metadata.name == "nmi")' > /dev/null; then
   for node in $(${KUBECTL} get nodes -o json | jq -e -r '.items[] | .metadata.name'); do
