@@ -140,6 +140,8 @@ const (
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
+	// DashboardMetricsScraperContainerName is the name of the metrics-scraper container in the kubernetes-dashboard addon
+	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
 	ReschedulerAddonName = "rescheduler"
 	// ExecHealthZComponentName is the name of the exechealthz component
