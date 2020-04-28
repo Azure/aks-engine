@@ -77,9 +77,29 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
-	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = "mycustomtaint"
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = "node-role.kubernetes.io/customtaint=true:NoSchedule"
 	cs.setKubeletConfig(false)
-	expected["--register-with-taints"] = fmt.Sprintf("mycustomtaint,%s", common.MasterNodeTaint)
+	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,%s", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", common.MasterNodeTaint)
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("%s,node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule", common.MasterNodeTaint)
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("%s,node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule", common.MasterNodeTaint)
 	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
 		if expected[key] != val {
