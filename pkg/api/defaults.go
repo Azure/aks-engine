@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/blang/semver"
@@ -691,6 +692,10 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.PlatformUpdateDomainCount == nil {
 		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 	}
+
+	if p.MasterProfile.OSDiskCachingType == "" {
+		p.MasterProfile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
@@ -760,6 +765,17 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 
 		if !p.OrchestratorProfile.IsKubernetes() {
 			profile.Distro = Ubuntu
+		}
+
+		if profile.OSDiskCachingType == "" {
+			if profile.IsEphemeral() {
+				profile.OSDiskCachingType = string(compute.CachingTypesReadOnly)
+			} else {
+				profile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+			}
+		}
+		if profile.DataDiskCachingType == "" {
+			profile.DataDiskCachingType = string(compute.CachingTypesReadOnly)
 		}
 	}
 }

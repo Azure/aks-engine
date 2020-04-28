@@ -265,7 +265,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	}
 
 	osDisk := &compute.VirtualMachineScaleSetOSDisk{
-		Caching:      compute.CachingTypesReadWrite,
+		Caching:      compute.CachingTypes(masterProfile.OSDiskCachingType),
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 	}
 
@@ -681,7 +681,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 
 	osDisk := compute.VirtualMachineScaleSetOSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		Caching:      compute.CachingTypesReadWrite,
+		Caching:      compute.CachingTypes(profile.OSDiskCachingType),
 	}
 
 	if profile.OSDiskSizeGB > 0 {
@@ -689,7 +689,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	if profile.IsEphemeral() {
-		osDisk.Caching = compute.CachingTypesReadOnly
 		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
 			Option: compute.Local,
 		}
@@ -828,7 +827,7 @@ func getVMSSDataDisks(profile *api.AgentPoolProfile) *[]compute.VirtualMachineSc
 			DiskSizeGB:   to.Int32Ptr(int32(diskSize)),
 			Lun:          to.Int32Ptr(int32(i)),
 			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			Caching:      compute.CachingTypesReadOnly,
+			Caching:      compute.CachingTypes(profile.DataDiskCachingType),
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))

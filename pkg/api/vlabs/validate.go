@@ -15,7 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-07-01/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
@@ -605,6 +605,11 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		}
 		if !validDataDiskCachingType {
 			return errors.Errorf("Invalid dataDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", agentPoolProfile.DataDiskCachingType, agentPoolProfile.Name, cachingTypesValidValues)
+		}
+		if agentPoolProfile.IsEphemeral() {
+			if agentPoolProfile.OSDiskCachingType != "" && agentPoolProfile.OSDiskCachingType != string(compute.CachingTypesReadOnly) {
+				return errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\" using Ephemeral Disk, you must use: %s", agentPoolProfile.OSDiskCachingType, agentPoolProfile.Name, string(compute.CachingTypesReadOnly))
+			}
 		}
 	}
 
