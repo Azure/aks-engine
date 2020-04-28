@@ -208,7 +208,6 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 					cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] += fmt.Sprintf(",%s", common.MasterNodeTaint)
 				}
 			}
-			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-node"] = "true"
 		}
 	}
 

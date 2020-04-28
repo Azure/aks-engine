@@ -69,7 +69,6 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
-	expected["--register-node"] = "true"
 	expected["--register-with-taints"] = common.MasterNodeTaint
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
@@ -88,7 +87,6 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
-	delete(expected, "--register-node")
 	delete(expected, "--register-with-taints")
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
@@ -217,7 +215,6 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
 		"--register-with-taints":              common.MasterNodeTaint,
-		"--register-node":                     "true",
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
@@ -884,9 +881,6 @@ func TestStaticWindowsConfig(t *testing.T) {
 	}
 	if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; ok {
 		t.Fatalf("got unexpected --register-with-taints kubelet config with no Linux node pools")
-	}
-	if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-node"]; ok {
-		t.Fatalf("got unexpected --register-node kubelet config with no Linux node pools")
 	}
 }
 
