@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers/azurestack/testserver"
-	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 )
 
@@ -17,7 +17,7 @@ const (
 	subscriptionID                             = "cc6b141e-6afc-4786-9bf6-e3b9a5601460"
 	tenantID                                   = "19590a3f-b1af-4e6b-8f63-f917cbf40711"
 	resourceGroup                              = "TestResourceGroup"
-	computeAPIVersion                          = "2017-03-30"
+	computeAPIVersion                          = "2017-12-01"
 	networkAPIVersion                          = "2017-10-01"
 	deploymentAPIVersion                       = "2018-05-01"
 	resourceGroupAPIVersion                    = "2018-05-01"
@@ -482,7 +482,7 @@ func (mc *HTTPMockClient) RegisterDeleteNetworkInterface() {
 func (mc *HTTPMockClient) RegisterDeleteManagedDisk() {
 	pattern := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/disks/%s", mc.SubscriptionID, mc.ResourceGroup, mc.VirutalDiskName)
 	mc.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Query().Get("api-version") != mc.ComputeAPIVersion {
+		if r.URL.Query().Get("api-version") != "2017-03-30" {
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.Header().Add("Azure-Asyncoperation", fmt.Sprintf("http://localhost:%d/subscriptions/%s/providers/Microsoft.Compute/locations/%s/DiskOperations/%s?api-version=%s", mc.server.Port, mc.SubscriptionID, mc.Location, mc.OperationID, mc.ComputeAPIVersion))

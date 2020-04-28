@@ -2,7 +2,7 @@
 ## explicit
 github.com/Azure/azure-sdk-for-go/services/apimanagement/mgmt/2017-03-01/apimanagement
 github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization
-github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute
+github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute
 github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute
 github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb
 github.com/Azure/azure-sdk-for-go/services/graphrbac/1.6/graphrbac

@@ -652,7 +652,7 @@ func TestK8sVars(t *testing.T) {
 		"agentpool1osImageVersion":           "[parameters('agentpool1osImageVersion')]",
 		"apiVersionAuthorizationSystem":      "2018-01-01-preview",
 		"apiVersionAuthorizationUser":        "2018-09-01-preview",
-		"apiVersionCompute":                  "2017-03-30",
+		"apiVersionCompute":                  "2017-12-01",
 		"apiVersionDeployments":              "2018-06-01",
 		"apiVersionKeyVault":                 "2016-10-01",
 		"applicationInsightsKey":             "c92d8284-b550-4b06-b7ba-e80fd7178faa", // should be DefaultApplicationInsightsKey,

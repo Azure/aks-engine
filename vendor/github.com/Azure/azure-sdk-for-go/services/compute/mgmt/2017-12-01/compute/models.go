@@ -29,7 +29,7 @@ import (
 )
 
 // The package's fully qualified name.
-const fqdn = "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-03-30/compute"
+const fqdn = "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2017-12-01/compute"
 
 // AccessLevel enumerates the values for access level.
 type AccessLevel string
@@ -125,6 +125,25 @@ const (
 // PossibleInstanceViewTypesValues returns an array of possible values for the InstanceViewTypes const type.
 func PossibleInstanceViewTypesValues() []InstanceViewTypes {
 	return []InstanceViewTypes{InstanceView}
+}
+
+// IntervalInMins enumerates the values for interval in mins.
+type IntervalInMins string
+
+const (
+	// FiveMins ...
+	FiveMins IntervalInMins = "FiveMins"
+	// SixtyMins ...
+	SixtyMins IntervalInMins = "SixtyMins"
+	// ThirtyMins ...
+	ThirtyMins IntervalInMins = "ThirtyMins"
+	// ThreeMins ...
+	ThreeMins IntervalInMins = "ThreeMins"
+)
+
+// PossibleIntervalInMinsValues returns an array of possible values for the IntervalInMins const type.
+func PossibleIntervalInMinsValues() []IntervalInMins {
+	return []IntervalInMins{FiveMins, SixtyMins, ThirtyMins, ThreeMins}
 }
 
 // IPVersion enumerates the values for ip version.
@@ -223,13 +242,19 @@ func PossibleProtocolTypesValues() []ProtocolTypes {
 type ResourceIdentityType string
 
 const (
-	// SystemAssigned ...
-	SystemAssigned ResourceIdentityType = "SystemAssigned"
+	// ResourceIdentityTypeNone ...
+	ResourceIdentityTypeNone ResourceIdentityType = "None"
+	// ResourceIdentityTypeSystemAssigned ...
+	ResourceIdentityTypeSystemAssigned ResourceIdentityType = "SystemAssigned"
+	// ResourceIdentityTypeSystemAssignedUserAssigned ...
+	ResourceIdentityTypeSystemAssignedUserAssigned ResourceIdentityType = "SystemAssigned, UserAssigned"
+	// ResourceIdentityTypeUserAssigned ...
+	ResourceIdentityTypeUserAssigned ResourceIdentityType = "UserAssigned"
 )
 
 // PossibleResourceIdentityTypeValues returns an array of possible values for the ResourceIdentityType const type.
 func PossibleResourceIdentityTypeValues() []ResourceIdentityType {
-	return []ResourceIdentityType{SystemAssigned}
+	return []ResourceIdentityType{ResourceIdentityTypeNone, ResourceIdentityTypeSystemAssigned, ResourceIdentityTypeSystemAssignedUserAssigned, ResourceIdentityTypeUserAssigned}
 }
 
 // ResourceSkuCapacityScaleType enumerates the values for resource sku capacity scale type.
@@ -270,11 +295,13 @@ type ResourceSkuRestrictionsType string
 const (
 	// Location ...
 	Location ResourceSkuRestrictionsType = "Location"
+	// Zone ...
+	Zone ResourceSkuRestrictionsType = "Zone"
 )
 
 // PossibleResourceSkuRestrictionsTypeValues returns an array of possible values for the ResourceSkuRestrictionsType const type.
 func PossibleResourceSkuRestrictionsTypeValues() []ResourceSkuRestrictionsType {
-	return []ResourceSkuRestrictionsType{Location}
+	return []ResourceSkuRestrictionsType{Location, Zone}
 }
 
 // RollingUpgradeActionType enumerates the values for rolling upgrade action type.
@@ -375,6 +402,72 @@ func PossibleUpgradeModeValues() []UpgradeMode {
 	return []UpgradeMode{Automatic, Manual, Rolling}
 }
 
+// UpgradeOperationInvoker enumerates the values for upgrade operation invoker.
+type UpgradeOperationInvoker string
+
+const (
+	// Platform ...
+	Platform UpgradeOperationInvoker = "Platform"
+	// Unknown ...
+	Unknown UpgradeOperationInvoker = "Unknown"
+	// User ...
+	User UpgradeOperationInvoker = "User"
+)
+
+// PossibleUpgradeOperationInvokerValues returns an array of possible values for the UpgradeOperationInvoker const type.
+func PossibleUpgradeOperationInvokerValues() []UpgradeOperationInvoker {
+	return []UpgradeOperationInvoker{Platform, Unknown, User}
+}
+
+// UpgradeState enumerates the values for upgrade state.
+type UpgradeState string
+
+const (
+	// UpgradeStateCancelled ...
+	UpgradeStateCancelled UpgradeState = "Cancelled"
+	// UpgradeStateCompleted ...
+	UpgradeStateCompleted UpgradeState = "Completed"
+	// UpgradeStateFaulted ...
+	UpgradeStateFaulted UpgradeState = "Faulted"
+	// UpgradeStateRollingForward ...
+	UpgradeStateRollingForward UpgradeState = "RollingForward"
+)
+
+// PossibleUpgradeStateValues returns an array of possible values for the UpgradeState const type.
+func PossibleUpgradeStateValues() []UpgradeState {
+	return []UpgradeState{UpgradeStateCancelled, UpgradeStateCompleted, UpgradeStateFaulted, UpgradeStateRollingForward}
+}
+
+// VirtualMachineEvictionPolicyTypes enumerates the values for virtual machine eviction policy types.
+type VirtualMachineEvictionPolicyTypes string
+
+const (
+	// Deallocate ...
+	Deallocate VirtualMachineEvictionPolicyTypes = "Deallocate"
+	// Delete ...
+	Delete VirtualMachineEvictionPolicyTypes = "Delete"
+)
+
+// PossibleVirtualMachineEvictionPolicyTypesValues returns an array of possible values for the VirtualMachineEvictionPolicyTypes const type.
+func PossibleVirtualMachineEvictionPolicyTypesValues() []VirtualMachineEvictionPolicyTypes {
+	return []VirtualMachineEvictionPolicyTypes{Deallocate, Delete}
+}
+
+// VirtualMachinePriorityTypes enumerates the values for virtual machine priority types.
+type VirtualMachinePriorityTypes string
+
+const (
+	// Low ...
+	Low VirtualMachinePriorityTypes = "Low"
+	// Regular ...
+	Regular VirtualMachinePriorityTypes = "Regular"
+)
+
+// PossibleVirtualMachinePriorityTypesValues returns an array of possible values for the VirtualMachinePriorityTypes const type.
+func PossibleVirtualMachinePriorityTypesValues() []VirtualMachinePriorityTypes {
+	return []VirtualMachinePriorityTypes{Low, Regular}
+}
+
 // VirtualMachineScaleSetSkuScaleType enumerates the values for virtual machine scale set sku scale type.
 type VirtualMachineScaleSetSkuScaleType string
 
@@ -442,6 +535,18 @@ const (
 	StandardA8V2 VirtualMachineSizeTypes = "Standard_A8_v2"
 	// StandardA9 ...
 	StandardA9 VirtualMachineSizeTypes = "Standard_A9"
+	// StandardB1ms ...
+	StandardB1ms VirtualMachineSizeTypes = "Standard_B1ms"
+	// StandardB1s ...
+	StandardB1s VirtualMachineSizeTypes = "Standard_B1s"
+	// StandardB2ms ...
+	StandardB2ms VirtualMachineSizeTypes = "Standard_B2ms"
+	// StandardB2s ...
+	StandardB2s VirtualMachineSizeTypes = "Standard_B2s"
+	// StandardB4ms ...
+	StandardB4ms VirtualMachineSizeTypes = "Standard_B4ms"
+	// StandardB8ms ...
+	StandardB8ms VirtualMachineSizeTypes = "Standard_B8ms"
 	// StandardD1 ...
 	StandardD1 VirtualMachineSizeTypes = "Standard_D1"
 	// StandardD11 ...
@@ -462,22 +567,46 @@ const (
 	StandardD14V2 VirtualMachineSizeTypes = "Standard_D14_v2"
 	// StandardD15V2 ...
 	StandardD15V2 VirtualMachineSizeTypes = "Standard_D15_v2"
+	// StandardD16sV3 ...
+	StandardD16sV3 VirtualMachineSizeTypes = "Standard_D16s_v3"
+	// StandardD16V3 ...
+	StandardD16V3 VirtualMachineSizeTypes = "Standard_D16_v3"
 	// StandardD1V2 ...
 	StandardD1V2 VirtualMachineSizeTypes = "Standard_D1_v2"
 	// StandardD2 ...
 	StandardD2 VirtualMachineSizeTypes = "Standard_D2"
+	// StandardD2sV3 ...
+	StandardD2sV3 VirtualMachineSizeTypes = "Standard_D2s_v3"
 	// StandardD2V2 ...
 	StandardD2V2 VirtualMachineSizeTypes = "Standard_D2_v2"
+	// StandardD2V3 ...
+	StandardD2V3 VirtualMachineSizeTypes = "Standard_D2_v3"
 	// StandardD3 ...
 	StandardD3 VirtualMachineSizeTypes = "Standard_D3"
+	// StandardD32sV3 ...
+	StandardD32sV3 VirtualMachineSizeTypes = "Standard_D32s_v3"
+	// StandardD32V3 ...
+	StandardD32V3 VirtualMachineSizeTypes = "Standard_D32_v3"
 	// StandardD3V2 ...
 	StandardD3V2 VirtualMachineSizeTypes = "Standard_D3_v2"
 	// StandardD4 ...
 	StandardD4 VirtualMachineSizeTypes = "Standard_D4"
+	// StandardD4sV3 ...
+	StandardD4sV3 VirtualMachineSizeTypes = "Standard_D4s_v3"
 	// StandardD4V2 ...
 	StandardD4V2 VirtualMachineSizeTypes = "Standard_D4_v2"
+	// StandardD4V3 ...
+	StandardD4V3 VirtualMachineSizeTypes = "Standard_D4_v3"
 	// StandardD5V2 ...
 	StandardD5V2 VirtualMachineSizeTypes = "Standard_D5_v2"
+	// StandardD64sV3 ...
+	StandardD64sV3 VirtualMachineSizeTypes = "Standard_D64s_v3"
+	// StandardD64V3 ...
+	StandardD64V3 VirtualMachineSizeTypes = "Standard_D64_v3"
+	// StandardD8sV3 ...
+	StandardD8sV3 VirtualMachineSizeTypes = "Standard_D8s_v3"
+	// StandardD8V3 ...
+	StandardD8V3 VirtualMachineSizeTypes = "Standard_D8_v3"
 	// StandardDS1 ...
 	StandardDS1 VirtualMachineSizeTypes = "Standard_DS1"
 	// StandardDS11 ...
@@ -490,10 +619,18 @@ const (
 	StandardDS12V2 VirtualMachineSizeTypes = "Standard_DS12_v2"
 	// StandardDS13 ...
 	StandardDS13 VirtualMachineSizeTypes = "Standard_DS13"
+	// StandardDS132V2 ...
+	StandardDS132V2 VirtualMachineSizeTypes = "Standard_DS13-2_v2"
+	// StandardDS134V2 ...
+	StandardDS134V2 VirtualMachineSizeTypes = "Standard_DS13-4_v2"
 	// StandardDS13V2 ...
 	StandardDS13V2 VirtualMachineSizeTypes = "Standard_DS13_v2"
 	// StandardDS14 ...
 	StandardDS14 VirtualMachineSizeTypes = "Standard_DS14"
+	// StandardDS144V2 ...
+	StandardDS144V2 VirtualMachineSizeTypes = "Standard_DS14-4_v2"
+	// StandardDS148V2 ...
+	StandardDS148V2 VirtualMachineSizeTypes = "Standard_DS14-8_v2"
 	// StandardDS14V2 ...
 	StandardDS14V2 VirtualMachineSizeTypes = "Standard_DS14_v2"
 	// StandardDS15V2 ...
@@ -514,26 +651,72 @@ const (
 	StandardDS4V2 VirtualMachineSizeTypes = "Standard_DS4_v2"
 	// StandardDS5V2 ...
 	StandardDS5V2 VirtualMachineSizeTypes = "Standard_DS5_v2"
+	// StandardE16sV3 ...
+	StandardE16sV3 VirtualMachineSizeTypes = "Standard_E16s_v3"
+	// StandardE16V3 ...
+	StandardE16V3 VirtualMachineSizeTypes = "Standard_E16_v3"
+	// StandardE2sV3 ...
+	StandardE2sV3 VirtualMachineSizeTypes = "Standard_E2s_v3"
+	// StandardE2V3 ...
+	StandardE2V3 VirtualMachineSizeTypes = "Standard_E2_v3"
+	// StandardE3216V3 ...
+	StandardE3216V3 VirtualMachineSizeTypes = "Standard_E32-16_v3"
+	// StandardE328sV3 ...
+	StandardE328sV3 VirtualMachineSizeTypes = "Standard_E32-8s_v3"
+	// StandardE32sV3 ...
+	StandardE32sV3 VirtualMachineSizeTypes = "Standard_E32s_v3"
+	// StandardE32V3 ...
+	StandardE32V3 VirtualMachineSizeTypes = "Standard_E32_v3"
+	// StandardE4sV3 ...
+	StandardE4sV3 VirtualMachineSizeTypes = "Standard_E4s_v3"
+	// StandardE4V3 ...
+	StandardE4V3 VirtualMachineSizeTypes = "Standard_E4_v3"
+	// StandardE6416sV3 ...
+	StandardE6416sV3 VirtualMachineSizeTypes = "Standard_E64-16s_v3"
+	// StandardE6432sV3 ...
+	StandardE6432sV3 VirtualMachineSizeTypes = "Standard_E64-32s_v3"
+	// StandardE64sV3 ...
+	StandardE64sV3 VirtualMachineSizeTypes = "Standard_E64s_v3"
+	// StandardE64V3 ...
+	StandardE64V3 VirtualMachineSizeTypes = "Standard_E64_v3"
+	// StandardE8sV3 ...
+	StandardE8sV3 VirtualMachineSizeTypes = "Standard_E8s_v3"
+	// StandardE8V3 ...
+	StandardE8V3 VirtualMachineSizeTypes = "Standard_E8_v3"
 	// StandardF1 ...
 	StandardF1 VirtualMachineSizeTypes = "Standard_F1"
 	// StandardF16 ...
 	StandardF16 VirtualMachineSizeTypes = "Standard_F16"
 	// StandardF16s ...
 	StandardF16s VirtualMachineSizeTypes = "Standard_F16s"
+	// StandardF16sV2 ...
+	StandardF16sV2 VirtualMachineSizeTypes = "Standard_F16s_v2"
 	// StandardF1s ...
 	StandardF1s VirtualMachineSizeTypes = "Standard_F1s"
 	// StandardF2 ...
 	StandardF2 VirtualMachineSizeTypes = "Standard_F2"
 	// StandardF2s ...
 	StandardF2s VirtualMachineSizeTypes = "Standard_F2s"
+	// StandardF2sV2 ...
+	StandardF2sV2 VirtualMachineSizeTypes = "Standard_F2s_v2"
+	// StandardF32sV2 ...
+	StandardF32sV2 VirtualMachineSizeTypes = "Standard_F32s_v2"
 	// StandardF4 ...
 	StandardF4 VirtualMachineSizeTypes = "Standard_F4"
 	// StandardF4s ...
 	StandardF4s VirtualMachineSizeTypes = "Standard_F4s"
+	// StandardF4sV2 ...
+	StandardF4sV2 VirtualMachineSizeTypes = "Standard_F4s_v2"
+	// StandardF64sV2 ...
+	StandardF64sV2 VirtualMachineSizeTypes = "Standard_F64s_v2"
+	// StandardF72sV2 ...
+	StandardF72sV2 VirtualMachineSizeTypes = "Standard_F72s_v2"
 	// StandardF8 ...
 	StandardF8 VirtualMachineSizeTypes = "Standard_F8"
 	// StandardF8s ...
 	StandardF8s VirtualMachineSizeTypes = "Standard_F8s"
+	// StandardF8sV2 ...
+	StandardF8sV2 VirtualMachineSizeTypes = "Standard_F8s_v2"
 	// StandardG1 ...
 	StandardG1 VirtualMachineSizeTypes = "Standard_G1"
 	// StandardG2 ...
@@ -552,8 +735,16 @@ const (
 	StandardGS3 VirtualMachineSizeTypes = "Standard_GS3"
 	// StandardGS4 ...
 	StandardGS4 VirtualMachineSizeTypes = "Standard_GS4"
+	// StandardGS44 ...
+	StandardGS44 VirtualMachineSizeTypes = "Standard_GS4-4"
+	// StandardGS48 ...
+	StandardGS48 VirtualMachineSizeTypes = "Standard_GS4-8"
 	// StandardGS5 ...
 	StandardGS5 VirtualMachineSizeTypes = "Standard_GS5"
+	// StandardGS516 ...
+	StandardGS516 VirtualMachineSizeTypes = "Standard_GS5-16"
+	// StandardGS58 ...
+	StandardGS58 VirtualMachineSizeTypes = "Standard_GS5-8"
 	// StandardH16 ...
 	StandardH16 VirtualMachineSizeTypes = "Standard_H16"
 	// StandardH16m ...
@@ -574,14 +765,54 @@ const (
 	StandardL4s VirtualMachineSizeTypes = "Standard_L4s"
 	// StandardL8s ...
 	StandardL8s VirtualMachineSizeTypes = "Standard_L8s"
+	// StandardM12832ms ...
+	StandardM12832ms VirtualMachineSizeTypes = "Standard_M128-32ms"
+	// StandardM12864ms ...
+	StandardM12864ms VirtualMachineSizeTypes = "Standard_M128-64ms"
+	// StandardM128ms ...
+	StandardM128ms VirtualMachineSizeTypes = "Standard_M128ms"
+	// StandardM128s ...
+	StandardM128s VirtualMachineSizeTypes = "Standard_M128s"
+	// StandardM6416ms ...
+	StandardM6416ms VirtualMachineSizeTypes = "Standard_M64-16ms"
+	// StandardM6432ms ...
+	StandardM6432ms VirtualMachineSizeTypes = "Standard_M64-32ms"
+	// StandardM64ms ...
+	StandardM64ms VirtualMachineSizeTypes = "Standard_M64ms"
+	// StandardM64s ...
+	StandardM64s VirtualMachineSizeTypes = "Standard_M64s"
 	// StandardNC12 ...
 	StandardNC12 VirtualMachineSizeTypes = "Standard_NC12"
+	// StandardNC12sV2 ...
+	StandardNC12sV2 VirtualMachineSizeTypes = "Standard_NC12s_v2"
+	// StandardNC12sV3 ...
+	StandardNC12sV3 VirtualMachineSizeTypes = "Standard_NC12s_v3"
 	// StandardNC24 ...
 	StandardNC24 VirtualMachineSizeTypes = "Standard_NC24"
 	// StandardNC24r ...
 	StandardNC24r VirtualMachineSizeTypes = "Standard_NC24r"
+	// StandardNC24rsV2 ...
+	StandardNC24rsV2 VirtualMachineSizeTypes = "Standard_NC24rs_v2"
+	// StandardNC24rsV3 ...
+	StandardNC24rsV3 VirtualMachineSizeTypes = "Standard_NC24rs_v3"
+	// StandardNC24sV2 ...
+	StandardNC24sV2 VirtualMachineSizeTypes = "Standard_NC24s_v2"
+	// StandardNC24sV3 ...
+	StandardNC24sV3 VirtualMachineSizeTypes = "Standard_NC24s_v3"
 	// StandardNC6 ...
 	StandardNC6 VirtualMachineSizeTypes = "Standard_NC6"
+	// StandardNC6sV2 ...
+	StandardNC6sV2 VirtualMachineSizeTypes = "Standard_NC6s_v2"
+	// StandardNC6sV3 ...
+	StandardNC6sV3 VirtualMachineSizeTypes = "Standard_NC6s_v3"
+	// StandardND12s ...
+	StandardND12s VirtualMachineSizeTypes = "Standard_ND12s"
+	// StandardND24rs ...
+	StandardND24rs VirtualMachineSizeTypes = "Standard_ND24rs"
+	// StandardND24s ...
+	StandardND24s VirtualMachineSizeTypes = "Standard_ND24s"
+	// StandardND6s ...
+	StandardND6s VirtualMachineSizeTypes = "Standard_ND6s"
 	// StandardNV12 ...
 	StandardNV12 VirtualMachineSizeTypes = "Standard_NV12"
 	// StandardNV24 ...
@@ -592,7 +823,7 @@ const (
 
 // PossibleVirtualMachineSizeTypesValues returns an array of possible values for the VirtualMachineSizeTypes const type.
 func PossibleVirtualMachineSizeTypesValues() []VirtualMachineSizeTypes {
-	return []VirtualMachineSizeTypes{BasicA0, BasicA1, BasicA2, BasicA3, BasicA4, StandardA0, StandardA1, StandardA10, StandardA11, StandardA1V2, StandardA2, StandardA2mV2, StandardA2V2, StandardA3, StandardA4, StandardA4mV2, StandardA4V2, StandardA5, StandardA6, StandardA7, StandardA8, StandardA8mV2, StandardA8V2, StandardA9, StandardD1, StandardD11, StandardD11V2, StandardD12, StandardD12V2, StandardD13, StandardD13V2, StandardD14, StandardD14V2, StandardD15V2, StandardD1V2, StandardD2, StandardD2V2, StandardD3, StandardD3V2, StandardD4, StandardD4V2, StandardD5V2, StandardDS1, StandardDS11, StandardDS11V2, StandardDS12, StandardDS12V2, StandardDS13, StandardDS13V2, StandardDS14, StandardDS14V2, StandardDS15V2, StandardDS1V2, StandardDS2, StandardDS2V2, StandardDS3, StandardDS3V2, StandardDS4, StandardDS4V2, StandardDS5V2, StandardF1, StandardF16, StandardF16s, StandardF1s, StandardF2, StandardF2s, StandardF4, StandardF4s, StandardF8, StandardF8s, StandardG1, StandardG2, StandardG3, StandardG4, StandardG5, StandardGS1, StandardGS2, StandardGS3, StandardGS4, StandardGS5, StandardH16, StandardH16m, StandardH16mr, StandardH16r, StandardH8, StandardH8m, StandardL16s, StandardL32s, StandardL4s, StandardL8s, StandardNC12, StandardNC24, StandardNC24r, StandardNC6, StandardNV12, StandardNV24, StandardNV6}
+	return []VirtualMachineSizeTypes{BasicA0, BasicA1, BasicA2, BasicA3, BasicA4, StandardA0, StandardA1, StandardA10, StandardA11, StandardA1V2, StandardA2, StandardA2mV2, StandardA2V2, StandardA3, StandardA4, StandardA4mV2, StandardA4V2, StandardA5, StandardA6, StandardA7, StandardA8, StandardA8mV2, StandardA8V2, StandardA9, StandardB1ms, StandardB1s, StandardB2ms, StandardB2s, StandardB4ms, StandardB8ms, StandardD1, StandardD11, StandardD11V2, StandardD12, StandardD12V2, StandardD13, StandardD13V2, StandardD14, StandardD14V2, StandardD15V2, StandardD16sV3, StandardD16V3, StandardD1V2, StandardD2, StandardD2sV3, StandardD2V2, StandardD2V3, StandardD3, StandardD32sV3, StandardD32V3, StandardD3V2, StandardD4, StandardD4sV3, StandardD4V2, StandardD4V3, StandardD5V2, StandardD64sV3, StandardD64V3, StandardD8sV3, StandardD8V3, StandardDS1, StandardDS11, StandardDS11V2, StandardDS12, StandardDS12V2, StandardDS13, StandardDS132V2, StandardDS134V2, StandardDS13V2, StandardDS14, StandardDS144V2, StandardDS148V2, StandardDS14V2, StandardDS15V2, StandardDS1V2, StandardDS2, StandardDS2V2, StandardDS3, StandardDS3V2, StandardDS4, StandardDS4V2, StandardDS5V2, StandardE16sV3, StandardE16V3, StandardE2sV3, StandardE2V3, StandardE3216V3, StandardE328sV3, StandardE32sV3, StandardE32V3, StandardE4sV3, StandardE4V3, StandardE6416sV3, StandardE6432sV3, StandardE64sV3, StandardE64V3, StandardE8sV3, StandardE8V3, StandardF1, StandardF16, StandardF16s, StandardF16sV2, StandardF1s, StandardF2, StandardF2s, StandardF2sV2, StandardF32sV2, StandardF4, StandardF4s, StandardF4sV2, StandardF64sV2, StandardF72sV2, StandardF8, StandardF8s, StandardF8sV2, StandardG1, StandardG2, StandardG3, StandardG4, StandardG5, StandardGS1, StandardGS2, StandardGS3, StandardGS4, StandardGS44, StandardGS48, StandardGS5, StandardGS516, StandardGS58, StandardH16, StandardH16m, StandardH16mr, StandardH16r, StandardH8, StandardH8m, StandardL16s, StandardL32s, StandardL4s, StandardL8s, StandardM12832ms, StandardM12864ms, StandardM128ms, StandardM128s, StandardM6416ms, StandardM6432ms, StandardM64ms, StandardM64s, StandardNC12, StandardNC12sV2, StandardNC12sV3, StandardNC24, StandardNC24r, StandardNC24rsV2, StandardNC24rsV3, StandardNC24sV2, StandardNC24sV3, StandardNC6, StandardNC6sV2, StandardNC6sV3, StandardND12s, StandardND24rs, StandardND24s, StandardND6s, StandardNV12, StandardNV24, StandardNV6}
 }
 
 // AccessURI a disk access SAS uri.
@@ -722,6 +953,12 @@ type APIErrorBase struct {
 	Target *string `json:"target,omitempty"`
 	// Message - The error message.
 	Message *string `json:"message,omitempty"`
+}
+
+// AutoOSUpgradePolicy the configuration parameters used for performing automatic OS upgrade.
+type AutoOSUpgradePolicy struct {
+	// DisableAutoRollback - Whether OS image rollback feature should be disabled. Default value is false.
+	DisableAutoRollback *bool `json:"disableAutoRollback,omitempty"`
 }
 
 // AvailabilitySet specifies information about the availability set that the virtual machine should be
@@ -1005,6 +1242,73 @@ type AvailabilitySetProperties struct {
 	Statuses *[]InstanceViewStatus `json:"statuses,omitempty"`
 }
 
+// AvailabilitySetUpdate specifies information about the availability set that the virtual machine should
+// be assigned to. Only tags may be updated.
+type AvailabilitySetUpdate struct {
+	*AvailabilitySetProperties `json:"properties,omitempty"`
+	// Sku - Sku of the availability set
+	Sku *Sku `json:"sku,omitempty"`
+	// Tags - Resource tags
+	Tags map[string]*string `json:"tags"`
+}
+
+// MarshalJSON is the custom marshaler for AvailabilitySetUpdate.
+func (asu AvailabilitySetUpdate) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if asu.AvailabilitySetProperties != nil {
+		objectMap["properties"] = asu.AvailabilitySetProperties
+	}
+	if asu.Sku != nil {
+		objectMap["sku"] = asu.Sku
+	}
+	if asu.Tags != nil {
+		objectMap["tags"] = asu.Tags
+	}
+	return json.Marshal(objectMap)
+}
+
+// UnmarshalJSON is the custom unmarshaler for AvailabilitySetUpdate struct.
+func (asu *AvailabilitySetUpdate) UnmarshalJSON(body []byte) error {
+	var m map[string]*json.RawMessage
+	err := json.Unmarshal(body, &m)
+	if err != nil {
+		return err
+	}
+	for k, v := range m {
+		switch k {
+		case "properties":
+			if v != nil {
+				var availabilitySetProperties AvailabilitySetProperties
+				err = json.Unmarshal(*v, &availabilitySetProperties)
+				if err != nil {
+					return err
+				}
+				asu.AvailabilitySetProperties = &availabilitySetProperties
+			}
+		case "sku":
+			if v != nil {
+				var sku Sku
+				err = json.Unmarshal(*v, &sku)
+				if err != nil {
+					return err
+				}
+				asu.Sku = &sku
+			}
+		case "tags":
+			if v != nil {
+				var tags map[string]*string
+				err = json.Unmarshal(*v, &tags)
+				if err != nil {
+					return err
+				}
+				asu.Tags = tags
+			}
+		}
+	}
+
+	return nil
+}
+
 // BootDiagnostics boot Diagnostics is a debugging feature which allows you to view Console Output and
 // Screenshot to diagnose VM status. <br><br> You can easily view the output of your console log. <br><br>
 // Azure also enables you to see a screenshot of the VM from the hypervisor.
@@ -1049,6 +1353,8 @@ type DataDisk struct {
 	Image *VirtualHardDisk `json:"image,omitempty"`
 	// Caching - Specifies the caching requirements. <br><br> Possible values are: <br><br> **None** <br><br> **ReadOnly** <br><br> **ReadWrite** <br><br> Default: **None for Standard storage. ReadOnly for Premium storage**. Possible values include: 'CachingTypesNone', 'CachingTypesReadOnly', 'CachingTypesReadWrite'
 	Caching CachingTypes `json:"caching,omitempty"`
+	// WriteAcceleratorEnabled - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+	WriteAcceleratorEnabled *bool `json:"writeAcceleratorEnabled,omitempty"`
 	// CreateOption - Specifies how the virtual machine should be created.<br><br> Possible values are:<br><br> **Attach** \u2013 This value is used when you are using a specialized disk to create the virtual machine.<br><br> **FromImage** \u2013 This value is used when you are using an image to create the virtual machine. If you are using a platform image, you also use the imageReference element described above. If you are using a marketplace image, you  also use the plan element previously described. Possible values include: 'DiskCreateOptionTypesFromImage', 'DiskCreateOptionTypesEmpty', 'DiskCreateOptionTypesAttach'
 	CreateOption DiskCreateOptionTypes `json:"createOption,omitempty"`
 	// DiskSizeGB - Specifies the size of an empty data disk in gigabytes. This element can be used to overwrite the size of the disk in a virtual machine image. <br><br> This value cannot be larger than 1023 GB
@@ -1636,7 +1942,7 @@ type GrantAccessData struct {
 
 // HardwareProfile specifies the hardware settings for the virtual machine.
 type HardwareProfile struct {
-	// VMSize - Specifies the size of the virtual machine. For more information about virtual machine sizes, see [Sizes for virtual machines](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-sizes?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json). <br><br> The available VM sizes depend on region and availability set. For a list of available sizes use these APIs:  <br><br> [List all available virtual machine sizes in an availability set](https://docs.microsoft.com/rest/api/compute/availabilitysets/listavailablesizes) <br><br> [List all available virtual machine sizes in a region](https://docs.microsoft.com/rest/api/compute/virtualmachinesizes/list) <br><br> [List all available virtual machine sizes for resizing](https://docs.microsoft.com/rest/api/compute/virtualmachines/listavailablesizes). Possible values include: 'BasicA0', 'BasicA1', 'BasicA2', 'BasicA3', 'BasicA4', 'StandardA0', 'StandardA1', 'StandardA2', 'StandardA3', 'StandardA4', 'StandardA5', 'StandardA6', 'StandardA7', 'StandardA8', 'StandardA9', 'StandardA10', 'StandardA11', 'StandardA1V2', 'StandardA2V2', 'StandardA4V2', 'StandardA8V2', 'StandardA2mV2', 'StandardA4mV2', 'StandardA8mV2', 'StandardD1', 'StandardD2', 'StandardD3', 'StandardD4', 'StandardD11', 'StandardD12', 'StandardD13', 'StandardD14', 'StandardD1V2', 'StandardD2V2', 'StandardD3V2', 'StandardD4V2', 'StandardD5V2', 'StandardD11V2', 'StandardD12V2', 'StandardD13V2', 'StandardD14V2', 'StandardD15V2', 'StandardDS1', 'StandardDS2', 'StandardDS3', 'StandardDS4', 'StandardDS11', 'StandardDS12', 'StandardDS13', 'StandardDS14', 'StandardDS1V2', 'StandardDS2V2', 'StandardDS3V2', 'StandardDS4V2', 'StandardDS5V2', 'StandardDS11V2', 'StandardDS12V2', 'StandardDS13V2', 'StandardDS14V2', 'StandardDS15V2', 'StandardF1', 'StandardF2', 'StandardF4', 'StandardF8', 'StandardF16', 'StandardF1s', 'StandardF2s', 'StandardF4s', 'StandardF8s', 'StandardF16s', 'StandardG1', 'StandardG2', 'StandardG3', 'StandardG4', 'StandardG5', 'StandardGS1', 'StandardGS2', 'StandardGS3', 'StandardGS4', 'StandardGS5', 'StandardH8', 'StandardH16', 'StandardH8m', 'StandardH16m', 'StandardH16r', 'StandardH16mr', 'StandardL4s', 'StandardL8s', 'StandardL16s', 'StandardL32s', 'StandardNC6', 'StandardNC12', 'StandardNC24', 'StandardNC24r', 'StandardNV6', 'StandardNV12', 'StandardNV24'
+	// VMSize - Specifies the size of the virtual machine. For more information about virtual machine sizes, see [Sizes for virtual machines](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-sizes?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json). <br><br> The available VM sizes depend on region and availability set. For a list of available sizes use these APIs:  <br><br> [List all available virtual machine sizes in an availability set](https://docs.microsoft.com/rest/api/compute/availabilitysets/listavailablesizes) <br><br> [List all available virtual machine sizes in a region](https://docs.microsoft.com/rest/api/compute/virtualmachinesizes/list) <br><br> [List all available virtual machine sizes for resizing](https://docs.microsoft.com/rest/api/compute/virtualmachines/listavailablesizes). Possible values include: 'BasicA0', 'BasicA1', 'BasicA2', 'BasicA3', 'BasicA4', 'StandardA0', 'StandardA1', 'StandardA2', 'StandardA3', 'StandardA4', 'StandardA5', 'StandardA6', 'StandardA7', 'StandardA8', 'StandardA9', 'StandardA10', 'StandardA11', 'StandardA1V2', 'StandardA2V2', 'StandardA4V2', 'StandardA8V2', 'StandardA2mV2', 'StandardA4mV2', 'StandardA8mV2', 'StandardB1s', 'StandardB1ms', 'StandardB2s', 'StandardB2ms', 'StandardB4ms', 'StandardB8ms', 'StandardD1', 'StandardD2', 'StandardD3', 'StandardD4', 'StandardD11', 'StandardD12', 'StandardD13', 'StandardD14', 'StandardD1V2', 'StandardD2V2', 'StandardD3V2', 'StandardD4V2', 'StandardD5V2', 'StandardD2V3', 'StandardD4V3', 'StandardD8V3', 'StandardD16V3', 'StandardD32V3', 'StandardD64V3', 'StandardD2sV3', 'StandardD4sV3', 'StandardD8sV3', 'StandardD16sV3', 'StandardD32sV3', 'StandardD64sV3', 'StandardD11V2', 'StandardD12V2', 'StandardD13V2', 'StandardD14V2', 'StandardD15V2', 'StandardDS1', 'StandardDS2', 'StandardDS3', 'StandardDS4', 'StandardDS11', 'StandardDS12', 'StandardDS13', 'StandardDS14', 'StandardDS1V2', 'StandardDS2V2', 'StandardDS3V2', 'StandardDS4V2', 'StandardDS5V2', 'StandardDS11V2', 'StandardDS12V2', 'StandardDS13V2', 'StandardDS14V2', 'StandardDS15V2', 'StandardDS134V2', 'StandardDS132V2', 'StandardDS148V2', 'StandardDS144V2', 'StandardE2V3', 'StandardE4V3', 'StandardE8V3', 'StandardE16V3', 'StandardE32V3', 'StandardE64V3', 'StandardE2sV3', 'StandardE4sV3', 'StandardE8sV3', 'StandardE16sV3', 'StandardE32sV3', 'StandardE64sV3', 'StandardE3216V3', 'StandardE328sV3', 'StandardE6432sV3', 'StandardE6416sV3', 'StandardF1', 'StandardF2', 'StandardF4', 'StandardF8', 'StandardF16', 'StandardF1s', 'StandardF2s', 'StandardF4s', 'StandardF8s', 'StandardF16s', 'StandardF2sV2', 'StandardF4sV2', 'StandardF8sV2', 'StandardF16sV2', 'StandardF32sV2', 'StandardF64sV2', 'StandardF72sV2', 'StandardG1', 'StandardG2', 'StandardG3', 'StandardG4', 'StandardG5', 'StandardGS1', 'StandardGS2', 'StandardGS3', 'StandardGS4', 'StandardGS5', 'StandardGS48', 'StandardGS44', 'StandardGS516', 'StandardGS58', 'StandardH8', 'StandardH16', 'StandardH8m', 'StandardH16m', 'StandardH16r', 'StandardH16mr', 'StandardL4s', 'StandardL8s', 'StandardL16s', 'StandardL32s', 'StandardM64s', 'StandardM64ms', 'StandardM128s', 'StandardM128ms', 'StandardM6432ms', 'StandardM6416ms', 'StandardM12864ms', 'StandardM12832ms', 'StandardNC6', 'StandardNC12', 'StandardNC24', 'StandardNC24r', 'StandardNC6sV2', 'StandardNC12sV2', 'StandardNC24sV2', 'StandardNC24rsV2', 'StandardNC6sV3', 'StandardNC12sV3', 'StandardNC24sV3', 'StandardNC24rsV3', 'StandardND6s', 'StandardND12s', 'StandardND24s', 'StandardND24rs', 'StandardNV6', 'StandardNV12', 'StandardNV24'
 	VMSize VirtualMachineSizeTypes `json:"vmSize,omitempty"`
 }
 
@@ -2024,6 +2330,88 @@ type ImageStorageProfile struct {
 	OsDisk *ImageOSDisk `json:"osDisk,omitempty"`
 	// DataDisks - Specifies the parameters that are used to add a data disk to a virtual machine. <br><br> For more information about disks, see [About disks and VHDs for Azure virtual machines](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-about-disks-vhds?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json).
 	DataDisks *[]ImageDataDisk `json:"dataDisks,omitempty"`
+	// ZoneResilient - Specifies whether an image is zone resilient or not. Default is false. Zone resilient images can be created only in regions that provide Zone Redundant Storage (ZRS).
+	ZoneResilient *bool `json:"zoneResilient,omitempty"`
+}
+
+// ImagesUpdateFuture an abstraction for monitoring and retrieving the results of a long-running operation.
+type ImagesUpdateFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *ImagesUpdateFuture) Result(client ImagesClient) (i Image, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.ImagesUpdateFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.ImagesUpdateFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if i.Response.Response, err = future.GetResult(sender); err == nil && i.Response.Response.StatusCode != http.StatusNoContent {
+		i, err = client.UpdateResponder(i.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.ImagesUpdateFuture", "Result", i.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// ImageUpdate the source user image virtual hard disk. Only tags may be updated.
+type ImageUpdate struct {
+	*ImageProperties `json:"properties,omitempty"`
+	// Tags - Resource tags
+	Tags map[string]*string `json:"tags"`
+}
+
+// MarshalJSON is the custom marshaler for ImageUpdate.
+func (iu ImageUpdate) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if iu.ImageProperties != nil {
+		objectMap["properties"] = iu.ImageProperties
+	}
+	if iu.Tags != nil {
+		objectMap["tags"] = iu.Tags
+	}
+	return json.Marshal(objectMap)
+}
+
+// UnmarshalJSON is the custom unmarshaler for ImageUpdate struct.
+func (iu *ImageUpdate) UnmarshalJSON(body []byte) error {
+	var m map[string]*json.RawMessage
+	err := json.Unmarshal(body, &m)
+	if err != nil {
+		return err
+	}
+	for k, v := range m {
+		switch k {
+		case "properties":
+			if v != nil {
+				var imageProperties ImageProperties
+				err = json.Unmarshal(*v, &imageProperties)
+				if err != nil {
+					return err
+				}
+				iu.ImageProperties = &imageProperties
+			}
+		case "tags":
+			if v != nil {
+				var tags map[string]*string
+				err = json.Unmarshal(*v, &tags)
+				if err != nil {
+					return err
+				}
+				iu.Tags = tags
+			}
+		}
+	}
+
+	return nil
 }
 
 // InnerError inner error details.
@@ -2251,6 +2639,103 @@ type ListVirtualMachineImageResource struct {
 	Value             *[]VirtualMachineImageResource `json:"value,omitempty"`
 }
 
+// LogAnalyticsExportRequestRateByIntervalFuture an abstraction for monitoring and retrieving the results
+// of a long-running operation.
+type LogAnalyticsExportRequestRateByIntervalFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *LogAnalyticsExportRequestRateByIntervalFuture) Result(client LogAnalyticsClient) (laor LogAnalyticsOperationResult, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.LogAnalyticsExportRequestRateByIntervalFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.LogAnalyticsExportRequestRateByIntervalFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if laor.Response.Response, err = future.GetResult(sender); err == nil && laor.Response.Response.StatusCode != http.StatusNoContent {
+		laor, err = client.ExportRequestRateByIntervalResponder(laor.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.LogAnalyticsExportRequestRateByIntervalFuture", "Result", laor.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// LogAnalyticsExportThrottledRequestsFuture an abstraction for monitoring and retrieving the results of a
+// long-running operation.
+type LogAnalyticsExportThrottledRequestsFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *LogAnalyticsExportThrottledRequestsFuture) Result(client LogAnalyticsClient) (laor LogAnalyticsOperationResult, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.LogAnalyticsExportThrottledRequestsFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.LogAnalyticsExportThrottledRequestsFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if laor.Response.Response, err = future.GetResult(sender); err == nil && laor.Response.Response.StatusCode != http.StatusNoContent {
+		laor, err = client.ExportThrottledRequestsResponder(laor.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.LogAnalyticsExportThrottledRequestsFuture", "Result", laor.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// LogAnalyticsInputBase api input base class for LogAnalytics Api.
+type LogAnalyticsInputBase struct {
+	// BlobContainerSasURI - SAS Uri of the logging blob container to which LogAnalytics Api writes output logs to.
+	BlobContainerSasURI *string `json:"blobContainerSasUri,omitempty"`
+	// FromTime - From time of the query
+	FromTime *date.Time `json:"fromTime,omitempty"`
+	// ToTime - To time of the query
+	ToTime *date.Time `json:"toTime,omitempty"`
+	// GroupByThrottlePolicy - Group query result by Throttle Policy applied.
+	GroupByThrottlePolicy *bool `json:"groupByThrottlePolicy,omitempty"`
+	// GroupByOperationName - Group query result by Operation Name.
+	GroupByOperationName *bool `json:"groupByOperationName,omitempty"`
+	// GroupByResourceName - Group query result by Resource Name.
+	GroupByResourceName *bool `json:"groupByResourceName,omitempty"`
+}
+
+// LogAnalyticsOperationResult logAnalytics operation status response
+type LogAnalyticsOperationResult struct {
+	autorest.Response `json:"-"`
+	// Properties - READ-ONLY; LogAnalyticsOutput
+	Properties *LogAnalyticsOutput `json:"properties,omitempty"`
+	// Name - READ-ONLY; Operation ID
+	Name *string `json:"name,omitempty"`
+	// Status - READ-ONLY; Operation status
+	Status *string `json:"status,omitempty"`
+	// StartTime - READ-ONLY; Start time of the operation
+	StartTime *date.Time `json:"startTime,omitempty"`
+	// EndTime - READ-ONLY; End time of the operation
+	EndTime *date.Time `json:"endTime,omitempty"`
+	// Error - READ-ONLY; Api error
+	Error *APIError `json:"error,omitempty"`
+}
+
+// LogAnalyticsOutput logAnalytics output properties
+type LogAnalyticsOutput struct {
+	// Output - READ-ONLY; Output file Uri path to blob container.
+	Output *string `json:"output,omitempty"`
+}
+
 // LongRunningOperationProperties compute-specific operation properties, including output
 type LongRunningOperationProperties struct {
 	// Output - Operation output data (raw JSON)
@@ -2347,6 +2832,13 @@ type NetworkProfile struct {
 	NetworkInterfaces *[]NetworkInterfaceReference `json:"networkInterfaces,omitempty"`
 }
 
+// OperationListResult the List Compute Operation operation response.
+type OperationListResult struct {
+	autorest.Response `json:"-"`
+	// Value - READ-ONLY; The list of compute operations
+	Value *[]OperationValue `json:"value,omitempty"`
+}
+
 // OperationStatusResponse operation status response
 type OperationStatusResponse struct {
 	autorest.Response `json:"-"`
@@ -2360,6 +2852,78 @@ type OperationStatusResponse struct {
 	EndTime *date.Time `json:"endTime,omitempty"`
 	// Error - READ-ONLY; Api error
 	Error *APIError `json:"error,omitempty"`
+}
+
+// OperationValue describes the properties of a Compute Operation value.
+type OperationValue struct {
+	// Origin - READ-ONLY; The origin of the compute operation.
+	Origin *string `json:"origin,omitempty"`
+	// Name - READ-ONLY; The name of the compute operation.
+	Name                   *string `json:"name,omitempty"`
+	*OperationValueDisplay `json:"display,omitempty"`
+}
+
+// MarshalJSON is the custom marshaler for OperationValue.
+func (ov OperationValue) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if ov.OperationValueDisplay != nil {
+		objectMap["display"] = ov.OperationValueDisplay
+	}
+	return json.Marshal(objectMap)
+}
+
+// UnmarshalJSON is the custom unmarshaler for OperationValue struct.
+func (ov *OperationValue) UnmarshalJSON(body []byte) error {
+	var m map[string]*json.RawMessage
+	err := json.Unmarshal(body, &m)
+	if err != nil {
+		return err
+	}
+	for k, v := range m {
+		switch k {
+		case "origin":
+			if v != nil {
+				var origin string
+				err = json.Unmarshal(*v, &origin)
+				if err != nil {
+					return err
+				}
+				ov.Origin = &origin
+			}
+		case "name":
+			if v != nil {
+				var name string
+				err = json.Unmarshal(*v, &name)
+				if err != nil {
+					return err
+				}
+				ov.Name = &name
+			}
+		case "display":
+			if v != nil {
+				var operationValueDisplay OperationValueDisplay
+				err = json.Unmarshal(*v, &operationValueDisplay)
+				if err != nil {
+					return err
+				}
+				ov.OperationValueDisplay = &operationValueDisplay
+			}
+		}
+	}
+
+	return nil
+}
+
+// OperationValueDisplay describes the properties of a Compute Operation Value Display.
+type OperationValueDisplay struct {
+	// Operation - READ-ONLY; The display name of the compute operation.
+	Operation *string `json:"operation,omitempty"`
+	// Resource - READ-ONLY; The display name of the resource the operation applies to.
+	Resource *string `json:"resource,omitempty"`
+	// Description - READ-ONLY; The description of the operation.
+	Description *string `json:"description,omitempty"`
+	// Provider - READ-ONLY; The resource provider for the operation.
+	Provider *string `json:"provider,omitempty"`
 }
 
 // OSDisk specifies information about the operating system disk used by the virtual machine. <br><br> For
@@ -2378,6 +2942,8 @@ type OSDisk struct {
 	Image *VirtualHardDisk `json:"image,omitempty"`
 	// Caching - Specifies the caching requirements. <br><br> Possible values are: <br><br> **None** <br><br> **ReadOnly** <br><br> **ReadWrite** <br><br> Default: **None for Standard storage. ReadOnly for Premium storage**. Possible values include: 'CachingTypesNone', 'CachingTypesReadOnly', 'CachingTypesReadWrite'
 	Caching CachingTypes `json:"caching,omitempty"`
+	// WriteAcceleratorEnabled - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+	WriteAcceleratorEnabled *bool `json:"writeAcceleratorEnabled,omitempty"`
 	// CreateOption - Specifies how the virtual machine should be created.<br><br> Possible values are:<br><br> **Attach** \u2013 This value is used when you are using a specialized disk to create the virtual machine.<br><br> **FromImage** \u2013 This value is used when you are using an image to create the virtual machine. If you are using a platform image, you also use the imageReference element described above. If you are using a marketplace image, you  also use the plan element previously described. Possible values include: 'DiskCreateOptionTypesFromImage', 'DiskCreateOptionTypesEmpty', 'DiskCreateOptionTypesAttach'
 	CreateOption DiskCreateOptionTypes `json:"createOption,omitempty"`
 	// DiskSizeGB - Specifies the size of an empty data disk in gigabytes. This element can be used to overwrite the size of the disk in a virtual machine image. <br><br> This value cannot be larger than 1023 GB
@@ -2436,6 +3002,33 @@ type PurchasePlan struct {
 	Product *string `json:"product,omitempty"`
 }
 
+// RecoveryWalkResponse response after calling a manual recovery walk
+type RecoveryWalkResponse struct {
+	autorest.Response `json:"-"`
+	// WalkPerformed - READ-ONLY; Whether the recovery walk was performed
+	WalkPerformed *bool `json:"walkPerformed,omitempty"`
+	// NextPlatformUpdateDomain - READ-ONLY; The next update domain that needs to be walked. Null means walk spanning all update domains has been completed
+	NextPlatformUpdateDomain *int32 `json:"nextPlatformUpdateDomain,omitempty"`
+}
+
+// RequestRateByIntervalInput api request input for LogAnalytics getRequestRateByInterval Api.
+type RequestRateByIntervalInput struct {
+	// IntervalLength - Interval value in minutes used to create LogAnalytics call rate logs. Possible values include: 'ThreeMins', 'FiveMins', 'ThirtyMins', 'SixtyMins'
+	IntervalLength IntervalInMins `json:"intervalLength,omitempty"`
+	// BlobContainerSasURI - SAS Uri of the logging blob container to which LogAnalytics Api writes output logs to.
+	BlobContainerSasURI *string `json:"blobContainerSasUri,omitempty"`
+	// FromTime - From time of the query
+	FromTime *date.Time `json:"fromTime,omitempty"`
+	// ToTime - To time of the query
+	ToTime *date.Time `json:"toTime,omitempty"`
+	// GroupByThrottlePolicy - Group query result by Throttle Policy applied.
+	GroupByThrottlePolicy *bool `json:"groupByThrottlePolicy,omitempty"`
+	// GroupByOperationName - Group query result by Operation Name.
+	GroupByOperationName *bool `json:"groupByOperationName,omitempty"`
+	// GroupByResourceName - Group query result by Resource Name.
+	GroupByResourceName *bool `json:"groupByResourceName,omitempty"`
+}
+
 // Resource the Resource model definition.
 type Resource struct {
 	// ID - READ-ONLY; Resource Id
@@ -2480,6 +3073,8 @@ type ResourceSku struct {
 	Capacity *ResourceSkuCapacity `json:"capacity,omitempty"`
 	// Locations - READ-ONLY; The set of locations that the SKU is available.
 	Locations *[]string `json:"locations,omitempty"`
+	// LocationInfo - READ-ONLY; A list of locations and availability zones in those locations where the SKU is available.
+	LocationInfo *[]ResourceSkuLocationInfo `json:"locationInfo,omitempty"`
 	// APIVersions - READ-ONLY; The api versions that support this SKU.
 	APIVersions *[]string `json:"apiVersions,omitempty"`
 	// Costs - READ-ONLY; Metadata for retrieving price info.
@@ -2520,22 +3115,40 @@ type ResourceSkuCosts struct {
 	ExtendedUnit *string `json:"extendedUnit,omitempty"`
 }
 
+// ResourceSkuLocationInfo ...
+type ResourceSkuLocationInfo struct {
+	// Location - READ-ONLY; Location of the SKU
+	Location *string `json:"location,omitempty"`
+	// Zones - READ-ONLY; List of availability zones where the SKU is supported.
+	Zones *[]string `json:"zones,omitempty"`
+}
+
+// ResourceSkuRestrictionInfo ...
+type ResourceSkuRestrictionInfo struct {
+	// Locations - READ-ONLY; Locations where the SKU is restricted
+	Locations *[]string `json:"locations,omitempty"`
+	// Zones - READ-ONLY; List of availability zones where the SKU is restricted.
+	Zones *[]string `json:"zones,omitempty"`
+}
+
 // ResourceSkuRestrictions describes scaling information of a SKU.
 type ResourceSkuRestrictions struct {
-	// Type - READ-ONLY; The type of restrictions. Possible values include: 'Location'
+	// Type - READ-ONLY; The type of restrictions. Possible values include: 'Location', 'Zone'
 	Type ResourceSkuRestrictionsType `json:"type,omitempty"`
 	// Values - READ-ONLY; The value of restrictions. If the restriction type is set to location. This would be different locations where the SKU is restricted.
 	Values *[]string `json:"values,omitempty"`
+	// RestrictionInfo - READ-ONLY; The information about the restriction where the SKU cannot be used.
+	RestrictionInfo *ResourceSkuRestrictionInfo `json:"restrictionInfo,omitempty"`
 	// ReasonCode - READ-ONLY; The reason for restriction. Possible values include: 'QuotaID', 'NotAvailableForSubscription'
 	ReasonCode ResourceSkuRestrictionsReasonCode `json:"reasonCode,omitempty"`
 }
 
-// ResourceSkusResult the Compute List Skus operation response.
+// ResourceSkusResult the List Resource Skus operation response.
 type ResourceSkusResult struct {
 	autorest.Response `json:"-"`
 	// Value - The list of skus available for the subscription.
 	Value *[]ResourceSku `json:"value,omitempty"`
-	// NextLink - The uri to fetch the next page of Compute Skus. Call ListNext() with this to fetch the next page of VMSS Skus.
+	// NextLink - The URI to fetch the next page of Resource Skus. Call ListNext() with this URI to fetch the next page of Resource Skus
 	NextLink *string `json:"nextLink,omitempty"`
 }
 
@@ -2693,6 +3306,16 @@ func (ru ResourceUpdate) MarshalJSON() ([]byte, error) {
 		objectMap["sku"] = ru.Sku
 	}
 	return json.Marshal(objectMap)
+}
+
+// RollbackStatusInfo information about rollback on failed VM instances after a OS Upgrade operation.
+type RollbackStatusInfo struct {
+	// SuccessfullyRolledbackInstanceCount - READ-ONLY; The number of instances which have been successfully rolled back.
+	SuccessfullyRolledbackInstanceCount *int32 `json:"successfullyRolledbackInstanceCount,omitempty"`
+	// FailedRolledbackInstanceCount - READ-ONLY; The number of instances which failed to rollback.
+	FailedRolledbackInstanceCount *int32 `json:"failedRolledbackInstanceCount,omitempty"`
+	// RollbackError - READ-ONLY; Error details if OS rollback failed.
+	RollbackError *APIError `json:"rollbackError,omitempty"`
 }
 
 // RollingUpgradePolicy the configuration parameters used while performing a rolling upgrade.
@@ -3687,6 +4310,22 @@ type SubResourceReadOnly struct {
 	ID *string `json:"id,omitempty"`
 }
 
+// ThrottledRequestsInput api request input for LogAnalytics getThrottledRequests Api.
+type ThrottledRequestsInput struct {
+	// BlobContainerSasURI - SAS Uri of the logging blob container to which LogAnalytics Api writes output logs to.
+	BlobContainerSasURI *string `json:"blobContainerSasUri,omitempty"`
+	// FromTime - From time of the query
+	FromTime *date.Time `json:"fromTime,omitempty"`
+	// ToTime - To time of the query
+	ToTime *date.Time `json:"toTime,omitempty"`
+	// GroupByThrottlePolicy - Group query result by Throttle Policy applied.
+	GroupByThrottlePolicy *bool `json:"groupByThrottlePolicy,omitempty"`
+	// GroupByOperationName - Group query result by Operation Name.
+	GroupByOperationName *bool `json:"groupByOperationName,omitempty"`
+	// GroupByResourceName - Group query result by Resource Name.
+	GroupByResourceName *bool `json:"groupByResourceName,omitempty"`
+}
+
 // UpdateResource the Update Resource model definition.
 type UpdateResource struct {
 	// Tags - Resource tags
@@ -3702,6 +4341,43 @@ func (ur UpdateResource) MarshalJSON() ([]byte, error) {
 	return json.Marshal(objectMap)
 }
 
+// UpgradeOperationHistoricalStatusInfo virtual Machine Scale Set OS Upgrade History operation response.
+type UpgradeOperationHistoricalStatusInfo struct {
+	// Properties - READ-ONLY; Information about the properties of the upgrade operation.
+	Properties *UpgradeOperationHistoricalStatusInfoProperties `json:"properties,omitempty"`
+	// Type - READ-ONLY; Resource type
+	Type *string `json:"type,omitempty"`
+	// Location - READ-ONLY; Resource location
+	Location *string `json:"location,omitempty"`
+}
+
+// UpgradeOperationHistoricalStatusInfoProperties describes each OS upgrade on the Virtual Machine Scale
+// Set.
+type UpgradeOperationHistoricalStatusInfoProperties struct {
+	// RunningStatus - READ-ONLY; Information about the overall status of the upgrade operation.
+	RunningStatus *UpgradeOperationHistoryStatus `json:"runningStatus,omitempty"`
+	// Progress - READ-ONLY; Counts of the VMs in each state.
+	Progress *RollingUpgradeProgressInfo `json:"progress,omitempty"`
+	// Error - READ-ONLY; Error Details for this upgrade if there are any.
+	Error *APIError `json:"error,omitempty"`
+	// StartedBy - READ-ONLY; Invoker of the Upgrade Operation. Possible values include: 'Unknown', 'User', 'Platform'
+	StartedBy UpgradeOperationInvoker `json:"startedBy,omitempty"`
+	// TargetImageReference - READ-ONLY; Image Reference details
+	TargetImageReference *ImageReference `json:"targetImageReference,omitempty"`
+	// RollbackInfo - READ-ONLY; Information about OS rollback if performed
+	RollbackInfo *RollbackStatusInfo `json:"rollbackInfo,omitempty"`
+}
+
+// UpgradeOperationHistoryStatus information about the current running state of the overall upgrade.
+type UpgradeOperationHistoryStatus struct {
+	// Code - READ-ONLY; Code indicating the current status of the upgrade. Possible values include: 'UpgradeStateRollingForward', 'UpgradeStateCancelled', 'UpgradeStateCompleted', 'UpgradeStateFaulted'
+	Code UpgradeState `json:"code,omitempty"`
+	// StartTime - READ-ONLY; Start time of the upgrade.
+	StartTime *date.Time `json:"startTime,omitempty"`
+	// EndTime - READ-ONLY; End time of the upgrade.
+	EndTime *date.Time `json:"endTime,omitempty"`
+}
+
 // UpgradePolicy describes an upgrade policy - automatic, manual, or rolling.
 type UpgradePolicy struct {
 	// Mode - Specifies the mode of an upgrade to virtual machines in the scale set.<br /><br /> Possible values are:<br /><br /> **Manual** - You  control the application of updates to virtual machines in the scale set. You do this by using the manualUpgrade action.<br /><br /> **Automatic** - All virtual machines in the scale set are  automatically updated at the same time. Possible values include: 'Automatic', 'Manual', 'Rolling'
@@ -3710,6 +4386,8 @@ type UpgradePolicy struct {
 	RollingUpgradePolicy *RollingUpgradePolicy `json:"rollingUpgradePolicy,omitempty"`
 	// AutomaticOSUpgrade - Whether OS upgrades should automatically be applied to scale set instances in a rolling fashion when a newer version of the image becomes available.
 	AutomaticOSUpgrade *bool `json:"automaticOSUpgrade,omitempty"`
+	// AutoOSUpgradePolicy - Configuration parameters used for performing automatic OS Upgrade.
+	AutoOSUpgradePolicy *AutoOSUpgradePolicy `json:"autoOSUpgradePolicy,omitempty"`
 }
 
 // Usage describes Compute Resource Usage.
@@ -4419,12 +5097,14 @@ type VirtualMachineHealthStatus struct {
 
 // VirtualMachineIdentity identity for the virtual machine.
 type VirtualMachineIdentity struct {
-	// PrincipalID - READ-ONLY; The principal id of virtual machine identity.
+	// PrincipalID - READ-ONLY; The principal id of virtual machine identity. This property will only be provided for a system assigned identity.
 	PrincipalID *string `json:"principalId,omitempty"`
-	// TenantID - READ-ONLY; The tenant id associated with the virtual machine.
+	// TenantID - READ-ONLY; The tenant id associated with the virtual machine. This property will only be provided for a system assigned identity.
 	TenantID *string `json:"tenantId,omitempty"`
-	// Type - The type of identity used for the virtual machine. Currently, the only supported type is 'SystemAssigned', which implicitly creates an identity. Possible values include: 'SystemAssigned'
+	// Type - The type of identity used for the virtual machine. The type 'SystemAssigned, UserAssigned' includes both an implicitly created identity and a set of user assigned identities. The type 'None' will remove any identities from the virtual machine. Possible values include: 'ResourceIdentityTypeSystemAssigned', 'ResourceIdentityTypeUserAssigned', 'ResourceIdentityTypeSystemAssignedUserAssigned', 'ResourceIdentityTypeNone'
 	Type ResourceIdentityType `json:"type,omitempty"`
+	// IdentityIds - The list of user identities associated with the Virtual Machine. The user identity references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/identities/{identityName}'.
+	IdentityIds *[]string `json:"identityIds,omitempty"`
 }
 
 // VirtualMachineImage describes a Virtual Machine Image.
@@ -4566,6 +5246,12 @@ type VirtualMachineInstanceView struct {
 	PlatformUpdateDomain *int32 `json:"platformUpdateDomain,omitempty"`
 	// PlatformFaultDomain - Specifies the fault domain of the virtual machine.
 	PlatformFaultDomain *int32 `json:"platformFaultDomain,omitempty"`
+	// ComputerName - The computer name assigned to the virtual machine.
+	ComputerName *string `json:"computerName,omitempty"`
+	// OsName - The Operating System running on the virtual machine.
+	OsName *string `json:"osName,omitempty"`
+	// OsVersion - The version of Operating System running on the virtual machine.
+	OsVersion *string `json:"osVersion,omitempty"`
 	// RdpThumbPrint - The Remote desktop certificate thumbprint.
 	RdpThumbPrint *string `json:"rdpThumbPrint,omitempty"`
 	// VMAgent - The VM Agent running on the virtual machine.
@@ -4916,6 +5602,8 @@ type VirtualMachineScaleSetDataDisk struct {
 	Lun *int32 `json:"lun,omitempty"`
 	// Caching - Specifies the caching requirements. <br><br> Possible values are: <br><br> **None** <br><br> **ReadOnly** <br><br> **ReadWrite** <br><br> Default: **None for Standard storage. ReadOnly for Premium storage**. Possible values include: 'CachingTypesNone', 'CachingTypesReadOnly', 'CachingTypesReadWrite'
 	Caching CachingTypes `json:"caching,omitempty"`
+	// WriteAcceleratorEnabled - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+	WriteAcceleratorEnabled *bool `json:"writeAcceleratorEnabled,omitempty"`
 	// CreateOption - The create option. Possible values include: 'DiskCreateOptionTypesFromImage', 'DiskCreateOptionTypesEmpty', 'DiskCreateOptionTypesAttach'
 	CreateOption DiskCreateOptionTypes `json:"createOption,omitempty"`
 	// DiskSizeGB - Specifies the size of an empty data disk in gigabytes. This element can be used to overwrite the size of the disk in a virtual machine image. <br><br> This value cannot be larger than 1023 GB
@@ -5222,12 +5910,14 @@ func (future *VirtualMachineScaleSetExtensionsDeleteFuture) Result(client Virtua
 
 // VirtualMachineScaleSetIdentity identity for the virtual machine scale set.
 type VirtualMachineScaleSetIdentity struct {
-	// PrincipalID - READ-ONLY; The principal id of virtual machine scale set identity.
+	// PrincipalID - READ-ONLY; The principal id of virtual machine scale set identity. This property will only be provided for a system assigned identity.
 	PrincipalID *string `json:"principalId,omitempty"`
-	// TenantID - READ-ONLY; The tenant id associated with the virtual machine scale set.
+	// TenantID - READ-ONLY; The tenant id associated with the virtual machine scale set. This property will only be provided for a system assigned identity.
 	TenantID *string `json:"tenantId,omitempty"`
-	// Type - The type of identity used for the virtual machine scale set. Currently, the only supported type is 'SystemAssigned', which implicitly creates an identity. Possible values include: 'SystemAssigned'
+	// Type - The type of identity used for the virtual machine scale set. The type 'SystemAssigned, UserAssigned' includes both an implicitly created identity and a set of user assigned identities. The type 'None' will remove any identities from the virtual machine scale set. Possible values include: 'ResourceIdentityTypeSystemAssigned', 'ResourceIdentityTypeUserAssigned', 'ResourceIdentityTypeSystemAssignedUserAssigned', 'ResourceIdentityTypeNone'
 	Type ResourceIdentityType `json:"type,omitempty"`
+	// IdentityIds - The list of user identities associated with the virtual machine scale set. The user identity references will be ARM resource ids in the form: '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/identities/{identityName}'.
+	IdentityIds *[]string `json:"identityIds,omitempty"`
 }
 
 // VirtualMachineScaleSetInstanceView the instance view of a virtual machine scale set.
@@ -5332,6 +6022,155 @@ type VirtualMachineScaleSetIPConfigurationProperties struct {
 	LoadBalancerBackendAddressPools *[]SubResource `json:"loadBalancerBackendAddressPools,omitempty"`
 	// LoadBalancerInboundNatPools - Specifies an array of references to inbound Nat pools of the load balancers. A scale set can reference inbound nat pools of one public and one internal load balancer. Multiple scale sets cannot use the same load balancer
 	LoadBalancerInboundNatPools *[]SubResource `json:"loadBalancerInboundNatPools,omitempty"`
+}
+
+// VirtualMachineScaleSetListOSUpgradeHistory list of Virtual Machine Scale Set OS Upgrade History
+// operation response.
+type VirtualMachineScaleSetListOSUpgradeHistory struct {
+	autorest.Response `json:"-"`
+	// Value - The list of OS upgrades performed on the virtual machine scale set.
+	Value *[]UpgradeOperationHistoricalStatusInfo `json:"value,omitempty"`
+	// NextLink - The uri to fetch the next page of OS Upgrade History. Call ListNext() with this to fetch the next page of history of upgrades.
+	NextLink *string `json:"nextLink,omitempty"`
+}
+
+// VirtualMachineScaleSetListOSUpgradeHistoryIterator provides access to a complete listing of
+// UpgradeOperationHistoricalStatusInfo values.
+type VirtualMachineScaleSetListOSUpgradeHistoryIterator struct {
+	i    int
+	page VirtualMachineScaleSetListOSUpgradeHistoryPage
+}
+
+// NextWithContext advances to the next value.  If there was an error making
+// the request the iterator does not advance and the error is returned.
+func (iter *VirtualMachineScaleSetListOSUpgradeHistoryIterator) NextWithContext(ctx context.Context) (err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/VirtualMachineScaleSetListOSUpgradeHistoryIterator.NextWithContext")
+		defer func() {
+			sc := -1
+			if iter.Response().Response.Response != nil {
+				sc = iter.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
+	iter.i++
+	if iter.i < len(iter.page.Values()) {
+		return nil
+	}
+	err = iter.page.NextWithContext(ctx)
+	if err != nil {
+		iter.i--
+		return err
+	}
+	iter.i = 0
+	return nil
+}
+
+// Next advances to the next value.  If there was an error making
+// the request the iterator does not advance and the error is returned.
+// Deprecated: Use NextWithContext() instead.
+func (iter *VirtualMachineScaleSetListOSUpgradeHistoryIterator) Next() error {
+	return iter.NextWithContext(context.Background())
+}
+
+// NotDone returns true if the enumeration should be started or is not yet complete.
+func (iter VirtualMachineScaleSetListOSUpgradeHistoryIterator) NotDone() bool {
+	return iter.page.NotDone() && iter.i < len(iter.page.Values())
+}
+
+// Response returns the raw server response from the last page request.
+func (iter VirtualMachineScaleSetListOSUpgradeHistoryIterator) Response() VirtualMachineScaleSetListOSUpgradeHistory {
+	return iter.page.Response()
+}
+
+// Value returns the current value or a zero-initialized value if the
+// iterator has advanced beyond the end of the collection.
+func (iter VirtualMachineScaleSetListOSUpgradeHistoryIterator) Value() UpgradeOperationHistoricalStatusInfo {
+	if !iter.page.NotDone() {
+		return UpgradeOperationHistoricalStatusInfo{}
+	}
+	return iter.page.Values()[iter.i]
+}
+
+// Creates a new instance of the VirtualMachineScaleSetListOSUpgradeHistoryIterator type.
+func NewVirtualMachineScaleSetListOSUpgradeHistoryIterator(page VirtualMachineScaleSetListOSUpgradeHistoryPage) VirtualMachineScaleSetListOSUpgradeHistoryIterator {
+	return VirtualMachineScaleSetListOSUpgradeHistoryIterator{page: page}
+}
+
+// IsEmpty returns true if the ListResult contains no values.
+func (vmsslouh VirtualMachineScaleSetListOSUpgradeHistory) IsEmpty() bool {
+	return vmsslouh.Value == nil || len(*vmsslouh.Value) == 0
+}
+
+// virtualMachineScaleSetListOSUpgradeHistoryPreparer prepares a request to retrieve the next set of results.
+// It returns nil if no more results exist.
+func (vmsslouh VirtualMachineScaleSetListOSUpgradeHistory) virtualMachineScaleSetListOSUpgradeHistoryPreparer(ctx context.Context) (*http.Request, error) {
+	if vmsslouh.NextLink == nil || len(to.String(vmsslouh.NextLink)) < 1 {
+		return nil, nil
+	}
+	return autorest.Prepare((&http.Request{}).WithContext(ctx),
+		autorest.AsJSON(),
+		autorest.AsGet(),
+		autorest.WithBaseURL(to.String(vmsslouh.NextLink)))
+}
+
+// VirtualMachineScaleSetListOSUpgradeHistoryPage contains a page of UpgradeOperationHistoricalStatusInfo
+// values.
+type VirtualMachineScaleSetListOSUpgradeHistoryPage struct {
+	fn       func(context.Context, VirtualMachineScaleSetListOSUpgradeHistory) (VirtualMachineScaleSetListOSUpgradeHistory, error)
+	vmsslouh VirtualMachineScaleSetListOSUpgradeHistory
+}
+
+// NextWithContext advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+func (page *VirtualMachineScaleSetListOSUpgradeHistoryPage) NextWithContext(ctx context.Context) (err error) {
+	if tracing.IsEnabled() {
+		ctx = tracing.StartSpan(ctx, fqdn+"/VirtualMachineScaleSetListOSUpgradeHistoryPage.NextWithContext")
+		defer func() {
+			sc := -1
+			if page.Response().Response.Response != nil {
+				sc = page.Response().Response.Response.StatusCode
+			}
+			tracing.EndSpan(ctx, sc, err)
+		}()
+	}
+	next, err := page.fn(ctx, page.vmsslouh)
+	if err != nil {
+		return err
+	}
+	page.vmsslouh = next
+	return nil
+}
+
+// Next advances to the next page of values.  If there was an error making
+// the request the page does not advance and the error is returned.
+// Deprecated: Use NextWithContext() instead.
+func (page *VirtualMachineScaleSetListOSUpgradeHistoryPage) Next() error {
+	return page.NextWithContext(context.Background())
+}
+
+// NotDone returns true if the page enumeration should be started or is not yet complete.
+func (page VirtualMachineScaleSetListOSUpgradeHistoryPage) NotDone() bool {
+	return !page.vmsslouh.IsEmpty()
+}
+
+// Response returns the raw server response from the last page request.
+func (page VirtualMachineScaleSetListOSUpgradeHistoryPage) Response() VirtualMachineScaleSetListOSUpgradeHistory {
+	return page.vmsslouh
+}
+
+// Values returns the slice of values for the current page or nil if there are no values.
+func (page VirtualMachineScaleSetListOSUpgradeHistoryPage) Values() []UpgradeOperationHistoricalStatusInfo {
+	if page.vmsslouh.IsEmpty() {
+		return nil
+	}
+	return *page.vmsslouh.Value
+}
+
+// Creates a new instance of the VirtualMachineScaleSetListOSUpgradeHistoryPage type.
+func NewVirtualMachineScaleSetListOSUpgradeHistoryPage(getNextPage func(context.Context, VirtualMachineScaleSetListOSUpgradeHistory) (VirtualMachineScaleSetListOSUpgradeHistory, error)) VirtualMachineScaleSetListOSUpgradeHistoryPage {
+	return VirtualMachineScaleSetListOSUpgradeHistoryPage{fn: getNextPage}
 }
 
 // VirtualMachineScaleSetListResult the List Virtual Machine operation response.
@@ -5868,6 +6707,8 @@ type VirtualMachineScaleSetNetworkConfigurationProperties struct {
 	DNSSettings *VirtualMachineScaleSetNetworkConfigurationDNSSettings `json:"dnsSettings,omitempty"`
 	// IPConfigurations - Specifies the IP configurations of the network interface.
 	IPConfigurations *[]VirtualMachineScaleSetIPConfiguration `json:"ipConfigurations,omitempty"`
+	// EnableIPForwarding - Whether IP forwarding enabled on this NIC.
+	EnableIPForwarding *bool `json:"enableIPForwarding,omitempty"`
 }
 
 // VirtualMachineScaleSetNetworkProfile describes a virtual machine scale set network profile.
@@ -5884,6 +6725,8 @@ type VirtualMachineScaleSetOSDisk struct {
 	Name *string `json:"name,omitempty"`
 	// Caching - Specifies the caching requirements. <br><br> Possible values are: <br><br> **None** <br><br> **ReadOnly** <br><br> **ReadWrite** <br><br> Default: **None for Standard storage. ReadOnly for Premium storage**. Possible values include: 'CachingTypesNone', 'CachingTypesReadOnly', 'CachingTypesReadWrite'
 	Caching CachingTypes `json:"caching,omitempty"`
+	// WriteAcceleratorEnabled - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+	WriteAcceleratorEnabled *bool `json:"writeAcceleratorEnabled,omitempty"`
 	// CreateOption - Specifies how the virtual machines in the scale set should be created.<br><br> The only allowed value is: **FromImage** \u2013 This value is used when you are using an image to create the virtual machine. If you are using a platform image, you also use the imageReference element described above. If you are using a marketplace image, you  also use the plan element previously described. Possible values include: 'DiskCreateOptionTypesFromImage', 'DiskCreateOptionTypesEmpty', 'DiskCreateOptionTypesAttach'
 	CreateOption DiskCreateOptionTypes `json:"createOption,omitempty"`
 	// OsType - This property allows you to specify the type of the OS that is included in the disk if creating a VM from user-image or a specialized VHD. <br><br> Possible values are: <br><br> **Windows** <br><br> **Linux**. Possible values include: 'Windows', 'Linux'
@@ -5928,6 +6771,10 @@ type VirtualMachineScaleSetProperties struct {
 	UniqueID *string `json:"uniqueId,omitempty"`
 	// SinglePlacementGroup - When true this limits the scale set to a single placement group, of max size 100 virtual machines.
 	SinglePlacementGroup *bool `json:"singlePlacementGroup,omitempty"`
+	// ZoneBalance - Whether to force strictly even Virtual Machine distribution cross x-zones in case there is zone outage.
+	ZoneBalance *bool `json:"zoneBalance,omitempty"`
+	// PlatformFaultDomainCount - Fault Domain count for each placement group.
+	PlatformFaultDomainCount *int32 `json:"platformFaultDomainCount,omitempty"`
 }
 
 // VirtualMachineScaleSetPublicIPAddressConfiguration describes a virtual machines scale set IP
@@ -6195,6 +7042,35 @@ type VirtualMachineScaleSetSkuCapacity struct {
 	ScaleType VirtualMachineScaleSetSkuScaleType `json:"scaleType,omitempty"`
 }
 
+// VirtualMachineScaleSetsPerformMaintenanceFuture an abstraction for monitoring and retrieving the results
+// of a long-running operation.
+type VirtualMachineScaleSetsPerformMaintenanceFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachineScaleSetsPerformMaintenanceFuture) Result(client VirtualMachineScaleSetsClient) (osr OperationStatusResponse, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetsPerformMaintenanceFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachineScaleSetsPerformMaintenanceFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if osr.Response.Response, err = future.GetResult(sender); err == nil && osr.Response.Response.StatusCode != http.StatusNoContent {
+		osr, err = client.PerformMaintenanceResponder(osr.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetsPerformMaintenanceFuture", "Result", osr.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
 // VirtualMachineScaleSetsPowerOffFuture an abstraction for monitoring and retrieving the results of a
 // long-running operation.
 type VirtualMachineScaleSetsPowerOffFuture struct {
@@ -6219,6 +7095,35 @@ func (future *VirtualMachineScaleSetsPowerOffFuture) Result(client VirtualMachin
 		osr, err = client.PowerOffResponder(osr.Response.Response)
 		if err != nil {
 			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetsPowerOffFuture", "Result", osr.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// VirtualMachineScaleSetsRedeployFuture an abstraction for monitoring and retrieving the results of a
+// long-running operation.
+type VirtualMachineScaleSetsRedeployFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachineScaleSetsRedeployFuture) Result(client VirtualMachineScaleSetsClient) (osr OperationStatusResponse, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetsRedeployFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachineScaleSetsRedeployFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if osr.Response.Response, err = future.GetResult(sender); err == nil && osr.Response.Response.StatusCode != http.StatusNoContent {
+		osr, err = client.RedeployResponder(osr.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetsRedeployFuture", "Result", osr.Response.Response, "Failure responding to request")
 		}
 	}
 	return
@@ -6669,6 +7574,8 @@ type VirtualMachineScaleSetUpdateNetworkConfigurationProperties struct {
 	DNSSettings *VirtualMachineScaleSetNetworkConfigurationDNSSettings `json:"dnsSettings,omitempty"`
 	// IPConfigurations - The virtual machine scale set IP Configuration.
 	IPConfigurations *[]VirtualMachineScaleSetUpdateIPConfiguration `json:"ipConfigurations,omitempty"`
+	// EnableIPForwarding - Whether IP forwarding enabled on this NIC.
+	EnableIPForwarding *bool `json:"enableIPForwarding,omitempty"`
 }
 
 // VirtualMachineScaleSetUpdateNetworkProfile describes a virtual machine scale set network profile.
@@ -6682,6 +7589,8 @@ type VirtualMachineScaleSetUpdateNetworkProfile struct {
 type VirtualMachineScaleSetUpdateOSDisk struct {
 	// Caching - The caching type. Possible values include: 'CachingTypesNone', 'CachingTypesReadOnly', 'CachingTypesReadWrite'
 	Caching CachingTypes `json:"caching,omitempty"`
+	// WriteAcceleratorEnabled - Specifies whether writeAccelerator should be enabled or disabled on the disk.
+	WriteAcceleratorEnabled *bool `json:"writeAcceleratorEnabled,omitempty"`
 	// Image - The Source User Image VirtualHardDisk. This VirtualHardDisk will be copied before using it to attach to the Virtual Machine. If SourceImage is provided, the destination VirtualHardDisk should not exist.
 	Image *VirtualHardDisk `json:"image,omitempty"`
 	// VhdContainers - The list of virtual hard disk container uris.
@@ -6983,6 +7892,8 @@ type VirtualMachineScaleSetVMInstanceView struct {
 	RdpThumbPrint *string `json:"rdpThumbPrint,omitempty"`
 	// VMAgent - The VM Agent running on the virtual machine.
 	VMAgent *VirtualMachineAgentInstanceView `json:"vmAgent,omitempty"`
+	// MaintenanceRedeployStatus - The Maintenance Operation status on the virtual machine.
+	MaintenanceRedeployStatus *MaintenanceRedeployStatus `json:"maintenanceRedeployStatus,omitempty"`
 	// Disks - The disks information.
 	Disks *[]DiskInstanceView `json:"disks,omitempty"`
 	// Extensions - The extensions information.
@@ -7158,6 +8069,10 @@ type VirtualMachineScaleSetVMProfile struct {
 	ExtensionProfile *VirtualMachineScaleSetExtensionProfile `json:"extensionProfile,omitempty"`
 	// LicenseType - Specifies that the image or disk that is being used was licensed on-premises. This element is only used for images that contain the Windows Server operating system. <br><br> Possible values are: <br><br> Windows_Client <br><br> Windows_Server <br><br> If this element is included in a request for an update, the value must match the initial value. This value cannot be updated. <br><br> For more information, see [Azure Hybrid Use Benefit for Windows Server](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-hybrid-use-benefit-licensing?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json) <br><br> Minimum api-version: 2015-06-15
 	LicenseType *string `json:"licenseType,omitempty"`
+	// Priority - Specifies the priority for the virtual machines in the scale set. <br><br>Minimum api-version: 2017-10-30-preview. Possible values include: 'Regular', 'Low'
+	Priority VirtualMachinePriorityTypes `json:"priority,omitempty"`
+	// EvictionPolicy - Specifies the eviction policy for virtual machines in a low priority scale set. <br><br>Minimum api-version: 2017-10-30-preview. Possible values include: 'Deallocate', 'Delete'
+	EvictionPolicy VirtualMachineEvictionPolicyTypes `json:"evictionPolicy,omitempty"`
 }
 
 // VirtualMachineScaleSetVMProperties describes the properties of a virtual machine scale set virtual
@@ -7245,6 +8160,35 @@ func (future *VirtualMachineScaleSetVMsDeleteFuture) Result(client VirtualMachin
 	return
 }
 
+// VirtualMachineScaleSetVMsPerformMaintenanceFuture an abstraction for monitoring and retrieving the
+// results of a long-running operation.
+type VirtualMachineScaleSetVMsPerformMaintenanceFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachineScaleSetVMsPerformMaintenanceFuture) Result(client VirtualMachineScaleSetVMsClient) (osr OperationStatusResponse, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsPerformMaintenanceFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachineScaleSetVMsPerformMaintenanceFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if osr.Response.Response, err = future.GetResult(sender); err == nil && osr.Response.Response.StatusCode != http.StatusNoContent {
+		osr, err = client.PerformMaintenanceResponder(osr.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsPerformMaintenanceFuture", "Result", osr.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
 // VirtualMachineScaleSetVMsPowerOffFuture an abstraction for monitoring and retrieving the results of a
 // long-running operation.
 type VirtualMachineScaleSetVMsPowerOffFuture struct {
@@ -7269,6 +8213,35 @@ func (future *VirtualMachineScaleSetVMsPowerOffFuture) Result(client VirtualMach
 		osr, err = client.PowerOffResponder(osr.Response.Response)
 		if err != nil {
 			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsPowerOffFuture", "Result", osr.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// VirtualMachineScaleSetVMsRedeployFuture an abstraction for monitoring and retrieving the results of a
+// long-running operation.
+type VirtualMachineScaleSetVMsRedeployFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachineScaleSetVMsRedeployFuture) Result(client VirtualMachineScaleSetVMsClient) (osr OperationStatusResponse, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsRedeployFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachineScaleSetVMsRedeployFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if osr.Response.Response, err = future.GetResult(sender); err == nil && osr.Response.Response.StatusCode != http.StatusNoContent {
+		osr, err = client.RedeployResponder(osr.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsRedeployFuture", "Result", osr.Response.Response, "Failure responding to request")
 		}
 	}
 	return
@@ -7385,6 +8358,35 @@ func (future *VirtualMachineScaleSetVMsStartFuture) Result(client VirtualMachine
 		osr, err = client.StartResponder(osr.Response.Response)
 		if err != nil {
 			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsStartFuture", "Result", osr.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// VirtualMachineScaleSetVMsUpdateFuture an abstraction for monitoring and retrieving the results of a
+// long-running operation.
+type VirtualMachineScaleSetVMsUpdateFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachineScaleSetVMsUpdateFuture) Result(client VirtualMachineScaleSetVMsClient) (vmssv VirtualMachineScaleSetVM, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsUpdateFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachineScaleSetVMsUpdateFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if vmssv.Response.Response, err = future.GetResult(sender); err == nil && vmssv.Response.Response.StatusCode != http.StatusNoContent {
+		vmssv, err = client.UpdateResponder(vmssv.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachineScaleSetVMsUpdateFuture", "Result", vmssv.Response.Response, "Failure responding to request")
 		}
 	}
 	return
@@ -7739,6 +8741,129 @@ type VirtualMachineStatusCodeCount struct {
 	Code *string `json:"code,omitempty"`
 	// Count - READ-ONLY; The number of instances having a particular status code.
 	Count *int32 `json:"count,omitempty"`
+}
+
+// VirtualMachinesUpdateFuture an abstraction for monitoring and retrieving the results of a long-running
+// operation.
+type VirtualMachinesUpdateFuture struct {
+	azure.Future
+}
+
+// Result returns the result of the asynchronous operation.
+// If the operation has not completed it will return an error.
+func (future *VirtualMachinesUpdateFuture) Result(client VirtualMachinesClient) (VM VirtualMachine, err error) {
+	var done bool
+	done, err = future.DoneWithContext(context.Background(), client)
+	if err != nil {
+		err = autorest.NewErrorWithError(err, "compute.VirtualMachinesUpdateFuture", "Result", future.Response(), "Polling failure")
+		return
+	}
+	if !done {
+		err = azure.NewAsyncOpIncompleteError("compute.VirtualMachinesUpdateFuture")
+		return
+	}
+	sender := autorest.DecorateSender(client, autorest.DoRetryForStatusCodes(client.RetryAttempts, client.RetryDuration, autorest.StatusCodesForRetry...))
+	if VM.Response.Response, err = future.GetResult(sender); err == nil && VM.Response.Response.StatusCode != http.StatusNoContent {
+		VM, err = client.UpdateResponder(VM.Response.Response)
+		if err != nil {
+			err = autorest.NewErrorWithError(err, "compute.VirtualMachinesUpdateFuture", "Result", VM.Response.Response, "Failure responding to request")
+		}
+	}
+	return
+}
+
+// VirtualMachineUpdate describes a Virtual Machine Update.
+type VirtualMachineUpdate struct {
+	// Plan - Specifies information about the marketplace image used to create the virtual machine. This element is only used for marketplace images. Before you can use a marketplace image from an API, you must enable the image for programmatic use.  In the Azure portal, find the marketplace image that you want to use and then click **Want to deploy programmatically, Get Started ->**. Enter any required information and then click **Save**.
+	Plan                      *Plan `json:"plan,omitempty"`
+	*VirtualMachineProperties `json:"properties,omitempty"`
+	// Identity - The identity of the virtual machine, if configured.
+	Identity *VirtualMachineIdentity `json:"identity,omitempty"`
+	// Zones - The virtual machine zones.
+	Zones *[]string `json:"zones,omitempty"`
+	// Tags - Resource tags
+	Tags map[string]*string `json:"tags"`
+}
+
+// MarshalJSON is the custom marshaler for VirtualMachineUpdate.
+func (vmu VirtualMachineUpdate) MarshalJSON() ([]byte, error) {
+	objectMap := make(map[string]interface{})
+	if vmu.Plan != nil {
+		objectMap["plan"] = vmu.Plan
+	}
+	if vmu.VirtualMachineProperties != nil {
+		objectMap["properties"] = vmu.VirtualMachineProperties
+	}
+	if vmu.Identity != nil {
+		objectMap["identity"] = vmu.Identity
+	}
+	if vmu.Zones != nil {
+		objectMap["zones"] = vmu.Zones
+	}
+	if vmu.Tags != nil {
+		objectMap["tags"] = vmu.Tags
+	}
+	return json.Marshal(objectMap)
+}
+
+// UnmarshalJSON is the custom unmarshaler for VirtualMachineUpdate struct.
+func (vmu *VirtualMachineUpdate) UnmarshalJSON(body []byte) error {
+	var m map[string]*json.RawMessage
+	err := json.Unmarshal(body, &m)
+	if err != nil {
+		return err
+	}
+	for k, v := range m {
+		switch k {
+		case "plan":
+			if v != nil {
+				var plan Plan
+				err = json.Unmarshal(*v, &plan)
+				if err != nil {
+					return err
+				}
+				vmu.Plan = &plan
+			}
+		case "properties":
+			if v != nil {
+				var virtualMachineProperties VirtualMachineProperties
+				err = json.Unmarshal(*v, &virtualMachineProperties)
+				if err != nil {
+					return err
+				}
+				vmu.VirtualMachineProperties = &virtualMachineProperties
+			}
+		case "identity":
+			if v != nil {
+				var identity VirtualMachineIdentity
+				err = json.Unmarshal(*v, &identity)
+				if err != nil {
+					return err
+				}
+				vmu.Identity = &identity
+			}
+		case "zones":
+			if v != nil {
+				var zones []string
+				err = json.Unmarshal(*v, &zones)
+				if err != nil {
+					return err
+				}
+				vmu.Zones = &zones
+			}
+		case "tags":
+			if v != nil {
+				var tags map[string]*string
+				err = json.Unmarshal(*v, &tags)
+				if err != nil {
+					return err
+				}
+				vmu.Tags = tags
+			}
+		}
+	}
+
+	return nil
 }
 
 // WindowsConfiguration specifies Windows operating system settings on the virtual machine.
