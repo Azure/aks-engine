@@ -373,3 +373,5 @@ const (
 	AntreaInstallCniChainCmd      = "install_cni_chaining"
 	AntreaNetworkPolicyOnlyMode   = "networkPolicyOnly"
 )
+
+const MasterNodeTaint string = "node-role.kubernetes.io/master=true:NoSchedule"

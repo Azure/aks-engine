@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -68,6 +69,8 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	expected["--register-node"] = "true"
+	expected["--register-with-taints"] = common.MasterNodeTaint
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
 		if expected[key] != val {
@@ -75,6 +78,18 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = "mycustomtaint"
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("mycustomtaint,%s", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	delete(expected, "--register-node")
+	delete(expected, "--register-with-taints")
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
 		if expected[key] != val {
@@ -201,6 +216,8 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+		"--register-with-taints":              common.MasterNodeTaint,
+		"--register-node":                     "true",
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
@@ -864,6 +881,12 @@ func TestStaticWindowsConfig(t *testing.T) {
 				}
 			}
 		}
+	}
+	if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; ok {
+		t.Fatalf("got unexpected --register-with-taints kubelet config with no Linux node pools")
+	}
+	if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-node"]; ok {
+		t.Fatalf("got unexpected --register-node kubelet config with no Linux node pools")
 	}
 }
 

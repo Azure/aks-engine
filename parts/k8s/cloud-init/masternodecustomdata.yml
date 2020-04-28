@@ -361,10 +361,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
-{{if AnyAgentIsLinux}}
-    KUBELET_REGISTER_NODE=--register-node=true
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
-{{end}}
     #EOF
 
 - path: /opt/azure/containers/kubelet.sh

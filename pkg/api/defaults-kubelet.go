@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -199,6 +200,16 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
+		if cs.Properties.AnyAgentIsLinux() {
+			if val, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; !ok {
+				cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = common.MasterNodeTaint
+			} else {
+				if !strings.Contains(val, common.MasterNodeTaint) {
+					cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] += fmt.Sprintf(",%s", common.MasterNodeTaint)
+				}
+			}
+			cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-node"] = "true"
+		}
 	}
 
 	// Agent-specific kubelet config changes go here
