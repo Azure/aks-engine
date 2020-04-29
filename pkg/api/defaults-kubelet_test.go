@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -68,6 +69,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	expected["--register-with-taints"] = common.MasterNodeTaint
 	masterKubeletConfig := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	for key, val := range masterKubeletConfig {
 		if expected[key] != val {
@@ -75,6 +77,37 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = "node-role.kubernetes.io/customtaint=true:NoSchedule"
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,%s", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", common.MasterNodeTaint)
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("%s,node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule", common.MasterNodeTaint)
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("%s,node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule", common.MasterNodeTaint)
+	masterKubeletConfig = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
+	for key, val := range masterKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected masterProfile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	delete(expected, "--register-with-taints")
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
 		if expected[key] != val {
@@ -201,6 +234,7 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+		"--register-with-taints":              common.MasterNodeTaint,
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
@@ -864,6 +898,9 @@ func TestStaticWindowsConfig(t *testing.T) {
 				}
 			}
 		}
+	}
+	if _, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; ok {
+		t.Fatalf("got unexpected --register-with-taints kubelet config with no Linux node pools")
 	}
 }
 

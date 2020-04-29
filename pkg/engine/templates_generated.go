@@ -38824,9 +38824,7 @@ ExecStart=/usr/local/bin/kubelet \
         --node-labels="${KUBELET_NODE_LABELS}" \
         --v=2 {{if NeedsContainerd}}--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock{{end}} \
         --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-        $KUBELET_CONFIG \
-        $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
-
+        $KUBELET_CONFIG
 [Install]
 WantedBy=multi-user.target
 `)
@@ -39959,10 +39957,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
 {{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
-{{if AnyAgentIsLinux}}
-    KUBELET_REGISTER_NODE=--register-node=true
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints=node-role.kubernetes.io/master=true:NoSchedule
 {{end}}
     #EOF
 

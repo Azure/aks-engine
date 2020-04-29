@@ -387,7 +387,7 @@ The above is the pattern we use to pass in a `cluster-init` spec for loading at 
 
 #### kubeletConfig
 
-`kubeletConfig` declares runtime configuration for the kubelet running on all master and agent nodes. It is a generic key/value object, and a child property of `kubernetesConfig`. An example custom kubelet config:
+`kubeletConfig` declares runtime configuration for the kubelet running on all master and agent nodes. It is a generic key/value object, and a child property of `kubernetesConfig`. The `kubeletConfig` configuration under `kubernetesConfig` will be inherited by a similar `kubeletConfig` configuration under the `masterProfile` configuration object, and by each `agentPoolProfile` in the `agentPoolProfiles` array. Specific master and per-pool kubelet configurations should be applied there. An example custom kubelet config:
 
 ```
 "kubernetesConfig": {
@@ -426,6 +426,7 @@ Below is a list of kubelet options that aks-engine will configure by default:
 | "--tls-cipher-suites"                 | "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256" |
 | "--authentication-token-webhook"      | "true" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                      |
 | "--read-only-port"                    | "0" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                         |
+| "--register-with-taints" | "node-role.kubernetes.io/master=true:NoSchedule" (`masterProfile` only; Note: you may add your own master-specific taints in the `kubeletConfig` under `masterProfile`, which will augment the built-in "node-role.kubernetes.io/master=true:NoSchedule" taint, which will always be present.) |
 
 Below is a list of kubelet options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces kubelet configuration, or because a static configuration is required to build a functional cluster:
 
@@ -437,8 +438,6 @@ Below is a list of kubelet options that are _not_ currently user-configurable, e
 | "--node-labels"                              | (based on Azure node metadata)                   |
 | "--cgroups-per-qos"                          | "true"                                           |
 | "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
-| "--register-node" (master nodes only)        | "true"                                           |
-| "--register-with-taints" (master nodes only) | "node-role.kubernetes.io/master=true:NoSchedule" |
 | "--keep-terminated-pod-volumes"              | "false"                                          |
 
 <a name="feat-controller-manager-config"></a>
@@ -743,6 +742,7 @@ Below is a list of sysctl configuration that aks-engine will configure by defaul
 | customVMTags                                                   | no                                                                                                | Specifies a list of custom tags to be added to the master VMs or Scale Sets. Each tag is a key/value pair (ie: `"myTagKey": "myTagValue"`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | sysctldConfig                    | no                        | Configure Linux kernel parameters via /etc/sysctl.d/. See `sysctldConfig` [below](#feat-sysctld-config)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | proximityPlacementGroupID        | no                        | Specifies the resource id of the Proximity Placement Group (PPG) to be used for master VMs.  Please find more details about PPG in this [Azure blog](https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups). Note that the PPG should be created in advance. The following [Azure CLI documentation](https://docs.microsoft.com/en-us/cli/azure/ppg?view=azure-cli-latest#az-ppg-create) explains how to create a PPG. |
+| kubeletConfig                    | no                        | Configure various runtime configuration for kubelet running on master nodes. See `kubeletConfig` [above](#feat-kubelet-config) |
 
 ### agentPoolProfiles
 
@@ -782,6 +782,8 @@ A cluster can have 0 to 12 agent pool profiles. Agent Pool Profiles are used for
 | preProvisionExtension | no | Specifies an extension to be run before the cluster is brought up. More details about [agentPoolProfiles extensions](extensions.md#agentpoolprofiles) |
 | sysctldConfig                    | no                        | Configure Linux kernel parameters via /etc/sysctl.d/. See `sysctldConfig` [below](#feat-sysctld-config) |
 | proximityPlacementGroupID        | no                        | Specifies the resource id of the Proximity Placement Group (PPG) to be used for this agentpool.  Please find more details about PPG in this [Azure blog](https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups). Note that the PPG should be created in advance. The following [Azure CLI documentation](https://docs.microsoft.com/en-us/cli/azure/ppg?view=azure-cli-latest#az-ppg-create) explains how to create a PPG. |
+| kubeletConfig                    | no                        | Configure various runtime configuration for kubelet running on this node pool. See `kubeletConfig` [above](#feat-kubelet-config) |
+
 ### linuxProfile
 
 `linuxProfile` provides the linux configuration for each linux node in the cluster
