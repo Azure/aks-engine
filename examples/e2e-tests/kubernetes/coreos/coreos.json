@@ -1,0 +1,105 @@
+{
+  "apiVersion": "vlabs",
+  "properties": {
+    "orchestratorProfile": {
+      "orchestratorType": "Kubernetes",
+      "kubernetesConfig": {
+        "clusterSubnet": "10.239.0.0/16",
+        "addons": [
+          {
+            "name": "tiller",
+            "enabled": true,
+            "config": {
+              "max-history": "10"
+            },
+            "containers": [
+              {
+                "name": "tiller",
+                "cpuRequests": "1",
+                "memoryRequests": "1Gi",
+                "cpuLimits": "1",
+                "memoryLimits": "1Gi"
+              }
+            ]
+          },
+          {
+            "name": "kubernetes-dashboard",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "kubernetes-dashboard",
+                "cpuRequests": "50m",
+                "memoryRequests": "512Mi",
+                "cpuLimits": "50m",
+                "memoryLimits": "512Mi"
+              }
+            ]
+          },
+          {
+            "name": "rescheduler",
+            "enabled": true,
+            "containers": [
+              {
+                "name": "rescheduler",
+                "cpuRequests": "20m",
+                "memoryRequests": "200Mi",
+                "cpuLimits": "20m",
+                "memoryLimits": "200Mi"
+              }
+            ]
+          },
+          {
+            "name": "keyvault-flexvolume",
+            "enabled": false
+          },
+          {
+            "name": "blobfuse-flexvolume",
+            "enabled": false
+          }
+        ]
+      }
+    },
+    "masterProfile": {
+      "count": 3,
+      "dnsPrefix": "",
+      "vmSize": "Standard_D2_v3",
+      "OSDiskSizeGB": 200,
+      "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+      "firstConsecutiveStaticIP": "10.239.255.239",
+      "vnetCidr": "10.239.0.0/16",
+      "distro": "coreos"
+    },
+    "agentPoolProfiles": [
+      {
+        "name": "agentmd",
+        "count": 3,
+        "distro": "coreos",
+        "vmSize": "Standard_D2_v3",
+        "OSDiskSizeGB": 200,
+        "storageProfile": "ManagedDisks",
+        "diskSizesGB": [
+          128,
+          128,
+          128,
+          128
+        ],
+        "availabilityProfile": "AvailabilitySet",
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+      }
+    ],
+    "linuxProfile": {
+      "adminUsername": "azureuser",
+      "ssh": {
+        "publicKeys": [
+          {
+            "keyData": ""
+          }
+        ]
+      }
+    },
+    "servicePrincipalProfile": {
+      "clientId": "",
+      "secret": ""
+    }
+  }
+}

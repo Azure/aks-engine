@@ -145,6 +145,9 @@ func TestOSType(t *testing.T) {
 	if p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return false but instead returned true")
 	}
+	if p.HasCoreOS() {
+		t.Fatalf("expected HasCoreOS() to return false but instead returned true")
+	}
 	if p.AgentPoolProfiles[0].IsWindows() {
 		t.Fatalf("expected IsWindows() to return false but instead returned true")
 	}
@@ -157,12 +160,68 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsRHEL() to return false but instead returned true")
 	}
 
+	if p.AgentPoolProfiles[0].IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return false but instead returned true")
+	}
+
 	if !p.AgentPoolProfiles[1].IsRHEL() {
 		t.Fatalf("expected IsRHEL() to return true but instead returned false")
 	}
 
+	if p.AgentPoolProfiles[1].IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return false but instead returned true")
+	}
+
 	if !p.MasterProfile.IsRHEL() {
 		t.Fatalf("expected IsRHEL() to return true but instead returned false")
+	}
+
+	if p.MasterProfile.IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return false but instead returned true")
+	}
+
+	p.MasterProfile.Distro = CoreOS
+	p.AgentPoolProfiles[0].OSType = Windows
+	p.AgentPoolProfiles[1].Distro = CoreOS
+
+	if !p.HasWindows() {
+		t.Fatalf("expected HasWindows() to return true but instead returned false")
+	}
+
+	if !p.HasCoreOS() {
+		t.Fatalf("expected HasCoreOS() to return true but instead returned false")
+	}
+
+	if !p.AgentPoolProfiles[0].IsWindows() {
+		t.Fatalf("expected IsWindows() to return true but instead returned false")
+	}
+
+	if p.AgentPoolProfiles[0].IsLinux() {
+		t.Fatalf("expected IsLinux() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[0].IsRHEL() {
+		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[0].IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[1].IsRHEL() {
+		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	}
+
+	if !p.AgentPoolProfiles[1].IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return true but instead returned false")
+	}
+
+	if p.MasterProfile.IsRHEL() {
+		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	}
+
+	if !p.MasterProfile.IsCoreOS() {
+		t.Fatalf("expected IsCoreOS() to return true but instead returned false")
 	}
 }
 
@@ -185,6 +244,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 				Distro: AKSUbuntu1804,
 			},
 			expected: true,
+		},
+		{
+			name: "coreos distro",
+			ap: AgentPoolProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
 		},
 		{
 			name: "ubuntu distro",
@@ -313,6 +379,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1804,
+			},
+			expected: false,
+		},
+		{
+			name: "coreos distro",
+			ap: AgentPoolProfile{
+				Distro: CoreOS,
 			},
 			expected: false,
 		},
@@ -456,6 +529,13 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 			expected: true,
 		},
 		{
+			name: "coreos distro",
+			m: MasterProfile{
+				Distro: CoreOS,
+			},
+			expected: false,
+		},
+		{
 			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
@@ -506,6 +586,13 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1804,
+			},
+			expected: false,
+		},
+		{
+			name: "coreos distro",
+			m: MasterProfile{
+				Distro: CoreOS,
 			},
 			expected: false,
 		},
@@ -1979,6 +2066,15 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
+					Distro: CoreOS,
+				},
+			},
+			expected: false,
+		},
+		{
+			p: Properties{
+				MasterProfile: &MasterProfile{
+					Count:  1,
 					Distro: RHEL,
 				},
 			},
@@ -2072,6 +2168,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				},
 			},
 			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: CoreOS,
+					},
+				},
+			},
+			expected: false,
 		},
 		{
 			p: Properties{

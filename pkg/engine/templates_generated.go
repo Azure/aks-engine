@@ -33430,7 +33430,11 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+if [[ $OS == $COREOS_OS_NAME ]]; then
+  PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
+else
+  PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
+fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
@@ -34344,11 +34348,12 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
 
-OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
+COREOS_OS_NAME="COREOS"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 DOCKER=/usr/bin/docker
@@ -34602,7 +34607,12 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
-    local path="/usr/bin"
+    if [[ $OS == $COREOS_OS_NAME ]]; then
+      path="/opt/bin"
+    else
+      path="/usr/bin"
+    fi
+
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
     removeEtcd
@@ -34773,8 +34783,14 @@ extractHyperkube() {
     img unpack -o "$path" ${HYPERKUBE_URL}
   fi
 
-  cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-  mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  if [[ $OS == $COREOS_OS_NAME ]]; then
+    cp "$path/hyperkube" "/opt/kubelet"
+    mv "$path/hyperkube" "/opt/kubectl"
+    chmod a+x /opt/kubelet /opt/kubectl
+  else
+    cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+    mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  fi
 }
 extractKubeBinaries() {
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
@@ -34864,6 +34880,11 @@ set +x
 ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
+
+if [[ $OS == $COREOS_OS_NAME ]]; then
+    echo "Changing default kubectl bin location"
+    KUBECTL=/opt/kubectl
+fi
 
 if [ -f /var/run/reboot-required ]; then
   REBOOTREQUIRED=true
@@ -34969,7 +34990,11 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 {{end}}
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
-time_metric "EnsureRPC" ensureRPC
+
+if [[ $OS != $COREOS_OS_NAME ]]; then
+    time_metric "EnsureRPC" ensureRPC
+fi
+
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
@@ -36627,7 +36652,11 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .MasterProfile.IsVHDDistro}}
+    {{- if .MasterProfile.IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -36726,13 +36755,15 @@ write_files:
 {{end}}
 
 {{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{- if not .MasterProfile.IsVHDDistro}}
+    {{- if not .MasterProfile.IsCoreOS}}
+        {{- if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+         {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -36741,7 +36772,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
+    {{if .MasterProfile.IsCoreOS}}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -36941,7 +36976,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     mount --make-shared $MOUNT_DIR
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
+    {{- if .MasterProfile.IsCoreOS}}
+    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
 {{end}}
 {{- if gt .MasterProfile.Count 1}}
@@ -36996,7 +37035,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
+    {{if .MasterProfile.IsCoreOS}}
+    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
+    {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    {{end}}
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
@@ -37045,10 +37088,90 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{if .MasterProfile.IsCoreOS}}
+- path: /opt/azure/containers/provision-setup.sh
+  permissions: "0755"
+  owner: root
+  content: |
+    #!/bin/bash
+    source {{GetCSEHelpersScriptFilepath}}
+    /opt/azure/containers/mountetcd.sh
+    retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
+
+    {{if EnableAggregatedAPIs}}
+    sudo bash /etc/kubernetes/generate-proxy-certs.sh
+    {{end}}
+
+    touch /opt/azure/containers/runcmd.complete
+
+- path: "/etc/kubernetes/manifests/.keep"
+
+{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+{{end}}
+
+coreos:
+  units:
+    - name: start-provision-setup.service
+      command: "start"
+      content: |
+        [Unit]
+        Description=Start provision setup service
+
+        [Service]
+        ExecStart=/opt/azure/containers/provision-setup.sh
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            After=etcd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
+    - name: kubelet-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh kubelet
+    - name: docker-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: etcd.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/etcd $DAEMON_ARGS
+    - name: etcd-member.service
+      mask: true
+{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
+{{end}}
 `)
 
 func k8sCloudInitMasternodecustomdataYmlBytes() ([]byte, error) {
@@ -37193,7 +37316,11 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .IsVHDDistro}}
+    {{- if .IsCoreOS}}
+- path: /opt/bin/health-monitor.sh
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
+    {{end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -37262,13 +37389,15 @@ write_files:
 {{end}}
 
 {{- if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsVHDDistro}}
+    {{- if not .IsCoreOS}}
+        {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
+        {{end}}
     {{end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
@@ -37277,7 +37406,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
+    {{if .IsCoreOS}}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    {{end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -37455,10 +37588,58 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{if .IsCoreOS}}
+- path: "/etc/kubernetes/manifests/.keep"
+
+{{if .KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+{{end}}
+
+coreos:
+  units:
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
+    - name: kubelet-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh kubelet
+    - name: docker-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-coreos.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: rpcbind.service
+      enable: true
+{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
+{{end}}
 `)
 
 func k8sCloudInitNodecustomdataYmlBytes() ([]byte, error) {

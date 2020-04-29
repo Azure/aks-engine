@@ -226,6 +226,7 @@ func GetMockPropertiesWithCustomCloudProfile(name string, hasCustomCloudProfile,
 				OSImageConfig: map[Distro]AzureOSImageConfig{
 					Ubuntu:        Ubuntu1604OSImageConfig,
 					RHEL:          RHELOSImageConfig,
+					CoreOS:        CoreOSImageConfig,
 					AKSUbuntu1604: AKSUbuntu1604OSImageConfig,
 				},
 			}

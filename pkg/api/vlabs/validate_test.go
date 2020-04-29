@@ -2293,6 +2293,62 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
+	p.AgentPoolProfiles = []*AgentPoolProfile{
+		{
+			AvailabilityProfile: AvailabilitySet,
+			Distro:              CoreOS,
+		},
+	}
+
+	p.MasterProfile = &MasterProfile{
+		Distro: CoreOS,
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "smb-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (smb-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "keyvault-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (keyvault-flexvolume)",
+		)
+	}
+
+	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+		Addons: []KubernetesAddon{
+			{
+				Name:    "blobfuse-flexvolume",
+				Enabled: to.BoolPtr(true),
+			},
+		},
+	}
+
+	if err := p.validateAddons(); err == nil {
+		t.Errorf(
+			"should error using incompatible addon with coreos (blobfuse-flexvolume)",
+		)
+	}
+
 	// appgw-ingress add-on
 
 	// Basic test with UseManagedIdentity
@@ -3875,10 +3931,23 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
 			cs.Properties.FeatureFlags = &featureFlags
 			masterProfile := cs.Properties.MasterProfile
+			masterProfile.Distro = CoreOS
+			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
+			if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
+
 			masterProfile.Distro = Ubuntu
 			agentPoolProfiles := cs.Properties.AgentPoolProfiles
 			agentPoolProfiles[0].OSType = Windows
-			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+			}
+
+			agentPoolProfiles[0].OSType = Linux
+			agentPoolProfiles[0].Distro = CoreOS
+			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].Distro)
 			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 			}
@@ -4078,7 +4147,7 @@ func TestAgentPoolProfile_ValidateAuditDEnabled(t *testing.T) {
 			agentPoolProfiles[0].Distro = distro
 			agentPoolProfiles[0].AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL:
+			case RHEL, CoreOS:
 				expectedMsg := fmt.Sprintf("You have enabled auditd in agent pool %s, but you did not specify an Ubuntu-based distro", agentPoolProfiles[0].Name)
 				if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
@@ -4101,7 +4170,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 			masterProfile.Distro = distro
 			masterProfile.AuditDEnabled = to.BoolPtr(true)
 			switch distro {
-			case RHEL:
+			case RHEL, CoreOS:
 				expectedMsg := "You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro."
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())

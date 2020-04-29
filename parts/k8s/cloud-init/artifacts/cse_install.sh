@@ -18,7 +18,12 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
-    local path="/usr/bin"
+    if [[ $OS == $COREOS_OS_NAME ]]; then
+      path="/opt/bin"
+    else
+      path="/usr/bin"
+    fi
+
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
     removeEtcd
@@ -189,8 +194,14 @@ extractHyperkube() {
     img unpack -o "$path" ${HYPERKUBE_URL}
   fi
 
-  cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-  mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  if [[ $OS == $COREOS_OS_NAME ]]; then
+    cp "$path/hyperkube" "/opt/kubelet"
+    mv "$path/hyperkube" "/opt/kubectl"
+    chmod a+x /opt/kubelet /opt/kubectl
+  else
+    cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
+    mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  fi
 }
 extractKubeBinaries() {
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
