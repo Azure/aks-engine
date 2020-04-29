@@ -85,7 +85,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
-	linuxProfileKubeletConfig["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule")
+	linuxProfileKubeletConfig["--register-with-taints"] = "node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule"
 	cs.setKubeletConfig(false)
 	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", fmt.Sprintf("%s=true:NoSchedule", common.AADPodIdentityTaintKey))
 	for key, val := range linuxProfileKubeletConfig {
