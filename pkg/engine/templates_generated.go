@@ -38884,7 +38884,7 @@ var _k8sCloudInitArtifactsLabelNodesSh = []byte(`#!/usr/bin/env bash
 
 set -euo pipefail
 
-KUBECONFIG="$(find /home/*/.kube/config)"
+KUBECONFIG=/var/lib/kubelet/kubeconfig
 KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
 
 MASTER_SELECTOR="kubernetes.azure.com/role!=agent,kubernetes.io/role!=agent"

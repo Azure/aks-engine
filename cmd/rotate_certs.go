@@ -325,6 +325,7 @@ func (rcc *rotateCertsCmd) deleteServiceAccounts() error {
 	return nil
 }
 
+// TODO get rid of this
 func (rcc *rotateCertsCmd) updateKubeconfig() error {
 	kubeconfig, err := engine.GenerateKubeConfig(rcc.containerService.Properties, rcc.location)
 	if err != nil {
