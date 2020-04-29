@@ -41500,11 +41500,14 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\kubeclusterconfig.json"
+
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
+        Images = @{
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+        }
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
@@ -41542,7 +41545,7 @@ function Write-KubeClusterConfig {
         Destination = "c:\k";
     }
     
-    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigFile
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
 function Assert-FileExists {
@@ -41651,6 +41654,9 @@ $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
+## ContainerD Usage
+$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
 {{if eq GetIdentitySystem "adfs"}}
@@ -41741,6 +41747,8 @@ Update-ServiceFailureActions()
     sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
 }
 
+$global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
+
 try
 {
     # Set to false for debugging.  This will output the start script to
@@ -41765,8 +41773,9 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
-        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
-        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["cri"] = $global:ContainerRuntime
+        # TODO: Update once containerd versioning story is decided
+        $global:AppInsightsClient.Context.Properties["cri_version"] = if ($global:ContainerRuntime -eq "docker") { $global:DockerVersion } else { "" }
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
@@ -43523,7 +43532,8 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+    $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+    $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
