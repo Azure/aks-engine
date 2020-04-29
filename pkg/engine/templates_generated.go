@@ -38883,10 +38883,7 @@ EnvironmentFile=/etc/default/kubelet
 SuccessExitStatus=143
 ExecStartPre=/bin/bash /opt/azure/containers/kubelet.sh
 ExecStart=/usr/local/bin/kubelet \
-        --enable-server \
         --node-labels="${KUBELET_NODE_LABELS}" \
-        --v=2 {{if NeedsContainerd}}--container-runtime=remote --runtime-request-timeout=15m --container-runtime-endpoint=unix:///run/containerd/containerd.sock{{end}} \
-        --volume-plugin-dir=/etc/kubernetes/volumeplugins \
         $KUBELET_CONFIG
 [Install]
 WantedBy=multi-user.target
