@@ -39738,6 +39738,13 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
+- path: /opt/azure/containers/label-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesScript"}}
+
 {{- if not .MasterProfile.IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
@@ -39766,13 +39773,6 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /opt/azure/containers/label-nodes.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesScript"}}
 
 - path: /etc/systemd/system/label-nodes.service
   permissions: "0644"
