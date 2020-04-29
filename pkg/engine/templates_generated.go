@@ -40403,9 +40403,6 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-{{- if not (IsKubernetesVersionGe "1.17.0")}}
-    KUBELET_IMAGE={{GetHyperkubeImageReference}}
-{{end}}
 {{if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 {{else}}
