@@ -39626,7 +39626,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
-{{if not .MasterProfile.IsVHDDistro}}
+{{- if not .MasterProfile.IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
@@ -39635,8 +39635,8 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{if not .MasterProfile.IsVHDDistro}}
-  {{if .MasterProfile.IsAuditDEnabled}}
+{{- if not .MasterProfile.IsVHDDistro}}
+  {{- if .MasterProfile.IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
@@ -39656,7 +39656,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -39672,7 +39672,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .MasterProfile.IsVHDDistro}}
+{{- if not .MasterProfile.IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -39739,7 +39739,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{if IsIPv6Enabled}}
+{{- if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -39755,8 +39755,8 @@ write_files:
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
 
-{{if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{if not .MasterProfile.IsVHDDistro}}
+{{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
+    {{- if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
@@ -39782,7 +39782,7 @@ write_files:
 {{IndentString (GetDockerConfig false) 4}}
 {{end}}
 
-{{if HasCiliumNetworkPlugin}}
+{{- if HasCiliumNetworkPlugin}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
@@ -39798,7 +39798,7 @@ write_files:
     {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
     #EOF
 
-{{if NeedsContainerd}}
+{{- if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root
@@ -39813,8 +39813,8 @@ write_files:
   content: |
 {{IndentString GetContainerdConfig 4}}
     #EOF
-    
-  {{if IsKubenet}}
+
+  {{- if IsKubenet}}
 - path: /etc/containerd/kubenet_template.conf
   permissions: "0644"
   owner: root
@@ -39854,7 +39854,7 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if EnableAggregatedAPIs}}
+{{- if EnableAggregatedAPIs}}
 - path: /etc/kubernetes/generate-proxy-certs.sh
   permissions: "0744"
   encoding: gzip
@@ -39863,7 +39863,7 @@ write_files:
     {{CloudInitData "generateProxyCertsScript"}}
 {{end}}
 
-{{if HasCustomSearchDomain}}
+{{- if HasCustomSearchDomain}}
 - path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -39900,7 +39900,7 @@ write_files:
     current-context: localclustercontext
     #EOF
 
-{{if EnableDataEncryptionAtRest}}
+{{- if EnableDataEncryptionAtRest}}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: "0600"
   owner: root
@@ -39918,7 +39918,7 @@ write_files:
           - identity: {}
 {{end}}
 
-{{if EnableEncryptionWithExternalKms}}
+{{- if EnableEncryptionWithExternalKms}}
 - path: /etc/kubernetes/encryption-config.yaml
   permissions: "0444"
   owner: root
@@ -39947,12 +39947,12 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-{{if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
 {{else}}
     KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsCustomCloudProfile }}
+{{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -39964,30 +39964,28 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     #!/bin/bash
     set -e
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-  {{if IsMasterVirtualMachineScaleSets}}
+{{- if IsMasterVirtualMachineScaleSets}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-  {{end}}
-{{if gt .MasterProfile.Count 1}}
+{{end}}
+{{- if gt .MasterProfile.Count 1}}
     # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-
-{{if EnableDataEncryptionAtRest }}
+{{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
-
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
-    {{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
+    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
     sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
     {{else}}
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
     {{end}}
 {{end}}
-{{if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
 {{end}}
     #EOF
@@ -39998,7 +39996,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   owner: root
   content: !!binary |
     {{CloudInitData "mountEtcdScript"}}
-{{ if not HasCosmosEtcd  }}
+{{- if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
   encoding: gzip
@@ -40017,7 +40015,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
                Append a blank line... */}}
         echo "" >> /etc/environment
     fi
-  {{if IsMasterVirtualMachineScaleSets}}
+  {{- if IsMasterVirtualMachineScaleSets}}
     MASTER_VM_NAME=$(hostname)
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
@@ -40063,7 +40061,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     #EOF
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
@@ -40131,7 +40129,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
-{{if not .IsVHDDistro}}
+{{- if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
@@ -40140,8 +40138,8 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{if not .IsVHDDistro}}
-  {{if .IsAuditDEnabled}}
+{{- if not .IsVHDDistro}}
+  {{- if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
@@ -40161,7 +40159,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -40177,7 +40175,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .IsVHDDistro}}
+{{- if not .IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -40230,7 +40228,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{if IsIPv6Enabled}}
+{{- if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -40246,7 +40244,7 @@ write_files:
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
 
-{{if .KubernetesConfig.RequiresDocker}}
+{{- if .KubernetesConfig.RequiresDocker}}
     {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -40273,7 +40271,7 @@ write_files:
 {{IndentString (GetDockerConfig (IsNSeriesSKU .VMSize)) 4}}
 {{end}}
 
-{{if HasCiliumNetworkPlugin}}
+{{- if HasCiliumNetworkPlugin}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
@@ -40289,7 +40287,7 @@ write_files:
     {{GetSysctlDConfigKeyVals .SysctlDConfig}}
     #EOF
 
-{{if NeedsContainerd}}
+{{- if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root
@@ -40331,7 +40329,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsNSeriesSKU .VMSize}}
+{{- if IsNSeriesSKU .VMSize}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
   owner: root
@@ -40362,7 +40360,7 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasCustomSearchDomain}}
+{{- if HasCustomSearchDomain}}
 - path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -40400,12 +40398,12 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-{{if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsCustomCloudProfile }}
+{{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -40415,14 +40413,14 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-{{if not IsIPMasqAgentEnabled}}
+{{- if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
     #EOF
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"
