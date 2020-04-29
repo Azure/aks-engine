@@ -41679,11 +41679,14 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\kubeclusterconfig.json"
+
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
-        Name = $global:ContainerRuntime;
+        Name   = $global:ContainerRuntime;
+        Images = @{
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+        }
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
@@ -41721,7 +41724,7 @@ function Write-KubeClusterConfig {
         Destination = "c:\k";
     }
     
-    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigFile
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
 function Assert-FileExists {
@@ -41919,6 +41922,7 @@ Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 . c:\AzureData\k8s\windowscontainerdfunc.ps1
 
 $useContainerD = ($global:ContainerRuntime -eq "containerd")
+$global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
 
 try
 {
@@ -41944,8 +41948,9 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
-        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
-        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["cri"] = $global:ContainerRuntime
+        # TODO: Update once containerd versioning story is decided
+        $global:AppInsightsClient.Context.Properties["cri_version"] = if ($global:ContainerRuntime -eq "docker") { $global:DockerVersion } else { "" }
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
@@ -43142,13 +43147,21 @@ function Install-Containerd {
     [Parameter(Mandatory = $true)][string]
     $CNIConfDir
   )
+
+  $svc = Get-Service -Name containerd -ErrorAction SilentlyContinue
+  if ($null -ne $svc) {
+    Write-Log "Stoping containerd service"
+    $svc | Stop-Service
+  }
+
+  # TODO: check if containerd is already installed and is the same version before this.
   $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
   DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
+  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
   del $zipfile
 
   Add-SystemPathEntry $global:ContainerdInstallLocation
-    
+
   # TODO: remove if the node comes up without this code
   # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
   # if (-Not (Test-Path $configDir)) {
@@ -43157,6 +43170,9 @@ function Install-Containerd {
 
   # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
+
+  $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+  $pauseImage = $clusterConfig.Cri.Images.Pause
 
   @"
 version = 2
@@ -43214,7 +43230,7 @@ oom_score = 0
     stream_server_port = "0"
     stream_idle_timeout = "4h0m0s"
     enable_selinux = false
-    sandbox_image = "mcr.microsoft.com/k8s/core/pause:1.2.0"
+    sandbox_image = "$pauseImage"
     stats_collect_period = 10
     systemd_cgroup = false
     enable_tls_streaming = false
@@ -43263,8 +43279,8 @@ oom_score = 0
   [plugins."io.containerd.service.v1.diff-service"]
     default = ["windows", "windows-lcow"]
 "@ | Out-File -Encoding ascii $configFile
+
   RegisterContainerDService
-    
 }`)
 
 func k8sWindowscontainerdfuncPs1Bytes() ([]byte, error) {
@@ -43608,7 +43624,8 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+    $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+    $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 

@@ -197,7 +197,8 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+    $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+    $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
