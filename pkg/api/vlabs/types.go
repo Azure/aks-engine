@@ -614,6 +614,16 @@ type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
 }
 
+// HasCoreOS returns true if the cluster contains coreos nodes
+func (p *Properties) HasCoreOS() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.Distro == CoreOS {
+			return true
+		}
+	}
+	return false
+}
+
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
@@ -716,6 +726,11 @@ func (m *MasterProfile) IsStorageAccount() bool {
 // IsRHEL returns true if the master specified a RHEL distro
 func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
+}
+
+// IsCoreOS returns true if the master specified a CoreOS distro
+func (m *MasterProfile) IsCoreOS() bool {
+	return m.Distro == CoreOS
 }
 
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
@@ -834,6 +849,11 @@ func (a *AgentPoolProfile) IsLinux() bool {
 // IsRHEL returns true if the agent pool specified a RHEL distro
 func (a *AgentPoolProfile) IsRHEL() bool {
 	return a.OSType == Linux && a.Distro == RHEL
+}
+
+// IsCoreOS returns true if the agent specified a CoreOS distro
+func (a *AgentPoolProfile) IsCoreOS() bool {
+	return a.OSType == Linux && a.Distro == CoreOS
 }
 
 // IsAvailabilitySets returns true if the customer specified disks
