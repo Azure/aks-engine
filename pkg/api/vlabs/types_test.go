@@ -263,8 +263,8 @@ func TestAgentPoolProfile(t *testing.T) {
 	if !to.Bool(ap.EncryptionAtHost) {
 		t.Fatalf("AgentPoolProfile.EncryptionAtHost should be true after unmarshal")
 	}
-	// With osType Linux and coreos distro
-	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "coreos", "count": 1, "vmSize": "Standard_D2_v2",
+	// With osType Linux and Flatcar distro
+	AgentPoolProfileText = `{ "name": "linuxpool1", "osType" : "Linux", "distro" : "flatcar", "count": 1, "vmSize": "Standard_D2_v2",
 "availabilityProfile": "VirtualMachineScaleSets", "storageProfile" : "ManagedDisks", "diskSizesGB" : [750, 250, 600, 1000], "diskEncryptionSetID": "diskEncryptionSetID" }`
 	ap = &AgentPoolProfile{}
 	if e := json.Unmarshal([]byte(AgentPoolProfileText), ap); e != nil {
@@ -279,8 +279,8 @@ func TestAgentPoolProfile(t *testing.T) {
 		t.Fatalf("unexpectedly detected AgentPoolProfile.OSType != Linux after unmarshal")
 	}
 
-	if !ap.IsCoreOS() {
-		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != CoreOS after unmarshal")
+	if !ap.IsFlatcar() {
+		t.Fatalf("unexpectedly detected AgentPoolProfile.Distro != Flatcar after unmarshal")
 	}
 
 	if !ap.IsManagedDisks() {
@@ -618,7 +618,7 @@ func TestMasterIsUbuntu(t *testing.T) {
 			p: Properties{
 				MasterProfile: &MasterProfile{
 					Count:  1,
-					Distro: CoreOS,
+					Distro: Flatcar,
 				},
 			},
 			expected: false,
@@ -726,7 +726,7 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				AgentPoolProfiles: []*AgentPoolProfile{
 					{
 						Count:  1,
-						Distro: CoreOS,
+						Distro: Flatcar,
 					},
 				},
 			},

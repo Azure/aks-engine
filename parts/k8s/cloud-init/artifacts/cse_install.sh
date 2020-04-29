@@ -18,7 +18,7 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
-    if [[ $OS == $COREOS_OS_NAME ]]; then
+    if [[ $OS == $FLATCAR_OS_NAME ]]; then
       path="/opt/bin"
     else
       path="/usr/bin"
@@ -194,7 +194,7 @@ extractHyperkube() {
     img unpack -o "$path" ${HYPERKUBE_URL}
   fi
 
-  if [[ $OS == $COREOS_OS_NAME ]]; then
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
     cp "$path/hyperkube" "/opt/kubelet"
     mv "$path/hyperkube" "/opt/kubectl"
     chmod a+x /opt/kubelet /opt/kubectl

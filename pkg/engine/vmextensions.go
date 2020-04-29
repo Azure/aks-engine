@@ -53,7 +53,7 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsFlatcar() {
 		ncBinary = "ncat"
 	}
 	var userAssignedIDEnabled bool
@@ -112,7 +112,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if profile.IsCoreOS() {
+	if profile.IsFlatcar() {
 		ncBinary = "ncat"
 	}
 	var userAssignedIDEnabled bool

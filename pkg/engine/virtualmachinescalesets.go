@@ -281,7 +281,7 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsCoreOS() {
+	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsFlatcar() {
 		ncBinary = "ncat"
 	}
 	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
@@ -724,7 +724,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if profile.IsCoreOS() {
+	if profile.IsFlatcar() {
 		ncBinary = "ncat"
 	}
 	featureFlags := cs.Properties.FeatureFlags

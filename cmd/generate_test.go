@@ -367,13 +367,13 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "coreos",
-			apiModelPath: "../examples/coreos/kubernetes-coreos.json",
+			name:         "flatcar",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar.json",
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "coreos hybrid",
-			apiModelPath: "../examples/coreos/kubernetes-coreos-hybrid.json",
+			name:         "flatcar hybrid",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar-hybrid.json",
 			setArgs:      defaultSet,
 		},
 		{
@@ -802,8 +802,8 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "e2e coreos",
-			apiModelPath: "../examples/e2e-tests/kubernetes/coreos/coreos.json",
+			name:         "e2e flatcar",
+			apiModelPath: "../examples/e2e-tests/kubernetes/flatcar/flatcar.json",
 			setArgs:      defaultSet,
 		},
 		{

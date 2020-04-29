@@ -17908,7 +17908,7 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-if [[ $OS == $COREOS_OS_NAME ]]; then
+if [[ $OS == $FLATCAR_OS_NAME ]]; then
   PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
 else
   PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
@@ -18845,12 +18845,12 @@ func k8sCloudInitArtifactsCse_customcloudSh() (*asset, error) {
 
 var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
 
-OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(coreos)|ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
+OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
-COREOS_OS_NAME="COREOS"
+FLATCAR_OS_NAME="FLATCAR"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${COREOS_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${FLATCAR_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
@@ -19111,7 +19111,7 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
-    if [[ $OS == $COREOS_OS_NAME ]]; then
+    if [[ $OS == $FLATCAR_OS_NAME ]]; then
       path="/opt/bin"
     else
       path="/usr/bin"
@@ -19287,7 +19287,7 @@ extractHyperkube() {
     img unpack -o "$path" ${HYPERKUBE_URL}
   fi
 
-  if [[ $OS == $COREOS_OS_NAME ]]; then
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
     cp "$path/hyperkube" "/opt/kubelet"
     mv "$path/hyperkube" "/opt/kubectl"
     chmod a+x /opt/kubelet /opt/kubectl
@@ -19385,7 +19385,7 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
-if [[ $OS == $COREOS_OS_NAME ]]; then
+if [[ $OS == $FLATCAR_OS_NAME ]]; then
     echo "Changing default kubectl bin location"
     KUBECTL=/opt/kubectl
 fi
@@ -19495,7 +19495,7 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
-if [[ $OS != $COREOS_OS_NAME ]]; then
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
     time_metric "EnsureRPC" ensureRPC
 fi
 
@@ -21127,7 +21127,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .MasterProfile.IsVHDDistro}}
-    {{- if .MasterProfile.IsCoreOS}}
+    {{- if .MasterProfile.IsFlatcar}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
@@ -21230,7 +21230,7 @@ write_files:
 {{end}}
 
 {{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{- if not .MasterProfile.IsCoreOS}}
+    {{- if not .MasterProfile.IsFlatcar}}
         {{- if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -21247,7 +21247,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
+    {{if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
@@ -21451,7 +21451,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     mount --make-shared $MOUNT_DIR
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
-    {{- if .MasterProfile.IsCoreOS}}
+    {{- if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
@@ -21504,7 +21504,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    {{if .MasterProfile.IsCoreOS}}
+    {{if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
@@ -21806,7 +21806,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .IsVHDDistro}}
-    {{- if .IsCoreOS}}
+    {{- if .IsFlatcar}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
@@ -21879,7 +21879,7 @@ write_files:
 {{end}}
 
 {{- if .KubernetesConfig.RequiresDocker}}
-    {{- if not .IsCoreOS}}
+    {{- if not .IsFlatcar}}
         {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -21896,7 +21896,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .MasterProfile.IsCoreOS}}
+    {{if .MasterProfile.IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
@@ -22078,7 +22078,7 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsCoreOS}}
+{{if .IsFlatcar}}
 - path: "/etc/kubernetes/manifests/.keep"
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -22091,7 +22091,7 @@ coreos:
     - name: kubelet.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Unit]
             Requires=rpc-statd.service
@@ -22109,7 +22109,7 @@ coreos:
     - name: kubelet-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=
@@ -22117,7 +22117,7 @@ coreos:
     - name: docker-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=

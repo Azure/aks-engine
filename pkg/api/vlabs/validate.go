@@ -420,7 +420,7 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		}
 		// validate distro is ubuntu if dual stack or ipv6 only feature is enabled
 		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
-			if m.Distro == CoreOS {
+			if m.Distro == Flatcar {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
 			}
 		}
@@ -501,7 +501,7 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			if agentPoolProfile.OSType == Windows {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
 			}
-			if agentPoolProfile.Distro == CoreOS {
+			if agentPoolProfile.Distro == Flatcar {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
 			}
 		}
@@ -769,8 +769,8 @@ func (a *Properties) validateAddons() error {
 					if IsNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
-					if a.HasCoreOS() {
-						return errors.New("NVIDIA Device Plugin add-on not currently supported on coreos. Please use node pools with Ubuntu only")
+					if a.HasFlatcar() {
+						return errors.New("NVIDIA Device Plugin add-on not currently supported on flatcar. Please use node pools with Ubuntu only")
 					}
 				case "aad":
 					if !a.HasAADAdminGroupID() {
@@ -781,8 +781,8 @@ func (a *Properties) validateAddons() error {
 					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
 					}
-					if a.HasCoreOS() {
-						return errors.New("flexvolume add-ons not currently supported on coreos distro. Please use Ubuntu")
+					if a.HasFlatcar() {
+						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
 					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&

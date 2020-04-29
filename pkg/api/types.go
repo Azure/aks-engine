@@ -851,10 +851,10 @@ type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
 }
 
-// HasCoreOS returns true if the cluster contains coreos nodes
-func (p *Properties) HasCoreOS() bool {
+// HasFlatcar returns true if the cluster contains flatcar nodes
+func (p *Properties) HasFlatcar() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.Distro == CoreOS {
+		if agentPoolProfile.Distro == Flatcar {
 			return true
 		}
 	}
@@ -1469,9 +1469,9 @@ func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
 }
 
-// IsCoreOS returns true if the master specified a CoreOS distro
-func (m *MasterProfile) IsCoreOS() bool {
-	return m.Distro == CoreOS
+// IsFlatcar returns true if the master specified a Flatcar distro
+func (m *MasterProfile) IsFlatcar() bool {
+	return m.Distro == Flatcar
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
@@ -1608,9 +1608,9 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 	return a.OSType == Linux && a.Distro == RHEL
 }
 
-// IsCoreOS returns true if the agent specified a CoreOS distro
-func (a *AgentPoolProfile) IsCoreOS() bool {
-	return a.OSType == Linux && a.Distro == CoreOS
+// IsFlatcar returns true if the agent specified a Flatcar distro
+func (a *AgentPoolProfile) IsFlatcar() bool {
+	return a.OSType == Linux && a.Distro == Flatcar
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs

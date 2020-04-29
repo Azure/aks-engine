@@ -1,7 +1,7 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
-if [[ $OS == $COREOS_OS_NAME ]]; then
+if [[ $OS == $FLATCAR_OS_NAME ]]; then
   PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
 else
   PRIVATE_IP=$(hostname -I | cut -d' ' -f1)

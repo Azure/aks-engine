@@ -731,7 +731,7 @@ func TestValidateDistro(t *testing.T) {
 	}
 
 	// Test with invalid Agent Pool Profile
-	cs.Properties.MasterProfile.Distro = "coreos"
+	cs.Properties.MasterProfile.Distro = "flatcar"
 	cs.Properties.AgentPoolProfiles = []*api.AgentPoolProfile{
 		{
 			Distro: "rhel",

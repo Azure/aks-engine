@@ -125,7 +125,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .IsVHDDistro}}
-    {{- if .IsCoreOS}}
+    {{- if .IsFlatcar}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
@@ -198,7 +198,7 @@ write_files:
 {{end}}
 
 {{- if .KubernetesConfig.RequiresDocker}}
-    {{- if not .IsCoreOS}}
+    {{- if not .IsFlatcar}}
         {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -215,7 +215,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsCoreOS}}
+    {{if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
@@ -397,7 +397,7 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsCoreOS}}
+{{if .IsFlatcar}}
 - path: "/etc/kubernetes/manifests/.keep"
 
 {{if .KubernetesConfig.RequiresDocker}}
@@ -410,7 +410,7 @@ coreos:
     - name: kubelet.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Unit]
             Requires=rpc-statd.service
@@ -428,7 +428,7 @@ coreos:
     - name: kubelet-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=
@@ -436,7 +436,7 @@ coreos:
     - name: docker-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=
