@@ -117,7 +117,7 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .MasterProfile.IsVHDDistro}}
-    {{- if .MasterProfile.IsCoreOS}}
+    {{- if .MasterProfile.IsFlatcar}}
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
@@ -220,7 +220,7 @@ write_files:
 {{end}}
 
 {{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{- if not .MasterProfile.IsCoreOS}}
+    {{- if not .MasterProfile.IsFlatcar}}
         {{- if not .MasterProfile.IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -237,7 +237,7 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .MasterProfile.IsCoreOS}}
+    {{if .MasterProfile.IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
@@ -441,7 +441,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     mount --make-shared $MOUNT_DIR
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
-    {{- if .MasterProfile.IsCoreOS}}
+    {{- if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
@@ -500,7 +500,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    {{if .MasterProfile.IsCoreOS}}
+    {{if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
@@ -553,7 +553,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .MasterProfile.IsCoreOS}}
+{{if .MasterProfile.IsFlatcar}}
 - path: /opt/azure/containers/provision-setup.sh
   permissions: "0755"
   owner: root
@@ -576,6 +576,8 @@ groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
 {{end}}
 
+# This must be coreos, not flatcar until (put reference link here)
+# hits all the channels.
 coreos:
   units:
     - name: start-provision-setup.service
@@ -589,7 +591,7 @@ coreos:
     - name: kubelet.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Unit]
             Requires=rpc-statd.service
@@ -608,7 +610,7 @@ coreos:
     - name: kubelet-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=
@@ -616,7 +618,7 @@ coreos:
     - name: docker-monitor.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=
@@ -624,7 +626,7 @@ coreos:
     - name: etcd.service
       enable: true
       drop-ins:
-        - name: "10-coreos.conf"
+        - name: "10-flatcar.conf"
           content: |
             [Service]
             ExecStart=

@@ -2081,7 +2081,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "CoreOS addons",
+			name: "Flatcar addons",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -2099,8 +2099,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					},
 					AgentPoolProfiles: []*AgentPoolProfile{
 						{
-							Distro: CoreOS,
-							VMSize: "Standard_NC6", // to validate that CoreOS distro does not get nvidia addon
+							Distro: Flatcar,
+							VMSize: "Standard_NC6", // to validate that Flatcar distro does not get nvidia addon
 						},
 					},
 				},

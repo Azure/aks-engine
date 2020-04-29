@@ -67,13 +67,13 @@
       "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
       "firstConsecutiveStaticIP": "10.239.255.239",
       "vnetCidr": "10.239.0.0/16",
-      "distro": "coreos"
+      "distro": "flatcar"
     },
     "agentPoolProfiles": [
       {
         "name": "agentmd",
         "count": 3,
-        "distro": "coreos",
+        "distro": "flatcar",
         "vmSize": "Standard_D2_v3",
         "OSDiskSizeGB": 200,
         "storageProfile": "ManagedDisks",
