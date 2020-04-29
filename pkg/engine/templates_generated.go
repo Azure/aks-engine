@@ -38882,15 +38882,6 @@ Restart=always
 EnvironmentFile=/etc/default/kubelet
 SuccessExitStatus=143
 ExecStartPre=/bin/bash /opt/azure/containers/kubelet.sh
-ExecStartPre=/bin/mkdir -p /var/lib/kubelet
-ExecStartPre=/bin/mkdir -p /var/lib/cni
-ExecStartPre=/bin/bash -c "if [ $(mount | grep \"/var/lib/kubelet\" | wc -l) -le 0 ] ; then /bin/mount --bind /var/lib/kubelet /var/lib/kubelet ; fi"
-ExecStartPre=/bin/mount --make-shared /var/lib/kubelet
-{{/* This is a partial workaround to this upstream Kubernetes issue: */}}
-{{/* https://github.com/kubernetes/kubernetes/issues/41916#issuecomment-312428731 */}}
-
-ExecStartPre=-/sbin/ebtables -t nat --list
-ExecStartPre=-/sbin/iptables -t nat --numeric --list
 ExecStart=/usr/local/bin/kubelet \
         --enable-server \
         --node-labels="${KUBELET_NODE_LABELS}" \
@@ -40114,13 +40105,19 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -e
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
 {{end}}
 {{- if gt .MasterProfile.Count 1}}
-    # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
+    {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
@@ -40564,6 +40561,12 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
 {{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
     {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}
     iptables -A OUTPUT -s 127.0.0.1/32 -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DROP

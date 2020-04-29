@@ -321,6 +321,12 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
 {{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
     {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}
     iptables -A OUTPUT -s 127.0.0.1/32 -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DROP
