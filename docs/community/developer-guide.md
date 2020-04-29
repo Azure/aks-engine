@@ -202,7 +202,7 @@ A `make` target convenience is maintained to easily run these tests:
 $ make test-kubernetes
 ```
 
-In practice, running E2E tests locally requires lots of environmental context, in order to tell the E2E runner what kind of cluster configuration you want to test, which tests you may want to run or skip, what level of timeout tolerance to permit, and many other runtime-configurable options that express the exact test criteria your intend to validate. A real-world E2E invocation may look this this instead:
+In practice, running E2E tests locally requires lots of environmental context, in order to tell the E2E runner what kind of cluster configuration you want to test, which tests you may want to run or skip, what level of timeout tolerance to permit, and many other runtime-configurable options that express the exact test criteria you intend to validate. A real-world E2E invocation may look this this instead:
 
 ```sh
 $ ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$TEST_AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
