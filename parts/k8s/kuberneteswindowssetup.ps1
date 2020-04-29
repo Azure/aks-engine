@@ -69,6 +69,9 @@ $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
 
+## ContainerD Usage
+$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
+
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
 {{if eq GetIdentitySystem "adfs"}}
@@ -159,6 +162,8 @@ Update-ServiceFailureActions()
     sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
 }
 
+$global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
+
 try
 {
     # Set to false for debugging.  This will output the start script to
@@ -183,8 +188,9 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
-        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
-        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["cri"] = $global:ContainerRuntime
+        # TODO: Update once containerd versioning story is decided
+        $global:AppInsightsClient.Context.Properties["cri_version"] = if ($global:ContainerRuntime -eq "docker") { $global:DockerVersion } else { "" }
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
