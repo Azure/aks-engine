@@ -24,45 +24,15 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	winProfile.VMSize = "Standard_D2_v2"
 	winProfile.OSType = Windows
 	cs.Properties.AgentPoolProfiles = append(cs.Properties.AgentPoolProfiles, winProfile)
-	cs.setKubeletConfig(false)
-	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
-	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
-	expected := map[string]string{
-		"--address":                           "0.0.0.0",
-		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
-		"--anonymous-auth":                    "false",
-		"--authorization-mode":                "Webhook",
-		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
-		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
-		"--cgroups-per-qos":                   "true",
-		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
-		"--cloud-provider":                    "azure",
-		"--cloud-config":                      "/etc/kubernetes/azure.json",
-		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
-		"--cluster-domain":                    "cluster.local",
-		"--enforce-node-allocatable":          "pods",
-		"--event-qps":                         DefaultKubeletEventQPS,
-		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
-		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
-		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
-		"--image-pull-progress-deadline":      "30m",
-		"--keep-terminated-pod-volumes":       "false",
-		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
-		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
-		"--network-plugin":                    NetworkPluginKubenet,
-		"--node-status-update-frequency":      k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
-		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
-		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
-		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
-		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
-		"--protect-kernel-defaults":           "true",
-		"--rotate-certificates":               "true",
-		"--streaming-connection-idle-timeout": "4h",
-		"--feature-gates":                     "RotateKubeletServerCertificate=true",
-		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
-		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
-		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.AADPodIdentityAddonName,
+			Enabled: to.BoolPtr(true),
+		},
 	}
+	cs.setKubeletConfig(false)
+	kubeletConfig := cs.Properties.OrchestratorProfile.KubernetesConfig.KubeletConfig
+	expected := getDefaultLinuxKubeletConfig(cs)
 	for key, val := range kubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected kubelet config value for %s: %s, expected %s",
@@ -107,7 +77,7 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
-	delete(expected, "--register-with-taints")
+	expected["--register-with-taints"] = fmt.Sprintf("%s=true:NoSchedule", common.AADPodIdentityTaintKey)
 	linuxProfileKubeletConfig := cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
 	for key, val := range linuxProfileKubeletConfig {
 		if expected[key] != val {
@@ -115,6 +85,16 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	linuxProfileKubeletConfig["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule")
+	cs.setKubeletConfig(false)
+	expected["--register-with-taints"] = fmt.Sprintf("node-role.kubernetes.io/customtaint=true:NoSchedule,node-role.kubernetes.io/customtaint2=true:NoSchedule,%s", fmt.Sprintf("%s=true:NoSchedule", common.AADPodIdentityTaintKey))
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+	delete(expected, "--register-with-taints")
 
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
 	expected["--azure-container-registry-config"] = "c:\\k\\azure.json"
@@ -136,6 +116,24 @@ func TestKubeletConfigDefaults(t *testing.T) {
 	for key, val := range windowsProfileKubeletConfig {
 		if expected[key] != val {
 			t.Fatalf("got unexpected Windows agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
+
+	// validate aad-pod-identity disabled scenario
+	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []KubernetesAddon{
+		{
+			Name:    common.AADPodIdentityAddonName,
+			Enabled: to.BoolPtr(false),
+		},
+	}
+	cs.setKubeletConfig(false)
+	linuxProfileKubeletConfig = cs.Properties.AgentPoolProfiles[0].KubernetesConfig.KubeletConfig
+	expected = getDefaultLinuxKubeletConfig(cs)
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
 				key, val, expected[key])
 		}
 	}
@@ -184,6 +182,46 @@ func TestKubeletConfigDefaults(t *testing.T) {
 		if _, ok := kubeletConfig[key]; !ok {
 			t.Fatalf("could not find expected kubelet config value for %s", key)
 		}
+	}
+}
+
+func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
+	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
+	return map[string]string{
+		"--address":                           "0.0.0.0",
+		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
+		"--anonymous-auth":                    "false",
+		"--authorization-mode":                "Webhook",
+		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
+		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
+		"--cgroups-per-qos":                   "true",
+		"--client-ca-file":                    "/etc/kubernetes/certs/ca.crt",
+		"--cloud-provider":                    "azure",
+		"--cloud-config":                      "/etc/kubernetes/azure.json",
+		"--cluster-dns":                       DefaultKubernetesDNSServiceIP,
+		"--cluster-domain":                    "cluster.local",
+		"--enforce-node-allocatable":          "pods",
+		"--event-qps":                         DefaultKubeletEventQPS,
+		"--eviction-hard":                     DefaultKubernetesHardEvictionThreshold,
+		"--image-gc-high-threshold":           strconv.Itoa(DefaultKubernetesGCHighThreshold),
+		"--image-gc-low-threshold":            strconv.Itoa(DefaultKubernetesGCLowThreshold),
+		"--image-pull-progress-deadline":      "30m",
+		"--keep-terminated-pod-volumes":       "false",
+		"--kubeconfig":                        "/var/lib/kubelet/kubeconfig",
+		"--max-pods":                          strconv.Itoa(DefaultKubernetesMaxPods),
+		"--network-plugin":                    NetworkPluginKubenet,
+		"--node-status-update-frequency":      k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion]["nodestatusfreq"],
+		"--non-masquerade-cidr":               DefaultNonMasqueradeCIDR,
+		"--pod-manifest-path":                 "/etc/kubernetes/manifests",
+		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
+		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
+		"--protect-kernel-defaults":           "true",
+		"--rotate-certificates":               "true",
+		"--streaming-connection-idle-timeout": "4h",
+		"--feature-gates":                     "RotateKubeletServerCertificate=true",
+		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
+		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
+		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
 	}
 }
 

@@ -39830,6 +39830,22 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
+{{if IsAADPodIdentityAddonEnabled}}
+- path: /opt/azure/containers/untaint-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesScript"}}
+
+- path: /etc/systemd/system/untaint-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesSystemdService"}}
+{{end}}
+
 - path: /etc/apt/apt.conf.d/99periodic
   permissions: "0644"
   owner: root
@@ -40321,22 +40337,6 @@ write_files:
     {{CloudInitData "aptPreferences"}}
 {{end}}
 
-{{if IsAADPodIdentityAddonEnabled}}
-- path: /opt/azure/containers/untaint-nodes.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "untaintNodesScript"}}
-
-- path: /etc/systemd/system/untaint-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "untaintNodesSystemdService"}}
-{{end}}
-
 - path: /etc/apt/apt.conf.d/99periodic
   permissions: "0644"
   owner: root
@@ -40523,9 +40523,6 @@ write_files:
 {{end}}
 {{if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
-{{if IsAADPodIdentityAddonEnabled}}
-    KUBELET_REGISTER_WITH_TAINTS=--register-with-taints={{GetAADPodIdentityTaintKey}}=true:NoSchedule
 {{end}}
     #EOF
 
