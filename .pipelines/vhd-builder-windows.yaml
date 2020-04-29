@@ -4,6 +4,7 @@
 # - BUILD_POOL - Azure DevOps build pool to use
 # - CLIENT_ID - Service principal ID
 # - CLIENT_SECRET - Service principal secret
+# - CONTAINER_RUNTIME - Container runtime to in for VHD - Valid values are 'containerd' or 'docker'
 # - COPY_VHD - Set to 'True' if VHD should be copied to classic storage account in preparation for publishing
 # - DEIS_GO_DEV_IMAGE - Dev container image ID
 # - PACKER_VM_SIZE - VM Size to be used during packer build operation
@@ -38,6 +39,7 @@ jobs:
       -e GIT_VERSION=$(Build.SourceVersion) \
       -e BUILD_ID=$(Build.BuildId) \
       -e BUILD_NUMBER=$(Build.BuildNumber) \
+      -e CONTAINER_RUNTIME=$(CONTAINER_RUNTIME) \
       ${DEIS_GO_DEV_IMAGE} make run-packer-windows
     displayName: Building windows VHD
 

@@ -10,11 +10,9 @@ param()
 
 $ErrorActionPreference = "Stop"
 
-
-$global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/0.0.87-public.zip"
-
-
 filter Timestamp {"$(Get-Date -Format o): $_"}
+
+$global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/containerd-0.0.87-public.zip"
 
 function Write-Log($Message)
 {
@@ -43,20 +41,23 @@ function Disable-WindowsUpdates
 
 function Get-ContainerImages
 {
+    param (
+        $containerRuntime
+    )
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
         "mcr.microsoft.com/oss/kubernetes/pause:1.3.0")
 
-    <#
-    foreach ($image in $imagesToPull) {
-        docker pull $image
+    if ($containerRuntime -eq 'containerd') {
+        foreach ($image in $imagesToPull) {
+            & ctr.exe -n k8s.io images pull $image
+        }
+    } else {
+        foreach ($image in $imagesToPull) {
+            docker pull $image
+        }
     }
-    #>
-    foreach ($image in $imagesToPull) {
-        & ctr.exe -n k8s.io images pull $image
-    }
-
 }
 
 function Get-FilesToCacheOnVHD
@@ -77,6 +78,9 @@ function Get-FilesToCacheOnVHD
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1",
             "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg"
+        );
+        "c:\akse-cache\containerd\" = @(
+            $global:containerdPackageUrl
         );
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
@@ -274,6 +278,13 @@ function Update-WindowsFeatures
 # Disable progress writers for this session to greatly speed up operations such as Invoke-WebRequest
 $ProgressPreference = 'SilentlyContinue'
 
+$containerRuntime = $env:ContainerRuntime
+$validContainerRuntimes = @('containerd', 'docker')
+if (-not ($validContainerRuntimes -contains $containerRuntime)) {
+    Write-Host "Unsupported container runtime: $containerRuntime"
+    exit 1
+}
+
 switch ($env:ProvisioningPhase)
 {
     "1"
@@ -289,11 +300,14 @@ switch ($env:ProvisioningPhase)
     }
     "2"
     {
-        Write-Log "Performing actions for provisioning phase 2"
+        Write-Log "Performing actions for provisioning phase 2 for container runtime '$containerRuntime'"
         Set-WinRmServiceAutoStart
+        # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
         Install-Docker
-        Install-ContainerD
-        Get-ContainerImages
+        if ($containerRuntime -eq 'containerd') {
+            Install-ContainerD 
+        }
+        Get-ContainerImages -containerRuntime $containerRuntime
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }
