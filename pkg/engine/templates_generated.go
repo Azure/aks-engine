@@ -36620,7 +36620,7 @@ NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
-KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+KUBECTL="/usr/local/bin/kubectl --kubeconfig=/var/lib/kubelet/kubeconfig"
 MOUNT_ETCD_SCRIPT=/opt/azure/containers/mountetcd.sh
 
 systemctlEnableAndStart() {
@@ -37056,39 +37056,6 @@ ensureEtcd() {
 createKubeManifestDir() {
   KUBEMANIFESTDIR=/etc/kubernetes/manifests
   mkdir -p $KUBEMANIFESTDIR
-}
-writeKubeConfig() {
-  local DIR=/home/$ADMINUSER/.kube
-  local FILE=$DIR/config
-  mkdir -p $DIR
-  touch $FILE
-  chown $ADMINUSER:$ADMINUSER $DIR $FILE
-  chmod 700 $DIR
-  chmod 600 $FILE
-  set +x
-  echo "
----
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: \"$CA_CERTIFICATE\"
-    server: $KUBECONFIG_SERVER
-  name: \"$MASTER_FQDN\"
-contexts:
-- context:
-    cluster: \"$MASTER_FQDN\"
-    user: \"$MASTER_FQDN-admin\"
-  name: \"$MASTER_FQDN\"
-current-context: \"$MASTER_FQDN\"
-kind: Config
-users:
-- name: \"$MASTER_FQDN-admin\"
-  user:
-    client-certificate-data: \"$KUBECONFIG_CERTIFICATE\"
-    client-key-data: \"$KUBECONFIG_KEY\"
-" >$FILE
-  set -x
-  KUBECTL="$KUBECTL --kubeconfig=$FILE"
 }
 {{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
@@ -38221,7 +38188,6 @@ if [[ -n ${MASTER_NODE} ]]; then
     time_metric "EnsureTaints" ensureTaints
 {{end}}
   fi
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
@@ -41158,18 +41124,6 @@ var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
     "clientPrivateKey": {
       "metadata": {
         "description": "The base 64 client private key used to communicate with the master"
-      },
-      "type": "securestring"
-    },
-    "kubeConfigCertificate": {
-      "metadata": {
-        "description": "The base 64 certificate used by cli to communicate with the master"
-      },
-      "type": "string"
-    },
-    "kubeConfigPrivateKey": {
-      "metadata": {
-        "description": "The base 64 private key used by cli to communicate with the master"
       },
       "type": "securestring"
     },

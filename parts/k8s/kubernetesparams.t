@@ -131,18 +131,6 @@
       },
       "type": "securestring"
     },
-    "kubeConfigCertificate": {
-      "metadata": {
-        "description": "The base 64 certificate used by cli to communicate with the master"
-      },
-      "type": "string"
-    },
-    "kubeConfigPrivateKey": {
-      "metadata": {
-        "description": "The base 64 private key used by cli to communicate with the master"
-      },
-      "type": "securestring"
-    },
     "generatorCode": {
       "metadata": {
         "description": "The generator code used to identify the generator"

@@ -144,8 +144,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 		 - caCertificate
 		 - clientCertificate
 		 - clientPrivateKey
-		 - kubeConfigCertificate
-		 - kubeConfigPrivateKey
 		 - servicePrincipalClientSecret
 		 - etcdClientCertificate
 		 - etcdClientPrivateKey
@@ -183,8 +181,6 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 			addSecret(parametersMap, "caPrivateKey", certificateProfile.CaPrivateKey, true)
 			addSecret(parametersMap, "clientCertificate", certificateProfile.ClientCertificate, true)
 			addSecret(parametersMap, "clientPrivateKey", certificateProfile.ClientPrivateKey, true)
-			addSecret(parametersMap, "kubeConfigCertificate", certificateProfile.KubeConfigCertificate, true)
-			addSecret(parametersMap, "kubeConfigPrivateKey", certificateProfile.KubeConfigPrivateKey, true)
 			if properties.MasterProfile != nil {
 				addSecret(parametersMap, "etcdServerCertificate", certificateProfile.EtcdServerCertificate, true)
 				addSecret(parametersMap, "etcdServerPrivateKey", certificateProfile.EtcdServerPrivateKey, true)
