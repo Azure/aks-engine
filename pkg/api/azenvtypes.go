@@ -155,9 +155,9 @@ var (
 
 	//FlatcarImageConfig is the Flatcar Linux distribution.
 	FlatcarImageConfig = AzureOSImageConfig{
-		ImageOffer:     "Flatcar",
-		ImageSku:       "Stable",
-		ImagePublisher: "Flatcar",
+		ImageOffer:     "flatcar-container-linux-free",
+		ImageSku:       "stable",
+		ImagePublisher: "kinvolk",
 		ImageVersion:   "latest",
 	}
 
