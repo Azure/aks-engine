@@ -202,6 +202,8 @@
 // ../../parts/k8s/cloud-init/artifacts/sshd_config_1604
 // ../../parts/k8s/cloud-init/artifacts/sys-fs-bpf.mount
 // ../../parts/k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf
+// ../../parts/k8s/cloud-init/artifacts/untaint-nodes.service
+// ../../parts/k8s/cloud-init/artifacts/untaint-nodes.sh
 // ../../parts/k8s/cloud-init/jumpboxcustomdata.yml
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
@@ -8197,6 +8199,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -12754,6 +12761,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -17331,6 +17343,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -21974,6 +21991,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -28688,6 +28710,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -36976,6 +37003,13 @@ ensureLabelNodes() {
   wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart label-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
+{{- if IsAADPodIdentityAddonEnabled}}
+ensureTaints() {
+  wait_for_file 1200 1 /opt/azure/containers/untaint-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/untaint-nodes.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart untaint-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
+{{end}}
 ensureJournal() {
   {
     echo "Storage=persistent"
@@ -38183,6 +38217,9 @@ time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
+{{- if IsAADPodIdentityAddonEnabled}}
+    time_metric "EnsureTaints" ensureTaints
+{{end}}
   fi
   time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
@@ -39552,6 +39589,69 @@ func k8sCloudInitArtifactsSysctlD60CisConf() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsUntaintNodesService = []byte(`[Unit]
+Description=Untaint nodes when pre-scheduling conditions are fulfilled
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=60
+ExecStart=/bin/bash /opt/azure/containers/untaint-nodes.sh
+[Install]
+WantedBy=multi-user.target
+#EOF
+`)
+
+func k8sCloudInitArtifactsUntaintNodesServiceBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsUntaintNodesService, nil
+}
+
+func k8sCloudInitArtifactsUntaintNodesService() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsUntaintNodesServiceBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/untaint-nodes.service", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sCloudInitArtifactsUntaintNodesSh = []byte(`#!/usr/bin/env bash
+
+KUBECONFIG="$(find /home/*/.kube/config)"
+KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
+AAD_POD_ID_TAINT_KEY={{GetAADPodIdentityTaintKey}}
+
+if ! ${KUBECTL} get daemonsets -n kube-system -o json | jq -e -r '.items[] | select(.metadata.name == "nmi")' > /dev/null; then
+  for node in $(${KUBECTL} get nodes -o json | jq -e -r '.items[] | .metadata.name'); do
+    ${KUBECTL} taint nodes $node $AAD_POD_ID_TAINT_KEY=true:NoSchedule- 2>&1 | grep -v 'not found';
+  done
+  exit 0
+fi
+for pod in $(${KUBECTL} get pods -n kube-system -o json | jq -r '.items[] | select(.status.phase == "Running") | .metadata.name'); do
+  if [[ "$pod" =~ ^nmi ]]; then
+    ${KUBECTL} taint nodes $(${KUBECTL} get pod ${pod} -n kube-system -o json | jq -r '.spec.nodeName') $AAD_POD_ID_TAINT_KEY=true:NoSchedule- 2>&1 | grep -v 'not found';
+  fi;
+done
+exit 0
+#EOF
+`)
+
+func k8sCloudInitArtifactsUntaintNodesShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsUntaintNodesSh, nil
+}
+
+func k8sCloudInitArtifactsUntaintNodesSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsUntaintNodesShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/untaint-nodes.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitJumpboxcustomdataYml = []byte(`#cloud-config
 
 write_files:
@@ -39728,6 +39828,22 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "aptPreferences"}}
+{{end}}
+
+{{if IsAADPodIdentityAddonEnabled}}
+- path: /opt/azure/containers/untaint-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesScript"}}
+
+- path: /etc/systemd/system/untaint-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesSystemdService"}}
 {{end}}
 
 - path: /etc/apt/apt.conf.d/99periodic
@@ -47597,6 +47713,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/sshd_config_1604":                                 k8sCloudInitArtifactsSshd_config_1604,
 	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                 k8sCloudInitArtifactsSysFsBpfMount,
 	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                             k8sCloudInitArtifactsSysctlD60CisConf,
+	"k8s/cloud-init/artifacts/untaint-nodes.service":                            k8sCloudInitArtifactsUntaintNodesService,
+	"k8s/cloud-init/artifacts/untaint-nodes.sh":                                 k8sCloudInitArtifactsUntaintNodesSh,
 	"k8s/cloud-init/jumpboxcustomdata.yml":                                      k8sCloudInitJumpboxcustomdataYml,
 	"k8s/cloud-init/masternodecustomdata.yml":                                   k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                         k8sCloudInitNodecustomdataYml,
@@ -47903,6 +48021,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"sshd_config_1604":                          {k8sCloudInitArtifactsSshd_config_1604, map[string]*bintree{}},
 				"sys-fs-bpf.mount":                          {k8sCloudInitArtifactsSysFsBpfMount, map[string]*bintree{}},
 				"sysctl-d-60-CIS.conf":                      {k8sCloudInitArtifactsSysctlD60CisConf, map[string]*bintree{}},
+				"untaint-nodes.service":                     {k8sCloudInitArtifactsUntaintNodesService, map[string]*bintree{}},
+				"untaint-nodes.sh":                          {k8sCloudInitArtifactsUntaintNodesSh, map[string]*bintree{}},
 			}},
 			"jumpboxcustomdata.yml":    {k8sCloudInitJumpboxcustomdataYml, map[string]*bintree{}},
 			"masternodecustomdata.yml": {k8sCloudInitMasternodecustomdataYml, map[string]*bintree{}},

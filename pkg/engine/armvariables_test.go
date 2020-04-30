@@ -196,6 +196,39 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Test with AAD Pod Identity
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
+		{
+			Name:    common.AADPodIdentityAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":            getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":            getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":          getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":           getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":  getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":   getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"mountEtcdScript":            getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
+		"etcdSystemdService":         getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":  getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":       getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":      getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"untaintNodesScript":         getBase64EncodedGzippedCustomScript(untaintNodesScript, cs),
+		"untaintNodesSystemdService": getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs),
+	}
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Test with MSI
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 	varMap, err = GetKubernetesVariables(cs)
@@ -215,6 +248,7 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with ubuntu 16.04 distro
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{}
 	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
 	varMap, err = GetKubernetesVariables(cs)

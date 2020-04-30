@@ -224,6 +224,9 @@ time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
+{{- if IsAADPodIdentityAddonEnabled}}
+    time_metric "EnsureTaints" ensureTaints
+{{end}}
   fi
   time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then

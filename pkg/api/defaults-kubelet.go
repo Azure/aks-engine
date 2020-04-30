@@ -218,7 +218,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
 		}
 
-		if profile.OSType == Windows {
+		if profile.IsWindows() {
 			for key, val := range staticWindowsKubeletConfig {
 				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
@@ -256,6 +256,15 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) && !profile.IsWindows() {
+			if val, ok := profile.KubernetesConfig.KubeletConfig["--register-with-taints"]; !ok {
+				profile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("%s=true:NoSchedule", common.AADPodIdentityTaintKey)
+			} else {
+				if !strings.Contains(val, common.AADPodIdentityTaintKey) {
+					profile.KubernetesConfig.KubeletConfig["--register-with-taints"] += fmt.Sprintf(",%s=true:NoSchedule", common.AADPodIdentityTaintKey)
+				}
+			}
+		}
 	}
 }
 

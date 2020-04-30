@@ -137,6 +137,11 @@ spec:
             - NET_ADMIN
       nodeSelector:
         beta.kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
 ---
 apiVersion: v1
 kind: ServiceAccount
