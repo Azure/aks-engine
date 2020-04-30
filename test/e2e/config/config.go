@@ -41,6 +41,7 @@ type Config struct {
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
+	ResourceGroup       string `envconfig:"RESOURCE_GROUP" default:""`
 	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
 	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
 	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
@@ -51,9 +52,12 @@ type Config struct {
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
 	TestPVC             bool   `envconfig:"TEST_PVC" default:"false"`
+	SubscriptionID      string `envconfig:"SUBSCRIPTION_ID"`
+	ClientID            string `envconfig:"CLIENT_ID"`
+	ClientSecret        string `envconfig:"CLIENT_SECRET"`
 }
 
-// CustomCloudConfig holds configurations for custom clould
+// CustomCloudConfig holds configurations for custom cloud
 type CustomCloudConfig struct {
 	ServiceManagementEndpoint    string `envconfig:"SERVICE_MANAGEMENT_ENDPOINT" default:""`
 	ResourceManagerEndpoint      string `envconfig:"RESOURCE_MANAGER_ENDPOINT" default:""`

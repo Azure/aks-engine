@@ -6,6 +6,7 @@ package kubernetes
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -19,10 +20,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
@@ -39,6 +42,8 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/Azure/aks-engine/test/e2e/remote"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -72,6 +77,8 @@ var (
 	deploymentReplicasCount         int
 	dnsAddonName                    string
 	stabilityCommandTimeout         time.Duration
+	env                             azure.Environment
+	azureClient                     *armhelpers.AzureClient
 )
 
 var _ = BeforeSuite(func() {
@@ -157,6 +164,15 @@ var _ = BeforeSuite(func() {
 		stabilityCommandTimeout = 10 * time.Second
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
+
+	env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
+	if err != nil {
+		Expect(err).NotTo(HaveOccurred())
+	}
+	azureClient, err = armhelpers.NewAzureClientWithClientSecret(env, cfg.SubscriptionID, cfg.ClientID, cfg.ClientSecret)
+	if err != nil {
+		Expect(err).NotTo(HaveOccurred())
+	}
 })
 
 var _ = AfterSuite(func() {
@@ -2036,6 +2052,111 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					Skip("Kubernetes version needs to be 1.8 and up for Azure File test")
 				}
+			} else {
+				Skip("No windows agent was provisioned for this Cluster Definition")
+			}
+		})
+		// This test is not parallelizable due to tainting nodes with NoSchedule
+		It("should expect containers to be recreated after node restart", func() {
+			if eng.HasWindowsAgents() {
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if profile.IsWindows() {
+						if profile.AvailabilityProfile == api.AvailabilitySet {
+							Skip("AvailabilitySet is configured for this Cluster Definition")
+						}
+					}
+				}
+
+				windowsImages, err := eng.GetWindowsTestImages()
+				Expect(err).NotTo(HaveOccurred())
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				deploymentPrefix := fmt.Sprintf("iis-%s", cfg.Name)
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				By("Creating a deployment with 1 pod running IIS")
+				iisDeploy, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting on pod to be Ready")
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
+				By("Exposing a LoadBalancer for the pod")
+				err = iisDeploy.ExposeDeleteIfExist(deploymentPrefix, "default", "LoadBalancer", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
+				iisService, err := service.Get(deploymentName, "default")
+				Expect(err).NotTo(HaveOccurred())
+				err = iisService.WaitForIngress(cfg.LBTimeout, 5*time.Second)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying that the service is reachable and returns the default IIS start page")
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
+				pods, err := iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				nodeName := pods[0].Spec.NodeName
+				ctx, cancel := context.WithTimeout(context.Background(), 6000*time.Second)
+				defer cancel()
+
+				By("Adding taint to all other Windows nodes")
+				nodeList, err := node.Get()
+				for _, n := range nodeList.Nodes {
+					if n.IsWindows() && n.Metadata.Name != nodeName {
+						n.AddTaint(node.Taint{Key: "key", Value: "value", Effect: "NoSchedule"})
+					}
+				}
+
+				// Removing taints
+				defer func(nodeList *node.List, nodeName string) {
+					for _, n := range nodeList.Nodes {
+						if n.IsWindows() && n.Metadata.Name != nodeName {
+							n.RemoveTaint(node.Taint{Key: "key", Value: "value", Effect: "NoSchedule"})
+						}
+					}
+				}(nodeList, nodeName)
+
+				By("Restarting VM " + nodeName + " in resource group " + cfg.ResourceGroup)
+
+				// Getting vmss for the vm
+				vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
+				vmssList := vmssPage.Values()
+
+				// Name of VMSS of nodeName
+				var vmssName string
+				// InstanceID of VM in its VMSS
+				var instanceID string
+				for _, vmss := range vmssList {
+					if !strings.Contains(nodeName, *vmss.Name) {
+						continue
+					}
+					vmName := *vmss.Name + "_" + nodeName[len(nodeName)-1:]
+					vmPage, err := azureClient.ListVirtualMachineScaleSetVMs(ctx, cfg.ResourceGroup, *vmss.Name)
+					Expect(err).NotTo(HaveOccurred())
+
+					vmList := vmPage.Values()
+					for _, vm := range vmList {
+						if vmName == *vm.Name {
+							vmssName = *vmss.Name
+							instanceID = *vm.InstanceID
+							break
+						}
+					}
+					if instanceID != "" {
+						break
+					}
+				}
+
+				instanceIDs := &compute.VirtualMachineScaleSetVMInstanceIDs{&[]string{instanceID}}
+				err = azureClient.RestartVirtualMachineScaleSets(ctx, cfg.ResourceGroup, vmssName, instanceIDs)
+				Expect(err).NotTo(HaveOccurred())
+
+				//Wait for VM to come up
+				time.Sleep(30 * time.Second)
+
+				By("Verifying that the service is still reachable and returns the default IIS start page")
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}
