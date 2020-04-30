@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-KUBECONFIG="$(find /home/*/.kube/config)"
-KUBECTL="kubectl --kubeconfig=${KUBECONFIG}"
+KUBECTL="kubectl --kubeconfig=/var/lib/kubelet/kubeconfig"
 AAD_POD_ID_TAINT_KEY={{GetAADPodIdentityTaintKey}}
 
 if ! ${KUBECTL} get daemonsets -n kube-system -o json | jq -e -r '.items[] | select(.metadata.name == "nmi")' > /dev/null; then
