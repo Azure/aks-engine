@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
@@ -2881,6 +2882,39 @@ func TestMasterProfileValidate(t *testing.T) {
 			},
 			expectedErr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
 		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: None",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "foo",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesNone),
+			},
+		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: ReadWrite",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "bar",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesReadWrite),
+			},
+		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: ReadOnly",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "baz",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesReadOnly),
+			},
+		},
+		{
+			name: "Master Profile with invalid OSDiskCachingType",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "whizbang",
+				Count:             3,
+				OSDiskCachingType: "NotExist",
+			},
+			expectedErr: fmt.Sprintf("Invalid masterProfile osDiskCachingType value \"%s\", please use one of the following versions: %s", "NotExist", cachingTypesValidValues),
+		},
 	}
 
 	for _, test := range tests {
@@ -4771,6 +4805,162 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 			},
 			isUpdate:      true,
 			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateAgentPoolProfiles(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestValidateAgentPoolProfilesOSDiskCachingType(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"AgentPoolProfile with valid OSDiskCachingType: None": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "foo",
+						OSDiskCachingType: string(compute.CachingTypesNone),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: None": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "foo",
+						DataDiskCachingType: string(compute.CachingTypesNone),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid OSDiskCachingType: ReadWrite": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "bar",
+						OSDiskCachingType: string(compute.CachingTypesReadWrite),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: ReadWrite": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "bar",
+						DataDiskCachingType: string(compute.CachingTypesReadWrite),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid OSDiskCachingType: ReadOnly": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "baz",
+						OSDiskCachingType: string(compute.CachingTypesReadOnly),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: ReadOnly": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "baz",
+						DataDiskCachingType: string(compute.CachingTypesReadOnly),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with invalid OSDiskCachingType": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "frick",
+						OSDiskCachingType: "The Magnificent Ambersons original cut",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", "The Magnificent Ambersons original cut", "frick", cachingTypesValidValues),
+		},
+		"AgentPoolProfile with invalid DataDiskCachingType": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "frack",
+						DataDiskCachingType: "Spear of Longinus",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid dataDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", "Spear of Longinus", "frack", cachingTypesValidValues),
+		},
+		"AgentPoolProfile with invalid OSDiskCachingType for Ephemeral Disk": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "foo",
+						OSDiskCachingType: string(compute.CachingTypesReadWrite),
+						StorageProfile:    Ephemeral,
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\" using Ephemeral Disk, you must use: %s", string(compute.CachingTypesReadWrite), "foo", string(compute.CachingTypesReadOnly)),
 		},
 	}
 
