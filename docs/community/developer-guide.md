@@ -45,6 +45,8 @@ When `make dev` completes, you will be left at a command prompt inside a Docker 
 Run the following commands to pull the latest dependencies and build the `aks-engine` tool.
 
 ```sh
+# set up the hack/tools directory for your platform
+make -C hack/tools clean install
 # install and download build dependencies
 make bootstrap
 # build the `aks-engine` binary
@@ -60,9 +62,11 @@ Usage:
   aks-engine [command]
 
 Available Commands:
+  addpool       Add a node pool to an existing Kubernetes cluster
   completion    Generates bash completion scripts
   deploy        Deploy an Azure Resource Manager template
   generate      Generate an Azure Resource Manager template
+  get-logs      Collect logs and current cluster nodes configuration.
   get-versions  Display info about supported Kubernetes versions
   help          Help about any command
   rotate-certs  Rotate certificates on an existing Kubernetes cluster
@@ -78,11 +82,11 @@ Flags:
 Use "aks-engine [command] --help" for more information about a command.
 ```
 
-[Here is a reference to the information on Kubernetes cluster upgrade.](https://github.com/Azure/aks-engine/blob/master/examples/k8s-upgrade/README.md)
-
 [Here's a quick demo video showing the dev/build/test cycle with this setup.](https://www.youtube.com/watch?v=lc6UZmqxQMs)
 
 ### Building on Windows, OSX, and Linux
+
+If the above docker container conveniences don't work for your developer environment, below is per-platform guidance to help you set up your local dev environment manually to build AKS Engine from source.
 
 Building AKS Engine from source has a few requirements for each of the platforms. Download and install the prerequisites for your platform: Windows, Linux, or Mac:
 
@@ -190,30 +194,21 @@ Unit tests may be run locally via `make test`.
 
 ### End-to-end Tests
 
-End-to-end tests for Kubernetes may be run
-via `make test-kubernetes`.  The test process can optionally
-deploy and tear down a cluster as part of the test (this is enabled by default).
-You'll need access to an Azure subscription, as well as at least the following
-environment variables to be set:
+AKS Engine maintains its own E2E test implementation (see the `test/e2e/` source directory) to validate Kubernetes on Azure functionality from AKS Engine source.
 
-* `CLIENT_ID`: "name" field (a URL) from an Azure service principal
-* `CLIENT_SECRET`: "password" field from an Azure service principal
-* `SUBSCRIPTION_ID`: Azure subscription UUID
-* `TENANT_ID`: Azure tenant UUID
+A `make` target convenience is maintained to easily run these tests:
 
-You can set these optional environment variable to configure how the end-to-end tests run
-* `CLUSTER_DEFINITION`: Input apimodel. Defaults to `examples/kubernetes.json`
-* `LOCATION`: Azure region where the resources for the test cluster will be created.
-* `NAME`: Name of an existing cluster to use for testing
-
-The end-to-end tests also require the `k` script from the `scripts/` folder in to
-be in your search $PATH. This ensures that testing uses a `kubectl` client that
-matches the version of the Kubernetes server.
-
-Below is an example command to run end-to-end tests for Kubernetes. Make sure the `NAME` environment variable is not set if you want a new cluster to be deployed.
-```bash
-CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID="<YOUR_SUB_ID>" CLIENT_ID="<YOUR_CLIENT_ID" CLIENT_SECRET="<YOUR_CLIENT_SECRET>" TENANT_ID="<YOUR_TENANT_ID>" LOCATION=<REGION> CLEANUP_ON_EXIT=true make test-kubernetes
+```sh
+$ make test-kubernetes
 ```
+
+In practice, running E2E tests locally requires lots of environmental context, in order to tell the E2E runner what kind of cluster configuration you want to test, which tests you may want to run or skip, what level of timeout tolerance to permit, and many other runtime-configurable options that express the exact test criteria you intend to validate. A real-world E2E invocation may look this this instead:
+
+```sh
+$ ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$TEST_AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
+```
+
+Thorough guidance around effectively running E2E tests to validate source code changes can be found [here](running-tests.md).
 
 ### Debugging
 
