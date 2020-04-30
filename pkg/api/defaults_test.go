@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/google/go-cmp/cmp"
@@ -737,6 +738,29 @@ func TestAuditDEnabled(t *testing.T) {
 	}
 }
 
+func TestDiskCachingTypes(t *testing.T) {
+	mockCS := getMockBaseContainerService("1.18.2")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	isUpgrade := false
+	isScale := false
+	mockCS.Properties.setAgentProfileDefaults(isUpgrade, isScale)
+
+	if mockCS.Properties.AgentPoolProfiles[0].OSDiskCachingType != string(compute.CachingTypesReadWrite) {
+		t.Errorf("expected OSDiskCachingType to be %s by default, instead got %s", string(compute.CachingTypesReadWrite), mockCS.Properties.AgentPoolProfiles[0].OSDiskCachingType)
+	}
+	if mockCS.Properties.AgentPoolProfiles[0].DataDiskCachingType != string(compute.CachingTypesReadOnly) {
+		t.Errorf("expected OSDiskCachingType to be %s by default, instead got %s", string(compute.CachingTypesReadOnly), mockCS.Properties.AgentPoolProfiles[0].OSDiskCachingType)
+	}
+
+	mockCS = getMockBaseContainerService("1.18.2")
+	mockCS.Properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	mockCS.Properties.AgentPoolProfiles[0].StorageProfile = Ephemeral
+	mockCS.Properties.setAgentProfileDefaults(isUpgrade, isScale)
+	if mockCS.Properties.AgentPoolProfiles[0].OSDiskCachingType != string(compute.CachingTypesReadOnly) {
+		t.Errorf("expected OSDiskCachingType to be %s by default, instead got %s", string(compute.CachingTypesReadOnly), mockCS.Properties.AgentPoolProfiles[0].OSDiskCachingType)
+	}
+}
+
 func TestKubeletFeatureGatesEnsureFeatureGatesOnAgentsFor1_6_0(t *testing.T) {
 	mockCS := getMockBaseContainerService("1.6.0")
 	properties := mockCS.Properties
@@ -1401,6 +1425,10 @@ func TestMasterProfileDefaults(t *testing.T) {
 	if properties.MasterProfile.FirstConsecutiveStaticIP != "10.255.255.5" {
 		t.Fatalf("Master VMAS, AzureCNI: MasterProfile FirstConsecutiveStaticIP did not have the expected default configuration, got %s, expected %s",
 			properties.MasterProfile.FirstConsecutiveStaticIP, "10.255.255.5")
+	}
+	if properties.MasterProfile.OSDiskCachingType != string(compute.CachingTypesReadWrite) {
+		t.Fatalf("MasterProfile.OSDiskCachingType did not have the expected default configuration, got %s, expected %s",
+			properties.MasterProfile.OSDiskCachingType, string(compute.CachingTypesReadWrite))
 	}
 
 	// this validates default VMSS masterProfile configuration

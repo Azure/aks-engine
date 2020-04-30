@@ -72,7 +72,9 @@
           128
         ],
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "osDiskCachingType": "ReadOnly",
+        "dataDiskCachingType": "ReadWrite"
       },
       {
         "name": "poolwin",
@@ -121,7 +123,8 @@
         "vmSize": "Standard_D2s_v3",
         "osType": "Windows",
         "availabilityProfile": "VirtualMachineScaleSets",
-        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
+        "vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
+        "osDiskCachingType": "ReadOnly"
       }
     ],
     "linuxProfile": {

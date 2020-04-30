@@ -593,6 +593,7 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
+	api.OSDiskCachingType = vlabs.OSDiskCachingType
 	convertCustomFilesToAPI(vlabs, api)
 	api.SysctlDConfig = map[string]string{}
 	for key, val := range vlabs.SysctlDConfig {
@@ -671,6 +672,8 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	for key, val := range vlabs.SysctlDConfig {
 		api.SysctlDConfig[key] = val
 	}
+	api.OSDiskCachingType = vlabs.OSDiskCachingType
+	api.DataDiskCachingType = vlabs.DataDiskCachingType
 }
 
 func convertVLabsKeyVaultSecrets(vlabs *vlabs.KeyVaultSecrets, api *KeyVaultSecrets) {

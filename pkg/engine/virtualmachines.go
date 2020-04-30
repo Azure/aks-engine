@@ -196,7 +196,7 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 	}
 
 	osDisk := &compute.OSDisk{
-		Caching:      compute.CachingTypesReadWrite,
+		Caching:      compute.CachingTypes(cs.Properties.MasterProfile.OSDiskCachingType),
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
 	}
 
@@ -520,7 +520,7 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	osDisk := compute.OSDisk{
 		CreateOption: compute.DiskCreateOptionTypesFromImage,
-		Caching:      compute.CachingTypesReadWrite,
+		Caching:      compute.CachingTypes(profile.OSDiskCachingType),
 	}
 
 	if profile.IsStorageAccount() {
@@ -531,7 +531,6 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 	}
 
 	if profile.IsEphemeral() {
-		osDisk.Caching = compute.CachingTypesReadOnly
 		osDisk.DiffDiskSettings = &compute.DiffDiskSettings{
 			Option: compute.Local,
 		}
@@ -570,7 +569,7 @@ func getArmDataDisks(profile *api.AgentPoolProfile) *[]compute.DataDisk {
 			DiskSizeGB:   to.Int32Ptr(int32(diskSize)),
 			Lun:          to.Int32Ptr(int32(i)),
 			CreateOption: compute.DiskCreateOptionTypesEmpty,
-			Caching:      compute.CachingTypesReadOnly,
+			Caching:      compute.CachingTypes(profile.DataDiskCachingType),
 		}
 		if profile.StorageProfile == api.StorageAccount {
 			dataDisk.Name = to.StringPtr(fmt.Sprintf("[concat(variables('%sVMNamePrefix'), copyIndex(),'-datadisk%d')]", profile.Name, i))
