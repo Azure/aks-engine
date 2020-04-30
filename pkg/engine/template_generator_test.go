@@ -188,6 +188,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedHasVHDDistroNodes             bool
 		expectedIsVHDDistroForAllNodes        bool
 		expectedHasClusterInitComponent       bool
+		expectedIsVirtualMachineScaleSets     bool
 	}{
 		{
 			name: "1.15 release",
@@ -221,6 +222,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedGetCSEErrorCodeVals:          []int{-1},
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "1.16 release",
@@ -253,6 +255,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "1.17 release",
@@ -285,6 +288,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "1.17 release w/ VHD distro",
@@ -320,6 +324,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedHasVHDDistroNodes:            true,
 			expectedIsVHDDistroForAllNodes:       true,
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "custom search domain",
@@ -359,6 +364,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "custom nodes DNS",
@@ -396,6 +402,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "1.17 release with custom kube images",
@@ -431,6 +438,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "china cloud",
@@ -464,6 +472,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "german cloud",
@@ -497,6 +506,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "usgov cloud",
@@ -530,6 +540,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "Azure Stack",
@@ -567,6 +578,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "N series SKU",
@@ -600,6 +612,39 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsNSeriesSKU:                 true,
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
+		},
+		{
+			name: "AvailabilitySet pool",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.AvailabilitySet,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    false,
 		},
 		{
 			name: "PrivateAzureRegistryServer",
@@ -635,6 +680,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasPrivateAzureRegistryServer: true,
 			expectedGetPrivateAzureRegistryServer: "my-server",
 			expectedGetSysctlDConfigKeyVals:       "",
+			expectedIsVirtualMachineScaleSets:     true,
 		},
 		{
 			name: "cluster-init config",
@@ -674,6 +720,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsDockerContainerRuntime:     true,
 			expectedGetSysctlDConfigKeyVals:      "",
 			expectedHasClusterInitComponent:      true,
+			expectedIsVirtualMachineScaleSets:    true,
 		},
 		{
 			name: "sysctl config",
@@ -729,6 +776,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedGetTargetEnvironment:         "AzurePublicCloud",
 			expectedIsNSeriesSKU:                 false,
 			expectedIsDockerContainerRuntime:     true,
+			expectedIsVirtualMachineScaleSets:    true,
 			expectedGetSysctlDConfigKeyVals: `net.core.message_burst = 80
     net.core.message_cost = 40
     net.core.somaxconn = 16384
@@ -868,6 +916,13 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasClusterInitComponent {
 				t.Errorf("expected funcMap invocation of HasClusterInitComponent to return %t, instead got %t", c.expectedHasClusterInitComponent, ret[0].Interface())
+			}
+			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
+				v = reflect.ValueOf(funcMap["IsVirtualMachineScaleSets"])
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
+				if ret[0].Interface() != c.expectedIsVirtualMachineScaleSets {
+					t.Errorf("expected funcMap invocation of IsVirtualMachineScaleSets to return %t, instead got %t", c.expectedIsVirtualMachineScaleSets, ret[0].Interface())
+				}
 			}
 		})
 	}

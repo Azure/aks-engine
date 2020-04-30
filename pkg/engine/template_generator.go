@@ -263,6 +263,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
+		"IsVirtualMachineScaleSets": func(profile *api.AgentPoolProfile) bool {
+			return profile.IsVirtualMachineScaleSets()
+		},
 		"IsHostedMaster": func() bool {
 			return cs.Properties.IsHostedMasterProfile()
 		},
