@@ -189,6 +189,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedIsVHDDistroForAllNodes        bool
 		expectedHasClusterInitComponent       bool
 		expectedIsVirtualMachineScaleSets     bool
+		expectedUseManagedIdentity            bool
 	}{
 		{
 			name: "1.15 release",
@@ -647,6 +648,40 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedIsVirtualMachineScaleSets:    false,
 		},
 		{
+			name: "managed identity enabled",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							UseManagedIdentity:      true,
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedUseManagedIdentity:           true,
+		},
+		{
 			name: "PrivateAzureRegistryServer",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
@@ -916,6 +951,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasClusterInitComponent {
 				t.Errorf("expected funcMap invocation of HasClusterInitComponent to return %t, instead got %t", c.expectedHasClusterInitComponent, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["UseManagedIdentity"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedUseManagedIdentity {
+				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %t, instead got %t", c.expectedUseManagedIdentity, ret[0].Interface())
 			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsVirtualMachineScaleSets"])
