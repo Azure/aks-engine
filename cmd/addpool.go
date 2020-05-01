@@ -52,8 +52,8 @@ type addPoolCmd struct {
 
 const (
 	addPoolName             = "addpool"
-	addPoolShortDescription = "Add a node pool to an existing Kubernetes cluster"
-	addPoolLongDescription  = "Add a node pool to an existing Kubernetes cluster by referencing a new agentpoolProfile spec"
+	addPoolShortDescription = "Add a node pool to an existing AKS Engine-created Kubernetes cluster"
+	addPoolLongDescription  = "Add a node pool to an existing AKS Engine-created Kubernetes cluster by referencing a new agentpoolProfile spec"
 )
 
 // newAddPoolCmd run a command to add an agent pool to a Kubernetes cluster

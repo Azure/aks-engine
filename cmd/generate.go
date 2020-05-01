@@ -132,7 +132,7 @@ func (gc *generateCmd) mergeAPIModel() error {
 			return errors.Wrap(err, "error merging --set values with the api model")
 		}
 
-		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", gc.apimodelPath))
+		log.Infoln(fmt.Sprintf("new API model file has been generated during merge: %s", gc.apimodelPath))
 	}
 
 	return nil

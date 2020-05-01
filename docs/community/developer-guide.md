@@ -38,7 +38,7 @@ Or on Windows (ensure Docker is configured for Linux containers on Windows):
 powershell ./makedev.ps1
 ```
 
-This make target mounts the `aks-engine` source directory as a volume into the Docker container, which means you can edit your source code in your favorite editor on your machine, while still being able to compile and test inside of the Docker container. This environment mirrors the environment used in the AKS Engine continuous integration (CI) system.
+This make target mounts the AKS Engine source directory as a volume into the Docker container, which means you can edit your source code in your favorite editor on your machine, while still being able to compile and test inside of the Docker container. This environment mirrors the environment used in the AKS Engine continuous integration (CI) system.
 
 When `make dev` completes, you will be left at a command prompt inside a Docker container.
 
@@ -62,17 +62,17 @@ Usage:
   aks-engine [command]
 
 Available Commands:
-  addpool       Add a node pool to an existing Kubernetes cluster
+  addpool       Add a node pool to an existing AKS Engine-created Kubernetes cluster
   completion    Generates bash completion scripts
   deploy        Deploy an Azure Resource Manager template
   generate      Generate an Azure Resource Manager template
   get-logs      Collect logs and current cluster nodes configuration.
   get-versions  Display info about supported Kubernetes versions
   help          Help about any command
-  rotate-certs  Rotate certificates on an existing Kubernetes cluster
-  scale         Scale an existing Kubernetes cluster
-  upgrade       Upgrade an existing Kubernetes cluster
-  version       Print the version of AKS Engine
+  rotate-certs  Rotate certificates on an existing AKS Engine-created Kubernetes cluster
+  scale         Scale an existing AKS Engine-created Kubernetes cluster
+  upgrade       Upgrade an existing AKS Engine-created Kubernetes cluster
+  version       Print the version of aks-engine
 
 Flags:
       --debug                enable verbose debug logs
@@ -86,9 +86,9 @@ Use "aks-engine [command] --help" for more information about a command.
 
 ### Building on Windows, OSX, and Linux
 
-If the above docker container conveniences don't work for your developer environment, below is per-platform guidance to help you set up your local dev environment manually to build AKS Engine from source.
+If the above docker container conveniences don't work for your developer environment, below is per-platform guidance to help you set up your local dev environment manually to build an `aks-engine` binary from source.
 
-Building AKS Engine from source has a few requirements for each of the platforms. Download and install the prerequisites for your platform: Windows, Linux, or Mac:
+Building an `aks-engine` binary from source has a few requirements for each of the platforms. Download and install the prerequisites for your platform: Windows, Linux, or Mac:
 
 #### Windows
 
@@ -138,7 +138,7 @@ Build aks-engine:
 
 ### Structure of the Code
 
-The code for the aks-engine project is organized as follows:
+The code for the AKS Engine project is organized as follows:
 
 - The individual programs are located in `cmd/`. Code inside of `cmd/`
   is not designed for library re-use.
@@ -228,8 +228,7 @@ Once installed, the Go extension will `go get` several helper applications, incl
 debugging support. You can read more about VS Code integration with Delve
 [here](https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code).
 
-Make sure you have the `aks-engine` code checked out to the appropriate location in your `$GOPATH`
-and open that directory in VS Code.
+Open the directory that you checked out the `aks-engine` repo to in VS Code.
 
 ##### Debugging Tests
 
@@ -243,7 +242,7 @@ To the right of "run test" appears a link saying "debug test": click it!
 
 ##### Debugging AKS Engine
 
-To debug `aks-engine` itself, the default Go debugging configuration in `.vscode/launch.json` needs
+To debug changes to AKS Engine source during active development, the default Go debugging configuration in `.vscode/launch.json` needs
 to be edited. Open that file (or just click the gear-shaped "Open launch.json" icon if you have the
 Debug panel open).
 
@@ -333,7 +332,7 @@ The following steps constitute the AKS Engine CI pipeline:
 
 ## Pull Requests and Generated Code
 
-To make it easier use AKS Engine as a library and to `go get github.com/Azure/aks-engine`, some
+To make it easier use AKS Engine source code as a library and to `go get github.com/Azure/aks-engine`, some
 generated Go code is committed to the repository. Your pull request may need to regenerate those
 files before it will pass the required `make ensure-generated` step.
 

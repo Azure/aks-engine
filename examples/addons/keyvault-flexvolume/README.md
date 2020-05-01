@@ -1,10 +1,10 @@
 # Azure Key Vault FlexVolume Add-on
 
-[The Azure Key Vault FlexVolume](https://github.com/Azure/kubernetes-keyvault-flexvol) integrates Azure Key Vault with Kubernetes via a FlexVolume.  
+[The Azure Key Vault FlexVolume](https://github.com/Azure/kubernetes-keyvault-flexvol) integrates Azure Key Vault with Kubernetes via a FlexVolume.
 
 With the Azure Key Vault FlexVolume, developers can access application-specific secrets, keys, and certs stored in Azure Key Vault directly from their pods.
 
-Add this add-on to your apimodel as shown below to automatically enable Key Vault FlexVolume in your new Kubernetes cluster.
+Add this add-on to your API model as shown below to automatically enable Key Vault FlexVolume in your new Kubernetes cluster.
 
 ```json
 {
@@ -67,7 +67,7 @@ keyvault-flexvolume-z6jm6   1/1       Running   0          3m
 
 Follow the README at https://github.com/Azure/kubernetes-keyvault-flexvol for get started steps.
 
-## 
+##
 To update resources:
 
 ```json

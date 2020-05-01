@@ -4,7 +4,7 @@ If you're trying to deploy Kubernetes with Windows the first time, be sure to ch
 
 ## Customizing Windows deployments
 
-AKS Engine allows a lot more customizations available in the [docs](../), but here are a few important ones you should know for Windows deployments. Each of these are extra parameters you can add into the AKS Engine apimodel file (such as `kubernetes-windows.json` from the quick start) before running `aks-engine generate`.
+AKS Engine allows a lot more customizations available in the [docs](../), but here are a few important ones you should know for Windows deployments. Each of these are extra parameters you can add into the AKS Engine API model file (such as `kubernetes-windows.json` from the quick start) before running `aks-engine generate`.
 
 ### Changing the OS disk size
 
@@ -345,7 +345,7 @@ Workaround:
 
 #### Pods cannot ping default route or internet IPs
 
-Affects: All clusters deployed by aks-engine
+Affects: All clusters created by AKS Engine
 
 ICMP traffic is not routed between private Azure vNETs or to the internet.
 

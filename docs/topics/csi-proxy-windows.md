@@ -13,7 +13,7 @@ More info can be found in the following places:
 
 ## Usage
 
-### Enable in aks-engine
+### Enable in the cluster definition JSON (or API model)
 
 Add the following fields to `windowsProfile`:
 
@@ -30,6 +30,6 @@ For testing purposes the following csi-proxy binary may be used:
 
 - https://k8scsi.blob.core.windows.net/csi-proxy/master/binaries/csi-proxy.tar.gz
 
-If you want to use another version, replace `master` field to the concrete version number. 
+If you want to use another version, replace `master` field to the concrete version number.
 
 For example, https://k8scsi.blob.core.windows.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz

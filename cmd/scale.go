@@ -59,8 +59,8 @@ type scaleCmd struct {
 
 const (
 	scaleName             = "scale"
-	scaleShortDescription = "Scale an existing Kubernetes cluster"
-	scaleLongDescription  = "Scale an existing Kubernetes cluster by specifying increasing or decreasing the node count of an agentpool"
+	scaleShortDescription = "Scale an existing AKS Engine-created Kubernetes cluster"
+	scaleLongDescription  = "Scale an existing AKS Engine-created Kubernetes cluster by specifying increasing or decreasing the number of nodes in a node pool"
 	apiModelFilename      = "apimodel.json"
 )
 

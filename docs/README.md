@@ -10,7 +10,7 @@ AKS Engine has a lot of documentation. A high-level overview of how it’s organ
 
 [Topic guides][] discuss key topics and concepts at a fairly high level and provide useful background information and explanation.
 
-[How-to guides][] are recipes. They guide you through the steps involved in addressing key problems and use-cases. They are more advanced than tutorials and assume some knowledge of how AKS Engine works.
+[How-to guides][] are recipes. They guide you through the steps involved in addressing key problems and use-cases. They are more advanced than tutorials and assume some knowledge of how the `aks-engine` tool works.
 
 [Community guides][] teach you about the AKS Engine community. It incudes information on the project's Code of Conduct, the planning process for the AKS Engine project itself, its release cycle, and how you can contribute to the project.
 

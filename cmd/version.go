@@ -31,7 +31,7 @@ var (
 
 const (
 	versionName             = "version"
-	versionShortDescription = "Print the version of AKS Engine"
+	versionShortDescription = "Print the version of aks-engine"
 	versionLongDescription  = versionShortDescription
 )
 

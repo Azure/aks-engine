@@ -33,7 +33,7 @@ Enable Managed Identity by adding `useManagedIdentity` in `kubernetesConfig`.
 
 ## Optional: Disable Kubernetes Role-Based Access Control (RBAC) (for clusters running Kubernetes versions before 1.15.0)
 
-By default, the cluster will be provisioned with [Role-Based Access Control](https://kubernetes.io/docs/admin/authorization/rbac/) enabled. Disable RBAC by adding `enableRbac` in `kubernetesConfig` in the api model:
+By default, the cluster will be provisioned with [Role-Based Access Control](https://kubernetes.io/docs/admin/authorization/rbac/) enabled. Disable RBAC by adding `enableRbac` in `kubernetesConfig` in the API model:
 
 ```json
 "kubernetesConfig": {
@@ -78,11 +78,6 @@ storagetier=<Standard_LRS|Premium_LRS>
 
 They are managed-premium and managed-standard and map to Standard_LRS and Premium_LRS managed disk types respectively.
 
-In order to use these storage classes the following conditions must be met.
-
-- The cluster must be running Kubernetes release 1.7 or greater. Refer to this [example](../../examples/kubernetes-releases/kubernetes1.7.json) for how to provision a Kubernetes cluster of a specific version.
-- The node must support managed disks. See this [example](../../examples/disks-managed/kubernetes-vmas.json) to provision nodes with managed disks. You can also confirm if a node has managed disks using kubectl.
-
 ```console
 kubectl get nodes -l storageprofile=managed
 NAME                    STATUS    AGE       VERSION
@@ -110,7 +105,7 @@ spec:
 
 ## Using Azure integrated networking (CNI)
 
-Kubernetes clusters are configured by default to use the [Azure CNI plugin](https://github.com/Azure/azure-container-networking) which provides an Azure native networking experience. Pods will receive IP addresses directly from the vnet subnet on which they're hosted. If the api model doesn't specify explicitly, aks-engine will automatically provide the following `networkPlugin` configuration in `kubernetesConfig`:
+Kubernetes clusters are configured by default to use the [Azure CNI plugin](https://github.com/Azure/azure-container-networking) which provides an Azure native networking experience. Pods will receive IP addresses directly from the vnet subnet on which they're hosted. If the API model doesn't specify explicitly, aks-engine will automatically provide the following `networkPlugin` configuration in `kubernetesConfig`:
 
 ```json
 "kubernetesConfig": {
@@ -270,7 +265,7 @@ Depending upon the size of the VNET address space, during deployment, it is poss
 First, the detail:
 
 - Azure CNI assigns dynamic IP addresses from the "beginning" of the subnet IP address space (specifically, it looks for available addresses starting at ".4" ["10.0.0.4" in a "10.0.0.0/24" network])
-- aks-engine will require a range of up to 16 unused IP addresses in multi-master scenarios (1 per master for up to 5 masters, and then the next 10 IP addresses immediately following the "last" master for headroom reservation, and finally 1 more for the load balancer immediately adjacent to the afore-described _n_ masters+10 sequence) to successfully scaffold the network stack for your cluster
+- AKS Engine will require a range of up to 16 unused IP addresses in multi-master scenarios (1 per master for up to 5 masters, and then the next 10 IP addresses immediately following the "last" master for headroom reservation, and finally 1 more for the load balancer immediately adjacent to the afore-described _n_ masters+10 sequence) to successfully scaffold the network stack for your cluster
 
 A guideline that will remove the danger of IP address allocation collision during deployment:
 
@@ -302,7 +297,7 @@ Before provisioning, modify the `masterProfile` and `agentPoolProfiles` to match
 ### VirtualMachineScaleSets Masters Custom VNET
 
 When using custom VNET with `VirtualMachineScaleSets` MasterProfile, make sure to create two subnets within the vnet: `master` and `agent`.
-Modify `masterProfile` in the api model, `vnetSubnetId`, `agentVnetSubnetId` should be set to the values of the `master` subnet and the `agent` subnet in the existing vnet respectively.
+Modify `masterProfile` in the API model, `vnetSubnetId`, `agentVnetSubnetId` should be set to the values of the `master` subnet and the `agent` subnet in the existing vnet respectively.
 Modify `agentPoolProfiles`, `vnetSubnetId` should be set to the value of the `agent` subnet in the existing vnet.
 
 *NOTE: The `firstConsecutiveStaticIP` configuration should be empty and will be derived from an offset and the first IP in the vnetCidr.*
@@ -328,7 +323,7 @@ For example, if `vnetCidr` is `10.239.0.0/16`, `master` subnet is `10.239.0.0/17
 
 ### Kubenet Networking Custom VNET
 
-If you're *not- using Azure CNI (e.g., `"networkPlugin": "kubenet"` in the `kubernetesConfig` api model configuration object): After a custom VNET-configured cluster finishes provisioning, fetch the id of the Route Table resource from `Microsoft.Network` provider in your new cluster's Resource Group.
+If you're *not- using Azure CNI (e.g., `"networkPlugin": "kubenet"` in the `kubernetesConfig` API model configuration object): After a custom VNET-configured cluster finishes provisioning, fetch the id of the Route Table resource from `Microsoft.Network` provider in your new cluster's Resource Group.
 
 The route table resource id is of the format: `/subscriptions/SUBSCRIPTIONID/resourceGroups/RESOURCEGROUPNAME/providers/Microsoft.Network/routeTables/ROUTETABLENAME`
 
@@ -541,4 +536,4 @@ These parameters are all required.
 
 As of March 3, 2020, the ContainerD and network plugin repos don't have public builds available. This repo has a script that will build them from source and create two ZIP files: [build-windows-containerd.sh](../../scripts/build-windows-containerd.sh)
 
-Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` and `windowsSdnPluginURL` in the AKS-Engine apimodel shown above.
+Upload these ZIP files to a location that your cluster will be able to reach, then put those URLs in `windowsContainerdURL` and `windowsSdnPluginURL` in the AKS-Engine API model shown above.

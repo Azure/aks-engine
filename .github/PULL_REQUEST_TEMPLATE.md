@@ -1,4 +1,4 @@
-<!-- Thank you for helping aks-engine with a pull request!
+<!-- Thank you for helping AKS Engine with a pull request!
 Use conventional commit messages, such as
   feat: add a knob to the frobnitz
 or
@@ -6,7 +6,7 @@ or
 And read this for faster PR reviews: https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md#best-practices-for-faster-reviews -->
 
 **Reason for Change**:
-<!-- What does this PR improve or fix in aks-engine? -->
+<!-- What does this PR improve or fix in AKS Engine? -->
 
 
 **Issue Fixed**:

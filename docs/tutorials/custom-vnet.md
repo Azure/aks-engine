@@ -222,7 +222,7 @@ az network vnet subnet update \
 --ids "/subscriptions/SUBSCRIPTION_ID/resourceGroups/RESOURCE_GROUP_NAME_VNET/providers/Microsoft.Network/VirtualNetworks/KUBERNETES_CUSTOM_VNET/subnets/KUBERNETES_SUBNET"
 ```
 
-... where `RESOURCE_GROUP_NAME_KUBE` is the name of the Resource Group that contains the Kubernetes cluster, `SUBSCRIPTION_ID` is the id of the Azure subscription that both the VNET & Cluster are in, `RESOURCE_GROUP_NAME_VNET` is the name of the Resource Group that the VNET is in, `KUBERNETES_SUBNET` is the name of the vnet subnet, and `KUBERNETES_CUSTOM_VNET` is the name of the custom VNET itself.
+... where `RESOURCE_GROUP_NAME_KUBE` is the name of the Resource Group that contains the AKS Engine-created Kubernetes cluster, `SUBSCRIPTION_ID` is the id of the Azure subscription that both the VNET & Cluster are in, `RESOURCE_GROUP_NAME_VNET` is the name of the Resource Group that the VNET is in, `KUBERNETES_SUBNET` is the name of the vnet subnet, and `KUBERNETES_CUSTOM_VNET` is the name of the custom VNET itself.
 
 ## Connect to your new cluster
 
