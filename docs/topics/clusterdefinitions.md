@@ -427,18 +427,29 @@ Below is a list of kubelet options that aks-engine will configure by default:
 | "--authentication-token-webhook"      | "true" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                      |
 | "--read-only-port"                    | "0" (this default is set for clusters >= 1.16.0 )                                                                                                                                                                                                                                                         |
 | "--register-with-taints" | "node-role.kubernetes.io/master=true:NoSchedule" (`masterProfile` only; Note: you may add your own master-specific taints in the `kubeletConfig` under `masterProfile`, which will augment the built-in "node-role.kubernetes.io/master=true:NoSchedule" taint, which will always be present.) |
+| "--container-runtime" | "remote" if in a containerd configuration, otherwise this configuration is not passed to kubelet runtime |
+| "--runtime-request-timeout" | "15m" if in a containerd configuration, otherwise this configuration is not passed to kubelet runtime |
+| "--container-runtime-endpoint" | "unix:///run/containerd/containerd.sock" if in a containerd configuration, otherwise this configuration is not passed to kubelet runtime |
 
 Below is a list of kubelet options that are _not_ currently user-configurable, either because a higher order configuration vector is available that enforces kubelet configuration, or because a static configuration is required to build a functional cluster:
 
-| kubelet option                               | default value                                    |
-| -------------------------------------------- | ------------------------------------------------ |
-| "--address"                                  | "0.0.0.0"                                        |
-| "--allow-privileged"                         | "true"                                           |
-| "--pod-manifest-path"                        | "/etc/kubernetes/manifests"                      |
-| "--node-labels"                              | (based on Azure node metadata)                   |
-| "--cgroups-per-qos"                          | "true"                                           |
-| "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                    |
-| "--keep-terminated-pod-volumes"              | "false"                                          |
+| kubelet option                               | default value                                      |
+| -------------------------------------------- | ---------------------------------------------------|
+| "--address"                                  | "0.0.0.0"                                          |
+| "--allow-privileged"                         | "true"                                             |
+| "--anonymous-auth"                           | "false"                                            |
+| "--authorization-mode"                       | "webhook"                                          |
+| "--client-ca-file"                           | "/etc/kubernetes/certs/ca.crt"                     |
+| "--cluster-dns"                              | "10.0.0.10" (if ipv4, or "fd00::10" if using ipv6) |
+| "--pod-manifest-path"                        | "/etc/kubernetes/manifests"                        |
+| "--node-labels"                              | (based on Azure node metadata)                     |
+| "--cgroups-per-qos"                          | "true"                                             |
+| "--kubeconfig"                               | "/var/lib/kubelet/kubeconfig"                      |
+| "--keep-terminated-pod-volumes"              | "false"                                            |
+| "--tls-cert-file"                            | "/etc/kubernetes/certs/kubeletserver.crt"          |
+| "--tls-private-key-file"                     | "/etc/kubernetes/certs/kubeletserver.key"          |
+| "--v"                                        | "2"                                                |
+| "--volume-plugin-dir"                        | "/etc/kubernetes/volumeplugins"                    |
 
 <a name="feat-controller-manager-config"></a>
 

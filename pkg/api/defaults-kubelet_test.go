@@ -94,6 +94,17 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
+	cs.setKubeletConfig(false)
+	expected["--container-runtime"] = "remote"
+	expected["--runtime-request-timeout"] = "15m"
+	expected["--container-runtime-endpoint"] = "unix:///run/containerd/containerd.sock"
+	for key, val := range linuxProfileKubeletConfig {
+		if expected[key] != val {
+			t.Fatalf("got unexpected Linux agent profile kubelet config value for %s: %s, expected %s",
+				key, val, expected[key])
+		}
+	}
 	delete(expected, "--register-with-taints")
 
 	windowsProfileKubeletConfig := cs.Properties.AgentPoolProfiles[1].KubernetesConfig.KubeletConfig
@@ -119,6 +130,9 @@ func TestKubeletConfigDefaults(t *testing.T) {
 				key, val, expected[key])
 		}
 	}
+	delete(expected, "--container-runtime")
+	delete(expected, "--runtime-request-timeout")
+	delete(expected, "--container-runtime-endpoint")
 
 	// validate aad-pod-identity disabled scenario
 	cs = CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
@@ -222,6 +236,8 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 		"--tls-cipher-suites":                 TLSStrongCipherSuitesKubelet,
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
+		"--v":                                 "2",
+		"--volume-plugin-dir":                 "/etc/kubernetes/volumeplugins",
 	}
 }
 
@@ -273,6 +289,8 @@ func TestKubeletConfigAzureStackDefaults(t *testing.T) {
 		"--tls-cert-file":                     "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":              "/etc/kubernetes/certs/kubeletserver.key",
 		"--register-with-taints":              common.MasterNodeTaint,
+		"--v":                                 "2",
+		"--volume-plugin-dir":                 "/etc/kubernetes/volumeplugins",
 	}
 	for key, val := range kubeletConfig {
 		if expected[key] != val {

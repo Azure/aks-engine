@@ -382,13 +382,19 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
   content: |
     #!/bin/bash
     set -e
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
 {{end}}
 {{- if gt .MasterProfile.Count 1}}
-    # Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain
+    {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
 {{end}}
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml

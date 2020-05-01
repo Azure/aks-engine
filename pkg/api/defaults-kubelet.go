@@ -28,6 +28,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--keep-terminated-pod-volumes": "false",
 		"--tls-cert-file":               "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":        "/etc/kubernetes/certs/kubeletserver.key",
+		"--v":                           "2",
+		"--volume-plugin-dir":           "/etc/kubernetes/volumeplugins",
 	}
 
 	for key := range staticLinuxKubeletConfig {
@@ -126,6 +128,12 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		if !cs.Properties.IsHostedMasterProfile() { // Skip for AKS until it supports metrics-server v0.3
 			defaultKubeletConfig["--read-only-port"] = "0" // we only have metrics-server v0.3 support in 1.16.0 and above
 		}
+	}
+
+	if o.KubernetesConfig.NeedsContainerd() {
+		defaultKubeletConfig["--container-runtime"] = "remote"
+		defaultKubeletConfig["--runtime-request-timeout"] = "15m"
+		defaultKubeletConfig["--container-runtime-endpoint"] = "unix:///run/containerd/containerd.sock"
 	}
 
 	// If no user-configurable kubelet config values exists, use the defaults
