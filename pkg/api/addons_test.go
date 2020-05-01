@@ -2033,8 +2033,12 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							Name:           common.AzureCNINetworkMonitorAddonName,
+							Image:          "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							CPURequests:    "30m",
+							MemoryRequests: "25Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "256Mi",
 						},
 					},
 				},
@@ -5021,8 +5025,12 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
 				{
-					Name:  common.AzureCNINetworkMonitorAddonName,
-					Image: specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					Name:           common.AzureCNINetworkMonitorAddonName,
+					Image:          specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					CPURequests:    "30m",
+					MemoryRequests: "25Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "256Mi",
 				},
 			},
 		},
