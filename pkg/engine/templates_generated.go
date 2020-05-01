@@ -37202,8 +37202,8 @@ installSGXDrivers() {
   retrycmd 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit 90
   dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
   sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
-  retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit 90
-  matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
+  retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version.cfg" || exit 90
+  matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version.cfg)"
   read -ra tmp_array <<<"$matched_line"
   sgx_driver_sha256sum_expected="${tmp_array[0]}"
   sgx_driver_remote_path="${tmp_array[1]}"
