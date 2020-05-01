@@ -7860,6 +7860,13 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
           env:
             - name: HOSTNAME
               valueFrom:
@@ -12418,6 +12425,13 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
           env:
             - name: HOSTNAME
               valueFrom:
@@ -17000,6 +17014,13 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
           env:
             - name: HOSTNAME
               valueFrom:
@@ -21648,6 +21669,13 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
           env:
             - name: HOSTNAME
               valueFrom:
@@ -26941,6 +26969,13 @@ spec:
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
+              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
           env:
             - name: HOSTNAME
               valueFrom:
