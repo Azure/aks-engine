@@ -8190,6 +8190,8 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
       hostNetwork: true
       volumes:
       - name: log
@@ -8199,6 +8201,10 @@ spec:
       - name: xtables-lock
         hostPath:
           path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
           type: File
       serviceAccountName: azure-npm
 `)
@@ -12388,6 +12394,8 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
       hostNetwork: true
       volumes:
       - name: log
@@ -12397,6 +12405,10 @@ spec:
       - name: xtables-lock
         hostPath:
           path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
           type: File
       serviceAccountName: azure-npm
 `)
@@ -16599,6 +16611,8 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
       hostNetwork: true
       volumes:
       - name: log
@@ -16608,6 +16622,10 @@ spec:
       - name: xtables-lock
         hostPath:
           path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
           type: File
       serviceAccountName: azure-npm
 `)
@@ -20876,6 +20894,8 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
       hostNetwork: true
       volumes:
       - name: log
@@ -20885,6 +20905,10 @@ spec:
       - name: xtables-lock
         hostPath:
           path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
           type: File
       serviceAccountName: azure-npm
 `)
@@ -30428,6 +30452,8 @@ spec:
             mountPath: /run/xtables.lock
           - name: log
             mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
       hostNetwork: true
       volumes:
       - name: log
@@ -30437,6 +30463,10 @@ spec:
       - name: xtables-lock
         hostPath:
           path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
           type: File
       serviceAccountName: azure-npm
 `)
