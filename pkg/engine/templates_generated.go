@@ -40529,6 +40529,10 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
+{{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
+    {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}
+    iptables -A OUTPUT -s 127.0.0.1/32 -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DROP
+{{end}}
 {{- if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
