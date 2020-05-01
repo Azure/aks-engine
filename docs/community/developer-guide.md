@@ -212,12 +212,12 @@ Thorough guidance around effectively running E2E tests to validate source code c
 
 ### Debugging
 
-To debug `aks-engine` code directly, use the [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go)
+To debug AKS Engine code directly, use the [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go)
 for Visual Studio Code or use [Delve](https://github.com/go-delve/delve) at the command line.
 
 #### Visual Studio Code
 
-To debug `aks-engine` with [VS Code](https://code.visualstudio.com/), first ensure that you have the
+To debug AKS Engine with [VS Code](https://code.visualstudio.com/), first ensure that you have the
 [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go) installed. Click
 the "Extensions" icon in the Activity Bar (on the far left), search for "go", then install the
 official Microsoft extension titled "Rich Go language support for Visual Studio Code."
