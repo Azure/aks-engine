@@ -3093,6 +3093,19 @@ func TestProperties_ValidateZones(t *testing.T) {
 	}
 }
 
+func ExampleProperties_validateLocation() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+	cs.Location = ""
+	cs.validateLocation()
+	// Output:
+	// level=warning msg="No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only"
+}
+
 func ExampleProperties_validateZones() {
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.TextFormatter{
