@@ -1965,6 +1965,9 @@ func (cs *ContainerService) validateLocation() error {
 	if cs.Properties != nil && cs.Properties.IsCustomCloudProfile() && cs.Location == "" {
 		return errors.New("missing ContainerService Location")
 	}
+	if cs.Location == "" {
+		log.Warnf("No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only")
+	}
 	return nil
 }
 
