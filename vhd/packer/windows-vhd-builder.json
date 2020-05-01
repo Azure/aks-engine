@@ -7,6 +7,7 @@
         "build_repo": "{{env `GIT_REPO`}}",
         "client_id": "{{env `AZURE_CLIENT_ID`}}",
         "client_secret": "{{env `AZURE_CLIENT_SECRET`}}",
+        "container_runtime": "{{env `CONTAINER_RUNTIME`}}",
         "tenant_id": "{{env `AZURE_TENANT_ID`}}",
         "subscription_id": "{{env `AZURE_SUBSCRIPTION_ID`}}",
         "location": "{{env `AZURE_LOCATION`}}",
@@ -46,7 +47,10 @@
         {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
-            "environment_vars": "ProvisioningPhase=1",
+            "environment_vars": [
+                "ProvisioningPhase=1",
+                "ContainerRuntime={{user `container_runtime`}}"
+            ],
             "type": "powershell",
             "script": "vhd/packer/configure-windows-vhd.ps1"
         },
@@ -61,7 +65,10 @@
         {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
-            "environment_vars": "ProvisioningPhase=2",
+            "environment_vars": [
+                "ProvisioningPhase=2",
+                "ContainerRuntime={{user `container_runtime`}}"
+            ],
             "type": "powershell",
             "script": "vhd/packer/configure-windows-vhd.ps1"
         },

@@ -12,6 +12,8 @@ $ErrorActionPreference = "Stop"
 
 filter Timestamp {"$(Get-Date -Format o): $_"}
 
+$global:containerdPackageUrl = "https://marosset.blob.core.windows.net/pub/containerd/containerd-0.0.87-public.zip"
+
 function Write-Log($Message)
 {
     $msg = $message | Timestamp
@@ -39,13 +41,22 @@ function Disable-WindowsUpdates
 
 function Get-ContainerImages
 {
+    param (
+        $containerRuntime
+    )
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
         "mcr.microsoft.com/oss/kubernetes/pause:1.3.0")
 
-    foreach ($image in $imagesToPull) {
-        docker pull $image
+    if ($containerRuntime -eq 'containerd') {
+        foreach ($image in $imagesToPull) {
+            & ctr.exe -n k8s.io images pull $image
+        }
+    } else {
+        foreach ($image in $imagesToPull) {
+            docker pull $image
+        }
     }
 }
 
@@ -67,6 +78,9 @@ function Get-FilesToCacheOnVHD
             "https://github.com/microsoft/SDN/raw/master/Kubernetes/windows/helper.psm1",
             "https://github.com/Microsoft/SDN/raw/master/Kubernetes/windows/hns.psm1",
             "https://globalcdn.nuget.org/packages/microsoft.applicationinsights.2.11.0.nupkg"
+        );
+        "c:\akse-cache\containerd\" = @(
+            $global:containerdPackageUrl
         );
         "c:\akse-cache\win-k8s\" = @(
             "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
@@ -111,6 +125,36 @@ function Get-FilesToCacheOnVHD
     }
 }
 
+function Install-ContainerD {
+    Write-Log "Getting containerD binaries from $global:containerdPackageUrl"
+
+    $installDir = "c:\program files\containerd"
+    $zipPath = [IO.Path]::Combine($installDir, "containerd.zip")
+
+    Write-Log "Installing containerd to $installDir"
+    New-Item -ItemType Directory $installDir -Force | Out-Null
+    Invoke-WebRequest -UseBasicParsing -Uri $global:containerdPackageUrl -OutFile $zipPath
+    Expand-Archive -Path $zipPath -DestinationPath $installDir
+    Remove-Item -Path $zipPath | Out-null
+
+    $newPath = [Environment]::GetEnvironmentVariable("Path", [EnvironmentVariableTarget]::Machine) + ";$installDir"
+    [Environment]::SetEnvironmentVariable("Path", $newPath, [EnvironmentVariableTarget]::Machine)
+    $env:Path += ";$installDir"
+
+    Write-Log "Registering containerd as a service"
+    & containerd.exe --register-service
+    $svc = Get-Service -Name "containerd" -ErrorAction SilentlyContinue
+    if ($null -eq $svc) {
+        throw "containerd.exe did not get installed as a service correctly."
+    }
+
+    Write-Log "Starting containerd service"
+    $svc | Start-Service
+    if ($svc.Status -ne "Running") {
+        throw "containerd service is not running"
+    }
+}
+
 function Install-Docker
 {
     $defaultDockerVersion = "19.03.5"
@@ -122,6 +166,7 @@ function Install-Docker
     $package | Install-Package -Force | Out-Null
     Start-Service docker
 }
+
 
 function Install-OpenSSH
 {
@@ -233,6 +278,13 @@ function Update-WindowsFeatures
 # Disable progress writers for this session to greatly speed up operations such as Invoke-WebRequest
 $ProgressPreference = 'SilentlyContinue'
 
+$containerRuntime = $env:ContainerRuntime
+$validContainerRuntimes = @('containerd', 'docker')
+if (-not ($validContainerRuntimes -contains $containerRuntime)) {
+    Write-Host "Unsupported container runtime: $containerRuntime"
+    exit 1
+}
+
 switch ($env:ProvisioningPhase)
 {
     "1"
@@ -248,10 +300,14 @@ switch ($env:ProvisioningPhase)
     }
     "2"
     {
-        Write-Log "Performing actions for provisioning phase 2"
+        Write-Log "Performing actions for provisioning phase 2 for container runtime '$containerRuntime'"
         Set-WinRmServiceAutoStart
+        # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
         Install-Docker
-        Get-ContainerImages
+        if ($containerRuntime -eq 'containerd') {
+            Install-ContainerD 
+        }
+        Get-ContainerImages -containerRuntime $containerRuntime
         Get-FilesToCacheOnVHD
         (New-Guid).Guid | Out-File -FilePath 'c:\vhd-id.txt'
     }
