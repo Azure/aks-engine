@@ -328,7 +328,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				CPURequests:    "30m",
 				MemoryRequests: "25Mi",
 				CPULimits:      "200m",
-				MemoryLimits:   "512Mi",
+				MemoryLimits:   "256Mi",
 			},
 		},
 	}
