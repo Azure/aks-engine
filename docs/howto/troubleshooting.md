@@ -52,7 +52,7 @@ Look for the exit code. In the above example, the exit code is `20`. The list of
 
 If after following the above you are still unable to troubleshoot your deployment error, please open a Github issue with title "CSE error: exit code <INSERT_YOUR_EXIT_CODE>" and include the following in the description:
 
-1. The API modeljson used to deploy the cluster (aka your cluster config). **Please make sure you remove all secrets and keys before posting it on GitHub.**
+1. Relevant data from the cluster definition JSON file (API model) used to deploy the cluster. **Please make sure you remove all secrets and keys before posting it on GitHub.**
 
 2. The output of `kubectl get nodes`
 

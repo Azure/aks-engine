@@ -24,7 +24,7 @@ The input validator checks for bad/missing input in the user-provided api models
 
 ### Template Generator
 
-Once the input is validated, the template generator is invoked which will convert the API model JSON into another JSON which has a format that is well-understood by ARM (Azure Resource Manager). The template generator achieves this through templating where existing skeleton json files are converted into the actual ARM JSON files using the values present in the input API model. These skeleton templates are written in the schema recognized by ARM and they contain placeholders which can be substituted with the values provided in the API model JSON file. These templates also nest other template files  inside of it. Given below is an example of a template file with placeholders.
+Once the input is validated, the template generator is invoked which will convert the API model JSON into another JSON which has a format that is well-understood by ARM (Azure Resource Manager). The template generator achieves this through templating where existing skeleton JSON files are converted into the actual ARM JSON files using the values present in the input API model. These skeleton templates are written in the schema recognized by ARM and they contain placeholders which can be substituted with the values provided in the API model JSON file. These templates also nest other template files  inside of it. Given below is an example of a template file with placeholders.
 
 ```js
 {
