@@ -322,7 +322,7 @@ func certificateToPem(derBytes []byte) []byte {
 		Bytes: derBytes,
 	}
 	pemBuffer := bytes.Buffer{}
-	pem.Encode(&pemBuffer, pemBlock)
+	_ = pem.Encode(&pemBuffer, pemBlock)
 
 	return pemBuffer.Bytes()
 }
@@ -333,7 +333,7 @@ func privateKeyToPem(privateKey *rsa.PrivateKey) []byte {
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
 	pemBuffer := bytes.Buffer{}
-	pem.Encode(&pemBuffer, pemBlock)
+	_ = pem.Encode(&pemBuffer, pemBlock)
 
 	return pemBuffer.Bytes()
 }

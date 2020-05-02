@@ -1148,11 +1148,11 @@ func (p *Properties) GetClusterID() string {
 		// from the master dns name
 		h := fnv.New64a()
 		if p.MasterProfile != nil {
-			h.Write([]byte(p.MasterProfile.DNSPrefix))
+			_, _ = h.Write([]byte(p.MasterProfile.DNSPrefix))
 		} else if p.HostedMasterProfile != nil {
-			h.Write([]byte(p.HostedMasterProfile.DNSPrefix))
+			_, _ = h.Write([]byte(p.HostedMasterProfile.DNSPrefix))
 		} else if len(p.AgentPoolProfiles) > 0 {
-			h.Write([]byte(p.AgentPoolProfiles[0].Name))
+			_, _ = h.Write([]byte(p.AgentPoolProfiles[0].Name))
 		}
 		r := rand.New(rand.NewSource(int64(h.Sum64())))
 		mutex.Lock()

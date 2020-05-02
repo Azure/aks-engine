@@ -297,7 +297,9 @@ func isAgentPoolOnlyClusterJSON(contents []byte) bool {
 
 func propertiesAsMap(contents []byte) (map[string]interface{}, bool) {
 	var raw interface{}
-	json.Unmarshal(contents, &raw)
+	if err := json.Unmarshal(contents, &raw); err != nil {
+		return nil, false
+	}
 	jsonMap := raw.(map[string]interface{})
 	properties, propertiesPresent := jsonMap["properties"]
 	if !propertiesPresent {

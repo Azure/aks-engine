@@ -437,7 +437,9 @@ func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentV
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)", *vm.Name, currentVersion)
 		*uc.MasterVMs = append(*uc.MasterVMs, vm)
 	} else {
-		uc.addVMToAgentPool(vm, true)
+		if err := uc.addVMToAgentPool(vm, true); err != nil {
+			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
+		}
 	}
 }
 
@@ -446,6 +448,8 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)", *vm.Name, currentVersion)
 		*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 	} else {
-		uc.addVMToAgentPool(vm, false)
+		if err := uc.addVMToAgentPool(vm, false); err != nil {
+			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
+		}
 	}
 }

@@ -79,7 +79,7 @@ func DeployTemplateSync(az armhelpers.AKSEngineClient, logger *logrus.Entry, res
 	// try to extract error from ARM Response
 	if deploymentExtended.Response.Response != nil && deploymentExtended.Body != nil {
 		buf := new(bytes.Buffer)
-		buf.ReadFrom(deploymentExtended.Body)
+		_, _ = buf.ReadFrom(deploymentExtended.Body)
 		logger.Infof("StatusCode: %d, Error: %s", deploymentExtended.Response.StatusCode, buf.String())
 		deploymentErr.Response = buf.Bytes()
 		deploymentErr.StatusCode = deploymentExtended.Response.StatusCode

@@ -61,7 +61,7 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
-				cmd.Usage()
+				_ = cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
@@ -77,11 +77,11 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
-	command.MarkFlagRequired("location")
-	command.MarkFlagRequired("api-model")
-	command.MarkFlagRequired("ssh-host")
-	command.MarkFlagRequired("linux-ssh-private-key")
-	command.MarkFlagRequired("linux-script") // optional once in VHD
+	_ = command.MarkFlagRequired("location")
+	_ = command.MarkFlagRequired("api-model")
+	_ = command.MarkFlagRequired("ssh-host")
+	_ = command.MarkFlagRequired("linux-ssh-private-key")
+	_ = command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 

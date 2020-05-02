@@ -630,7 +630,7 @@ func getBase64EncodedGzippedCustomScript(csFilename string, cs *api.ContainerSer
 		panic(fmt.Sprintf("BUG: %s", err.Error()))
 	}
 	var buffer bytes.Buffer
-	templ.Execute(&buffer, cs)
+	_ = templ.Execute(&buffer, cs)
 	csStr := buffer.String()
 	csStr = strings.Replace(csStr, "\r\n", "\n", -1)
 	return getBase64EncodedGzippedCustomScriptFromStr(csStr)
@@ -645,7 +645,7 @@ func getStringFromBase64(str string) (string, error) {
 func getBase64EncodedGzippedCustomScriptFromStr(str string) string {
 	var gzipB bytes.Buffer
 	w := gzip.NewWriter(&gzipB)
-	w.Write([]byte(str))
+	_, _ = w.Write([]byte(str))
 	w.Close()
 	return base64.StdEncoding.EncodeToString(gzipB.Bytes())
 }
@@ -917,7 +917,7 @@ func getComponentsString(cs *api.ContainerService, sourcePath string) string {
 					return ""
 				}
 				var buffer bytes.Buffer
-				templ.Execute(&buffer, component)
+				_ = templ.Execute(&buffer, component)
 				input = buffer.String()
 			}
 			if componentName == common.ClusterInitComponentName {
@@ -974,7 +974,7 @@ func getAddonsString(cs *api.ContainerService, sourcePath string) string {
 					return ""
 				}
 				var buffer bytes.Buffer
-				templ.Execute(&buffer, addon)
+				_ = templ.Execute(&buffer, addon)
 				input = buffer.String()
 			}
 			result += getComponentString(input, "/etc/kubernetes/addons", setting.destinationFile)

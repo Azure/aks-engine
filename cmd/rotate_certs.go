@@ -81,7 +81,7 @@ func newRotateCertsCmd() *cobra.Command {
 	f.StringVar(&rcc.masterFQDN, "apiserver", "", "apiserver endpoint (required)")
 	f.StringVarP(&rcc.outputDirectory, "output-directory", "o", "", "output directory where generated TLS artifacts will be saved (derived from DNS prefix if absent)")
 
-	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
+	_ = f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
 
 	addAuthFlags(rcc.getAuthArgs(), f)
 

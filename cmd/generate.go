@@ -102,10 +102,10 @@ func (gc *generateCmd) validate(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
 			gc.apimodelPath = args[0]
 		} else if len(args) > 1 {
-			cmd.Usage()
+			_ = cmd.Usage()
 			return errors.New("too many arguments were provided to 'generate'")
 		} else {
-			cmd.Usage()
+			_ = cmd.Usage()
 			return errors.New("--api-model was not supplied, nor was one specified as a positional argument")
 		}
 	}

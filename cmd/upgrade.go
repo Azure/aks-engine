@@ -87,7 +87,7 @@ func newUpgradeCmd() *cobra.Command {
 	f.BoolVarP(&uc.controlPlaneOnly, "control-plane-only", "", false, "upgrade control plane VMs only, do not upgrade node pools")
 	addAuthFlags(uc.getAuthArgs(), f)
 
-	f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	_ = f.MarkDeprecated("deployment-dir", "deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
 
 	return upgradeCmd
 }
@@ -101,12 +101,12 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	}
 
 	if uc.resourceGroupName == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--resource-group must be specified")
 	}
 
 	if uc.location == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--location must be specified")
 	}
 	uc.location = helpers.NormalizeAzureRegion(uc.location)
@@ -122,17 +122,17 @@ func (uc *upgradeCmd) validate(cmd *cobra.Command) error {
 	}
 
 	if uc.upgradeVersion == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--upgrade-version must be specified")
 	}
 
 	if uc.apiModelPath == "" && uc.deploymentDirectory == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--api-model must be specified")
 	}
 
 	if uc.apiModelPath != "" && uc.deploymentDirectory != "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
@@ -175,7 +175,9 @@ func (uc *upgradeCmd) loadCluster() error {
 	}
 
 	if uc.containerService.Properties.IsCustomCloudProfile() {
-		writeCustomCloudProfile(uc.containerService)
+		if err = writeCustomCloudProfile(uc.containerService); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
 		if err = uc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{
 			IsUpgrade: true,
 			IsScale:   false,

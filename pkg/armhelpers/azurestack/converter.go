@@ -10,11 +10,10 @@ import (
 // DeepCopy dst and src should be the same type in different API version
 // dst should be pointer type
 func DeepCopy(dst, src interface{}) error {
-	defer func() error {
+	defer func() {
 		if r := recover(); r != nil {
-			return fmt.Errorf("fail to copy object %v", r)
+			fmt.Printf("fail to copy object %v", r)
 		}
-		return nil
 	}()
 	dstValue := reflect.ValueOf(dst)
 	srcValue := reflect.ValueOf(src)
