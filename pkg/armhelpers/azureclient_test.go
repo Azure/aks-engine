@@ -23,7 +23,7 @@ func TestAzureClientAuxToken(t *testing.T) {
 	g.Expect(err).To(BeNil())
 
 	token := "eyJ0eXAiOiJKV1QiL"
-	azureClient, _ := NewAzureClientWithClientSecretExternalTenant(env, "subID", "d1a3-4ea4", "clientID", "secret")
+	azureClient, err := NewAzureClientWithClientSecretExternalTenant(env, "subID", "d1a3-4ea4", "clientID", "secret")
 	g.Expect(err).To(BeNil())
 	azureClient.AddAuxiliaryTokens([]string{token})
 	request, err := azureClient.deploymentsClient.GetPreparer(context.Background(), "testRG", "testDeployment")

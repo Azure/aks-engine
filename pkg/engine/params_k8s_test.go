@@ -17,7 +17,9 @@ import (
 func TestAssignKubernetesParameters(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -41,7 +43,8 @@ func TestAssignKubernetesParameters(t *testing.T) {
 		parametersMap := paramsMap{}
 		containerService.Location = "eastus"
 		cloudSpecConfig := containerService.GetCloudSpecConfig()
-		containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		// TODO: this returns an error: "The raw pem is not a valid PEM formatted block"
+		_, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,

@@ -24,7 +24,7 @@ func TestRegisterHandler(t *testing.T) {
 
 var _ = Describe("v20180331 test suite", func() {
 	locale := gotext.NewLocale(path.Join("../../..", "../../..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	_ = i18n.Initialize(locale)
 	apiloader := &api.Apiloader{}
 	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false)
 	defaultK8sVersion := common.GetDefaultKubernetesVersion(false)

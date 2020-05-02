@@ -25,7 +25,8 @@ func TestNormalizeForK8sVMASScalingUp(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
@@ -42,7 +43,8 @@ func TestNormalizeForK8sAddVMASPool(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sAddVMASPool(logger, templateMap)
@@ -59,7 +61,8 @@ func TestNormalizeMasterResourcesForScaling(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeMasterResourcesForScaling(logger, templateMap)
@@ -76,7 +79,8 @@ func TestNormalizeForK8sVMASScalingUpWithVnet(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sVMASScalingUp(logger, templateMap)
@@ -93,7 +97,8 @@ func TestNormalizeResourcesForK8sMasterUpgrade(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := &Transformer{
 		Translator: &i18n.Translator{
@@ -117,7 +122,8 @@ func TestNormalizeResourcesForK8sAgentUpgrade(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := &Transformer{
 		Translator: &i18n.Translator{
@@ -141,7 +147,8 @@ func TestNormalizeForK8sSLBScalingOrUpgrade(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sSLBScalingOrUpgrade(logger, templateMap)
@@ -158,7 +165,8 @@ func TestNormalizeForK8sSLBScalingOrUpgradeVMSS(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.NormalizeForK8sSLBScalingOrUpgrade(logger, templateMap)
@@ -175,7 +183,8 @@ func TestRemoveJumpboxResourcesFromTemplate(t *testing.T) {
 	Expect(e).To(BeNil())
 	templateJSON := string(fileContents)
 	var template interface{}
-	json.Unmarshal([]byte(templateJSON), &template)
+	e = json.Unmarshal([]byte(templateJSON), &template)
+	Expect(e).NotTo(HaveOccurred())
 	templateMap := template.(map[string]interface{})
 	transformer := Transformer{}
 	e = transformer.RemoveJumpboxResourcesFromTemplate(logger, templateMap)
@@ -265,7 +274,8 @@ func ValidateTemplate(templateMap map[string]interface{}, expectedFileContents [
 	prettyExpectedOutput, e := PrettyPrintArmTemplate(string(expectedFileContents))
 	Expect(e).To(BeNil())
 	if prettyOutput != prettyExpectedOutput {
-		ioutil.WriteFile(fmt.Sprintf("./transformtestfiles/%s.failure.json", testFileName), []byte(prettyOutput), 0600)
+		err := ioutil.WriteFile(fmt.Sprintf("./transformtestfiles/%s.failure.json", testFileName), []byte(prettyOutput), 0600)
+		Expect(err).NotTo(HaveOccurred())
 	}
 	Expect(prettyOutput).To(Equal(prettyExpectedOutput))
 }
