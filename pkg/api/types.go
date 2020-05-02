@@ -536,9 +536,8 @@ type MasterProfile struct {
 	// Not used during PUT, returned as part of GET
 	FQDN string `json:"fqdn,omitempty"`
 	// True: uses cosmos etcd endpoint instead of installing etcd on masters
-	CosmosEtcd                *bool             `json:"cosmosEtcd,omitempty"`
-	SysctlDConfig             map[string]string `json:"sysctldConfig,omitempty"`
-	ProximityPlacementGroupID string            `json:"proximityPlacementGroupID,omitempty"`
+	CosmosEtcd                *bool  `json:"cosmosEtcd,omitempty"`
+	ProximityPlacementGroupID string `json:"proximityPlacementGroupID,omitempty"`
 }
 
 // ImageReference represents a reference to an Image resource in Azure.
