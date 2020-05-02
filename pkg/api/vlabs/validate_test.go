@@ -3101,7 +3101,9 @@ func ExampleProperties_validateLocation() {
 	})
 	cs := getK8sDefaultContainerService(true)
 	cs.Location = ""
-	cs.validateLocation()
+	if err := cs.validateLocation(); err != nil {
+		fmt.Printf("error in validateLocation: %s", err)
+	}
 	// Output:
 	// level=warning msg="No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only"
 }
