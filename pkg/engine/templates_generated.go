@@ -26584,14 +26584,14 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
-{{- if not IsKubernetesVersionGe "1.16.0"}}
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
-{{end}}
+{{- end}}
 {{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-{{end}}
+{{- end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -26610,7 +26610,7 @@ spec:
         kubernetes.io/os: linux
 {{else}}
         beta.kubernetes.io/os: linux
-{{end}}
+{{- end}}
       containers:
         - name: azure-cnms
           image: {{ContainerImage "azure-cni-networkmonitor"}}
