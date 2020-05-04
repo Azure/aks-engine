@@ -14,8 +14,14 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
+{{- if not IsKubernetesVersionGe "1.16.0"}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+{{end}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -30,7 +36,11 @@ spec:
       - operator: "Exists"
         effect: NoSchedule
       nodeSelector:
+{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
+        kubernetes.io/os: linux
+{{else}}
         beta.kubernetes.io/os: linux
+{{end}}
       containers:
         - name: azure-cnms
           image: {{ContainerImage "azure-cni-networkmonitor"}}

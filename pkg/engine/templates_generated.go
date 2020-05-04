@@ -38,7 +38,6 @@
 // ../../parts/k8s/addons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml
 // ../../parts/k8s/addons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml
 // ../../parts/k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml
-// ../../parts/k8s/addons/1.16/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/1.16/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -61,7 +60,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/1.17/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -84,7 +82,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/1.18/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -107,7 +104,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-pod-security-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/1.19/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -7823,94 +7819,6 @@ func k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-cni-networkmonitor
-  namespace: kube-system
-  labels:
-    app: azure-cnms
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-cnms
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-cnms
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-cnms
-          image: {{ContainerImage "azure-cni-networkmonitor"}}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: ebtables-rule-repo
-            mountPath: /var/run
-          - name: log
-            mountPath: /var/log
-          - name: telemetry
-            mountPath: /opt/cni/bin
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: ebtables-rule-repo
-        hostPath:
-          path: /var/run/
-          type: Directory
-      - name: telemetry
-        hostPath:
-          path: /opt/cni/bin
-          type: Directory
-`)
-
-func k8sAddons116AzureCniNetworkmonitorYamlBytes() ([]byte, error) {
-	return _k8sAddons116AzureCniNetworkmonitorYaml, nil
-}
-
-func k8sAddons116AzureCniNetworkmonitorYaml() (*asset, error) {
-	bytes, err := k8sAddons116AzureCniNetworkmonitorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116IpMasqAgentYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -12382,96 +12290,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-cni-networkmonitor
-  namespace: kube-system
-  labels:
-    app: azure-cnms
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-cnms
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-cnms
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-cnms
-          image: {{ContainerImage "azure-cni-networkmonitor"}}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: ebtables-rule-repo
-            mountPath: /var/run
-          - name: log
-            mountPath: /var/log
-          - name: telemetry
-            mountPath: /opt/cni/bin
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: ebtables-rule-repo
-        hostPath:
-          path: /var/run/
-          type: Directory
-      - name: telemetry
-        hostPath:
-          path: /opt/cni/bin
-          type: Directory
-`)
-
-func k8sAddons117AzureCniNetworkmonitorYamlBytes() ([]byte, error) {
-	return _k8sAddons117AzureCniNetworkmonitorYaml, nil
-}
-
-func k8sAddons117AzureCniNetworkmonitorYaml() (*asset, error) {
-	bytes, err := k8sAddons117AzureCniNetworkmonitorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16971,96 +16789,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-cni-networkmonitor
-  namespace: kube-system
-  labels:
-    app: azure-cnms
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-cnms
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-cnms
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-cnms
-          image: {{ContainerImage "azure-cni-networkmonitor"}}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: ebtables-rule-repo
-            mountPath: /var/run
-          - name: log
-            mountPath: /var/log
-          - name: telemetry
-            mountPath: /opt/cni/bin
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: ebtables-rule-repo
-        hostPath:
-          path: /var/run/
-          type: Directory
-      - name: telemetry
-        hostPath:
-          path: /opt/cni/bin
-          type: Directory
-`)
-
-func k8sAddons118AzureCniNetworkmonitorYamlBytes() ([]byte, error) {
-	return _k8sAddons118AzureCniNetworkmonitorYaml, nil
-}
-
-func k8sAddons118AzureCniNetworkmonitorYaml() (*asset, error) {
-	bytes, err := k8sAddons118AzureCniNetworkmonitorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -21626,96 +21354,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119AzureCniNetworkmonitorYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-cni-networkmonitor
-  namespace: kube-system
-  labels:
-    app: azure-cnms
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-cnms
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-cnms
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: azure-cnms
-          image: {{ContainerImage "azure-cni-networkmonitor"}}
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemReqs "azure-cni-networkmonitor"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-cni-networkmonitor"}}
-              memory: {{ContainerMemLimits "azure-cni-networkmonitor"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: ebtables-rule-repo
-            mountPath: /var/run
-          - name: log
-            mountPath: /var/log
-          - name: telemetry
-            mountPath: /opt/cni/bin
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: ebtables-rule-repo
-        hostPath:
-          path: /var/run/
-          type: Directory
-      - name: telemetry
-        hostPath:
-          path: /opt/cni/bin
-          type: Directory
-`)
-
-func k8sAddons119AzureCniNetworkmonitorYamlBytes() ([]byte, error) {
-	return _k8sAddons119AzureCniNetworkmonitorYaml, nil
-}
-
-func k8sAddons119AzureCniNetworkmonitorYaml() (*asset, error) {
-	bytes, err := k8sAddons119AzureCniNetworkmonitorYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -26946,8 +26584,14 @@ spec:
     metadata:
       labels:
         k8s-app: azure-cnms
+{{- if not IsKubernetesVersionGe "1.16.0"}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+{{end}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:
@@ -26962,7 +26606,11 @@ spec:
       - operator: "Exists"
         effect: NoSchedule
       nodeSelector:
+{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
+        kubernetes.io/os: linux
+{{else}}
         beta.kubernetes.io/os: linux
+{{end}}
       containers:
         - name: azure-cnms
           image: {{ContainerImage "azure-cni-networkmonitor"}}
@@ -27002,7 +26650,8 @@ spec:
       - name: telemetry
         hostPath:
           path: /opt/cni/bin
-          type: Directory`)
+          type: Directory
+`)
 
 func k8sAddonsAzureCniNetworkmonitorYamlBytes() ([]byte, error) {
 	return _k8sAddonsAzureCniNetworkmonitorYaml, nil
@@ -47588,7 +47237,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.15/kubernetesmasteraddons-cluster-autoscaler-deployment.yaml":   k8sAddons115KubernetesmasteraddonsClusterAutoscalerDeploymentYaml,
 	"k8s/addons/1.15/kubernetesmasteraddons-metrics-server-deployment.yaml":       k8sAddons115KubernetesmasteraddonsMetricsServerDeploymentYaml,
 	"k8s/addons/1.15/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml,
-	"k8s/addons/1.16/azure-cni-networkmonitor.yaml":                               k8sAddons116AzureCniNetworkmonitorYaml,
 	"k8s/addons/1.16/ip-masq-agent.yaml":                                          k8sAddons116IpMasqAgentYaml,
 	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":                          k8sAddons116KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -47611,7 +47259,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons116KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":               k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/azure-cni-networkmonitor.yaml":                               k8sAddons117AzureCniNetworkmonitorYaml,
 	"k8s/addons/1.17/ip-masq-agent.yaml":                                          k8sAddons117IpMasqAgentYaml,
 	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                          k8sAddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -47634,7 +47281,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons117KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":               k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/azure-cni-networkmonitor.yaml":                               k8sAddons118AzureCniNetworkmonitorYaml,
 	"k8s/addons/1.18/ip-masq-agent.yaml":                                          k8sAddons118IpMasqAgentYaml,
 	"k8s/addons/1.18/kubernetesmaster-audit-policy.yaml":                          k8sAddons118KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -47657,7 +47303,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-pod-security-policy.yaml":             k8sAddons118KubernetesmasteraddonsPodSecurityPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":        k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":               k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/azure-cni-networkmonitor.yaml":                               k8sAddons119AzureCniNetworkmonitorYaml,
 	"k8s/addons/1.19/ip-masq-agent.yaml":                                          k8sAddons119IpMasqAgentYaml,
 	"k8s/addons/1.19/kubernetesmaster-audit-policy.yaml":                          k8sAddons119KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -47886,7 +47531,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-pod-security-policy.yaml":             {k8sAddons115KubernetesmasteraddonsPodSecurityPolicyYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
-				"azure-cni-networkmonitor.yaml":                               {k8sAddons116AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sAddons116IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -47911,7 +47555,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"azure-cni-networkmonitor.yaml":                               {k8sAddons117AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sAddons117IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -47936,7 +47579,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"azure-cni-networkmonitor.yaml":                               {k8sAddons118AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sAddons118IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons118KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -47961,7 +47603,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":               {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"azure-cni-networkmonitor.yaml":                               {k8sAddons119AzureCniNetworkmonitorYaml, map[string]*bintree{}},
 				"ip-masq-agent.yaml":                                          {k8sAddons119IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                          {k8sAddons119KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":     {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
