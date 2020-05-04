@@ -164,7 +164,7 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 		return nil, err
 	}
 	if err = armSpt.Refresh(); err != nil {
-		return nil, err
+		log.Error(err)
 	}
 
 	adRawToken := armSpt.Token()
@@ -174,7 +174,7 @@ func NewAzureClientWithDeviceAuth(env azure.Environment, subscriptionID string) 
 		return nil, err
 	}
 	if err = graphSpt.Refresh(); err != nil {
-		return nil, err
+		log.Error(err)
 	}
 
 	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
@@ -196,7 +196,7 @@ func NewAzureClientWithClientSecret(env azure.Environment, subscriptionID, clien
 		return nil, err
 	}
 	if err = graphSpt.Refresh(); err != nil {
-		return nil, err
+		log.Error(err)
 	}
 
 	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
@@ -216,6 +216,9 @@ func NewAzureClientWithClientSecretExternalTenant(env azure.Environment, subscri
 	graphSpt, err := adal.NewServicePrincipalToken(*oauthConfig, clientID, clientSecret, env.GraphEndpoint)
 	if err != nil {
 		return nil, err
+	}
+	if err = graphSpt.Refresh(); err != nil {
+		log.Error(err)
 	}
 
 	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
@@ -284,7 +287,7 @@ func newAzureClientWithCertificate(env azure.Environment, oauthConfig *adal.OAut
 		return nil, err
 	}
 	if err = graphSpt.Refresh(); err != nil {
-		return nil, err
+		log.Error(err)
 	}
 
 	return getClient(env, subscriptionID, tenantID, autorest.NewBearerAuthorizer(armSpt), autorest.NewBearerAuthorizer(graphSpt)), nil
