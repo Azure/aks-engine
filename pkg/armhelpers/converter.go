@@ -9,10 +9,10 @@ import (
 
 // DeepCopy dst and src should be the same type in different API version
 // dst should be pointer type
-func DeepCopy(dst, src interface{}) error {
+func DeepCopy(dst, src interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("fail to copy object %v\n", r)
+			err = fmt.Errorf("fail to copy object %v", r)
 		}
 	}()
 	dstValue := reflect.ValueOf(dst)
@@ -25,7 +25,7 @@ func DeepCopy(dst, src interface{}) error {
 		return fmt.Errorf("the dst type (%q) and src type (%q) are not the same", dstValue.Type().String(), srcValue.Type().String())
 	}
 	deepCopyInternal(dstValue, srcValue, 0)
-	return nil
+	return err
 }
 
 func deepCopyInternal(dstValue, srcValue reflect.Value, depth int) {
