@@ -121,7 +121,7 @@ func (dc *deployCmd) validateArgs(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
 			dc.apimodelPath = args[0]
 		} else if len(args) > 1 {
-			cmd.Usage()
+			_ = cmd.Usage()
 			return errors.New("too many arguments were provided to 'deploy'")
 		}
 	}
@@ -225,7 +225,9 @@ func (dc *deployCmd) loadAPIModel() error {
 		if err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}
-		writeCustomCloudProfile(dc.containerService)
+		if err = writeCustomCloudProfile(dc.containerService); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
 
 		if dc.containerService.Properties.CustomCloudProfile.IdentitySystem == "" || dc.containerService.Properties.CustomCloudProfile.IdentitySystem != dc.authProvider.getAuthArgs().IdentitySystem {
 			if dc.authProvider != nil {

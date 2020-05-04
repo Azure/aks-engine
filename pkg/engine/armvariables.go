@@ -673,6 +673,6 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 func getSizeMap() map[string]interface{} {
 	var sizeMap map[string]interface{}
 	sizeMapStr := fmt.Sprintf("{%s}", helpers.GetSizeMap())
-	json.Unmarshal([]byte(sizeMapStr), &sizeMap)
+	_ = json.Unmarshal([]byte(sizeMapStr), &sizeMap)
 	return sizeMap
 }

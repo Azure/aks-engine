@@ -90,17 +90,26 @@ func MergeValuesWithAPIModel(apiModelPath string, m map[string]APIModelValue) (s
 			arrayPath := fmt.Sprint("properties.", flagValue.arrayName)
 			arrayValue := jsonObj.Path(arrayPath)
 			if flagValue.arrayProperty != "" {
-				arrayValue.Index(flagValue.arrayIndex).SetP(flagValue.value, flagValue.arrayProperty)
+				c := arrayValue.Index(flagValue.arrayIndex)
+				if _, err = c.SetP(flagValue.value, flagValue.arrayProperty); err != nil {
+					return "", err
+				}
 			} else {
 				count, _ := arrayValue.ArrayCount()
 				for i := count; i <= flagValue.arrayIndex; i++ {
-					jsonObj.ArrayAppendP(nil, arrayPath)
+					if err = jsonObj.ArrayAppendP(nil, arrayPath); err != nil {
+						return "", err
+					}
 				}
 				arrayValue = jsonObj.Path(arrayPath)
-				arrayValue.SetIndex(flagValue.value, flagValue.arrayIndex)
+				if _, err = arrayValue.SetIndex(flagValue.value, flagValue.arrayIndex); err != nil {
+					return "", err
+				}
 			}
 		} else {
-			jsonObj.SetP(flagValue.value, fmt.Sprint("properties.", key))
+			if _, err = jsonObj.SetP(flagValue.value, fmt.Sprint("properties.", key)); err != nil {
+				return "", err
+			}
 		}
 	}
 
