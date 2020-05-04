@@ -135,7 +135,7 @@ INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group co
 INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
 ```
 
-`aks-engine` will output ARM templates, SSH keys, and a kubeconfig (A specification that may be used as input to the `kubectl` command to establish a privileged connection to the Kubernetes apiserver) file in `_output/contoso-apple-59769a59` directory:
+`aks-engine` will output ARM templates, SSH keys, and a kubeconfig (A specification that may be used as input to the `kubectl` command to establish a privileged connection to the Kubernetes apiserver, see [here](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for more documentation.) file in `_output/contoso-apple-59769a59` directory:
 
 * `_output/contoso-apple-59769a59/azureuser_rsa`
 * `_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json`
