@@ -35079,7 +35079,7 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{end}}
   time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
-    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${OS} == ${UBUNTU_OS_NAME} ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
     fi
   fi
