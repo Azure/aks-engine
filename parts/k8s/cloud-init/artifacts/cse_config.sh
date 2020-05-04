@@ -369,7 +369,7 @@ ensureKubelet() {
       sleep 3
     done
   else
-    while [ ! -f $CNI_CONFIG_DIR/10-antrea.conf ]; do
+    while [ ! -f $CNI_CONFIG_DIR/10-antrea.conflist ]; do
       sleep 3
     done
   fi
