@@ -34,6 +34,7 @@ const (
 	windowsConfigurationFieldName     = "windowsConfiguration"
 	platformFaultDomainCountFieldName = "platformFaultDomainCount"
 	singlePlacementGroupFieldName     = "singlePlacementGroup"
+	proximityPlacementGroupFieldName  = "proximityPlacementGroup"
 
 	// ARM resource Types
 	nsgResourceType  = "Microsoft.Network/networkSecurityGroups"
@@ -138,6 +139,7 @@ func (t *Transformer) RemoveImmutableResourceProperties(logger *logrus.Entry, te
 		if resource.Type() == vmssResourceType {
 			resource.RemoveProperty(logger, platformFaultDomainCountFieldName)
 			resource.RemoveProperty(logger, singlePlacementGroupFieldName)
+			resource.RemoveProperty(logger, proximityPlacementGroupFieldName)
 		}
 	}
 }
