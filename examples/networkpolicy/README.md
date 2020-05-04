@@ -28,7 +28,7 @@ This template will deploy the [Kubernetes Datastore backed version of Calico](ht
 
 If deploying on a K8s 1.8 or later cluster, then egress policies are also supported!
 
-To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/tutorials/deploy.md) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an api model reference.
+To understand how to deploy this template, please read the baseline [Kubernetes](../../docs/tutorials/deploy.md) document, and use the appropriate **kubernetes-calico-[azure|kubenet].json** example file in this folder as an API model reference.
 
 ### Post installation
 

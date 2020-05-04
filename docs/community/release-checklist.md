@@ -1,6 +1,6 @@
 # Releases
 
-aks-engine uses a [continuous delivery][] approach for creating releases. Every merged commit that passes
+AKS Engine uses a [continuous delivery][] approach for creating releases. Every merged commit that passes
 testing results in a deliverable that can be given a [semantic version][] tag and shipped.
 
 ## Master Is Always Releasable
@@ -8,13 +8,13 @@ testing results in a deliverable that can be given a [semantic version][] tag an
 The master `git` branch of a project should always work. Only changes considered ready to be
 released publicly are merged.
 
-aks-engine depends on components that release new versions as often as needed. Fixing
+AKS Engine depends on components that release new versions as often as needed. Fixing
 a high priority bug requires the project maintainer to create a new patch release.
 Merging a backward-compatible feature implies a minor release.
 
 By releasing often, each release becomes a safe and routine event. This makes it faster
 and easier for users to obtain specific fixes. Continuous delivery also reduces the work
-necessary to release a product such as aks-engine, which depends on several external projects.
+necessary to release a product such as AKS Engine, which depends on several external projects.
 
 "Components" applies not just to AKS projects, but also to development and release
 tools, to orchestrator versions, to Docker base images, and to other Azure
@@ -35,7 +35,7 @@ See "[Creating a New Release](#creating-a-new-release)" for more detail.
 
 ## Semantic Versioning
 
-aks-engine releases comply with [semantic versioning][semantic version], with the "public API" broadly
+Releases of the `aks-engine` binary comply with [semantic versioning][semantic version], with the "public API" broadly
 defined as:
 
 - REST, gRPC, or other API that is network-accessible
@@ -45,12 +45,12 @@ defined as:
 - Integration with Azure public APIs such as ARM
 
 In general, changes to anything a user might reasonably link to, customize, or integrate with should
-be backward-compatible, or else require a major release. aks-engine users can be confident that upgrading
+be backward-compatible, or else require a major release. `aks-engine` users can be confident that upgrading
 to a patch or to a minor release will not break anything.
 
 ## Creating a New Release
 
-Let's go through the process of creating a new release of [aks-engine][].
+Let's go through the process of creating a new release of the [aks-engine][] binary.
 
 We will use **v0.32.3** as an example herein. You should replace this with the new version you're releasing.
 

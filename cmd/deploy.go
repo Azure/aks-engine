@@ -170,7 +170,7 @@ func (dc *deployCmd) mergeAPIModel() error {
 			return errors.Wrapf(err, "error merging --set values with the api model: %s", dc.apimodelPath)
 		}
 
-		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", dc.apimodelPath))
+		log.Infoln(fmt.Sprintf("new API model file has been generated during merge: %s", dc.apimodelPath))
 	}
 
 	return nil

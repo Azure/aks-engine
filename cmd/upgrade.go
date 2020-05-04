@@ -31,8 +31,8 @@ import (
 
 const (
 	upgradeName             = "upgrade"
-	upgradeShortDescription = "Upgrade an existing Kubernetes cluster"
-	upgradeLongDescription  = "Upgrade an existing Kubernetes cluster, one minor version at a time"
+	upgradeShortDescription = "Upgrade an existing AKS Engine-created Kubernetes cluster"
+	upgradeLongDescription  = "Upgrade an existing AKS Engine-created Kubernetes cluster, one node at a time"
 )
 
 type upgradeCmd struct {

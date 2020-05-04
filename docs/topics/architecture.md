@@ -2,7 +2,7 @@
 
 AKS Engine is a command line tool that generates ARM (Azure Resource Manager) templates to deploy Kubernetes clusters on the Azure platform.
 
-This design document provides a brief and high-level overview of what aks-engine does internally to achieve deployment of containerized clusters. The scope of this document will be limited to the execution of aks-engine when creating Kubernetes clusters.
+This design document provides a brief and high-level overview of what AKS Engine does internally to achieve deployment of Kubernetes clusters.
 
 ## Architecture Diagram
 
@@ -10,9 +10,9 @@ This design document provides a brief and high-level overview of what aks-engine
 
 ## Components
 
-### Cluster api model
+### Cluster definition, or API model
 
-AKS Engine accepts JSONs of cluster api models as inputs. These api models allow the user to specify cluster configuration items such as
+AKS Engine accepts a cluster definition JSON file (or API model) as input. An API model allows the user to specify cluster configuration items such as:
 
 - Master and worker nodes configuration
 - Kubernetes version
@@ -24,7 +24,7 @@ The input validator checks for bad/missing input in the user-provided api models
 
 ### Template Generator
 
-Once the input is validated, the template generator is invoked which will convert the apimodel JSON into another JSON which has a format that is well-understood by ARM (Azure Resource Manager). The template generator achieves this through templating where existing skeleton json files are converted into the actual ARM JSONs using the values present in the input api model. These skeleton templates are written in the schema recognized by ARM and they contain placeholders which can be substituted with the values provided in the apimodel JSONs. These templates also nest other template files  inside of it. Given below is an example of a template file with placeholders.
+Once the input is validated, the template generator is invoked which will convert the API model JSON into another JSON which has a format that is well-understood by ARM (Azure Resource Manager). The template generator achieves this through templating where existing skeleton JSON files are converted into the actual ARM JSON files using the values present in the input API model. These skeleton templates are written in the schema recognized by ARM and they contain placeholders which can be substituted with the values provided in the API model JSON file. These templates also nest other template files  inside of it. Given below is an example of a template file with placeholders.
 
 ```js
 {
@@ -219,7 +219,7 @@ Once the input is validated, the template generator is invoked which will conver
 ```
 The template generator then creates the following artifacts
 
-- ARM Templates (Deploy and Paramater JSONs). These artifacts are used by ARM to effect the actual deployment of the kubernetes clusters.
+- ARM Templates (Deploy and Parameter JSON files). These artifacts are used by ARM to effect the actual deployment of the kubernetes clusters.
 
 - KubeConfigs. These are kubernetes config files which can be used by the user or the Kubernetes API clients to perform kubectl operations against the deployed Kubernetes cluster directly.
 
@@ -231,7 +231,7 @@ AKS Engine interfaces with Azure Resource Manager (ARM) through the Azure Go SDK
 
 ### Kubernetes Client API
 
-AKS Engine also performs kubernetes cluster management operations (kubectl) through the imported Kubernetes API libraries. The Client API calls are made during the scale and upgrade commands of aks-engine.
+AKS Engine also performs Kubernetes cluster management operations through the imported Kubernetes API libraries. The Client API calls are made during `aks-engine scale` and `aks-engine upgrade` command operations.
 
 
 Design challenges and proposals
@@ -242,9 +242,9 @@ Design challenges and proposals
 We find that the current implementation of templating leads to challenges in terms of code readability and maintainability.
 
 
-- There is no direct and intuitive mapping between the input apimodels and the ARM templates. The placeholder substitutions are performed at very specific areas in the template skeletons. It's hard to draw any generality from it and this makes it difficult to create the template JSONs purely through code as opposed to performing the placeholder substitutions.
+- There is no direct and intuitive mapping between the input apimodels and the ARM templates. The placeholder substitutions are performed at very specific areas in the template skeletons. It's hard to draw any generality from it and this makes it difficult to create the template JSON files purely through code as opposed to performing the placeholder substitutions.
 
-- This also limits the capabilities of aks-engine as far as extensibility is concerned. If we were to introduce more changes and customizations, it would potentially entail modifying the template skeleton layouts. This would just add more complexity.
+- This also limits the capabilities of AKS Engine as far as extensibility is concerned. If we were to introduce more changes and customizations, it would potentially entail modifying the template skeleton layouts. This would just add more complexity.
 
 #### Possible Solutions
 
@@ -254,11 +254,11 @@ As of now, we have no standard/formal representation of the ARM templates. They 
 
 _**Pros**_
 
-- A formal representation would help us create a more direct mapping between the api model inputs and their corresponding ARM template files.
+- A formal representation would help us create a more direct mapping between the API model inputs and their corresponding ARM template files.
 
 - This will allow us to accommodate future ARM template customization more effectively, because we can express and maintain the variety of inter-dependent outputs natively, as first class data representations.
 
-- Template validation can be done within the aks-engine layer itself. Currently, template validation can only be performed via the Azure GO SDK and this entails a network call.
+- Template validation can be done within the AKS Engine layer itself. Currently, template validation can only be performed via the Azure GO SDK and this entails a network call.
 
 _**Cons/Challenges**_
 

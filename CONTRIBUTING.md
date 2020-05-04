@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-The Microsoft aks-engine project accepts contributions via GitHub pull requests. This document outlines the process to help get your contribution accepted.
+The Microsoft AKS Engine project accepts contributions via GitHub pull requests. This document outlines the process to help get your contribution accepted.
 
 Please see also the [AKS Engine Developer Guide](docs/community/developer-guide.md).
 
@@ -35,11 +35,11 @@ specific upcoming bug or minor release, it would go into `2.2.1` or `2.3.0`.
 A milestone (and hence release) is considered done when all outstanding issues/PRs have been closed or moved to another milestone.
 
 ## Issues
-Issues are used as the primary method for tracking anything to do with the aks-engine project.
+Issues are used as the primary method for tracking anything to do with the AKS Engine project.
 
 ### Issue Lifecycle
 The issue lifecycle is mainly driven by the core maintainers, but is good information for those
-contributing to aks-engine. All issue types follow the same general lifecycle. Differences are noted below.
+contributing to AKS Engine. All issue types follow the same general lifecycle. Differences are noted below.
 1. Issue creation
 2. Triage
     - The maintainer in charge of triaging will apply the proper labels for the issue. This

@@ -1,5 +1,7 @@
 # Monitoring Kubernetes Clusters
 
+**NOTE:** These docs are stale! See https://github.com/Azure/aks-engine/issues/3176.
+
 Monitoring your Kubernetes cluster is important to be able to see your cluster's health. By monitoring your cluster, you can see stats such as such as CPU, memory, and disk usage. Monitoring is supported for both Linux as well as Windows nodes in your cluster.
 
 There are five main options to monitor your cluster:

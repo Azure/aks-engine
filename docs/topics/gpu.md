@@ -1,6 +1,6 @@
 # Using GPUs with Kubernetes
 
-If you created a Kubernetes cluster with one or multiple agent pool(s) whose VM size is `Standard_NC*` or `Standard_NV*` you can schedule GPU workload on your cluster.
+If you created a Kubernetes cluster with one or multiple node pools whose VM size is `Standard_NC*` or `Standard_NV*` you can schedule GPU workloads on your cluster.
 The NVIDIA drivers are automatically installed on every GPU agent in your cluster, so you don't need to do that manually, unless you require a specific version of the drivers. Currently, the installed driver is version 418.40.04.
 
 To make sure everything is fine, run `kubectl describe node <name-of-a-gpu-node>`. You should see the correct number of GPU reported (in this example shows 2 GPU for a NC12 VM):

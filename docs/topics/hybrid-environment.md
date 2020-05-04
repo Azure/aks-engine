@@ -14,7 +14,7 @@ As illustrated on the figure above, we recommand to deploy the Kubernetes cluste
 
 This document assumes that you are familiar with:
 
-- Deploying Kubernetes cluster in a [custom VNET using AKS Engine](../../examples/vnet/README.md)
+- Deploying into a [custom VNET using AKS Engine](../../examples/vnet/README.md)
 - Azure [VPN Gateway](https://azure.microsoft.com/en-us/services/vpn-gateway/) and/or [Azure Express Route](https://azure.microsoft.com/en-us/services/expressroute/)
 - Azure [Virtual Network Peering](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-peering-overview)
 
@@ -27,13 +27,13 @@ The network topology must be well defined beforehand to enable peering between t
 ### DNS
 
 In a hybrid environment, you usually want to integrate with your on-premises DNS. There is two aspects to this. The first one is to register the VMs forming the cluster, and using your local search domain when resolving other services. The second is getting the services running on Kubernetes to use the external DNS.
-To benefit the scaling capabilities of the cluster and to ensure resiliency to machine failure, every node configuration needs to be scripted and part of the initial template that aks-engine will deploy. To register the nodes in your DNS at startup, you need to define [an aks-engine extension](extensions.md) that will run your [DNS registration script](https://github.com/Azure/aks-engine/blob/master/extensions/dnsupdate/v1/register-dns.sh).
+To benefit the scaling capabilities of the cluster and to ensure resiliency to machine failure, every node configuration needs to be scripted and part of the initial template that `aks-engine generate` creates. To register the nodes in your DNS at startup, you need to define [an aks-engine extension](extensions.md) that will run your [DNS registration script](https://github.com/Azure/aks-engine/blob/master/extensions/dnsupdate/v1/register-dns.sh).
 
 In addition, you might want cluster services to address URLs outside the cluster using your on-premise DNS. To achieve this you need to configure KubeDNS to use your existing nameservice as upstream. [This setup is well documented on kubernetes blog](https://kubernetes.io/blog/2017/04/configuring-private-dns-zones-upstream-nameservers-kubernetes)
 
 ### Private Cluster
 
-By default, Kubernetes deployment with aks-engine expose the the admin api publicly (and securely). This can be avoided. Using peering with private/on-premise virtual network with AKS Engine also allows you to create cloud-hosted [private cluster](features.md#private-cluster), with no endpoint exposed over the Internet.
+By default, Kubernetes deployments with AKS Engine expose the the admin api publicly (and securely). This can be avoided. Using peering with private/on-premise virtual network with AKS Engine also allows you to create cloud-hosted [private cluster](features.md#private-cluster), with no endpoint exposed over the Internet.
 
 ## Kubernetes Network
 
@@ -46,7 +46,7 @@ Deploying AKS Engine on Azure, you have 3 options of network policy. Azure CNI, 
 #### Azure CNI
 
 By default, AKS Engine is using the [**azure cni** network policy](../../examples/networkpolicy/README.md#azure-container-networking-default) plugin. This has some advantages and some consequences that must be considered when defining the network where we deploy the cluster. CNI provides an integration with azure subnet IP addressing so that every pod created by kubernetes is assigned an IP address from the corresponding subnet.
-All IP addresses are pre-allocated at provisionning time. By default, [aks-engine will pre-allocate 128 IPs per node](https://github.com/Azure/azure-container-networking/blob/master/docs/acs.md#enabling-azure-vnet-plugins-for-an-acs-kubernetes-cluster) on the subnet.
+All IP addresses are pre-allocated at provisionning time. By default, [AKS Engine will pre-allocate 128 IPs per node](https://github.com/Azure/azure-container-networking/blob/master/docs/acs.md#enabling-azure-vnet-plugins-for-an-acs-kubernetes-cluster) on the subnet.
 While this can be configured, new addresses will not be allocated dynamically. That means that you need to anticipate and plan for the maximum number of IP addresses you will need for the maximum scale.
 
 Consequences:

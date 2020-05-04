@@ -1,6 +1,6 @@
 # CoreDNS customization
 
-The configuration provided by aks-engine handles most setups by forwarding to
+The configuration provided by AKS Engine handles most setups by forwarding to
 the dns server configured on the nodes.
 
 To customize CoreDNS ([kubernetes docs][Customizing DNS Service]) you can create

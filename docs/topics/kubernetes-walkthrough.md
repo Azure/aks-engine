@@ -22,9 +22,9 @@ All VMs are in the same private VNET and are fully accessible to each other.
 
 After completing this walkthrough you will know how to:
 
-* Access Kubernetes cluster via SSH,
+* Access the Azure VM(s) running the Kubernetes control plane via SSH,
 * Deploy a simple Docker application and expose to the world,
-* The location of the Kube config file and how to access the Kubernetes cluster remotely,
+* The location of the kubeconfig file and how to access the Kubernetes cluster remotely,
 * Use `kubectl exec` to run commands in a container,
 * And finally access the Kubernetes Dashboard.
 
