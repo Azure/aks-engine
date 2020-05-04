@@ -192,8 +192,11 @@ func TestGetCloudSubFromAzConfig(t *testing.T) {
 func TestWriteCustomCloudProfile(t *testing.T) {
 	t.Parallel()
 
-	cs := prepareCustomCloudProfile()
-	if err := writeCustomCloudProfile(cs); err != nil {
+	cs, err := prepareCustomCloudProfile()
+	if err != nil {
+		t.Fatalf("failed to prepare custom cloud profile: %v", err)
+	}
+	if err = writeCustomCloudProfile(cs); err != nil {
 		t.Fatalf("failed to write custom cloud profile: %v", err)
 	}
 
@@ -202,7 +205,7 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 		t.Fatal("failed to write custom cloud profile: err - AZURE_ENVIRONMENT_FILEPATH is empty")
 	}
 
-	if _, err := os.Stat(environmentFilePath); os.IsNotExist(err) {
+	if _, err = os.Stat(environmentFilePath); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 		t.Fatalf("failed to write custom cloud profile: file %s does not exist", environmentFilePath)
 	}
@@ -221,7 +224,10 @@ func TestWriteCustomCloudProfile(t *testing.T) {
 func TestGetAzureStackClientWithClientSecret(t *testing.T) {
 	t.Parallel()
 
-	cs := prepareCustomCloudProfile()
+	cs, err := prepareCustomCloudProfile()
+	if err != nil {
+		t.Fatalf("failed to prepare custom cloud profile: %v", err)
+	}
 	subscriptionID, _ := uuid.Parse("cc6b141e-6afc-4786-9bf6-e3b9a5601460")
 
 	for _, tc := range []struct {
@@ -490,7 +496,7 @@ func getMuxForIdentitySystem(authArgs *authArgs) *http.ServeMux {
 	return mux
 }
 
-func prepareCustomCloudProfile() *api.ContainerService {
+func prepareCustomCloudProfile() (*api.ContainerService, error) {
 	const (
 		name                         = "azurestackcloud"
 		managementPortalURL          = "https://management.local.azurestack.external/"
@@ -564,11 +570,14 @@ func prepareCustomCloudProfile() *api.ContainerService {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		return nil, err
+	}
 
-	return cs
+	return cs, nil
 }

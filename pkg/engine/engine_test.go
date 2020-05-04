@@ -83,7 +83,9 @@ const securityRuleBaseString string = `          {
 func TestExpected(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -403,7 +405,9 @@ type OutputElement struct {
 
 func TestTemplateOutputPresence(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -427,11 +431,14 @@ func TestTemplateOutputPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Error(err)
+	}
 	armTemplate, _, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 	if err != nil {
 		t.Fatalf("Failed to generate arm template: %v", err)
@@ -635,7 +642,9 @@ func TestIsNSeriesSKU(t *testing.T) {
 
 func TestGenerateKubeConfig(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{

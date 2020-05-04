@@ -30,7 +30,9 @@ func TestDeepCopyManagedDisk(t *testing.T) {
 	}
 
 	diskAzureConvert := []azcompute.Disk{}
-	DeepCopy(&diskAzureConvert, diskAzureStack)
+	if err = DeepCopy(&diskAzureConvert, diskAzureStack); err != nil {
+		t.Error(err)
+	}
 
 	for _, expect := range diskAzure {
 		match := false
@@ -73,7 +75,9 @@ func TestDeepCopyVirtualMachine(t *testing.T) {
 	}
 
 	vmsAzureConvert := []azcompute.VirtualMachine{}
-	DeepCopy(&vmsAzureConvert, vmsAzureStack)
+	if err = DeepCopy(&vmsAzureConvert, vmsAzureStack); err != nil {
+		t.Error(err)
+	}
 
 	for _, expect := range vmsAzure {
 		match := false
@@ -113,7 +117,9 @@ func TestDeepCopyVMScaleSet(t *testing.T) {
 	}
 
 	vmssAzureConvert := []azcompute.VirtualMachineScaleSet{}
-	DeepCopy(&vmssAzureConvert, vmssAzureStack)
+	if err = DeepCopy(&vmssAzureConvert, vmssAzureStack); err != nil {
+		t.Error(err)
+	}
 
 	for _, expect := range vmssAzure {
 		match := false
@@ -156,7 +162,9 @@ func TestDeepCopyVMScaleSetVM(t *testing.T) {
 	}
 
 	vmssvmAzureConvert := []azcompute.VirtualMachineScaleSetVM{}
-	DeepCopy(&vmssvmAzureConvert, vmssvmAzureStack)
+	if err = DeepCopy(&vmssvmAzureConvert, vmssvmAzureStack); err != nil {
+		t.Error(err)
+	}
 
 	for _, expect := range vmssvmAzure {
 		match := false
@@ -213,7 +221,9 @@ func TestDeepCopySampleStruct(t *testing.T) {
 		StringArray: [5]string{"one", "two", "three", "four", "five"},
 	}
 	sConvert := Sample{}
-	DeepCopy(&sConvert, s)
+	if err := DeepCopy(&sConvert, s); err != nil {
+		t.Error(err)
+	}
 
 	if diff := cmp.Diff(s, sConvert); diff != "" {
 		t.Errorf("Fail to compare, Sample %q", diff)

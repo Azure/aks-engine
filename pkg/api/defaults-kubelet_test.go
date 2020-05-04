@@ -790,11 +790,14 @@ func TestEnforceNodeAllocatable(t *testing.T) {
 func TestProtectKernelDefaults(t *testing.T) {
 	// Validate default
 	cs := CreateMockContainerService("testcluster", "1.12.7", 3, 2, false)
-	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Error(err)
+	}
 	km := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -813,11 +816,14 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
-			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+			_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
+			if err != nil {
+				t.Error(err)
+			}
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "true" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -834,11 +840,14 @@ func TestProtectKernelDefaults(t *testing.T) {
 			cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 			cs.Properties.MasterProfile.Distro = distro
 			cs.Properties.AgentPoolProfiles[0].Distro = distro
-			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+			_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
+			if err != nil {
+				t.Error(err)
+			}
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if _, ok := km["--protect-kernel-defaults"]; ok {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s",
@@ -856,11 +865,14 @@ func TestProtectKernelDefaults(t *testing.T) {
 	cs = CreateMockContainerService("testcluster", "1.10.13", 3, 2, false)
 	cs.Properties.MasterProfile.Distro = AKSUbuntu1604
 	cs.Properties.AgentPoolProfiles[0].OSType = Windows
-	cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+	_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Error(err)
+	}
 	km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 	if km["--protect-kernel-defaults"] != "true" {
 		t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",
@@ -884,11 +896,14 @@ func TestProtectKernelDefaults(t *testing.T) {
 					"--protect-kernel-defaults": "false",
 				},
 			}
-			cs.SetPropertiesDefaults(PropertiesDefaultsParams{
+			_, err = cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
 			})
+			if err != nil {
+				t.Error(err)
+			}
 			km = cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig
 			if km["--protect-kernel-defaults"] != "false" {
 				t.Fatalf("got unexpected '--protect-kernel-defaults' kubelet config value %s, the expected value is %s",

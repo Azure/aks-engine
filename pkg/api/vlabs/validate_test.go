@@ -3101,7 +3101,9 @@ func ExampleProperties_validateLocation() {
 	})
 	cs := getK8sDefaultContainerService(true)
 	cs.Location = ""
-	cs.validateLocation()
+	if err := cs.validateLocation(); err != nil {
+		fmt.Printf("error in validateLocation: %s", err)
+	}
 	// Output:
 	// level=warning msg="No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only"
 }
@@ -3130,7 +3132,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityProfile: AvailabilitySet,
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
 
@@ -3150,7 +3154,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityZones:   []string{"1", "2"},
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
 
@@ -3183,7 +3189,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityZones:   []string{"1", "2"},
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
 
@@ -3195,7 +3203,9 @@ func ExampleProperties_validateZones() {
 		AvailabilityProfile: VirtualMachineScaleSets,
 		AvailabilityZones:   []string{"1", "2"},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
 	// The ordered collection of all output is validated below:

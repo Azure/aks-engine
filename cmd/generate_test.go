@@ -159,9 +159,15 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	g.set = []string{"agentPoolProfiles[0].count=1"}
 
-	g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
-	g.mergeAPIModel()
-	err := g.loadAPIModel()
+	err := g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
+	if err != nil {
+		t.Fatalf("unexpected error validating api model: %s", err.Error())
+	}
+	err = g.mergeAPIModel()
+	if err != nil {
+		t.Fatalf("unexpected error merging api model: %s", err.Error())
+	}
+	err = g.loadAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error loading api model: %s", err.Error())
 	}
@@ -871,15 +877,17 @@ func TestExampleAPIModels(t *testing.T) {
 			g.set = test.setArgs
 			r := &cobra.Command{}
 
-			g.validate(r, []string{})
-			g.mergeAPIModel()
-			err := g.loadAPIModel()
-			if err != nil {
+			if err := g.validate(r, []string{}); err != nil {
+				t.Fatalf("unexpected error validating api model: %s", err.Error())
+			}
+			if err := g.mergeAPIModel(); err != nil {
+				t.Fatalf("unexpected error merging api model: %s", err.Error())
+			}
+			if err := g.loadAPIModel(); err != nil {
 				t.Fatalf("unexpected error loading api model: %s", err.Error())
 			}
 
-			err = g.validateAPIModelAsVLabs()
-			if err != nil {
+			if err := g.validateAPIModelAsVLabs(); err != nil {
 				t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
 			}
 		})

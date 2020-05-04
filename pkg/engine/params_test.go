@@ -17,7 +17,9 @@ import (
 func TestAssignParameters(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -39,7 +41,8 @@ func TestAssignParameters(t *testing.T) {
 		}
 
 		containerService.Location = "eastus"
-		containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		// TODO: this returns an error: "The raw pem is not a valid PEM formatted block"
+		_, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,
@@ -57,7 +60,9 @@ func TestAssignParameters(t *testing.T) {
 func TestAssignVnetCidr(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -79,7 +84,8 @@ func TestAssignVnetCidr(t *testing.T) {
 		}
 
 		containerService.Location = "eastus"
-		containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+		// TODO: this returns an error: "The raw pem is not a valid PEM formatted block"
+		_, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 			IsScale:    false,
 			IsUpgrade:  false,
 			PkiKeySize: helpers.DefaultPkiKeySize,

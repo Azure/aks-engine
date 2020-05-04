@@ -56,11 +56,14 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
@@ -659,11 +662,14 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err = cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
+	}
 
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
@@ -921,11 +927,14 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
