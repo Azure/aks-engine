@@ -310,6 +310,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 
 		"GetKubeReservedCgroup": func(kc *api.KubernetesConfig) string {
+			if kc == nil {
+				return ""
+			}
 			return kc.KubeReservedCgroup
 		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
