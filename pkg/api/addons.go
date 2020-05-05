@@ -1174,14 +1174,11 @@ func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService
 	return ret
 }
 
-// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack and Kubernetes version is lower than v1.17.0.
-// Otherwise, it returns empty string.
+// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack. Otherwise, it returns empty string.
 // Azure Stack needs the '-azs' suffix so kube-proxy's manifests uses the custom hyperkube image present in the VHD
 func kubeProxyImageSuffix(cs ContainerService) string {
 	if cs.Properties.IsAzureStackCloud() {
-		if !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-			return common.AzureStackSuffix
-		}
+		return common.AzureStackSuffix
 	}
 	return ""
 }
