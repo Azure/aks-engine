@@ -28,7 +28,7 @@
             "image_sku": "datacenter-core-1903-with-containers-smalldisk",
             "image_version": "latest",
             "resource_group_name": "{{user `resource_group_name`}}",
-            "capture_container_name": "aksengine-vhds-windows-ws2019",
+            "capture_container_name": "aksengine-vhds-windows-ws19h1",
             "capture_name_prefix": "aksengine-{{user `create_time`}}",
             "storage_account": "{{user `storage_account_name`}}",
             "communicator": "winrm",
