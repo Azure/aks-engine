@@ -12,6 +12,7 @@
 # - STORAGE_ACCT_SAS_TOKEN - SAS token with permission to write to CLASSIC_BLOB container
 # - SUBSCRIPTION_ID - Subscription ID used by the pipeline
 # - TENANT_ID - Tenant Id used for service principal login
+#
 
 trigger: none
 pr: none
