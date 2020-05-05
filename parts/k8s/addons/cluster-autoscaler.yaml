@@ -53,12 +53,18 @@ rules:
 - apiGroups: ["apps"]
   resources: ["statefulsets","replicasets","daemonsets"]
   verbs: ["watch","list","get"]
+{{- if not (IsKubernetesVersionGe "1.17.0")}}
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["watch","list"]
+{{- end}}
 - apiGroups: ["storage.k8s.io"]
-  resources: ["storageclasses", "csinodes"]
+  resources: ["csinodes", "storageclasses"]
   verbs: ["get", "list", "watch"]
 - apiGroups: ["batch"]
   resources: ["jobs", "cronjobs"]
   verbs: ["watch", "list", "get"]
+{{- if IsKubernetesVersionGe "1.17.0"}}
 - apiGroups: ["coordination.k8s.io"]
   resources: ["leases"]
   verbs: ["create"]
@@ -66,6 +72,7 @@ rules:
   resourceNames: ["cluster-autoscaler"]
   resources: ["leases"]
   verbs: ["get", "update"]
+{{- end}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -141,7 +148,11 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
+{{- if IsKubernetesVersionGe "1.16.0"}}
 apiVersion: apps/v1
+{{else}}
+apiVersion: extensions/v1beta1
+{{- end}}
 kind: Deployment
 metadata:
   labels:
@@ -169,7 +180,11 @@ spec:
         key: node-role.kubernetes.io/master
       nodeSelector:
         kubernetes.io/role: master
+{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
+        kubernetes.io/os: linux
+{{else}}
         beta.kubernetes.io/os: linux
+{{- end}}
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
         imagePullPolicy: IfNotPresent
@@ -261,7 +276,9 @@ spec:
         - mountPath: /etc/ssl/certs/ca-certificates.crt
           name: ssl-certs
           readOnly: true{{GetVolumeMounts}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
       dnsPolicy: ClusterFirst
+{{- end}}
       restartPolicy: Always
       volumes:
       - hostPath:
