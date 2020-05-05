@@ -35086,7 +35086,7 @@ users:
 }
 {{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
-  CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
+  CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler.yaml
   wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
   sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
