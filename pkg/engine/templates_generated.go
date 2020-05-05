@@ -34747,6 +34747,12 @@ installBpftrace() {
   local bpftrace_url="https://upstreamartifacts.azureedge.net/$bpftrace_bin/$version"
   local bpftrace_filepath="/usr/local/bin/$bpftrace_bin"
   local tools_filepath="/usr/local/share/$bpftrace_bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    bpftrace_filepath="/opt/bin/$bpftrace_bin"
+    tools_filepath="/opt/share/$bpftrace_bin"
+    # Ensure that path to apmz binary is in the PATH.
+    export PATH="${PATH}:/opt/bin"
+  fi
   if [[ -f $bpftrace_filepath ]]; then
     installed_version="$($bpftrace_bin -V | cut -d' ' -f2)"
     if [[ $version == "$installed_version" ]]; then
