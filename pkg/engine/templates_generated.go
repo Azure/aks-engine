@@ -36878,6 +36878,47 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
+{{- if HasKubeReservedCgroup .KubernetesConfig}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup .KubernetesConfig -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
+    
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .KubernetesConfig -}}.slice
+    #EOF
+
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .KubernetesConfig -}}.slice
+    #EOF
+  {{else}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .KubernetesConfig -}}.slice
+    #EOF
+  {{end}}
+{{end}}
+
 - path: /etc/systemd/system/kubelet.service
   permissions: "0644"
   encoding: gzip
@@ -37401,6 +37442,47 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
+
+{{- if HasKubeReservedCgroup .MasterProfile.KubernetesConfig}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
+
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    #EOF
+
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    #EOF
+  {{else}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    #EOF
+  {{end}}
 {{end}}
 
 - path: /etc/systemd/system/kubelet.service
