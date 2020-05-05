@@ -88,7 +88,7 @@
 			"agentPoolProfiles": [
 				{
 					"name": "pool1",
-					"count": 10,
+					"count": 1,
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_D2_v3",
 					"OSDiskSizeGB": 200,
