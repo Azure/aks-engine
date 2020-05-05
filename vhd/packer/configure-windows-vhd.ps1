@@ -104,9 +104,9 @@ function Get-FilesToCacheOnVHD
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.0-alpha.2/windowszip/v1.19.0-alpha.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.30/binaries/azure-vnet-cni-windows-amd64-v1.0.30.zip",
             "https://kubernetesartifacts.azureedge.net/azure-cni/v1.0.33/binaries/azure-vnet-cni-windows-amd64-v1.0.33.zip",
-            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.0/binaries/azure-vnet-cni-windows-amd64-v1.1.0.zip"
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.0/binaries/azure-vnet-cni-windows-amd64-v1.1.0.zip",
+            "https://kubernetesartifacts.azureedge.net/azure-cni/v1.1.1/binaries/azure-vnet-cni-windows-amd64-v1.1.1.zip"
         )
     }
 
@@ -305,7 +305,7 @@ switch ($env:ProvisioningPhase)
         # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
         Install-Docker
         if ($containerRuntime -eq 'containerd') {
-            Install-ContainerD 
+            Install-ContainerD
         }
         Get-ContainerImages -containerRuntime $containerRuntime
         Get-FilesToCacheOnVHD
