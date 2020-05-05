@@ -305,7 +305,6 @@ switch ($env:ProvisioningPhase)
         # TODO: make decision on if we want to install docker along with containerd (will need to update CSE too,)
         Install-Docker
         if ($containerRuntime -eq 'containerd') {
-            Install-ContainerD
         }
         Get-ContainerImages -containerRuntime $containerRuntime
         Get-FilesToCacheOnVHD
