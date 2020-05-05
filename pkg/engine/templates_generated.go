@@ -19473,11 +19473,13 @@ if [[ $FULL_INSTALL_REQUIRED == "true" ]]; then
 fi
 {{end}}
 
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   {{- if IsDockerContainerRuntime}}
