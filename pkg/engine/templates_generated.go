@@ -26568,7 +26568,11 @@ func k8sAddonsAntreaYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsAzureCniNetworkmonitorYaml = []byte(`apiVersion: extensions/v1beta1
+var _k8sAddonsAzureCniNetworkmonitorYaml = []byte(`{{- if IsKubernetesVersionGe "1.16.0"}}
+apiVersion: apps/v1
+{{else}}
+apiVersion: extensions/v1beta1
+{{- end}}
 kind: DaemonSet
 metadata:
   name: azure-cni-networkmonitor
