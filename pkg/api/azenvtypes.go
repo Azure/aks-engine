@@ -91,7 +91,7 @@ var (
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
 		MCRKubernetesImageBase:           "mcr.microsoft.com/",
 		EtcdDownloadURLBase:              "mcr.microsoft.com/oss/etcd-io/",
-		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/wink8s/",
+		KubeBinariesSASURLBase:           "https://acs-mirror.azureedge.net/kubernetes/",
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
 		CNIPluginsDownloadURL:            "https://acs-mirror.azureedge.net/cni/cni-plugins-amd64-" + CNIPluginVer + ".tgz",
 		VnetCNILinuxPluginsDownloadURL:   "https://acs-mirror.azureedge.net/cni/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
