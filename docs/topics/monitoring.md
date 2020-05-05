@@ -1,60 +1,63 @@
 # Monitoring Kubernetes Clusters
 
-**NOTE:** These docs are stale! See https://github.com/Azure/aks-engine/issues/3176.
+Monitoring your Kubernetes cluster lets you see its health and performance. Statistics such as CPU, memory, and disk usage are available for both Linux and Windows nodes in your AKS Engine cluster.
 
-Monitoring your Kubernetes cluster is important to be able to see your cluster's health. By monitoring your cluster, you can see stats such as such as CPU, memory, and disk usage. Monitoring is supported for both Linux as well as Windows nodes in your cluster.
+Resource metrics are collected by the lightweight, in-memory [metrics-server][] component. Metrics-server discovers nodes and queries each one's kubelet for CPU and memory usage.
 
-There are five main options to monitor your cluster:
-
-1. [Kubectl](#kubectl)
-1. [Azure Monitor for containers](#azure-monitor-for-containers)
-1. [Kubernetes Dashboard](#kubernetes-dashboard)
-1. [Monitoring extension](#monitoring-extension)
-1. [Grafana and Influx DB](#grafana-and-influx-db)
-1. [Heapster REST API](#heapster-rest-api)
-
-## Intro to Heapster
-
-Monitoring your cluster in Kubernetes is powered by a component called [Heapster](https://github.com/kubernetes/Heapster/). Heapster is a pod that is responsible for aggregating monitoring data from across all the nodes and pods in your cluster. Heapster is necessary for viewing monitoring data in Grafana. Heapster comes preinstalled on `aks-engine` deployments. To ensure that Heapster is set up in your cluster and is running:
-1. Ensure you have set up a [working kubernetes cluster](../tutorials/quickstart.md) and are able to use kubectl
-2. Run `kubectl get pods --namespace=kube-system`
+Metrics-server is part of every AKS Engine deployment. To verify that metrics-server is running in your cluster:
 
 ```shell
-$ kubectl get pods --namespace=kube-system
-NAME                                            READY     STATUS    RESTARTS   AGE
-Heapster-4081560158-cnhn7                       2/2       Running   0          20d
-kube-addon-manager-k8s-master-13181513-0        1/1       Running   0          20d
-kube-apiserver-k8s-master-13181513-0            1/1       Running   0          20d
-kube-controller-manager-k8s-master-13181513-0   1/1       Running   0          20d
-kube-dns-v20-3119293658-pnqqs                   3/3       Running   0          20d
-kube-dns-v20-3119293658-qbbjw                   3/3       Running   0          20d
-kube-proxy-f41qb                                1/1       Running   0          20d
-kube-scheduler-k8s-master-13181513-0            1/1       Running   0          20d
-kubernetes-dashboard-2957563879-3h8gf           1/1       Running   0          20d
-tiller-deploy-1318497129-wb74v                  1/1       Running   0          20d
+$ kubectl get pods --namespace=kube-system -l k8s-app=metrics-server
+NAME                             READY   STATUS    RESTARTS   AGE
+metrics-server-bb7db87bc-nm6vn   1/1     Running   2          140m
 ```
-3. Ensure you see Heapster listed and it is in a `Running` state.
+
+Tools like `kubectl` and the Kubernetes Dashboard use metrics-server, and it has an [API][metrics-server-api] to get metrics for your custom monitoring solution.
+
+## Monitoring Options
+
+1. [kubectl](#kubectl)
+1. [Kubernetes Dashboard](#kubernetes-dashboard)
+1. [Azure Monitor for containers](#azure-monitor-for-containers)
+1. [Monitoring extension](#monitoring-extension)
+1. [Grafana and Influx DB](#grafana-and-influx-db)
 
 ## Kubectl
 
-The easiest way to see basic node metrics is by using kubectl. The `kubectl top` command communicates with Heapster to get the latest node metrics and displays them in your terminal.
+The `kubectl top` command is an easy way to see node or pod metrics in your terminal.
 
-1. To get node metrics: `kubectl top node`
-
-```shell
-azureuser@k8s-master-95363663-0:~$ kubectl top node
-NAME                        CPU(cores)   CPU%      MEMORY(bytes)   MEMORY%
-k8s-agentpool1-95363663-0   49m          2%        1298Mi          18%
-k8s-master-95363663-0       105m         5%        1317Mi          19%
-```
-
-1. To get pod metrics: `kubectl top pod`
+Use `kubectl top node` to see the resource consumption of nodes:
 
 ```shell
-azureuser@k8s-master-95363663-0:~$ kubectl top pod
-NAME            CPU(cores)   MEMORY(bytes)
-somePod         0m           11Mi
+$ kubectl top node
+NAME                                 CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
+k8s-agentpool1-26399701-vmss000000   67m          3%     729Mi           10%
+k8s-agentpool1-26399701-vmss000001   80m          4%     787Mi           10%
+k8s-master-26399701-0                201m         10%    1406Mi          19%
 ```
+
+Use `kubectl top pod` to see the resource consumption of pods:
+
+```shell
+$ kubectl top pod --namespace=kube-system
+NAME                                            CPU(cores)   MEMORY(bytes)
+azure-cni-networkmonitor-7gfd4                  2m           15Mi
+...
+kube-proxy-mzlq5                                1m           18Mi
+kube-scheduler-k8s-master-26399701-0            3m           16Mi
+metrics-server-bb7db87bc-nm6vn                  1m           12Mi
+```
+
+## Kubernetes Dashboard
+
+The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize your cluster metrics. The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
+
+1. On Linux, run `kubectl proxy`. This will allow you to access the Kubernetes Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
+    * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
+
+Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
+
+![Image of Kuberentes dashboard](../static/img/k8s-monitoring-dashboard.png)
 
 ## Azure Monitor for containers
 
@@ -77,17 +80,6 @@ Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-d
 
 If you have any questions or feedback regarding the monitoring of your AKS Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
 
-## Kubernetes Dashboard
-
-The Kubernetes Dashboard is an easy way to visualize your cluster metrics. The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
-
-1. On Linux, run `kubectl proxy`. This will allow you to access the Kubernetes Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
-    * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
-
-Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
-
-![Image of Kuberentes dashboard](../static/img/k8s-monitoring-dashboard.png)
-
 ## Monitoring extension
 
 A quick way to scaffold out cloud-native and open source monitoring components is to use the [aks-engine monitoring extension](https://github.com/Azure/aks-engine/tree/master/extensions/prometheus-grafana-k8s). For details on how to use the monitoring extension, please refer to the [extension documentation](https://github.com/Azure/aks-engine/tree/master/extensions/prometheus-grafana-k8s). By embedding the extension in your apimodel, the extension will do much of the work to create a monitoring solution in your cluster, which includes the following:
@@ -96,7 +88,7 @@ A quick way to scaffold out cloud-native and open source monitoring components i
 - [Prometheus](https://prometheus.io/) for metrics collection and storage
 - [Grafana](https://grafana.com/) for dashboard and visualizations
 
-The extension wires up these components together. Post-deplyoment of the Kubernetes cluster, you just have to retrieve Grafana admin password (Kubernetes secret) and target your browser to the Grafana endpoint. There is already a pre-loaded Kubernetes cluster monitoring dashboard, so out-of-the-box you will have meaningful monitoring points with the extensibility that Prometheus and Grafana offer you.
+The extension wires up these components together. Post-deployment of the Kubernetes cluster, you just have to retrieve Grafana admin password (Kubernetes secret) and target your browser to the Grafana endpoint. There is already a pre-loaded Kubernetes cluster monitoring dashboard, so out-of-the-box you will have meaningful monitoring points with the extensibility that Prometheus and Grafana offer you.
 
 ## Grafana and Influx DB
 
@@ -152,55 +144,6 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
 
-## Heapster REST API
-
-Heapster exposes a REST API that can be used to programmatically obtain cluster metrics. The full documentation for the REST API is [here.](https://github.com/kubernetes/heapster/blob/master/docs/model.md) The REST API can be useful if you need to obtain metrics in your custom application or integrate metrics in an existing system.
-
-Here are a few examples on how to use the REST API.
-
-1. Run `kubectl proxy`
-1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes`
-
-```json
-[
-    "k8s-agentpool1-95363663-0",
-    "k8s-master-95363663-0"
-]
-```
-
-1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics`
-
-```js
-[
-    "cpu/usage",
-    "network/rx_errors",
-    "memory/major_page_faults",
-    "memory/page_faults_rate",
-    "cpu/node_allocatable",
-    ...
-]
-```
-
-1. `curl http://localhost:8001/api/v1/namespaces/kube-system/services/heapster/proxy/api/v1/model/nodes/k8s-master-95363663-0/metrics/cpu/usage`
-
-```js
-{
-    metrics: [
-        {
-            timestamp: "2017-08-31T00:08:00Z",
-            value: 1040133457832
-        },
-        {
-            timestamp: "2017-08-31T00:09:00Z",
-            value: 1046556719483
-        },
-        {
-            timestamp: "2017-08-31T00:10:00Z",
-            value: 1052835238099
-        }
-    ],
-        latestTimestamp: "2017-08-31T00:10:00Z"
-}
-```
-
-For more details take a look at the [Heapster model documentation.](https://github.com/kubernetes/heapster/blob/master/docs/model.md)
+[kubernetes-dashboard]: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+[metrics-server]: https://github.com/kubernetes-sigs/metrics-server
+[metrics-server-api]: https://github.com/kubernetes/metrics/blob/master/pkg/apis/metrics/v1beta1/types.go
