@@ -50,7 +50,16 @@ metrics-server-bb7db87bc-nm6vn                  1m           12Mi
 
 ## Kubernetes Dashboard
 
-The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize your cluster metrics. The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
+The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize cluster metrics.
+
+The Kubernetes Dashboard addon is not enabled by default for an AKS Engine cluster. Your cluster configuration file must enable it before provisioning:
+
+```json
+
+```
+
+
+The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
 
 1. On Linux, run `kubectl proxy`. This will allow you to access the Kubernetes Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
     * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
