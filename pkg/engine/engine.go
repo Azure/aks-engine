@@ -877,6 +877,9 @@ func getClusterAutoscalerAddonFuncMap(addon api.KubernetesAddon, cs *api.Contain
 			}
 			return "false"
 		},
+		"IsKubernetesVersionGe": func(version string) bool {
+			return common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, version)
+		},
 	}
 }
 
