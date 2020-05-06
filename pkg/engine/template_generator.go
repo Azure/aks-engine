@@ -305,11 +305,13 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
 		},
-		"HasKubeReservedCgroup": func(kc *api.KubernetesConfig) bool {
+		"HasKubeReservedCgroup": func() bool {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
 			return kc != nil && kc.KubeReservedCgroup != ""
 		},
 
-		"GetKubeReservedCgroup": func(kc *api.KubernetesConfig) string {
+		"GetKubeReservedCgroup": func() string {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
 			if kc == nil {
 				return ""
 			}

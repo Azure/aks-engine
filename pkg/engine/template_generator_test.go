@@ -999,12 +999,12 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %t, instead got %t", c.expectedUseManagedIdentity, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["HasKubeReservedCgroup"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.OrchestratorProfile.KubernetesConfig)})
+			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasKubeReservedCgroup {
 				t.Errorf("expected funcMap invocation of HasKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
 			}
 			v = reflect.ValueOf(funcMap["GetKubeReservedCgroup"])
-			ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.OrchestratorProfile.KubernetesConfig)})
+			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedGetKubeReservedCgroup {
 				t.Errorf("expected funcMap invocation of GetKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
 			}

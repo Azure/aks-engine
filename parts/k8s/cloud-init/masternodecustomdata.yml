@@ -68,8 +68,8 @@ write_files:
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
 {{end}}
 
-{{- if HasKubeReservedCgroup .MasterProfile.KubernetesConfig}}
-- path: /etc/systemd/system/{{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+{{- if HasKubeReservedCgroup}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
   permissions: "0644"
   owner: root
   content: |
@@ -87,7 +87,7 @@ write_files:
   owner: root
   content: |
     [Service]
-    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
 
   {{if NeedsContainerd}}
@@ -96,7 +96,7 @@ write_files:
   owner: root
   content: |
     [Service]
-    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
   {{else}}
 - path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
@@ -104,7 +104,7 @@ write_files:
   owner: root
   content: |
     [Service]
-    Slice={{- GetKubeReservedCgroup .MasterProfile.KubernetesConfig -}}.slice
+    Slice={{- GetKubeReservedCgroup -}}.slice
     #EOF
   {{end}}
 {{end}}
