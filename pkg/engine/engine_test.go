@@ -2495,6 +2495,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedShouldEnableAzureDiskCSISnapshotFeature   bool
 		expectedShouldEnableAzureFileCSISnapshotFeature   bool
 		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
+		expectedMode                                      string
 	}{
 		{
 			name: "coredns as an example",
@@ -2573,6 +2574,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2655,6 +2657,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - StorageAccount",
@@ -2733,6 +2736,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2812,6 +2816,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - Availability Zones",
@@ -2896,13 +2901,14 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - hybrid cluster",
 			addon: api.KubernetesAddon{
 				Name:    common.CoreDNSAddonName,
 				Enabled: to.BoolPtr(true),
-				Mode:    api.AddonModeEnsureExists,
+				Mode:    api.AddonModeReconcile,
 				Config: map[string]string{
 					"foo": "bar",
 				},
@@ -2979,6 +2985,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+			expectedMode: api.AddonModeReconcile,
 		},
 	}
 
@@ -3081,6 +3088,11 @@ func TestGetAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != common.AADPodIdentityTaintKey {
 				t.Errorf("expected funcMap invocation of GetAADPodIdentityTaintKey to return %s, instead got %s", common.AADPodIdentityTaintKey, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetMode"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedMode {
+				t.Errorf("expected funcMap invocation of GetMode to return %s, instead got %s", c.expectedMode, ret[0].Interface())
 			}
 		})
 	}
