@@ -136,7 +136,8 @@ func (az *AzureClient) GetAvailabilitySet(ctx context.Context, resourceGroup, av
 // GetAvailabilitySetFaultDomainCount returns the first existing fault domain count it finds from the IDs provided.
 func (az *AzureClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, resourceGroup string, vmasIDs []string) (int, error) {
 	var count int
-	for _, id := range vmasIDs {
+	if len(vmasIDs) > 0 {
+		id := vmasIDs[0]
 		// extract the last element of the id for VMAS name
 		ss := strings.Split(id, "/")
 		name := ss[len(ss)-1]
@@ -146,7 +147,6 @@ func (az *AzureClient) GetAvailabilitySetFaultDomainCount(ctx context.Context, r
 		}
 		// Assume that all VMASes in the cluster share a value for platformFaultDomainCount
 		count = int(*vmas.AvailabilitySetProperties.PlatformFaultDomainCount)
-		break
 	}
 	return count, nil
 }

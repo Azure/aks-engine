@@ -380,6 +380,10 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 
 	if vm.StorageProfile.OsDisk.OsType == compute.Windows {
 		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(*vm.Name)
+		if err != nil {
+			uc.Logger.Errorf(err.Error())
+			return err
+		}
 		if !strings.Contains(uc.NameSuffix, poolPrefix) {
 			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s",
 				*vm.Name, uc.NameSuffix)

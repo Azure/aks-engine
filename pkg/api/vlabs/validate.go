@@ -302,7 +302,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if o.KubernetesConfig.LoadBalancerSku != "" {
-					if strings.ToLower(o.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) && strings.ToLower(o.KubernetesConfig.LoadBalancerSku) != strings.ToLower(BasicLoadBalancerSku) {
+					if !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) && !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
 						return errors.Errorf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku)
 					}
 				}
@@ -656,7 +656,7 @@ func (a *Properties) validateZones() error {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
 					}
 				}
-				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) {
+				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && !strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
 			}

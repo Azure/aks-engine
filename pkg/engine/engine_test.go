@@ -122,7 +122,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+			certsGenerated, _ := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -152,7 +152,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+					certsGenerated, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -234,7 +234,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+			certsGenerated, _ := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -264,7 +264,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+					certsGenerated, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
