@@ -82,7 +82,7 @@ kubectl get pods -n kube-system
 | Name           | Required | Description                       | Default Value                                                                 |
 | -------------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
 | name           | no       | container name                    | "azure-policy"                                                                |
-| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200227.1" |
+| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1" |
 | cpuRequests    | no       | cpu requests for the container    | "30m"                                                                         |
 | memoryRequests | no       | memory requests for the container | "50Mi"                                                                        |
 | cpuLimits      | no       | cpu limits for the container      | "100m"                                                                        |
