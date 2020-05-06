@@ -52,7 +52,7 @@ metrics-server-bb7db87bc-nm6vn                  1m           12Mi
 
 The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize cluster metrics.
 
-The Kubernetes Dashboard addon is not enabled by default for an AKS Engine cluster. You must enable it before creating a cluster, as shown in this partial cluster configuration (also known as API model):
+The Dashboard addon is not enabled by default for an AKS Engine cluster. You must enable it before creating a cluster, as shown in this partial cluster configuration:
 
 ```json
 "orchestratorProfile": {
@@ -76,9 +76,9 @@ dashboard-metrics-scraper-7bdfbb4477-7mhc8   1/1     Running   0          18h
 kubernetes-dashboard-b597987c-rr7bf          1/1     Running   0          18h
 ```
 
-Accessing the Kubernetes Dashboard requires a Bearer Token. To create a token for demonstration purposes, you can follow the Kubernetes documentation on [creating a sample user][].
+Accessing the Dashboard requires a Bearer Token. To create a token for demonstration purposes, you can follow the Kubernetes documentation on [creating-a-sample-user][].
 
-> WARNING: The sample user created in the tutorial above will have administrative privileges and is for educational purposes only.
+> WARNING: The sample user created in the tutorial above will have administrative privileges and is for demonstration purposes only.
 
 In a terminal window, create a command-line proxy to your cluster with this command:
 
@@ -88,9 +88,9 @@ kubectl proxy
 
 This will make Dashboard available at http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/.
 
-Open that URL in a web browser on the same machine that's running `kubectl proxy`, and paste your Bearer Token into the login screen when requested.
+Open that URL in a web browser on the same machine that's running `kubectl proxy`, and paste your token into the login screen when requested.
 
-Once you have opened the UI, you can explore node metrics under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
+After authenticating, you can explore node metrics under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
 
 ![Image of Kubernetes dashboard](../static/img/k8s-monitoring-dashboard.png)
 
@@ -98,24 +98,21 @@ For more information about accessing the Dashboard, see the Kubernetes documenta
 
 ## Azure Monitor for containers
 
-Azure Monitor for containers is a feature designed to monitor the performance of container workloads deployed to AKS Engine (formerly known as ACS-Engine) cluster(s) hosted on Azure. Monitoring your containers is critical, especially when you're running a production cluster, at scale, with multiple applications.
+[Azure Monitor for containers][azure-monitor-for-containers] is a feature designed to monitor the performance of container workloads. It supports self-managed Kubernetes clusters using AKS Engine.
 
-Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. After you enable monitoring from Kubernetes clusters, these metrics and logs are automatically collected for you through a containerized version of the Log Analytics agent for Linux and stored in your Log Analytics workspace.
+Azure Monitor for containers gives you performance visibility by collecting memory and processor metrics from controllers, nodes, and containers that are available in Kubernetes through the Metrics API. Container logs are also collected. Please see its documentation [overview][azure-monitor-for-containers] for more detail.
 
-Azure Monitor for containers for AKS Engine cluster(s) can be configured through following options
+Azure Monitor for containers is known as the ["container-monitoring" addon][container-monitoring-addon] in AKS Engine, and it is not enabled by default. See the container-monitoring docs to learn how to enable and configure Azure Monitor for containers via addon.
 
-1. Helm chart [azuremonitor-containers](https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers)
-2. [Container-monitoring add-on](../../examples/addons/container-monitoring/README.md)
+Alternately, you can install the [azuremonitor-containers][] Helm chart to enable Azure Monitor for containers.
 
-Navigate to [azmon-containers](https://aka.ms/azmon-containers) to view the health, metrics and logs of AKS-engine cluster(s).
+Once Azure Monitor for containers is enabled, navigate to https://aka.ms/azmon-containers to view the health, metrics, and logs of your AKS Engine clusters in the Azure portal website.
 
-For more details on how to use the product, see [Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview)
-
-Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for the supported matrix, troubleshooting and supportability etc.
+Refer to [azuremonitor-containers-aks-engine](https://github.com/Microsoft/OMS-docker/blob/aks-engine/README.md) for information about supported versions and for troubleshooting.
 
 ![Image of Azure Monitor for containers](../static/img/azure_monitor_aks_engine.png)
 
-If you have any questions or feedback regarding the monitoring of your AKS Engine (or ACS-Engine) cluster(s), please reach us out through [this](mailto:askcoin@microsoft.com) email.
+Please reach out with any questions or feedback by sending an email to [Azure Monitor for Containers](mailto:askcoin@microsoft.com).
 
 ## Monitoring extension
 
@@ -181,7 +178,11 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
 
-[creating a sample user]: https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
+
+[azure-monitor-for-containers]: https://docs.microsoft.com/en-us/azure/azure-monitor/insights/container-insights-overview
+[azuremonitor-containers]: https://github.com/helm/charts/tree/master/incubator/azuremonitor-containers
+[container-monitoring-addon]: ../../examples/addons/container-monitoring/README.md
+[creating-a-sample-user]: https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
 [kubernetes-dashboard]: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
 [metrics-server]: https://github.com/kubernetes-sigs/metrics-server
 [metrics-server-api]: https://github.com/kubernetes/metrics/blob/master/pkg/apis/metrics/v1beta1/types.go
