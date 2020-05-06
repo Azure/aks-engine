@@ -224,10 +224,10 @@ time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
-{{- if IsAADPodIdentityAddonEnabled}}
-    time_metric "EnsureTaints" ensureTaints
-{{end}}
   fi
+{{- if IsAADPodIdentityAddonEnabled}}
+  time_metric "EnsureTaints" ensureTaints
+{{end}}
   time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then

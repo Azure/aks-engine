@@ -37905,10 +37905,10 @@ time_metric "EnsureJournal" ensureJournal
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
-{{- if IsAADPodIdentityAddonEnabled}}
-    time_metric "EnsureTaints" ensureTaints
-{{end}}
   fi
+{{- if IsAADPodIdentityAddonEnabled}}
+  time_metric "EnsureTaints" ensureTaints
+{{end}}
   time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
@@ -39300,13 +39300,13 @@ AAD_POD_ID_TAINT_KEY={{GetAADPodIdentityTaintKey}}
 
 if ! ${KUBECTL} get daemonsets -n kube-system -o json | jq -e -r '.items[] | select(.metadata.name == "nmi")' > /dev/null; then
   for node in $(${KUBECTL} get nodes -o json | jq -e -r '.items[] | .metadata.name'); do
-    ${KUBECTL} taint nodes $node $AAD_POD_ID_TAINT_KEY=true:NoSchedule- 2>&1 | grep -v 'not found';
+    ${KUBECTL} taint nodes $node $AAD_POD_ID_TAINT_KEY:NoSchedule- 2>&1 | grep -v 'not found';
   done
   exit 0
 fi
 for pod in $(${KUBECTL} get pods -n kube-system -o json | jq -r '.items[] | select(.status.phase == "Running") | .metadata.name'); do
   if [[ "$pod" =~ ^nmi ]]; then
-    ${KUBECTL} taint nodes $(${KUBECTL} get pod ${pod} -n kube-system -o json | jq -r '.spec.nodeName') $AAD_POD_ID_TAINT_KEY=true:NoSchedule- 2>&1 | grep -v 'not found';
+    ${KUBECTL} taint nodes $(${KUBECTL} get pod ${pod} -n kube-system -o json | jq -r '.spec.nodeName') $AAD_POD_ID_TAINT_KEY:NoSchedule- 2>&1 | grep -v 'not found';
   fi;
 done
 exit 0
