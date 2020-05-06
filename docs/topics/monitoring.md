@@ -52,21 +52,49 @@ metrics-server-bb7db87bc-nm6vn                  1m           12Mi
 
 The [Kubernetes Dashboard][kubernetes-dashboard] is a web-based user interface that can visualize cluster metrics.
 
-The Kubernetes Dashboard addon is not enabled by default for an AKS Engine cluster. Your cluster configuration file must enable it before provisioning:
+The Kubernetes Dashboard addon is not enabled by default for an AKS Engine cluster. You must enable it before creating a cluster, as shown in this partial cluster configuration (also known as API model):
 
 ```json
-
+"orchestratorProfile": {
+  "orchestratorType": "Kubernetes",
+  "kubernetesConfig": {
+    "addons": [
+      {
+        "name": "kubernetes-dashboard",
+        "enabled": true
+      }
+    ]
+  }
 ```
 
+To verify that the Kubernetes Dashboard is running in your cluster:
 
-The Dashboard displays metrics that are known to the metrics-server component. The Kubernetes Dashboard addon is not enabled by default on your cluster. To access the Dashboard:
+```shell
+$ kubectl get pods --namespace=kubernetes-dashboard
+NAME                                         READY   STATUS    RESTARTS   AGE
+dashboard-metrics-scraper-7bdfbb4477-7mhc8   1/1     Running   0          18h
+kubernetes-dashboard-b597987c-rr7bf          1/1     Running   0          18h
+```
 
-1. On Linux, run `kubectl proxy`. This will allow you to access the Kubernetes Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
-    * If you are using Windows and sshing into the master to use kubectl, you will need to set up remote port forwarding from port 8001 on the master to your host in order to use `kubectl proxy`. To do this, under PUTTY > Connection > SSH > Tunnels, create a new forwarded port (source local port 8001 to destination 127.0.0.1:8001).
+Accessing the Kubernetes Dashboard requires a Bearer Token. To create a token for demonstration purposes, you can follow the Kubernetes documentation on [creating a sample user][].
 
-Once you have opened the UI, you can explore node stats (CPU, Memory, etc...) under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
+> WARNING: The sample user created in the tutorial above will have administrative privileges and is for educational purposes only.
 
-![Image of Kuberentes dashboard](../static/img/k8s-monitoring-dashboard.png)
+In a terminal window, create a command-line proxy to your cluster with this command:
+
+```shell
+kubectl proxy
+```
+
+This will make Dashboard available at http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/.
+
+Open that URL in a web browser on the same machine that's running `kubectl proxy`, and paste your Bearer Token into the login screen when requested.
+
+Once you have opened the UI, you can explore node metrics under the nodes section on the left menu. You can also see pod level metrics under the pods section, and even drill into a specific container in a given pod.
+
+![Image of Kubernetes dashboard](../static/img/k8s-monitoring-dashboard.png)
+
+For more information about accessing the Dashboard, see the Kubernetes documentation on [web UI (dashboard)][web-ui-dashboard].
 
 ## Azure Monitor for containers
 
@@ -153,6 +181,8 @@ If everything looks ok and Grafana and Influx DB were able to start up, you can 
 
 ![Image of Grafana](../static/img/k8s-monitoring-grafana2.png)
 
+[creating a sample user]: https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
 [kubernetes-dashboard]: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
 [metrics-server]: https://github.com/kubernetes-sigs/metrics-server
 [metrics-server-api]: https://github.com/kubernetes/metrics/blob/master/pkg/apis/metrics/v1beta1/types.go
+[web-ui-dashboard]: https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
