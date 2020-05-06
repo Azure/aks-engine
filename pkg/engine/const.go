@@ -199,8 +199,8 @@ const (
 const (
 	heapsterAddonSourceFilename                    string = "kubernetesmasteraddons-heapster-deployment.yaml"
 	heapsterAddonDestinationFilename               string = "kube-heapster-deployment.yaml"
-	metricsServerAddonSourceFilename               string = "kubernetesmasteraddons-metrics-server-deployment.yaml"
-	metricsServerAddonDestinationFilename          string = "kube-metrics-server-deployment.yaml"
+	metricsServerAddonSourceFilename               string = "metrics-server.yaml"
+	metricsServerAddonDestinationFilename          string = "metrics-server.yaml"
 	tillerAddonSourceFilename                      string = "kubernetesmasteraddons-tiller-deployment.yaml"
 	tillerAddonDestinationFilename                 string = "kube-tiller-deployment.yaml"
 	aadPodIdentityAddonSourceFilename              string = "kubernetesmasteraddons-aad-pod-identity-deployment.yaml"

@@ -4962,6 +4962,20 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		imageBase = kubernetesImageBase
 	}
 	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: kubernetesImageBaseType})
+	metricsServerAddon := KubernetesAddon{
+		Name:    common.MetricsServerAddonName,
+		Enabled: to.BoolPtr(true),
+		Mode:    AddonModeEnsureExists,
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.MetricsServerAddonName,
+				Image: imageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
+			},
+		},
+	}
+	if common.IsKubernetesVersionGe(version, "1.16.0") {
+		metricsServerAddon.Mode = AddonModeReconcile
+	}
 	addons := []KubernetesAddon{
 		{
 			Name:    common.BlobfuseFlexVolumeAddonName,
@@ -4991,16 +5005,7 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				},
 			},
 		},
-		{
-			Name:    common.MetricsServerAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:  common.MetricsServerAddonName,
-					Image: imageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
-				},
-			},
-		},
+		metricsServerAddon,
 		{
 			Name:    common.IPMASQAgentAddonName,
 			Enabled: to.BoolPtr(true),

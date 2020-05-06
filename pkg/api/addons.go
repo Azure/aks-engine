@@ -246,12 +246,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
 		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
+		Mode:    AddonModeEnsureExists,
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
 				Image: kubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 			},
 		},
+	}
+
+	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultMetricsServerAddonsConfig.Mode = AddonModeReconcile
 	}
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
