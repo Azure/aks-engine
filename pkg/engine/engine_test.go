@@ -1801,24 +1801,25 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
-		name                       string
-		addon                      api.KubernetesAddon
-		cs                         *api.ContainerService
-		expectedImage              string
-		expectedCPUReqs            string
-		expectedCPULimits          string
-		expectedMemReqs            string
-		expectedMemLimits          string
-		expectedScanInterval       string
-		expectedVersion            string
-		expectedMode               string
-		expectedNodesConfig        string
-		expectedVMType             string
-		expectedVolumeMounts       string
-		expectedVolumes            string
-		expectedHostNetwork        string
-		expectedCloud              string
-		expectedUseManagedIdentity string
+		name                                              string
+		addon                                             api.KubernetesAddon
+		cs                                                *api.ContainerService
+		expectedImage                                     string
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedScanInterval                              string
+		expectedVersion                                   string
+		expectedMode                                      string
+		expectedNodesConfig                               string
+		expectedVMType                                    string
+		expectedVolumeMounts                              string
+		expectedVolumes                                   string
+		expectedHostNetwork                               string
+		expectedCloud                                     string
+		expectedUseManagedIdentity                        string
+		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
 	}{
 		{
 			name: "single pool",
@@ -1837,7 +1838,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.16.9"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1854,7 +1855,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
+						OrchestratorVersion: "1.16.9",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -1875,7 +1876,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.16.9"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1890,6 +1891,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
 		},
 		{
 			name: "multiple pools",
@@ -2458,6 +2460,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedUseManagedIdentity {
 				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %s, instead got %s", c.expectedUseManagedIdentity, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("1.16.0")})
+			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
+				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
 			}
 		})
 	}
