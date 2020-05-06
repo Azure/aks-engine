@@ -62,6 +62,14 @@
 						{
 							"name": "rescheduler",
 							"enabled": true
+						},
+						{
+							"name": "coredns",
+							"enabled": true,
+							"config": {
+								"min-replicas": "1",
+								"nodes-per-replica": "8"
+							}
 						}
 					],
 					"components": [
@@ -83,7 +91,10 @@
 				"firstConsecutiveStaticIP": "10.239.255.239",
 				"vnetCidr": "10.239.0.0/16",
 				"auditDEnabled": true,
-				"availabilityZones": ["1", "2"]
+				"availabilityZones": [
+					"1",
+					"2"
+				]
 			},
 			"agentPoolProfiles": [
 				{
@@ -99,7 +110,10 @@
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME",
 					"scalesetPriority": "Spot",
 					"auditDEnabled": true,
-					"availabilityZones": ["1", "2"]
+					"availabilityZones": [
+						"1",
+						"2"
+					]
 				},
 				{
 					"name": "poolgpu",
