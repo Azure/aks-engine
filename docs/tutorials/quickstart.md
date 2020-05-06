@@ -159,7 +159,7 @@ Administrative note: By default, the directory where aks-engine stores cluster c
 
 ## AKS Engine the Long Way
 
-This example uses the more traditional method of generating raw ARM templates, which are submitted to Azure using the `az group deployment create` command.
+This example uses the more traditional method of generating raw ARM templates, which are submitted to Azure using the `az deployment group create` command.
 
 For this example, we will use the same information as before: the subscription id is `51ac25de-afdg-9201-d923-8d8e8e8e8e8e`, the DNS prefix is `contoso-apple-5eac6ed8` (note the manual use of a unique string suffix to better ensure uniqueness), and the location is `westus2`.
 
@@ -235,7 +235,7 @@ Now we can deploy the files `azuredeploy.json` and `azuredeploy.parameters.json`
 Using the CLI:
 
 ```console
-$ az group deployment create \
+$ az deployment group create \
     --name "contoso-apple-k8s" \
     --resource-group "contoso-apple-5eac6ed8" \
     --template-file "./_output/contoso-apple-5eac6ed8/azuredeploy.json" \

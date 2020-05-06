@@ -382,10 +382,10 @@ It will also create a working Kubernetes client config file in `_output/<dnspref
 
 ### Deploy the cluster
 
-Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az group deployment create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
+Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az deployment group create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
 
 ```console
-$ az group deployment create --name k8s-win1-deploy --resource-group k8s-win1 --template-file "./_output/wink8s1/azuredeploy.json" --parameters "./_output/wink8s1/azuredeploy.parameters.json"
+$ az deployment group create --name k8s-win1-deploy --resource-group k8s-win1 --template-file "./_output/wink8s1/azuredeploy.json" --parameters "./_output/wink8s1/azuredeploy.parameters.json"
 ```
 
 After several minutes, it will return the list of resources created in JSON. Look for `masterFQDN`.

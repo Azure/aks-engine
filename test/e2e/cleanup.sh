@@ -42,9 +42,9 @@ az account set -s $SUBSCRIPTION_ID_TO_CLEANUP
 echo "Looking for resource groups created over ${EXPIRATION_IN_HOURS} hours ago..."
 if [ -z "$RESOURCE_GROUP_SUBSTRING" ]; then
   for resourceGroup in $(az group list | jq --arg dl $deadline '.[] | select(.name | contains("acse-test") | not) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
-    for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
+    for deployment in $(az deployment group list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
       echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
-      az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+      az deployment group delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
     done
     echo "Will delete resource group ${resourceGroup}..."
     # delete old resource groups
@@ -52,9 +52,9 @@ if [ -z "$RESOURCE_GROUP_SUBSTRING" ]; then
   done
 else
   for resourceGroup in $(az group list | jq --arg dl $deadline --arg rg $RESOURCE_GROUP_SUBSTRING '.[] | select(.name | contains("acse-test") | not) | select(.name | contains($rg)) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
-    for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
+    for deployment in $(az deployment group list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
       echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
-      az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+      az deployment group delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
     done
     echo "Will delete resource group ${resourceGroup}..."
     # delete old resource groups

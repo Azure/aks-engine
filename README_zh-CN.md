@@ -57,7 +57,7 @@ $ az group create \
     --name "<RESOURCE_GROUP_NAME>" \
     --location "<LOCATION>"
 
-$ az group deployment create \
+$ az deployment group create \
     --name "<DEPLOYMENT NAME>" \
     --resource-group "<RESOURCE_GROUP_NAME>" \
     --template-file "./_output/<INSTANCE>/azuredeploy.json" \
