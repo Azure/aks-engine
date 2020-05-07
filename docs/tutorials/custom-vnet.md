@@ -71,7 +71,7 @@ az group create -n aks-custom-vnet -l "westeurope"
 Then you can deploy the virtual network using the JSON description above and the following command:
 
 ```bash
-az group deployment create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.vnet.json
+az deployment group create -g aks-custom-vnet --name "CustomVNet" --template-file azuredeploy.vnet.json
 ```
 
 Alternatively, you can use Azure CLI to create the vnet and the subnet directly:
@@ -189,7 +189,7 @@ aksengine took 37.1384ms
 Now that you have generated the ARM templates and its parameters file using AKS Engine, you can use Azure CLI 2.0 to start the deployment of the cluster:
 
 ```bash
-az group deployment create -g aks-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"
+az deployment group create -g aks-custom-vnet --name "ClusterDeployment" --template-file azuredeploy.json --parameters "@azuredeploy.parameters.json"
 ```
 
 Depending on the number of agents you have asked for the deployment can take a while.
@@ -198,7 +198,7 @@ Depending on the number of agents you have asked for the deployment can take a w
 
 _NOTE: This section is applicable only to Kubernetes clusters that use Kubenet. If AzureCNI is enabled in your cluster, you may disregard._
 
-For Kubernetes clusters, we need to update the VNET to attach to the route table created by the above `az group deployment create` command. An example in bash form if the VNET is in the same ResourceGroup as the Kubernetes Cluster:
+For Kubernetes clusters, we need to update the VNET to attach to the route table created by the above `az deployment group create` command. An example in bash form if the VNET is in the same ResourceGroup as the Kubernetes Cluster:
 
 ```
 #!/bin/bash

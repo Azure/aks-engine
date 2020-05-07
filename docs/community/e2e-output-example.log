@@ -26,7 +26,7 @@ $ timeout 60 az group show -n kubernetes-westus2-13811
 2020/04/23 16:59:41
 Kubeconfig:/aks-engine/_output/kubernetes-westus2-13811/kubeconfig/kubeconfig.westus2.json
 
-$ az group deployment create --name kubernetes-westus2-13811 --resource-group kubernetes-westus2-13811 --template-file /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.json --parameters /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.parameters.json
+$ az deployment group create --name kubernetes-westus2-13811 --resource-group kubernetes-westus2-13811 --template-file /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.json --parameters /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.parameters.json
 
 $ timeout 60 az group create --name kubernetes-westus2-13811 --location westus2 --tags now=1587661198
 ...
