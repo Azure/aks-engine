@@ -246,7 +246,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
 		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
-		Mode:    AddonModeEnsureExists,
+		Mode:    AddonModeReconcile,
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
@@ -255,8 +255,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 	}
 
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
-		defaultMetricsServerAddonsConfig.Mode = AddonModeReconcile
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultMetricsServerAddonsConfig.Mode = AddonModeEnsureExists
 	}
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
