@@ -73,20 +73,22 @@ stackfy() {
 
 stackfyKubeletLog() {
     KUBELET_VERSION=$(kubelet --version | grep -oh -E 'v.*$')
-    KUBELET_VERBOSITY=$(cat /etc/systemd/system/kubelet.service | grep -e '--v=[0-9]' -oh | grep -e [0-9] -oh | head -n 1)
+    KUBELET_VERBOSITY=$(grep -e '--v=[0-9]' -oh | grep -e '[0-9]' -oh /etc/systemd/system/kubelet.service | head -n 1)
     KUBELET_LOG_FILE=${OUTDIR}/daemons/k8s-kubelet.log
     
-    echo "== BEGIN HEADER =="               >  ${KUBELET_LOG_FILE}
-    echo "Type: Daemon"                     >> ${KUBELET_LOG_FILE}
-    echo "TenantId: ${TENANT_ID}"           >> ${KUBELET_LOG_FILE}
-    echo "Name: kubelet"                    >> ${KUBELET_LOG_FILE}
-    echo "Version: ${KUBELET_VERSION}"      >> ${KUBELET_LOG_FILE}
-    echo "Verbosity: ${KUBELET_VERBOSITY}"  >> ${KUBELET_LOG_FILE}
-    echo "Image: "                          >> ${KUBELET_LOG_FILE}
-    echo "Hostname: ${HOSTNAME}"            >> ${KUBELET_LOG_FILE}
-    echo "SubscriptionID: ${SUB_ID}"        >> ${KUBELET_LOG_FILE}
-    echo "ResourceGroup: ${RESOURCE_GROUP}" >> ${KUBELET_LOG_FILE}
-    echo "== END HEADER =="                 >> ${KUBELET_LOG_FILE}
+    {
+        echo "== BEGIN HEADER ==";
+        echo "Type: Daemon";
+        echo "TenantId: ${TENANT_ID}";
+        echo "Name: kubelet";
+        echo "Version: ${KUBELET_VERSION}";
+        echo "Verbosity: ${KUBELET_VERBOSITY}";
+        echo "Image: ";
+        echo "Hostname: ${HOSTNAME}";
+        echo "SubscriptionID: ${SUB_ID}";
+        echo "ResourceGroup: ${RESOURCE_GROUP}";
+        echo "== END HEADER =="
+    } >> ${KUBELET_LOG_FILE}
 
     cat ${OUTDIR}/daemons/kubelet.service.log >> ${KUBELET_LOG_FILE}
     rm ${OUTDIR}/daemons/kubelet.service.log
@@ -96,15 +98,17 @@ stackfyMobyLog() {
     DOCKER_VERSION=$(docker version | grep -A 20 "Server:" | grep "Version:" | head -n 1 | cut -d ":" -f 2 | xargs)
     DOCKER_LOG_FILE=${OUTDIR}/daemons/k8s-docker.log
     
-    echo "== BEGIN HEADER =="               >  ${DOCKER_LOG_FILE}
-    echo "Type: Daemon"                     >> ${DOCKER_LOG_FILE}
-    echo "TenantId: ${TENANT_ID}"           >> ${DOCKER_LOG_FILE}
-    echo "Name: docker"                     >> ${DOCKER_LOG_FILE}
-    echo "Version: ${DOCKER_VERSION}"       >> ${DOCKER_LOG_FILE}
-    echo "Hostname: ${HOSTNAME}"            >> ${DOCKER_LOG_FILE}
-    echo "SubscriptionID: ${SUB_ID}"        >> ${DOCKER_LOG_FILE}
-    echo "ResourceGroup: ${RESOURCE_GROUP}" >> ${DOCKER_LOG_FILE}
-    echo "== END HEADER =="                 >> ${DOCKER_LOG_FILE}
+    {
+        echo "== BEGIN HEADER =="
+        echo "Type: Daemon"
+        echo "TenantId: ${TENANT_ID}"
+        echo "Name: docker"
+        echo "Version: ${DOCKER_VERSION}"
+        echo "Hostname: ${HOSTNAME}"
+        echo "SubscriptionID: ${SUB_ID}"
+        echo "ResourceGroup: ${RESOURCE_GROUP}"
+        echo "== END HEADER =="
+    } >> ${DOCKER_LOG_FILE}
 
     cat ${OUTDIR}/daemons/docker.service.log >> ${DOCKER_LOG_FILE}
     rm ${OUTDIR}/daemons/docker.service.log
@@ -118,15 +122,17 @@ stackfyEtcdLog() {
     ETCD_VERSION=$(/usr/bin/etcd --version | grep "etcd Version:" | cut -d ":" -f 2 | xargs)
     ETCD_LOG_FILE=${OUTDIR}/daemons/k8s-etcd.log
     
-    echo "== BEGIN HEADER =="               >  ${ETCD_LOG_FILE}
-    echo "Type: Daemon"                     >> ${ETCD_LOG_FILE}
-    echo "TenantId: ${TENANT_ID}"           >> ${ETCD_LOG_FILE}
-    echo "Name: etcd"                       >> ${ETCD_LOG_FILE}
-    echo "Version: ${ETCD_VERSION}"         >> ${ETCD_LOG_FILE}
-    echo "Hostname: ${HOSTNAME}"            >> ${ETCD_LOG_FILE}
-    echo "SubscriptionID: ${SUB_ID}"        >> ${ETCD_LOG_FILE}
-    echo "ResourceGroup: ${RESOURCE_GROUP}" >> ${ETCD_LOG_FILE}
-    echo "== END HEADER =="                 >> ${ETCD_LOG_FILE}
+    {
+        echo "== BEGIN HEADER =="
+        echo "Type: Daemon"
+        echo "TenantId: ${TENANT_ID}"
+        echo "Name: etcd"
+        echo "Version: ${ETCD_VERSION}"
+        echo "Hostname: ${HOSTNAME}"
+        echo "SubscriptionID: ${SUB_ID}"
+        echo "ResourceGroup: ${RESOURCE_GROUP}"
+        echo "== END HEADER =="
+    } >> ${ETCD_LOG_FILE}
 
     cat ${OUTDIR}/daemons/etcd.service.log >> ${ETCD_LOG_FILE}
     rm ${OUTDIR}/daemons/etcd.service.log
@@ -137,25 +143,27 @@ stackfyClusterInfo() {
         return
     fi
     mkdir -p ${OUTDIR}/containers
-    for SRC in ${OUTDIR}/cluster-info/kube-system/kube-controller-manager-*/logs.txt; do
-        KCM_VERBOSITY=$(cat /etc/kubernetes/manifests/kube-controller-manager.yaml | grep -e "--v=[0-9]" -oh | grep -e [0-9] -oh | head -n 1)
+    for SRC in "${OUTDIR}"/cluster-info/kube-system/kube-controller-manager-*/logs.txt; do
+        KCM_VERBOSITY=$(grep -e "--v=[0-9]" -oh /etc/kubernetes/manifests/kube-controller-manager.yaml | grep -e "[0-9]" -oh | head -n 1)
         KCM_IMAGE=$(grep image: /etc/kubernetes/manifests/kube-controller-manager.yaml | xargs | cut -f 2 -d " ")
         KCM_DIR=$(dirname ${SRC})
         KCM_NAME=$(basename ${KCM_DIR})
         KCM_LOG_FILE=${OUTDIR}/containers/k8s-${KCM_NAME}.log
         
-        echo "== BEGIN HEADER =="               >  ${KCM_LOG_FILE}
-        echo "Type: Container"                  >> ${KCM_LOG_FILE}
-        echo "TenantId: ${TENANT_ID}"           >> ${KCM_LOG_FILE}
-        echo "Name: ${KCM_NAME}"                >> ${KCM_LOG_FILE}
-        echo "Hostname: ${HOSTNAME}"            >> ${KCM_LOG_FILE}
-        echo "ContainerID: "                    >> ${KCM_LOG_FILE}
-        echo "Image: ${KCM_IMAGE}"              >> ${KCM_LOG_FILE}
-        echo "Verbosity: ${KCM_VERBOSITY}"      >> ${KCM_LOG_FILE}
-        echo "SubscriptionID: ${SUB_ID}"        >> ${KCM_LOG_FILE}
-        echo "ResourceGroup: ${RESOURCE_GROUP}" >> ${KCM_LOG_FILE}
-        echo "== END HEADER =="                 >> ${KCM_LOG_FILE}
-
+        {
+            echo "== BEGIN HEADER =="
+            echo "Type: Container"
+            echo "TenantId: ${TENANT_ID}"
+            echo "Name: ${KCM_NAME}"
+            echo "Hostname: ${HOSTNAME}"
+            echo "ContainerID: "
+            echo "Image: ${KCM_IMAGE}"
+            echo "Verbosity: ${KCM_VERBOSITY}"
+            echo "SubscriptionID: ${SUB_ID}"
+            echo "ResourceGroup: ${RESOURCE_GROUP}"
+            echo "== END HEADER =="
+        } >> ${KCM_LOG_FILE}
+        
         cat ${SRC} >> ${KCM_LOG_FILE}
     done
 }
@@ -169,7 +177,7 @@ stackfyNetwork() {
 
 stackfyFileNames() {
     local DIR=${OUTDIR}/${1}
-    for SRC in ${DIR}/*.log; do
+    for SRC in "${DIR}"/*.log; do
         NAME=$(basename ${SRC})
         mv ${SRC} ${DIR}/k8s-${NAME}
     done
