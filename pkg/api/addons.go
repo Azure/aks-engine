@@ -419,20 +419,24 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AntreaControllerContainerName,
-				Image: k8sComponents[common.AntreaControllerContainerName],
+				Name:        common.AntreaControllerContainerName,
+				Image:       k8sComponents[common.AntreaControllerContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaAgentContainerName,
-				Image: k8sComponents[common.AntreaAgentContainerName],
+				Name:        common.AntreaAgentContainerName,
+				Image:       k8sComponents[common.AntreaAgentContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaOVSContainerName,
-				Image: k8sComponents[common.AntreaOVSContainerName],
+				Name:        common.AntreaOVSContainerName,
+				Image:       k8sComponents[common.AntreaOVSContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaInstallCNIContainerName,
-				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
+				Name:        common.AntreaInstallCNIContainerName,
+				Image:       k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
+				CPURequests: "100m",
 			},
 		},
 	}

@@ -26184,6 +26184,7 @@ kind: RoleBinding
 metadata:
   labels:
     app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: antrea-controller-authentication-reader
   namespace: kube-system
 roleRef:
@@ -26412,7 +26413,7 @@ spec:
           timeoutSeconds: 5
         resources:
           requests:
-            cpu: 200m
+            cpu: {{ContainerCPUReqs "antrea-controller"}}
         volumeMounts:
         - mountPath: /etc/antrea/antrea-controller.conf
           name: antrea-config
@@ -26544,7 +26545,7 @@ spec:
           timeoutSeconds: 5
         resources:
           requests:
-            cpu: 200m
+            cpu: {{ContainerCPUReqs "antrea-agent"}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -26585,7 +26586,7 @@ spec:
         name: antrea-ovs
         resources:
           requests:
-            cpu: 200m
+            cpu: {{ContainerCPUReqs "antrea-ovs"}}
         securityContext:
           capabilities:
             add:
@@ -26609,7 +26610,7 @@ spec:
         command: [{{ContainerConfig "installCniCmd"}}]
         resources:
           requests:
-            cpu: 100m
+            cpu: {{ContainerCPUReqs "install-cni"}}
         securityContext:
           capabilities:
             add:
