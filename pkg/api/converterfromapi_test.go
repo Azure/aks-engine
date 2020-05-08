@@ -548,7 +548,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.1.1",
+					AzureCNIVersion:                 "1.1.2",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
