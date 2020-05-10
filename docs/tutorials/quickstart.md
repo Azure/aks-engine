@@ -235,7 +235,7 @@ Now we can deploy the files `azuredeploy.json` and `azuredeploy.parameters.json`
 Using the CLI:
 
 ```console
-$ az deployment group create \
+$ az group deployment create \
     --name "contoso-apple-k8s" \
     --resource-group "contoso-apple-5eac6ed8" \
     --template-file "./_output/contoso-apple-5eac6ed8/azuredeploy.json" \
