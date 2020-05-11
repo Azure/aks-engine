@@ -4,7 +4,7 @@
 - [Using SGX with Kubernetes](#using-sgx-with-kubernetes)
   - [Deploy a Kubernetes Cluster](#deploy-a-kubernetes-cluster)
   - [Running a SGX-enabled container](#running-a-sgx-enabled-container)
-  - [OPTIONAL: Using sgx device plugin](#optional-using-sgx-device-plugin)
+  - [Deploying the sgx device plugin](#deploying-the-sgx-device-plugin)
     - [Device plugin installation](#device-plugin-installation)
       - [Running on Azure](#running-on-azure)
       - [Running outside Azure](#running-outside-azure)
@@ -76,9 +76,9 @@ spec:
       type: CharDevice
 ```
 
-## OPTIONAL: Using sgx device plugin
+## Deploying the sgx device plugin
 
-Alternatively, you can install the sgx device plugin (alpha) which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the Open Enclave SDK onto hardware which supports Trusted Execution Environments.
+You can install the sgx device plugin which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the Open Enclave SDK onto hardware which supports Trusted Execution Environments.
 
 ### Device plugin installation
 
