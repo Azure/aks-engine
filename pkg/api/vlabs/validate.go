@@ -173,7 +173,7 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateWindowsProfile(); e != nil {
+	if e := a.validateWindowsProfile(isUpdate); e != nil {
 		return e
 	}
 	return nil
@@ -1146,7 +1146,7 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 	return nil
 }
 
-func (a *Properties) validateWindowsProfile() error {
+func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 	hasWindowsAgentPools := false
 	for _, profile := range a.AgentPoolProfiles {
 		if profile.OSType == Windows {
@@ -1176,7 +1176,7 @@ func (a *Properties) validateWindowsProfile() error {
 			false,
 			true)
 
-		if version == "" {
+		if version == "" && !isUpdate {
 			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
 		}
 	default:
