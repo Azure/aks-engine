@@ -82,7 +82,7 @@ kubectl get pods -n kube-system
 | Name           | Required | Description                       | Default Value                                                                 |
 | -------------- | -------- | --------------------------------- | ----------------------------------------------------------------------------- |
 | name           | no       | container name                    | "azure-policy"                                                                |
-| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200227.1" |
+| image          | no       | image                             | "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1" |
 | cpuRequests    | no       | cpu requests for the container    | "30m"                                                                         |
 | memoryRequests | no       | memory requests for the container | "50Mi"                                                                        |
 | cpuLimits      | no       | cpu limits for the container      | "100m"                                                                        |
@@ -93,7 +93,7 @@ kubectl get pods -n kube-system
 | Name           | Required | Description                       | Default Value                                        |
 | -------------- | -------- | --------------------------------- | ---------------------------------------------------- |
 | name           | no       | container name                    | "gatekeeper"                                         |
-| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.7-hotfix.20200327" |
+| image          | no       | image                             | "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.8" |
 | cpuRequests    | no       | cpu requests for the container    | "100m"                                               |
 | memoryRequests | no       | memory requests for the container | "256Mi"                                              |
 | cpuLimits      | no       | cpu limits for the container      | "1000m"                                              |
