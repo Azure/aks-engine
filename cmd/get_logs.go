@@ -130,6 +130,15 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	if glc.cs, _, err = apiloader.LoadContainerServiceFromFile(glc.apiModelPath, false, false, nil); err != nil {
 		return errors.Wrap(err, "error parsing api-model")
 	}
+	if glc.cs.Properties.IsCustomCloudProfile() {
+		if err = writeCustomCloudProfile(glc.cs); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
+		if err = glc.cs.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+	}
+
 	if glc.cs.Location == "" {
 		glc.cs.Location = glc.location
 	} else if glc.cs.Location != glc.location {
@@ -184,6 +193,7 @@ func (glc *getLogsCmd) run() (err error) {
 			log.Warnf("Error: %s", err)
 		}
 	}
+	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	return nil
 }
 
@@ -217,7 +227,6 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}
 	}
-	log.Debugf("Logs downloaded to %s", glc.outputDirectory)
 	return nil
 }
 
@@ -280,10 +289,10 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 	if isLinuxNode(node) {
 		if glc.linuxScriptPath != "" {
 			script = "/tmp/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; sudo %s; rm %s\"", script, script, script)
+			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; export AZURE_ENV=%s; sudo -E %s; rm %s\"", script, glc.getCloudName(), script, script)
 		} else {
 			script = "/opt/azure/containers/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo %s\"", script)
+			cmd = fmt.Sprintf("bash -c \"export AZURE_ENV=%s; sudo -E %s\"", glc.getCloudName(), script)
 		}
 	} else {
 		script = "c:\\k\\debug\\collect-windows-logs.ps1"
@@ -333,6 +342,7 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 		return "", errors.Wrap(err, "downloading logs")
 	}
 
+	fmt.Println("")
 	return "", nil
 }
 
@@ -342,6 +352,13 @@ func isLinuxNode(node v1.Node) bool {
 
 func isWindowsNode(node v1.Node) bool {
 	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows")
+}
+
+func (glc *getLogsCmd) getCloudName() string {
+	if glc.cs.Properties.IsAzureStackCloud() {
+		return "AzureStackCloud"
+	}
+	return ""
 }
 
 type DownloadProgressWriter struct {
