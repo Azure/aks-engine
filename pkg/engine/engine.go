@@ -808,6 +808,9 @@ func getAddonFuncMap(addon api.KubernetesAddon, cs *api.ContainerService) templa
 		"GetAADPodIdentityTaintKey": func() string {
 			return common.AADPodIdentityTaintKey
 		},
+		"GetMode": func() string {
+			return addon.Mode
+		},
 	}
 }
 
