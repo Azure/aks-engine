@@ -301,6 +301,7 @@ const (
 )
 
 const WindowsArtifactComponentName = "windowszip"
+const WindowsArtifactAzsComponentName = ""
 
 const (
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
