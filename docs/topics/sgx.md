@@ -1,11 +1,14 @@
 # Using SGX with Kubernetes
 
 <!-- TOC -->
-- [Deploy a Kubernetes Cluster](#deploy-a-kubernetes-cluster)
-- [Running a SGX-enabled container](#running-a-sgx-enabled-container)
-- [OPTIONAL: Using oe-sgx device plugin (alpha)](#optional-using-sgx-device-plugin-alpha)
-   - [Device plugin installation](#device-plugin-installation)
-   - [Scheduling Pods to TEE enabled Hardware](#scheduling-pods-to-tee-enabled-hardware)
+- [Using SGX with Kubernetes](#using-sgx-with-kubernetes)
+  - [Deploy a Kubernetes Cluster](#deploy-a-kubernetes-cluster)
+  - [Running a SGX-enabled container](#running-a-sgx-enabled-container)
+  - [OPTIONAL: Using sgx device plugin](#optional-using-sgx-device-plugin)
+    - [Device plugin installation](#device-plugin-installation)
+      - [Running on Azure](#running-on-azure)
+      - [Running outside Azure](#running-outside-azure)
+    - [Scheduling Pods to TEE enabled Hardware](#scheduling-pods-to-tee-enabled-hardware)
 <!-- /TOC -->
 
 [Intel&reg; Secure Guard Extension](https://software.intel.com/en-us/sgx) (Intel&reg; SGX) is an architecture extension designed to increase the security of application code and data.
@@ -73,14 +76,19 @@ spec:
       type: CharDevice
 ```
 
-## OPTIONAL: Using sgx device plugin (alpha)
+## OPTIONAL: Using sgx device plugin
 
 Alternatively, you can install the sgx device plugin (alpha) which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the Open Enclave SDK onto hardware which supports Trusted Execution Environments.
 
 ### Device plugin installation
 
 #### Running on Azure
-If you are deploying your cluster on Azure, you can leverage the `node.kubernetes.io/instance-type` label in your node selector rules to target only the [DCv2-series](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) nodes - 
+
+*NOTE: For kubernetes versions before v1.17, replace 
+1. `node.kubernetes.io/instance-type` -> `beta.kubernetes.io/instance-type`
+2. `kubernetes.io/os` -> `beta.kubernetes.io/os`
+
+If you are deploying your cluster on Azure, you can leverage the `node.kubernetes.io/instance-type` label in your node selector rules to target only the [DCsv2-series](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) nodes - 
 
 ```yaml
 nodeAffinity:
@@ -92,9 +100,9 @@ nodeAffinity:
         values:
         - Standard_DC2s
         - Standard_DC4s
-        - Standard_DCs1_v2
-        - Standard_DCs2_v2
-        - Standard_DCs4_v2
+        - Standard_DC1s_v2
+        - Standard_DC2s_v2
+        - Standard_DC4s_v2
         - Standard_DC8_v2
 ```
 Using kubectl, install the device plugin DaemonSet:
@@ -126,9 +134,9 @@ spec:
                 values:
                 - Standard_DC2s
                 - Standard_DC4s
-                - Standard_DCs1_v2
-                - Standard_DCs2_v2
-                - Standard_DCs4_v2
+                - Standard_DC1s_v2
+                - Standard_DC2s_v2
+                - Standard_DC4s_v2
                 - Standard_DC8_v2
               - key: kubernetes.io/os
                 operator: In
@@ -136,7 +144,7 @@ spec:
                 - linux 
       containers:
       - name: sgx-device-plugin
-        image: mcr.microsoft.com/aks/acc/sgx-device-plugin:latest
+        image: mcr.microsoft.com/aks/acc/sgx-device-plugin:1.0
         imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: device-plugin
@@ -153,7 +161,6 @@ spec:
         hostPath:
           path: /dev/sgx
 ```
-
 #### Running outside Azure
 We recommend labelling the nodes so that a nodeSelector can be used to run the device plugin only on the nodes that support Intel SGX based Trusted Execution Environments. Use the following command to apply the appropriate labels to the Intel SGX enabled nodes:
 
@@ -208,7 +215,7 @@ spec:
         tee: sgx
 ```
 
-Confirm that the DaemonSet pods are running on each IntelSGX enabled node as follows:
+Confirm that the DaemonSet pods are running on each Intel SGX enabled node as follows:
 
 ```bash
 $ kubectl get pods -n kube-system -l app=sgx-device-plugin
