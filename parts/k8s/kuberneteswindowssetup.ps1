@@ -353,7 +353,7 @@ try
                 -KubeClusterCIDR $global:KubeClusterCIDR `
                 -MasterSubnet $global:MasterSubnet `
                 -KubeServiceCIDR $global:KubeServiceCIDR `
-                -VNetCIDR $global:VNetCIDR{{if IsAzureStackCloud}} -TargetEnvironment $TargetEnvironment{{end}}
+                -VNetCIDR $global:VNetCIDR -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `

@@ -39327,7 +39327,7 @@ try
                 -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
                 -MasterSubnet $global:MasterSubnet ` + "`" + `
                 -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
-                -VNetCIDR $global:VNetCIDR{{if IsAzureStackCloud}} -TargetEnvironment $TargetEnvironment{{end}}
+                -VNetCIDR $global:VNetCIDR -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig ` + "`" + `
@@ -39798,8 +39798,8 @@ Set-AzureCNIConfig
         $KubeServiceCIDR,
         [Parameter(Mandatory=$true)][string]
         $VNetCIDR,
-        [Parameter(Mandatory=$false)][string]
-        $TargetEnvironment
+        [Parameter(Mandatory=$true)][bool]
+        $IsAzureStack
     )
     # Fill in DNS information for kubernetes.
     $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
@@ -39825,7 +39825,7 @@ Set-AzureCNIConfig
 
     $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
 
-    if ($TargetEnvironment -ieq "AzureStackCloud") {
+    if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
     }
 
