@@ -68,7 +68,7 @@ Set-AzureCNIConfig
         $KubeServiceCIDR,
         [Parameter(Mandatory=$true)][string]
         $VNetCIDR,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory=$false)][string]
         $TargetEnvironment
     )
     # Fill in DNS information for kubernetes.
