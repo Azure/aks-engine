@@ -39327,11 +39327,9 @@ try
                 -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
                 -MasterSubnet $global:MasterSubnet ` + "`" + `
                 -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
-                -VNetCIDR $global:VNetCIDR ` + "`" + `
-{{- if IsAzureStackCloud}}
-                -TargetEnvironment $TargetEnvironment
-{{end}}
-            if ($TargetEnvironment -ieq "AzureStackCloud") {
+                -VNetCIDR $global:VNetCIDR{{if IsAzureStackCloud}} -TargetEnvironment $TargetEnvironment{{end}}
+
+                if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig ` + "`" + `
                     -TenantId $global:TenantId ` + "`" + `
                     -SubscriptionId $global:SubscriptionId ` + "`" + `
