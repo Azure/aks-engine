@@ -261,3 +261,4 @@ Now you're ready to start using your Kubernetes cluster with `kubectl`!
 [homebrew-install]: https://brew.sh/#install
 [scale]: ../topics/scale.md
 [sp]: ../topics/service-principals.md
+[upgrade]: ../topics/upgrade.md
