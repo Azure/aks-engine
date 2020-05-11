@@ -39328,6 +39328,7 @@ try
                 -MasterSubnet $global:MasterSubnet ` + "`" + `
                 -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
                 -VNetCIDR $global:VNetCIDR ` + "`" + `
+                {{- /* Azure Stack has discrete Azure CNI config requirements */}}
                 -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
