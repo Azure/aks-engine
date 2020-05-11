@@ -89,7 +89,7 @@ func assignKubernetesParameters(properties *api.Properties, parametersMap params
 				kubeBinariesSASURL := kubernetesConfig.CustomWindowsPackageURL
 				if kubeBinariesSASURL == "" {
 					if properties.IsAzureStackCloud() {
-						kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents[common.WindowsArtifactAzsComponentName]
+						kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents[common.WindowsArtifactAzureStackComponentName]
 					} else {
 						kubeBinariesSASURL = cloudSpecConfig.KubernetesSpecConfig.KubeBinariesSASURLBase + k8sComponents[common.WindowsArtifactComponentName]
 					}
