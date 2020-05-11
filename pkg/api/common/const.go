@@ -381,7 +381,3 @@ const (
 	// AADPodIdentityTaintKey is the node taint key for AAD Pod Identity-enabled clusters before NMI daemonset is ready
 	AADPodIdentityTaintKey string = "node.kubernetes.io/aad-pod-identity-not-ready"
 )
-
-const (
-	DefaultKubeReservedCgroup string = "system"
-)

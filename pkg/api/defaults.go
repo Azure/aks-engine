@@ -434,10 +434,6 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			o.KubernetesConfig.ContainerRuntimeConfig = make(map[string]string)
 		}
 
-		if o.KubernetesConfig.KubeReservedCgroup == "" {
-			o.KubernetesConfig.KubeReservedCgroup = "kubereserved"
-		}
-
 		// Master-specific defaults that depend upon OrchestratorProfile defaults
 		if cs.Properties.MasterProfile != nil {
 			if !cs.Properties.MasterProfile.IsCustomVNET() {
