@@ -23,7 +23,6 @@
 			"orchestratorProfile": {
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
-					"kubeReservedCgroup": "kubesystem",
 					"containerRuntimeConfig": {
 						"dataDir": "/mnt/docker"
 					},
