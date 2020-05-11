@@ -28,7 +28,7 @@ const (
 	antreaAgentImageReference                                = antreaControllerImageReference
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
-	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.0.33"
+	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.1.2"
 	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
 	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1"
