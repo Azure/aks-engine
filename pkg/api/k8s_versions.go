@@ -1140,7 +1140,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 			"ratelimitbucketwrite":                            strconv.Itoa(DefaultKubernetesCloudProviderRateLimitBucketWrite),
 			"gchighthreshold":                                 strconv.Itoa(DefaultKubernetesGCHighThreshold),
 			"gclowthreshold":                                  strconv.Itoa(DefaultKubernetesGCLowThreshold),
-			common.NVIDIADevicePluginAddonName:                "k8s-device-plugin:1.10",
+			common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		}
 	case "1.9":
 		ret = map[string]string{

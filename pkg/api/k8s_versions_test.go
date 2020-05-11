@@ -676,7 +676,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 		common.ACIConnectorAddonName:                      virtualKubeletImageReference,
 		common.AzureCNINetworkMonitorAddonName:            azureCNINetworkMonitorImageReference,
 		common.ClusterAutoscalerAddonName:                 k8sComponent[common.ClusterAutoscalerAddonName],
-		common.NVIDIADevicePluginAddonName:                "k8s-device-plugin:1.10",
+		common.NVIDIADevicePluginAddonName:                nvidiaDevicePluginImageReference,
 		common.DNSSidecarComponentName:                    k8sComponent[common.DNSSidecarComponentName],
 		common.BlobfuseFlexVolumeAddonName:                blobfuseFlexVolumeImageReference,
 		common.SMBFlexVolumeAddonName:                     smbFlexVolumeImageReference,
