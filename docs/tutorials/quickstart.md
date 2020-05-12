@@ -19,7 +19,7 @@ You can also choose to install the `aks-engine` binary using [gofish][gofish-abo
 
 On macOS, you can install the `aks-engine` binary with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following these [instructions][homebrew-install].
 
-On Windows, you can install `aks-engine.exe` via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following these [instructions][choco-install].
+On Windows, you can install `aks-engine.exe` via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following these [instructions][choco-install]. You can also install `aks-engine.exe` via [Scoop][scoop] by executing the command `scoop install aks-engine`. You can install Scoop following these [instructions][scoop-install].
 
 On Linux, if you prefer, you can install the `aks-engine` binary via install script doing:
 ```bash
@@ -260,5 +260,7 @@ Now you're ready to start using your Kubernetes cluster with `kubectl`!
 [homebrew]: https://brew.sh/
 [homebrew-install]: https://brew.sh/#install
 [scale]: ../topics/scale.md
+[scoop]: https://scoop.sh/
+[scoop-install]: https://github.com/lukesampson/scoop#installation
 [sp]: ../topics/service-principals.md
 [upgrade]: ../topics/upgrade.md
