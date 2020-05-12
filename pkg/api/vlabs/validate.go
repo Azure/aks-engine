@@ -1173,10 +1173,10 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 			o.OrchestratorType,
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
-			false,
+			isUpdate,
 			true)
 
-		if version == "" && !isUpdate {
+		if version == "" {
 			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
 		}
 	default:
