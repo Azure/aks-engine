@@ -1,8 +1,8 @@
 {
   "planId": "{{ID}}",
-  "microsoft-azure-corevm.skuTitle": "Windows K8s base image, {{MONTH-YEAR}}",
-  "microsoft-azure-corevm.skuSummary": "Windows K8s base image, {{MONTH-YEAR}}",
-  "microsoft-azure-corevm.skuLongSummary": "Windows K8s base image, {{MONTH-YEAR}}",
+  "microsoft-azure-corevm.skuTitle": "Windows K8s base image - {{CONTAINER_RUNTIME}}, {{MONTH-YEAR}}",
+  "microsoft-azure-corevm.skuSummary": "Windows K8s base image - {{CONTAINER_RUNTIME}}, {{MONTH-YEAR}}",
+  "microsoft-azure-corevm.skuLongSummary": "Windows K8s base image - {{CONTAINER_RUNTIME}}, {{MONTH-YEAR}}",
   "microsoft-azure-corevm.hideSKUForSolutionTemplate": true,
   "microsoft-azure-corevm.hardened": false,
   "microsoft-azure-corevm.deploymentModels": [
