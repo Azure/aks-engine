@@ -83,8 +83,15 @@ function Get-FilesToCacheOnVHD
             $global:containerdPackageUrl
         );
         "c:\akse-cache\win-k8s\" = @(
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.7-1int.zip",
-            "https://acs-mirror.azureedge.net/wink8s/azs-v1.14.8-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.7-azs/windowszip/v1.14.7-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.8-azs/windowszip/v1.14.8-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10-azs/windowszip/v1.15.10-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.11-azs/windowszip/v1.15.11-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.12-azs/windowszip/v1.15.12-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.8-azs/windowszip/v1.16.8-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.9-azs/windowszip/v1.16.9-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.4-azs/windowszip/v1.17.4-azs-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.5-azs/windowszip/v1.17.5-azs-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.7/windowszip/v1.14.7-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.14.8/windowszip/v1.14.8-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.15.10/windowszip/v1.15.10-1int.zip",
