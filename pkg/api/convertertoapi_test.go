@@ -146,6 +146,14 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 				WindowsSdnPluginURL: "http://test/testsdnplugin.tar.gz",
 			},
 		},
+		"KubeReservedCgroup": {
+			props: &vlabs.KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+			expect: &KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+		},
 	}
 
 	for name, test := range tests {

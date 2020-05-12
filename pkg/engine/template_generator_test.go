@@ -190,6 +190,8 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedHasClusterInitComponent       bool
 		expectedIsVirtualMachineScaleSets     bool
 		expectedUseManagedIdentity            bool
+		expectedHasKubeReservedCgroup         bool
+		expectedGetKubeReservedCgroup         string
 	}{
 		{
 			name: "1.15 release",
@@ -822,6 +824,45 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
     net.ipv4.tcp_max_syn_backlog = 16384
     net.ipv4.tcp_retries2 = 8`,
 		},
+		{
+			name: "1.17 release w/ kube-reserved cgroup",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.17.0-beta.1",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							KubeReservedCgroup:      "kubereserved",
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+							Distro:              api.AKSUbuntu1604,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedHasVHDDistroNodes:            true,
+			expectedIsVHDDistroForAllNodes:       true,
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedHasKubeReservedCgroup:        true,
+			expectedGetKubeReservedCgroup:        "kubereserved",
+		},
 	}
 
 	for _, c := range cases {
@@ -956,6 +997,16 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedUseManagedIdentity {
 				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %t, instead got %t", c.expectedUseManagedIdentity, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["HasKubeReservedCgroup"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasKubeReservedCgroup {
+				t.Errorf("expected funcMap invocation of HasKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetKubeReservedCgroup"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedGetKubeReservedCgroup {
+				t.Errorf("expected funcMap invocation of GetKubeReservedCgroup to return %t, instead got %t", c.expectedIsDockerContainerRuntime, ret[0].Interface())
 			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsVirtualMachineScaleSets"])
