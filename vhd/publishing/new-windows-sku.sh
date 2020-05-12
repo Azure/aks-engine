@@ -8,6 +8,7 @@ required_env_vars=(
     "AZURE_CLIENT_SECRET"
     "PUBLISHER"
     "OFFER"
+    "CONTAINER_RUNTIME"
 )
 
 for v in "${required_env_vars[@]}"
@@ -28,7 +29,7 @@ pretty_date=$(date +"%b %Y")
 
 sku_id="${SKU_PREFIX}-${short_date}"
 
-< $SKU_TEMPLATE_FILE sed s/{{ID}}/"$sku_id"/ | sed s/{{MONTH-YEAR}}/"$pretty_date/" > sku.json
+< $SKU_TEMPLATE_FILE sed s/{{ID}}/"$sku_id"/ | sed s/{{MONTH-YEAR}}/"$pretty_date/" | sed s/{{CONTAINER_RUNTIME}}/"$CONTAINER_RUNTIME/" > sku.json
 cat sku.json
 
 echo "Creating new SKU"
