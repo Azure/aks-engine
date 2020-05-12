@@ -7,7 +7,9 @@
                 "orchestratorType": "Kubernetes",
                 "kubernetesConfig": {
                     "networkPlugin": "azure",
-                    "containerRuntime": "containerd"
+                    "containerRuntime": "containerd",
+                    "windowsContainerdURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip",
+                    "windowsSdnPluginURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
                 }
             },
             "masterProfile": {
@@ -22,6 +24,15 @@
                     "vmSize": "Standard_D2_v3",
                     "availabilityProfile": "VirtualMachineScaleSets",
                     "scalesetPriority": "Spot"
+                },
+                {
+                    "name": "poolwin",
+                    "count": 2,
+                    "vmSize": "Standard_D2_v3",
+                    "osType": "Windows",
+                    "OSDiskSizeGB": 200,
+                    "availabilityProfile": "VirtualMachineScaleSets",
+                    "scalesetPriority": "Spot"
                 }
             ],
             "linuxProfile": {
@@ -33,6 +44,16 @@
                         }
                     ]
                 }
+            },
+            "windowsProfile": {
+                "adminUsername": "azureuser",
+                "adminPassword": "replacepassword1234$",
+                "enableAutomaticUpdates": false,
+                "sshEnabled": true,
+                "windowsPublisher": "microsoft-aks",
+                "windowsOffer": "aks-windows",
+                "windowsSku": "2019-datacenter-core-smalldisk-containerd-2005",
+                "imageVersion": "latest"
             }
         }
     }
