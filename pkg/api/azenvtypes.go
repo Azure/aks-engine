@@ -89,7 +89,7 @@ var (
 		KubernetesImageBase:              "k8s.gcr.io/",
 		TillerImageBase:                  "mcr.microsoft.com/",
 		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "nvidia/",
+		NVIDIAImageBase:                  "mcr.microsoft.com/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
 		MCRKubernetesImageBase:           "mcr.microsoft.com/",
