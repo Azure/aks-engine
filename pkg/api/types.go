@@ -449,6 +449,7 @@ type KubernetesConfig struct {
 	APIServerConfig                   map[string]string `json:"apiServerConfig,omitempty"`
 	SchedulerConfig                   map[string]string `json:"schedulerConfig,omitempty"`
 	PodSecurityPolicyConfig           map[string]string `json:"podSecurityPolicyConfig,omitempty"` // Deprecated
+	KubeReservedCgroup                string            `json:"kubeReservedCgroup,omitempty"`
 	CloudProviderBackoffMode          string            `json:"cloudProviderBackoffMode"`
 	CloudProviderBackoff              *bool             `json:"cloudProviderBackoff,omitempty"`
 	CloudProviderBackoffRetries       int               `json:"cloudProviderBackoffRetries,omitempty"`
