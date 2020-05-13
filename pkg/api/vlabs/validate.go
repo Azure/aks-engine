@@ -1547,6 +1547,32 @@ func (k *KubernetesConfig) Validate(k8sVersion string, hasWindows, ipv6DualStack
 	if e := k.validateNetworkMode(); e != nil {
 		return e
 	}
+	return k.validateContainerRuntimeConfig()
+}
+
+func (k *KubernetesConfig) validateContainerRuntimeConfig() error {
+	if val, ok := k.ContainerRuntimeConfig[common.ContainerDataDirKey]; ok {
+		if val == "" {
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig.DataDir '%s' is invalid: must not be empty", val)
+		}
+		if !strings.HasPrefix(val, "/") {
+			return errors.Errorf("OrchestratorProfile.KubernetesConfig.ContainerRuntimeConfig.DataDir '%s' is invalid: must be absolute path", val)
+		}
+	}
+
+	// Validate base config here, and only allow predefined mutations to ensure invariant.
+	if k.ContainerRuntime == Containerd {
+		_, err := common.GetContainerdConfig(k.ContainerRuntimeConfig, nil)
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := common.GetDockerConfig(k.ContainerRuntimeConfig, nil)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
