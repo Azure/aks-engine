@@ -357,7 +357,8 @@ try
                 -MasterSubnet $global:MasterSubnet `
                 -KubeServiceCIDR $global:KubeServiceCIDR `
                 -VNetCIDR $global:VNetCIDR `
-                -TargetEnvironment $TargetEnvironment
+                {{- /* Azure Stack has discrete Azure CNI config requirements */}}
+                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `
@@ -411,7 +412,7 @@ try
         Out-File "c:\k\kubeletstart.ps1"
         (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
         Out-File "c:\k\kubeproxystart.ps1"
-        
+
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
