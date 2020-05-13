@@ -18,37 +18,43 @@ AKS-engine means in this context the VM ([Windows](https://docs.microsoft.com/az
 
 **Linux**
 
-On a Linux system you've to make sure that you export the proxy server configuration via environment variables. Most tools will leverage these environment variables and will automatically use them w/o additional configuration.
+On a Linux system you've to make sure that you export the proxy server configuration via environment variables. Most commandline tools will leverage these environment variables automatically w/o additional configuration.
 
-You can either set these environment variables in your current session, permanantly for a specific user in `~/.bashrc` or permanently for the whole system in `/etc/profile` (or in `/etc/environment`).
+You can either set these environment variables in your current session, persistent for a specific user in `~/.bashrc` or permanently for the whole system in `/etc/profile` (or in `/etc/environment`).
 
 ```bash
 export HTTP_PROXY=http://proxy:8888
 export HTTPS_PROXY=http://proxy:8888
 ```
 
-In case your proxy servers require authentication:
+In case your proxy servers require authentication, you've to set a username and a password like this:
 
 ```bash
 export HTTP_PROXY="http://usrname:passwrd@host:port"
 export HTTPS_PROXY="http://usrname:passwrd@host:port"
 ```
 
-And in case you want to exclude specific URLs and IP-addresses that do not not need a proxy you can use:
+> **Important!** Please keep in mind that these credentials are stored in plaintext and accessible for everyone on the system. Use either individual credentials per system or use a service-side authorization (e.g. for specific IPs) instead.
+
+In case you want to exclude specific URLs and IP-addresses that do not not need a proxy you can use:
 
 ```bash
 export NO_PROXY=master.hostname.example.com,<docker_registry_ip>,docker-registry.default.svc.cluster.local
 ```
 
-Setting these environment variables is required to use tools like `wget`, `curl` etc. and force them to use a proxy server.
+Setting these environment variables will automatically enable tools like `wget`, `curl` etc. to send their traffic through the configured proxy server. 
 
-To set the proxy server configuration permanently on a system it's recommended to write the configuration into a separate file in `/etc/profile.d`:
+> Some tools and services might require a specific, dedicated configuration.
+
+To set the proxy server configuration permanently on a system it's recommended to write the configuration into a separate file in `/etc/profile.d`.
+
+Here's an example how this can be achieved:
 
 ```bash
 echo "export http_proxy=http://host:port/" > /etc/profile.d/http_proxy.sh
 ```
 
-This will make the configuration persistent and will also survi
+This will make the configuration persistent. It will now survive a reboot of the os/machine.
 
 ***Windows***
 
