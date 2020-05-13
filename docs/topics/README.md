@@ -11,14 +11,24 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 - [Running Kubernetes in a hybrid environment](hybrid-environment.md)
 - [For Kubernetes Developers](kubernetes-developers.md)
 - [Kubernetes Walkthrough](kubernetes-walkthrough.md)
-- [Monitoring Kubernetes Clusters](monitoring.md)
-- [Scaling Kubernetes Clusters](scale.md)
 - [Service Principals](service-principals.md)
 - [Use Key Vault as the Source of Cluster Configuration Secrets](keyvault-secrets.md)
-- [Upgrading Kubernetes Clusters](upgrade.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
 - [Kubernetes Windows Walkthrough](windows.md)
 - [Using Intel&reg; SGX with Kubernetes](sgx.md)
+
+**Operations**
+
+- [Scaling Kubernetes Clusters](scale.md)
+- [Upgrading Kubernetes Clusters](upgrade.md)
+- [Monitoring Kubernetes Clusters](monitoring.md)
+
+**Azure Stack**
+
+Next using AKS-engine in Azure there are some specific considerations for Azure Stack:
+
+- [Azure Stack](azure-stack.md)
+- [Proxy Servers](proxy-servers.md)
 
 ## Community Material
 
