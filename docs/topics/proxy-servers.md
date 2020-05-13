@@ -1,6 +1,6 @@
-# AKS-Engine and proxy servers
+# AKS Engine and proxy servers
 
-Using AKS-engine on [Azure Stack](azure-stack.md) in connected and disconnected environments often times requires the use of a non-transparent proxy server. Non-transparent means that they're not part of the default route and have to be configured to be used.
+Using AKS engine on [Azure Stack](azure-stack.md) in connected and disconnected environments often times requires the use of a non-transparent proxy server. Non-transparent means that they're not part of the default route and have to be configured to be used.
 
 > Azure Stack Hub itself supports only _transparent_ proxy server setups today. This isn't relevant for the workload, as long as the workload (and it's components) can access the proxy server.
 
@@ -12,9 +12,9 @@ This document guides you through the different components and layers where you n
 
 What kind of egress traffic you can expect is documented here: [Control egress traffic for cluster nodes in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic). Even though the document is referring to AKS (in Azure) it gives you an idea what kind of traffic and requests you can expect.
 
-## AKS-engine
+## AKS engine
 
-AKS-engine means in this context the VM ([Windows](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-windows) or [Linux](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-linux)) that is used to run AKS-engine to deploy, scale and upgrade your Kubernetes cluster.
+AKS engine means in this context the VM ([Windows](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-windows) or [Linux](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-linux)) that is used to run AKS engine to deploy, scale and upgrade your Kubernetes cluster.
 
 **Linux**
 
