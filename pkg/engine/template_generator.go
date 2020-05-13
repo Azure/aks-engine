@@ -760,6 +760,12 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetTargetEnvironment": func() string {
 			return helpers.GetTargetEnv(cs.Location, cs.Properties.GetCustomCloudName())
 		},
+		"IsAKSCustomCloud": func() bool {
+			return cs.IsAKSCustomCloud()
+		},
+		"GetInitAKSCustomCloudFilepath": func() string {
+			return initAKSCustomCloudFilepath
+		},
 		"GetCustomCloudConfigCSEScriptFilepath": func() string {
 			return customCloudConfigCSEScriptFilepath
 		},

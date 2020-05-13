@@ -165,6 +165,10 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		}
 	}
 
+	if cs.IsAKSCustomCloud() {
+		cloudInitFiles["initAKSCustomCloud"] = getBase64EncodedGzippedCustomScript(initAKSCustomCloudScript, cs)
+	}
+
 	masterVars["cloudInitFiles"] = cloudInitFiles
 
 	blockOutboundInternet := cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet")
