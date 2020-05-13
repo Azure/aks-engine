@@ -25,7 +25,7 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 
 **Azure Stack**
 
-Next using AKS engine in Azure there are some specific considerations for Azure Stack:
+Next using AKS Engine in Azure there are some specific considerations for Azure Stack:
 
 - [Azure Stack](azure-stack.md)
 - [Proxy Servers](proxy-servers.md)
