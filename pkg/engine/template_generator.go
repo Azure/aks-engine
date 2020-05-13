@@ -950,13 +950,6 @@ func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) 
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
 }
 
-func generateUserAssignedIdentityClientIDParameterForWindows(isUserAssignedIdentity bool) string {
-	if isUserAssignedIdentity {
-		return "reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId"
-	}
-	return ""
-}
-
 func getDockerConfig(cs *api.ContainerService, hasGPU bool) (string, error) {
 	var overrides []func(*common.DockerConfig) error
 

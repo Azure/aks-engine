@@ -488,7 +488,7 @@ func TestCreateAgentVMSS(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -UserAssignedClientID ',,' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
+						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
 					},
 				},
 			},
@@ -513,92 +513,6 @@ func TestCreateAgentVMSS(t *testing.T) {
 	}
 
 	expected.Tags["resourceNameSuffix"] = to.StringPtr("[variables('winResourceNamePrefix')]")
-
-	diff = cmp.Diff(actual, expected)
-
-	if diff != "" {
-		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
-	}
-
-	// Test with windows and managed Identity
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = "fooAssignedID"
-
-	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
-
-	expectedCustomDataStr = getCustomDataFromJSON(tg.GetKubernetesWindowsNodeCustomDataJSONObject(cs, cs.Properties.AgentPoolProfiles[0]))
-
-	// Restore back to default
-	expected.DependsOn = []string{
-		"[variables('vnetID')]",
-	}
-	// Restore back to default
-	expected.VirtualMachineScaleSet.VirtualMachineScaleSetProperties.VirtualMachineProfile.NetworkProfile = &compute.VirtualMachineScaleSetNetworkProfile{
-		NetworkInterfaceConfigurations: &[]compute.VirtualMachineScaleSetNetworkConfiguration{
-			{
-				Name: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
-				VirtualMachineScaleSetNetworkConfigurationProperties: &compute.VirtualMachineScaleSetNetworkConfigurationProperties{
-					Primary:                     to.BoolPtr(true),
-					EnableAcceleratedNetworking: to.BoolPtr(true),
-					IPConfigurations:            getIPConfigs(to.StringPtr("/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"), false, false),
-				},
-			},
-		},
-	}
-
-	expected.VirtualMachineProfile.OsProfile = &compute.VirtualMachineScaleSetOSProfile{
-		AdminUsername:      to.StringPtr("[parameters('windowsAdminUsername')]"),
-		AdminPassword:      to.StringPtr("[parameters('windowsAdminPassword')]"),
-		CustomData:         to.StringPtr(expectedCustomDataStr),
-		ComputerNamePrefix: to.StringPtr("[variables('agentpool1VMNamePrefix')]"),
-		WindowsConfiguration: &compute.WindowsConfiguration{
-			EnableAutomaticUpdates: to.BoolPtr(cs.Properties.WindowsProfile.GetEnableWindowsUpdate()),
-		},
-	}
-
-	expected.VirtualMachineProfile.ExtensionProfile = &compute.VirtualMachineScaleSetExtensionProfile{
-		Extensions: &[]compute.VirtualMachineScaleSetExtension{
-			{
-				Name: to.StringPtr("vmssCSE"),
-				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
-					Publisher:               to.StringPtr("Microsoft.Compute"),
-					Type:                    to.StringPtr("CustomScriptExtension"),
-					TypeHandlerVersion:      to.StringPtr("1.8"),
-					AutoUpgradeMinorVersion: to.BoolPtr(true),
-					Settings:                map[string]interface{}{},
-					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -UserAssignedClientID ',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId,' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
-					},
-				},
-			},
-			{
-				Name: to.StringPtr("[concat(variables('agentpool1VMNamePrefix'), '-computeAksLinuxBilling')]"),
-				VirtualMachineScaleSetExtensionProperties: &compute.VirtualMachineScaleSetExtensionProperties{
-					Publisher:               to.StringPtr("Microsoft.AKS"),
-					Type:                    to.StringPtr("Compute.AKS-Engine.Windows.Billing"),
-					TypeHandlerVersion:      to.StringPtr("1.0"),
-					AutoUpgradeMinorVersion: to.BoolPtr(true),
-					Settings:                map[string]interface{}{},
-				},
-			},
-		},
-	}
-
-	expected.VirtualMachineProfile.StorageProfile.ImageReference = &compute.ImageReference{
-		Offer:     to.StringPtr("[parameters('agentWindowsOffer')]"),
-		Publisher: to.StringPtr("[parameters('agentWindowsPublisher')]"),
-		Sku:       to.StringPtr("[parameters('agentWindowsSku')]"),
-		Version:   to.StringPtr("[parameters('agentWindowsVersion')]"),
-	}
-
-	expected.Tags["resourceNameSuffix"] = to.StringPtr("[variables('winResourceNamePrefix')]")
-
-	expected.Identity = &compute.VirtualMachineScaleSetIdentity{
-		Type: compute.ResourceIdentityType("UserAssigned"),
-		UserAssignedIdentities: map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue{
-			"[variables('userAssignedIDReference')]": {},
-		},
-	}
 
 	diff = cmp.Diff(actual, expected)
 
@@ -608,8 +522,6 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	// Test with ipv6 dual stack enabled
 	cs.Properties.FeatureFlags = &api.FeatureFlags{EnableIPv6DualStack: true}
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
-	cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedID = ""
 	cs.Properties.AgentPoolProfiles[0].OSType = "Linux"
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
@@ -648,8 +560,6 @@ func TestCreateAgentVMSS(t *testing.T) {
 			},
 		},
 	}
-
-	diff = cmp.Diff(actual.VirtualMachineProfile.NetworkProfile, expected.VirtualMachineProfile.NetworkProfile)
 
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
@@ -888,7 +798,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 					AutoUpgradeMinorVersion: to.BoolPtr(true),
 					Settings:                map[string]interface{}{},
 					ProtectedSettings: map[string]interface{}{
-						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -UserAssignedClientID ',` + generateUserAssignedIdentityClientIDParameterForWindows(userAssignedIDEnabled) + `,' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
+						"commandToExecute": `[concat('echo %DATE%,%TIME%,%COMPUTERNAME% && powershell.exe -ExecutionPolicy Unrestricted -command "', '$arguments = ', variables('singleQuote'),'-MasterIP ',variables('kubernetesAPIServerIP'),' -KubeDnsServiceIp ',parameters('kubeDnsServiceIp'),' -MasterFQDNPrefix ',variables('masterFqdnPrefix'),' -Location ',variables('location'),' -TargetEnvironment ',parameters('targetEnvironment'),' -AgentKey ',parameters('clientPrivateKey'),' -AADClientId ',variables('servicePrincipalClientId'),' -AADClientSecret ',variables('singleQuote'),variables('singleQuote'),base64(variables('servicePrincipalClientSecret')),variables('singleQuote'),variables('singleQuote'),' -NetworkAPIVersion ',variables('apiVersionNetwork'),' ',variables('singleQuote'), ' ; ', variables('windowsCustomScriptSuffix'), '" > %SYSTEMDRIVE%\AzureData\CustomDataSetupScript.log 2>&1 ; exit $LASTEXITCODE')]`,
 					},
 				},
 			},

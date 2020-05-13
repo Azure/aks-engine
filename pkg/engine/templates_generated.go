@@ -38835,11 +38835,7 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $TargetEnvironment,
-
-    [parameter(Mandatory=$true)]
-    [ValidateNotNull()]
-    $UserAssignedClientID
+    $TargetEnvironment
 )
 
 # These globals will not change between nodes in the same cluster, so they are not
@@ -38894,6 +38890,7 @@ $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
+$global:UserAssignedClientID = "{{WrapAsVariable "userAssignedClientID"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
 
 $global:LoadBalancerSku = "{{WrapAsVariable "loadBalancerSku"}}"
@@ -39080,7 +39077,7 @@ try
             -PrimaryAvailabilitySetName $global:PrimaryAvailabilitySetName ` + "`" + `
             -PrimaryScaleSetName $global:PrimaryScaleSetName ` + "`" + `
             -UseManagedIdentityExtension $global:UseManagedIdentityExtension ` + "`" + `
-            -UserAssignedClientID $UserAssignedClientID ` + "`" + `
+            -UserAssignedClientID $global:UserAssignedClientID ` + "`" + `
             -UseInstanceMetadata $global:UseInstanceMetadata ` + "`" + `
             -LoadBalancerSku $global:LoadBalancerSku ` + "`" + `
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB ` + "`" + `
