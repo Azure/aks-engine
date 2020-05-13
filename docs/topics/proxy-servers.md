@@ -34,6 +34,12 @@ export HTTP_PROXY="http://usrname:passwrd@host:port"
 export HTTPS_PROXY="http://usrname:passwrd@host:port"
 ```
 
+And in case you want to exclude specific URLs and IP-addresses that do not not need a proxy you can use:
+
+```bash
+export NO_PROXY=master.hostname.example.com,<docker_registry_ip>,docker-registry.default.svc.cluster.local
+```
+
 Setting these environment variables is required to use tools like `wget`, `curl` etc. and force them to use a proxy server.
 
 To set the proxy server configuration permanently on a system it's recommended to write the configuration into a separate file in `/etc/profile.d`:
@@ -54,7 +60,7 @@ netsh winhttp set proxy <proxy>:<port>
 
 ## Cluster Nodes
 
-In your cluster you've to configure a proxy server on both, your worker nodes as well as your master nodes. This is required for example to use `apt` and even to use `docker pull` to download container images.
+In your cluster you've to configure a proxy server on both, your worker nodes as well as your master nodes. This is required for example to use `apt` and also for `docker pull` to download container images.
 
 You can use the same manual configuration for the proxy servers as described in the [AKS-engine](#aks-engine) section above. But that's a very static way to achieve that. A better way to dynamically configure your cluster nodes is using a Kubernetes [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) this will also take care of newly added nodes while scaling out your cluster.
 
