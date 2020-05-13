@@ -2,7 +2,7 @@
 
 Using AKS-engine on [Azure Stack](azure-stack.md) in connected and disconnected environments often times requires the use of a non-transparent proxy server. Non-transparent means that they're not part of the default route and have to be configured to be used.
 
-This document guides you through the different components and layers where you need to configure the proxy server.
+This document guides you through the different components and layers where you need to configure the proxy server. Considerations include:
 
 - [AKS-engine](#aks-engine)
 - [Cluster Nodes](#cluster-nodes)
@@ -21,19 +21,21 @@ export HTTP_PROXY=http://proxy:8888
 export HTTPS_PROXY=http://proxy:8888
 ```
 
+This is required to use tools like `wget`, `curl` etc.
+
 ***Windows***
+
+On Windows-based systems you have to use `netsh` to configure the proxy server:
 
 ```cmd
 netsh winhttp set proxy <proxy>:<port>
 ```
 
-This is required to use tools like `wget`, `curl` etc.
-
 ## Cluster Nodes
 
-In your cluster you've to configure a proxy server on both, your worker nodes as well as your master nodes.
+In your cluster you've to configure a proxy server on both, your worker nodes as well as your master nodes. This is required for example to use `apt` and even to use `docker pull` to download container images.
 
-You can use the same manual configuration for the proxy servers as described in the [AKS-engine](#aks-engine) section above. But that's a very static way to achieve that. A better way to dynamically configure your cluster nodes is using a Kubernetes [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/).
+You can use the same manual configuration for the proxy servers as described in the [AKS-engine](#aks-engine) section above. But that's a very static way to achieve that. A better way to dynamically configure your cluster nodes is using a Kubernetes [DaemonSet](https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/) this will also take care of newly added nodes while scaling out your cluster.
 
 **Linux**
 
