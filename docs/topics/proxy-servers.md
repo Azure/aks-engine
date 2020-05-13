@@ -1,6 +1,6 @@
 # AKS-Engine and proxy servers
 
-Using AKS-engine on [Azure Stack](azure-stack.md) in connected and disconnected environments often times requires the use of a non-transparent proxy server. Non-transparent means that they're not part of the default route and have to be configured to be used. 
+Using AKS-engine on [Azure Stack](azure-stack.md) in connected and disconnected environments often times requires the use of a non-transparent proxy server. Non-transparent means that they're not part of the default route and have to be configured to be used.
 
 > Azure Stack Hub itself supports only _transparent_ proxy server setups today. This isn't relevant for the workload, as long as the workload (and it's components) can access the proxy server.
 
@@ -12,11 +12,13 @@ This document guides you through the different components and layers where you n
 
 ## AKS-engine
 
-AKS-engine means in this context the VM ([Windows](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-windows) or [Linux](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-linux) that is used to run AKS-engine to deploy, scale and upgrade your Kubernetes cluster.
+AKS-engine means in this context the VM ([Windows](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-windows) or [Linux](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-linux)) that is used to run AKS-engine to deploy, scale and upgrade your Kubernetes cluster.
 
 **Linux**
 
-You've to make sure that you export the proxy server configuration via environment variables. You can either set it in your current session, permanantly for a specific user in `~/.bashrc` or permanently for the whole system in `/etc/profile` (or in `/etc/environment`).
+On a Linux system you've to make sure that you export the proxy server configuration via environment variables. Most tools will leverage these environment variables and will automatically use them w/o additional configuration.
+
+You can either set these environment variables in your current session, permanantly for a specific user in `~/.bashrc` or permanently for the whole system in `/etc/profile` (or in `/etc/environment`).
 
 ```bash
 export HTTP_PROXY=http://proxy:8888
@@ -30,13 +32,15 @@ export HTTP_PROXY="http://usrname:passwrd@host:port"
 export HTTPS_PROXY="http://usrname:passwrd@host:port"
 ```
 
-This is required to use tools like `wget`, `curl` etc. and force them to use a proxy server.
+Setting these environment variables is required to use tools like `wget`, `curl` etc. and force them to use a proxy server.
 
-To set the proxy server configuration permanently it's recommended to write the configuration into a separate file in `/etc/profile.d`:
+To set the proxy server configuration permanently on a system it's recommended to write the configuration into a separate file in `/etc/profile.d`:
 
 ```bash
 echo "export http_proxy=http://host:port/" > /etc/profile.d/http_proxy.sh
 ```
+
+This will make the configuration persistent and will also survi
 
 ***Windows***
 
@@ -104,7 +108,7 @@ export HTTPS_PROXY=http://proxy:8888
 
 Besides the system itself you might need to configure the proxy server for apt (aptitude) directly:
 
-* [Setting up apt-get to use a http-proxy](https://help.ubuntu.com/community/AptGet/Howto#Setting_up_apt-get_to_use_a_http-proxy)
+- [Setting up apt-get to use a http-proxy](https://help.ubuntu.com/community/AptGet/Howto#Setting_up_apt-get_to_use_a_http-proxy)
 
 **Windows**
 
