@@ -23,6 +23,7 @@ jobs:
       -e SKU_TEMPLATE_FILE=${SKU_TEMPLATE_FILE} \
       -e PUBLISHER=${PUBLISHER} \
       -e OFFER=${OFFER} \
+      -e CONTAINER_RUNTIME=${CONTAINER_RUNTIME} \
       ${DEIS_GO_DEV_IMAGE} ./vhd/publishing/new-windows-sku.sh
     displayName: Create a new marketplace SKU
   - task: PublishPipelineArtifact@1
