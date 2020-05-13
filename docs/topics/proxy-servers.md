@@ -10,6 +10,8 @@ This document guides you through the different components and layers where you n
 - [Cluster Nodes](#cluster-nodes)
 - [Pods](#pods)
 
+What kind of egress traffic you can expect is documented here: [Control egress traffic for cluster nodes in Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/limit-egress-traffic). Even though the document is referring to AKS (in Azure) it gives you an idea what kind of traffic and requests you can expect.
+
 ## AKS-engine
 
 AKS-engine means in this context the VM ([Windows](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-windows) or [Linux](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-deploy-linux)) that is used to run AKS-engine to deploy, scale and upgrade your Kubernetes cluster.
