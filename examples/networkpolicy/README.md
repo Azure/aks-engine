@@ -36,33 +36,6 @@ Once the template has been successfully deployed, following the [simple policy t
 
 > Note: `ping` (ICMP) traffic is blocked on the cluster by default.  Wherever `ping` is used in any tutorial substitute testing access with something like `wget -q --timeout=5 google.com -O -` instead.
 
-### Update guidance for clusters deployed by AKS Engine releases prior to 0.17.0
-Clusters deployed with calico networkPolicy enabled prior to `0.17.0` had calico `2.6.3` deployed, and a daemonset with an `updateStrategy` of `Ondelete`.
-
-AKS Engine releases starting with 0.17.0 now produce an addon manifest for calico in `/etc/kubernetes/addons/calico-daemonset.yaml` contaning calico 3.1.x, and an `updateStrategy` of `RollingUpdate`. Due to breaking changes introduced by calico 3, one must first migrate through calico `2.6.5` or a later 2.6.x release in order to migrate to calico 3.1.x. as described in the [calico kubernetes upgrade documentation](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/). The AKS Engine manifest for calico uses the [kubernetes API datastore, policy-only setup](https://docs.projectcalico.org/v3.1/getting-started/kubernetes/upgrade/upgrade#upgrading-an-installation-that-uses-the-kubernetes-api-datastore).
-
-1. To update to `2.6.5+` in preparation of an upgrade to 3.1.x as specified, edit `/etc/kubernetes/addons/calico-daemonset.yaml` on a master node, replacing `calico/node:v3.1.1` with `calico/node:v2.6.10` and `calico/cni:v3.1.1` with `calico/cni:v2.0.6`. Run `kubectl apply -f /etc/kubernetes/addons/calico-daemonset.yaml`.
-
-    Wait until all the pods in the daemonset get rotated and come up up-to-date, healthy and ready:
-
-    `YYYY-MM-DD HH:MM:SS.FFF [INFO][n] health.go 150: Overall health summary=&health.HealthReport{Live:true, Ready:true}`
-
-2. To complete the upgrade to 3.1.x, edit `/etc/kubernetes/addons/calico-daemonset.yaml` on the master node again, replacing `calico/node:v2.6.10` with `calico/node:v3.1.1` and `calico/cni:v2.0.6` with `calico/cni:v3.1.1`. Run `kubectl apply -f /etc/kubernetes/addons/calico-daemonset.yaml`.
-
-    Propagate this updated manifest to all master nodes in the cluster.
-
-3. Confirm that all the pods in the daemonset get rotated and come up healthy after finishing tasks logged by migrate.go:
-
-    ```
-    YYYY-MM-DD HH:MM:SS.FFF [INFO][n] startup.go 1044: Running migration
-    YYYY-MM-DD HH:MM:SS.FFF [INFO][n] migrate.go 842: Querying current v1 snapshot and converting to v3
-    [xxx]
-    YYYY-MM-DD HH:MM:SS.FFF [INFO][n] migrate.go 851: continue by upgrading your calico/node versions to Calico v3.1.x
-    YYYY-MM-DD HH:MM:SS.FFF [INFO][n] startup.go 1048: Migration successful
-    ```
-
-If you have any customized calico resource manifests, you must also follow the [conversion guide](https://docs.projectcalico.org/v3.0/getting-started/kubernetes/upgrade/convert) for these.
-
 ## Cilium
 
 The kubernetes-cilium deployment template enables Cilium networking and policies for the AKS Engine cluster via `"networkPolicy": "cilium"` or `"networkPlugin": "cilium"` being present inside the `kubernetesConfig`.
