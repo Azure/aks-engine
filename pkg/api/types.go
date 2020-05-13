@@ -88,6 +88,12 @@ type Properties struct {
 	FeatureFlags            *FeatureFlags            `json:"featureFlags,omitempty"`
 	CustomCloudProfile      *CustomCloudProfile      `json:"customCloudProfile,omitempty"`
 	TelemetryProfile        *TelemetryProfile        `json:"telemetryProfile,omitempty"`
+	CustomCloudEnv          *CustomCloudEnv          `json:"customCloudEnv,omitempty"`
+}
+
+// CustomCloudEnv represents the custom cloud env info of the AKS cluster.
+type CustomCloudEnv struct {
+	Name string `json:"Name,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
@@ -2195,6 +2201,12 @@ func (cs *ContainerService) IsAKSBillingEnabled() bool {
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
 func (cs *ContainerService) GetAzureProdFQDN() string {
 	return FormatProdFQDNByLocation(cs.Properties.MasterProfile.DNSPrefix, cs.Location, cs.Properties.GetCustomCloudName())
+}
+
+// IsAKSCustomCloud checks if it's in AKS custom cloud
+func (cs *ContainerService) IsAKSCustomCloud() bool {
+	return cs.Properties.CustomCloudEnv != nil &&
+		strings.EqualFold(cs.Properties.CustomCloudEnv.Name, "akscustom")
 }
 
 // ProvisionScriptParametersInput is the struct used to pass in Azure environment variables and secrets

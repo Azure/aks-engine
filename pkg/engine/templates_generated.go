@@ -180,6 +180,7 @@
 // ../../parts/k8s/cloud-init/artifacts/etcd.service
 // ../../parts/k8s/cloud-init/artifacts/generateproxycerts.sh
 // ../../parts/k8s/cloud-init/artifacts/health-monitor.sh
+// ../../parts/k8s/cloud-init/artifacts/init-aks-custom-cloud.sh
 // ../../parts/k8s/cloud-init/artifacts/kms.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.service
 // ../../parts/k8s/cloud-init/artifacts/kubelet-monitor.timer
@@ -38367,6 +38368,51 @@ func k8sCloudInitArtifactsHealthMonitorSh() (*asset, error) {
 	return a, nil
 }
 
+var _k8sCloudInitArtifactsInitAksCustomCloudSh = []byte(`#!/bin/bash
+mkdir -p /root/AzureCACertificates
+# http://168.63.129.16 is a constant for the host's wireserver endpoint
+certs=$(curl "http://168.63.129.16/machine?comp=acmspackage&type=cacertificates&ext=json")
+IFS_backup=$IFS
+IFS=$'\r\n'
+certNames=($(echo $certs | grep -oP '(?<=Name\": \")[^\"]*'))
+certBodies=($(echo $certs | grep -oP '(?<=CertBody\": \")[^\"]*'))
+for i in ${!certBodies[@]}; do
+    echo ${certBodies[$i]}  | sed 's/\\r\\n/\n/g' | sed 's/\\//g' > "/root/AzureCACertificates/$(echo ${certNames[$i]} | sed 's/.cer/.crt/g')"
+done
+IFS=$IFS_backup
+
+cp /root/AzureCACertificates/*.crt /usr/local/share/ca-certificates/
+update-ca-certificates
+
+# This copies the updated bundle to the location used by OpenSSL which is commonly used
+cp /etc/ssl/certs/ca-certificates.crt /usr/lib/ssl/cert.pem
+
+# This section creates a cron job to poll for refreshed CA certs daily
+# It can be removed if not needed or desired
+action=${1:-init}
+if [ $action == "ca-refresh" ]
+then
+    exit
+fi
+
+(crontab -l ; echo "0 19 * * * $0 ca-refresh") | crontab -
+`)
+
+func k8sCloudInitArtifactsInitAksCustomCloudShBytes() ([]byte, error) {
+	return _k8sCloudInitArtifactsInitAksCustomCloudSh, nil
+}
+
+func k8sCloudInitArtifactsInitAksCustomCloudSh() (*asset, error) {
+	bytes, err := k8sCloudInitArtifactsInitAksCustomCloudShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/init-aks-custom-cloud.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sCloudInitArtifactsKmsService = []byte(`[Unit]
 Description=azurekms
 Requires=docker.service
@@ -39909,6 +39955,15 @@ write_files:
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
+
+{{if IsAKSCustomCloud}}
+- path: {{GetInitAKSCustomCloudFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "initAKSCustomCloud"}}
 {{end}}
 
 - path: /etc/systemd/system/kubelet.service
@@ -47318,6 +47373,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/etcd.service":                                   k8sCloudInitArtifactsEtcdService,
 	"k8s/cloud-init/artifacts/generateproxycerts.sh":                          k8sCloudInitArtifactsGenerateproxycertsSh,
 	"k8s/cloud-init/artifacts/health-monitor.sh":                              k8sCloudInitArtifactsHealthMonitorSh,
+	"k8s/cloud-init/artifacts/init-aks-custom-cloud.sh":                       k8sCloudInitArtifactsInitAksCustomCloudSh,
 	"k8s/cloud-init/artifacts/kms.service":                                    k8sCloudInitArtifactsKmsService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.service":                        k8sCloudInitArtifactsKubeletMonitorService,
 	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                          k8sCloudInitArtifactsKubeletMonitorTimer,
@@ -47639,6 +47695,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"etcd.service":                              {k8sCloudInitArtifactsEtcdService, map[string]*bintree{}},
 				"generateproxycerts.sh":                     {k8sCloudInitArtifactsGenerateproxycertsSh, map[string]*bintree{}},
 				"health-monitor.sh":                         {k8sCloudInitArtifactsHealthMonitorSh, map[string]*bintree{}},
+				"init-aks-custom-cloud.sh":                  {k8sCloudInitArtifactsInitAksCustomCloudSh, map[string]*bintree{}},
 				"kms.service":                               {k8sCloudInitArtifactsKmsService, map[string]*bintree{}},
 				"kubelet-monitor.service":                   {k8sCloudInitArtifactsKubeletMonitorService, map[string]*bintree{}},
 				"kubelet-monitor.timer":                     {k8sCloudInitArtifactsKubeletMonitorTimer, map[string]*bintree{}},
