@@ -141,3 +141,4 @@ containers:
 - [Configure Docker to use a proxy server](https://docs.docker.com/network/proxy/) (Docker)
 - [Setting up apt-get to use a http-proxy](https://help.ubuntu.com/community/AptGet/Howto#Setting_up_apt-get_to_use_a_http-proxy) (Ubuntu Linux)
 - [How to set up proxy using http_proxy & https_proxy environment variable in Linux?](https://www.golinuxcloud.com/set-up-proxy-http-proxy-environment-variable/) (Linux)
+- [Proxies and Gatewaying](https://www.gnu.org/software/emacs/manual/html_node/url/Proxies.html) (GNU docs)
