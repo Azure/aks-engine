@@ -12,7 +12,7 @@ if mount | grep $MOUNTPOINT; then
   umount /dev/sdc1
 fi
 if ! grep "/dev/sdc1" /etc/fstab; then
-  echo "$PARTITION       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
+  echo "LABEL=etcd_disk       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
 fi
 if ! ls $PARTITION; then
   /sbin/sgdisk --new 1 $DISK
