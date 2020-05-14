@@ -94,11 +94,13 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 }
 
 func toImageConfigWindows(profile *api.WindowsProfile) api.AzureOSImageConfig {
-	if profile == nil {
-		return api.AKSWindowsServer2019OSImageConfig
-	} else if profile.WindowsOffer == api.WindowsServer2019OSImageConfig.ImageOffer && profile.WindowsPublisher == api.WindowsServer2019OSImageConfig.ImagePublisher && profile.WindowsSku == api.WindowsServer2019OSImageConfig.ImageSku {
-		return api.WindowsServer2019OSImageConfig
-	} else {
-		return api.AKSWindowsServer2019OSImageConfig
+	if profile != nil && profile.WindowsPublisher != api.AKSWindowsServer2019OSImageConfig.ImagePublisher {
+		return api.AzureOSImageConfig{
+			ImageOffer: profile.WindowsOffer,
+			ImageSku: profile.WindowsSku,
+			ImagePublisher: profile.WindowsPublisher,
+			ImageVersion: profile.ImageVersion,
+		}
 	}
+	return api.AKSWindowsServer2019OSImageConfig
 }
