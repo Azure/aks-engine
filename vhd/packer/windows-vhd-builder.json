@@ -83,6 +83,12 @@
             "destination": "c:\\akse-cache\\collect-windows-logs.ps1"
         },
         {
+            "type": "file",
+            "direction": "upload",
+            "source": "vhd/notice/notice.txt",
+            "destination": "c:\\NOTICE.txt"
+        },
+        {
             "elevated_user": "packer",
             "elevated_password": "{{.WinRMPassword}}",
             "environment_vars" : [
