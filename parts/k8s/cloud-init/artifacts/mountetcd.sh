@@ -4,8 +4,8 @@
 set -x
 ETCDDISK=""
 PARTITION=""
-for DISK in $(cat /proc/partitions | grep -o sd[a-z] | uniq); do
-  if ! cat /proc/partitions | grep "$DISK"1; then
+for DISK in $(grep -o -G "sd[a-z]" /proc/partitions | uniq); do
+  if ! grep "$DISK"1 /proc/partitions; then
     if [[ -n $PARTITION ]]; then
       exit 1
     fi
@@ -13,12 +13,10 @@ for DISK in $(cat /proc/partitions | grep -o sd[a-z] | uniq); do
     PARTITION=${ETCDDISK}1
   fi;
 done
-MOUNTPOINT=/var/lib/etcddisk
 udevadm settle
+MOUNTPOINT=/var/lib/etcddisk
 mkdir -p $MOUNTPOINT
-if mount | grep $MOUNTPOINT; then
-  umount $MOUNTPOINT
-fi
+umount $MOUNTPOINT
 if ! grep "$MOUNTPOINT" /etc/fstab; then
   echo "LABEL=etcd_disk       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
 fi
