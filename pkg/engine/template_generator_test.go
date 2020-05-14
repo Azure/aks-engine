@@ -1456,3 +1456,32 @@ func TestGenerateUserAssignedIdentityClientIDParameter(t *testing.T) {
 		})
 	}
 }
+
+func TestGenerateUserAssignedIdentityClientIDParameterForWindows(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		isUserAssignedIdentity bool
+		expected               string
+	}{
+		{
+			name:                   "enabled",
+			isUserAssignedIdentity: true,
+			expected:               "' -UserAssignedClientID ',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId,",
+		},
+		{
+			name:                   "disabled",
+			isUserAssignedIdentity: false,
+			expected:               "",
+		},
+	}
+
+	for _, c := range testCases {
+		c := c
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			if ret := generateUserAssignedIdentityClientIDParameterForWindows(c.isUserAssignedIdentity); ret != c.expected {
+				t.Fatalf("generateUserAssignedIdentityClientIDParameter(%t) returned %s, expected %s", c.isUserAssignedIdentity, ret, c.expected)
+			}
+		})
+	}
+}
