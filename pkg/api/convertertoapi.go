@@ -190,6 +190,7 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		api.ImageRef.Version = vlabs.ImageRef.Version
 	}
 	api.ImageVersion = vlabs.ImageVersion
+	api.ProvisioningScriptsPackageURL = vlabs.ProvisioningScriptsPackageURL
 	api.WindowsImageSourceURL = vlabs.WindowsImageSourceURL
 	api.WindowsPublisher = vlabs.WindowsPublisher
 	api.WindowsOffer = vlabs.WindowsOffer
