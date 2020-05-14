@@ -14,7 +14,7 @@ for DISK in $(grep -o -G "sd[a-z]" /proc/partitions | uniq); do
     PARTITION=${ETCDDISK}1
   fi;
 done
-if [[ -n $ETCDDISK ]]; then
+if [[ -z $ETCDDISK ]]; then
   exit 1
 fi
 MOUNTPOINT=/var/lib/etcddisk
