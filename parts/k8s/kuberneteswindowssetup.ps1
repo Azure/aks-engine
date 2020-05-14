@@ -143,7 +143,7 @@ $global:TelemetryKey = "{{WrapAsVariable "applicationInsightsKey" }}";
 $global:EnableCsiProxy = [System.Convert]::ToBoolean("{{WrapAsVariable "windowsEnableCSIProxy" }}");
 $global:CsiProxyUrl = "{{WrapAsVariable "windowsCSIProxyURL" }}";
 
-$global:ProvisioingScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
+$global:ProvisioningScriptsPackageUrl = "{{WrapAsVariable "windowsProvisioningScriptsPackageURL" }}";
 
 # Base64 representation of ZIP archive
 $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
@@ -241,6 +241,9 @@ try
 
         Write-Log "Create required data directories as needed"
         Initialize-DataDirectories
+
+        New-Item -ItemType Directory -Path "c:\k" -Force | Out-Null
+        Get-ProvisioningScripts
 
         Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
 
