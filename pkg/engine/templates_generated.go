@@ -35799,6 +35799,7 @@ var _k8sCloudInitArtifactsMountetcdSh = []byte(`#!/bin/bash
 set -x
 ETCDDISK=""
 PARTITION=""
+udevadm settle
 for DISK in $(grep -o -G "sd[a-z]" /proc/partitions | uniq); do
   if ! grep "$DISK"1 /proc/partitions; then
     if [[ -n $PARTITION ]]; then
@@ -35808,7 +35809,9 @@ for DISK in $(grep -o -G "sd[a-z]" /proc/partitions | uniq); do
     PARTITION=${ETCDDISK}1
   fi;
 done
-udevadm settle
+if [[ -n $ETCDDISK ]]; then
+  exit 1
+fi
 MOUNTPOINT=/var/lib/etcddisk
 mkdir -p $MOUNTPOINT
 umount $MOUNTPOINT
