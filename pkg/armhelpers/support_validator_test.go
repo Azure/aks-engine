@@ -123,14 +123,18 @@ func TestToImageConfigWindows(t *testing.T) {
 	imageConfig := toImageConfigWindows(&windowsProfile)
 
 	if imageConfig.ImageOffer != api.WindowsServer2019OSImageConfig.ImageOffer {
-		t.Fatal("could not convert windows profile to image config WindowsServer2019OSImageConfig")
+		t.Fatal("could not fetch windows profile as image config WindowsServer2019OSImageConfig")
 	}
 
-	windowsProfile = api.WindowsProfile{}
+	windowsProfile = api.WindowsProfile{
+		WindowsPublisher: api.AKSWindowsServer2019OSImageConfig.ImagePublisher,
+		WindowsOffer:     api.AKSWindowsServer2019OSImageConfig.ImageOffer,
+		WindowsSku:       api.AKSWindowsServer2019OSImageConfig.ImageSku,
+	}
 	imageConfig = toImageConfigWindows(&windowsProfile)
 
 	if imageConfig.ImageOffer != api.AKSWindowsServer2019OSImageConfig.ImageOffer {
-		t.Fatal("could not convert windows profile to image config AKSWindowsServer2019OSImageConfig")
+		t.Fatal("could not fetch windows profile as image config AKSWindowsServer2019OSImageConfig")
 	}
 
 }
