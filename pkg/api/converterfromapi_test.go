@@ -9,7 +9,6 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
-	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/google/go-cmp/cmp"
@@ -508,14 +507,11 @@ func getDefaultContainerService() *ContainerService {
 					ResourceGroup: "FooImageRefResourceGroup",
 				},
 				KubernetesConfig: &KubernetesConfig{
-					KubernetesImageBase: "quay.io",
-					ClusterSubnet:       "fooClusterSubnet",
-					NetworkPolicy:       "calico",
-					NetworkPlugin:       "azure-cni",
-					ContainerRuntime:    "docker",
-					ContainerRuntimeConfig: map[string]string{
-						common.ContainerDataDirKey: "/mnt/docker",
-					},
+					KubernetesImageBase:             "quay.io",
+					ClusterSubnet:                   "fooClusterSubnet",
+					NetworkPolicy:                   "calico",
+					NetworkPlugin:                   "azure-cni",
+					ContainerRuntime:                "docker",
 					MaxPods:                         3,
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
