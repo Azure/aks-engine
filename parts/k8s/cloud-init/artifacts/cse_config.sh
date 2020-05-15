@@ -98,6 +98,7 @@ configureEtcd() {
     done
   fi
 
+  chown -R etcd:etcd /var/lib/etcddisk
   systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
   for i in $(seq 1 600); do
     MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
