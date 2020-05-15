@@ -262,15 +262,14 @@ func TestK8sVars(t *testing.T) {
 	expectedMap["servicePrincipalClientSecret"] = "[parameters('servicePrincipalClientSecret')]"
 	expectedMap["useManagedIdentityExtension"] = "false"
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":              getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":       getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -413,15 +412,14 @@ func TestK8sVars(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":              getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":       getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -514,15 +512,14 @@ func TestK8sVars(t *testing.T) {
 		t.Fatal(err)
 	}
 	expectedMap["cloudInitFiles"] = map[string]interface{}{
-		"provisionScript":           getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
-		"provisionSource":           getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
-		"provisionInstalls":         getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
-		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
-		"provisionCIS":              getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
-		"healthMonitorScript":       getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
-		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
-		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-
+		"provisionScript":                  getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":                  getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":                getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":                 getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"provisionCIS":                     getBase64EncodedGzippedCustomScript(kubernetesCISScript, cs),
+		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
+		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
