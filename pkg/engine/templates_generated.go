@@ -35799,27 +35799,9 @@ var _k8sCloudInitArtifactsMountetcdSh = []byte(`#!/bin/bash
 set -x
 MOUNTPOINT=/var/lib/etcddisk
 LABEL=etcd_disk
-ETCDDISK=""
-PARTITION=""
-ETCDDISK_PERSIST=/opt/azure/containers/etcd_disk_initial
-udevadm settle
-if [ ! -f $ETCDDISK_PERSIST ]; then
-  for DISK in $(grep -o -G "sd[a-z]" /proc/partitions | uniq); do
-    if ! grep "$DISK"1 /proc/partitions; then
-      if [[ -n $ETCDDISK ]]; then
-        exit 1
-      fi
-      ETCDDISK=/dev/${DISK}
-      echo "${ETCDDISK}" > /opt/azure/containers/etcd_disk_initial
-    fi;
-  done
-  if [[ -z $ETCDDISK ]]; then
-    exit 1
-  fi
-else
-  ETCDDISK=$(cat ${ETCDDISK_PERSIST})
-fi
+ETCDDISK=$(readlink -f /dev/disk/azure/scsi1/lun0)
 PARTITION=${ETCDDISK}1
+udevadm settle
 if ! ls $PARTITION; then
   /sbin/sgdisk --new 1 $ETCDDISK
 fi
