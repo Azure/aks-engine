@@ -5,7 +5,6 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
-MOUNT_ETCD_SCRIPT=/opt/azure/containers/mountetcd.sh
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -25,7 +24,6 @@ systemctlEtcd() {
       if [ $i -eq 60 ]; then
         return 1
       else
-        $MOUNT_ETCD_SCRIPT
         sleep 5
       fi
   done
@@ -100,8 +98,6 @@ configureEtcd() {
     done
   fi
 
-  wait_for_file 1200 1 $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
-  $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_VOL_MOUNT_FAIL"}}
   systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
   for i in $(seq 1 600); do
     MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"

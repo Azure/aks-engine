@@ -456,12 +456,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     #EOF
 
-- path: /opt/azure/containers/mountetcd.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "mountEtcdScript"}}
 {{- if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
@@ -535,6 +529,22 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+disk_setup:
+  /dev/disk/azure/scsi1/lun0:
+    table_type: gpt
+    layout: true
+    overwrite: false
+fs_setup:
+  - label: etcd_disk
+    filesystem: ext4
+    device: /dev/disk/azure/scsi1/lun0
+    extra_opts:
+      - -F
+      - -E
+      - lazy_itable_init=1,lazy_journal_init=1
+mounts:
+  - - LABEL=etcd_disk
+    - /var/lib/etcddisk
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}

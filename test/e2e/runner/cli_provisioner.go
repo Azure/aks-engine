@@ -369,7 +369,7 @@ func (cli *CLIProvisioner) FetchProvisioningMetrics(path string, cfg *config.Con
 		"/opt/m", "/opt/azure/containers/kubelet.sh", "/opt/azure/containers/provision.sh",
 		"/var/log/azure/kubelet-status.log", "/var/log/azure/docker-status.log", "/var/log/azure/systemd-journald-status.log"}
 	masterFiles := agentFiles
-	masterFiles = append(masterFiles, "/opt/azure/containers/mountetcd.sh", "/opt/azure/containers/setup-etcd.sh", "/opt/azure/containers/setup-etcd.log")
+	masterFiles = append(masterFiles, "/opt/azure/containers/setup-etcd.sh", "/opt/azure/containers/setup-etcd.log")
 	hostname := fmt.Sprintf("%s.%s.cloudapp.azure.com", cli.Config.Name, cli.Config.Location)
 	cmd := exec.Command("ssh-agent", "-s")
 	out, err := cmd.CombinedOutput()
