@@ -191,12 +191,16 @@ installImg() {
 extractHyperkube() {
   CLI_TOOL=$1
   path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  targetpath="/usr/local/bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    targetpath="/opt"
+  fi
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
   if [[ $CLI_TOOL == "docker" ]]; then
     mkdir -p "$path"
     if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
-      mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-      mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+      mv "$path/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+      mv "$path/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
       return
     else
       docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
