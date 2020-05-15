@@ -231,7 +231,7 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
         Images = @{
-            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.1"
         }
     }
 
