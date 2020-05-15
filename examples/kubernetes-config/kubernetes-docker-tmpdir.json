@@ -25,7 +25,7 @@
         "vmSize": "Standard_NC12s_v3",
         "availabilityProfile": "VirtualMachineScaleSets",
         "osDiskSizeGb": 1024,
-        "distro": "ubuntu-18.04"
+        "distro": "ubuntu"
       }
     ],
     "linuxProfile": {

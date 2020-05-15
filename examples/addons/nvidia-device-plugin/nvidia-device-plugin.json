@@ -22,7 +22,8 @@
       {
         "name": "agentpool",
         "count": 3,
-        "vmSize": "Standard_NC6"
+        "vmSize": "Standard_NC6",
+        "distro": "aks-ubuntu-16.04"
       }
     ],
     "linuxProfile": {
