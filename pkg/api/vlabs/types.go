@@ -335,6 +335,7 @@ type KubernetesConfig struct {
 	EnableEncryptionWithExternalKms   *bool             `json:"enableEncryptionWithExternalKms,omitempty"`
 	EnablePodSecurityPolicy           *bool             `json:"enablePodSecurityPolicy,omitempty"`
 	Addons                            []KubernetesAddon `json:"addons,omitempty"`
+	ContainerRuntimeConfig            map[string]string `json:"containerRuntimeConfig,omitempty"`
 	KubeletConfig                     map[string]string `json:"kubeletConfig,omitempty"`
 	ControllerManagerConfig           map[string]string `json:"controllerManagerConfig,omitempty"`
 	CloudControllerManagerConfig      map[string]string `json:"cloudControllerManagerConfig,omitempty"`
