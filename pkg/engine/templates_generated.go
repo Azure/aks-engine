@@ -35805,7 +35805,7 @@ PARTITION=${ETCDDISK}1
 if ! ls $PARTITION; then
   /sbin/sgdisk --new 1 $ETCDDISK
 fi
-if ! blkid -L $LABEL; then
+if ! blkid $PARTITION | grep "LABEL=.${LABEL}"; then
   /sbin/mkfs.ext4 $PARTITION -L $LABEL -F -E lazy_itable_init=1,lazy_journal_init=1
 fi
 mkdir -p $MOUNTPOINT
