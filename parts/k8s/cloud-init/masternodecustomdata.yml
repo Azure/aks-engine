@@ -539,7 +539,6 @@ fs_setup:
     filesystem: ext4
     device: /dev/disk/azure/scsi1/lun0
     extra_opts:
-      - -F
       - -E
       - lazy_itable_init=1,lazy_journal_init=1
 mounts:
