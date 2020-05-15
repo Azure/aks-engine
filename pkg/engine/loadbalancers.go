@@ -132,6 +132,9 @@ func CreateMasterLoadBalancer(prop *api.Properties, isVMSS bool) LoadBalancerARM
 				},
 			},
 		}
+		if to.Bool(prop.OrchestratorProfile.KubernetesConfig.CloudProviderDisableOutboundSNAT) {
+			loadBalancingRules.LoadBalancingRulePropertiesFormat.DisableOutboundSnat = to.Bool(true)
+		}
 		probes := &[]network.Probe{
 			{
 				Name: to.StringPtr("tcpHTTPSProbe"),
