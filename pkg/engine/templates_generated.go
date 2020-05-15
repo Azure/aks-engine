@@ -170,7 +170,6 @@
 // ../../parts/k8s/cloud-init/artifacts/label-nodes.service
 // ../../parts/k8s/cloud-init/artifacts/label-nodes.sh
 // ../../parts/k8s/cloud-init/artifacts/modprobe-CIS.conf
-// ../../parts/k8s/cloud-init/artifacts/mountetcd.sh
 // ../../parts/k8s/cloud-init/artifacts/pam-d-common-auth
 // ../../parts/k8s/cloud-init/artifacts/pam-d-common-password
 // ../../parts/k8s/cloud-init/artifacts/pam-d-su
@@ -33434,7 +33433,6 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
-MOUNT_ETCD_SCRIPT=/opt/azure/containers/mountetcd.sh
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -33454,7 +33452,6 @@ systemctlEtcd() {
       if [ $i -eq 60 ]; then
         return 1
       else
-        $MOUNT_ETCD_SCRIPT
         sleep 5
       fi
   done
@@ -33529,8 +33526,7 @@ configureEtcd() {
     done
   fi
 
-  wait_for_file 1200 1 $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
-  $MOUNT_ETCD_SCRIPT || exit {{GetCSEErrorCode "ERR_ETCD_VOL_MOUNT_FAIL"}}
+  chown -R etcd:etcd /var/lib/etcddisk
   systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
   for i in $(seq 1 600); do
     MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
@@ -35793,46 +35789,6 @@ func k8sCloudInitArtifactsModprobeCisConf() (*asset, error) {
 	return a, nil
 }
 
-var _k8sCloudInitArtifactsMountetcdSh = []byte(`#!/bin/bash
-# Mounting is done here instead of etcd because of bug https://bugs.launchpad.net/cloud-init/+bug/1692093
-# Once the bug is fixed, replace the below with the cloud init changes replaced in https://github.com/Azure/aks-engine/pull/661.
-set -x
-udevadm settle
-MOUNTPOINT=/var/lib/etcddisk
-LABEL=etcd_disk
-ETCDDISK=$(readlink -f /dev/disk/azure/scsi1/lun0)
-PARTITION=${ETCDDISK}1
-if ! ls $PARTITION; then
-  /sbin/sgdisk --new 1 $ETCDDISK
-fi
-if ! blkid $PARTITION | grep "LABEL=.${LABEL}"; then
-  /sbin/mkfs.ext4 $PARTITION -L $LABEL -F -E lazy_itable_init=1,lazy_journal_init=1
-fi
-mkdir -p $MOUNTPOINT
-if ! grep "$MOUNTPOINT" /etc/fstab; then
-  echo "LABEL=${LABEL}       $MOUNTPOINT       auto    defaults,nofail       0       2" >>/etc/fstab
-fi
-umount $MOUNTPOINT
-mount $MOUNTPOINT
-/bin/chown -R etcd:etcd /var/lib/etcddisk
-#EOF
-`)
-
-func k8sCloudInitArtifactsMountetcdShBytes() ([]byte, error) {
-	return _k8sCloudInitArtifactsMountetcdSh, nil
-}
-
-func k8sCloudInitArtifactsMountetcdSh() (*asset, error) {
-	bytes, err := k8sCloudInitArtifactsMountetcdShBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/cloud-init/artifacts/mountetcd.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sCloudInitArtifactsPamDCommonAuth = []byte(`#
 # /etc/pam.d/common-auth - authentication settings common to all services
 #
@@ -36966,12 +36922,6 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
 {{end}}
     #EOF
 
-- path: /opt/azure/containers/mountetcd.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "mountEtcdScript"}}
 {{- if not HasCosmosEtcd  }}
 - path: /etc/systemd/system/etcd.service
   permissions: "0644"
@@ -37045,6 +36995,22 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+disk_setup:
+  /dev/disk/azure/scsi1/lun0:
+    table_type: gpt
+    layout: true
+    overwrite: false
+fs_setup:
+  - label: etcd_disk
+    filesystem: ext4
+    device: /dev/disk/azure/scsi1/lun0
+    extra_opts:
+      - -F
+      - -E
+      - lazy_itable_init=1,lazy_journal_init=1
+mounts:
+  - - LABEL=etcd_disk
+    - /var/lib/etcddisk
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
@@ -44599,7 +44565,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/artifacts/label-nodes.service":                           k8sCloudInitArtifactsLabelNodesService,
 	"k8s/cloud-init/artifacts/label-nodes.sh":                                k8sCloudInitArtifactsLabelNodesSh,
 	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                             k8sCloudInitArtifactsModprobeCisConf,
-	"k8s/cloud-init/artifacts/mountetcd.sh":                                  k8sCloudInitArtifactsMountetcdSh,
 	"k8s/cloud-init/artifacts/pam-d-common-auth":                             k8sCloudInitArtifactsPamDCommonAuth,
 	"k8s/cloud-init/artifacts/pam-d-common-password":                         k8sCloudInitArtifactsPamDCommonPassword,
 	"k8s/cloud-init/artifacts/pam-d-su":                                      k8sCloudInitArtifactsPamDSu,
@@ -44885,7 +44850,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"label-nodes.service":                       {k8sCloudInitArtifactsLabelNodesService, map[string]*bintree{}},
 				"label-nodes.sh":                            {k8sCloudInitArtifactsLabelNodesSh, map[string]*bintree{}},
 				"modprobe-CIS.conf":                         {k8sCloudInitArtifactsModprobeCisConf, map[string]*bintree{}},
-				"mountetcd.sh":                              {k8sCloudInitArtifactsMountetcdSh, map[string]*bintree{}},
 				"pam-d-common-auth":                         {k8sCloudInitArtifactsPamDCommonAuth, map[string]*bintree{}},
 				"pam-d-common-password":                     {k8sCloudInitArtifactsPamDCommonPassword, map[string]*bintree{}},
 				"pam-d-su":                                  {k8sCloudInitArtifactsPamDSu, map[string]*bintree{}},

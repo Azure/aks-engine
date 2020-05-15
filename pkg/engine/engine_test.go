@@ -1734,8 +1734,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			for _, file := range []string{kubernetesMountEtcd,
-				etcdSystemdService,
+			for _, file := range []string{etcdSystemdService,
 				dhcpv6ConfigurationScript,
 				kubernetesCISScript,
 				kmsSystemdService,
