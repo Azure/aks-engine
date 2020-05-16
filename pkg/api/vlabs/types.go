@@ -276,7 +276,7 @@ type PrivateCluster struct {
 type PrivateJumpboxProfile struct {
 	Name           string `json:"name" validate:"required"`
 	VMSize         string `json:"vmSize" validate:"required"`
-	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB   int    `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	Username       string `json:"username,omitempty"`
 	PublicKey      string `json:"publicKey" validate:"required"`
 	StorageProfile string `json:"storageProfile,omitempty"`
@@ -400,7 +400,7 @@ type MasterProfile struct {
 	DNSPrefix                 string            `json:"dnsPrefix" validate:"required"`
 	SubjectAltNames           []string          `json:"subjectAltNames"`
 	VMSize                    string            `json:"vmSize" validate:"required"`
-	OSDiskSizeGB              int               `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB              int               `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	VnetSubnetID              string            `json:"vnetSubnetID,omitempty"`
 	VnetCidr                  string            `json:"vnetCidr,omitempty"`
 	AgentVnetSubnetID         string            `json:"agentVnetSubnetID,omitempty"`
@@ -473,7 +473,7 @@ type AgentPoolProfile struct {
 	Name                                string               `json:"name" validate:"required"`
 	Count                               int                  `json:"count" validate:"required,min=1,max=100"`
 	VMSize                              string               `json:"vmSize" validate:"required"`
-	OSDiskSizeGB                        int                  `json:"osDiskSizeGB,omitempty" validate:"min=0,max=1023"`
+	OSDiskSizeGB                        int                  `json:"osDiskSizeGB,omitempty" validate:"min=0,max=2048"`
 	DNSPrefix                           string               `json:"dnsPrefix,omitempty"`
 	OSType                              OSType               `json:"osType,omitempty"`
 	Ports                               []int                `json:"ports,omitempty" validate:"dive,min=1,max=65535"`
@@ -482,7 +482,7 @@ type AgentPoolProfile struct {
 	ScaleSetEvictionPolicy              string               `json:"scaleSetEvictionPolicy,omitempty" validate:"eq=Delete|eq=Deallocate|len=0"`
 	SpotMaxPrice                        *float64             `json:"spotMaxPrice,omitempty"`
 	StorageProfile                      string               `json:"storageProfile" validate:"eq=StorageAccount|eq=ManagedDisks|eq=Ephemeral|len=0"`
-	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty" validate:"max=4,dive,min=1,max=1023"`
+	DiskSizesGB                         []int                `json:"diskSizesGB,omitempty" validate:"max=4,dive,min=1,max=32767"`
 	VnetSubnetID                        string               `json:"vnetSubnetID,omitempty"`
 	IPAddressCount                      int                  `json:"ipAddressCount,omitempty" validate:"min=0,max=256"`
 	Distro                              Distro               `json:"distro,omitempty"`

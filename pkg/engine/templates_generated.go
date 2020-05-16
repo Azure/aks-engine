@@ -204,6 +204,8 @@
 // ../../parts/k8s/cloud-init/masternodecustomdata.yml
 // ../../parts/k8s/cloud-init/nodecustomdata.yml
 // ../../parts/k8s/kubeconfig.json
+// ../../parts/k8s/kubeletstart.ps1
+// ../../parts/k8s/kubeproxystart.ps1
 // ../../parts/k8s/kubernetesparams.t
 // ../../parts/k8s/kuberneteswindowsfunctions.ps1
 // ../../parts/k8s/kuberneteswindowssetup.ps1
@@ -40372,6 +40374,423 @@ func k8sKubeconfigJson() (*asset, error) {
 	return a, nil
 }
 
+var _k8sKubeletstartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+
+$global:MasterIP = $Global:ClusterConfiguration.Kubernetes.ControlPlane.IpAddress
+$global:KubeDnsSearchPath = "svc.cluster.local"
+$global:KubeDnsServiceIp = $Global:ClusterConfiguration.Kubernetes.Network.DnsIp
+$global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
+$global:KubeClusterCIDR = $Global:ClusterConfiguration.Kubernetes.Network.ClusterCidr
+$global:KubeServiceCIDR = $Global:ClusterConfiguration.Kubernetes.Network.ServiceCidr
+$global:KubeBinariesVersion = $Global:ClusterConfiguration.Kubernetes.Source.Release
+$global:KubeDir = $Global:ClusterConfiguration.Install.Destination
+$global:NetworkMode = "L2Bridge"
+$global:ExternalNetwork = "ext"
+$global:CNIConfig = "$CNIConfig"
+$global:HNSModule = "c:\k\hns.psm1"
+#$global:VolumePluginDir = "$VolumePluginDir" TODO ksbrmnn remove as this seems to be calculated later 
+$global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
+$global:KubeletNodeLabels = $Global:ClusterConfiguration.Kubernetes.Kubelet.NodeLabels
+$global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
+
+$global:AzureCNIDir = [Io.path]::Combine("$global:KubeDir", "azurecni")
+$global:AzureCNIBinDir = [Io.path]::Combine("$global:AzureCNIDir", "bin")
+$global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
+
+$global:CNIPath = [Io.path]::Combine("$global:KubeDir", "cni")
+$global:CNIConfig = [Io.path]::Combine($global:CNIPath, "config", "` + "`" + `$global:NetworkMode.conf")
+$global:CNIConfigPath = [Io.path]::Combine("$global:CNIPath", "config")
+
+
+$UseContainerD = ($global:ContainerRuntime -eq "containerd")
+
+$KubeNetwork = "azure"
+
+#TODO ksbrmnn refactor to be sensical instead of if if if ...
+
+# Calculate some local paths
+$VolumePluginDir = [Io.path]::Combine($global:KubeDir, "volumeplugins")
+
+#mkdir $VolumePluginDir TODO ksbrmnn figure out how this is already created
+$KubeletArgList = $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs # This is the initial list passed in from aks-engine
+$KubeletArgList += "--node-labels=$global:KubeletNodeLabels"
+# $KubeletArgList += "--hostname-override=$global:AzureHostname" TODO: remove - dead code?
+$KubeletArgList += "--volume-plugin-dir=$global:VolumePluginDir"
+# If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
+# Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
+
+# Configure kubelet to use CNI plugins if enabled.
+if ($NetworkPlugin -eq "azure") {
+    $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
+}
+elseif ($NetworkPlugin -eq "kubenet") {
+    $KubeletArgList += @("--cni-bin-dir=$CNIPath", "--cni-conf-dir=$CNIConfigPath")
+    # handle difference in naming between Linux & Windows reference plugin
+    $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
+}
+else {
+    throw "Unknown network type $NetworkPlugin, can't configure kubelet"
+}
+
+# Update args to use ContainerD if needed
+if ($UseContainerD -eq $true) {
+    $KubeletArgList += @("--container-runtime=remote", "--container-runtime-endpoint=npipe://./pipe/containerd-containerd")
+}
+
+# Used in WinCNI version of kubeletstart.ps1
+$KubeletArgListStr = ""
+$KubeletArgList | Foreach-Object {
+    # Since generating new code to be written to a file, need to escape quotes again
+    if ($KubeletArgListStr.length -gt 0) {
+        $KubeletArgListStr = $KubeletArgListStr + ", "
+    }
+    # TODO ksbrmnn figure out what's going on here re tick marks
+    $KubeletArgListStr = $KubeletArgListStr + "` + "`" + `"" + $_.Replace("` + "`" + `"` + "`" + `"", "` + "`" + `"` + "`" + `"` + "`" + `"` + "`" + `"") + "` + "`" + `""
+}
+$KubeletArgListStr = "@($KubeletArgListStr` + "`" + `)"
+
+# Used in Azure-CNI version of kubeletstart.ps1
+$KubeletCommandLine = "$global:KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
+
+# Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
+# TODO move this to CSE
+netsh advfirewall set allprofiles state off
+
+function
+Get-DefaultGateway($CIDR) {
+    return $CIDR.substring(0, $CIDR.lastIndexOf(".")) + ".1"
+}
+function
+Get-PodCIDR() {
+    $podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/$($env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
+    return $podCIDR
+}
+
+function
+Test-PodCIDR($podCIDR) {
+    return $podCIDR.length -gt 0
+}
+
+function
+Update-CNIConfigKubenetDocker($podCIDR, $masterSubnetGW) {
+    $jsonSampleConfig =
+    "{
+    ""cniVersion"": ""0.2.0"",
+    ""name"": ""<NetworkMode>"",
+    ""type"": ""win-bridge"",
+    ""master"": ""Ethernet"",
+    ""dns"" : {
+        ""Nameservers"" : [ ""<NameServers>"" ],
+        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+    },
+    ""policies"": [
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
+    },
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""ROUTE"", ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }
+    }
+    ]
+}"
+
+    $configJson = ConvertFrom-Json $jsonSampleConfig
+    $configJson.name = $global:NetworkMode.ToLower()
+    $configJson.dns.Nameservers[0] = $global:KubeDnsServiceIp
+    $configJson.dns.Search[0] = $global:KubeDnsSearchPath
+
+    $configJson.policies[0].Value.ExceptionList[0] = $global:KubeClusterCIDR
+    $configJson.policies[0].Value.ExceptionList[1] = $global:MasterSubnet
+    $configJson.policies[1].Value.DestinationPrefix = $global:KubeServiceCIDR
+
+    if (Test-Path $global:CNIConfig) {
+        Clear-Content -Path $global:CNIConfig
+    }
+
+    Write-Host "Generated CNI Config [$configJson]"
+
+    Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
+}
+function
+Update-CNIConfigKubenetContainerD($podCIDR, $masterSubnetGW) {
+    $jsonSampleConfig =
+    "{
+    ""cniVersion"": ""0.2.0"",
+    ""name"": ""<NetworkMode>"",
+    ""type"": ""sdnbridge.exe"",
+    ""master"": ""Ethernet"",
+    ""capabilities"": { ""portMappings"": true },
+    ""ipam"": {
+        ""environment"": ""azure"",
+        ""subnet"":""<PODCIDR>"",
+        ""routes"": [{
+        ""GW"":""<PODGW>""
+        }]
+    },
+    ""dns"" : {
+    ""Nameservers"" : [ ""<NameServers>"" ],
+    ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
+    },
+    ""AdditionalArgs"" : [
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""Settings"" : { ""Exceptions"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }}
+    },
+    {
+        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""SDNRoute"", ""Settings"" : { ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }}
+    }
+    ]
+}"
+
+    $configJson = ConvertFrom-Json $jsonSampleConfig
+    $configJson.name = $global:NetworkMode.ToLower()
+    $configJson.ipam.subnet = $podCIDR
+    $configJson.ipam.routes[0].GW = $masterSubnetGW
+    $configJson.dns.Nameservers[0] = $global:KubeDnsServiceIp
+    $configJson.dns.Search[0] = $global:KubeDnsSearchPath
+
+
+    $configJson.AdditionalArgs[0].Value.Settings.Exceptions[0] = $global:KubeClusterCIDR
+    $configJson.AdditionalArgs[0].Value.Settings.Exceptions[1] = $global:MasterSubnet
+    $configJson.AdditionalArgs[1].Value.Settings.DestinationPrefix = $global:KubeServiceCIDR
+
+    if (Test-Path $global:CNIConfig) {
+        Clear-Content -Path $global:CNIConfig
+    }
+
+    Write-Host "Generated CNI Config [$configJson]"
+
+    Add-Content -Path $global:CNIConfig -Value (ConvertTo-Json $configJson -Depth 20)
+}
+
+
+if ($global:NetworkPlugin -eq "azure") {
+    Write-Host "NetworkPlugin azure, starting kubelet."
+
+    # startup the service
+
+    # Find if network created by CNI exists, if yes, remove it
+    # This is required to keep the network non-persistent behavior
+    # Going forward, this would be done by HNS automatically during restart of the node
+
+    $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+    if ($hnsNetwork) {
+        # Cleanup all containers
+        docker ps -q | foreach { docker rm $_ -f }
+
+        Write-Host "Cleaning up old HNS network found"
+        Remove-HnsNetwork $hnsNetwork
+        # Kill all cni instances & stale data left by cni
+        # Cleanup all files related to cni
+        taskkill /IM azure-vnet.exe /f
+        taskkill /IM azure-vnet-ipam.exe /f
+        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
+        if ((Test-Path $cnijson)) {
+            Remove-Item $cnijson
+        }
+        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
+        if ((Test-Path $cnilock)) {
+            Remove-Item $cnilock
+        }
+
+        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
+        if ((Test-Path $cnijson)) {
+            Remove-Item $cnijson
+        }
+        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
+        if ((Test-Path $cnilock)) {
+            Remove-Item $cnilock
+        }
+    }
+
+    # Restart Kubeproxy, which would wait, until the network is created
+    # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
+    Restart-Service Kubeproxy
+
+    $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
+    Invoke-Expression $KubeletCommandLine
+}
+
+if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "docker")) {
+    $KubeNetwork = "l2bridge"
+    try {
+        $env:AZURE_ENVIRONMENT_FILEPATH = "c:\k\azurestackcloud.json"
+
+        $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
+        $podCIDR = Get-PodCIDR
+        $podCidrDiscovered = Test-PodCIDR($podCIDR)
+
+        # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
+        if (-not $podCidrDiscovered) {
+            $argList = $KubeletArgListStr
+
+            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
+
+            # run kubelet until podCidr is discovered
+            Write-Host "waiting to discover pod CIDR"
+            while (-not $podCidrDiscovered) {
+                Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
+                Start-Sleep 10
+
+                $podCIDR = Get-PodCIDR
+                $podCidrDiscovered = Test-PodCIDR($podCIDR)
+            }
+
+            # stop the kubelet process now that we have our CIDR, discard the process output
+            $process | Stop-Process | Out-Null
+        }
+
+        # startup the service
+        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
+
+        if ($hnsNetwork) {
+            # Kubelet has been restarted with existing network.
+            # Cleanup all containers
+            docker ps -q | foreach { docker rm $_ -f }
+            # cleanup network
+            Write-Host "Cleaning up old HNS network found"
+            Remove-HnsNetwork $hnsNetwork
+            Start-Sleep 10
+        }
+
+        Write-Host "Creating a new hns Network"
+        ipmo $global:HNSModule
+
+        $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
+        # New network has been created, Kubeproxy service has to be restarted
+        # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
+        Restart-Service Kubeproxy
+
+        Start-Sleep 10
+        # Add route to all other POD networks
+        Update-CNIConfigKubenetDocker $podCIDR $masterSubnetGW
+
+        Invoke-Expression $KubeletCommandLine
+    }
+    catch {
+        Write-Error $_
+    }
+
+}
+
+if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "containerd")) {
+    $KubeNetwork = "l2bridge"
+    try {
+        $masterSubnetGW = Get-DefaultGateway $global:MasterSubnet
+        $podCIDR = Get-PodCIDR
+        $podCidrDiscovered = Test-PodCIDR($podCIDR)
+
+        # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
+        if (-not $podCidrDiscovered) {
+            $argList = $KubeletArgListStr
+
+            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
+
+            # run kubelet until podCidr is discovered
+            Write-Host "waiting to discover pod CIDR"
+            while (-not $podCidrDiscovered) {
+                Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
+                Start-Sleep 10
+
+                $podCIDR = Get-PodCIDR
+                $podCidrDiscovered = Test-PodCIDR($podCIDR)
+            }
+
+            # stop the kubelet process now that we have our CIDR, discard the process output
+            $process | Stop-Process | Out-Null
+        }
+
+        # startup the service
+        $hnsNetwork = Get-HnsNetwork | ? Name -EQ $global:NetworkMode.ToLower()
+
+        if ($hnsNetwork) {
+            # Kubelet has been restarted with existing network.
+            # Cleanup all containers
+            # TODO: convert this to ctr.exe -n k8s.io container list ; container rm
+            docker ps -q | foreach { docker rm $_ -f }
+            # cleanup network
+            Write-Host "Cleaning up old HNS network found"
+            Remove-HnsNetwork $hnsNetwork
+            Start-Sleep 10
+        }
+
+        Write-Host "Creating a new hns Network"
+        ipmo $global:HNSModule
+
+        $hnsNetwork = New-HNSNetwork -Type $global:NetworkMode -AddressPrefix $podCIDR -Gateway $masterSubnetGW -Name $global:NetworkMode.ToLower() -Verbose
+        # New network has been created, Kubeproxy service has to be restarted
+        Restart-Service Kubeproxy
+
+        Start-Sleep 10
+        # Add route to all other POD networks
+        Write-Host "Updating CNI config"
+        Update-CNIConfigKubenetContainerD $podCIDR $masterSubnetGW
+
+        Invoke-Expression $KubeletCommandLine
+    }
+    catch {
+        Write-Error $_
+    }
+}
+`)
+
+func k8sKubeletstartPs1Bytes() ([]byte, error) {
+	return _k8sKubeletstartPs1, nil
+}
+
+func k8sKubeletstartPs1() (*asset, error) {
+	bytes, err := k8sKubeletstartPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/kubeletstart.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sKubeproxystartPs1 = []byte(`$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+
+$KubeNetwork = "azure"
+if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
+    $KubeNetwork = "l2bridge"
+}
+
+$env:KUBE_NETWORK = $KubeNetwork
+$global:HNSModule = "c:\k\hns.psm1"
+$KubeDir = $Global:ClusterConfiguration.Install.Destination
+
+$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+while (!$hnsNetwork) {
+    Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
+    Start-Sleep 10
+    $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+}
+
+#
+# cleanup the persisted policy lists
+#
+Import-Module $global:HNSModule
+# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
+# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
+Get-HnsPolicyList | Remove-HnsPolicyList
+
+.$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
+`)
+
+func k8sKubeproxystartPs1Bytes() ([]byte, error) {
+	return _k8sKubeproxystartPs1, nil
+}
+
+func k8sKubeproxystartPs1() (*asset, error) {
+	bytes, err := k8sKubeproxystartPs1Bytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/kubeproxystart.ps1", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sKubernetesparamsT = []byte(`{{if IsHostedMaster}}
     "kubernetesEndpoint": {
       "metadata": {
@@ -40914,20 +41333,18 @@ func k8sKubernetesparamsT() (*asset, error) {
 var _k8sKuberneteswindowsfunctionsPs1 = []byte(`# This filter removes null characters (\0) which are captured in nssm.exe output when logged through powershell
 filter RemoveNulls { $_ -replace '\0', '' }
 
-filter Timestamp {"$(Get-Date -Format o): $_"}
+filter Timestamp { "$(Get-Date -Format o): $_" }
 
-function Write-Log($message)
-{
+function Write-Log($message) {
     $msg = $message | Timestamp
     Write-Output $msg
 }
 
-function DownloadFileOverHttp
-{
+function DownloadFileOverHttp {
     Param(
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $Url,
-        [Parameter(Mandatory=$true)][string]
+        [Parameter(Mandatory = $true)][string]
         $DestinationPath
     )
 
@@ -40935,25 +41352,20 @@ function DownloadFileOverHttp
     $fileName = [IO.Path]::GetFileName($Url)
     
     $search = @()
-    if (Test-Path $global:CacheDir)
-    {
+    if (Test-Path $global:CacheDir) {
         $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
     }
 
-    if ($search.Count -ne 0)
-    {
+    if ($search.Count -ne 0) {
         Write-Log "Using cached version of $fileName - Copying file from $($search[0]) to $DestinationPath"
         Copy-Item -Path $search[0] -Destination $DestinationPath -Force
     }
-    else
-    {
+    else {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
     
-        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType]))
-        {
-            if ($insecureProtocols -notcontains $protocol)
-            {
+        foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
+            if ($insecureProtocols -notcontains $protocol) {
                 $secureProtocols += $protocol
             }
         }
@@ -40985,11 +41397,12 @@ function Get-WindowsVersion {
 }
 
 function Get-CniVersion {
-    switch($global:NetworkPlugin) {
+    switch ($global:NetworkPlugin) {
         "azure" {
             if ($global:VNetCNIPluginsURL -match "(v[0-9` + "`" + `.]+).(zip|tar)") {
                 return $matches[1]
-            } else {
+            }
+            else {
                 return ""
             }
             break;
@@ -41001,12 +41414,12 @@ function Get-CniVersion {
 }
 
 function Get-InstanceMetadataServiceTelemetry {
-    $keys = @{}
+    $keys = @{ }
 
     try {
         # Write-Log "Querying instance metadata service..."
         # Note: 2019-04-30 is latest api available in all clouds
-        $metadata = Invoke-RestMethod -Headers @{"Metadata"="true"} -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
+        $metadata = Invoke-RestMethod -Headers @{"Metadata" = "true" } -URI "http://169.254.169.254/metadata/instance?api-version=2019-04-30" -Method get
         # Write-Log ($metadata | ConvertTo-Json)
 
         $keys.Add("vm_size", $metadata.compute.vmSize)
@@ -41038,30 +41451,29 @@ function Initialize-DataDirectories {
     }
 }
 
-function Retry-Command
-{
+function Retry-Command {
     Param(
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][string]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][string]
         $Command,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][hashtable]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][hashtable]
         $Args,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $Retries,
-        [Parameter(Mandatory=$true)][ValidateNotNullOrEmpty()][int]
+        [Parameter(Mandatory = $true)][ValidateNotNullOrEmpty()][int]
         $RetryDelaySeconds
     )
 
     for ($i = 0; $i -lt $Retries; $i++) {
         try {
             return & $Command @Args
-        } catch {
+        }
+        catch {
             Start-Sleep $RetryDelaySeconds
         }
     }
 }
 
-function Invoke-Executable
-{
+function Invoke-Executable {
     Param(
         [string]
         $Executable,
@@ -41082,7 +41494,8 @@ function Invoke-Executable
             Write-Log "$Executable returned unsuccessfully with exit code $LASTEXITCODE"
             Start-Sleep -Seconds $RetryDelaySeconds
             continue
-        } else {
+        }
+        else {
             Write-Log "$Executable returned successfully"
             return
         }
@@ -41136,9 +41549,65 @@ function Register-NodeResetScriptTask {
     Register-ScheduledTask -TaskName "k8s-restart-job" -InputObject $definition
 }
 
+# TODO ksubrmnn parameterize this fully
+function Write-KubeClusterConfig {
+    param(		
+        [Parameter(Mandatory = $true)][string]	
+        $MasterIP,
+        [Parameter(Mandatory = $true)][string]	
+        $KubeDnsServiceIp
+    )
+
+    $Global:ClusterConfiguration = [PSCustomObject]@{ }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
+        Name   = $global:ContainerRuntime;
+        Images = @{
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.1"
+        }
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
+        Name   = $global:NetworkPlugin;
+        Plugin = @{
+            Name = "bridge";
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Csi -Value @{
+        EnableProxy = "true"
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Kubernetes -Value @{
+        Source       = @{
+            Release = $global:KubeBinariesVersion;
+        };
+        ControlPlane = @{
+            IpAddress = $MasterIP;
+            Username  = "azureuser"
+            MasterSubnet = $global:MasterSubnet
+        };
+        Network = @{
+            ServiceCidr = $global:KubeServiceCIDR;
+            ClusterCidr = $global:KubeClusterCIDR;
+            DnsIp = $KubeDnsServiceIp
+        };
+        Kubelet = @{
+            NodeLabels = $global:KubeletNodeLabels;
+            ConfigArgs = $global:KubeletConfigArgs
+        };
+    }
+
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{ 
+        Destination = "c:\k";
+    }
+    
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
+}
+
 function Assert-FileExists {
     Param(
-        [Parameter(Mandatory=$true,Position=0)][string]
+        [Parameter(Mandatory = $true, Position = 0)][string]
         $Filename
     )
     
@@ -41221,7 +41690,10 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $TargetEnvironment
+    $TargetEnvironment,
+
+    [string]
+    $UserAssignedClientID
 )
 
 # These globals will not change between nodes in the same cluster, so they are not
@@ -41241,6 +41713,9 @@ $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
+
+## ContainerD Usage
+$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -41271,7 +41746,6 @@ $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
-$global:UserAssignedClientID = "{{WrapAsVariable "userAssignedClientID"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
 
 $global:LoadBalancerSku = "{{WrapAsVariable "loadBalancerSku"}}"
@@ -41315,7 +41789,7 @@ $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 [io.file]::WriteAllBytes("scripts.zip", [System.Convert]::FromBase64String($zippedFiles))
 Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 
-# Dot-source contents of zip. This should match the list in template_generator.go GetKubernetesWindowsAgentFunctions
+# Dot-source scripts with functions that are called in this script
 . c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
 . c:\AzureData\k8s\windowsconfigfunc.ps1
 . c:\AzureData\k8s\windowskubeletfunc.ps1
@@ -41331,6 +41805,8 @@ Update-ServiceFailureActions()
     sc.exe failure "kubeproxy" actions= restart/60000/restart/60000/restart/60000 reset= 900
     sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
 }
+
+$global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
 
 try
 {
@@ -41356,8 +41832,9 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
-        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
-        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
+        $global:AppInsightsClient.Context.Properties["cri"] = $global:ContainerRuntime
+        # TODO: Update once containerd versioning story is decided
+        $global:AppInsightsClient.Context.Properties["cri_version"] = if ($global:ContainerRuntime -eq "docker") { $global:DockerVersion } else { "" }
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
@@ -41415,6 +41892,8 @@ try
         $dockerTimer.Stop()
         $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
 
+        Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
+
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
 
@@ -41444,7 +41923,7 @@ try
             -PrimaryAvailabilitySetName $global:PrimaryAvailabilitySetName ` + "`" + `
             -PrimaryScaleSetName $global:PrimaryScaleSetName ` + "`" + `
             -UseManagedIdentityExtension $global:UseManagedIdentityExtension ` + "`" + `
-            -UserAssignedClientID $global:UserAssignedClientID ` + "`" + `
+            -UserAssignedClientID $UserAssignedClientID ` + "`" + `
             -UseInstanceMetadata $global:UseInstanceMetadata ` + "`" + `
             -LoadBalancerSku $global:LoadBalancerSku ` + "`" + `
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB ` + "`" + `
@@ -41525,28 +42004,8 @@ try
 
         New-ExternalHnsNetwork
 
-
-        Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices ` + "`" + `
-            -KubeletConfigArgs $global:KubeletConfigArgs ` + "`" + `
-            -KubeBinariesVersion $global:KubeBinariesVersion ` + "`" + `
-            -NetworkPlugin $global:NetworkPlugin ` + "`" + `
-            -NetworkMode $global:NetworkMode ` + "`" + `
-            -KubeDir $global:KubeDir ` + "`" + `
-            -AzureCNIBinDir $global:AzureCNIBinDir ` + "`" + `
-            -AzureCNIConfDir $global:AzureCNIConfDir ` + "`" + `
-            -CNIPath $global:CNIPath ` + "`" + `
-            -CNIConfig $global:CNIConfig ` + "`" + `
-            -CNIConfigPath $global:CNIConfigPath ` + "`" + `
-            -MasterIP $MasterIP ` + "`" + `
-            -KubeDnsServiceIp $KubeDnsServiceIp ` + "`" + `
-            -MasterSubnet $global:MasterSubnet ` + "`" + `
-            -KubeClusterCIDR $global:KubeClusterCIDR ` + "`" + `
-            -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
-            -HNSModule $global:HNSModule ` + "`" + `
-            -KubeletNodeLabels $global:KubeletNodeLabels
-
-
+            -KubeDir $global:KubeDir
 
         Get-LogCollectionScripts
 
@@ -41567,6 +42026,12 @@ try
         Register-NodeResetScriptTask
         Update-DefenderPreferences
 
+        # Output kubelet and kube-proxy scripts
+        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
+        Out-File "c:\k\kubeletstart.ps1"
+        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
+        Out-File "c:\k\kubeproxystart.ps1"
+        
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -41594,7 +42059,7 @@ catch
     $global:AppInsightsClient.Flush()
 
     Write-Error $_
-    exit 1
+    throw $_
 }
 `)
 
@@ -43126,7 +43591,8 @@ New-InfraContainer {
     # Reference for these tags: curl -L https://mcr.microsoft.com/v2/k8s/core/pause/tags/list
     # Then docker run --rm mplatform/manifest-tool inspect mcr.microsoft.com/k8s/core/pause:<tag>
 
-    $defaultPauseImage = "mcr.microsoft.com/oss/kubernetes/pause:1.3.0"
+    $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+    $defaultPauseImage = $clusterConfig.Cri.Images.Pause
 
     $pauseImageVersions = @("1803", "1809", "1903", "1909")
 
@@ -43280,332 +43746,16 @@ New-NSSMService {
 
 # Renamed from Write-KubernetesStartFiles
 function
-Install-KubernetesServices {
-    param(
-        [Parameter(Mandatory = $true)][string[]]
-        $KubeletConfigArgs,
-        [Parameter(Mandatory = $true)][string]
-        $KubeBinariesVersion,
-        [Parameter(Mandatory = $true)][string]
-        $NetworkPlugin,
-        [Parameter(Mandatory = $true)][string]
-        $NetworkMode,
-        [Parameter(Mandatory = $true)][string]
-        $KubeDir,
-        [Parameter(Mandatory = $true)][string]
-        $AzureCNIBinDir,
-        [Parameter(Mandatory = $true)][string]
-        $AzureCNIConfDir,
-        [Parameter(Mandatory = $true)][string]
-        $CNIPath,
-        [Parameter(Mandatory = $true)][string]
-        $CNIConfig,
-        [Parameter(Mandatory = $true)][string]
-        $CNIConfigPath,
-        [Parameter(Mandatory = $true)][string]
-        $MasterIP,
-        [Parameter(Mandatory = $true)][string]
-        $KubeDnsServiceIp,
-        [Parameter(Mandatory = $true)][string]
-        $MasterSubnet,
-        [Parameter(Mandatory = $true)][string]
-        $KubeClusterCIDR,
-        [Parameter(Mandatory = $true)][string]
-        $KubeServiceCIDR,
-        [Parameter(Mandatory = $true)][string]
-        $HNSModule,
-        [Parameter(Mandatory = $true)][string]
-        $KubeletNodeLabels
+Install-KubernetesServices {  
+    param(		
+        [Parameter(Mandatory = $true)][string]	
+        $KubeDir
     )
 
-    # Calculate some local paths
-    $VolumePluginDir = [Io.path]::Combine($KubeDir, "volumeplugins")
+    # TODO ksbrmnn fix callers to this function
+
     $KubeletStartFile = [io.path]::Combine($KubeDir, "kubeletstart.ps1")
     $KubeProxyStartFile = [io.path]::Combine($KubeDir, "kubeproxystart.ps1")
-
-    mkdir $VolumePluginDir
-    $KubeletArgList = $KubeletConfigArgs # This is the initial list passed in from aks-engine
-    $KubeletArgList += "--node-labels=` + "`" + `$global:KubeletNodeLabels"
-    # $KubeletArgList += "--hostname-override=` + "`" + `$global:AzureHostname" TODO: remove - dead code?
-    $KubeletArgList += "--volume-plugin-dir=` + "`" + `$global:VolumePluginDir"
-    # If you are thinking about adding another arg here, you should be considering pkg/engine/defaults-kubelet.go first
-    # Only args that need to be calculated or combined with other ones on the Windows agent should be added here.
-
-
-    # Regex to strip version to Major.Minor.Build format such that the following check does not crash for version like x.y.z-alpha
-    [regex]$regex = "^[0-9.]+"
-    $KubeBinariesVersionStripped = $regex.Matches($KubeBinariesVersion).Value
-    if ([System.Version]$KubeBinariesVersionStripped -lt [System.Version]"1.8.0") {
-        # --api-server deprecates from 1.8.0
-        $KubeletArgList += "--api-servers=https://` + "`" + `${global:MasterIP}:443"
-    }
-
-    # Configure kubelet to use CNI plugins if enabled.
-    if ($NetworkPlugin -eq "azure") {
-        $KubeletArgList += @("--cni-bin-dir=$AzureCNIBinDir", "--cni-conf-dir=$AzureCNIConfDir")
-    }
-    elseif ($NetworkPlugin -eq "kubenet") {
-        $KubeletArgList += @("--cni-bin-dir=$CNIPath", "--cni-conf-dir=$CNIConfigPath")
-        # handle difference in naming between Linux & Windows reference plugin
-        $KubeletArgList = $KubeletArgList -replace "kubenet", "cni"
-    }
-    else {
-        throw "Unknown network type $NetworkPlugin, can't configure kubelet"
-    }
-
-    # Used in WinCNI version of kubeletstart.ps1
-    $KubeletArgListStr = ""
-    $KubeletArgList | Foreach-Object {
-        # Since generating new code to be written to a file, need to escape quotes again
-        if ($KubeletArgListStr.length -gt 0) {
-            $KubeletArgListStr = $KubeletArgListStr + ", "
-        }
-        $KubeletArgListStr = $KubeletArgListStr + "` + "`" + `"" + $_.Replace("` + "`" + `"` + "`" + `"", "` + "`" + `"` + "`" + `"` + "`" + `"` + "`" + `"") + "` + "`" + `""
-    }
-    $KubeletArgListStr = "@` + "`" + `($KubeletArgListStr` + "`" + `)"
-
-    # Used in Azure-CNI version of kubeletstart.ps1
-    $KubeletCommandLine = "$KubeDir\kubelet.exe " + ($KubeletArgList -join " ")
-
-    $kubeStartStr = @"
-` + "`" + `$global:MasterIP = "$MasterIP"
-` + "`" + `$global:KubeDnsSearchPath = "svc.cluster.local"
-` + "`" + `$global:KubeDnsServiceIp = "$KubeDnsServiceIp"
-` + "`" + `$global:MasterSubnet = "$MasterSubnet"
-` + "`" + `$global:KubeClusterCIDR = "$KubeClusterCIDR"
-` + "`" + `$global:KubeServiceCIDR = "$KubeServiceCIDR"
-` + "`" + `$global:KubeBinariesVersion = "$KubeBinariesVersion"
-` + "`" + `$global:CNIPath = "$CNIPath"
-` + "`" + `$global:NetworkMode = "$NetworkMode"
-` + "`" + `$global:ExternalNetwork = "ext"
-` + "`" + `$global:CNIConfig = "$CNIConfig"
-` + "`" + `$global:HNSModule = "$HNSModule"
-` + "`" + `$global:VolumePluginDir = "$VolumePluginDir"
-` + "`" + `$global:NetworkPlugin="$NetworkPlugin"
-` + "`" + `$global:KubeletNodeLabels="$KubeletNodeLabels"
-
-"@
-
-    if ($NetworkPlugin -eq "azure") {
-        $KubeNetwork = "azure"
-        $kubeStartStr += @"
-Write-Host "NetworkPlugin azure, starting kubelet."
-
-# Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
-netsh advfirewall set allprofiles state off
-# startup the service
-
-# Find if network created by CNI exists, if yes, remove it
-# This is required to keep the network non-persistent behavior
-# Going forward, this would be done by HNS automatically during restart of the node
-
-` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-if (` + "`" + `$hnsNetwork)
-{
-    # Cleanup all containers
-    docker ps -q | foreach {docker rm ` + "`" + `$_ -f}
-
-    Write-Host "Cleaning up old HNS network found"
-    Remove-HnsNetwork ` + "`" + `$hnsNetwork
-    # Kill all cni instances & stale data left by cni
-    # Cleanup all files related to cni
-    taskkill /IM azure-vnet.exe /f
-    taskkill /IM azure-vnet-ipam.exe /f
-    ` + "`" + `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json")
-    if ((Test-Path ` + "`" + `$cnijson))
-    {
-        Remove-Item ` + "`" + `$cnijson
-    }
-    ` + "`" + `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipam.json.lock")
-    if ((Test-Path ` + "`" + `$cnilock))
-    {
-        Remove-Item ` + "`" + `$cnilock
-    }
-
-    ` + "`" + `$cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
-    if ((Test-Path ` + "`" + `$cnijson))
-    {
-        Remove-Item ` + "`" + `$cnijson
-    }
-    ` + "`" + `$cnilock = [io.path]::Combine("$KubeDir", "azure-vnet.json.lock")
-    if ((Test-Path ` + "`" + `$cnilock))
-    {
-        Remove-Item ` + "`" + `$cnilock
-    }
-}
-
-# Restart Kubeproxy, which would wait, until the network is created
-# This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
-Restart-Service Kubeproxy
-
-` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
-
-$KubeletCommandLine
-
-"@
-    }
-    else {
-        # using WinCNI. TODO: If WinCNI support is removed, then delete this as dead code later
-        $KubeNetwork = "l2bridge"
-        $kubeStartStr += @"
-
-function
-Get-DefaultGateway(` + "`" + `$CIDR)
-{
-    return ` + "`" + `$CIDR.substring(0,` + "`" + `$CIDR.lastIndexOf(".")) + ".1"
-}
-
-function
-Get-PodCIDR()
-{
-    ` + "`" + `$podCIDR = c:\k\kubectl.exe --kubeconfig=c:\k\config get nodes/` + "`" + `$(` + "`" + `$env:computername.ToLower()) -o custom-columns=podCidr:.spec.podCIDR --no-headers
-    return ` + "`" + `$podCIDR
-}
-
-function
-Test-PodCIDR(` + "`" + `$podCIDR)
-{
-    return ` + "`" + `$podCIDR.length -gt 0
-}
-
-function
-Update-CNIConfig(` + "`" + `$podCIDR, ` + "`" + `$masterSubnetGW)
-{
-    ` + "`" + `$jsonSampleConfig =
-"{
-    ""cniVersion"": ""0.2.0"",
-    ""name"": ""<NetworkMode>"",
-    ""type"": ""win-bridge"",
-    ""master"": ""Ethernet"",
-    ""dns"" : {
-        ""Nameservers"" : [ ""<NameServers>"" ],
-        ""Search"" : [ ""<Cluster DNS Suffix or Search Path>"" ]
-    },
-    ""policies"": [
-    {
-        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""OutBoundNAT"", ""ExceptionList"": [ ""<ClusterCIDR>"", ""<MgmtSubnet>"" ] }
-    },
-    {
-        ""Name"" : ""EndpointPolicy"", ""Value"" : { ""Type"" : ""ROUTE"", ""DestinationPrefix"": ""<ServiceCIDR>"", ""NeedEncap"" : true }
-    }
-    ]
-}"
-
-    ` + "`" + `$configJson = ConvertFrom-Json ` + "`" + `$jsonSampleConfig
-    ` + "`" + `$configJson.name = ` + "`" + `$global:NetworkMode.ToLower()
-    ` + "`" + `$configJson.dns.Nameservers[0] = ` + "`" + `$global:KubeDnsServiceIp
-    ` + "`" + `$configJson.dns.Search[0] = ` + "`" + `$global:KubeDnsSearchPath
-
-    ` + "`" + `$configJson.policies[0].Value.ExceptionList[0] = ` + "`" + `$global:KubeClusterCIDR
-    ` + "`" + `$configJson.policies[0].Value.ExceptionList[1] = ` + "`" + `$global:MasterSubnet
-    ` + "`" + `$configJson.policies[1].Value.DestinationPrefix  = ` + "`" + `$global:KubeServiceCIDR
-
-    if (Test-Path ` + "`" + `$global:CNIConfig)
-    {
-        Clear-Content -Path ` + "`" + `$global:CNIConfig
-    }
-
-    Write-Host "Generated CNI Config [` + "`" + `$configJson]"
-
-    Add-Content -Path ` + "`" + `$global:CNIConfig -Value (ConvertTo-Json ` + "`" + `$configJson -Depth 20)
-}
-
-try
-{
-    ` + "`" + `$env:AZURE_ENVIRONMENT_FILEPATH="c:\k\azurestackcloud.json"
-
-    ` + "`" + `$masterSubnetGW = Get-DefaultGateway ` + "`" + `$global:MasterSubnet
-    ` + "`" + `$podCIDR=Get-PodCIDR
-    ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
-
-    # if the podCIDR has not yet been assigned to this node, start the kubelet process to get the podCIDR, and then promptly kill it.
-    if (-not ` + "`" + `$podCidrDiscovered)
-    {
-        ` + "`" + `$argList = $KubeletArgListStr
-
-        ` + "`" + `$process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList ` + "`" + `$argList
-
-        # run kubelet until podCidr is discovered
-        Write-Host "waiting to discover pod CIDR"
-        while (-not ` + "`" + `$podCidrDiscovered)
-        {
-            Write-Host "Sleeping for 10s, and then waiting to discover pod CIDR"
-            Start-Sleep 10
-
-            ` + "`" + `$podCIDR=Get-PodCIDR
-            ` + "`" + `$podCidrDiscovered=Test-PodCIDR(` + "`" + `$podCIDR)
-        }
-
-        # stop the kubelet process now that we have our CIDR, discard the process output
-        ` + "`" + `$process | Stop-Process | Out-Null
-    }
-
-    # Turn off Firewall to enable pods to talk to service endpoints. (Kubelet should eventually do this)
-    netsh advfirewall set allprofiles state off
-
-    # startup the service
-    ` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ ` + "`" + `$global:NetworkMode.ToLower()
-
-    if (` + "`" + `$hnsNetwork)
-    {
-        # Kubelet has been restarted with existing network.
-        # Cleanup all containers
-        docker ps -q | foreach {docker rm ` + "`" + `$_ -f}
-        # cleanup network
-        Write-Host "Cleaning up old HNS network found"
-        Remove-HnsNetwork ` + "`" + `$hnsNetwork
-        Start-Sleep 10
-    }
-
-    Write-Host "Creating a new hns Network"
-    ipmo ` + "`" + `$global:HNSModule
-
-    ` + "`" + `$hnsNetwork = New-HNSNetwork -Type ` + "`" + `$global:NetworkMode -AddressPrefix ` + "`" + `$podCIDR -Gateway ` + "`" + `$masterSubnetGW -Name ` + "`" + `$global:NetworkMode.ToLower() -Verbose
-    # New network has been created, Kubeproxy service has to be restarted
-    # This was fixed in 1.15, workaround still needed for 1.14 https://github.com/kubernetes/kubernetes/pull/78612
-    Restart-Service Kubeproxy
-
-    Start-Sleep 10
-    # Add route to all other POD networks
-    Update-CNIConfig ` + "`" + `$podCIDR ` + "`" + `$masterSubnetGW
-
-    $KubeletCommandLine
-}
-catch
-{
-    Write-Error ` + "`" + `$_
-}
-
-"@
-    } # end else using WinCNI.
-
-    # Now that the script is generated, based on what CNI plugin and startup options are needed, write it to disk
-    $kubeStartStr | Out-File -encoding ASCII -filepath $KubeletStartFile
-
-    $kubeProxyStartStr = @"
-` + "`" + `$env:KUBE_NETWORK = "$KubeNetwork"
-` + "`" + `$global:NetworkMode = "$NetworkMode"
-` + "`" + `$global:HNSModule = "$HNSModule"
-` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-while (!` + "`" + `$hnsNetwork)
-{
-    Write-Host "Waiting for Network [$KubeNetwork] to be created . . ."
-    Start-Sleep 10
-    ` + "`" + `$hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
-}
-
-#
-# cleanup the persisted policy lists
-#
-ipmo ` + "`" + `$global:HNSModule
-# Workaround for https://github.com/kubernetes/kubernetes/pull/68923 in < 1.14,
-# and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
-Get-HnsPolicyList | Remove-HnsPolicyList
-
-$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
-"@
-
-    $kubeProxyStartStr | Out-File -encoding ASCII -filepath $KubeProxyStartFile
 
     New-NSSMService -KubeDir $KubeDir ` + "`" + `
         -KubeletStartFile $KubeletStartFile ` + "`" + `
@@ -43678,11 +43828,12 @@ var _k8sWindowsnoderesetPs1 = []byte(`<#
 $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
-# Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
-$global:CsiProxyEnabled = [System.Convert]::ToBoolean("{{CsiProxyEnabled}}")
-$global:MasterSubnet = "{{MasterSubnet}}"
-$global:NetworkMode = "{{NetworkMode}}"
-$global:NetworkPlugin = "{{NetworkPlugin}}"
+$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
+
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean($Global:ClusterConfiguration.Csi.EnableProxy)
+$global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
+$global:NetworkMode = "L2Bridge"
+$global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
@@ -47397,6 +47548,8 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/cloud-init/masternodecustomdata.yml":                                 k8sCloudInitMasternodecustomdataYml,
 	"k8s/cloud-init/nodecustomdata.yml":                                       k8sCloudInitNodecustomdataYml,
 	"k8s/kubeconfig.json":                                                     k8sKubeconfigJson,
+	"k8s/kubeletstart.ps1":                                                    k8sKubeletstartPs1,
+	"k8s/kubeproxystart.ps1":                                                  k8sKubeproxystartPs1,
 	"k8s/kubernetesparams.t":                                                  k8sKubernetesparamsT,
 	"k8s/kuberneteswindowsfunctions.ps1":                                      k8sKuberneteswindowsfunctionsPs1,
 	"k8s/kuberneteswindowssetup.ps1":                                          k8sKuberneteswindowssetupPs1,
@@ -47721,6 +47874,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"nodecustomdata.yml":       {k8sCloudInitNodecustomdataYml, map[string]*bintree{}},
 		}},
 		"kubeconfig.json":                {k8sKubeconfigJson, map[string]*bintree{}},
+		"kubeletstart.ps1":               {k8sKubeletstartPs1, map[string]*bintree{}},
+		"kubeproxystart.ps1":             {k8sKubeproxystartPs1, map[string]*bintree{}},
 		"kubernetesparams.t":             {k8sKubernetesparamsT, map[string]*bintree{}},
 		"kuberneteswindowsfunctions.ps1": {k8sKuberneteswindowsfunctionsPs1, map[string]*bintree{}},
 		"kuberneteswindowssetup.ps1":     {k8sKuberneteswindowssetupPs1, map[string]*bintree{}},
