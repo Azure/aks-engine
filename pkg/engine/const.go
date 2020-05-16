@@ -85,7 +85,7 @@ const (
 
 const (
 	kubeConfigJSON = "k8s/kubeconfig.json"
-	// Windows custom scripts. These should all be listed in template_generator.go:func GetKubernetesWindowsAgentFunctions
+	// Windows custom scripts
 	kubernetesWindowsAgentCustomDataPS1   = "k8s/kuberneteswindowssetup.ps1"
 	kubernetesWindowsAgentFunctionsPS1    = "k8s/kuberneteswindowsfunctions.ps1"
 	kubernetesWindowsConfigFunctionsPS1   = "k8s/windowsconfigfunc.ps1"
@@ -96,8 +96,6 @@ const (
 	kubernetesWindowsOpenSSHFunctionPS1   = "k8s/windowsinstallopensshfunc.ps1"
 	kubernetesWindowsLogsCleanupPS1       = "k8s/windowslogscleanup.ps1"
 	kubernetesWindowsNodeResetPS1         = "k8s/windowsnodereset.ps1"
-	kubeletStartPS1                       = "k8s/kubeletstart.ps1"
-	kubeproxyStartPS1                     = "k8s/kubeproxystart.ps1"
 )
 
 // cloud-init (i.e. ARM customData) source file references

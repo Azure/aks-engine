@@ -7,12 +7,11 @@
 $global:LogPath = "c:\k\windowsnodereset.log"
 $global:HNSModule = "c:\k\hns.psm1"
 
-$Global:ClusterConfiguration = ConvertFrom-Json ((Get-Content "c:\k\kubeclusterconfig.json" -ErrorAction Stop) | out-string)
-
-$global:CsiProxyEnabled = [System.Convert]::ToBoolean($Global:ClusterConfiguration.Csi.EnableProxy)
-$global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
-$global:NetworkMode = "L2Bridge"
-$global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
+# Note: the following templated values are expanded kuberneteswindowsfunctions.ps1/Register-NodeResetScriptTask() not during template generation!
+$global:CsiProxyEnabled = [System.Convert]::ToBoolean("{{CsiProxyEnabled}}")
+$global:MasterSubnet = "{{MasterSubnet}}"
+$global:NetworkMode = "{{NetworkMode}}"
+$global:NetworkPlugin = "{{NetworkPlugin}}"
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 

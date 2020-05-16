@@ -48,10 +48,7 @@ param(
 
     [parameter(Mandatory=$true)]
     [ValidateNotNullOrEmpty()]
-    $TargetEnvironment,
-
-    [string]
-    $UserAssignedClientID
+    $TargetEnvironment
 )
 
 # These globals will not change between nodes in the same cluster, so they are not
@@ -71,9 +68,6 @@ $global:KubeBinariesVersion = "{{WrapAsParameter "kubeBinariesVersion"}}"
 
 ## Docker Version
 $global:DockerVersion = "{{WrapAsParameter "windowsDockerVersion"}}"
-
-## ContainerD Usage
-$global:ContainerRuntime = "{{WrapAsParameter "containerRuntime"}}"
 
 ## VM configuration passed by Azure
 $global:WindowsTelemetryGUID = "{{WrapAsParameter "windowsTelemetryGUID"}}"
@@ -104,6 +98,7 @@ $global:KubeletNodeLabels = "{{GetAgentKubernetesLabelsDeprecated . "',variables
 $global:KubeletConfigArgs = @( {{GetKubeletConfigKeyValsPsh .KubernetesConfig }} )
 
 $global:UseManagedIdentityExtension = "{{WrapAsVariable "useManagedIdentityExtension"}}"
+$global:UserAssignedClientID = "{{WrapAsVariable "userAssignedClientID"}}"
 $global:UseInstanceMetadata = "{{WrapAsVariable "useInstanceMetadata"}}"
 
 $global:LoadBalancerSku = "{{WrapAsVariable "loadBalancerSku"}}"
@@ -147,7 +142,7 @@ $zippedFiles = "{{ GetKubernetesWindowsAgentFunctions }}"
 [io.file]::WriteAllBytes("scripts.zip", [System.Convert]::FromBase64String($zippedFiles))
 Expand-Archive scripts.zip -DestinationPath "C:\\AzureData\\"
 
-# Dot-source scripts with functions that are called in this script
+# Dot-source contents of zip. This should match the list in template_generator.go GetKubernetesWindowsAgentFunctions
 . c:\AzureData\k8s\kuberneteswindowsfunctions.ps1
 . c:\AzureData\k8s\windowsconfigfunc.ps1
 . c:\AzureData\k8s\windowskubeletfunc.ps1
@@ -163,8 +158,6 @@ Update-ServiceFailureActions()
     sc.exe failure "kubeproxy" actions= restart/60000/restart/60000/restart/60000 reset= 900
     sc.exe failure "docker" actions= restart/60000/restart/60000/restart/60000 reset= 900
 }
-
-$global:KubeClusterConfigPath = "c:\k\kubeclusterconfig.json"
 
 try
 {
@@ -190,9 +183,8 @@ try
         $global:AppInsightsClient = New-Object "Microsoft.ApplicationInsights.TelemetryClient"($conf)
 
         $global:AppInsightsClient.Context.Properties["correlation_id"] = New-Guid
-        $global:AppInsightsClient.Context.Properties["cri"] = $global:ContainerRuntime
-        # TODO: Update once containerd versioning story is decided
-        $global:AppInsightsClient.Context.Properties["cri_version"] = if ($global:ContainerRuntime -eq "docker") { $global:DockerVersion } else { "" }
+        $global:AppInsightsClient.Context.Properties["cri"] = "docker"
+        $global:AppInsightsClient.Context.Properties["cri_version"] = $global:DockerVersion
         $global:AppInsightsClient.Context.Properties["k8s_version"] = $global:KubeBinariesVersion
         $global:AppInsightsClient.Context.Properties["lb_sku"] = $global:LoadBalancerSku
         $global:AppInsightsClient.Context.Properties["location"] = $Location
@@ -250,8 +242,6 @@ try
         $dockerTimer.Stop()
         $global:AppInsightsClient.TrackMetric("Install-Docker", $dockerTimer.Elapsed.TotalSeconds)
 
-        Write-KubeClusterConfig -MasterIP $MasterIP -KubeDnsServiceIp $KubeDnsServiceIp
-
         Write-Log "Download kubelet binaries and unzip"
         Get-KubePackage -KubeBinariesSASURL $global:KubeBinariesPackageSASURL
 
@@ -281,7 +271,7 @@ try
             -PrimaryAvailabilitySetName $global:PrimaryAvailabilitySetName `
             -PrimaryScaleSetName $global:PrimaryScaleSetName `
             -UseManagedIdentityExtension $global:UseManagedIdentityExtension `
-            -UserAssignedClientID $UserAssignedClientID `
+            -UserAssignedClientID $global:UserAssignedClientID `
             -UseInstanceMetadata $global:UseInstanceMetadata `
             -LoadBalancerSku $global:LoadBalancerSku `
             -ExcludeMasterFromStandardLB $global:ExcludeMasterFromStandardLB `
@@ -362,8 +352,28 @@ try
 
         New-ExternalHnsNetwork
 
+
+        Write-Log "Write kubelet startfile with pod CIDR of $podCIDR"
         Install-KubernetesServices `
-            -KubeDir $global:KubeDir
+            -KubeletConfigArgs $global:KubeletConfigArgs `
+            -KubeBinariesVersion $global:KubeBinariesVersion `
+            -NetworkPlugin $global:NetworkPlugin `
+            -NetworkMode $global:NetworkMode `
+            -KubeDir $global:KubeDir `
+            -AzureCNIBinDir $global:AzureCNIBinDir `
+            -AzureCNIConfDir $global:AzureCNIConfDir `
+            -CNIPath $global:CNIPath `
+            -CNIConfig $global:CNIConfig `
+            -CNIConfigPath $global:CNIConfigPath `
+            -MasterIP $MasterIP `
+            -KubeDnsServiceIp $KubeDnsServiceIp `
+            -MasterSubnet $global:MasterSubnet `
+            -KubeClusterCIDR $global:KubeClusterCIDR `
+            -KubeServiceCIDR $global:KubeServiceCIDR `
+            -HNSModule $global:HNSModule `
+            -KubeletNodeLabels $global:KubeletNodeLabels
+
+
 
         Get-LogCollectionScripts
 
@@ -384,12 +394,6 @@ try
         Register-NodeResetScriptTask
         Update-DefenderPreferences
 
-        # Output kubelet and kube-proxy scripts
-        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
-        Out-File "c:\k\kubeletstart.ps1"
-        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
-        Out-File "c:\k\kubeproxystart.ps1"
-        
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
@@ -417,5 +421,5 @@ catch
     $global:AppInsightsClient.Flush()
 
     Write-Error $_
-    throw $_
+    exit 1
 }
