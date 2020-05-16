@@ -151,6 +151,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.8":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
 	"1.15.9":         true,
 	"1.15.10":        true,
+	"1.15.11":        true,
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -164,6 +165,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.5":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
 	"1.16.6":         true,
 	"1.16.7":         true,
+	"1.16.8":         true,
+	"1.16.9":         true,
 	"1.17.0-alpha.1": false,
 	"1.17.0-alpha.2": false,
 	"1.17.0-alpha.3": false,
@@ -175,6 +178,8 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.1":         false,
 	"1.17.2":         true,
 	"1.17.3":         true,
+	"1.17.4":         true,
+	"1.17.5":         true,
 	"1.18.0":         false,
 	"1.18.1":         true,
 	"1.18.2":         true,
