@@ -918,3 +918,10 @@ func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) 
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
 }
+
+func generateUserAssignedIdentityClientIDParameterForWindows(isUserAssignedIdentity bool) string {
+	if isUserAssignedIdentity {
+		return "' -UserAssignedClientID ',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId,"
+	}
+	return ""
+}
