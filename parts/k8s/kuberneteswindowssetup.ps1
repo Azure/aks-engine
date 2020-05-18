@@ -413,12 +413,6 @@ try
         Register-NodeResetScriptTask
         Update-DefenderPreferences
 
-        # Output kubelet and kube-proxy scripts
-        (Get-Content "c:\AzureData\k8s\kubeletstart.ps1") |
-        Out-File "c:\k\kubeletstart.ps1"
-        (Get-Content "c:\AzureData\k8s\kubeproxystart.ps1") |
-        Out-File "c:\k\kubeproxystart.ps1"
-
         if (Test-Path $CacheDir)
         {
             Write-Log "Removing aks-engine bits cache directory"
