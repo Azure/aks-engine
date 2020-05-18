@@ -52,6 +52,7 @@ spec:
         prometheus.io/scrape: "true"
         scheduler.alpha.kubernetes.io/critical-pod: ""
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","operator":"Equal","value":"master","effect":"NoSchedule"}]'
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
       labels:
         k8s-app: cilium
         kubernetes.io/cluster-service: "true"
