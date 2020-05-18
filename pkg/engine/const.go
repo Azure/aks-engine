@@ -233,7 +233,7 @@ const (
 	calicoAddonSourceFilename                      string = "kubernetesmasteraddons-calico-daemonset.yaml"
 	calicoAddonDestinationFilename                 string = "calico-daemonset.yaml"
 	azureNetworkPolicyAddonSourceFilename          string = "azure-network-policy.yaml"
-	azureNetworkPolicyAddonDestinationFilename     string = "azure-npm-daemonset.yaml"
+	azureNetworkPolicyAddonDestinationFilename     string = "azure-network-policy.yaml"
 	azurePolicyAddonSourceFilename                 string = "azure-policy-deployment.yaml"
 	azurePolicyAddonDestinationFilename            string = "azure-policy-deployment.yaml"
 	cloudNodeManagerAddonSourceFilename            string = "kubernetesmasteraddons-cloud-node-manager.yaml"

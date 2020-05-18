@@ -22151,7 +22151,7 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       nodeSelector:
-        {{- if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
       containers:
         - name: azure-npm
           image: {{ContainerImage "azure-npm-daemonset"}}
