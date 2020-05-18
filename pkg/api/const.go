@@ -485,6 +485,13 @@ const (
 	DefaultWindowsSSHEnabled = true
 )
 
+// WindowsProfile defaults
+// TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
+const (
+	// For testing only!
+	DefaultWindowsProvisioningScriptsPackageURL = "https://marosset.blob.core.windows.net/pub/provisioningscripts.zip"
+)
+
 const (
 	//DefaultExtensionsRootURL  Root URL for extensions
 	DefaultExtensionsRootURL = "https://raw.githubusercontent.com/Azure/aks-engine/master/"

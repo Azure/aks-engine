@@ -804,6 +804,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
+		// Allow non-default values of windowsProfile.ProvisioningScriptsPackageURL to allow for testing of updates to the scripts.
+		if len(windowsProfile.ProvisioningScriptsPackageURL) == 0 {
+			windowsProfile.ProvisioningScriptsPackageURL = DefaultWindowsProvisioningScriptsPackageURL
+		}
 		if windowsProfile.SSHEnabled == nil {
 			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
@@ -853,6 +857,10 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 			}
 		}
 	} else if isUpgrade {
+		// Always set windowsProfile.ProvisioningScriptsPackerURL to the default value during upgrade.
+		// This content on this package must stay in sync with other powershell code in /parts/k8s and the best way to ensure that is to update the value here.
+		windowsProfile.ProvisioningScriptsPackageURL = DefaultWindowsProvisioningScriptsPackageURL
+
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
 		// Reference: https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-upgrade-scale-set#create-time-properties
 		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
