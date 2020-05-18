@@ -578,6 +578,20 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 					return errors.Errorf("The %s distro is not supported", agentPoolProfile.Distro)
 				}
 			}
+
+			if agentPoolProfile.IsNSeriesSKU() {
+				switch agentPoolProfile.Distro {
+				// TODO remove 18.04-LTS when nvidia drivers are supported there
+				case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
+					var recommendedDistro Distro
+					if agentPoolProfile.Distro == AKSUbuntu1804 {
+						recommendedDistro = AKSUbuntu1604
+					} else {
+						recommendedDistro = Ubuntu
+					}
+					return errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", agentPoolProfile.Distro, recommendedDistro)
+				}
+			}
 		}
 
 		if e := agentPoolProfile.validateLoadBalancerBackendAddressPoolIDs(); e != nil {

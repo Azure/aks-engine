@@ -4860,6 +4860,138 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 	}
 }
 
+func TestValidateAgentPoolProfilesNvidiaDistro(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"should not error when N series sku uses 16.04 VHD": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1604,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should not error when N series sku uses 16.04 vanilla image": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: Ubuntu,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"should error when N series sku uses 18.04 VHD": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1804,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", AKSUbuntu1804, AKSUbuntu1604),
+		},
+		"should error when N series sku uses 18.04 VHD during upgrade": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: AKSUbuntu1804,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", AKSUbuntu1804, AKSUbuntu1604),
+		},
+		"should error when N series sku uses vanilla 18.04 image": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: Ubuntu1804,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", Ubuntu1804, Ubuntu),
+		},
+		"should error when N series sku uses vanilla 18.04 image during upgrade": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: Ubuntu1804,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", Ubuntu1804, Ubuntu),
+		},
+		"should error when N series sku uses vanilla 18.04 gen2 image during upgrade": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:   "foo",
+						Distro: Ubuntu1804Gen2,
+						VMSize: "Standard_NC6",
+					},
+				},
+			},
+			isUpdate:      true,
+			expectedError: errors.Errorf("nvidia drivers not supported on %s distro, please use %s instead", Ubuntu1804Gen2, Ubuntu),
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateAgentPoolProfiles(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestValidateAgentPoolProfilesOSDiskCachingType(t *testing.T) {
 	tests := map[string]struct {
 		properties    *Properties

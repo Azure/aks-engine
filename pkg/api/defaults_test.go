@@ -4678,6 +4678,61 @@ func TestImageReference(t *testing.T) {
 			},
 		},
 		{
+			name: "default w/ nvidia node pool",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							VMSize: "Standard_NC6",
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   AKSUbuntu1804,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro:   AKSUbuntu1604,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
+			name: "custom hyperkube w/ nvidia node pool",
+			cs: ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							CustomHyperkubeImage: "foo",
+						},
+					},
+					MasterProfile: &MasterProfile{},
+					AgentPoolProfiles: []*AgentPoolProfile{
+						{
+							VMSize: "Standard_NC6",
+						},
+					},
+				},
+			},
+			expectedMasterProfile: MasterProfile{
+				Distro:   Ubuntu1804,
+				ImageRef: nil,
+			},
+			expectedAgentPoolProfiles: []AgentPoolProfile{
+				{
+					Distro:   Ubuntu,
+					ImageRef: nil,
+				},
+			},
+		},
+		{
 			name: "image references",
 			cs: ContainerService{
 				Properties: &Properties{
