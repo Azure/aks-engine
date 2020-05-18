@@ -51,7 +51,6 @@ const (
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	stabilityCommandTimeout                   = 3 * time.Second
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
@@ -73,6 +72,7 @@ var (
 	clusterAutoscalerAddon          api.KubernetesAddon
 	deploymentReplicasCount         int
 	dnsAddonName                    string
+	stabilityCommandTimeout         time.Duration
 )
 
 var _ = BeforeSuite(func() {
@@ -152,6 +152,10 @@ var _ = BeforeSuite(func() {
 	}
 	if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
 		dnsAddonName = common.CoreDNSAddonName
+	}
+	stabilityCommandTimeout = 3 * time.Second
+	if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyCalico {
+		stabilityCommandTimeout = 5 * time.Second
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
 })

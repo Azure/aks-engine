@@ -1,7 +1,6 @@
 {
 	"env": {
-		"CREATE_VNET": true,
-		"STABILITY_ITERATIONS": "0"
+		"CREATE_VNET": true
 	},
 	"options": {
 		"allowedOrchestratorVersions": ["1.14", "1.15", "1.16"]
