@@ -232,7 +232,7 @@ const (
 	azureCNINetworkMonitorAddonDestinationFilename string = "azure-cni-networkmonitor.yaml"
 	calicoAddonSourceFilename                      string = "kubernetesmasteraddons-calico-daemonset.yaml"
 	calicoAddonDestinationFilename                 string = "calico-daemonset.yaml"
-	azureNetworkPolicyAddonSourceFilename          string = "kubernetesmasteraddons-azure-npm-daemonset.yaml"
+	azureNetworkPolicyAddonSourceFilename          string = "azure-network-policy.yaml"
 	azureNetworkPolicyAddonDestinationFilename     string = "azure-npm-daemonset.yaml"
 	azurePolicyAddonSourceFilename                 string = "azure-policy-deployment.yaml"
 	azurePolicyAddonDestinationFilename            string = "azure-policy-deployment.yaml"

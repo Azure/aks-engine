@@ -37,7 +37,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -55,7 +54,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -73,7 +71,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -91,7 +88,6 @@
 // ../../parts/k8s/addons/1.19/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -109,6 +105,7 @@
 // ../../parts/k8s/addons/antrea.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
+// ../../parts/k8s/addons/azure-network-policy.yaml
 // ../../parts/k8s/addons/azure-policy-deployment.yaml
 // ../../parts/k8s/addons/azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/azurefile-csi-driver-deployment.yaml
@@ -120,7 +117,6 @@
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-azure-npm-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml
@@ -7161,137 +7157,6 @@ func k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-    - ""
-    resources:
-      - pods
-      - nodes
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-    - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: azure-npm-binding
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: azure-npm
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azure-npm
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    app: azure-npm
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-npm
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-npm
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-npm
-          image: {{ContainerImage "azure-npm-daemonset"}}
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
-              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
-              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-          - name: log
-            mountPath: /var/log
-          - name: protocols
-            mountPath: /etc/protocols
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: File
-      - name: protocols
-        hostPath:
-          path: /etc/protocols
-          type: File
-      serviceAccountName: azure-npm
-`)
-
-func k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -10820,139 +10685,6 @@ func k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-    - ""
-    resources:
-      - pods
-      - nodes
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-    - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: azure-npm-binding
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: azure-npm
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azure-npm
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    app: azure-npm
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-npm
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-npm
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-npm
-          image: {{ContainerImage "azure-npm-daemonset"}}
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
-              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
-              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-          - name: log
-            mountPath: /var/log
-          - name: protocols
-            mountPath: /etc/protocols
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: File
-      - name: protocols
-        hostPath:
-          path: /etc/protocols
-          type: File
-      serviceAccountName: azure-npm
-`)
-
-func k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -14496,139 +14228,6 @@ func k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-    - ""
-    resources:
-      - pods
-      - nodes
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-    - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: azure-npm-binding
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: azure-npm
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azure-npm
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    app: azure-npm
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-npm
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-npm
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-npm
-          image: {{ContainerImage "azure-npm-daemonset"}}
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
-              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
-              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-          - name: log
-            mountPath: /var/log
-          - name: protocols
-            mountPath: /etc/protocols
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: File
-      - name: protocols
-        hostPath:
-          path: /etc/protocols
-          type: File
-      serviceAccountName: azure-npm
-`)
-
-func k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -18238,139 +17837,6 @@ func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-  - apiGroups:
-    - ""
-    resources:
-      - pods
-      - nodes
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-    - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: azure-npm-binding
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-subjects:
-  - kind: ServiceAccount
-    name: azure-npm
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azure-npm
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    app: azure-npm
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-npm
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-npm
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: azure-npm
-          image: {{ContainerImage "azure-npm-daemonset"}}
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
-              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
-              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-          - name: log
-            mountPath: /var/log
-          - name: protocols
-            mountPath: /etc/protocols
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: File
-      - name: protocols
-        hostPath:
-          path: /etc/protocols
-          type: File
-      serviceAccountName: azure-npm
-`)
-
-func k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -22601,6 +22067,144 @@ func k8sAddonsAzureCniNetworkmonitorYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/azure-cni-networkmonitor.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsAzureNetworkPolicyYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+rules:
+  - apiGroups:
+    - ""
+    resources:
+      - pods
+      - nodes
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+    - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: azure-npm-binding
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+subjects:
+  - kind: ServiceAccount
+    name: azure-npm
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: azure-npm
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: azure-npm
+  namespace: kube-system
+  labels:
+    app: azure-npm
+    addonmanager.kubernetes.io/mode: {{GetMode}}
+spec:
+  selector:
+    matchLabels:
+      k8s-app: azure-npm
+  template:
+    metadata:
+      labels:
+        k8s-app: azure-npm
+{{- if IsKubernetesVersionGe "1.16.0"}}
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+  {{- if IsKubernetesVersionGe "1.17.0"}}
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+  {{- end}}
+{{- end}}
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      nodeSelector:
+        {{- if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
+      containers:
+        - name: azure-npm
+          image: {{ContainerImage "azure-npm-daemonset"}}
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
+              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
+            limits:
+              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
+              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+          volumeMounts:
+          - name: xtables-lock
+            mountPath: /run/xtables.lock
+          - name: log
+            mountPath: /var/log
+          - name: protocols
+            mountPath: /etc/protocols
+      hostNetwork: true
+      volumes:
+      - name: log
+        hostPath:
+          path: /var/log
+          type: Directory
+      - name: xtables-lock
+        hostPath:
+          path: /run/xtables.lock
+          type: File
+      - name: protocols
+        hostPath:
+          path: /etc/protocols
+          type: File
+      serviceAccountName: azure-npm
+`)
+
+func k8sAddonsAzureNetworkPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddonsAzureNetworkPolicyYaml, nil
+}
+
+func k8sAddonsAzureNetworkPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddonsAzureNetworkPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/azure-network-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -27679,139 +27283,6 @@ func k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error)
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-  - apiGroups:
-    - ""
-    resources:
-      - pods
-      - nodes
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-    - networking.k8s.io
-    resources:
-      - networkpolicies
-    verbs:
-      - get
-      - list
-      - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: azure-npm-binding
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-subjects:
-  - kind: ServiceAccount
-    name: azure-npm
-    namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: azure-npm
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: extensions/v1beta1
-kind: DaemonSet
-metadata:
-  name: azure-npm
-  namespace: kube-system
-  labels:
-    app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-npm
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-npm
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-        - name: azure-npm
-          image: {{ContainerImage "azure-npm-daemonset"}}
-          securityContext:
-            privileged: true
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "azure-npm-daemonset"}}
-              memory: {{ContainerMemReqs "azure-npm-daemonset"}}
-            limits:
-              cpu: {{ContainerCPULimits "azure-npm-daemonset"}}
-              memory: {{ContainerMemLimits "azure-npm-daemonset"}}
-          env:
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: spec.nodeName
-          volumeMounts:
-          - name: xtables-lock
-            mountPath: /run/xtables.lock
-          - name: log
-            mountPath: /var/log
-          - name: protocols
-            mountPath: /etc/protocols
-      hostNetwork: true
-      volumes:
-      - name: log
-        hostPath:
-          path: /var/log
-          type: Directory
-      - name: xtables-lock
-        hostPath:
-          path: /run/xtables.lock
-          type: File
-      - name: protocols
-        hostPath:
-          path: /etc/protocols
-          type: File
-      serviceAccountName: azure-npm
-`)
-
-func k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-azure-npm-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -42999,7 +42470,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml":              k8sAddons116KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-cilium-daemonset.yaml":              k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -43017,7 +42487,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                        k8sAddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-cilium-daemonset.yaml":              k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -43035,7 +42504,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmaster-audit-policy.yaml":                        k8sAddons118KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-cilium-daemonset.yaml":              k8sAddons118KubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -43053,7 +42521,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmaster-audit-policy.yaml":                        k8sAddons119KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-cilium-daemonset.yaml":              k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -43071,6 +42538,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/antrea.yaml":                                               k8sAddonsAntreaYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                                 k8sAddonsAzureCloudProviderYaml,
 	"k8s/addons/azure-cni-networkmonitor.yaml":                             k8sAddonsAzureCniNetworkmonitorYaml,
+	"k8s/addons/azure-network-policy.yaml":                                 k8sAddonsAzureNetworkPolicyYaml,
 	"k8s/addons/azure-policy-deployment.yaml":                              k8sAddonsAzurePolicyDeploymentYaml,
 	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                      k8sAddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/addons/azurefile-csi-driver-deployment.yaml":                      k8sAddonsAzurefileCsiDriverDeploymentYaml,
@@ -43082,7 +42550,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                        k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-azure-npm-daemonset.yaml":           k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-cilium-daemonset.yaml":              k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml,
@@ -43269,7 +42736,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-npm-daemonset.yaml":           {k8sAddons116KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":              {k8sAddons116KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -43289,7 +42755,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-npm-daemonset.yaml":           {k8sAddons117KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":              {k8sAddons117KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -43309,7 +42774,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons118KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-npm-daemonset.yaml":           {k8sAddons118KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":              {k8sAddons118KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -43329,7 +42793,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons119KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-azure-npm-daemonset.yaml":           {k8sAddons119KubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-cilium-daemonset.yaml":              {k8sAddons119KubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},
@@ -43348,6 +42811,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"antrea.yaml":                                               {k8sAddonsAntreaYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":                                 {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
 			"azure-cni-networkmonitor.yaml":                             {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
+			"azure-network-policy.yaml":                                 {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
 			"azure-policy-deployment.yaml":                              {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"azuredisk-csi-driver-deployment.yaml":                      {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"azurefile-csi-driver-deployment.yaml":                      {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
@@ -43359,7 +42823,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmaster-audit-policy.yaml":                        {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-azure-npm-daemonset.yaml":           {k8sAddonsKubernetesmasteraddonsAzureNpmDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-cilium-daemonset.yaml":              {k8sAddonsKubernetesmasteraddonsCiliumDaemonsetYaml, map[string]*bintree{}},

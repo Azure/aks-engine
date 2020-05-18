@@ -341,6 +341,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultAzureNetworkPolicyAddonsConfig := KubernetesAddon{
 		Name:    common.AzureNetworkPolicyAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
+		Mode:    AddonModeReconcile,
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.AzureNetworkPolicyAddonName,
@@ -351,6 +352,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryLimits:   "200Mi",
 			},
 		},
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultAzureNetworkPolicyAddonsConfig.Mode = AddonModeEnsureExists
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{

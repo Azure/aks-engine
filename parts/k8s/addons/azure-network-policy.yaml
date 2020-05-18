@@ -4,7 +4,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -12,7 +12,7 @@ metadata:
   name: azure-npm
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 rules:
   - apiGroups:
     - ""
@@ -39,7 +39,7 @@ metadata:
   name: azure-npm-binding
   namespace: kube-system
   labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 subjects:
   - kind: ServiceAccount
     name: azure-npm
@@ -56,7 +56,7 @@ metadata:
   namespace: kube-system
   labels:
     app: azure-npm
-    addonmanager.kubernetes.io/mode: EnsureExists
+    addonmanager.kubernetes.io/mode: {{GetMode}}
 spec:
   selector:
     matchLabels:
@@ -65,15 +65,20 @@ spec:
     metadata:
       labels:
         k8s-app: azure-npm
+{{- if IsKubernetesVersionGe "1.16.0"}}
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
+  {{- if IsKubernetesVersionGe "1.17.0"}}
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+  {{- end}}
+{{- end}}
     spec:
       priorityClassName: system-node-critical
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{- if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
       containers:
         - name: azure-npm
           image: {{ContainerImage "azure-npm-daemonset"}}
