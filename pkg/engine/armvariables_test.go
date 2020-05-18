@@ -191,6 +191,7 @@ func TestK8sVars(t *testing.T) {
 		"customCloudIdentifySystem":                 cs.Properties.GetCustomCloudIdentitySystem(),
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
 	}
 
 	diff := cmp.Diff(varMap, expectedMap)
@@ -792,6 +793,7 @@ func TestK8sVars(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
 	}
 	diff = cmp.Diff(varMap, expectedMap)
 
@@ -1045,6 +1047,7 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		"vnetSubnetID":                              "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
 		"windowsCSIProxyURL":                        "",
 		"windowsEnableCSIProxy":                     false,
+		"windowsProvisioningScriptsPackageURL":      "",
 	}
 	diff := cmp.Diff(varMap, expectedMap)
 
@@ -1061,30 +1064,34 @@ func TestK8sVarsWindowsProfile(t *testing.T) {
 		expectedVars map[string]interface{}
 	}{
 		{
-			name: "No windows profile",
+			name: "No Windows profile",
 			wp:   nil,
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
 			},
 		},
 		{
-			name: "Defaults",
+			name: "Empty Windows profile",
 			wp:   &api.WindowsProfile{},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": false,
-				"windowsCSIProxyURL":    "",
+				"windowsEnableCSIProxy":                false,
+				"windowsCSIProxyURL":                   "",
+				"windowsProvisioningScriptsPackageURL": "",
 			},
 		},
 		{
 			name: "Non-defaults",
 			wp: &api.WindowsProfile{
-				EnableCSIProxy: &trueVar,
-				CSIProxyURL:    "http://some/package.tar",
+				EnableCSIProxy:                &trueVar,
+				CSIProxyURL:                   "http://some/package.tar",
+				ProvisioningScriptsPackageURL: "https://provisioning/package",
 			},
 			expectedVars: map[string]interface{}{
-				"windowsEnableCSIProxy": true,
-				"windowsCSIProxyURL":    "http://some/package.tar",
+				"windowsEnableCSIProxy":                true,
+				"windowsCSIProxyURL":                   "http://some/package.tar",
+				"windowsProvisioningScriptsPackageURL": "https://provisioning/package",
 			},
 		},
 	}
