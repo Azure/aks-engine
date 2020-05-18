@@ -29529,6 +29529,10 @@ if [[ -n ${MASTER_NODE} ]]; then
   time_metric "ConfigureSecrets" configureSecrets
 fi
 
+{{- if IsDockerContainerRuntime}}
+time_metric "EnsureDocker" ensureDocker
+{{end}}
+
 {{/* configure etcd if we are configured for etcd */}}
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   time_metric "ConfigureEtcd" configureEtcd
@@ -29539,10 +29543,6 @@ fi
 {{- if HasCustomSearchDomain}}
 wait_for_file 3600 1 {{GetCustomSearchDomainsCSEScriptFilepath}} || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
 {{GetCustomSearchDomainsCSEScriptFilepath}} >/opt/azure/containers/setup-custom-search-domain.log 2>&1 || exit {{GetCSEErrorCode "ERR_CUSTOM_SEARCH_DOMAINS_FAIL"}}
-{{end}}
-
-{{- if IsDockerContainerRuntime}}
-time_metric "EnsureDocker" ensureDocker
 {{end}}
 
 time_metric "ConfigureK8s" configureK8s
