@@ -30298,7 +30298,7 @@ metadata:
   name: default:privileged
 {{- if not (IsKubernetesVersionGe "1.15.0")}}
   namespace: kube-system
-{{end -}}
+{{end}}
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
 roleRef:
@@ -30313,7 +30313,7 @@ subjects:
 - kind: Group
   name: system:serviceaccounts:kube-system
   apiGroup: rbac.authorization.k8s.io
-{{end -}}
+{{end}}
 - kind: Group
   name: system:nodes
   apiGroup: rbac.authorization.k8s.io
