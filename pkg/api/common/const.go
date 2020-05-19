@@ -65,9 +65,9 @@ const (
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.15"
+	KubernetesDefaultRelease string = "1.18"
 	// KubernetesDefaultReleaseWindows is the default Kubernetes release
-	KubernetesDefaultReleaseWindows string = "1.15"
+	KubernetesDefaultReleaseWindows string = "1.18"
 )
 
 const (
