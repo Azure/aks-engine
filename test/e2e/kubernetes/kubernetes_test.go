@@ -191,6 +191,35 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(ready).To(Equal(true))
 			}
 		})
+
+		It("should validate filesystem config", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				filesystemValidateScript := "host-os-fs.sh"
+				err = sshConn.CopyTo(filesystemValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := fmt.Sprintf("MASTER_NODE=true")
+				filesystemValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
+				err = sshConn.Execute(filesystemValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+filesystemValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{"k8s-master"}))
+						filesystemValidationCommand = fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, filesystemValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
 		It("should validate host OS DNS", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
