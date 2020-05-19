@@ -31551,6 +31551,12 @@ fs_setup:
     extra_opts:
       - -E
       - lazy_itable_init=1,lazy_journal_init=1
+{{- /* ephemeral (/mnt) filesystem is explicitly configured, see: */}}
+{{- /* https://bugs.launchpad.net/cloud-init/+bug/1879552 */}}
+  - label: ephemeral0
+    filesystem: ext4
+    device: ephemeral0.1
+    replace_fs: ntfs
 mounts:
   - - LABEL=etcd_disk
     - /var/lib/etcddisk
