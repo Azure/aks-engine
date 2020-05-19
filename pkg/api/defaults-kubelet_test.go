@@ -206,6 +206,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 		"--allow-privileged":                  "true", // validate that we delete this key for >= 1.15 clusters
 		"--anonymous-auth":                    "false",
 		"--authorization-mode":                "Webhook",
+		"--authentication-token-webhook":      "true",
 		"--azure-container-registry-config":   "/etc/kubernetes/azure.json",
 		"--cadvisor-port":                     "", // Validate that we delete this key for >= 1.12 clusters
 		"--cgroups-per-qos":                   "true",
@@ -230,6 +231,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 		"--pod-infra-container-image":         cs.Properties.OrchestratorProfile.KubernetesConfig.MCRKubernetesImageBase + k8sComponentsByVersionMap[cs.Properties.OrchestratorProfile.OrchestratorVersion][common.PauseComponentName],
 		"--pod-max-pids":                      strconv.Itoa(DefaultKubeletPodMaxPIDs),
 		"--protect-kernel-defaults":           "true",
+		"--read-only-port":                    "0",
 		"--rotate-certificates":               "true",
 		"--streaming-connection-idle-timeout": "4h",
 		"--feature-gates":                     "RotateKubeletServerCertificate=true",
@@ -242,7 +244,7 @@ func getDefaultLinuxKubeletConfig(cs *ContainerService) map[string]string {
 }
 
 func TestKubeletConfigAzureStackDefaults(t *testing.T) {
-	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false), 3, 2, false)
+	cs := CreateMockContainerService("testcluster", common.RationalizeReleaseAndVersion(Kubernetes, "1.15", "", false, false), 3, 2, false)
 	cs.Properties.CustomCloudProfile = &CustomCloudProfile{}
 	winProfile := &AgentPoolProfile{}
 	winProfile.Count = 1
