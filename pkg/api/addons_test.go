@@ -1959,7 +1959,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.15.12",
 						KubernetesConfig: &KubernetesConfig{
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
@@ -1995,7 +1995,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2005,7 +2005,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2019,7 +2019,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2034,7 +2034,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:           common.AzureCNINetworkMonitorAddonName,
-							Image:          "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							Image:          "AzureCNIImageBase" + k8sComponentsByVersionMap["1.15.12"][common.AzureCNINetworkMonitorAddonName],
 							CPURequests:    "30m",
 							MemoryRequests: "25Mi",
 							CPULimits:      "200m",
@@ -2055,11 +2055,11 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.CoreDNSAddonName],
 						},
 						{
 							Name:  common.CoreDNSAutoscalerName,
-							Image: k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAutoscalerName],
+							Image: k8sComponentsByVersionMap["1.15.12"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -2074,9 +2074,13 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.KubeProxyAddonName] + common.AzureStackSuffix,
 						},
 					},
+				},
+				{
+					Name:    common.PodSecurityPolicyAddonName,
+					Enabled: to.BoolPtr(true),
 				},
 			},
 		},

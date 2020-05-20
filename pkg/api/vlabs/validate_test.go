@@ -2024,7 +2024,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.14"
+	p.OrchestratorProfile.OrchestratorRelease = "1.18"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with k8s >= 1.14",

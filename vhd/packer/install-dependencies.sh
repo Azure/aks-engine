@@ -223,7 +223,6 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.17.2
 1.16.5
 1.15.6
-1.14.8
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -364,9 +363,6 @@ K8S_VERSIONS="
 1.15.12-azs
 1.15.11
 1.15.11-azs
-1.14.8
-1.14.7
-1.14.7-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then

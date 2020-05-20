@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-const defaultTestClusterVer = "1.7.12"
+var defaultTestClusterVer = common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false)
 
 func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	// Test EnableDataEncryptionAtRest = true
@@ -392,20 +392,11 @@ func TestAPIServerConfigEnableProfiling(t *testing.T) {
 
 func TestAPIServerConfigRepairMalformedUpdates(t *testing.T) {
 	// Test default
-	cs := CreateMockContainerService("testcluster", "1.13.0", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--repair-malformed-updates"] != "false" {
-		t.Fatalf("got unexpected default value for '--repair-malformed-updates' API server config: %s",
-			a["--repair-malformed-updates"])
-	}
-
-	// Validate that 1.14.0 doesn't include --repair-malformed-updates at all
-	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if _, ok := a["--repair-malformed-updates"]; ok {
-		t.Fatalf("got a value for the deprecated '--repair-malformed-updates' API server config: %s",
+		t.Fatalf("got unexpected default value for '--repair-malformed-updates' API server config: %s",
 			a["--repair-malformed-updates"])
 	}
 }
@@ -426,7 +417,7 @@ func TestAPIServerAuditPolicyBackCompatOverride(t *testing.T) {
 
 func TestAPIServerWeakCipherSuites(t *testing.T) {
 	// Test allowed versions
-	for _, version := range []string{"1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.15.12", "1.16.9", "1.17.5", "1.18.2"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.setAPIServerConfig()
 		a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
@@ -438,7 +429,7 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 
 	allSuites := "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_RC4_128_SHA,TLS_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_RSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_RC4_128_SHA"
 	// Test user-override
-	for _, version := range []string{"1.13.0", "1.14.0"} {
+	for _, version := range []string{"1.15.12", "1.16.9", "1.17.5", "1.18.2"} {
 		cs := CreateMockContainerService("testcluster", version, 3, 2, false)
 		cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
 			"--tls-cipher-suites": allSuites,
@@ -454,7 +445,7 @@ func TestAPIServerWeakCipherSuites(t *testing.T) {
 
 func TestAPIServerCosmosEtcd(t *testing.T) {
 	// Test default
-	cs := CreateMockContainerService("testcluster", "1.15.4", 3, 2, false)
+	cs := CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--etcd-cafile"] != "/etc/kubernetes/certs/ca.crt" {
@@ -466,8 +457,7 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 			a["--etcd-servers"])
 	}
 
-	// Validate that 1.14.0 doesn't include --repair-malformed-updates at all
-	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", "1.18.2", 3, 2, false)
 	cs.Properties.MasterProfile.CosmosEtcd = to.BoolPtr(true)
 	cs.Properties.MasterProfile.DNSPrefix = "my-cosmos"
 	cs.setAPIServerConfig()
@@ -479,26 +469,17 @@ func TestAPIServerCosmosEtcd(t *testing.T) {
 }
 
 func TestAPIServerFeatureGates(t *testing.T) {
-	// Test k8s < 1.13
-	cs := CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
+	// Test 1.13 <= k8s <= 1.16
+	cs := CreateMockContainerService("testcluster", "1.15.12", 3, 2, false)
 	cs.setAPIServerConfig()
 	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
-	if a["--feature-gates"] != "" {
-		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			defaultTestClusterVer, a["--feature-gates"])
-	}
-
-	// Test 1.13 <= k8s <= 1.16
-	cs = CreateMockContainerService("testcluster", "1.14.0", 3, 2, false)
-	cs.setAPIServerConfig()
-	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "VolumeSnapshotDataSource=true" {
 		t.Fatalf("got unexpected '--feature-gates' API server config value for k8s v%s: %s",
-			"1.14.0", a["--feature-gates"])
+			"1.15.12", a["--feature-gates"])
 	}
 
 	// Test k8s >= 1.17
-	cs = CreateMockContainerService("testcluster", "1.17.0", 3, 2, false)
+	cs = CreateMockContainerService("testcluster", defaultTestClusterVer, 3, 2, false)
 	cs.setAPIServerConfig()
 	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
 	if a["--feature-gates"] != "" {

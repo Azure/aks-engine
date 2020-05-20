@@ -3,7 +3,7 @@
 		"CREATE_VNET": true
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.14", "1.15", "1.16"]
+		"allowedOrchestratorVersions": ["1.15", "1.16"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
