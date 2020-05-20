@@ -27755,6 +27755,7 @@ configAzurePolicyAddon() {
 }
 {{end}}
 configAddons() {
+  mkdir -p $ADDONS_DIR/init
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
@@ -27770,8 +27771,6 @@ configAddons() {
   {{end}}
   {{- if not HasCustomPodSecurityPolicy}}
   wait_for_file 1200 1 $POD_SECURITY_POLICY_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  mkdir -p $ADDONS_DIR/init
   cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/
   {{- end}}
 }
