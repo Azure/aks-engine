@@ -762,6 +762,17 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"GetAADPodIdentityTaintKey": func() string {
 			return common.AADPodIdentityTaintKey
 		},
+		"HasCustomPodSecurityPolicy": func() bool {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) &&
+				cs.Properties.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig != nil {
+				return true
+			}
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.PodSecurityPolicyAddonName) {
+				return cs.Properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.PodSecurityPolicyAddonName).Data != ""
+
+			}
+			return false
+		},
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.GetK8sComponentsByVersionMap(cs.Properties.OrchestratorProfile.KubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]

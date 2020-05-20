@@ -197,11 +197,10 @@ time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 
 time_metric "ConfigureCNI" configureCNI
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
   time_metric "ConfigAddons" configAddons
+  time_metric "WriteKubeConfig" writeKubeConfig
 fi
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "EnsureContainerd" ensureContainerd
@@ -219,6 +218,9 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureAddons" ensureAddons
+fi
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
