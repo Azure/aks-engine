@@ -397,7 +397,7 @@ ensureKubelet() {
 ensureAddons() {
   retrycmd 120 5 30 $KUBECTL get pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
 {{- if not HasCustomPodSecurityPolicy}}
-  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   rm -Rf ${ADDONS_DIR}/init
 {{- end}}
   sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC
