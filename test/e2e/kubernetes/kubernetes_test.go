@@ -1982,7 +1982,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			})*/
 		It("should be able to attach azure file", func() {
-			if eng.HasWindowsAgents() {
+			if eng.HasWindowsAgents() && !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
