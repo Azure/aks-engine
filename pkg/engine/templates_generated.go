@@ -19314,9 +19314,7 @@ spec:
           image: {{ContainerImage "csi-provisioner"}}
           args:
             - "--provisioner=disk.csi.azure.com"
-            {{if IsKubernetesVersionGe "1.14.0"}}
             - "--feature-gates=Topology=true"
-            {{end}}
             - "--csi-address=$(ADDRESS)"
             - "--connection-timeout=15s"
             - "--v=5"

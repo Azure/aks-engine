@@ -547,11 +547,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.14 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.14.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.15 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.15.json",
 			setArgs:      defaultSet,
@@ -814,11 +809,6 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "e2e kubenet",
 			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/network-plugin-kubenet.json",
-			setArgs:      defaultSet,
-		},
-		{
-			name:         "e2e rbac disabled",
-			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/rbac-disabled.json",
 			setArgs:      defaultSet,
 		},
 		{

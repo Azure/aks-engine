@@ -1833,7 +1833,7 @@ func TestMasterProfileDefaults(t *testing.T) {
 	}
 
 	// this validates default configurations for OutboundRuleIdleTimeoutInMinutes.
-	mockCS = getMockBaseContainerService("1.14.4")
+	mockCS = getMockBaseContainerService("1.18.2")
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
@@ -2891,37 +2891,12 @@ func TestCloudProviderBackoff(t *testing.T) {
 			},
 		},
 		{
-			name: "Kubernetes 1.13.0",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.13.0",
-						OrchestratorType:    Kubernetes,
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: KubernetesConfig{
-				CloudProviderBackoffMode:          "v1",
-				CloudProviderBackoff:              to.BoolPtr(false),
-				CloudProviderBackoffRetries:       DefaultKubernetesCloudProviderBackoffRetries,
-				CloudProviderBackoffJitter:        DefaultKubernetesCloudProviderBackoffJitter,
-				CloudProviderBackoffDuration:      DefaultKubernetesCloudProviderBackoffDuration,
-				CloudProviderBackoffExponent:      DefaultKubernetesCloudProviderBackoffExponent,
-				CloudProviderRateLimit:            to.BoolPtr(DefaultKubernetesCloudProviderRateLimit),
-				CloudProviderRateLimitQPS:         DefaultKubernetesCloudProviderRateLimitQPS,
-				CloudProviderRateLimitQPSWrite:    DefaultKubernetesCloudProviderRateLimitQPSWrite,
-				CloudProviderRateLimitBucket:      DefaultKubernetesCloudProviderRateLimitBucket,
-				CloudProviderRateLimitBucketWrite: DefaultKubernetesCloudProviderRateLimitBucketWrite,
-			},
-		},
-		{
-			name: "Kubernetes 1.14.0",
+			name: "Kubernetes 1.18.2",
 			cs: ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -4049,46 +4024,7 @@ func TestDefaultEnablePodSecurityPolicy(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "default",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.0-alpha.1",
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "default",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.0-beta.1",
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "default",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.15.0",
+						OrchestratorVersion: "1.18.2",
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -4121,7 +4057,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -4134,7 +4070,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku: "basic",
 						},
@@ -4150,7 +4086,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku: BasicLoadBalancerSku,
 						},
@@ -4166,7 +4102,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku: "standard",
 						},
@@ -4182,7 +4118,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku: StandardLoadBalancerSku,
 						},
@@ -4225,39 +4161,6 @@ func TestEnableRBAC(t *testing.T) {
 				},
 			},
 			expected: true,
-		},
-		{
-			name: "1.14 disabled",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: common.GetLatestPatchVersion("1.14", common.GetAllSupportedKubernetesVersions(false, false)),
-						KubernetesConfig: &KubernetesConfig{
-							EnableRbac: to.BoolPtr(false),
-						},
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			expected: false,
-		},
-		{
-			name: "1.14 disabled upgrade",
-			cs: ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: common.GetLatestPatchVersion("1.14", common.GetAllSupportedKubernetesVersions(false, false)),
-						KubernetesConfig: &KubernetesConfig{
-							EnableRbac: to.BoolPtr(false),
-						},
-					},
-					MasterProfile: &MasterProfile{},
-				},
-			},
-			isUpgrade: true,
-			expected:  false,
 		},
 		{
 			name: "1.15",
@@ -4433,7 +4336,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 					},
 					MasterProfile: &MasterProfile{},
 				},
@@ -4446,7 +4349,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku: BasicLoadBalancerSku,
 						},
@@ -4462,7 +4365,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  BasicLoadBalancerSku,
 							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
@@ -4479,7 +4382,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  BasicLoadBalancerSku,
 							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
@@ -4496,7 +4399,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  StandardLoadBalancerSku,
 							CloudProviderDisableOutboundSNAT: to.BoolPtr(true),
@@ -4513,7 +4416,7 @@ func TestDefaultCloudProviderDisableOutboundSNAT(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							LoadBalancerSku:                  StandardLoadBalancerSku,
 							CloudProviderDisableOutboundSNAT: to.BoolPtr(false),
@@ -5062,7 +4965,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},
@@ -5088,7 +4991,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5114,7 +5017,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5144,7 +5047,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},
@@ -5174,7 +5077,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginAzure,
 						},
@@ -5211,7 +5114,7 @@ func TestDefaultIPAddressCount(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.18.2",
 						KubernetesConfig: &KubernetesConfig{
 							NetworkPlugin: NetworkPluginKubenet,
 						},

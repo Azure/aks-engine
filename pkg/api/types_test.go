@@ -4274,7 +4274,7 @@ func TestGetAzureCNIURLFuncs(t *testing.T) {
 
 func TestCloudProviderDefaults(t *testing.T) {
 	// Test cloudprovider defaults when no user-provided values
-	v := "1.8.0"
+	v := "1.18.2"
 	p := Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4343,7 +4343,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider Azure Stack defaults when no user-provided values
-	v = "1.14.0"
+	v = "1.15.12"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4500,7 +4500,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults when user provides *some* config values
-	v = "1.8.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4557,7 +4557,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for VMSS scenario
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4623,7 +4623,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for VMSS scenario with 3 pools
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4695,7 +4695,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for VMSS scenario + AKS
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4764,7 +4764,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for VMAS scenario
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4830,7 +4830,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for VMAS + VMSS scenario
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",
@@ -4899,7 +4899,7 @@ func TestCloudProviderDefaults(t *testing.T) {
 	}
 
 	// Test cloudprovider defaults for backoff mode v2
-	v = "1.14.0"
+	v = "1.18.2"
 	p = Properties{
 		OrchestratorProfile: &OrchestratorProfile{
 			OrchestratorType:    "Kubernetes",

@@ -3,7 +3,7 @@
 		"GINKGO_FOCUS": "should apply various network policies"
 	},
 	"options": {
-		"allowedOrchestratorVersions": ["1.14", "1.15"]
+		"allowedOrchestratorVersions": ["1.15"]
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",

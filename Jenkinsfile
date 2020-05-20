@@ -5,8 +5,8 @@ defaultEnv = [
 	CREATE_VNET: false,
 	] + params
 
-def k8sVersions = ["1.14", "1.15", "1.16", "1.17", "1.18", "1.19"]
-def latestReleasedVersion = "1.17"
+def k8sVersions = ["1.15", "1.16", "1.17", "1.18", "1.19"]
+def latestReleasedVersion = "1.18"
 def tasks = [:]
 def testConfigs = []
 
