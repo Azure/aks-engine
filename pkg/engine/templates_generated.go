@@ -32061,7 +32061,7 @@ $global:AzureCNIBinDir = [Io.path]::Combine("$global:AzureCNIDir", "bin")
 $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 
 $global:CNIPath = [Io.path]::Combine("$global:KubeDir", "cni")
-$global:CNIConfig = [Io.path]::Combine($global:CNIPath, "config", "` + "`" + `$global:NetworkMode.conf")
+$global:CNIConfig = [Io.path]::Combine($global:CNIPath, "config", "$global:NetworkMode.conf")
 $global:CNIConfigPath = [Io.path]::Combine("$global:CNIPath", "config")
 
 
@@ -32285,7 +32285,7 @@ if (($global:NetworkPlugin -eq "kubenet") -and ($global:ContainerRuntime -eq "do
         if (-not $podCidrDiscovered) {
             $argList = $KubeletArgListStr
 
-            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $argList
+            $process = Start-Process -FilePath c:\k\kubelet.exe -PassThru -ArgumentList $kubeletArgList
 
             # run kubelet until podCidr is discovered
             Write-Host "waiting to discover pod CIDR"
