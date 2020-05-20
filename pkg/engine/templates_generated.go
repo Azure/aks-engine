@@ -18251,7 +18251,7 @@ subjects:
 - kind: ServiceAccount
   name: azure-cloud-provider
   namespace: kube-system
-{{end -}}
+{{- end}}
 {{- if UsesCloudControllerManager}}
 ---
 apiVersion: storage.k8s.io/v1
@@ -18270,7 +18270,7 @@ parameters:
 reclaimPolicy: Delete
   {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{end -}}
+  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -18279,7 +18279,7 @@ allowedTopologies:
     values: {{GetZones}}
   {{else}}
 volumeBindingMode: Immediate
-  {{end -}}
+  {{- end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -18295,7 +18295,7 @@ parameters:
 reclaimPolicy: Delete
   {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{end -}}
+  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -18304,7 +18304,7 @@ allowedTopologies:
     values: {{GetZones}}
   {{else}}
 volumeBindingMode: Immediate
-  {{end -}}
+  {{- end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -18320,7 +18320,7 @@ parameters:
 reclaimPolicy: Delete
   {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{end -}}
+  {{- end}}
   {{- if HasAvailabilityZones}}
 volumeBindingMode: WaitForFirstConsumer
 allowedTopologies:
@@ -18329,7 +18329,7 @@ allowedTopologies:
     values: {{GetZones}}
   {{else}}
 volumeBindingMode: Immediate
-  {{end -}}
+  {{- end}}
 ---
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -18343,7 +18343,7 @@ parameters:
 reclaimPolicy: Delete
   {{- if IsKubernetesVersionGe "1.15.0"}}
 allowVolumeExpansion: true
-  {{end -}}
+  {{- end}}
 volumeBindingMode: Immediate
 {{else}}
   {{- if NeedsStorageAccountStorageClasses}}
@@ -18397,8 +18397,8 @@ metadata:
 provisioner: kubernetes.io/azure-file
 parameters:
   skuName: Standard_LRS
-    {{end -}}
-  {{end -}}
+    {{- end}}
+  {{- end}}
   {{- if NeedsManagedDiskStorageClasses}}
 ---
 apiVersion: storage.k8s.io/v1beta1
@@ -18452,9 +18452,9 @@ metadata:
 provisioner: kubernetes.io/azure-file
 parameters:
   skuName: Standard_LRS
-    {{end -}}
-  {{end -}}
-{{end -}}
+    {{- end}}
+  {{- end}}
+{{- end}}
 `)
 
 func k8sAddonsAzureCloudProviderYamlBytes() ([]byte, error) {
