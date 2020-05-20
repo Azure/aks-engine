@@ -20863,7 +20863,7 @@ apiVersion: storage.k8s.io/v1beta1
 kind: CSIDriver
 metadata:
   name: file.csi.azure.com
-  label:
+  labels:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   attachRequired: true
