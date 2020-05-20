@@ -293,7 +293,11 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			sc.printScaleTargetEqualsExisting(currentNodeCount)
 			return nil
 		}
-		highestUsedIndex = indexes[len(indexes)-1]
+		if currentNodeCount > 0 {
+			highestUsedIndex = indexes[currentNodeCount-1]
+		} else {
+			return errors.New("None of the VMs in the provided resource group contain any nodes")
+		}
 
 		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
@@ -556,7 +560,11 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 		}
 	}
 
-	// Fall back to checking the VM name to see if it fits the naming pattern.
+	// For Windows, we rely upon the tags
+	if sc.agentPool.OSType == api.Windows {
+		return false
+	}
+	// Fall back to checking the VM name to see if it fits the naming pattern for Linux
 	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
 }
 
