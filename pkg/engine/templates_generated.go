@@ -34705,6 +34705,8 @@ $global:CsiProxyEnabled = [System.Convert]::ToBoolean($Global:ClusterConfigurati
 $global:MasterSubnet = $Global:ClusterConfiguration.Kubernetes.ControlPlane.MasterSubnet
 $global:NetworkMode = "L2Bridge"
 $global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
+$global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
+$UseContainerD = ($global:ContainerRuntime -eq "containerd")
 
 filter Timestamp { "$(Get-Date -Format o): $_" }
 
@@ -34737,7 +34739,13 @@ if ($global:CsiProxyEnabled) {
 $hnsNetwork = Get-HnsNetwork | Where-Object Name -EQ azure
 if ($hnsNetwork) {
     Write-Log "Cleaning up containers"
-    docker ps -q | ForEach-Object { docker rm $_ -f }
+    if ($UseContainerD -eq $true) {
+        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io tasks kill $_ }
+        ctr.exe -n k8s.io c ls -q | ForEach-Object { ctr -n k8s.io c rm $_ }
+    }
+    else {
+        docker.exe ps -q | ForEach-Object { docker rm $_ -f }
+    }
 
     Write-Log "Removing old HNS network 'azure'"
     Remove-HnsNetwork $hnsNetwork
@@ -34769,8 +34777,8 @@ Get-HnsPolicyList | Remove-HnsPolicyList
 # Create required networks
 #
 
-# If using kubenet create the HSN network here.
-# (The kubelet creates the HSN network when using azure-cni + azure cloud provider)
+# If using kubenet create the HNS network here.
+# (The kubelet creates the HNS network when using azure-cni + azure cloud provider)
 if ($global:NetworkPlugin -eq 'kubenet') {
     Write-Log "Creating new hns network: $($global:NetworkMode.ToLower())"
     $podCIDR = Get-PodCIDR

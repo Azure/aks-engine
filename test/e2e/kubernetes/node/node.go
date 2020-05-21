@@ -204,6 +204,24 @@ func (n *Node) Describe() error {
 	return err
 }
 
+// Add taint to node
+func (n *Node) AddTaint(taint Taint) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+"="+taint.Value+":"+taint.Effect)
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
+// Remove taint to node
+func (n *Node) RemoveTaint(taint Taint) error {
+	var commandTimeout time.Duration
+	cmd := exec.Command("k", "taint", "nodes", n.Metadata.Name, taint.Key+":"+taint.Effect+"-")
+	out, err := util.RunAndLogCommand(cmd, commandTimeout)
+	log.Printf("\n%s\n", string(out))
+	return err
+}
+
 // AreAllReady returns if all nodes are ready
 func AreAllReady() bool {
 	list, _ := Get()
