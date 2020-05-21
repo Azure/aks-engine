@@ -1,6 +1,7 @@
 {
 	"env": {
 		"REGION_OPTIONS": "westus2",
+		"SKIP_TESTS": "true",
 		"WINDOWS_NODE_VHD_URL": "https://e2etestimageswestus2.blob.core.windows.net/vhds/WS2019-1908.vhd"
 	},
 	"options": {

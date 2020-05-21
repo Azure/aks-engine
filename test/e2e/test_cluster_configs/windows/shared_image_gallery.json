@@ -1,6 +1,7 @@
 {
 	"env": {
 		"REGION_OPTIONS": "westus2",
+		"SKIP_TESTS": "true",
 		"WINDOWS_NODE_IMAGE_NAME": "aks-engine-ws2019",
 		"WINDOWS_NODE_IMAGE_RESOURCE_GROUP": "acse-test-infrastructure",
 		"WINDOWS_NODE_IMAGE_GALLERY": "akse_test_images_westus2",
