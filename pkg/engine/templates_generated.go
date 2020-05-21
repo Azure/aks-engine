@@ -26292,6 +26292,7 @@ subjects:
 - kind: Group
   name: system:nodes
   apiGroup: rbac.authorization.k8s.io
+#EOF
 `)
 
 func k8sAddonsPodSecurityPolicyYamlBytes() ([]byte, error) {
@@ -27229,6 +27230,9 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+ADDONS_DIR=/etc/kubernetes/addons
+POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
+ADDON_MANAGER_SPEC=/etc/kubernetes/manifests/kube-addon-manager.yaml
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -27592,6 +27596,18 @@ ensureKubelet() {
   wait_for_file 1200 1 $KUBELET_SLICE_FILE || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
   {{- end}}
   systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+}
+
+ensureAddons() {
+  retrycmd 120 5 30 $KUBECTL get pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+{{- if not HasCustomPodSecurityPolicy}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  rm -Rf ${ADDONS_DIR}/init
+{{- end}}
+  wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
+  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
@@ -27706,11 +27722,10 @@ users:
     client-key-data: \"$KUBECONFIG_KEY\"
 " >$FILE
   set -x
-  KUBECTL="$KUBECTL --kubeconfig=$FILE"
 }
 {{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
-  CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler.yaml
+  CLUSTER_AUTOSCALER_ADDON_FILE=$ADDONS_DIR/cluster-autoscaler.yaml
   wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
   sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
@@ -27727,7 +27742,7 @@ configACIConnectorAddon() {
   ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
   ACI_CONNECTOR_CERT=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
 
-  ACI_CONNECTOR_ADDON_FILE=/etc/kubernetes/addons/aci-connector-deployment.yaml
+  ACI_CONNECTOR_ADDON_FILE=$ADDONS_DIR/aci-connector-deployment.yaml
   wait_for_file 1200 1 $ACI_CONNECTOR_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|<creds>|$ACI_CONNECTOR_CREDENTIALS|g" $ACI_CONNECTOR_ADDON_FILE
   sed -i "s|<rgName>|$RESOURCE_GROUP|g" $ACI_CONNECTOR_ADDON_FILE
@@ -27737,11 +27752,10 @@ configACIConnectorAddon() {
 {{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
-  AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+  AZURE_POLICY_ADDON_FILE=$ADDONS_DIR/azure-policy-deployment.yaml
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
 }
 {{end}}
-{{- if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
@@ -27756,8 +27770,11 @@ configAddons() {
   {{if IsAzurePolicyAddonEnabled}}
   configAzurePolicyAddon
   {{end}}
+  {{- if not HasCustomPodSecurityPolicy}}
+  wait_for_file 1200 1 $POD_SECURITY_POLICY_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  {{- end}}
 }
-{{end}}
 {{- if HasNSeriesSKU}}
 {{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
 installNvidiaDrivers() {
@@ -28808,11 +28825,10 @@ time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 
 time_metric "ConfigureCNI" configureCNI
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
   time_metric "ConfigAddons" configAddons
+  time_metric "WriteKubeConfig" writeKubeConfig
 fi
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "EnsureContainerd" ensureContainerd
@@ -28830,6 +28846,9 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureAddons" ensureAddons
+fi
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
@@ -28839,7 +28858,6 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{- if IsAADPodIdentityAddonEnabled}}
   time_metric "EnsureTaints" ensureTaints
 {{end}}
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
@@ -33092,6 +33110,8 @@ metadata:
   name: kube-addon-manager
   namespace: kube-system
   version: v1
+  labels:
+    app: kube-addon-manager
 spec:
   priorityClassName: system-node-critical
   hostNetwork: true
@@ -33105,7 +33125,7 @@ spec:
         memory: 50Mi
     volumeMounts:
     - name: addons
-      mountPath: /etc/kubernetes/addons
+      mountPath: /etc/kubernetes/addons/init
       readOnly: true
     - name: msi
       mountPath: /var/lib/waagent/ManagedIdentity-Settings
@@ -33113,10 +33133,11 @@ spec:
   volumes:
   - name: addons
     hostPath:
-      path: /etc/kubernetes/addons
+      path: /etc/kubernetes/addons/init
   - name: msi
     hostPath:
       path: /var/lib/waagent/ManagedIdentity-Settings
+#EOF
 `)
 
 func k8sManifestsKubernetesmasterKubeAddonManagerYamlBytes() ([]byte, error) {

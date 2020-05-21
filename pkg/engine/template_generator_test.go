@@ -192,6 +192,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedUseManagedIdentity            bool
 		expectedHasKubeReservedCgroup         bool
 		expectedGetKubeReservedCgroup         string
+		expectedHasCustomPodSecurityPolicy    bool
 	}{
 		{
 			name: "1.15 release",
@@ -863,6 +864,87 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasKubeReservedCgroup:        true,
 			expectedGetKubeReservedCgroup:        "kubereserved",
 		},
+		{
+			name: "custom pod-security-policy via addon",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.PodSecurityPolicyAddonName,
+									Enabled: to.BoolPtr(true),
+									Data:    "foo",
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedGetCSEErrorCodeVals:          []int{-1},
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedHasCustomPodSecurityPolicy:   true,
+		},
+		{
+			name: "deprecated custom pod-security-policy",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							EnablePodSecurityPolicy: to.BoolPtr(true),
+							PodSecurityPolicyConfig: map[string]string{
+								"foo": "bar",
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedGetCSEErrorCodeVals:          []int{-1},
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedHasCustomPodSecurityPolicy:   true,
+		},
 	}
 
 	for _, c := range cases {
@@ -1014,6 +1096,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 				if ret[0].Interface() != c.expectedIsVirtualMachineScaleSets {
 					t.Errorf("expected funcMap invocation of IsVirtualMachineScaleSets to return %t, instead got %t", c.expectedIsVirtualMachineScaleSets, ret[0].Interface())
 				}
+			}
+			v = reflect.ValueOf(funcMap["HasCustomPodSecurityPolicy"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedHasCustomPodSecurityPolicy {
+				t.Errorf("expected funcMap invocation of HasCustomPodSecurityPolicy to return %t, instead got %t", c.expectedHasCustomPodSecurityPolicy, ret[0].Interface())
 			}
 		})
 	}

@@ -197,11 +197,10 @@ time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 
 time_metric "ConfigureCNI" configureCNI
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
   time_metric "ConfigAddons" configAddons
+  time_metric "WriteKubeConfig" writeKubeConfig
 fi
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "EnsureContainerd" ensureContainerd
@@ -219,6 +218,9 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureAddons" ensureAddons
+fi
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
@@ -228,7 +230,6 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{- if IsAADPodIdentityAddonEnabled}}
   time_metric "EnsureTaints" ensureTaints
 {{end}}
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd

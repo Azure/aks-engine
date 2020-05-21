@@ -31,6 +31,7 @@ var cseErrorCodes = map[string]int{
 	"ERR_IMG_DOWNLOAD_TIMEOUT":                   33,
 	"ERR_KUBELET_START_FAIL":                     34,
 	"ERR_CONTAINER_IMG_PULL_TIMEOUT":             35,
+	"ERR_ADDONS_START_FAIL":                      36,
 	"ERR_CNI_DOWNLOAD_TIMEOUT":                   41,
 	"ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT":           42,
 	"ERR_MS_PROD_DEB_PKG_ADD_FAIL":               43,
