@@ -62,6 +62,8 @@ labels:
   color: f9d0c4
 - name: usgovcloud
   color: bfd4f2
+- name: VHD
+  color: 204f3d
 - name: windows
   color: 0052cc
 - name: wontfix
