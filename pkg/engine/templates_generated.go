@@ -27606,6 +27606,7 @@ ensureAddons() {
 {{- end}}
   wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
   retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
@@ -27756,7 +27757,6 @@ configAzurePolicyAddon() {
 }
 {{end}}
 configAddons() {
-  mkdir -p $ADDONS_DIR/init
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
     configClusterAutoscalerAddon
@@ -27772,7 +27772,7 @@ configAddons() {
   {{end}}
   {{- if not HasCustomPodSecurityPolicy}}
   wait_for_file 1200 1 $POD_SECURITY_POLICY_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
-  cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/
+  mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{- end}}
 }
 {{- if HasNSeriesSKU}}
@@ -28858,7 +28858,6 @@ if [[ -n ${MASTER_NODE} ]]; then
 {{- if IsAADPodIdentityAddonEnabled}}
   time_metric "EnsureTaints" ensureTaints
 {{end}}
-  time_metric "WriteKubeConfig" writeKubeConfig
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
