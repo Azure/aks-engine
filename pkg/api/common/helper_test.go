@@ -95,13 +95,33 @@ func getCSeriesVMCasesForTesting() []struct {
 		Expected bool
 	}{
 		{
+			"Standard_DC1s_v2",
+			"Standard_DC1s_v2",
+			true,
+		},
+		{
 			"Standard_DC2s",
 			"Standard_DC2s",
 			true,
 		},
 		{
+			"Standard_DC2s_v2",
+			"Standard_DC2s_v2",
+			true,
+		},
+		{
 			"Standard_DC4s",
 			"Standard_DC4s",
+			true,
+		},
+		{
+			"Standard_DC4s_v2",
+			"Standard_DC4s_v2",
+			true,
+		},
+		{
+			"Standard_DC8_v2",
+			"Standard_DC8_v2",
 			true,
 		},
 		{

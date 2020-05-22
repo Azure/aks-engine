@@ -245,11 +245,27 @@ func GetDCSeriesVMCasesForTesting() []struct {
 		Expected bool
 	}{
 		{
+			"Standard_DC1s_v2",
+			true,
+		},
+		{
 			"Standard_DC2s",
 			true,
 		},
 		{
+			"Standard_DC2s_v2",
+			true,
+		},
+		{
 			"Standard_DC4s",
+			true,
+		},
+		{
+			"Standard_DC4s_v2",
+			true,
+		},
+		{
+			"Standard_DC8_v2",
 			true,
 		},
 		{
@@ -271,11 +287,22 @@ func GetDCSeriesVMCasesForTesting() []struct {
 
 // IsSgxEnabledSKU determines if an VM SKU has SGX driver support
 func IsSgxEnabledSKU(vmSize string) bool {
-	switch vmSize {
-	case "Standard_DC2s", "Standard_DC4s":
-		return true
+        dm := map[string]bool{
+                "Standard_DC1s_v2":   true,
+                "Standard_DC2s":  true,
+                "Standard_DC2s_v2":  true,
+                "Standard_DC4s": true,
+                "Standard_DC4s_v2": true,
+                "Standard_DC8_v2": true,
+                "Standard_DC8s": true,
 	}
-	return false
+        // Trim the optional _Promo suffix.
+        vmSize = strings.TrimSuffix(vmSize, "_Promo")
+        if _, ok := dm[vmSize]; ok {
+                return dm[vmSize]
+        }
+
+        return false
 }
 
 // GetMasterKubernetesLabels returns a k8s API-compliant labels string.
