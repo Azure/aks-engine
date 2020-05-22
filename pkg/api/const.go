@@ -341,7 +341,7 @@ const (
 	AzureCniPluginVerWindows = "v1.1.2"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.5"
+	CNIPluginVer = "v0.8.6"
 )
 
 const (
