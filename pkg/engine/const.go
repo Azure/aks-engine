@@ -221,7 +221,7 @@ const (
 	dashboardAddonSourceFilename                   string = "kubernetes-dashboard.yaml"
 	dashboardAddonDestinationFilename              string = "kubernetes-dashboard.yaml"
 	reschedulerAddonSourceFilename                 string = "kube-rescheduler.yaml"
-	reschedulerAddonDestinationFilename            string = "kube-rescheduler-deployment.yaml"
+	reschedulerAddonDestinationFilename            string = "kube-rescheduler.yaml"
 	nvidiaAddonSourceFilename                      string = "nvidia-device-plugin.yaml"
 	nvidiaAddonDestinationFilename                 string = "nvidia-device-plugin.yaml"
 	containerMonitoringAddonSourceFilename         string = "container-monitoring.yaml"
