@@ -607,6 +607,11 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			CustomData: to.StringPtr(customDataStr),
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
+
+		windowsProfile := cs.Properties.WindowsProfile
+		if windowsProfile.HasLicenseType() {
+			vmssVMProfile.LicenseType = (*string)(windowsProfile.LicenseType)
+		}
 	} else {
 		customDataStr := getCustomDataFromJSON(t.GetKubernetesLinuxNodeCustomDataJSONObject(cs, profile))
 		linuxOsProfile := compute.VirtualMachineScaleSetOSProfile{

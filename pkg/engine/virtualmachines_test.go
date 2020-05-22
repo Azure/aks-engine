@@ -305,6 +305,22 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	licenseType := api.WindowsLicenseTypeServer
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		LicenseType: &licenseType,
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			// Expecting panic and it happens
+			// We do not test whether LicenseType works for VMAS so let it throw an error here before we test it
+		} else {
+			t.Errorf("Expecting panic but nothing happens")
+		}
+	}()
+
+	_ = createAgentAvailabilitySetVM(cs, profile)
 }
 
 func TestCreateVmWithCustomTags(t *testing.T) {

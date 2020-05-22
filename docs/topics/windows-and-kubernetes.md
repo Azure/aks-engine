@@ -66,6 +66,21 @@ If you want to disable automatic Windows updates, you can use the `enableAutomat
      },
 ```
 
+### Enabling Azure Hybrid Benefit for Windows Server
+
+If you want to enable [Azure hybrid benefit for Windows server](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-hybrid-use-benefit-licensing?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json), you can use the `licenseType` option.
+
+```json
+"windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServerSemiAnnual",
+            "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
+            "licenseType": "Windows_Server"
+     },
+```
+
 ## More Examples
 
 ### Using Azure Files

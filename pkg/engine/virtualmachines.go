@@ -483,6 +483,10 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsNodeCustomDataJSONObject(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
+		if cs.Properties.WindowsProfile.HasLicenseType() {
+			// We do not test whether LicenseType works for VMAS so let it throw an error here before we test it
+			panic("LicenseType is not supported for VMAS for now")
+		}
 	}
 
 	virtualMachine.OsProfile = &osProfile
