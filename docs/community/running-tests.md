@@ -5,7 +5,15 @@ If you are an AKS Engine developer, running local E2E tests to validate changes 
 As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage:
 
 ```sh
-$ ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
+$ ORCHESTRATOR_RELEASE=1.18 \
+    CLUSTER_DEFINITION=examples/kubernetes.json \
+    SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID \
+    CLIENT_ID=$TEST_AZURE_SP_ID \
+    CLIENT_SECRET=$TEST_AZURE_SP_PW \
+    TENANT_ID=$TEST_AZURE_TENANT_ID \
+    LOCATION=$AZURE_REGION \
+    CLEANUP_ON_EXIT=false \
+    make test-kubernetes
 ```
 
 The above, simple example describes an E2E test invocation against a base cluster configuration defined by the API model at `examples/kubernetes.json`, overriding any specific Kubernetes version therein to validate the most recent, supported v1.18 release; using Azure service principal authentication defined in the various `$TEST_AZURE_`* environment variables; deployed to the region defined by the environment variable `$AZURE_REGION`; and finally, we tell the E2E test runner not to delete the cluster resources (i.e., the resource group) following the completion of the tests.
