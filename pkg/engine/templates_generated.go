@@ -44,7 +44,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.17/ip-masq-agent.yaml
@@ -59,7 +58,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.18/ip-masq-agent.yaml
@@ -74,7 +72,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.19/ip-masq-agent.yaml
@@ -89,7 +86,6 @@
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
@@ -105,6 +101,7 @@
 // ../../parts/k8s/addons/container-monitoring.yaml
 // ../../parts/k8s/addons/coredns.yaml
 // ../../parts/k8s/addons/ip-masq-agent.yaml
+// ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
 // ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
@@ -116,7 +113,6 @@
 // ../../parts/k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/metrics-server.yaml
@@ -8722,60 +8718,6 @@ func k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) 
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-    spec:
-      priorityClassName: system-node-critical
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -11237,60 +11179,6 @@ func k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) 
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-    spec:
-      priorityClassName: system-node-critical
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -13828,60 +13716,6 @@ func k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) 
 	return a, nil
 }
 
-var _k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-    spec:
-      priorityClassName: system-node-critical
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -16411,60 +16245,6 @@ func k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) 
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-    spec:
-      priorityClassName: system-node-critical
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -23135,6 +22915,66 @@ func k8sAddonsIpMasqAgentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: Deployment
+metadata:
+  name: rescheduler
+  namespace: kube-system
+  labels:
+    k8s-app: rescheduler
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: rescheduler
+  template:
+    metadata:
+      labels:
+        k8s-app: rescheduler
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+{{- end}}
+    spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+      priorityClassName: system-node-critical
+{{- end}}
+      nodeSelector:
+        {{if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
+      containers:
+      - image: {{ContainerImage "rescheduler"}}
+        imagePullPolicy: IfNotPresent
+        name: rescheduler
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "rescheduler"}}
+            memory: {{ContainerMemReqs "rescheduler"}}
+          limits:
+            cpu: {{ContainerCPULimits "rescheduler"}}
+            memory: {{ContainerMemLimits "rescheduler"}}
+        command:
+        - sh
+        - -c
+        - '/rescheduler'
+`)
+
+func k8sAddonsKubeReschedulerYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubeReschedulerYaml, nil
+}
+
+func k8sAddonsKubeReschedulerYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubeReschedulerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kube-rescheduler.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsKubernetesDashboardYaml = []byte(`
 apiVersion: v1
 kind: Namespace
@@ -25514,61 +25354,6 @@ func k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml = []byte(`apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: rescheduler
-  namespace: kube-system
-  labels:
-    k8s-app: rescheduler
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: rescheduler
-  template:
-    metadata:
-      labels:
-        k8s-app: rescheduler
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - image: {{ContainerImage "rescheduler"}}
-        imagePullPolicy: IfNotPresent
-        name: rescheduler
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "rescheduler"}}
-            memory: {{ContainerMemReqs "rescheduler"}}
-          limits:
-            cpu: {{ContainerCPULimits "rescheduler"}}
-            memory: {{ContainerMemLimits "rescheduler"}}
-        command:
-        - sh
-        - -c
-        - '/rescheduler'
-`)
-
-func k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -38279,7 +38064,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.17/ip-masq-agent.yaml":                                        k8sAddons117IpMasqAgentYaml,
@@ -38294,7 +38078,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.18/ip-masq-agent.yaml":                                        k8sAddons118IpMasqAgentYaml,
@@ -38309,7 +38092,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.19/ip-masq-agent.yaml":                                        k8sAddons119IpMasqAgentYaml,
@@ -38324,7 +38106,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                              k8sAddonsAadDefaultAdminGroupRbacYaml,
@@ -38340,6 +38121,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/container-monitoring.yaml":                                 k8sAddonsContainerMonitoringYaml,
 	"k8s/addons/coredns.yaml":                                              k8sAddonsCorednsYaml,
 	"k8s/addons/ip-masq-agent.yaml":                                        k8sAddonsIpMasqAgentYaml,
+	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
 	"k8s/addons/kubernetesmaster-audit-policy.yaml":                        k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
@@ -38351,7 +38133,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/metrics-server.yaml":                                       k8sAddonsMetricsServerYaml,
@@ -38534,7 +38315,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":           {k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":          {k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   {k8sAddons116KubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":      {k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38551,7 +38331,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":           {k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":          {k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   {k8sAddons117KubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":      {k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38568,7 +38347,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":           {k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":          {k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   {k8sAddons118KubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":      {k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38585,7 +38363,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-dns-deployment.yaml":           {k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":          {k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml":      {k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -38602,6 +38379,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"container-monitoring.yaml":                                 {k8sAddonsContainerMonitoringYaml, map[string]*bintree{}},
 			"coredns.yaml":                                              {k8sAddonsCorednsYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                                        {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"kube-rescheduler.yaml":                                     {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                                 {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
 			"kubernetesmaster-audit-policy.yaml":                        {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
@@ -38613,7 +38391,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-kube-dns-deployment.yaml":           {k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":          {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-rescheduler-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsKubeReschedulerDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml":      {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			"metrics-server.yaml":                                       {k8sAddonsMetricsServerYaml, map[string]*bintree{}},
