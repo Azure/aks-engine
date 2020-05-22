@@ -1551,7 +1551,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 	Describe("with a GPU-enabled agent pool", func() {
 		It("should be able to run a nvidia-gpu job", func() {
-			if eng.ExpandedDefinition.Properties.HasNSeriesSKU() {
+			if hasAddon, _ := eng.HasAddon("nvidia-device-plugin"); hasAddon {
 				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "cuda-vector-add.yaml"), "cuda-vector-add", "default", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)

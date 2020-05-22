@@ -738,8 +738,8 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			}
 			return val
 		},
-		"HasNSeriesSKU": func() bool {
-			return cs.Properties.HasNSeriesSKU()
+		"IsNvidiaDevicePluginEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.NVIDIADevicePluginAddonName)
 		},
 		"HasDCSeriesSKU": func() bool {
 			return cs.Properties.HasDCSeriesSKU()

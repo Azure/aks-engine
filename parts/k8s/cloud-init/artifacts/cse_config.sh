@@ -550,7 +550,7 @@ configAddons() {
   mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{- end}}
 }
-{{- if HasNSeriesSKU}}
+{{- if IsNvidiaDevicePluginEnabled}}
 {{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
 installNvidiaDrivers() {
   NVIDIA_DKMS_DIR="/var/lib/dkms/nvidia/${GPU_DV}"
