@@ -854,6 +854,8 @@ func TestTelemetryEnabled(t *testing.T) {
 }
 func TestConvertVLabsWindowsProfile(t *testing.T) {
 	falseVar := false
+	apiLicenseType := WindowsLicenseTypeServer
+	vlabsLicenseType := vlabs.WindowsLicenseTypeServer
 
 	cases := []struct {
 		name     string
@@ -879,6 +881,7 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				LicenseType:            &vlabsLicenseType,
 			},
 			expected: WindowsProfile{
 				AdminUsername:          "user",
@@ -891,6 +894,7 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []KeyVaultSecrets{},
+				LicenseType:            &apiLicenseType,
 			},
 		},
 		{

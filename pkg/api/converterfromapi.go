@@ -208,6 +208,10 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 	}
 	vlabsProfile.SSHEnabled = api.SSHEnabled
 	vlabsProfile.EnableAutomaticUpdates = api.EnableAutomaticUpdates
+	if api.LicenseType != nil {
+		licenseType := vlabs.WindowsLicenseType(*api.LicenseType)
+		vlabsProfile.LicenseType = &licenseType
+	}
 }
 
 func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.OrchestratorProfile) {

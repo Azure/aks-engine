@@ -911,6 +911,22 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	// Now Test AgentVMSS with windows and LicenseType
+	licenseType := api.WindowsLicenseTypeServer
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		SSHEnabled:  &trueVar,
+		LicenseType: &licenseType,
+	}
+
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+	expected.VirtualMachineProfile.LicenseType = (*string)(&licenseType)
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func getIPConfigsMaster() *[]compute.VirtualMachineScaleSetIPConfiguration {
