@@ -5,6 +5,10 @@ If you are an AKS Engine developer, running local E2E tests to validate changes 
 As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage:
 
 ```sh
+# build local a copy of aks-engine
+$ make build
+
+# run e2e tests
 $ ORCHESTRATOR_RELEASE=1.18 \
     CLUSTER_DEFINITION=examples/kubernetes.json \
     SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID \
@@ -13,6 +17,7 @@ $ ORCHESTRATOR_RELEASE=1.18 \
     TENANT_ID=$TEST_AZURE_TENANT_ID \
     LOCATION=$AZURE_REGION \
     CLEANUP_ON_EXIT=false \
+    OUTPUT_DIR=./_output \
     make test-kubernetes
 ```
 
