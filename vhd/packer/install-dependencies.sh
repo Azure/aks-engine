@@ -111,6 +111,7 @@ echo "  - img" >> ${VHD_LOGS_FILEPATH}
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
 DASHBOARD_VERSIONS="
+2.0.1
 2.0.0
 "
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do

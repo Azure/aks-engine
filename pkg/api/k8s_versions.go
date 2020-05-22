@@ -81,7 +81,7 @@ var kubernetesImageBaseDefaultImages = map[string]map[string]string{
 		common.Hyperkube:                            "hyperkube-amd64",
 	},
 	common.KubernetesImageBaseTypeMCR: {
-		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.0",
+		common.DashboardAddonName:                   "oss/kubernetes/dashboard:v2.0.1",
 		common.DashboardMetricsScraperContainerName: "oss/kubernetes/metrics-scraper:v1.0.4",
 		common.ExecHealthZComponentName:             "oss/kubernetes/exechealthz:1.2",
 		common.HeapsterAddonName:                    "oss/kubernetes/heapster:v1.5.4",
