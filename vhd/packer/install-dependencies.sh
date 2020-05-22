@@ -243,12 +243,10 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
 done
 
 CORE_DNS_VERSIONS="
+1.6.9
 1.6.7
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/coredns:${CORE_DNS_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
