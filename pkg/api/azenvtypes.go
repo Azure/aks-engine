@@ -138,7 +138,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-gen2-202005",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.05.13",
+		ImageVersion:   "2020.05.21",
 	}
 
 	//RHELOSImageConfig is the RHEL Linux distribution.
@@ -162,7 +162,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-202005",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.05.13",
+		ImageVersion:   "2020.05.21",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -170,7 +170,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-202005",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.05.13",
+		ImageVersion:   "2020.05.21",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
