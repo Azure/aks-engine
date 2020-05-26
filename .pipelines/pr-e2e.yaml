@@ -55,6 +55,7 @@ jobs:
     displayName: Check if go mod is up to date
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
+        grep github.com/Masterminds/godir ./go.mod || echo "github.com/Masterminds/godir not in go.mod"
         make coverage
     displayName: Run unit tests and calculate coverage
 
