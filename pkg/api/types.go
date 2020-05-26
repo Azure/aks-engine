@@ -93,7 +93,8 @@ type Properties struct {
 
 // CustomCloudEnv represents the custom cloud env info of the AKS cluster.
 type CustomCloudEnv struct {
-	Name string `json:"Name,omitempty"`
+	Name   string `json:"Name,omitempty"`
+	McrURL string `json:"mcrURL,omitempty"`
 }
 
 // ClusterMetadata represents the metadata of the AKS cluster.
