@@ -48,27 +48,11 @@ You can install the SGX device plugin which surfaces the usage of Intel SGX’s 
 
 ### Device plugin installation
 
-Using kubectl, install the device plugin DaemonSet: 
-1. For kubernetes versions before v1.17, use [this](device-plugin-before-k8s-1-17.yaml) yaml.
-2. For kubernetes v1.17 and onwards, use [this](device-plugin.yaml) yaml.
-
-You can leverage the `node.kubernetes.io/instance-type` label in your node selector rules to target only the [DCsv2-series](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) nodes - 
-
-```yaml
-nodeAffinity:
-  requiredDuringSchedulingIgnoredDuringExecution:
-    nodeSelectorTerms:
-    - matchExpressions:
-      - key: node.kubernetes.io/instance-type
-        operator: In
-        values:
-        - Standard_DC2s
-        - Standard_DC4s
-        - Standard_DC1s_v2
-        - Standard_DC2s_v2
-        - Standard_DC4s_v2
-        - Standard_DC8_v2
-```
+Using kubectl, deploy device plugin DaemonSet: 
+1. For kubernetes versions before v1.17, use: <br>
+    kubectl create -f [device-plugin-before-k8s-1-17.yaml](device-plugin-before-k8s-1-17.yaml)
+2. For kubernetes v1.17 and onwards, use: <br> 
+    kubectl create -f [device-plugin.yaml](device-plugin.yaml)
 
 Confirm that the DaemonSet pods are running on each Intel SGX enabled node as follows:
 
