@@ -1,6 +1,6 @@
 module github.com/Azure/aks-engine/hack/tools
 
-go 1.12
+go 1.14
 
 require (
 	contrib.go.opencensus.io/exporter/jaeger v0.2.0 // indirect
