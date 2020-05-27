@@ -25,6 +25,7 @@ hash goveralls 2>/dev/null || go get github.com/mattn/goveralls
 hash godir 2>/dev/null || go get github.com/Masterminds/godir
 
 generate_cover_data() {
+  ginkgo version
   ginkgo -mod=vendor -skipPackage test/e2e -failFast -cover -r -v -tags=fast -ldflags "${LDFLAGS}" .
   echo "" > ${coveragetxt}
   find . -type f -name "*.coverprofile" | while read -r file;  do cat "$file" >> ${coveragetxt} && mv "$file" "${coverdir}"; done
