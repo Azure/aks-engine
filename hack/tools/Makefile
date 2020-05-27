@@ -31,3 +31,7 @@ reload: clean install
 .PHONY: clean
 clean:
 	rm -rf $(LOCALBIN)
+
+.PHONY: tidy
+tidy:
+	$(GO) mod tidy
