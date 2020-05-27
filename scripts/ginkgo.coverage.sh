@@ -26,7 +26,7 @@ hash godir 2>/dev/null || go get github.com/Masterminds/godir
 
 generate_cover_data() {
   ginkgo version
-  git diff --exit-code --quiet go.mod go.sum vendor/modules.txt
+  git diff --exit-code --quiet go.mod go.sum vendor/modules.txt || go mod vendor
   ginkgo -mod=vendor -skipPackage test/e2e -failFast -cover -r -v -tags=fast -ldflags "${LDFLAGS}" .
   echo "" > ${coveragetxt}
   find . -type f -name "*.coverprofile" | while read -r file;  do cat "$file" >> ${coveragetxt} && mv "$file" "${coverdir}"; done
