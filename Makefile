@@ -191,9 +191,6 @@ tools-install:
 tools-clean:
 	make -C hack/tools/ clean
 
-ci: bootstrap test-style build test lint
-	./scripts/coverage.sh --coveralls
-
 .PHONY: coverage
 coverage:
 	LDFLAGS="$(LDFLAGS)" ./scripts/ginkgo.coverage.sh --codecov
