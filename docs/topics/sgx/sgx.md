@@ -113,7 +113,7 @@ spec:
             kubernetes.azure.com/sgx_epc_mem_in_MiB: 10
 ```
 
-You can use the following test workload to confirm that your cluster is correctly configured:
+You can use the following test workload to confirm that your cluster is correctly configured ([Dockerfile](https://github.com/microsoft/openenclave-aks/blob/master/k8s-sgxtest/Dockerfile) for sgx-test):
 
 ```yaml
 apiVersion: batch/v1
@@ -131,7 +131,7 @@ spec:
       containers:
       - name: sgxtest
         image: oeciteam/sgx-test
-        command: ["/helloworld/host/helloworldhost", "/helloworld/enclave/helloworldenc.signed"]
+        command: ["/samples/helloworld/host/helloworldhost", "/samples/helloworld/enclave/helloworldenc.signed"]
         volumeMounts:
         - mountPath: /dev/sgx
           name: dev-sgx
