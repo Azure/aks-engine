@@ -21718,7 +21718,11 @@ spec:
         value: "true"
         key: node-role.kubernetes.io/master
       nodeSelector:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+        kubernetes.azure.com/role: master
+{{else}}
         kubernetes.io/role: master
+{{- end}}
 {{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
         kubernetes.io/os: linux
 {{else}}
