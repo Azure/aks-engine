@@ -11,7 +11,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20191227052852-215e87163ea7 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mitchellh/gox v1.0.1
-	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/ginkgo v1.12.2
 	github.com/onsi/gomega v1.7.1 // indirect
 	github.com/uber/jaeger-client-go v2.21.1+incompatible // indirect
 	go.opencensus.io v0.22.2 // indirect
