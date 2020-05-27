@@ -32,7 +32,6 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.16/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
@@ -46,7 +45,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
@@ -60,7 +58,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
@@ -74,7 +71,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/ip-masq-agent.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
@@ -6443,105 +6439,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116IpMasqAgentYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-ip-masq-agent
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    tier: node
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-ip-masq-agent
-      tier: node
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-ip-masq-agent
-        tier: node
-    spec:
-      priorityClassName: system-node-critical
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: azure-ip-masq-agent
-        image: {{ContainerImage "ip-masq-agent"}}
-        imagePullPolicy: IfNotPresent
-        args:
-          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: azure-ip-masq-agent-config-volume
-            mountPath: /etc/config
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
-            memory: {{ContainerMemReqs "ip-masq-agent"}}
-          limits:
-            cpu: {{ContainerCPULimits "ip-masq-agent"}}
-            memory: {{ContainerMemLimits "ip-masq-agent"}}
-      volumes:
-        - name: azure-ip-masq-agent-config-volume
-          configMap:
-            name: azure-ip-masq-agent-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: azure-ip-masq-agent-config
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  ip-masq-agent: |-
-    nonMasqueradeCIDRs:
-      - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
-      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-    {{end -}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
-      - {{ContainerConfig "non-masq-cni-cidr"}}
-    masqLinkLocal: true
-    {{else}}
-    masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s
-`)
-
-func k8sAddons116IpMasqAgentYamlBytes() ([]byte, error) {
-	return _k8sAddons116IpMasqAgentYaml, nil
-}
-
-func k8sAddons116IpMasqAgentYaml() (*asset, error) {
-	bytes, err := k8sAddons116IpMasqAgentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/ip-masq-agent.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
 kind: Policy
 omitStages:
@@ -8892,107 +8789,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117IpMasqAgentYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-ip-masq-agent
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    tier: node
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-ip-masq-agent
-      tier: node
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-ip-masq-agent
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: azure-ip-masq-agent
-        image: {{ContainerImage "ip-masq-agent"}}
-        imagePullPolicy: IfNotPresent
-        args:
-          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: azure-ip-masq-agent-config-volume
-            mountPath: /etc/config
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
-            memory: {{ContainerMemReqs "ip-masq-agent"}}
-          limits:
-            cpu: {{ContainerCPULimits "ip-masq-agent"}}
-            memory: {{ContainerMemLimits "ip-masq-agent"}}
-      volumes:
-        - name: azure-ip-masq-agent-config-volume
-          configMap:
-            name: azure-ip-masq-agent-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: azure-ip-masq-agent-config
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  ip-masq-agent: |-
-    nonMasqueradeCIDRs:
-      - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
-      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-    {{end -}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
-      - {{ContainerConfig "non-masq-cni-cidr"}}
-    masqLinkLocal: true
-    {{else}}
-    masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s
-`)
-
-func k8sAddons117IpMasqAgentYamlBytes() ([]byte, error) {
-	return _k8sAddons117IpMasqAgentYaml, nil
-}
-
-func k8sAddons117IpMasqAgentYaml() (*asset, error) {
-	bytes, err := k8sAddons117IpMasqAgentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/ip-masq-agent.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -11359,107 +11155,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118IpMasqAgentYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-ip-masq-agent
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    tier: node
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-ip-masq-agent
-      tier: node
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-ip-masq-agent
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      hostNetwork: true
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: azure-ip-masq-agent
-        image: {{ContainerImage "ip-masq-agent"}}
-        imagePullPolicy: IfNotPresent
-        args:
-          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: azure-ip-masq-agent-config-volume
-            mountPath: /etc/config
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
-            memory: {{ContainerMemReqs "ip-masq-agent"}}
-          limits:
-            cpu: {{ContainerCPULimits "ip-masq-agent"}}
-            memory: {{ContainerMemLimits "ip-masq-agent"}}
-      volumes:
-        - name: azure-ip-masq-agent-config-volume
-          configMap:
-            name: azure-ip-masq-agent-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: azure-ip-masq-agent-config
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  ip-masq-agent: |-
-    nonMasqueradeCIDRs:
-      - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
-      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-    {{end -}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
-      - {{ContainerConfig "non-masq-cni-cidr"}}
-    masqLinkLocal: true
-    {{else}}
-    masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s
-`)
-
-func k8sAddons118IpMasqAgentYamlBytes() ([]byte, error) {
-	return _k8sAddons118IpMasqAgentYaml, nil
-}
-
-func k8sAddons118IpMasqAgentYaml() (*asset, error) {
-	bytes, err := k8sAddons118IpMasqAgentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/ip-masq-agent.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -13892,107 +13587,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119IpMasqAgentYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: azure-ip-masq-agent
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    tier: node
-spec:
-  selector:
-    matchLabels:
-      k8s-app: azure-ip-masq-agent
-      tier: node
-  template:
-    metadata:
-      labels:
-        k8s-app: azure-ip-masq-agent
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      hostNetwork: true
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: azure-ip-masq-agent
-        image: {{ContainerImage "ip-masq-agent"}}
-        imagePullPolicy: IfNotPresent
-        args:
-          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: azure-ip-masq-agent-config-volume
-            mountPath: /etc/config
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "ip-masq-agent"}}
-            memory: {{ContainerMemReqs "ip-masq-agent"}}
-          limits:
-            cpu: {{ContainerCPULimits "ip-masq-agent"}}
-            memory: {{ContainerMemLimits "ip-masq-agent"}}
-      volumes:
-        - name: azure-ip-masq-agent-config-volume
-          configMap:
-            name: azure-ip-masq-agent-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: azure-ip-masq-agent-config
-  namespace: kube-system
-  labels:
-    component: azure-ip-masq-agent
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  ip-masq-agent: |-
-    nonMasqueradeCIDRs:
-      - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
-      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
-    {{end -}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
-      - {{ContainerConfig "non-masq-cni-cidr"}}
-    masqLinkLocal: true
-    {{else}}
-    masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s
-`)
-
-func k8sAddons119IpMasqAgentYamlBytes() ([]byte, error) {
-	return _k8sAddons119IpMasqAgentYaml, nil
-}
-
-func k8sAddons119IpMasqAgentYaml() (*asset, error) {
-	bytes, err := k8sAddons119IpMasqAgentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/ip-masq-agent.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -22826,7 +22420,7 @@ func k8sAddonsCorednsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: extensions/v1beta1
+var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
   name: azure-ip-masq-agent
@@ -22837,16 +22431,26 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
+{{- end}}
   template:
     metadata:
       labels:
         k8s-app: azure-ip-masq-agent
         tier: node
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       priorityClassName: system-node-critical
       hostNetwork: true
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
@@ -22862,6 +22466,10 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
+{{- if IsKubernetesVersionGe "1.16.0"}}
+        args:
+          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
+{{- end}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -22892,13 +22500,19 @@ data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
       - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
+  {{end -}}
+{{- end}}
+{{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true
-    {{else}}
+{{else}}
     masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s`)
+{{- end}}
+    resyncInterval: 60s
+`)
 
 func k8sAddonsIpMasqAgentYamlBytes() ([]byte, error) {
 	return _k8sAddonsIpMasqAgentYaml, nil
@@ -38052,7 +37666,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovision.sh":                              dcosDcosprovisionSh,
 	"dcos/dcosprovisionsource.sh":                        dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                      iaasoutputsT,
-	"k8s/addons/1.16/ip-masq-agent.yaml":                 k8sAddons116IpMasqAgentYaml,
 	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml": k8sAddons116KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
@@ -38066,7 +37679,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/ip-masq-agent.yaml":                                        k8sAddons117IpMasqAgentYaml,
 	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                        k8sAddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
@@ -38080,7 +37692,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/ip-masq-agent.yaml":                                        k8sAddons118IpMasqAgentYaml,
 	"k8s/addons/1.18/kubernetesmaster-audit-policy.yaml":                        k8sAddons118KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
@@ -38094,7 +37705,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/ip-masq-agent.yaml":                                        k8sAddons119IpMasqAgentYaml,
 	"k8s/addons/1.19/kubernetesmaster-audit-policy.yaml":                        k8sAddons119KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
@@ -38303,7 +37913,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"k8s": {nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.16": {nil, map[string]*bintree{
-				"ip-masq-agent.yaml":                                        {k8sAddons116IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
@@ -38319,7 +37928,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"ip-masq-agent.yaml":                                        {k8sAddons117IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
@@ -38335,7 +37943,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"ip-masq-agent.yaml":                                        {k8sAddons118IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons118KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
@@ -38351,7 +37958,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"ip-masq-agent.yaml":                                        {k8sAddons119IpMasqAgentYaml, map[string]*bintree{}},
 				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons119KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
