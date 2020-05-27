@@ -100,6 +100,8 @@ go-build:
 .PHONY: tidy
 tidy:
 	$(GO) mod tidy
+	make -C ./hack/tools tidy
+	make -C ./test/e2e tidy
 
 .PHONY: vendor
 vendor: tidy
@@ -189,9 +191,6 @@ tools-install:
 .PHONY: tools-clean
 tools-clean:
 	make -C hack/tools/ clean
-
-ci: bootstrap test-style build test lint
-	./scripts/coverage.sh --coveralls
 
 .PHONY: coverage
 coverage:
