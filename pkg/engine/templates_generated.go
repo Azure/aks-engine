@@ -22826,7 +22826,7 @@ func k8sAddonsCorednsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: extensions/v1beta1
+var _k8sAddonsIpMasqAgentYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
   name: azure-ip-masq-agent
@@ -22837,16 +22837,26 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
     tier: node
 spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      k8s-app: azure-ip-masq-agent
+      tier: node
+{{- end}}
   template:
     metadata:
       labels:
         k8s-app: azure-ip-masq-agent
         tier: node
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       priorityClassName: system-node-critical
       hostNetwork: true
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
@@ -22862,6 +22872,10 @@ spec:
       - name: azure-ip-masq-agent
         image: {{ContainerImage "ip-masq-agent"}}
         imagePullPolicy: IfNotPresent
+{{- if IsKubernetesVersionGe "1.16.0"}}
+        args:
+          - --enable-ipv6={{ContainerConfig "enable-ipv6"}}
+{{- end}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -22892,13 +22906,19 @@ data:
   ip-masq-agent: |-
     nonMasqueradeCIDRs:
       - {{ContainerConfig "non-masquerade-cidr"}}
-    {{- if ContainerConfig "non-masq-cni-cidr"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  {{- if ContainerConfig "secondary-non-masquerade-cidr"}}
+      - {{ContainerConfig "secondary-non-masquerade-cidr"}}
+  {{end -}}
+{{- end}}
+{{- if ContainerConfig "non-masq-cni-cidr"}}
       - {{ContainerConfig "non-masq-cni-cidr"}}
     masqLinkLocal: true
-    {{else}}
+{{else}}
     masqLinkLocal: false
-    {{end -}}
-    resyncInterval: 60s`)
+{{- end}}
+    resyncInterval: 60s
+`)
 
 func k8sAddonsIpMasqAgentYamlBytes() ([]byte, error) {
 	return _k8sAddonsIpMasqAgentYaml, nil
