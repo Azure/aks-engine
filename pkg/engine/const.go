@@ -236,7 +236,7 @@ const (
 	azureNetworkPolicyAddonDestinationFilename     string = "azure-network-policy.yaml"
 	azurePolicyAddonSourceFilename                 string = "azure-policy-deployment.yaml"
 	azurePolicyAddonDestinationFilename            string = "azure-policy-deployment.yaml"
-	cloudNodeManagerAddonSourceFilename            string = "kubernetesmasteraddons-cloud-node-manager.yaml"
+	cloudNodeManagerAddonSourceFilename            string = "cloud-node-manager.yaml"
 	cloudNodeManagerAddonDestinationFilename       string = "cloud-node-manager.yaml"
 	nodeProblemDetectorAddonSourceFilename         string = "node-problem-detector.yaml"
 	nodeProblemDetectorAddonDestinationFilename    string = "node-problem-detector.yaml"
