@@ -94,7 +94,7 @@ metadata:
   name: nmi
   namespace: kube-system
 spec:
-{- {if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: nmi
