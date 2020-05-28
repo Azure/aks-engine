@@ -43,7 +43,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -52,7 +51,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -61,7 +59,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -79,6 +76,7 @@
 // ../../parts/k8s/addons/azure-policy-deployment.yaml
 // ../../parts/k8s/addons/azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/azurefile-csi-driver-deployment.yaml
+// ../../parts/k8s/addons/blobfuse-flexvolume.yaml
 // ../../parts/k8s/addons/calico.yaml
 // ../../parts/k8s/addons/cilium.yaml
 // ../../parts/k8s/addons/cloud-node-manager.yaml
@@ -89,7 +87,6 @@
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -8520,69 +8517,6 @@ func k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	return a, nil
 }
 
-var _k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: blobfuse-flexvol-installer
-  namespace: kube-system
-  labels:
-    k8s-app: blobfuse
-    kubernetes.io/cluster-service: "true"
-spec:
-  selector:
-    matchLabels:
-      name: blobfuse
-  template:
-    metadata:
-      labels:
-        name: blobfuse
-        kubernetes.io/cluster-service: "true"
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      containers:
-      - name: blobfuse-flexvol-installer
-        image: {{ContainerImage "blobfuse-flexvolume"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
-            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
-          limits:
-            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
-            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
-        volumeMounts:
-        - name: volplugins
-          mountPath: /etc/kubernetes/volumeplugins/
-        - name: varlog
-          mountPath: /var/log/
-      volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log/
-      - name: volplugins
-        hostPath:
-          path: /etc/kubernetes/volumeplugins/
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-`)
-
-func k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 apiVersion: v1
@@ -9689,69 +9623,6 @@ func k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: blobfuse-flexvol-installer
-  namespace: kube-system
-  labels:
-    k8s-app: blobfuse
-    kubernetes.io/cluster-service: "true"
-spec:
-  selector:
-    matchLabels:
-      name: blobfuse
-  template:
-    metadata:
-      labels:
-        name: blobfuse
-        kubernetes.io/cluster-service: "true"
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      containers:
-      - name: blobfuse-flexvol-installer
-        image: {{ContainerImage "blobfuse-flexvolume"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
-            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
-          limits:
-            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
-            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
-        volumeMounts:
-        - name: volplugins
-          mountPath: /etc/kubernetes/volumeplugins/
-        - name: varlog
-          mountPath: /var/log/
-      volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log/
-      - name: volplugins
-        hostPath:
-          path: /etc/kubernetes/volumeplugins/
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-`)
-
-func k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -10871,69 +10742,6 @@ func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, err
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: blobfuse-flexvol-installer
-  namespace: kube-system
-  labels:
-    k8s-app: blobfuse
-    kubernetes.io/cluster-service: "true"
-spec:
-  selector:
-    matchLabels:
-      name: blobfuse
-  template:
-    metadata:
-      labels:
-        name: blobfuse
-        kubernetes.io/cluster-service: "true"
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      containers:
-      - name: blobfuse-flexvol-installer
-        image: {{ContainerImage "blobfuse-flexvolume"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
-            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
-          limits:
-            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
-            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
-        volumeMounts:
-        - name: volplugins
-          mountPath: /etc/kubernetes/volumeplugins/
-        - name: varlog
-          mountPath: /var/log/
-      volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log/
-      - name: volplugins
-        hostPath:
-          path: /etc/kubernetes/volumeplugins/
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16468,6 +16276,71 @@ func k8sAddonsAzurefileCsiDriverDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsBlobfuseFlexvolumeYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: DaemonSet
+metadata:
+  name: blobfuse-flexvol-installer
+  namespace: kube-system
+  labels:
+    k8s-app: blobfuse
+    kubernetes.io/cluster-service: "true"
+spec:
+  selector:
+    matchLabels:
+      name: blobfuse
+  template:
+    metadata:
+      labels:
+        name: blobfuse
+        kubernetes.io/cluster-service: "true"
+{{if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{end}}
+    spec:
+      priorityClassName: system-cluster-critical
+      containers:
+      - name: blobfuse-flexvol-installer
+        image: {{ContainerImage "blobfuse-flexvolume"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
+            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
+          limits:
+            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
+            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
+        volumeMounts:
+        - name: volplugins
+          mountPath: /etc/kubernetes/volumeplugins/
+        - name: varlog
+          mountPath: /var/log/
+      volumes:
+      - name: varlog
+        hostPath:
+          path: /var/log/
+      - name: volplugins
+        hostPath:
+          path: /etc/kubernetes/volumeplugins/
+      nodeSelector:
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+`)
+
+func k8sAddonsBlobfuseFlexvolumeYamlBytes() ([]byte, error) {
+	return _k8sAddonsBlobfuseFlexvolumeYaml, nil
+}
+
+func k8sAddonsBlobfuseFlexvolumeYaml() (*asset, error) {
+	bytes, err := k8sAddonsBlobfuseFlexvolumeYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/blobfuse-flexvolume.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsCalicoYaml = []byte(`{{- /* Source: calico/templates/calico-config.yaml
 This ConfigMap is used to configure a self-hosted Calico installation. */}}
 kind: ConfigMap
@@ -20214,67 +20087,6 @@ func k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error)
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: extensions/v1beta1
-kind: DaemonSet
-metadata:
-  name: blobfuse-flexvol-installer
-  namespace: kube-system
-  labels:
-    k8s-app: blobfuse
-    kubernetes.io/cluster-service: "true"
-spec:
-  selector:
-    matchLabels:
-      name: blobfuse
-  template:
-    metadata:
-      labels:
-        name: blobfuse
-        kubernetes.io/cluster-service: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      containers:
-      - name: blobfuse-flexvol-installer
-        image: {{ContainerImage "blobfuse-flexvolume"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "blobfuse-flexvolume"}}
-            memory: {{ContainerMemReqs "blobfuse-flexvolume"}}
-          limits:
-            cpu: {{ContainerCPULimits "blobfuse-flexvolume"}}
-            memory: {{ContainerMemLimits "blobfuse-flexvolume"}}
-        volumeMounts:
-        - name: volplugins
-          mountPath: /etc/kubernetes/volumeplugins/
-        - name: varlog
-          mountPath: /var/log/
-      volumes:
-      - name: varlog
-        hostPath:
-          path: /var/log/
-      - name: volplugins
-        hostPath:
-          path: /etc/kubernetes/volumeplugins/
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-`)
-
-func k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -33747,7 +33559,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33756,7 +33567,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33765,7 +33575,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33783,6 +33592,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/azure-policy-deployment.yaml":                                   k8sAddonsAzurePolicyDeploymentYaml,
 	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                           k8sAddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/addons/azurefile-csi-driver-deployment.yaml":                           k8sAddonsAzurefileCsiDriverDeploymentYaml,
+	"k8s/addons/blobfuse-flexvolume.yaml":                                       k8sAddonsBlobfuseFlexvolumeYaml,
 	"k8s/addons/calico.yaml":                                                    k8sAddonsCalicoYaml,
 	"k8s/addons/cilium.yaml":                                                    k8sAddonsCiliumYaml,
 	"k8s/addons/cloud-node-manager.yaml":                                        k8sAddonsCloudNodeManagerYaml,
@@ -33793,7 +33603,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kube-rescheduler.yaml":                                          k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                      k8sAddonsKubernetesDashboardYaml,
 	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":           k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                  k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":                k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33807,86 +33616,86 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/pod-security-policy.yaml":                                       k8sAddonsPodSecurityPolicyYaml,
 	"k8s/addons/scheduled-maintenance-deployment.yaml":                          k8sAddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/addons/secrets-store-csi-driver.yaml":                                  k8sAddonsSecretsStoreCsiDriverYaml,
-	"k8s/armparameters.t":                                                k8sArmparametersT,
-	"k8s/cloud-init/artifacts/apt-preferences":                           k8sCloudInitArtifactsAptPreferences,
-	"k8s/cloud-init/artifacts/auditd-rules":                              k8sCloudInitArtifactsAuditdRules,
-	"k8s/cloud-init/artifacts/cis.sh":                                    k8sCloudInitArtifactsCisSh,
-	"k8s/cloud-init/artifacts/cse_config.sh":                             k8sCloudInitArtifactsCse_configSh,
-	"k8s/cloud-init/artifacts/cse_customcloud.sh":                        k8sCloudInitArtifactsCse_customcloudSh,
-	"k8s/cloud-init/artifacts/cse_helpers.sh":                            k8sCloudInitArtifactsCse_helpersSh,
-	"k8s/cloud-init/artifacts/cse_install.sh":                            k8sCloudInitArtifactsCse_installSh,
-	"k8s/cloud-init/artifacts/cse_main.sh":                               k8sCloudInitArtifactsCse_mainSh,
-	"k8s/cloud-init/artifacts/default-grub":                              k8sCloudInitArtifactsDefaultGrub,
-	"k8s/cloud-init/artifacts/dhcpv6.service":                            k8sCloudInitArtifactsDhcpv6Service,
-	"k8s/cloud-init/artifacts/docker-monitor.service":                    k8sCloudInitArtifactsDockerMonitorService,
-	"k8s/cloud-init/artifacts/docker-monitor.timer":                      k8sCloudInitArtifactsDockerMonitorTimer,
-	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf": k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
-	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                          k8sCloudInitArtifactsEnableDhcpv6Sh,
-	"k8s/cloud-init/artifacts/etc-issue":                                 k8sCloudInitArtifactsEtcIssue,
-	"k8s/cloud-init/artifacts/etc-issue.net":                             k8sCloudInitArtifactsEtcIssueNet,
-	"k8s/cloud-init/artifacts/etcd.service":                              k8sCloudInitArtifactsEtcdService,
-	"k8s/cloud-init/artifacts/generateproxycerts.sh":                     k8sCloudInitArtifactsGenerateproxycertsSh,
-	"k8s/cloud-init/artifacts/health-monitor.sh":                         k8sCloudInitArtifactsHealthMonitorSh,
-	"k8s/cloud-init/artifacts/kms.service":                               k8sCloudInitArtifactsKmsService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.service":                   k8sCloudInitArtifactsKubeletMonitorService,
-	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                     k8sCloudInitArtifactsKubeletMonitorTimer,
-	"k8s/cloud-init/artifacts/kubelet.service":                           k8sCloudInitArtifactsKubeletService,
-	"k8s/cloud-init/artifacts/label-nodes.service":                       k8sCloudInitArtifactsLabelNodesService,
-	"k8s/cloud-init/artifacts/label-nodes.sh":                            k8sCloudInitArtifactsLabelNodesSh,
-	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                         k8sCloudInitArtifactsModprobeCisConf,
-	"k8s/cloud-init/artifacts/pam-d-common-auth":                         k8sCloudInitArtifactsPamDCommonAuth,
-	"k8s/cloud-init/artifacts/pam-d-common-password":                     k8sCloudInitArtifactsPamDCommonPassword,
-	"k8s/cloud-init/artifacts/pam-d-su":                                  k8sCloudInitArtifactsPamDSu,
-	"k8s/cloud-init/artifacts/profile-d-cis.sh":                          k8sCloudInitArtifactsProfileDCisSh,
-	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                        k8sCloudInitArtifactsPwqualityCisConf,
-	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                     k8sCloudInitArtifactsRsyslogD60CisConf,
-	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":            k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
-	"k8s/cloud-init/artifacts/sshd_config":                               k8sCloudInitArtifactsSshd_config,
-	"k8s/cloud-init/artifacts/sshd_config_1604":                          k8sCloudInitArtifactsSshd_config_1604,
-	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                          k8sCloudInitArtifactsSysFsBpfMount,
-	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                      k8sCloudInitArtifactsSysctlD60CisConf,
-	"k8s/cloud-init/artifacts/untaint-nodes.service":                     k8sCloudInitArtifactsUntaintNodesService,
-	"k8s/cloud-init/artifacts/untaint-nodes.sh":                          k8sCloudInitArtifactsUntaintNodesSh,
-	"k8s/cloud-init/jumpboxcustomdata.yml":                               k8sCloudInitJumpboxcustomdataYml,
-	"k8s/cloud-init/masternodecustomdata.yml":                            k8sCloudInitMasternodecustomdataYml,
-	"k8s/cloud-init/nodecustomdata.yml":                                  k8sCloudInitNodecustomdataYml,
-	"k8s/kubeconfig.json":                                                k8sKubeconfigJson,
-	"k8s/kubeletstart.ps1":                                               k8sKubeletstartPs1,
-	"k8s/kubeproxystart.ps1":                                             k8sKubeproxystartPs1,
-	"k8s/kubernetesparams.t":                                             k8sKubernetesparamsT,
-	"k8s/kuberneteswindowsfunctions.ps1":                                 k8sKuberneteswindowsfunctionsPs1,
-	"k8s/kuberneteswindowssetup.ps1":                                     k8sKuberneteswindowssetupPs1,
-	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":       k8sManifestsKubernetesmasterCloudControllerManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":             k8sManifestsKubernetesmasterKubeAddonManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                 k8sManifestsKubernetesmasterKubeApiserverYaml,
-	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":        k8sManifestsKubernetesmasterKubeControllerManagerYaml,
-	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                 k8sManifestsKubernetesmasterKubeSchedulerYaml,
-	"k8s/windowsazurecnifunc.ps1":                                        k8sWindowsazurecnifuncPs1,
-	"k8s/windowsazurecnifunc.tests.ps1":                                  k8sWindowsazurecnifuncTestsPs1,
-	"k8s/windowscnifunc.ps1":                                             k8sWindowscnifuncPs1,
-	"k8s/windowsconfigfunc.ps1":                                          k8sWindowsconfigfuncPs1,
-	"k8s/windowscontainerdfunc.ps1":                                      k8sWindowscontainerdfuncPs1,
-	"k8s/windowscsiproxyfunc.ps1":                                        k8sWindowscsiproxyfuncPs1,
-	"k8s/windowsinstallopensshfunc.ps1":                                  k8sWindowsinstallopensshfuncPs1,
-	"k8s/windowskubeletfunc.ps1":                                         k8sWindowskubeletfuncPs1,
-	"k8s/windowslogscleanup.ps1":                                         k8sWindowslogscleanupPs1,
-	"k8s/windowsnodereset.ps1":                                           k8sWindowsnoderesetPs1,
-	"masteroutputs.t":                                                    masteroutputsT,
-	"masterparams.t":                                                     masterparamsT,
-	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                     swarmInstallContainerhostAndJoinSwarmPs1,
-	"swarm/Join-SwarmMode-cluster.ps1":                                   swarmJoinSwarmmodeClusterPs1,
-	"swarm/configure-swarm-cluster.sh":                                   swarmConfigureSwarmClusterSh,
-	"swarm/configure-swarmmode-cluster.sh":                               swarmConfigureSwarmmodeClusterSh,
-	"swarm/swarmagentresourcesvmas.t":                                    swarmSwarmagentresourcesvmasT,
-	"swarm/swarmagentresourcesvmss.t":                                    swarmSwarmagentresourcesvmssT,
-	"swarm/swarmagentvars.t":                                             swarmSwarmagentvarsT,
-	"swarm/swarmbase.t":                                                  swarmSwarmbaseT,
-	"swarm/swarmmasterresources.t":                                       swarmSwarmmasterresourcesT,
-	"swarm/swarmmastervars.t":                                            swarmSwarmmastervarsT,
-	"swarm/swarmparams.t":                                                swarmSwarmparamsT,
-	"swarm/swarmwinagentresourcesvmas.t":                                 swarmSwarmwinagentresourcesvmasT,
-	"swarm/swarmwinagentresourcesvmss.t":                                 swarmSwarmwinagentresourcesvmssT,
-	"windowsparams.t":                                                    windowsparamsT,
+	"k8s/armparameters.t":                                                       k8sArmparametersT,
+	"k8s/cloud-init/artifacts/apt-preferences":                                  k8sCloudInitArtifactsAptPreferences,
+	"k8s/cloud-init/artifacts/auditd-rules":                                     k8sCloudInitArtifactsAuditdRules,
+	"k8s/cloud-init/artifacts/cis.sh":                                           k8sCloudInitArtifactsCisSh,
+	"k8s/cloud-init/artifacts/cse_config.sh":                                    k8sCloudInitArtifactsCse_configSh,
+	"k8s/cloud-init/artifacts/cse_customcloud.sh":                               k8sCloudInitArtifactsCse_customcloudSh,
+	"k8s/cloud-init/artifacts/cse_helpers.sh":                                   k8sCloudInitArtifactsCse_helpersSh,
+	"k8s/cloud-init/artifacts/cse_install.sh":                                   k8sCloudInitArtifactsCse_installSh,
+	"k8s/cloud-init/artifacts/cse_main.sh":                                      k8sCloudInitArtifactsCse_mainSh,
+	"k8s/cloud-init/artifacts/default-grub":                                     k8sCloudInitArtifactsDefaultGrub,
+	"k8s/cloud-init/artifacts/dhcpv6.service":                                   k8sCloudInitArtifactsDhcpv6Service,
+	"k8s/cloud-init/artifacts/docker-monitor.service":                           k8sCloudInitArtifactsDockerMonitorService,
+	"k8s/cloud-init/artifacts/docker-monitor.timer":                             k8sCloudInitArtifactsDockerMonitorTimer,
+	"k8s/cloud-init/artifacts/docker_clear_mount_propagation_flags.conf":        k8sCloudInitArtifactsDocker_clear_mount_propagation_flagsConf,
+	"k8s/cloud-init/artifacts/enable-dhcpv6.sh":                                 k8sCloudInitArtifactsEnableDhcpv6Sh,
+	"k8s/cloud-init/artifacts/etc-issue":                                        k8sCloudInitArtifactsEtcIssue,
+	"k8s/cloud-init/artifacts/etc-issue.net":                                    k8sCloudInitArtifactsEtcIssueNet,
+	"k8s/cloud-init/artifacts/etcd.service":                                     k8sCloudInitArtifactsEtcdService,
+	"k8s/cloud-init/artifacts/generateproxycerts.sh":                            k8sCloudInitArtifactsGenerateproxycertsSh,
+	"k8s/cloud-init/artifacts/health-monitor.sh":                                k8sCloudInitArtifactsHealthMonitorSh,
+	"k8s/cloud-init/artifacts/kms.service":                                      k8sCloudInitArtifactsKmsService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.service":                          k8sCloudInitArtifactsKubeletMonitorService,
+	"k8s/cloud-init/artifacts/kubelet-monitor.timer":                            k8sCloudInitArtifactsKubeletMonitorTimer,
+	"k8s/cloud-init/artifacts/kubelet.service":                                  k8sCloudInitArtifactsKubeletService,
+	"k8s/cloud-init/artifacts/label-nodes.service":                              k8sCloudInitArtifactsLabelNodesService,
+	"k8s/cloud-init/artifacts/label-nodes.sh":                                   k8sCloudInitArtifactsLabelNodesSh,
+	"k8s/cloud-init/artifacts/modprobe-CIS.conf":                                k8sCloudInitArtifactsModprobeCisConf,
+	"k8s/cloud-init/artifacts/pam-d-common-auth":                                k8sCloudInitArtifactsPamDCommonAuth,
+	"k8s/cloud-init/artifacts/pam-d-common-password":                            k8sCloudInitArtifactsPamDCommonPassword,
+	"k8s/cloud-init/artifacts/pam-d-su":                                         k8sCloudInitArtifactsPamDSu,
+	"k8s/cloud-init/artifacts/profile-d-cis.sh":                                 k8sCloudInitArtifactsProfileDCisSh,
+	"k8s/cloud-init/artifacts/pwquality-CIS.conf":                               k8sCloudInitArtifactsPwqualityCisConf,
+	"k8s/cloud-init/artifacts/rsyslog-d-60-CIS.conf":                            k8sCloudInitArtifactsRsyslogD60CisConf,
+	"k8s/cloud-init/artifacts/setup-custom-search-domains.sh":                   k8sCloudInitArtifactsSetupCustomSearchDomainsSh,
+	"k8s/cloud-init/artifacts/sshd_config":                                      k8sCloudInitArtifactsSshd_config,
+	"k8s/cloud-init/artifacts/sshd_config_1604":                                 k8sCloudInitArtifactsSshd_config_1604,
+	"k8s/cloud-init/artifacts/sys-fs-bpf.mount":                                 k8sCloudInitArtifactsSysFsBpfMount,
+	"k8s/cloud-init/artifacts/sysctl-d-60-CIS.conf":                             k8sCloudInitArtifactsSysctlD60CisConf,
+	"k8s/cloud-init/artifacts/untaint-nodes.service":                            k8sCloudInitArtifactsUntaintNodesService,
+	"k8s/cloud-init/artifacts/untaint-nodes.sh":                                 k8sCloudInitArtifactsUntaintNodesSh,
+	"k8s/cloud-init/jumpboxcustomdata.yml":                                      k8sCloudInitJumpboxcustomdataYml,
+	"k8s/cloud-init/masternodecustomdata.yml":                                   k8sCloudInitMasternodecustomdataYml,
+	"k8s/cloud-init/nodecustomdata.yml":                                         k8sCloudInitNodecustomdataYml,
+	"k8s/kubeconfig.json":                                                       k8sKubeconfigJson,
+	"k8s/kubeletstart.ps1":                                                      k8sKubeletstartPs1,
+	"k8s/kubeproxystart.ps1":                                                    k8sKubeproxystartPs1,
+	"k8s/kubernetesparams.t":                                                    k8sKubernetesparamsT,
+	"k8s/kuberneteswindowsfunctions.ps1":                                        k8sKuberneteswindowsfunctionsPs1,
+	"k8s/kuberneteswindowssetup.ps1":                                            k8sKuberneteswindowssetupPs1,
+	"k8s/manifests/kubernetesmaster-cloud-controller-manager.yaml":              k8sManifestsKubernetesmasterCloudControllerManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-addon-manager.yaml":                    k8sManifestsKubernetesmasterKubeAddonManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-apiserver.yaml":                        k8sManifestsKubernetesmasterKubeApiserverYaml,
+	"k8s/manifests/kubernetesmaster-kube-controller-manager.yaml":               k8sManifestsKubernetesmasterKubeControllerManagerYaml,
+	"k8s/manifests/kubernetesmaster-kube-scheduler.yaml":                        k8sManifestsKubernetesmasterKubeSchedulerYaml,
+	"k8s/windowsazurecnifunc.ps1":                                               k8sWindowsazurecnifuncPs1,
+	"k8s/windowsazurecnifunc.tests.ps1":                                         k8sWindowsazurecnifuncTestsPs1,
+	"k8s/windowscnifunc.ps1":                                                    k8sWindowscnifuncPs1,
+	"k8s/windowsconfigfunc.ps1":                                                 k8sWindowsconfigfuncPs1,
+	"k8s/windowscontainerdfunc.ps1":                                             k8sWindowscontainerdfuncPs1,
+	"k8s/windowscsiproxyfunc.ps1":                                               k8sWindowscsiproxyfuncPs1,
+	"k8s/windowsinstallopensshfunc.ps1":                                         k8sWindowsinstallopensshfuncPs1,
+	"k8s/windowskubeletfunc.ps1":                                                k8sWindowskubeletfuncPs1,
+	"k8s/windowslogscleanup.ps1":                                                k8sWindowslogscleanupPs1,
+	"k8s/windowsnodereset.ps1":                                                  k8sWindowsnoderesetPs1,
+	"masteroutputs.t":                                                           masteroutputsT,
+	"masterparams.t":                                                            masterparamsT,
+	"swarm/Install-ContainerHost-And-Join-Swarm.ps1":                            swarmInstallContainerhostAndJoinSwarmPs1,
+	"swarm/Join-SwarmMode-cluster.ps1":                                          swarmJoinSwarmmodeClusterPs1,
+	"swarm/configure-swarm-cluster.sh":                                          swarmConfigureSwarmClusterSh,
+	"swarm/configure-swarmmode-cluster.sh":                                      swarmConfigureSwarmmodeClusterSh,
+	"swarm/swarmagentresourcesvmas.t":                                           swarmSwarmagentresourcesvmasT,
+	"swarm/swarmagentresourcesvmss.t":                                           swarmSwarmagentresourcesvmssT,
+	"swarm/swarmagentvars.t":                                                    swarmSwarmagentvarsT,
+	"swarm/swarmbase.t":                                                         swarmSwarmbaseT,
+	"swarm/swarmmasterresources.t":                                              swarmSwarmmasterresourcesT,
+	"swarm/swarmmastervars.t":                                                   swarmSwarmmastervarsT,
+	"swarm/swarmparams.t":                                                       swarmSwarmparamsT,
+	"swarm/swarmwinagentresourcesvmas.t":                                        swarmSwarmwinagentresourcesvmasT,
+	"swarm/swarmwinagentresourcesvmss.t":                                        swarmSwarmwinagentresourcesvmssT,
+	"windowsparams.t":                                                           windowsparamsT,
 }
 
 // AssetDir returns the file names below a certain
@@ -33984,7 +33793,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.17": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -33995,7 +33803,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.18": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -34006,7 +33813,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.19": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -34025,6 +33831,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"azure-policy-deployment.yaml":                              {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
 			"azuredisk-csi-driver-deployment.yaml":                      {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"azurefile-csi-driver-deployment.yaml":                      {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"blobfuse-flexvolume.yaml":                                  {k8sAddonsBlobfuseFlexvolumeYaml, map[string]*bintree{}},
 			"calico.yaml":                                               {k8sAddonsCalicoYaml, map[string]*bintree{}},
 			"cilium.yaml":                                               {k8sAddonsCiliumYaml, map[string]*bintree{}},
 			"cloud-node-manager.yaml":                                   {k8sAddonsCloudNodeManagerYaml, map[string]*bintree{}},
@@ -34035,7 +33842,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kube-rescheduler.yaml":                                     {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                                 {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
