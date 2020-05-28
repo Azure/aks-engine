@@ -33,7 +33,6 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/calico.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml
@@ -42,7 +41,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -50,7 +48,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -58,7 +55,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -68,6 +64,7 @@
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/aad-pod-identity.yaml
+// ../../parts/k8s/addons/aci-connector.yaml
 // ../../parts/k8s/addons/antrea.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
@@ -86,7 +83,6 @@
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -7210,148 +7206,6 @@ func k8sAddons115CalicoYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aci-connector
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -8375,148 +8229,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aci-connector
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 apiVersion: v1
@@ -9481,148 +9193,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aci-connector
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -10600,148 +10170,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: aci-connector
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12013,6 +11441,150 @@ func k8sAddonsAadPodIdentityYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/aad-pod-identity.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsAciConnectorYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: aci-connector
+  labels:
+    app: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - pods
+  - services
+  - endpoints
+  - events
+  - secrets
+  - nodes
+  - nodes/status
+  - pods/status
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aci-connector
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: aci-connector
+subjects:
+- kind: ServiceAccount
+  name: aci-connector
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aci-connector-secret
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+type: Opaque
+data:
+  credentials.json: <creds>
+  cert.pem: <cert>
+  key.pem: <key>
+---
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: Deployment
+metadata:
+  name: aci-connector
+  namespace: kube-system
+  labels:
+    app: aci-connector
+    name: aci-connector
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  replicas: 1
+{{if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      app: aci-connector
+{{end}}
+  template:
+    metadata:
+      labels:
+        app: aci-connector
+    spec:
+      serviceAccountName: aci-connector
+      nodeSelector:
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+      containers:
+      - name: aci-connector
+        image: {{ContainerImage "aci-connector"}}
+        imagePullPolicy: Always
+        env:
+        - name: KUBELET_PORT
+          value: "10250"
+        - name: AZURE_AUTH_LOCATION
+          value: /etc/virtual-kubelet/credentials.json
+        - name: ACI_RESOURCE_GROUP
+          value: <rgName>
+        - name: ACI_REGION
+          value: {{ContainerConfig "region"}}
+        - name: APISERVER_CERT_LOCATION
+          value: /etc/virtual-kubelet/cert.pem
+        - name: APISERVER_KEY_LOCATION
+          value: /etc/virtual-kubelet/key.pem
+        - name: VKUBELET_POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "aci-connector"}}
+            memory: {{ContainerMemReqs "aci-connector"}}
+          limits:
+            cpu: {{ContainerCPULimits "aci-connector"}}
+            memory: {{ContainerMemLimits "aci-connector"}}
+        volumeMounts:
+        - name: credentials
+          mountPath: "/etc/virtual-kubelet"
+          readOnly: true
+        command: ["virtual-kubelet"]
+        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
+      volumes:
+      - name: credentials
+        secret:
+          secretName: aci-connector-secret
+#EOF
+`)
+
+func k8sAddonsAciConnectorYamlBytes() ([]byte, error) {
+	return _k8sAddonsAciConnectorYaml, nil
+}
+
+func k8sAddonsAciConnectorYaml() (*asset, error) {
+	bytes, err := k8sAddonsAciConnectorYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/aci-connector.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -19948,145 +19520,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetes-dashboard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: aci-connector
-  labels:
-    app: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - pods
-  - services
-  - endpoints
-  - events
-  - secrets
-  - nodes
-  - nodes/status
-  - pods/status
-  verbs:
-  - "*"
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aci-connector
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: aci-connector
-subjects:
-- kind: ServiceAccount
-  name: aci-connector
-  namespace: kube-system
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aci-connector-secret
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-type: Opaque
-data:
-  credentials.json: <creds>
-  cert.pem: <cert>
-  key.pem: <key>
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: aci-connector
-  namespace: kube-system
-  labels:
-    app: aci-connector
-    name: aci-connector
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: aci-connector
-    spec:
-      serviceAccountName: aci-connector
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      containers:
-      - name: aci-connector
-        image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
-        env:
-        - name: KUBELET_PORT
-          value: "10250"
-        - name: AZURE_AUTH_LOCATION
-          value: /etc/virtual-kubelet/credentials.json
-        - name: ACI_RESOURCE_GROUP
-          value: <rgName>
-        - name: ACI_REGION
-          value: {{ContainerConfig "region"}}
-        - name: APISERVER_CERT_LOCATION
-          value: /etc/virtual-kubelet/cert.pem
-        - name: APISERVER_KEY_LOCATION
-          value: /etc/virtual-kubelet/key.pem
-        - name: VKUBELET_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "aci-connector"}}
-            memory: {{ContainerMemReqs "aci-connector"}}
-          limits:
-            cpu: {{ContainerCPULimits "aci-connector"}}
-            memory: {{ContainerMemLimits "aci-connector"}}
-        volumeMounts:
-        - name: credentials
-          mountPath: "/etc/virtual-kubelet"
-          readOnly: true
-        command: ["virtual-kubelet"]
-        args: ["--provider", "azure", "--nodename", "{{ContainerConfig "nodeName"}}" , "--os", "{{ContainerConfig "os"}}", "--taint", "{{ContainerConfig "taint"}}"]
-      volumes:
-      - name: credentials
-        secret:
-          secretName: aci-connector-secret
-#EOF
-`)
-
-func k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -33549,7 +32982,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                        iaasoutputsT,
 	"k8s/addons/1.15/calico.yaml":          k8sAddons115CalicoYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
@@ -33558,7 +32990,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33566,7 +32997,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33574,7 +33004,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33584,6 +33013,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                              k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/aad-pod-identity.yaml":                                          k8sAddonsAadPodIdentityYaml,
+	"k8s/addons/aci-connector.yaml":                                             k8sAddonsAciConnectorYaml,
 	"k8s/addons/antrea.yaml":                                                    k8sAddonsAntreaYaml,
 	"k8s/addons/audit-policy.yaml":                                              k8sAddonsAuditPolicyYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                                      k8sAddonsAzureCloudProviderYaml,
@@ -33602,7 +33032,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/ip-masq-agent.yaml":                                             k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                          k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                      k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":           k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-flannel-daemonset.yaml":                  k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":                k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -33781,7 +33210,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
@@ -33792,7 +33220,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -33802,7 +33229,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -33812,7 +33238,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -33823,6 +33248,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"aad-default-admin-group-rbac.yaml":                         {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"aad-pod-identity.yaml":                                     {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
+			"aci-connector.yaml":                                        {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
 			"antrea.yaml":                                               {k8sAddonsAntreaYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                                         {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":                                 {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
@@ -33841,7 +33267,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"ip-masq-agent.yaml":                                        {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                     {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                                 {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddonsKubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},

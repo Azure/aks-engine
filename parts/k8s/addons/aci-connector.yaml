@@ -61,7 +61,7 @@ data:
   cert.pem: <cert>
   key.pem: <key>
 ---
-apiVersion: extensions/v1beta1
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: Deployment
 metadata:
   name: aci-connector
@@ -73,6 +73,11 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
+{{if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      app: aci-connector
+{{end}}
   template:
     metadata:
       labels:
@@ -80,7 +85,7 @@ spec:
     spec:
       serviceAccountName: aci-connector
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}
