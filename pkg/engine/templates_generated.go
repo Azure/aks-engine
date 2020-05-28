@@ -16293,10 +16293,10 @@ spec:
       labels:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
-{{if IsKubernetesVersionGe "1.17.0"}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-{{end}}
+{{- end}}
     spec:
       priorityClassName: system-cluster-critical
       containers:
