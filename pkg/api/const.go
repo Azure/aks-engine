@@ -36,6 +36,7 @@ const (
 	AKSUbuntu1604     Distro = "aks-ubuntu-16.04"
 	AKSUbuntu1804     Distro = "aks-ubuntu-18.04"
 	ACC1604           Distro = "acc-16.04"
+	AKSGPU1804        Distro = "aks-gpu-18.04"
 )
 
 const (

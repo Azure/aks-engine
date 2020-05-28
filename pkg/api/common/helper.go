@@ -14,6 +14,44 @@ import (
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
+var (
+	/* If a new GPU sku becomes available, add a key to this map, but only if you have a confirmation
+	   that we have an agreement with NVIDIA for this specific gpu.
+	*/
+	NvidiaEnabledSKUs = map[string]bool{
+		// K80
+		"Standard_NC6":   true,
+		"Standard_NC12":  true,
+		"Standard_NC24":  true,
+		"Standard_NC24r": true,
+		// M60
+		"Standard_NV6":      true,
+		"Standard_NV12":     true,
+		"Standard_NV12s_v3": true,
+		"Standard_NV24":     true,
+		"Standard_NV24s_v3": true,
+		"Standard_NV24r":    true,
+		"Standard_NV48s_v3": true,
+		// P40
+		"Standard_ND6s":   true,
+		"Standard_ND12s":  true,
+		"Standard_ND24s":  true,
+		"Standard_ND24rs": true,
+		// P100
+		"Standard_NC6s_v2":   true,
+		"Standard_NC12s_v2":  true,
+		"Standard_NC24s_v2":  true,
+		"Standard_NC24rs_v2": true,
+		// V100
+		"Standard_NC6s_v3":   true,
+		"Standard_NC12s_v3":  true,
+		"Standard_NC24s_v3":  true,
+		"Standard_NC24rs_v3": true,
+		"Standard_ND40s_v3":  true,
+		"Standard_ND40rs_v2": true,
+	}
+)
+
 // HandleValidationErrors is the helper function to catch validator.ValidationError
 // based on Namespace of the error, and return customized error message.
 func HandleValidationErrors(e validator.ValidationErrors) error {
@@ -74,45 +112,10 @@ func ValidateDNSPrefix(dnsName string) error {
 
 // IsNvidiaEnabledSKU determines if an VM SKU has nvidia driver support
 func IsNvidiaEnabledSKU(vmSize string) bool {
-	/* If a new GPU sku becomes available, add a key to this map, but only if you have a confirmation
-	   that we have an agreement with NVIDIA for this specific gpu.
-	*/
-	dm := map[string]bool{
-		// K80
-		"Standard_NC6":   true,
-		"Standard_NC12":  true,
-		"Standard_NC24":  true,
-		"Standard_NC24r": true,
-		// M60
-		"Standard_NV6":      true,
-		"Standard_NV12":     true,
-		"Standard_NV12s_v3": true,
-		"Standard_NV24":     true,
-		"Standard_NV24s_v3": true,
-		"Standard_NV24r":    true,
-		"Standard_NV48s_v3": true,
-		// P40
-		"Standard_ND6s":   true,
-		"Standard_ND12s":  true,
-		"Standard_ND24s":  true,
-		"Standard_ND24rs": true,
-		// P100
-		"Standard_NC6s_v2":   true,
-		"Standard_NC12s_v2":  true,
-		"Standard_NC24s_v2":  true,
-		"Standard_NC24rs_v2": true,
-		// V100
-		"Standard_NC6s_v3":   true,
-		"Standard_NC12s_v3":  true,
-		"Standard_NC24s_v3":  true,
-		"Standard_NC24rs_v3": true,
-		"Standard_ND40s_v3":  true,
-		"Standard_ND40rs_v2": true,
-	}
 	// Trim the optional _Promo suffix.
 	vmSize = strings.TrimSuffix(vmSize, "_Promo")
-	if _, ok := dm[vmSize]; ok {
-		return dm[vmSize]
+	if _, ok := NvidiaEnabledSKUs[vmSize]; ok {
+		return NvidiaEnabledSKUs[vmSize]
 	}
 
 	return false
