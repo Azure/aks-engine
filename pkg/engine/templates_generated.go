@@ -37,7 +37,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -50,7 +49,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -63,7 +61,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -76,7 +73,6 @@
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml
@@ -93,6 +89,7 @@
 // ../../parts/k8s/addons/azuredisk-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/azurefile-csi-driver-deployment.yaml
 // ../../parts/k8s/addons/cilium.yaml
+// ../../parts/k8s/addons/cloud-node-manager.yaml
 // ../../parts/k8s/addons/cluster-autoscaler.yaml
 // ../../parts/k8s/addons/container-monitoring.yaml
 // ../../parts/k8s/addons/coredns.yaml
@@ -7719,118 +7716,6 @@ func k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: cloud-node-manager
-  namespace: kube-system
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["watch","list","get","update", "patch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cloud-node-manager
-subjects:
-- kind: ServiceAccount
-  name: cloud-node-manager
-  namespace: kube-system
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      hostNetwork: true   # required to fetch correct hostname
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - cloud-node-manager
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-`)
-
-func k8sAddons116KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsCloudNodeManagerYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsCloudNodeManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml = []byte(`{{- /* This file was pulled from:
 https://github.com/coreos/flannel (HEAD at time of pull was 4973e02e539378) */}}
 apiVersion: v1
@@ -10075,118 +9960,6 @@ func k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: cloud-node-manager
-  namespace: kube-system
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["watch","list","get","update", "patch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cloud-node-manager
-subjects:
-- kind: ServiceAccount
-  name: cloud-node-manager
-  namespace: kube-system
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      hostNetwork: true {{/* required to fetch correct hostname */}}
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - cloud-node-manager
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-`)
-
-func k8sAddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsCloudNodeManagerYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsCloudNodeManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12441,175 +12214,6 @@ func k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: cloud-node-manager
-  namespace: kube-system
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["watch","list","get","update", "patch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cloud-node-manager
-subjects:
-- kind: ServiceAccount
-  name: cloud-node-manager
-  namespace: kube-system
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      hostNetwork: true {{/* required to fetch correct hostname */}}
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - cloud-node-manager
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-{{- if HasWindows}}
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager-windows
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager-windows
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager-windows
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      nodeSelector:
-        kubernetes.io/os: windows
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - /cloud-node-manager.exe
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-{{end}}
-`)
-
-func k8sAddons118KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsCloudNodeManagerYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsCloudNodeManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -14873,175 +14477,6 @@ func k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: cloud-node-manager
-  namespace: kube-system
----
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: [""]
-  resources: ["nodes"]
-  verbs: ["watch","list","get","update", "patch"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: cloud-node-manager
-  labels:
-    k8s-app: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cloud-node-manager
-subjects:
-- kind: ServiceAccount
-  name: cloud-node-manager
-  namespace: kube-system
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      hostNetwork: true {{/* required to fetch correct hostname */}}
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - cloud-node-manager
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-{{- if HasWindows}}
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: cloud-node-manager-windows
-  namespace: kube-system
-  labels:
-    component: cloud-node-manager
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  selector:
-    matchLabels:
-      k8s-app: cloud-node-manager-windows
-  template:
-    metadata:
-      labels:
-        k8s-app: cloud-node-manager-windows
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-node-critical
-      serviceAccountName: cloud-node-manager
-      nodeSelector:
-        kubernetes.io/os: windows
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      containers:
-      - name: cloud-node-manager
-        image: {{ContainerImage "cloud-node-manager"}}
-        imagePullPolicy: IfNotPresent
-        command:
-        - /cloud-node-manager.exe
-        - --node-name=$(NODE_NAME)
-        env:
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        resources:
-          requests:
-            cpu: 50m
-            memory: 50Mi
-          limits:
-            cpu: 2000m
-            memory: 512Mi
-{{end}}
-`)
-
-func k8sAddons119KubernetesmasteraddonsCloudNodeManagerYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsCloudNodeManagerYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -21127,6 +20562,175 @@ func k8sAddonsCiliumYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/cilium.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsCloudNodeManagerYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: cloud-node-manager
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["watch","list","get","update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cloud-node-manager
+  labels:
+    k8s-app: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cloud-node-manager
+subjects:
+- kind: ServiceAccount
+  name: cloud-node-manager
+  namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      hostNetwork: true {{/* required to fetch correct hostname */}}
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - cloud-node-manager
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+{{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloud-node-manager-windows
+  namespace: kube-system
+  labels:
+    component: cloud-node-manager
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      k8s-app: cloud-node-manager-windows
+  template:
+    metadata:
+      labels:
+        k8s-app: cloud-node-manager-windows
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+    spec:
+      priorityClassName: system-node-critical
+      serviceAccountName: cloud-node-manager
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      containers:
+      - name: cloud-node-manager
+        image: {{ContainerImage "cloud-node-manager"}}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /cloud-node-manager.exe
+        - --node-name=$(NODE_NAME)
+        env:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+{{end}}
+`)
+
+func k8sAddonsCloudNodeManagerYamlBytes() ([]byte, error) {
+	return _k8sAddonsCloudNodeManagerYaml, nil
+}
+
+func k8sAddonsCloudNodeManagerYaml() (*asset, error) {
+	bytes, err := k8sAddonsCloudNodeManagerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/cloud-node-manager.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -37675,7 +37279,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-cloud-node-manager.yaml":            k8sAddons116KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -37688,7 +37291,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-cloud-node-manager.yaml":            k8sAddons117KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -37701,7 +37303,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-cloud-node-manager.yaml":            k8sAddons118KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -37714,7 +37315,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-cloud-node-manager.yaml":            k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-flannel-daemonset.yaml":             k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml,
@@ -37731,6 +37331,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                      k8sAddonsAzurediskCsiDriverDeploymentYaml,
 	"k8s/addons/azurefile-csi-driver-deployment.yaml":                      k8sAddonsAzurefileCsiDriverDeploymentYaml,
 	"k8s/addons/cilium.yaml":                                               k8sAddonsCiliumYaml,
+	"k8s/addons/cloud-node-manager.yaml":                                   k8sAddonsCloudNodeManagerYaml,
 	"k8s/addons/cluster-autoscaler.yaml":                                   k8sAddonsClusterAutoscalerYaml,
 	"k8s/addons/container-monitoring.yaml":                                 k8sAddonsContainerMonitoringYaml,
 	"k8s/addons/coredns.yaml":                                              k8sAddonsCorednsYaml,
@@ -37922,7 +37523,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-cloud-node-manager.yaml":            {k8sAddons116KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons116KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37937,7 +37537,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-cloud-node-manager.yaml":            {k8sAddons117KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons117KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37952,7 +37551,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-cloud-node-manager.yaml":            {k8sAddons118KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons118KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37967,7 +37565,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-cloud-node-manager.yaml":            {k8sAddons119KubernetesmasteraddonsCloudNodeManagerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-flannel-daemonset.yaml":             {k8sAddons119KubernetesmasteraddonsFlannelDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-heapster-deployment.yaml":           {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-keyvault-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37985,6 +37582,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"azuredisk-csi-driver-deployment.yaml":                      {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"azurefile-csi-driver-deployment.yaml":                      {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
 			"cilium.yaml":                                               {k8sAddonsCiliumYaml, map[string]*bintree{}},
+			"cloud-node-manager.yaml":                                   {k8sAddonsCloudNodeManagerYaml, map[string]*bintree{}},
 			"cluster-autoscaler.yaml":                                   {k8sAddonsClusterAutoscalerYaml, map[string]*bintree{}},
 			"container-monitoring.yaml":                                 {k8sAddonsContainerMonitoringYaml, map[string]*bintree{}},
 			"coredns.yaml":                                              {k8sAddonsCorednsYaml, map[string]*bintree{}},
