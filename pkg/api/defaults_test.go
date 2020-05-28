@@ -4601,7 +4601,7 @@ func TestImageReference(t *testing.T) {
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   AKSUbuntu1604,
+					Distro:   AKSUbuntu1804,
 					ImageRef: nil,
 				},
 			},
@@ -4630,7 +4630,7 @@ func TestImageReference(t *testing.T) {
 			},
 			expectedAgentPoolProfiles: []AgentPoolProfile{
 				{
-					Distro:   Ubuntu,
+					Distro:   Ubuntu1804,
 					ImageRef: nil,
 				},
 			},
