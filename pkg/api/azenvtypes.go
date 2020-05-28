@@ -179,7 +179,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-gpu-1804-202005",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.05.31",
+		ImageVersion:   "2020.05.28",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
