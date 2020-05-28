@@ -82,7 +82,7 @@ roleRef:
   name: aad-pod-id-nmi-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: extensions/v1beta1
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
   labels:
@@ -94,11 +94,21 @@ metadata:
   name: nmi
   namespace: kube-system
 spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
+{{- end}}
   template:
     metadata:
       labels:
         component: nmi
         tier: node
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
@@ -132,7 +142,7 @@ spec:
             add:
             - NET_ADMIN
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       tolerations:
       - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
@@ -189,7 +199,7 @@ roleRef:
   name: aad-pod-id-mic-role
   apiGroup: rbac.authorization.k8s.io
 ---
-apiVersion: extensions/v1beta1
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: Deployment
 metadata:
   labels:
@@ -200,6 +210,11 @@ metadata:
   name: mic
   namespace: kube-system
 spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      component: mic
+{{- end}}
   template:
     metadata:
       labels:
