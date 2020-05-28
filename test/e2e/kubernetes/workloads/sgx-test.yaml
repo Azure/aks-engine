@@ -2,21 +2,20 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: sgx-test
-  labels:
-    app: sgx-test
 spec:
   template:
-    metadata:
-      labels:
-        app: sgx-test
     spec:
       containers:
       - name: sgxtest
         image: oeciteam/sgx-test:1.0
+        volumeMounts:
+        - mountPath: /dev/sgx
+          name: dev-sgx
         securityContext:
           privileged: true
-        resources:
-          limits:
-            kubernetes.azure.com/sgx_epc_mem_in_MiB: 10
+      volumes:
+      - name: dev-sgx
+        hostPath:
+          path: /dev/sgx
       restartPolicy: Never
   backoffLimit: 0

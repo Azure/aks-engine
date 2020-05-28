@@ -131,8 +131,6 @@ spec:
       containers:
       - name: sgxtest
         image: oeciteam/sgx-test:1.0
-        securityContext:
-          privileged: true
         resources:
           limits:
             kubernetes.azure.com/sgx_epc_mem_in_MiB: 10
