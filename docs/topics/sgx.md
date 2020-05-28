@@ -50,9 +50,9 @@ You can install the SGX device plugin which surfaces the usage of Intel SGX’s 
 
 Using kubectl, deploy device plugin DaemonSet: 
 1. For kubernetes versions before v1.17, use: <br>
-    kubectl create -f [device-plugin-before-k8s-1-17.yaml](device-plugin-before-k8s-1-17.yaml)
+    kubectl create -f [device-plugin-before-k8s-1-17.yaml](sgx/device-plugin-before-k8s-1-17.yaml)
 2. For kubernetes v1.17 and onwards, use: <br> 
-    kubectl create -f [device-plugin.yaml](device-plugin.yaml)
+    kubectl create -f [device-plugin.yaml](sgx/device-plugin.yaml)
 
 Confirm that the DaemonSet pods are running on each Intel SGX enabled node as follows:
 
@@ -131,20 +131,11 @@ spec:
       containers:
       - name: sgxtest
         image: oeciteam/sgx-test:1.0
-        command: ["/samples/helloworld/host/helloworldhost", "/samples/helloworld/enclave/helloworldenc.signed"]
-        volumeMounts:
-        - mountPath: /dev/sgx
-          name: dev-sgx
         securityContext:
           privileged: true
         resources:
           limits:
             kubernetes.azure.com/sgx_epc_mem_in_MiB: 10
-      volumes:
-      - name: dev-sgx
-        hostPath:
-          path: /dev/sgx
-          type: CharDevice
       restartPolicy: Never
   backoffLimit: 0
   ```
