@@ -11520,11 +11520,11 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
   replicas: 1
-{{if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       app: aci-connector
-{{end}}
+{{- end}}
   template:
     metadata:
       labels:
