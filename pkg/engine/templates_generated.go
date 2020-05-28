@@ -26320,8 +26320,15 @@ DEBIAN_OS_NAME="DEBIAN"
 if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
+if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
+  UBUNTU_RELEASE=$(lsb_release -r -s)
+fi
 DOCKER=/usr/bin/docker
-export GPU_DV=418.40.04
+if [[ $UBUNTU_RELEASE == "18.04" ]]; then
+  export GPU_DV=418.126.02
+else
+  export GPU_DV=418.40.04
+fi
 export GPU_DEST=/usr/local/nvidia
 NVIDIA_DOCKER_VERSION=2.0.3
 DOCKER_VERSION=1.13.1-1
