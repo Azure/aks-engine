@@ -173,9 +173,9 @@ var (
 		ImageVersion:   "2020.05.13",
 	}
 
-	// AKSGPU1804OSImageConfig is the AKS image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
+	// AKSUbuntuGPU1804OSImageConfig is the AKS image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
 	// TODO: Update sku and version after GPU image is actually published
-	AKSGPU1804OSImageConfig = AzureOSImageConfig{
+	AKSUbuntuGPU1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-gpu-1804-202005",
 		ImagePublisher: "microsoft-aks",
@@ -230,7 +230,7 @@ var (
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
 			ACC1604:           ACC1604OSImageConfig,
-			AKSGPU1804:        AKSGPU1804OSImageConfig,
+			AKSUbuntuGPU1804:  AKSUbuntuGPU1804OSImageConfig,
 		},
 	}
 
@@ -275,7 +275,7 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
-			AKSGPU1804:        AKSGPU1804OSImageConfig,
+			AKSUbuntuGPU1804:  AKSUbuntuGPU1804OSImageConfig,
 		},
 	}
 
@@ -324,7 +324,7 @@ var (
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
 			AKS1804Deprecated: AKSUbuntu1804OSImageConfig, // for back-compat
-			AKSGPU1804:        AKSGPU1804OSImageConfig,
+			AKSUbuntuGPU1804:  AKSUbuntuGPU1804OSImageConfig,
 		},
 	}
 

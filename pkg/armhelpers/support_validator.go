@@ -90,8 +90,8 @@ func toImageConfig(distro api.Distro) api.AzureOSImageConfig {
 		return api.AKSUbuntu1804OSImageConfig
 	case api.ACC1604:
 		return api.ACC1604OSImageConfig
-	case api.AKSGPU1804:
-		return api.AKSGPU1804OSImageConfig
+	case api.AKSUbuntuGPU1804:
+		return api.AKSUbuntuGPU1804OSImageConfig
 	default:
 		return api.Ubuntu1604OSImageConfig
 	}
