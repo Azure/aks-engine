@@ -67,7 +67,7 @@ To test node-problem-detector in a running cluster, you can inject messages into
 | customPluginMonitor | no       | Comma-separated list of custom plugin monitor config files | /config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json             |
 | systemLogMonitor    | no       | Comma-separated list of system log monitor config files    | /config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json |
 | systemStatsMonitor  | no       | Comma-separated list of system stats monitor config files  | /config/system-stats-monitor.json                                                    |
-| versionLabel        | no       | Version label used as DaemonSet selector                   | v0.8.1                                                                               |
+| versionLabel        | no       | Version label used as DaemonSet selector                   | v0.8.2                                                                               |
 
 ### Node Problem Detector
 
