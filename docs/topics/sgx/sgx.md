@@ -130,7 +130,7 @@ spec:
     spec:
       containers:
       - name: sgxtest
-        image: oeciteam/sgx-test
+        image: oeciteam/sgx-test:1.0
         command: ["/samples/helloworld/host/helloworldhost", "/samples/helloworld/enclave/helloworldenc.signed"]
         volumeMounts:
         - mountPath: /dev/sgx
