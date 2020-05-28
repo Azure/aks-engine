@@ -94,21 +94,21 @@ metadata:
   name: nmi
   namespace: kube-system
 spec:
-{{if IsKubernetesVersionGe "1.16.0"}}
+{- {if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: nmi
       tier: node
-{{end}}
+{{- end}}
   template:
     metadata:
       labels:
         component: nmi
         tier: node
-{{if IsKubernetesVersionGe "1.17.0"}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-{{end}}
+{{- end}}
     spec:
       priorityClassName: system-cluster-critical
       serviceAccountName: aad-pod-id-nmi-service-account
@@ -210,11 +210,11 @@ metadata:
   name: mic
   namespace: kube-system
 spec:
-{{if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       component: mic
-{{end}}
+{{- end}}
   template:
     metadata:
       labels:
