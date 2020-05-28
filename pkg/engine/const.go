@@ -254,7 +254,7 @@ const (
 	ciliumAddonDestinationFilename                 string = "cilium.yaml"
 	antreaAddonSourceFilename                      string = "antrea.yaml"
 	antreaAddonDestinationFilename                 string = "antrea.yaml"
-	auditPolicyAddonSourceFilename                 string = "kubernetesmaster-audit-policy.yaml"
+	auditPolicyAddonSourceFilename                 string = "audit-policy.yaml"
 	auditPolicyAddonDestinationFilename            string = "audit-policy.yaml"
 	cloudProviderAddonSourceFilename               string = "azure-cloud-provider.yaml"
 	cloudProviderAddonDestinationFilename          string = "azure-cloud-provider.yaml"

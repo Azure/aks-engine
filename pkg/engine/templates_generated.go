@@ -32,7 +32,6 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.16/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
@@ -45,7 +44,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
@@ -58,7 +56,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
@@ -71,7 +68,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
@@ -86,6 +82,7 @@
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/antrea.yaml
+// ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
 // ../../parts/k8s/addons/azure-cni-networkmonitor.yaml
 // ../../parts/k8s/addons/azure-network-policy.yaml
@@ -99,7 +96,6 @@
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmaster-audit-policy.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
@@ -6439,63 +6435,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons116KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons116KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -8789,63 +8728,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons117KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons117KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -11155,63 +11037,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons118KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons118KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -13587,63 +13412,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddons119KubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddons119KubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16788,6 +16556,63 @@ func k8sAddonsAntreaYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/antrea.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1{{ if not (IsKubernetesVersionGe "1.16.0")}}beta1{{end}}
+kind: Policy
+omitStages:
+  - RequestReceived
+rules:
+  - level: RequestResponse
+    resources:
+    - group: ""
+      resources: ["pods"]
+  - level: Metadata
+    resources:
+    - group: ""
+      resources: ["pods/log", "pods/status"]
+  - level: None
+    users: ["system:kube-proxy"]
+    verbs: ["watch"]
+    resources:
+    - group: ""
+      resources: ["endpoints", "services"]
+  - level: None
+    userGroups: ["system:authenticated"]
+    nonResourceURLs:
+    - /api*
+    - /version
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["configmaps"]
+    namespaces: ["kube-system"]
+  - level: Request
+    resources:
+    - group: ""
+      resources: ["secrets"]
+  - level: Request
+    resources:
+    - group: ""
+    - group: extensions
+  - level: Metadata
+    omitStages:
+      - RequestReceived
+`)
+
+func k8sAddonsAuditPolicyYamlBytes() ([]byte, error) {
+	return _k8sAddonsAuditPolicyYaml, nil
+}
+
+func k8sAddonsAuditPolicyYaml() (*asset, error) {
+	bytes, err := k8sAddonsAuditPolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -22925,63 +22750,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetes-dashboard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasterAuditPolicyYaml = []byte(`apiVersion: audit.k8s.io/v1beta1 # This is required.
-kind: Policy
-omitStages:
-  - RequestReceived
-rules:
-  - level: RequestResponse
-    resources:
-    - group: ""
-      resources: ["pods"]
-  - level: Metadata
-    resources:
-    - group: ""
-      resources: ["pods/log", "pods/status"]
-  - level: None
-    users: ["system:kube-proxy"]
-    verbs: ["watch"]
-    resources:
-    - group: ""
-      resources: ["endpoints", "services"]
-  - level: None
-    userGroups: ["system:authenticated"]
-    nonResourceURLs:
-    - /api*
-    - /version
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["configmaps"]
-    namespaces: ["kube-system"]
-  - level: Request
-    resources:
-    - group: ""
-      resources: ["secrets"]
-  - level: Request
-    resources:
-    - group: ""
-    - group: extensions
-  - level: Metadata
-    omitStages:
-      - RequestReceived
-`)
-
-func k8sAddonsKubernetesmasterAuditPolicyYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasterAuditPolicyYaml, nil
-}
-
-func k8sAddonsKubernetesmasterAuditPolicyYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasterAuditPolicyYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmaster-audit-policy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -37638,39 +37406,38 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                                     agentoutputsT,
-	"agentparams.t":                                      agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":                dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":                      dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":                  dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":                   dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":                        dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":                dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":                dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":                             dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":                  dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":                       dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":                       dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t":               dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t":               dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":                      dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":                      dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":                      dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                               dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                                    dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":                           dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":                           dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":                           dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":                           dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":                           dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":                           dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":                         dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                              dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                                  dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                              dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":                        dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                                      iaasoutputsT,
-	"k8s/addons/1.16/kubernetesmaster-audit-policy.yaml": k8sAddons116KubernetesmasterAuditPolicyYaml,
+	"agentoutputs.t":                       agentoutputsT,
+	"agentparams.t":                        agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":  dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":        dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":    dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":     dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":          dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":  dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":  dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":               dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":    dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":         dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":         dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t": dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t": dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":        dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":        dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":        dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                 dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                      dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":             dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":             dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":             dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":             dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":             dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":             dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":           dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                    dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                        iaasoutputsT,
 	"k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
@@ -37683,7 +37450,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmaster-audit-policy.yaml":                        k8sAddons117KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
@@ -37696,7 +37462,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmaster-audit-policy.yaml":                        k8sAddons118KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
@@ -37709,7 +37474,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmaster-audit-policy.yaml":                        k8sAddons119KubernetesmasterAuditPolicyYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
@@ -37724,6 +37488,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                              k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/antrea.yaml":                                               k8sAddonsAntreaYaml,
+	"k8s/addons/audit-policy.yaml":                                         k8sAddonsAuditPolicyYaml,
 	"k8s/addons/azure-cloud-provider.yaml":                                 k8sAddonsAzureCloudProviderYaml,
 	"k8s/addons/azure-cni-networkmonitor.yaml":                             k8sAddonsAzureCniNetworkmonitorYaml,
 	"k8s/addons/azure-network-policy.yaml":                                 k8sAddonsAzureNetworkPolicyYaml,
@@ -37737,7 +37502,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/ip-masq-agent.yaml":                                        k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmaster-audit-policy.yaml":                        k8sAddonsKubernetesmasterAuditPolicyYaml,
 	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
@@ -37917,7 +37681,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"k8s": {nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons116KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37932,7 +37695,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons117KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37947,7 +37709,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons118KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37962,7 +37723,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"kubernetesmaster-audit-policy.yaml":                        {k8sAddons119KubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
@@ -37978,6 +37738,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"aad-default-admin-group-rbac.yaml":                         {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
 			"antrea.yaml":                                               {k8sAddonsAntreaYaml, map[string]*bintree{}},
+			"audit-policy.yaml":                                         {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":                                 {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
 			"azure-cni-networkmonitor.yaml":                             {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
 			"azure-network-policy.yaml":                                 {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
@@ -37991,7 +37752,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"ip-masq-agent.yaml":                                        {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                     {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                                 {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmaster-audit-policy.yaml":                        {k8sAddonsKubernetesmasterAuditPolicyYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
