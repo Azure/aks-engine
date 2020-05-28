@@ -32,7 +32,6 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml
@@ -44,7 +43,6 @@
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml
@@ -56,7 +54,6 @@
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml
@@ -68,7 +65,6 @@
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml
@@ -81,6 +77,7 @@
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
+// ../../parts/k8s/addons/aad-pod-identity.yaml
 // ../../parts/k8s/addons/antrea.yaml
 // ../../parts/k8s/addons/audit-policy.yaml
 // ../../parts/k8s/addons/azure-cloud-provider.yaml
@@ -96,7 +93,6 @@
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml
@@ -6435,260 +6431,6 @@ func iaasoutputsT() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureassignedidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureAssignedIdentity
-    plural: azureassignedidentities
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentitybindings.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentityBinding
-    plural: azureidentitybindings
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentity
-    singular: azureidentity
-    plural: azureidentities
-  scope: Namespaced
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-nmi-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-nmi-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-nmi-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    component: nmi
-    tier: node
-    k8s-app: aad-pod-id
-  name: nmi
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: nmi
-      tier: node
-  template:
-    metadata:
-      labels:
-        component: nmi
-        tier: node
-    spec:
-      priorityClassName: system-cluster-critical
-      serviceAccountName: aad-pod-id-nmi-service-account
-      hostNetwork: true
-      containers:
-      - name: nmi
-        image: {{ContainerImage "nmi"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
-        args:
-          - "--host-ip=$(HOST_IP)"
-          - "--node=$(NODE_NAME)"
-        env:
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-            - NET_ADMIN
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: {{GetAADPodIdentityTaintKey}}
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-mic-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: [ "list", "watch" ]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureassignedidentities"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-mic-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-mic-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    component: mic
-    k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: mic
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: mic
-  template:
-    metadata:
-      labels:
-        component: mic
-    spec:
-      serviceAccountName: aad-pod-id-mic-service-account
-      containers:
-      - name: mic
-        image: {{ContainerImage "mic"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
-        args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
-        volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
-      volumes:
-      - name: k8s-azure-file
-        hostPath:
-          path: /etc/kubernetes/azure.json
-`)
-
-func k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -8728,262 +8470,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureassignedidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureAssignedIdentity
-    plural: azureassignedidentities
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentitybindings.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentityBinding
-    plural: azureidentitybindings
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentity
-    singular: azureidentity
-    plural: azureidentities
-  scope: Namespaced
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-nmi-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-nmi-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-nmi-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    component: nmi
-    tier: node
-    k8s-app: aad-pod-id
-  name: nmi
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: nmi
-      tier: node
-  template:
-    metadata:
-      labels:
-        component: nmi
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      serviceAccountName: aad-pod-id-nmi-service-account
-      hostNetwork: true
-      containers:
-      - name: nmi
-        image: {{ContainerImage "nmi"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
-        args:
-          - "--host-ip=$(HOST_IP)"
-          - "--node=$(NODE_NAME)"
-        env:
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-            - NET_ADMIN
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: {{GetAADPodIdentityTaintKey}}
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-mic-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: [ "list", "watch" ]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureassignedidentities"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-mic-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-mic-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    component: mic
-    k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: mic
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: mic
-  template:
-    metadata:
-      labels:
-        component: mic
-    spec:
-      serviceAccountName: aad-pod-id-mic-service-account
-      containers:
-      - name: mic
-        image: {{ContainerImage "mic"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
-        args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
-        volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
-      volumes:
-      - name: k8s-azure-file
-        hostPath:
-          path: /etc/kubernetes/azure.json
-`)
-
-func k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -11037,262 +10523,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureassignedidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureAssignedIdentity
-    plural: azureassignedidentities
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentitybindings.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentityBinding
-    plural: azureidentitybindings
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentity
-    singular: azureidentity
-    plural: azureidentities
-  scope: Namespaced
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-nmi-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-nmi-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-nmi-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    component: nmi
-    tier: node
-    k8s-app: aad-pod-id
-  name: nmi
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: nmi
-      tier: node
-  template:
-    metadata:
-      labels:
-        component: nmi
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      serviceAccountName: aad-pod-id-nmi-service-account
-      hostNetwork: true
-      containers:
-      - name: nmi
-        image: {{ContainerImage "nmi"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
-        args:
-          - "--host-ip=$(HOST_IP)"
-          - "--node=$(NODE_NAME)"
-        env:
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-            - NET_ADMIN
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: {{GetAADPodIdentityTaintKey}}
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-mic-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: [ "list", "watch" ]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureassignedidentities"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-mic-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-mic-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    component: mic
-    k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: mic
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: mic
-  template:
-    metadata:
-      labels:
-        component: mic
-    spec:
-      serviceAccountName: aad-pod-id-mic-service-account
-      containers:
-      - name: mic
-        image: {{ContainerImage "mic"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
-        args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
-        volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
-      volumes:
-      - name: k8s-azure-file
-        hostPath:
-          path: /etc/kubernetes/azure.json
-`)
-
-func k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -13412,262 +12642,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureassignedidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureAssignedIdentity
-    plural: azureassignedidentities
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentitybindings.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentityBinding
-    plural: azureidentitybindings
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentity
-    singular: azureidentity
-    plural: azureidentities
-  scope: Namespaced
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-nmi-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-nmi-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-nmi-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    component: nmi
-    tier: node
-    k8s-app: aad-pod-id
-  name: nmi
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: nmi
-      tier: node
-  template:
-    metadata:
-      labels:
-        component: nmi
-        tier: node
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-    spec:
-      priorityClassName: system-cluster-critical
-      serviceAccountName: aad-pod-id-nmi-service-account
-      hostNetwork: true
-      containers:
-      - name: nmi
-        image: {{ContainerImage "nmi"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
-        args:
-          - "--host-ip=$(HOST_IP)"
-          - "--node=$(NODE_NAME)"
-        env:
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-            - NET_ADMIN
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-      - key: {{GetAADPodIdentityTaintKey}}
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-mic-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: [ "list", "watch" ]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureassignedidentities"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-mic-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-mic-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    component: mic
-    k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: mic
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      component: mic
-  template:
-    metadata:
-      labels:
-        component: mic
-    spec:
-      serviceAccountName: aad-pod-id-mic-service-account
-      containers:
-      - name: mic
-        image: {{ContainerImage "mic"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
-        args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
-        volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
-      volumes:
-      - name: k8s-azure-file
-        hostPath:
-          path: /etc/kubernetes/azure.json
-`)
-
-func k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -15819,6 +14793,268 @@ func k8sAddonsAadDefaultAdminGroupRbacYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/aad-default-admin-group-rbac.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsAadPodIdentityYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aad-pod-id-nmi-service-account
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureassignedidentities.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureAssignedIdentity
+    plural: azureassignedidentities
+  scope: Namespaced
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureidentitybindings.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureIdentityBinding
+    plural: azureidentitybindings
+  scope: Namespaced
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: azureidentities.aadpodidentity.k8s.io
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  group: aadpodidentity.k8s.io
+  version: v1
+  names:
+    kind: AzureIdentity
+    singular: azureidentity
+    plural: azureidentities
+  scope: Namespaced
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aad-pod-id-nmi-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aad-pod-id-nmi-binding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-nmi-binding
+subjects:
+- kind: ServiceAccount
+  name: aad-pod-id-nmi-service-account
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: aad-pod-id-nmi-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: DaemonSet
+metadata:
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    component: nmi
+    tier: node
+    k8s-app: aad-pod-id
+  name: nmi
+  namespace: kube-system
+spec:
+{{if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      component: nmi
+      tier: node
+{{end}}
+  template:
+    metadata:
+      labels:
+        component: nmi
+        tier: node
+{{if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{end}}
+    spec:
+      priorityClassName: system-cluster-critical
+      serviceAccountName: aad-pod-id-nmi-service-account
+      hostNetwork: true
+      containers:
+      - name: nmi
+        image: {{ContainerImage "nmi"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "nmi"}}
+            memory: {{ContainerMemReqs "nmi"}}
+          limits:
+            cpu: {{ContainerCPULimits "nmi"}}
+            memory: {{ContainerMemLimits "nmi"}}
+        args:
+          - "--host-ip=$(HOST_IP)"
+          - "--node=$(NODE_NAME)"
+        env:
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+            - NET_ADMIN
+      nodeSelector:
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+      tolerations:
+      - key: {{GetAADPodIdentityTaintKey}}
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: aad-pod-id-mic-service-account
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: aad-pod-id-mic-role
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["*"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: [ "list", "watch" ]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create", "patch"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureidentitybindings", "azureidentities"]
+  verbs: ["get", "list", "watch", "post"]
+- apiGroups: ["aadpodidentity.k8s.io"]
+  resources: ["azureassignedidentities"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: aad-pod-id-mic-binding
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    k8s-app: aad-pod-id-mic-binding
+subjects:
+- kind: ServiceAccount
+  name: aad-pod-id-mic-service-account
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: aad-pod-id-mic-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: Deployment
+metadata:
+  labels:
+    component: mic
+    k8s-app: aad-pod-id
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: mic
+  namespace: kube-system
+spec:
+{{if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      component: mic
+{{end}}
+  template:
+    metadata:
+      labels:
+        component: mic
+    spec:
+      serviceAccountName: aad-pod-id-mic-service-account
+      containers:
+      - name: mic
+        image: {{ContainerImage "mic"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "mic"}}
+            memory: {{ContainerMemReqs "mic"}}
+          limits:
+            cpu: {{ContainerCPULimits "mic"}}
+            memory: {{ContainerMemLimits "mic"}}
+        args:
+          - --cloudconfig=/etc/kubernetes/azure.json
+          - --logtostderr
+        volumeMounts:
+          - name: k8s-azure-file
+            mountPath: /etc/kubernetes/azure.json
+            readOnly: true
+      volumes:
+      - name: k8s-azure-file
+        hostPath:
+          path: /etc/kubernetes/azure.json
+`)
+
+func k8sAddonsAadPodIdentityYamlBytes() ([]byte, error) {
+	return _k8sAddonsAadPodIdentityYaml, nil
+}
+
+func k8sAddonsAadPodIdentityYaml() (*asset, error) {
+	bytes, err := k8sAddonsAadPodIdentityYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/aad-pod-identity.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -22750,253 +21986,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetes-dashboard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureassignedidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureAssignedIdentity
-    plural: azureassignedidentities
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentitybindings.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentityBinding
-    plural: azureidentitybindings
-  scope: Namespaced
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  name: azureidentities.aadpodidentity.k8s.io
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  group: aadpodidentity.k8s.io
-  version: v1
-  names:
-    kind: AzureIdentity
-    singular: azureidentity
-    plural: azureidentities
-  scope: Namespaced
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-nmi-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["get", "list"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-nmi-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-nmi-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-nmi-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-nmi-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: extensions/v1beta1
-kind: DaemonSet
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    component: nmi
-    tier: node
-    k8s-app: aad-pod-id
-  name: nmi
-  namespace: kube-system
-spec:
-  template:
-    metadata:
-      labels:
-        component: nmi
-        tier: node
-    spec:
-      priorityClassName: system-cluster-critical
-      serviceAccountName: aad-pod-id-nmi-service-account
-      hostNetwork: true
-      containers:
-      - name: nmi
-        image: {{ContainerImage "nmi"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "nmi"}}
-            memory: {{ContainerMemReqs "nmi"}}
-          limits:
-            cpu: {{ContainerCPULimits "nmi"}}
-            memory: {{ContainerMemLimits "nmi"}}
-        args:
-          - "--host-ip=$(HOST_IP)"
-          - "--node=$(NODE_NAME)"
-        env:
-          - name: HOST_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-        securityContext:
-          privileged: true
-          capabilities:
-            add:
-            - NET_ADMIN
-      nodeSelector:
-        beta.kubernetes.io/os: linux
-      tolerations:
-      - key: {{GetAADPodIdentityTaintKey}}
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: aad-pod-id-mic-role
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-rules:
-- apiGroups: ["apiextensions.k8s.io"]
-  resources: ["customresourcedefinitions"]
-  verbs: ["*"]
-- apiGroups: [""]
-  resources: ["pods"]
-  verbs: [ "list", "watch" ]
-- apiGroups: [""]
-  resources: ["events"]
-  verbs: ["create", "patch"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureidentitybindings", "azureidentities"]
-  verbs: ["get", "list", "watch", "post"]
-- apiGroups: ["aadpodidentity.k8s.io"]
-  resources: ["azureassignedidentities"]
-  verbs: ["*"]
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: aad-pod-id-mic-binding
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    k8s-app: aad-pod-id-mic-binding
-subjects:
-- kind: ServiceAccount
-  name: aad-pod-id-mic-service-account
-  namespace: kube-system
-roleRef:
-  kind: ClusterRole
-  name: aad-pod-id-mic-role
-  apiGroup: rbac.authorization.k8s.io
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    component: mic
-    k8s-app: aad-pod-id
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: mic
-  namespace: kube-system
-spec:
-  template:
-    metadata:
-      labels:
-        component: mic
-    spec:
-      serviceAccountName: aad-pod-id-mic-service-account
-      containers:
-      - name: mic
-        image: {{ContainerImage "mic"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "mic"}}
-            memory: {{ContainerMemReqs "mic"}}
-          limits:
-            cpu: {{ContainerCPULimits "mic"}}
-            memory: {{ContainerMemLimits "mic"}}
-        args:
-          - --cloudconfig=/etc/kubernetes/azure.json
-          - --logtostderr
-        volumeMounts:
-          - name: k8s-azure-file
-            mountPath: /etc/kubernetes/azure.json
-            readOnly: true
-      volumes:
-      - name: k8s-azure-file
-        hostPath:
-          path: /etc/kubernetes/azure.json
-`)
-
-func k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -37438,7 +36427,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
 	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                        iaasoutputsT,
-	"k8s/addons/1.16/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -37450,7 +36438,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -37462,7 +36449,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -37474,7 +36460,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -37487,14 +36472,15 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                              k8sAddonsAadDefaultAdminGroupRbacYaml,
-	"k8s/addons/antrea.yaml":                                               k8sAddonsAntreaYaml,
-	"k8s/addons/audit-policy.yaml":                                         k8sAddonsAuditPolicyYaml,
-	"k8s/addons/azure-cloud-provider.yaml":                                 k8sAddonsAzureCloudProviderYaml,
-	"k8s/addons/azure-cni-networkmonitor.yaml":                             k8sAddonsAzureCniNetworkmonitorYaml,
-	"k8s/addons/azure-network-policy.yaml":                                 k8sAddonsAzureNetworkPolicyYaml,
-	"k8s/addons/azure-policy-deployment.yaml":                              k8sAddonsAzurePolicyDeploymentYaml,
-	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                      k8sAddonsAzurediskCsiDriverDeploymentYaml,
-	"k8s/addons/azurefile-csi-driver-deployment.yaml":                      k8sAddonsAzurefileCsiDriverDeploymentYaml,
+	"k8s/addons/aad-pod-identity.yaml":                                          k8sAddonsAadPodIdentityYaml,
+	"k8s/addons/antrea.yaml":                                                    k8sAddonsAntreaYaml,
+	"k8s/addons/audit-policy.yaml":                                              k8sAddonsAuditPolicyYaml,
+	"k8s/addons/azure-cloud-provider.yaml":                                      k8sAddonsAzureCloudProviderYaml,
+	"k8s/addons/azure-cni-networkmonitor.yaml":                                  k8sAddonsAzureCniNetworkmonitorYaml,
+	"k8s/addons/azure-network-policy.yaml":                                      k8sAddonsAzureNetworkPolicyYaml,
+	"k8s/addons/azure-policy-deployment.yaml":                                   k8sAddonsAzurePolicyDeploymentYaml,
+	"k8s/addons/azuredisk-csi-driver-deployment.yaml":                           k8sAddonsAzurediskCsiDriverDeploymentYaml,
+	"k8s/addons/azurefile-csi-driver-deployment.yaml":                           k8sAddonsAzurefileCsiDriverDeploymentYaml,
 	"k8s/addons/cilium.yaml":                                               k8sAddonsCiliumYaml,
 	"k8s/addons/cluster-autoscaler.yaml":                                   k8sAddonsClusterAutoscalerYaml,
 	"k8s/addons/container-monitoring.yaml":                                 k8sAddonsContainerMonitoringYaml,
@@ -37502,7 +36488,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/ip-masq-agent.yaml":                                        k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-aci-connector-deployment.yaml":      k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-calico-daemonset.yaml":              k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml,
@@ -37681,7 +36666,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"k8s": {nil, map[string]*bintree{
 		"addons": {nil, map[string]*bintree{
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons116KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons116KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -37695,7 +36679,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons117KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons117KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -37709,7 +36692,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons118KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons118KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -37723,7 +36705,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddons119KubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddons119KubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
@@ -37737,6 +36718,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"kubernetesmasteraddons-tiller-deployment.yaml":             {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"aad-default-admin-group-rbac.yaml":                         {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
+			"aad-pod-identity.yaml":                                     {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
 			"antrea.yaml":                                               {k8sAddonsAntreaYaml, map[string]*bintree{}},
 			"audit-policy.yaml":                                         {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
 			"azure-cloud-provider.yaml":                                 {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
@@ -37752,7 +36734,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"ip-masq-agent.yaml":                                        {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                     {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                                 {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-aad-pod-identity-deployment.yaml":   {k8sAddonsKubernetesmasteraddonsAadPodIdentityDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-aci-connector-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsAciConnectorDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-blobfuse-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsBlobfuseFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-calico-daemonset.yaml":              {k8sAddonsKubernetesmasteraddonsCalicoDaemonsetYaml, map[string]*bintree{}},
