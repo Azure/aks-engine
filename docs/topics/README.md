@@ -15,7 +15,7 @@ Introductions to all the key parts of AKS Engine you’ll need to know.
 - [Use Key Vault as the Source of Cluster Configuration Secrets](keyvault-secrets.md)
 - [More on Windows and Kubernetes](windows-and-kubernetes.md)
 - [Kubernetes Windows Walkthrough](windows.md)
-- [Using Intel&reg; SGX with Kubernetes](sgx.md)
+- [Using Intel&reg; SGX with Kubernetes](sgx/sgx.md)
 
 **Operations**
 
