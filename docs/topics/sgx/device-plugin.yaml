@@ -50,4 +50,3 @@ spec:
       - name: dev-sgx
         hostPath:
           path: /dev/sgx
-          
