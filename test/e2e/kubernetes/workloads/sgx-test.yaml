@@ -7,8 +7,7 @@ spec:
     spec:
       containers:
       - name: sgxtest
-        image: oeciteam/sgx-test
-        command: ["/helloworld/host/helloworldhost", "/helloworld/enclave/helloworldenc.signed"]
+        image: oeciteam/sgx-test:1.0
         volumeMounts:
         - mountPath: /dev/sgx
           name: dev-sgx
