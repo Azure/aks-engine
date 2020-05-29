@@ -142,7 +142,7 @@ spec:
             cpu: 10m
             memory: 10M
       nodeSelector:
-        beta.kubernetes.io/os: %s
+        kubernetes.io/os: %s
 `
 
 // CreateLinuxDeploy will create a deployment for a given image with a name in a namespace
@@ -227,7 +227,7 @@ spec:
         - -c
         - "%s"
       nodeSelector:
-        beta.kubernetes.io/os: %s
+        kubernetes.io/os: %s
 `
 
 // RunLinuxDeploy will create a deployment that runs a bash command in a pod
@@ -420,7 +420,7 @@ spec:
         ports:
         - containerPort: %d%s
       nodeSelector:
-        beta.kubernetes.io/os: %s
+        kubernetes.io/os: %s
 `
 
 // CreateWindowsDeployWithHostport will create a deployment for a given image with a name in a namespace and create a service mapping a hostPort

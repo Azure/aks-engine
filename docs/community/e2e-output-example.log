@@ -233,7 +233,7 @@ Roles:              agent
 Labels:             agentpool=agentpool1
                     beta.kubernetes.io/arch=amd64
                     beta.kubernetes.io/instance-type=Standard_D2_v3
-                    beta.kubernetes.io/os=linux
+                    kubernetes.io/os=linux
                     failure-domain.beta.kubernetes.io/region=westus2
                     failure-domain.beta.kubernetes.io/zone=0
                     foo=bar
@@ -337,7 +337,7 @@ Roles:              agent
 Labels:             agentpool=agentpool1
                     beta.kubernetes.io/arch=amd64
                     beta.kubernetes.io/instance-type=Standard_D2_v3
-                    beta.kubernetes.io/os=linux
+                    kubernetes.io/os=linux
                     failure-domain.beta.kubernetes.io/region=westus2
                     failure-domain.beta.kubernetes.io/zone=1
                     foo=bar
@@ -439,7 +439,7 @@ Name:               k8s-master-24731180-0
 Roles:              master
 Labels:             beta.kubernetes.io/arch=amd64
                     beta.kubernetes.io/instance-type=Standard_D2_v3
-                    beta.kubernetes.io/os=linux
+                    kubernetes.io/os=linux
                     failure-domain.beta.kubernetes.io/region=westus2
                     failure-domain.beta.kubernetes.io/zone=0
                     kubernetes.azure.com/cluster=kubernetes-westus2-13811
@@ -1065,12 +1065,12 @@ kube-system   service/kube-dns         ClusterIP   10.0.0.10     <none>        5
 kube-system   service/metrics-server   ClusterIP   10.0.87.235   <none>        443/TCP                  3m3s    k8s-app=metrics-server
 
 NAMESPACE     NAME                                              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE    CONTAINERS                                           IMAGES                                                                                                                                                                                  SELECTOR
-kube-system   daemonset.apps/azure-cni-networkmonitor           3         3         3       3            3           beta.kubernetes.io/os=linux   3m1s   azure-cnms                                           mcr.microsoft.com/containernetworking/networkmonitor:v0.0.8                                                                                                                             k8s-app=azure-cnms
-kube-system   daemonset.apps/azure-ip-masq-agent                3         3         3       3            3           beta.kubernetes.io/os=linux   3m3s   azure-ip-masq-agent                                  mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v2.5.0                                                                                                                                   k8s-app=azure-ip-masq-agent,tier=node
-kube-system   daemonset.apps/blobfuse-flexvol-installer         2         2         2       2            2           beta.kubernetes.io/os=linux   3m4s   blobfuse-flexvol-installer                           mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8                                                                                                                              name=blobfuse
-kube-system   daemonset.apps/csi-secrets-store                  2         2         2       2            2           beta.kubernetes.io/os=linux   3m     node-driver-registrar,secrets-store,liveness-probe   mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0,mcr.microsoft.com/k8s/csi/secrets-store/driver:v0.0.9,mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v1.1.0   app=csi-secrets-store
-kube-system   daemonset.apps/csi-secrets-store-provider-azure   2         2         2       2            2           beta.kubernetes.io/os=linux   3m     provider-azure-installer                             mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4                                                                                                                            app=csi-secrets-store-provider-azure
-kube-system   daemonset.apps/kube-proxy                         3         3         3       3            3           beta.kubernetes.io/os=linux   3m3s   kube-proxy                                           mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.18.2                                                                                                                                     component=kube-proxy,k8s-app=kube-proxy,tier=node
+kube-system   daemonset.apps/azure-cni-networkmonitor           3         3         3       3            3           kubernetes.io/os=linux        3m1s   azure-cnms                                           mcr.microsoft.com/containernetworking/networkmonitor:v0.0.8                                                                                                                             k8s-app=azure-cnms
+kube-system   daemonset.apps/azure-ip-masq-agent                3         3         3       3            3           kubernetes.io/os=linux        3m3s   azure-ip-masq-agent                                  mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v2.5.0                                                                                                                                   k8s-app=azure-ip-masq-agent,tier=node
+kube-system   daemonset.apps/blobfuse-flexvol-installer         2         2         2       2            2           kubernetes.io/os=linux        3m4s   blobfuse-flexvol-installer                           mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8                                                                                                                              name=blobfuse
+kube-system   daemonset.apps/csi-secrets-store                  2         2         2       2            2           kubernetes.io/os=linux        3m     node-driver-registrar,secrets-store,liveness-probe   mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0,mcr.microsoft.com/k8s/csi/secrets-store/driver:v0.0.9,mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v1.1.0   app=csi-secrets-store
+kube-system   daemonset.apps/csi-secrets-store-provider-azure   2         2         2       2            2           kubernetes.io/os=linux        3m     provider-azure-installer                             mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4                                                                                                                            app=csi-secrets-store-provider-azure
+kube-system   daemonset.apps/kube-proxy                         3         3         3       3            3           kubernetes.io/os=linux        3m3s   kube-proxy                                           mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.18.2                                                                                                                                     component=kube-proxy,k8s-app=kube-proxy,tier=node
 
 NAMESPACE     NAME                                           DATA   AGE
 kube-system   configmap/azure-ip-masq-agent-config           1      3m5s
@@ -1324,7 +1324,7 @@ Volumes:
     SecretName:  coredns-token-rlkf7
     Optional:    false
 QoS Class:       Burstable
-Node-Selectors:  beta.kubernetes.io/os=linux
+Node-Selectors:  kubernetes.io/os=linux
 Tolerations:     :NoExecute
                  :NoSchedule
                  CriticalAddonsOnly
@@ -1407,7 +1407,7 @@ Volumes:
     SecretName:  coredns-autoscaler-token-wczlj
     Optional:    false
 QoS Class:       Burstable
-Node-Selectors:  beta.kubernetes.io/os=linux
+Node-Selectors:  kubernetes.io/os=linux
 Tolerations:     :NoExecute
                  :NoSchedule
                  CriticalAddonsOnly

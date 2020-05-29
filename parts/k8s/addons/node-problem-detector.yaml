@@ -90,7 +90,7 @@ spec:
           path: /dev/kmsg
           type: "CharDevice"
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       serviceAccountName: node-problem-detector
       tolerations:
       - operator: "Exists"

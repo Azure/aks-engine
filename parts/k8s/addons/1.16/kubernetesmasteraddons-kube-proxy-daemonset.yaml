@@ -116,4 +116,4 @@ spec:
           name: kube-proxy-config
         name: kube-proxy-config-volume
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

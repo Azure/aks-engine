@@ -15,4 +15,4 @@ spec:
         image: {{ .ServerCore }}
         command: ['powershell', 'Resolve-DnsName', '-Name', 'google.com', '-DnsOnly', '-Type', 'A']
       nodeSelector:
-        beta.kubernetes.io/os: windows
+        kubernetes.io/os: windows
