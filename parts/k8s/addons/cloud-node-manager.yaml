@@ -93,7 +93,7 @@ spec:
           limits:
             cpu: 2000m
             memory: 512Mi
-{{- if HasWindows}}
+{{- if and HasWindows (IsKubernetesVersionGe "1.18.0")}}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
