@@ -307,19 +307,19 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	}
 
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		EnableAHUB: to.BoolPtr(true),
+		SSHEnabled: &trueVar,
+		EnableAHUB: &trueVar,
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			// Expecting panic and it happens
-			// We do not test whether LicenseType works for VMAS so let it throw an error here before we test it
-		} else {
-			t.Errorf("Expecting panic but nothing happens")
-		}
-	}()
+	actualVM = createAgentAvailabilitySetVM(cs, profile)
+	licenseType := api.WindowsLicenseTypeServer
+	expectedVM.VirtualMachine.VirtualMachineProperties.LicenseType = &licenseType
 
-	_ = createAgentAvailabilitySetVM(cs, profile)
+	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestCreateVmWithCustomTags(t *testing.T) {

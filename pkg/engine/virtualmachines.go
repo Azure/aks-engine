@@ -483,9 +483,10 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		}
 		agentCustomData := getCustomDataFromJSON(t.GetKubernetesWindowsNodeCustomDataJSONObject(cs, profile))
 		osProfile.CustomData = to.StringPtr(agentCustomData)
+
 		if cs.Properties.WindowsProfile.GetEnableAHUB() {
-			// We do not test whether LicenseType works for VMAS so let it throw an error here before we test it
-			panic("EnableAHUB is not supported for VMAS for now")
+			licenseType := api.WindowsLicenseTypeServer
+			virtualMachine.LicenseType = &licenseType
 		}
 	}
 
