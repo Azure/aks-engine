@@ -355,7 +355,7 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:
-        kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Mark the pod as a critical add-on for rescheduling. */}}
@@ -437,12 +437,14 @@ spec:
     metadata:
       labels:
         k8s-app: calico-node
+{{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:
-        kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Make sure calico-node gets scheduled on all nodes. */}}
