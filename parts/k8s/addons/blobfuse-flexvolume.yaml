@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
   name: blobfuse-flexvol-installer
@@ -15,8 +15,10 @@ spec:
       labels:
         name: blobfuse
         kubernetes.io/cluster-service: "true"
+{{- if IsKubernetesVersionGe "1.17.0"}}
       annotations:
         cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       priorityClassName: system-cluster-critical
       containers:
@@ -43,4 +45,4 @@ spec:
         hostPath:
           path: /etc/kubernetes/volumeplugins/
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
