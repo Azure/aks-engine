@@ -84,11 +84,11 @@ You can install the SGX device plugin which surfaces the usage of Intel SGX’s 
 
 #### Running on Azure
 
-*NOTE: For kubernetes versions before v1.17, replace 
+*NOTE: For kubernetes versions before v1.17, replace
 1. `node.kubernetes.io/instance-type` -> `beta.kubernetes.io/instance-type`
 2. `kubernetes.io/os` -> `beta.kubernetes.io/os`
 
-If you are deploying your cluster on Azure, you can leverage the `node.kubernetes.io/instance-type` label in your node selector rules to target only the [DCsv2-series](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) nodes - 
+If you are deploying your cluster on Azure, you can leverage the `node.kubernetes.io/instance-type` label in your node selector rules to target only the [DCsv2-series](https://docs.microsoft.com/en-us/azure/virtual-machines/dcv2-series) nodes -
 
 ```yaml
 nodeAffinity:
@@ -141,7 +141,7 @@ spec:
               - key: kubernetes.io/os
                 operator: In
                 values:
-                - linux 
+                - linux
       containers:
       - name: sgx-device-plugin
         image: mcr.microsoft.com/aks/acc/sgx-device-plugin:1.0
@@ -233,7 +233,7 @@ Confirm that the device plugin is advertising the available EPC RAM to the Kuber
 $ kubectl get nodes <node-name> -o yaml
 ```
 
-Under the status field you should see the total allocable resources with a name of `kubernetes.azure.com/sgx_epc_mem_in_MiB` 
+Under the status field you should see the total allocable resources with a name of `kubernetes.azure.com/sgx_epc_mem_in_MiB`
 ```bash
 <snip>
 status:
@@ -244,7 +244,7 @@ status:
 
 ### Scheduling Pods to TEE enabled Hardware
 
-The following pod specification demonstrates how you would schedule a pod to have access to a TEE by defining a limit on the specific EPC memory that is advertised to the Kubernetes scheduler by the device plugin available in alpha. 
+The following pod specification demonstrates how you would schedule a pod to have access to a TEE by defining a limit on the specific EPC memory that is advertised to the Kubernetes scheduler by the device plugin available in alpha.
 
 ```yaml
 apiVersion: apps/v1
@@ -341,5 +341,3 @@ $ kubectl logs -l app=sgx-test
 Hello world from the enclave
 Enclave called into host to print: Hello World!
 ```
-
-

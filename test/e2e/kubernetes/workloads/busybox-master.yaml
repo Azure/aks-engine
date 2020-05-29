@@ -33,5 +33,5 @@ spec:
         effect: NoSchedule
       nodeSelector:
         kubernetes.io/role: master
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
   backoffLimit: 0

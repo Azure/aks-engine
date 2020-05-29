@@ -142,7 +142,7 @@ spec:
             add:
             - NET_ADMIN
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal

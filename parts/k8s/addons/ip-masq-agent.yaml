@@ -28,7 +28,7 @@ spec:
       priorityClassName: system-node-critical
       hostNetwork: true
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists

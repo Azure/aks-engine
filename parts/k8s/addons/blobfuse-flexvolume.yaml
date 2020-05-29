@@ -45,4 +45,4 @@ spec:
         hostPath:
           path: /etc/kubernetes/volumeplugins/
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux

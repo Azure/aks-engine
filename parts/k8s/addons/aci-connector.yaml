@@ -85,7 +85,7 @@ spec:
     spec:
       serviceAccountName: aci-connector
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}

@@ -87,4 +87,4 @@ spec:
           path: /lib/modules/
         name: kernelmodules
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

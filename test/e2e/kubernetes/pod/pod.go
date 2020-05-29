@@ -186,9 +186,9 @@ func CreatePodFromFileIfNotExist(filename, name, namespace string, sleep, timeou
 }
 
 // RunLinuxPod will create a pod that runs a bash command
-// --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}`
+// --overrides := `"spec": {"nodeSelector":{"kubernetes.io/os":"linux"}}}`
 func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, podGetTimeout time.Duration) (*Pod, error) {
-	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"linux"}}}`
+	overrides := `{ "spec": {"nodeSelector":{"kubernetes.io/os":"linux"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "/bin/sh", "-c", command)
 	var out []byte
 	var err error
@@ -210,9 +210,9 @@ func RunLinuxPod(image, name, namespace, command string, printOutput bool, sleep
 }
 
 // RunWindowsPod will create a pod that runs a powershell command
-// --overrides := `"spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
+// --overrides := `"spec": {"nodeSelector":{"kubernetes.io/os":"windows"}}}`
 func RunWindowsPod(image, name, namespace, command string, printOutput bool, sleep, commandTimeout time.Duration, podGetTimeout time.Duration) (*Pod, error) {
-	overrides := `{ "spec": {"nodeSelector":{"beta.kubernetes.io/os":"windows"}}}`
+	overrides := `{ "spec": {"nodeSelector":{"kubernetes.io/os":"windows"}}}`
 	cmd := exec.Command("k", "run", name, "-n", namespace, "--image", image, "--image-pull-policy=IfNotPresent", "--restart=Never", "--overrides", overrides, "--command", "--", "powershell", command)
 	var out []byte
 	var err error

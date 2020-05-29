@@ -387,7 +387,7 @@ spec:
             - mountPath: /etc/config/settings
               name: settings-vol-config
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -399,11 +399,11 @@ spec:
                   values:
                   - virtual-kubelet
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: host-root
@@ -522,7 +522,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -534,11 +534,11 @@ spec:
                   values:
                   - virtual-kubelet
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock

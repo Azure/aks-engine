@@ -12,5 +12,5 @@ spec:
       - name: cuda-vector-add
         image: k8s.gcr.io/cuda-vector-add:v0.1
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
         accelerator: nvidia

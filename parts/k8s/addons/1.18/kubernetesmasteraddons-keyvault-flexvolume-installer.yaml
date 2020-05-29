@@ -46,4 +46,4 @@ spec:
           path: /etc/kubernetes/volumeplugins
         name: volplugins
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux

@@ -6776,7 +6776,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
     spec:
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Mark the pod as a critical add-on for rescheduling. */}}
@@ -6867,7 +6867,7 @@ spec:
         scheduler.alpha.kubernetes.io/critical-pod: ''
     spec:
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Make sure calico-node gets scheduled on all nodes. */}}
@@ -7249,7 +7249,7 @@ spec:
         hostPath:
           path: /etc/kubernetes/volumeplugins/
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsBlobfuseFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -7326,7 +7326,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready
@@ -7607,7 +7607,7 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
@@ -7671,7 +7671,7 @@ spec:
           path: /etc/kubernetes/volumeplugins
         name: volplugins
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -7897,7 +7897,7 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
@@ -8033,7 +8033,7 @@ spec:
           name: kube-proxy-config
         name: kube-proxy-config-volume
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
@@ -8094,7 +8094,7 @@ spec:
           path: /etc/kubernetes/volumeplugins/
           type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -8211,7 +8211,7 @@ spec:
             cpu: {{ContainerCPULimits "tiller"}}
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons116KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
@@ -8290,7 +8290,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready
@@ -8571,7 +8571,7 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
@@ -8637,7 +8637,7 @@ spec:
           path: /etc/kubernetes/volumeplugins
         name: volplugins
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -8863,7 +8863,7 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
@@ -8999,7 +8999,7 @@ spec:
           name: kube-proxy-config
         name: kube-proxy-config-volume
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
@@ -9062,7 +9062,7 @@ spec:
           path: /etc/kubernetes/volumeplugins/
           type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -9179,7 +9179,7 @@ spec:
             cpu: {{ContainerCPULimits "tiller"}}
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons117KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
@@ -9258,7 +9258,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready
@@ -9539,7 +9539,7 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
@@ -9605,7 +9605,7 @@ spec:
           path: /etc/kubernetes/volumeplugins
         name: volplugins
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -9831,7 +9831,7 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
@@ -9976,7 +9976,7 @@ spec:
           name: kube-proxy-config
         name: kube-proxy-config-volume
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
@@ -10039,7 +10039,7 @@ spec:
           path: /etc/kubernetes/volumeplugins/
           type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -10156,7 +10156,7 @@ spec:
             cpu: {{ContainerCPULimits "tiller"}}
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddons118KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
@@ -11327,7 +11327,7 @@ spec:
             add:
             - NET_ADMIN
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: {{GetAADPodIdentityTaintKey}}
         operator: Equal
@@ -11532,7 +11532,7 @@ spec:
     spec:
       serviceAccountName: aci-connector
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}
@@ -12732,7 +12732,7 @@ spec:
 {{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
         kubernetes.io/os: linux
 {{else}}
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 {{- end}}
       containers:
         - name: azure-cnms
@@ -12871,7 +12871,7 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
         - name: azure-npm
           image: {{ContainerImage "azure-npm-daemonset"}}
@@ -15895,7 +15895,7 @@ spec:
         hostPath:
           path: /etc/kubernetes/volumeplugins/
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsBlobfuseFlexvolumeYamlBytes() ([]byte, error) {
@@ -16270,7 +16270,7 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Mark the pod as a critical add-on for rescheduling. */}}
@@ -16359,7 +16359,7 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       hostNetwork: true
       tolerations:
       {{- /* Make sure calico-node gets scheduled on all nodes. */}}
@@ -17915,7 +17915,7 @@ spec:
 {{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
         kubernetes.io/os: linux
 {{else}}
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 {{- end}}
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
@@ -18424,7 +18424,7 @@ spec:
             - mountPath: /etc/config/settings
               name: settings-vol-config
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -18436,11 +18436,11 @@ spec:
                   values:
                   - virtual-kubelet
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: host-root
@@ -18559,7 +18559,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 60
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -18571,11 +18571,11 @@ spec:
                   values:
                   - virtual-kubelet
       tolerations:
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoSchedule"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "NoExecute"
-        - operator: "Exists" 
+        - operator: "Exists"
           effect: "PreferNoSchedule"
       volumes:
         - name: docker-sock
@@ -18808,7 +18808,7 @@ spec:
         - operator: "Exists"
           effect: NoSchedule
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
         {{- if ContainerConfig "use-host-network"}}
         kubernetes.azure.com/role: agent
         {{end}}
@@ -18984,7 +18984,7 @@ spec:
         - operator: "Exists"
           effect: NoSchedule
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - name: autoscaler
         image: {{ContainerImage "coredns-autoscaler"}}
@@ -19049,7 +19049,7 @@ spec:
       priorityClassName: system-node-critical
       hostNetwork: true
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-beta.0")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
@@ -19155,7 +19155,7 @@ spec:
       priorityClassName: system-node-critical
 {{- end}}
       nodeSelector:
-        {{if not (IsKubernetesVersionGe "1.19.0-alpha.3")}}beta.{{end}}kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - image: {{ContainerImage "rescheduler"}}
         imagePullPolicy: IfNotPresent
@@ -19581,7 +19581,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready
@@ -19864,7 +19864,7 @@ spec:
         - key: CriticalAddonsOnly
           operator: Exists
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
@@ -19925,7 +19925,7 @@ spec:
           path: /etc/kubernetes/volumeplugins
         name: volplugins
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsKeyvaultFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -20154,7 +20154,7 @@ spec:
       dnsPolicy: Default
       serviceAccountName: kube-dns
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
@@ -20261,7 +20261,7 @@ spec:
           path: /lib/modules/
         name: kernelmodules
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
@@ -20312,17 +20312,17 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/      
+          mountPath: /var/log/
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/              
+          path: /var/log/
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
           type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYamlBytes() ([]byte, error) {
@@ -20435,7 +20435,7 @@ spec:
             cpu: {{ContainerCPULimits "tiller"}}
             memory: {{ContainerMemLimits "tiller"}}
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsKubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
@@ -20598,7 +20598,7 @@ spec:
 {{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
 {{else}}
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 {{- end}}
 ---
 apiVersion: apiregistration.k8s.io/v1beta1
@@ -20726,7 +20726,7 @@ spec:
           path: /dev/kmsg
           type: "CharDevice"
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       serviceAccountName: node-problem-detector
       tolerations:
       - operator: "Exists"
@@ -20838,7 +20838,7 @@ spec:
 {{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
 {{else}}
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 {{- end}}
         accelerator: nvidia
 `)
@@ -21604,7 +21604,7 @@ spec:
             path: /etc/kubernetes/secrets-store-csi-providers
             type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -21648,7 +21648,7 @@ spec:
           hostPath:
             path: "/etc/kubernetes/secrets-store-csi-providers"
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsSecretsStoreCsiDriverYamlBytes() ([]byte, error) {
