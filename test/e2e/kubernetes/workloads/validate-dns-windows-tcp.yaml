@@ -15,4 +15,4 @@ spec:
         image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
         command: ['powershell', 'Resolve-DnsName', '-Name', 'google.com', '-DnsOnly', '-Type', 'A', '-TcpOnly']
       nodeSelector:
-        beta.kubernetes.io/os: windows
+        kubernetes.io/os: windows

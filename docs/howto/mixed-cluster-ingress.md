@@ -10,23 +10,23 @@
 ### Configure Helm
 
 ```console
-helm init --upgrade --node-selectors "beta.kubernetes.io/os=linux"
+helm init --upgrade --node-selectors "kubernetes.io/os=linux"
 ```
 
 ### Set up NGINX
 
 ```console
 helm install --name nginx-ingress `
-    --set controller.nodeSelector."beta\.kubernetes\.io\/os"=linux `
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io\/os"=linux `
+    --set controller.nodeSelector."kubernetes\.io\/os"=linux `
+    --set defaultBackend.nodeSelector."kubernetes\.io\/os"=linux `
      --set rbac.create=true `
     stable/nginx-ingress
 ```
 
 ```console
 helm install --name nginx-ingress \
-    --set controller.nodeSelector."beta\.kubernetes\.io\/os"=linux \
-    --set defaultBackend.nodeSelector."beta\.kubernetes\.io\/os"=linux \
+    --set controller.nodeSelector."kubernetes\.io\/os"=linux \
+    --set defaultBackend.nodeSelector."kubernetes\.io\/os"=linux \
     --set rbac.create=true \
     stable/nginx-ingress
 ```
@@ -132,7 +132,7 @@ spec:
         ports:
           - containerPort: 80
       nodeSelector:
-        "beta.kubernetes.io/os": windows
+        "kubernetes.io/os": windows
   selector:
     matchLabels:
       app: iis-1803

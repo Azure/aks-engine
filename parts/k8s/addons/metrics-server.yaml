@@ -143,7 +143,7 @@ spec:
 {{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
 {{else}}
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
 {{- end}}
 ---
 apiVersion: apiregistration.k8s.io/v1beta1

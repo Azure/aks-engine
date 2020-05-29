@@ -443,12 +443,12 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
 {{end}}
 {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
     {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
     {{else}}
-    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico-daemonset.yaml
-    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico-daemonset.yaml
+    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
+    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
     {{end}}
 {{end}}
 {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}

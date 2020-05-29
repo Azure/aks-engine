@@ -519,18 +519,10 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 							if profile.OSDiskSizeGB != 0 && profile.OSDiskSizeGB < VHDDiskSizeAKS {
 								profile.Distro = Ubuntu1804
 							} else {
-								if !profile.IsNSeriesSKU() {
-									profile.Distro = AKSUbuntu1804
-								} else {
-									profile.Distro = AKSUbuntu1604
-								}
+								profile.Distro = AKSUbuntu1804
 							}
 						} else {
-							if !profile.IsNSeriesSKU() {
-								profile.Distro = Ubuntu1804
-							} else {
-								profile.Distro = Ubuntu
-							}
+							profile.Distro = Ubuntu1804
 						}
 						// Ensure deprecated distros are overridden
 						// Previous versions of aks-engine required the docker-engine distro for N series vms,

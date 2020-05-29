@@ -72,7 +72,7 @@ Confirm that the device plugin is advertising the available EPC RAM to the Kuber
 $ kubectl get nodes <node-name> -o yaml
 ```
 
-Under the status field you should see the total allocable resources with a name of `kubernetes.azure.com/sgx_epc_mem_in_MiB` 
+Under the status field you should see the total allocable resources with a name of `kubernetes.azure.com/sgx_epc_mem_in_MiB`
 ```bash
 <snip>
 status:
@@ -169,5 +169,3 @@ $ kubectl logs -l app=sgx-test
 Hello world from the enclave
 Enclave called into host to print: Hello World!
 ```
-
-

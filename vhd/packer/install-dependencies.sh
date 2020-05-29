@@ -86,9 +86,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.1.3
 1.1.2
 1.1.0
-1.0.33
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -97,7 +97,7 @@ for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
 done
 
 CNI_PLUGIN_VERSIONS="
-0.8.5
+0.8.6
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-linux-amd64-v${CNI_PLUGIN_VERSION}.tgz"
@@ -192,10 +192,10 @@ for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-MCR_PAUSE_VERSIONS="1.2.0"
+MCR_PAUSE_VERSIONS="1.3.1"
 for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
     # Pull the arch independent MCR pause image which is built for Linux and Windows
-    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/pause:${PAUSE_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/pause:${PAUSE_VERSION}"
     pullContainerImage "docker" "${CONTAINER_IMAGE}"
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done

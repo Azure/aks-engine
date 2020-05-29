@@ -45,14 +45,14 @@ jobs:
     displayName: 'Set up the Go workspace'
   - script: make bootstrap
     displayName: Install dependencies
-  - script: make validate-dependencies
-    displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
   - script: make ensure-generated
     displayName: Check if generated code is up to date
   - script: make generate test-style
     displayName: Run linting rules
   - script: make build-cross
     displayName: Build cross-architectural binaries
+  - script: make validate-dependencies
+    displayName: Check if go mod is up-to-date
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
         make coverage

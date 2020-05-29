@@ -154,7 +154,7 @@ spec:
         - operator: "Exists"
           effect: NoSchedule
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
         {{- if ContainerConfig "use-host-network"}}
         kubernetes.azure.com/role: agent
         {{end}}
@@ -330,7 +330,7 @@ spec:
         - operator: "Exists"
           effect: NoSchedule
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       containers:
       - name: autoscaler
         image: {{ContainerImage "coredns-autoscaler"}}

@@ -8,14 +8,6 @@
 		"CLUSTER_INIT_POD_NAME": "aks-engine-pod-init",
 		"CLUSTER_INIT_JOB_NAME": "aks-engine-job-init"
 	},
-	"options": {
-		"allowedOrchestratorVersions": [
-			"1.15",
-			"1.16",
-			"1.17",
-			"1.18"
-		]
-	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -120,7 +112,6 @@
 					"count": 1,
 					"availabilityProfile": "VirtualMachineScaleSets",
 					"vmSize": "Standard_NC6",
-					"distro": "aks-ubuntu-16.04",
 					"vnetSubnetId": "/subscriptions/SUB_ID/resourceGroups/RG_NAME/providers/Microsoft.Network/virtualNetworks/VNET_NAME/subnets/SUBNET_NAME"
 				},
 				{

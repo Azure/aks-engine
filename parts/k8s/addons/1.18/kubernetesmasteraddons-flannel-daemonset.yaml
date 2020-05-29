@@ -59,7 +59,7 @@ spec:
       hostNetwork: true
       nodeSelector:
         beta.kubernetes.io/arch: amd64
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
       priorityClassName: system-node-critical
       tolerations:
         - key: node.kubernetes.io/not-ready

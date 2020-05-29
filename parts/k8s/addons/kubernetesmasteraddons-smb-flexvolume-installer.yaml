@@ -31,14 +31,14 @@ spec:
         - name: volplugins
           mountPath: /etc/kubernetes/volumeplugins/
         - name: varlog
-          mountPath: /var/log/      
+          mountPath: /var/log/
       volumes:
       - name: varlog
         hostPath:
-          path: /var/log/              
+          path: /var/log/
       - name: volplugins
         hostPath:
           path: /etc/kubernetes/volumeplugins/
           type: DirectoryOrCreate
       nodeSelector:
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
