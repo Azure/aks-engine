@@ -165,13 +165,15 @@ var _ = BeforeSuite(func() {
 	}
 	Expect(dnsAddonName).NotTo(Equal(""))
 
-	env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
-	if err != nil {
-		Expect(err).NotTo(HaveOccurred())
-	}
-	azureClient, err = armhelpers.NewAzureClientWithClientSecret(env, cfg.SubscriptionID, cfg.ClientID, cfg.ClientSecret)
-	if err != nil {
-		Expect(err).NotTo(HaveOccurred())
+	if !cfg.IsCustomCloudProfile() {
+		env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
+		if err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		azureClient, err = armhelpers.NewAzureClientWithClientSecret(env, cfg.SubscriptionID, cfg.ClientID, cfg.ClientSecret)
+		if err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
 	}
 })
 
@@ -2146,7 +2148,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						break
 					}
 				}
-
+				// TODO refactor to remove the "compute" usage so the test can be run on Azure Stack
 				instanceIDs := &compute.VirtualMachineScaleSetVMInstanceIDs{&[]string{instanceID}}
 				err = azureClient.RestartVirtualMachineScaleSets(ctx, cfg.ResourceGroup, vmssName, instanceIDs)
 				Expect(err).NotTo(HaveOccurred())
