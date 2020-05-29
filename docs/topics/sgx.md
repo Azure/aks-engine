@@ -44,7 +44,7 @@ Note: ACC Gen2 images have intel dcap driver v1.2.6 installed
 
 ## Deploying the SGX device plugin
 
-You can install the SGX device plugin which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the [Open Enclave SDK](https://github.com/openenclave/openenclave) or [Intel SGX SDK](https://github.com/intel/linux-sgx) onto hardware which supports Trusted Execution Environments.
+You can install the SGX device plugin which surfaces the usage of Intel SGX’s Encrypted Page Cache (EPC) RAM as a schedulable resource for Kubernetes. This allows you to schedule pods that use the [Open Enclave SDK](https://github.com/openenclave/openenclave) onto hardware which supports Trusted Execution Environments.
 
 ### Device plugin installation
 
