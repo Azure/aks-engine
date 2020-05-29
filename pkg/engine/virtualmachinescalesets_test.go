@@ -432,13 +432,12 @@ func TestCreateAgentVMSS(t *testing.T) {
 
 	// Now Test AgentVMSS with windows
 	// Restore LoadBalancerSku back to default and provide LoadBalancerBackendAddressPoolIDs
-	trueVar := true
-	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.BasicLoadBalancerSku
+	cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = api.DefaultLoadBalancerSku
 	cs.Properties.AgentPoolProfiles[0].LoadBalancerBackendAddressPoolIDs = []string{"/subscriptions/123/resourceGroups/rg/providers/Microsoft.Network/loadBalancers/mySLB/backendAddressPools/mySLBBEPool"}
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		SSHEnabled: &trueVar,
+		SSHEnabled: true,
 	}
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
@@ -850,11 +849,10 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	}
 
 	// Now Test AgentVMSS with windows
-	trueVar := true
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		SSHEnabled: &trueVar,
+		SSHEnabled: true,
 	}
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
