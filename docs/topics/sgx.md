@@ -40,7 +40,7 @@ The following example is a fragment of a cluster definition (apimodel) file decl
   ],
 ```
 
-Note: ACC Gen2 images have intel DCAP driver v1.22 installed
+Note: ACC Gen2 images have Intel SGX DCAP driver v1.22 installed
 
 ## Deploying the SGX device plugin
 
