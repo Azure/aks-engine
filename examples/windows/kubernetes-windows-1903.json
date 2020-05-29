@@ -27,7 +27,7 @@
       "windowsOffer": "WindowsServer",
       "windowsSku": "Datacenter-Core-1903-with-Containers-smalldisk",
       "imageVersion": "1903.0.20190603",
-      "licenseType": "Windows_Server"
+      "enableAHUB": true
     },
     "linuxProfile": {
       "adminUsername": "azureuser",

@@ -923,12 +923,12 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	// Now Test AgentVMSS with windows and LicenseType
 	licenseType := api.WindowsLicenseTypeServer
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		SSHEnabled:  &trueVar,
-		LicenseType: &licenseType,
+		SSHEnabled: &trueVar,
+		EnableAHUB: &trueVar,
 	}
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
-	expected.VirtualMachineProfile.LicenseType = (*string)(&licenseType)
+	expected.VirtualMachineProfile.LicenseType = &licenseType
 
 	diff = cmp.Diff(actual, expected)
 

@@ -306,9 +306,8 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
-	licenseType := api.WindowsLicenseTypeServer
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
-		LicenseType: &licenseType,
+		EnableAHUB: to.BoolPtr(true),
 	}
 
 	defer func() {
