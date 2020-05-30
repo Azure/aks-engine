@@ -712,24 +712,52 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
-		if windowsProfile.WindowsPublisher == "" {
-			windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
-		}
-		if windowsProfile.WindowsOffer == "" {
-			windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
-		}
-		if windowsProfile.WindowsSku == "" {
-			windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+		if windowsProfile.SSHEnabled == nil {
+			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
 		}
 
-		if windowsProfile.ImageVersion == "" {
-			// default versions are specific to a publisher/offer/sku
-			if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
-			} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
-				windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
-			} else {
-				windowsProfile.ImageVersion = "latest"
+		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
+		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
+		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				if windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
+			}
+		} else if windowsProfile.WindowsPublisher == WindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == WindowsServer2019OSImageConfig.ImageOffer {
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = WindowsServer2019OSImageConfig.ImageSku
+			}
+			if windowsProfile.ImageVersion == "" {
+				if windowsProfile.WindowsSku == WindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = WindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
+			}
+		} else {
+			if windowsProfile.WindowsPublisher == "" {
+				windowsProfile.WindowsPublisher = AKSWindowsServer2019OSImageConfig.ImagePublisher
+			}
+			if windowsProfile.WindowsOffer == "" {
+				windowsProfile.WindowsOffer = AKSWindowsServer2019OSImageConfig.ImageOffer
+			}
+			if windowsProfile.WindowsSku == "" {
+				windowsProfile.WindowsSku = AKSWindowsServer2019OSImageConfig.ImageSku
+			}
+
+			if windowsProfile.ImageVersion == "" {
+				// default versions are specific to a publisher/offer/sku
+				if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer && windowsProfile.WindowsSku == AKSWindowsServer2019OSImageConfig.ImageSku {
+					windowsProfile.ImageVersion = AKSWindowsServer2019OSImageConfig.ImageVersion
+				} else {
+					windowsProfile.ImageVersion = "latest"
+				}
 			}
 		}
 	} else if isUpgrade {

@@ -277,7 +277,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 					for _, n := range nodes {
 						if n.IsWindows() {
-							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 								log.Printf("Can't ssh into Windows node %s because there is no SSH listener", n.Metadata.Name)
 								continue
 							}
@@ -1110,7 +1110,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
-					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
