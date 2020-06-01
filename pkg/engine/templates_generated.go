@@ -17908,10 +17908,9 @@ func k8sCloudInitArtifactsCisSh() (*asset, error) {
 var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
+PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 if [[ $OS == $FLATCAR_OS_NAME ]]; then
   PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-else
-  PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
@@ -18341,6 +18340,9 @@ ensureJournal() {
 }
 installKubeletAndKubectl() {
   path=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    path=/opt
+  fi
   if [[ ! -f "${path}/kubectl-${KUBERNETES_VERSION}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then
       extractKubeBinaries
@@ -18351,9 +18353,6 @@ installKubeletAndKubectl() {
         extractHyperkube "img"
       fi
     fi
-  fi
-  if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    path=/opt
   fi
   mv "${path}/kubelet-${KUBERNETES_VERSION}" "${path}/kubelet"
   mv "${path}/kubectl-${KUBERNETES_VERSION}" "${path}/kubectl"
@@ -19115,10 +19114,9 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
+    local path="/usr/bin"
     if [[ $OS == $FLATCAR_OS_NAME ]]; then
       path="/opt/bin"
-    else
-      path="/usr/bin"
     fi
 
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
@@ -19230,7 +19228,6 @@ ensureAPMZ() {
   local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     apmz_filepath="/opt/bin/apmz"
-    # Ensure that path to apmz binary is in the PATH.
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $apmz_filepath ]]; then
@@ -19258,7 +19255,6 @@ installBpftrace() {
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     bpftrace_filepath="/opt/bin/$bpftrace_bin"
     tools_filepath="/opt/share/$bpftrace_bin"
-    # Ensure that path to apmz binary is in the PATH.
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $bpftrace_filepath ]]; then
@@ -19405,7 +19401,6 @@ ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1
 set -x
 
 if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    echo "Changing default kubectl bin location"
     KUBECTL=/opt/kubectl
 fi
 
@@ -21152,7 +21147,7 @@ write_files:
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
+    {{- end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -21223,7 +21218,7 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "untaintNodesSystemdService"}}
-{{end}}
+{{- end}}
 
 - path: /etc/apt/apt.conf.d/99periodic
   permissions: "0644"
@@ -21259,8 +21254,8 @@ write_files:
   owner: root
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-         {{end}}
-    {{end}}
+         {{- end}}
+    {{- end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -21268,11 +21263,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsFlatcar}}
+    {{- if .MasterProfile.IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
+    {{- end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -21470,23 +21465,22 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
 {{- if IsMasterVirtualMachineScaleSets}}
     {{- if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
+    {{- end}}
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-{{end}}
+{{- end}}
 {{- if gt .MasterProfile.Count 1}}
     {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
     iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
-{{end}}
+{{- end}}
     sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
 {{- if EnableDataEncryptionAtRest }}
     sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-{{end}}
+{{- end}}
 {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
     {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
@@ -21495,10 +21489,10 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
     sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
     {{end}}
-{{end}}
+{{- end}}
 {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
     sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
-{{end}}
+{{- end}}
     #EOF
 
 {{- if not HasCosmosEtcd  }}
@@ -21525,11 +21519,11 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
     MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
     MASTER_INDEX=$(hostname | tail -c 2)
-    {{if .MasterProfile.IsFlatcar}}
+    {{- if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{end}}
+    {{- end}}
     MASTER_COUNT={{WrapAsVariable "masterCount"}}
     IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
     echo $IPADDRESS_COUNT
@@ -21791,7 +21785,7 @@ write_files:
     Requires=-.slice
     After=-.slice
     #EOF
-    
+
 - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
@@ -21831,7 +21825,7 @@ write_files:
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
+    {{- end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -21901,15 +21895,15 @@ write_files:
 
 {{- if .KubernetesConfig.RequiresDocker}}
     {{- if not .IsFlatcar}}
-        {{if not .IsVHDDistro}}
+        {{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-        {{end}}
-    {{end}}
+        {{- end}}
+    {{- end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -21917,11 +21911,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .MasterProfile.IsFlatcar}}
+    {{- if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
+    {{- end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -22099,13 +22093,13 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsFlatcar}}
+{{- if .IsFlatcar}}
 - path: "/etc/kubernetes/manifests/.keep"
 
-{{if .KubernetesConfig.RequiresDocker}}
+  {{- if .KubernetesConfig.RequiresDocker}}
 groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
+  {{end}}
 
 coreos:
   units:
@@ -22150,7 +22144,7 @@ runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
-{{end}}
+{{- end}}
 `)
 
 func k8sCloudInitNodecustomdataYmlBytes() ([]byte, error) {

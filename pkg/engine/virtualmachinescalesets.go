@@ -82,6 +82,14 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		Type:     to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 	}
 
+	if masterProfile.IsFlatcar() {
+		virtualMachine.Plan = &compute.Plan{
+			Publisher: to.StringPtr("[parameters('osImagePublisher')]"),
+			Name:      to.StringPtr("[parameters('osImageSku')]"),
+			Product:   to.StringPtr("[parameters('osImageOffer')]"),
+		}
+	}
+
 	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
 
 	if hasAvailabilityZones {
@@ -407,6 +415,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 			Name:     to.StringPtr(fmt.Sprintf("[variables('%sVMSize')]", profile.Name)),
 		},
 		Tags: tags,
+	}
+
+	if profile.IsFlatcar() {
+		virtualMachineScaleSet.Plan = &compute.Plan{
+			Publisher: to.StringPtr(fmt.Sprintf("[parameters('%sosImagePublisher')]", profile.Name)),
+			Name:      to.StringPtr(fmt.Sprintf("[parameters('%sosImageSKU')]", profile.Name)),
+			Product:   to.StringPtr(fmt.Sprintf("[parameters('%sosImageOffer')]", profile.Name)),
+		}
 	}
 
 	addCustomTagsToVMScaleSets(profile.CustomVMTags, &virtualMachineScaleSet)

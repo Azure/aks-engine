@@ -407,9 +407,9 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 
 	if profile.IsFlatcar() {
 		virtualMachine.Plan = &compute.Plan{
-			Publisher: to.StringPtr("[parameters('osImagePublisher')]"),
-			Name:      to.StringPtr("[parameters('osImageSku')]"),
-			Product:   to.StringPtr("[parameters('osImageOffer')]"),
+			Publisher: to.StringPtr(fmt.Sprintf("[parameters('%sosImagePublisher')]", profile.Name)),
+			Name:      to.StringPtr(fmt.Sprintf("[parameters('%sosImageSKU')]", profile.Name)),
+			Product:   to.StringPtr(fmt.Sprintf("[parameters('%sosImageOffer')]", profile.Name)),
 		}
 	}
 

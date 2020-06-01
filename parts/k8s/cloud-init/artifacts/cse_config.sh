@@ -1,10 +1,9 @@
 #!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
+PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 if [[ $OS == $FLATCAR_OS_NAME ]]; then
   PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-else
-  PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
@@ -434,6 +433,9 @@ ensureJournal() {
 }
 installKubeletAndKubectl() {
   path=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    path=/opt
+  fi
   if [[ ! -f "${path}/kubectl-${KUBERNETES_VERSION}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then
       extractKubeBinaries
@@ -444,9 +446,6 @@ installKubeletAndKubectl() {
         extractHyperkube "img"
       fi
     fi
-  fi
-  if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    path=/opt
   fi
   mv "${path}/kubelet-${KUBERNETES_VERSION}" "${path}/kubelet"
   mv "${path}/kubectl-${KUBERNETES_VERSION}" "${path}/kubectl"

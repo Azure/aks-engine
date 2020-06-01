@@ -18,10 +18,9 @@ installEtcd() {
   CURRENT_VERSION=$(etcd --version | grep "etcd Version" | cut -d ":" -f 2 | tr -d '[:space:]')
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
+    local path="/usr/bin"
     if [[ $OS == $FLATCAR_OS_NAME ]]; then
       path="/opt/bin"
-    else
-      path="/usr/bin"
     fi
 
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
@@ -133,7 +132,6 @@ ensureAPMZ() {
   local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     apmz_filepath="/opt/bin/apmz"
-    # Ensure that path to apmz binary is in the PATH.
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $apmz_filepath ]]; then
@@ -161,7 +159,6 @@ installBpftrace() {
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     bpftrace_filepath="/opt/bin/$bpftrace_bin"
     tools_filepath="/opt/share/$bpftrace_bin"
-    # Ensure that path to apmz binary is in the PATH.
     export PATH="${PATH}:/opt/bin"
   fi
   if [[ -f $bpftrace_filepath ]]; then

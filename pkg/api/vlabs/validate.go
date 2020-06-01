@@ -784,6 +784,14 @@ func (a *Properties) validateAddons() error {
 					if a.HasFlatcar() {
 						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
 					}
+				case "blobfuse-flexvolume":
+					if a.HasFlatcar() {
+						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
+					}
+				case "smb-flexvolume":
+					if a.HasFlatcar() {
+						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
+					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
 						!a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {

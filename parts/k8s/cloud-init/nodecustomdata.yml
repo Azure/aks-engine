@@ -89,7 +89,7 @@ write_files:
     Requires=-.slice
     After=-.slice
     #EOF
-    
+
 - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
@@ -129,7 +129,7 @@ write_files:
 - path: /opt/bin/health-monitor.sh
     {{else}}
 - path: /usr/local/bin/health-monitor.sh
-    {{end}}
+    {{- end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -199,15 +199,15 @@ write_files:
 
 {{- if .KubernetesConfig.RequiresDocker}}
     {{- if not .IsFlatcar}}
-        {{if not .IsVHDDistro}}
+        {{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-        {{end}}
-    {{end}}
+        {{- end}}
+    {{- end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -215,11 +215,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
-    {{if .IsFlatcar}}
+    {{- if .IsFlatcar}}
     ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
     {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{end}}
+    {{- end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -397,13 +397,13 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
-{{if .IsFlatcar}}
+{{- if .IsFlatcar}}
 - path: "/etc/kubernetes/manifests/.keep"
 
-{{if .KubernetesConfig.RequiresDocker}}
+  {{- if .KubernetesConfig.RequiresDocker}}
 groups:
   - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-{{end}}
+  {{end}}
 
 coreos:
   units:
@@ -448,4 +448,4 @@ runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
-{{end}}
+{{- end}}
