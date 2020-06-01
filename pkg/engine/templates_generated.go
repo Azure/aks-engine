@@ -19316,8 +19316,12 @@ extractKubeBinaries() {
   K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
   mkdir -p "${K8S_DOWNLOADS_DIR}"
   retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
+  path=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    path=/opt
+  fi
   tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
-    --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
+    --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
   rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
 }
 pullContainerImage() {
