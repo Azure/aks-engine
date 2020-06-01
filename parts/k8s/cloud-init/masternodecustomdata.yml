@@ -439,12 +439,12 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
       mount --bind $MOUNT_DIR $MOUNT_DIR
     fi
     mount --make-shared $MOUNT_DIR
-{{- if IsMasterVirtualMachineScaleSets}}
     {{- if .MasterProfile.IsFlatcar}}
     PRIVATE_IP=$(hostname -I | cut -d" " -f1)
     {{else}}
     PRIVATE_IP=$(hostname -i | cut -d" " -f1)
     {{- end}}
+{{- if IsMasterVirtualMachineScaleSets}}
     sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
 {{- end}}
 {{- if gt .MasterProfile.Count 1}}
