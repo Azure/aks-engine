@@ -172,7 +172,7 @@ type WindowsProfile struct {
 	WindowsSku             string            `json:"WindowsSku"`
 	WindowsDockerVersion   string            `json:"windowsDockerVersion"`
 	Secrets                []KeyVaultSecrets `json:"secrets,omitempty"`
-	SSHEnabled             bool              `json:"sshEnabled,omitempty"`
+	SSHEnabled             *bool             `json:"sshEnabled,omitempty"`
 	EnableAutomaticUpdates *bool             `json:"enableAutomaticUpdates,omitempty"`
 }
 
