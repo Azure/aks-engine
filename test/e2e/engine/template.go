@@ -375,6 +375,9 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 	// tip: curl -L https://mcr.microsoft.com/v2/windows/servercore/tags/list
 	//      curl -L https://mcr.microsoft.com/v2/windows/servercore/iis/tags/list
 	switch {
+	case strings.Contains(windowsSku, "1909"):
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1909",
+			ServerCore: "mcr.microsoft.com/windows/servercore:1909"}, nil
 	case strings.Contains(windowsSku, "1903"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1903",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1903"}, nil
