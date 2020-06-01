@@ -1,8 +1,8 @@
 # Running Tests
 
-If you are an AKS Engine developer, running local E2E tests to validate changes can greatly increase iterative velocity.
+If you are an AKS Engine developer, running local E2E tests to validate changes can greatly increase iterative velocity.  
 
-As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage:
+As mentioned briefly in the [developer guide](developer-guide.md), a `make` target is maintained to provide convenient shell invocation of the E2E test runner across for generic, configurable usage.  In addition you can run the tests from a [dev contianer](developer-guide.md#docker-development-environment) using `make dev` then run the following commands:
 
 ```sh
 # build local a copy of aks-engine
