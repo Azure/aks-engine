@@ -16361,7 +16361,7 @@ func k8sAddonsKubeDnsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubeProxyYaml = []byte(`{{- if IsKubernetesVersionGe "1.16.0"}}
+var _k8sAddonsKubeProxyYaml = []byte(`{{if IsKubernetesVersionGe "1.16.0" -}}
 apiVersion: v1
 kind: ConfigMap
 data:
@@ -16455,7 +16455,7 @@ spec:
         - --feature-gates=ExperimentalCriticalPodAnnotation=true
         - --proxy-mode={{ContainerConfig "proxy-mode"}}
 {{else}}
-        --config=/var/lib/kube-proxy/config.yaml
+        - --config=/var/lib/kube-proxy/config.yaml
 {{- end}}
         image: {{ContainerImage "kube-proxy"}}
         imagePullPolicy: IfNotPresent
