@@ -24712,7 +24712,7 @@ MASTER_CONTAINER_ADDONS_PLACEHOLDER
     {{end}}
 {{end}}
 {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel-daemonset.yaml
+    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
 {{end}}
     #EOF
 
