@@ -30,7 +30,7 @@
     "windowsProfile": {
       "adminUsername": "azureuser",
       "adminPassword": "replacepassword1234$",
-      "EnableAHUB": true
+      "enableAHUB": true
     },
     "linuxProfile": {
       "adminUsername": "azureuser",

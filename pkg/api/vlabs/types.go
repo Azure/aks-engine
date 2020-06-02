@@ -164,8 +164,6 @@ type WindowsLicenseType string
 const (
 	// WindowsLicenseTypeServer specifies that the image or disk that is being used was licensed server on-premises.
 	WindowsLicenseTypeServer WindowsLicenseType = "Windows_Server"
-	// WindowsLicenseTypeClient specifies that the image or disk that is being used was licensed client on-premises.
-	WindowsLicenseTypeClient WindowsLicenseType = "Windows_Client"
 )
 
 // WindowsProfile represents the windows parameters passed to the cluster
