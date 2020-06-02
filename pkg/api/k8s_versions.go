@@ -18,7 +18,7 @@ const (
 	kubeDNSImageReference                             string = "k8s-dns-kube-dns-amd64:1.15.4"
 	kubeDNSMasqNannyImageReference                    string = "k8s-dns-dnsmasq-nanny-amd64:1.15.4"
 	kubeDNSSidecarImageReference                      string = "k8s-dns-sidecar-amd64:1.14.10"
-	pauseImageReference                               string = "k8s/core/pause:1.2.0"
+	pauseImageReference                               string = "oss/kubernetes/pause:1.3.1"
 	tillerImageReference                              string = "tiller:v2.13.1"
 	reschedulerImageReference                         string = "rescheduler:v0.4.0"
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
