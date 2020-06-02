@@ -33,19 +33,15 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/calico.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
@@ -73,7 +69,6 @@
 // ../../parts/k8s/addons/kube-dns.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
@@ -7193,193 +7188,6 @@ func k8sAddons115CalicoYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:heapster-with-nanny
-subjects:
-- kind: ServiceAccount
-  name: heapster
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: heapster-config
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
-spec:
-  ports:
-  - port: 80
-    targetPort: 8082
-  selector:
-    k8s-app: heapster
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    k8s-app: heapster
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: heapster
-  template:
-    metadata:
-      labels:
-        k8s-app: heapster
-    spec:
-      priorityClassName: system-node-critical
-      containers:
-        - image: {{ContainerImage "heapster"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster"}}
-              memory: {{ContainerMemReqs "heapster"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster"}}
-              memory: {{ContainerMemLimits "heapster"}}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes.summary_api:''
-        - image: {{ContainerImage "heapster-nanny"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster-nanny
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster-nanny"}}
-              memory: {{ContainerMemReqs "heapster-nanny"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster-nanny"}}
-              memory: {{ContainerMemLimits "heapster-nanny"}}
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          volumeMounts:
-          - name: heapster-config-volume
-            mountPath: /etc/config
-          command:
-            - /pod_nanny
-            - --config-dir=/etc/config
-            - --cpu=80m
-            - --extra-cpu=0.5m
-            - --memory=140Mi
-            - --extra-memory=4Mi
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
-      volumes:
-        - name: heapster-config-volume
-          configMap:
-            name: heapster-config
-      serviceAccountName: heapster
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
 apiVersion: v1
 kind: ConfigMap
@@ -7690,193 +7498,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:heapster-with-nanny
-subjects:
-- kind: ServiceAccount
-  name: heapster
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: heapster-config
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
-spec:
-  ports:
-  - port: 80
-    targetPort: 8082
-  selector:
-    k8s-app: heapster
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    k8s-app: heapster
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: heapster
-  template:
-    metadata:
-      labels:
-        k8s-app: heapster
-    spec:
-      priorityClassName: system-node-critical
-      containers:
-        - image: {{ContainerImage "heapster"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster"}}
-              memory: {{ContainerMemReqs "heapster"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster"}}
-              memory: {{ContainerMemLimits "heapster"}}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes.summary_api:''
-        - image: {{ContainerImage "heapster-nanny"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster-nanny
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster-nanny"}}
-              memory: {{ContainerMemReqs "heapster-nanny"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster-nanny"}}
-              memory: {{ContainerMemLimits "heapster-nanny"}}
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          volumeMounts:
-          - name: heapster-config-volume
-            mountPath: /etc/config
-          command:
-            - /pod_nanny
-            - --config-dir=/etc/config
-            - --cpu=80m
-            - --extra-cpu=0.5m
-            - --memory=140Mi
-            - --extra-memory=4Mi
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
-      volumes:
-        - name: heapster-config-volume
-          configMap:
-            name: heapster-config
-      serviceAccountName: heapster
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8193,193 +7814,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:heapster-with-nanny
-subjects:
-- kind: ServiceAccount
-  name: heapster
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: heapster-config
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
-spec:
-  ports:
-  - port: 80
-    targetPort: 8082
-  selector:
-    k8s-app: heapster
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    k8s-app: heapster
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: heapster
-  template:
-    metadata:
-      labels:
-        k8s-app: heapster
-    spec:
-      priorityClassName: system-node-critical
-      containers:
-        - image: {{ContainerImage "heapster"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster"}}
-              memory: {{ContainerMemReqs "heapster"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster"}}
-              memory: {{ContainerMemLimits "heapster"}}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes.summary_api:''
-        - image: {{ContainerImage "heapster-nanny"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster-nanny
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster-nanny"}}
-              memory: {{ContainerMemReqs "heapster-nanny"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster-nanny"}}
-              memory: {{ContainerMemLimits "heapster-nanny"}}
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          volumeMounts:
-          - name: heapster-config-volume
-            mountPath: /etc/config
-          command:
-            - /pod_nanny
-            - --config-dir=/etc/config
-            - --cpu=80m
-            - --extra-cpu=0.5m
-            - --memory=140Mi
-            - --extra-memory=4Mi
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
-      volumes:
-        - name: heapster-config-volume
-          configMap:
-            name: heapster-config
-      serviceAccountName: heapster
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8705,193 +8139,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:heapster-with-nanny
-subjects:
-- kind: ServiceAccount
-  name: heapster
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: heapster-config
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
-spec:
-  ports:
-  - port: 80
-    targetPort: 8082
-  selector:
-    k8s-app: heapster
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    k8s-app: heapster
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: heapster
-  template:
-    metadata:
-      labels:
-        k8s-app: heapster
-    spec:
-      priorityClassName: system-node-critical
-      containers:
-        - image: {{ContainerImage "heapster"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster"}}
-              memory: {{ContainerMemReqs "heapster"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster"}}
-              memory: {{ContainerMemLimits "heapster"}}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes.summary_api:''
-        - image: {{ContainerImage "heapster-nanny"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster-nanny
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster-nanny"}}
-              memory: {{ContainerMemReqs "heapster-nanny"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster-nanny"}}
-              memory: {{ContainerMemLimits "heapster-nanny"}}
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          volumeMounts:
-          - name: heapster-config-volume
-            mountPath: /etc/config
-          command:
-            - /pod_nanny
-            - --config-dir=/etc/config
-            - --cpu=80m
-            - --extra-cpu=0.5m
-            - --memory=140Mi
-            - --extra-memory=4Mi
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
-      volumes:
-        - name: heapster-config-volume
-          configMap:
-            name: heapster-config
-      serviceAccountName: heapster
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -18072,195 +17319,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetes-dashboard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-rules:
-- apiGroups:
-  - extensions
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - watch
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - events
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - watch
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: system:heapster-with-nanny
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:heapster-with-nanny
-subjects:
-- kind: ServiceAccount
-  name: heapster
-  namespace: kube-system
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: heapster-config
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  NannyConfiguration: |-
-    apiVersion: nannyconfig/v1alpha1
-    kind: NannyConfiguration
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
-spec:
-  ports:
-  - port: 80
-    targetPort: 8082
-  selector:
-    k8s-app: heapster
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: heapster
-  namespace: kube-system
-  labels:
-    k8s-app: heapster
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: EnsureExists
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      k8s-app: heapster
-  template:
-    metadata:
-      labels:
-        k8s-app: heapster
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      containers:
-        - image: {{ContainerImage "heapster"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster"}}
-              memory: {{ContainerMemReqs "heapster"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster"}}
-              memory: {{ContainerMemLimits "heapster"}}
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 8082
-              scheme: HTTP
-            initialDelaySeconds: 180
-            timeoutSeconds: 5
-          command:
-            - /heapster
-            - --source=kubernetes.summary_api:''
-        - image: {{ContainerImage "heapster-nanny"}}
-          imagePullPolicy: IfNotPresent
-          name: heapster-nanny
-          resources:
-            requests:
-              cpu: {{ContainerCPUReqs "heapster-nanny"}}
-              memory: {{ContainerMemReqs "heapster-nanny"}}
-            limits:
-              cpu: {{ContainerCPULimits "heapster-nanny"}}
-              memory: {{ContainerMemLimits "heapster-nanny"}}
-          env:
-            - name: MY_POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: MY_POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          volumeMounts:
-          - name: heapster-config-volume
-            mountPath: /etc/config
-          command:
-            - /pod_nanny
-            - --config-dir=/etc/config
-            - --cpu=80m
-            - --extra-cpu=0.5m
-            - --memory=140Mi
-            - --extra-memory=4Mi
-            - --threshold=5
-            - --deployment=heapster
-            - --container=heapster
-            - --poll-period=300000
-            - --estimator=exponential
-      volumes:
-        - name: heapster-config-volume
-          configMap:
-            name: heapster-config
-      serviceAccountName: heapster
-      tolerations:
-        - key: CriticalAddonsOnly
-          operator: Exists
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -31043,52 +30101,48 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                                                       agentoutputsT,
-	"agentparams.t":                                                        agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":                                  dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":                                        dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":                                    dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":                                     dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":                                          dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":                                  dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":                                  dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":                                               dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":                                    dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":                                         dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":                                         dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t":                                 dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t":                                 dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":                                        dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":                                        dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":                                        dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                                                 dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                                                      dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":                                             dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":                                             dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":                                             dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":                                             dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":                                             dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":                                             dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":                                           dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                                                dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                                                    dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                                                dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":                                          dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                                                        iaasoutputsT,
-	"k8s/addons/1.15/calico.yaml":                                          k8sAddons115CalicoYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"agentoutputs.t":                                                   agentoutputsT,
+	"agentparams.t":                                                    agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":                              dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":                                    dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":                                dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":                                 dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":                                      dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":                              dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":                              dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":                                           dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":                                dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":                                     dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":                                     dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t":                             dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t":                             dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":                                    dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":                                    dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":                                    dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                                             dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                                                  dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":                                         dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":                                         dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":                                         dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":                                         dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":                                         dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":                                         dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":                                       dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                                            dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                                                dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                                            dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":                                      dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                                                    iaasoutputsT,
+	"k8s/addons/1.15/calico.yaml":                                      k8sAddons115CalicoYaml,
+	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml": k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
@@ -31116,7 +30170,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kube-dns.yaml":                                             k8sAddonsKubeDnsYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
@@ -31291,25 +30344,21 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
@@ -31338,7 +30387,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"kube-dns.yaml":                                        {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                            {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},

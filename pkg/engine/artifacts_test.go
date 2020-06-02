@@ -19,7 +19,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 	cases := []struct {
 		name                           string
 		p                              *api.Properties
-		expectedHeapster               kubernetesComponentFileSpec
 		expectedMetricsServer          kubernetesComponentFileSpec
 		expectedTiller                 kubernetesComponentFileSpec
 		expectedAADPodIdentity         kubernetesComponentFileSpec
@@ -62,10 +61,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					OrchestratorVersion: "1.16.1",
 					KubernetesConfig: &api.KubernetesConfig{
 						Addons: []api.KubernetesAddon{
-							{
-								Name: common.HeapsterAddonName,
-								Data: base64Data,
-							},
 							{
 								Name: common.MetricsServerAddonName,
 								Data: base64Data,
@@ -197,11 +192,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 						},
 					},
 				},
-			},
-			expectedHeapster: kubernetesComponentFileSpec{
-				sourceFile:      heapsterAddonSourceFilename,
-				base64Data:      base64Data,
-				destinationFile: heapsterAddonDestinationFilename,
 			},
 			expectedMetricsServer: kubernetesComponentFileSpec{
 				sourceFile:      metricsServerAddonSourceFilename,
@@ -373,9 +363,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 					KubernetesConfig: &api.KubernetesConfig{
 						Addons: []api.KubernetesAddon{
 							{
-								Name: common.HeapsterAddonName,
-							},
-							{
 								Name: common.MetricsServerAddonName,
 							},
 							{
@@ -474,11 +461,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 						},
 					},
 				},
-			},
-			expectedHeapster: kubernetesComponentFileSpec{
-				sourceFile:      heapsterAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: heapsterAddonDestinationFilename,
 			},
 			expectedMetricsServer: kubernetesComponentFileSpec{
 				sourceFile:      metricsServerAddonSourceFilename,
@@ -644,11 +626,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 		{
 			name: "no addons in Properties object",
 			p:    &api.Properties{},
-			expectedHeapster: kubernetesComponentFileSpec{
-				sourceFile:      heapsterAddonSourceFilename,
-				base64Data:      "",
-				destinationFile: heapsterAddonDestinationFilename,
-			},
 			expectedMetricsServer: kubernetesComponentFileSpec{
 				sourceFile:      metricsServerAddonSourceFilename,
 				base64Data:      "",
@@ -819,16 +796,6 @@ func TestKubernetesAddonSettingsInit(t *testing.T) {
 			componentFileSpec := kubernetesAddonSettingsInit(c.p)
 			for addon := range componentFileSpec {
 				switch addon {
-				case common.HeapsterAddonName:
-					if c.expectedHeapster.sourceFile != componentFileSpec[addon].sourceFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedHeapster.sourceFile)
-					}
-					if c.expectedHeapster.base64Data != componentFileSpec[addon].base64Data {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].base64Data, c.expectedHeapster.base64Data)
-					}
-					if c.expectedHeapster.destinationFile != componentFileSpec[addon].destinationFile {
-						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].destinationFile, c.expectedHeapster.destinationFile)
-					}
 				case common.MetricsServerAddonName:
 					if c.expectedMetricsServer.sourceFile != componentFileSpec[addon].sourceFile {
 						t.Fatalf("Expected %s to be %s", componentFileSpec[addon].sourceFile, c.expectedMetricsServer.sourceFile)

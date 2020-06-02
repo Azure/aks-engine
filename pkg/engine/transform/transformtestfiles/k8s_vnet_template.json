@@ -874,13 +874,6 @@
       },
       "type": "string"
     },
-    "kubernetesHeapsterSpec": {
-      "defaultValue": "",
-      "metadata": {
-        "description": "The container spec for heapster."
-      },
-      "type": "string"
-    },
     "kubernetesHyperkubeSpec": {
       "defaultValue": "",
       "metadata": {
@@ -1165,7 +1158,6 @@
     "kubernetesDNSMasqSpec": "[parameters('kubernetesDNSMasqSpec')]",
     "kubernetesDashboardSpec": "[parameters('kubernetesDashboardSpec')]",
     "kubernetesExecHealthzSpec": "[parameters('kubernetesExecHealthzSpec')]",
-    "kubernetesHeapsterSpec": "[parameters('kubernetesHeapsterSpec')]",
     "kubernetesHyperkubeSpec": "[parameters('kubernetesHyperkubeSpec')]",
     "kubernetesKubeDNSSpec": "[parameters('kubernetesKubeDNSSpec')]",
     "kubernetesPodInfraContainerSpec": "[parameters('kubernetesPodInfraContainerSpec')]",
