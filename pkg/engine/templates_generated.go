@@ -34,22 +34,18 @@
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/calico.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
@@ -74,10 +70,10 @@
 // ../../parts/k8s/addons/flannel.yaml
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/keyvault-flexvolume.yaml
+// ../../parts/k8s/addons/kube-dns.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
@@ -7384,232 +7380,6 @@ func k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) 
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-in sync with this file. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: "KubeDNS"
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: {{ContainerConfig "clusterIP"}}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    rollingUpdate:
-      maxSurge: 10%
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-      volumes:
-      - name: kube-dns-config
-        configMap:
-          name: kube-dns
-          optional: true
-      containers:
-      - name: kubedns
-        image: {{ContainerImage "kubedns"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          {{- /* TODO: Set memory limits when we've profiled the container for large
-          clusters, then set request = limit to keep this container in
-          guaranteed class. Currently, this container falls into the
-          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
-        args:
-        - --domain={{ContainerConfig "domain"}}.
-        - --dns-port=10053
-        - --config-dir=/kube-dns-config
-        - --v=2
-        env:
-        - name: PROMETHEUS_PORT
-          value: "10055"
-        ports:
-        - containerPort: 10053
-          name: dns-local
-          protocol: UDP
-        - containerPort: 10053
-          name: dns-tcp-local
-          protocol: TCP
-        - containerPort: 10055
-          name: metrics
-          protocol: TCP
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /kube-dns-config
-      - name: dnsmasq
-        image: {{ContainerImage "dnsmasq"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - -v=2
-        - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
-        - -restartDnsmasq=true
-        - --
-        - -k
-        - --cache-size=1000
-        - --no-negcache
-        - --log-facility=-
-        - --server=/cluster.local/127.0.0.1#10053
-        - --server=/in-addr.arpa/127.0.0.1#10053
-        - --server=/ip6.arpa/127.0.0.1#10053
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        resources:
-          requests:
-            cpu: 150m
-            memory: 20Mi
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
-      - name: sidecar
-        image: {{ContainerImage "sidecar"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - --v=2
-        - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        ports:
-        - containerPort: 10054
-          name: metrics
-          protocol: TCP
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-      dnsPolicy: Default
-      serviceAccountName: kube-dns
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
 apiVersion: v1
 kind: ConfigMap
@@ -8107,232 +7877,6 @@ func k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) 
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-in sync with this file. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: "KubeDNS"
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: {{ContainerConfig "clusterIP"}}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    rollingUpdate:
-      maxSurge: 10%
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-      volumes:
-      - name: kube-dns-config
-        configMap:
-          name: kube-dns
-          optional: true
-      containers:
-      - name: kubedns
-        image: {{ContainerImage "kubedns"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          {{- /* TODO: Set memory limits when we've profiled the container for large
-          clusters, then set request = limit to keep this container in
-          guaranteed class. Currently, this container falls into the
-          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
-        args:
-        - --domain={{ContainerConfig "domain"}}.
-        - --dns-port=10053
-        - --config-dir=/kube-dns-config
-        - --v=2
-        env:
-        - name: PROMETHEUS_PORT
-          value: "10055"
-        ports:
-        - containerPort: 10053
-          name: dns-local
-          protocol: UDP
-        - containerPort: 10053
-          name: dns-tcp-local
-          protocol: TCP
-        - containerPort: 10055
-          name: metrics
-          protocol: TCP
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /kube-dns-config
-      - name: dnsmasq
-        image: {{ContainerImage "dnsmasq"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - -v=2
-        - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
-        - -restartDnsmasq=true
-        - --
-        - -k
-        - --cache-size=1000
-        - --no-negcache
-        - --log-facility=-
-        - --server=/cluster.local/127.0.0.1#10053
-        - --server=/in-addr.arpa/127.0.0.1#10053
-        - --server=/ip6.arpa/127.0.0.1#10053
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        resources:
-          requests:
-            cpu: 150m
-            memory: 20Mi
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
-      - name: sidecar
-        image: {{ContainerImage "sidecar"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - --v=2
-        - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        ports:
-        - containerPort: 10054
-          name: metrics
-          protocol: TCP
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-      dnsPolicy: Default
-      serviceAccountName: kube-dns
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8836,232 +8380,6 @@ func k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) 
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-in sync with this file. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: "KubeDNS"
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: {{ContainerConfig "clusterIP"}}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    rollingUpdate:
-      maxSurge: 10%
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-      volumes:
-      - name: kube-dns-config
-        configMap:
-          name: kube-dns
-          optional: true
-      containers:
-      - name: kubedns
-        image: {{ContainerImage "kubedns"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          {{- /* TODO: Set memory limits when we've profiled the container for large
-          clusters, then set request = limit to keep this container in
-          guaranteed class. Currently, this container falls into the
-          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
-        args:
-        - --domain={{ContainerConfig "domain"}}.
-        - --dns-port=10053
-        - --config-dir=/kube-dns-config
-        - --v=2
-        env:
-        - name: PROMETHEUS_PORT
-          value: "10055"
-        ports:
-        - containerPort: 10053
-          name: dns-local
-          protocol: UDP
-        - containerPort: 10053
-          name: dns-tcp-local
-          protocol: TCP
-        - containerPort: 10055
-          name: metrics
-          protocol: TCP
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /kube-dns-config
-      - name: dnsmasq
-        image: {{ContainerImage "dnsmasq"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - -v=2
-        - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
-        - -restartDnsmasq=true
-        - --
-        - -k
-        - --cache-size=1000
-        - --no-negcache
-        - --log-facility=-
-        - --server=/cluster.local/127.0.0.1#10053
-        - --server=/in-addr.arpa/127.0.0.1#10053
-        - --server=/ip6.arpa/127.0.0.1#10053
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        resources:
-          requests:
-            cpu: 150m
-            memory: 20Mi
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
-      - name: sidecar
-        image: {{ContainerImage "sidecar"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - --v=2
-        - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        ports:
-        - containerPort: 10054
-          name: metrics
-          protocol: TCP
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-      dnsPolicy: Default
-      serviceAccountName: kube-dns
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -9574,232 +8892,6 @@ func k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) 
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-in sync with this file. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: "KubeDNS"
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: {{ContainerConfig "clusterIP"}}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    rollingUpdate:
-      maxSurge: 10%
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: "CriticalAddonsOnly"
-        operator: "Exists"
-      volumes:
-      - name: kube-dns-config
-        configMap:
-          name: kube-dns
-          optional: true
-      containers:
-      - name: kubedns
-        image: {{ContainerImage "kubedns"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          {{- /* TODO: Set memory limits when we've profiled the container for large
-          clusters, then set request = limit to keep this container in
-          guaranteed class. Currently, this container falls into the
-          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
-        args:
-        - --domain={{ContainerConfig "domain"}}.
-        - --dns-port=10053
-        - --config-dir=/kube-dns-config
-        - --v=2
-        env:
-        - name: PROMETHEUS_PORT
-          value: "10055"
-        ports:
-        - containerPort: 10053
-          name: dns-local
-          protocol: UDP
-        - containerPort: 10053
-          name: dns-tcp-local
-          protocol: TCP
-        - containerPort: 10055
-          name: metrics
-          protocol: TCP
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /kube-dns-config
-      - name: dnsmasq
-        image: {{ContainerImage "dnsmasq"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - -v=2
-        - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
-        - -restartDnsmasq=true
-        - --
-        - -k
-        - --cache-size=1000
-        - --no-negcache
-        - --log-facility=-
-        - --server=/cluster.local/127.0.0.1#10053
-        - --server=/in-addr.arpa/127.0.0.1#10053
-        - --server=/ip6.arpa/127.0.0.1#10053
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        resources:
-          requests:
-            cpu: 150m
-            memory: 20Mi
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
-      - name: sidecar
-        image: {{ContainerImage "sidecar"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - --v=2
-        - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        ports:
-        - containerPort: 10054
-          name: metrics
-          protocol: TCP
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-      dnsPolicy: Default
-      serviceAccountName: kube-dns
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -18357,6 +17449,237 @@ func k8sAddonsKeyvaultFlexvolumeYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsKubeDnsYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
+in sync with this file. */}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/name: "KubeDNS"
+spec:
+  selector:
+    k8s-app: kube-dns
+  clusterIP: {{ContainerConfig "clusterIP"}}
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+---
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: Deployment
+metadata:
+  name: kube-dns
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  {{- /* replicas: not specified here:
+  1. In order to make Addon Manager do not reconcile this replicas parameter.
+  2. Default is 1.
+  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
+  strategy:
+    rollingUpdate:
+      maxSurge: 10%
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      k8s-app: kube-dns
+  template:
+    metadata:
+      labels:
+        k8s-app: kube-dns
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
+{{- end}}
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      volumes:
+      - name: kube-dns-config
+        configMap:
+          name: kube-dns
+          optional: true
+      containers:
+      - name: kubedns
+        image: {{ContainerImage "kubedns"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+          {{- /* TODO: Set memory limits when we've profiled the container for large
+          clusters, then set request = limit to keep this container in
+          guaranteed class. Currently, this container falls into the
+          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
+          limits:
+            memory: 170Mi
+          requests:
+            cpu: 100m
+            memory: 70Mi
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/kubedns
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 3
+          timeoutSeconds: 5
+        args:
+        - --domain={{ContainerConfig "domain"}}.
+        - --dns-port=10053
+        - --config-dir=/kube-dns-config
+        - --v=2
+        env:
+        - name: PROMETHEUS_PORT
+          value: "10055"
+        ports:
+        - containerPort: 10053
+          name: dns-local
+          protocol: UDP
+        - containerPort: 10053
+          name: dns-tcp-local
+          protocol: TCP
+        - containerPort: 10055
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: kube-dns-config
+          mountPath: /kube-dns-config
+      - name: dnsmasq
+        image: {{ContainerImage "dnsmasq"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /healthcheck/dnsmasq
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        args:
+        - -v=2
+        - -logtostderr
+        - -configDir=/etc/k8s/dns/dnsmasq-nanny
+        - -restartDnsmasq=true
+        - --
+        - -k
+        - --cache-size=1000
+        - --no-negcache
+        - --log-facility=-
+        - --server=/cluster.local/127.0.0.1#10053
+        - --server=/in-addr.arpa/127.0.0.1#10053
+        - --server=/ip6.arpa/127.0.0.1#10053
+        ports:
+        - containerPort: 53
+          name: dns
+          protocol: UDP
+        - containerPort: 53
+          name: dns-tcp
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 150m
+            memory: 20Mi
+        volumeMounts:
+        - name: kube-dns-config
+          mountPath: /etc/k8s/dns/dnsmasq-nanny
+      - name: sidecar
+        image: {{ContainerImage "sidecar"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: 10054
+            scheme: HTTP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 5
+        args:
+        - --v=2
+        - --logtostderr
+        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
+        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
+        ports:
+        - containerPort: 10054
+          name: metrics
+          protocol: TCP
+        resources:
+          requests:
+            memory: 20Mi
+            cpu: 10m
+      dnsPolicy: Default
+      serviceAccountName: kube-dns
+      nodeSelector:
+        kubernetes.io/os: linux
+`)
+
+func k8sAddonsKubeDnsYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubeDnsYaml, nil
+}
+
+func k8sAddonsKubeDnsYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubeDnsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kube-dns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: Deployment
 metadata:
@@ -18938,235 +18261,6 @@ func k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml = []byte(`{{- /* Copyright 2016 The Kubernetes Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Should keep target in cluster/addons/dns-horizontal-autoscaler/dns-horizontal-autoscaler.yaml
-in sync with this file. */}}
-apiVersion: v1
-kind: Service
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/name: KubeDNS
-spec:
-  selector:
-    k8s-app: kube-dns
-  clusterIP: {{ContainerConfig "clusterIP"}}
-  ports:
-  - name: dns
-    port: 53
-    protocol: UDP
-  - name: dns-tcp
-    port: 53
-    protocol: TCP
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: kube-dns
-  namespace: kube-system
-  labels:
-    k8s-app: kube-dns
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-spec:
-  {{- /* replicas: not specified here:
-  1. In order to make Addon Manager do not reconcile this replicas parameter.
-  2. Default is 1.
-  3. Will be tuned in real time if DNS horizontal auto-scaling is turned on. */}}
-  strategy:
-    rollingUpdate:
-      maxSurge: 10%
-      maxUnavailable: 0
-  selector:
-    matchLabels:
-      k8s-app: kube-dns
-  template:
-    metadata:
-      labels:
-        k8s-app: kube-dns
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-        seccomp.security.alpha.kubernetes.io/pod: 'docker/default'
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
-      volumes:
-      - name: kube-dns-config
-        configMap:
-          name: kube-dns
-          optional: true
-      containers:
-      - name: kubedns
-        image: {{ContainerImage "kubedns"}}
-        imagePullPolicy: IfNotPresent
-        resources:
-          {{- /* TODO: Set memory limits when we've profiled the container for large
-          clusters, then set request = limit to keep this container in
-          guaranteed class. Currently, this container falls into the
-          "burstable" category so the kubelet doesn't backoff from restarting it. */}}
-          limits:
-            memory: 170Mi
-          requests:
-            cpu: 100m
-            memory: 70Mi
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/kubedns
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 8081
-            scheme: HTTP
-          initialDelaySeconds: 3
-          timeoutSeconds: 5
-        args:
-        - --domain={{ContainerConfig "domain"}}.
-        - --dns-port=10053
-        - --config-dir=/kube-dns-config
-        - --v=2
-        env:
-        - name: PROMETHEUS_PORT
-          value: "10055"
-        ports:
-        - containerPort: 10053
-          name: dns-local
-          protocol: UDP
-        - containerPort: 10053
-          name: dns-tcp-local
-          protocol: TCP
-        - containerPort: 10055
-          name: metrics
-          protocol: TCP
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /kube-dns-config
-      - name: dnsmasq
-        image: {{ContainerImage "dnsmasq"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /healthcheck/dnsmasq
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - -v=2
-        - -logtostderr
-        - -configDir=/etc/k8s/dns/dnsmasq-nanny
-        - -restartDnsmasq=true
-        - --
-        - -k
-        - --cache-size=1000
-        - --no-negcache
-        - --log-facility=-
-        - --server=/cluster.local/127.0.0.1#10053
-        - --server=/in-addr.arpa/127.0.0.1#10053
-        - --server=/ip6.arpa/127.0.0.1#10053
-        ports:
-        - containerPort: 53
-          name: dns
-          protocol: UDP
-        - containerPort: 53
-          name: dns-tcp
-          protocol: TCP
-        resources:
-          requests:
-            cpu: 150m
-            memory: 20Mi
-        volumeMounts:
-        - name: kube-dns-config
-          mountPath: /etc/k8s/dns/dnsmasq-nanny
-      - name: sidecar
-        image: {{ContainerImage "sidecar"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /metrics
-            port: 10054
-            scheme: HTTP
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          successThreshold: 1
-          failureThreshold: 5
-        args:
-        - --v=2
-        - --logtostderr
-        - --probe=kubedns,127.0.0.1:10053,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        - --probe=dnsmasq,127.0.0.1:53,kubernetes.default.svc.{{ContainerConfig "domain"}},5,SRV
-        ports:
-        - containerPort: 10054
-          name: metrics
-          protocol: TCP
-        resources:
-          requests:
-            memory: 20Mi
-            cpu: 10m
-      dnsPolicy: Default
-      serviceAccountName: kube-dns
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -31983,22 +31077,18 @@ var _bindata = map[string]func() (*asset, error){
 	"iaasoutputs.t":                                                        iaasoutputsT,
 	"k8s/addons/1.15/calico.yaml":                                          k8sAddons115CalicoYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-kube-dns-deployment.yaml":      k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-kube-dns-deployment.yaml":      k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-kube-dns-deployment.yaml":      k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-heapster-deployment.yaml":      k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-kube-dns-deployment.yaml":      k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
@@ -32023,10 +31113,10 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/flannel.yaml":                                              k8sAddonsFlannelYaml,
 	"k8s/addons/ip-masq-agent.yaml":                                        k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/keyvault-flexvolume.yaml":                                  k8sAddonsKeyvaultFlexvolumeYaml,
+	"k8s/addons/kube-dns.yaml":                                             k8sAddonsKubeDnsYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
 	"k8s/addons/kubernetesmasteraddons-heapster-deployment.yaml":           k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-dns-deployment.yaml":           k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml,
 	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
@@ -32202,28 +31292,24 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			}},
 			"1.16": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-dns-deployment.yaml":      {k8sAddons116KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-dns-deployment.yaml":      {k8sAddons117KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-dns-deployment.yaml":      {k8sAddons118KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
 				"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-				"kubernetesmasteraddons-kube-dns-deployment.yaml":      {k8sAddons119KubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
@@ -32249,10 +31335,10 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"flannel.yaml":                                         {k8sAddonsFlannelYaml, map[string]*bintree{}},
 			"ip-masq-agent.yaml":                                   {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"keyvault-flexvolume.yaml":                             {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
+			"kube-dns.yaml":                                        {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                            {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-heapster-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsHeapsterDeploymentYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-dns-deployment.yaml":      {k8sAddonsKubernetesmasteraddonsKubeDnsDeploymentYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
