@@ -34,7 +34,7 @@ data:
       }
     }
 ---
-apiVersion: apps/v1
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: DaemonSet
 metadata:
   name: kube-flannel-ds
@@ -44,15 +44,25 @@ metadata:
     app: flannel
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
   selector:
     matchLabels:
       tier: node
       app: flannel
+{{- end}}
   template:
     metadata:
       labels:
         tier: node
         app: flannel
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+{{- end}}
+{{- if IsKubernetesVersionGe "1.17.0"}}
+      annotations:
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
     spec:
       hostNetwork: true
       nodeSelector:
