@@ -179,7 +179,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	if cfg.DebugAfterSuite {
-		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
+		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 		out, err := cmd.CombinedOutput()
 		log.Printf("%s\n", out)
 		if err != nil {
