@@ -68,7 +68,7 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.11"
+MOBY_VERSION="3.0.12"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
@@ -351,9 +351,11 @@ K8S_VERSIONS="
 1.18.3
 1.18.2
 1.17.6
+1.17.6-azs
 1.17.5
 1.17.5-azs
 1.16.10
+1.16.10-azs
 1.16.9
 1.16.9-azs
 1.15.12

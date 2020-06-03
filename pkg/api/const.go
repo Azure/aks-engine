@@ -128,8 +128,6 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
-	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
-	DefaultHeapsterAddonEnabled = false
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
@@ -464,7 +462,7 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.11"
+	DefaultMobyVersion = "3.0.12"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.3.2"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.

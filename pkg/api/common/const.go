@@ -128,8 +128,6 @@ const MinCloudProviderQPSToBucketFactor float64 = 0.1
 
 // Addon name consts
 const (
-	// HeapsterAddonName is the name of the heapster addon
-	HeapsterAddonName = "heapster"
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
 	// ACIConnectorAddonName is the name of the aci-connector addon deployment

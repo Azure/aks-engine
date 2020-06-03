@@ -27,20 +27,6 @@
         "etcdDiskSizeGB": "512",
         "addons": [
           {
-            "name": "heapster",
-            "enabled": true,
-            "containers": [
-              {
-                "name": "heapster",
-                "image": "k8s.gcr.io/heapster-amd64:v1.5.4"
-              },
-              {
-                "name": "heapster-nanny",
-                "image": "k8s.gcr.io/addon-resizer:1.8.5"
-              }
-            ]
-          },
-          {
             "name": "tiller",
             "enabled": true,
             "containers": [

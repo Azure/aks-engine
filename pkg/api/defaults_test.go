@@ -246,7 +246,6 @@ func TestAssignDefaultAddonImages(t *testing.T) {
 		common.ContainerMonitoringAddonName:    "mcr.microsoft.com/azuremonitor/containerinsights/ciprod:ciprod03022020",
 		common.IPMASQAgentAddonName:            specConfig.MCRKubernetesImageBase + k8sComponents[common.IPMASQAgentAddonName],
 		common.AzureCNINetworkMonitorAddonName: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
-		common.HeapsterAddonName:               specConfig.MCRKubernetesImageBase + k8sComponents[common.HeapsterAddonName],
 		common.CalicoAddonName:                 specConfig.CalicoImageBase + k8sComponents[common.CalicoTyphaComponentName],
 		common.AzureNetworkPolicyAddonName:     k8sComponents[common.AzureNetworkPolicyAddonName],
 		common.AADPodIdentityAddonName:         k8sComponents[common.NMIContainerName],

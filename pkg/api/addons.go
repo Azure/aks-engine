@@ -43,28 +43,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
-	defaultsHeapsterAddonsConfig := KubernetesAddon{
-		Name:    common.HeapsterAddonName,
-		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.HeapsterAddonName,
-				Image:          kubernetesImageBase + k8sComponents[common.HeapsterAddonName],
-				CPURequests:    "88m",
-				MemoryRequests: "204Mi",
-				CPULimits:      "88m",
-				MemoryLimits:   "204Mi",
-			},
-			{
-				Name:           "heapster-nanny",
-				Image:          kubernetesImageBase + k8sComponents[common.AddonResizerComponentName],
-				CPURequests:    "88m",
-				MemoryRequests: "204Mi",
-				CPULimits:      "88m",
-				MemoryLimits:   "204Mi",
-			},
-		},
-	}
 
 	defaultTillerAddonsConfig := KubernetesAddon{
 		Name:    common.TillerAddonName,
@@ -887,7 +865,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultAddons := []KubernetesAddon{
-		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
 		defaultACIConnectorAddonsConfig,
 		defaultClusterAutoscalerAddonsConfig,
