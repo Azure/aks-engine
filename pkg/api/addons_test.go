@@ -1699,6 +1699,71 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "info",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CalicoTyphaComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoTyphaComponentName],
+						},
+						{
+							Name:  common.CalicoCNIComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoCNIComponentName],
+						},
+						{
+							Name:  common.CalicoNodeComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoNodeComponentName],
+						},
+						{
+							Name:  common.CalicoPod2DaemonComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoPod2DaemonComponentName],
+						},
+						{
+							Name:  common.CalicoClusterAutoscalerComponentName,
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+						},
+					},
+				},
+			}, "1.15.4")),
+		},
+		{
+			name: "calico addon enabled with configurable log severity",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							NetworkPolicy: NetworkPolicyCalico,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.CalicoAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"logSeverityScreen": "error",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CalicoAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "error",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CalicoTyphaComponentName,
@@ -1744,6 +1809,9 @@ func TestSetAddonsConfig(t *testing.T) {
 								{
 									Name:    common.CalicoAddonName,
 									Enabled: to.BoolPtr(false),
+									Config: map[string]string{
+										"logSeverityScreen": "info",
+									},
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.CalicoTyphaComponentName,
@@ -1777,6 +1845,9 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "info",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CalicoTyphaComponentName,
