@@ -198,8 +198,8 @@ const (
 const (
 	metricsServerAddonSourceFilename               string = "metrics-server.yaml"
 	metricsServerAddonDestinationFilename          string = "metrics-server.yaml"
-	tillerAddonSourceFilename                      string = "kubernetesmasteraddons-tiller-deployment.yaml"
-	tillerAddonDestinationFilename                 string = "kube-tiller-deployment.yaml"
+	tillerAddonSourceFilename                      string = "tiller.yaml"
+	tillerAddonDestinationFilename                 string = "tiller.yaml"
 	aadPodIdentityAddonSourceFilename              string = "aad-pod-identity.yaml"
 	aadPodIdentityAddonDestinationFilename         string = "aad-pod-identity.yaml"
 	aciConnectorAddonSourceFilename                string = "aci-connector.yaml"

@@ -33,10 +33,6 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/calico.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/aad-pod-identity.yaml
 // ../../parts/k8s/addons/aci-connector.yaml
@@ -62,7 +58,6 @@
 // ../../parts/k8s/addons/kube-proxy.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/metrics-server.yaml
 // ../../parts/k8s/addons/node-problem-detector.yaml
 // ../../parts/k8s/addons/nvidia-device-plugin.yaml
@@ -70,6 +65,7 @@
 // ../../parts/k8s/addons/scheduled-maintenance-deployment.yaml
 // ../../parts/k8s/addons/secrets-store-csi-driver.yaml
 // ../../parts/k8s/addons/smb-flexvolume.yaml
+// ../../parts/k8s/addons/tiller.yaml
 // ../../parts/k8s/armparameters.t
 // ../../parts/k8s/cloud-init/artifacts/apt-preferences
 // ../../parts/k8s/cloud-init/artifacts/auditd-rules
@@ -7176,474 +7172,6 @@ func k8sAddons115CalicoYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.15/calico.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  ports:
-  - name: tiller
-    port: 44134
-    targetPort: tiller
-  selector:
-    app: helm
-    name: tiller
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: helm
-      name: tiller
-  template:
-    metadata:
-      labels:
-        app: helm
-        name: tiller
-    spec:
-      serviceAccountName: tiller
-      containers:
-      - env:
-        - name: TILLER_NAMESPACE
-          value: kube-system
-        - name: TILLER_HISTORY_MAX
-          value: "{{ContainerConfig "max-history"}}"
-        image: {{ContainerImage "tiller"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        name: tiller
-        ports:
-        - containerPort: 44134
-          name: tiller
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "tiller"}}
-            memory: {{ContainerMemReqs "tiller"}}
-          limits:
-            cpu: {{ContainerCPULimits "tiller"}}
-            memory: {{ContainerMemLimits "tiller"}}
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons116KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsTillerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  ports:
-  - name: tiller
-    port: 44134
-    targetPort: tiller
-  selector:
-    app: helm
-    name: tiller
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: helm
-      name: tiller
-  template:
-    metadata:
-      labels:
-        app: helm
-        name: tiller
-    spec:
-      serviceAccountName: tiller
-      containers:
-      - env:
-        - name: TILLER_NAMESPACE
-          value: kube-system
-        - name: TILLER_HISTORY_MAX
-          value: "{{ContainerConfig "max-history"}}"
-        image: {{ContainerImage "tiller"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        name: tiller
-        ports:
-        - containerPort: 44134
-          name: tiller
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "tiller"}}
-            memory: {{ContainerMemReqs "tiller"}}
-          limits:
-            cpu: {{ContainerCPULimits "tiller"}}
-            memory: {{ContainerMemLimits "tiller"}}
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons117KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsTillerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  ports:
-  - name: tiller
-    port: 44134
-    targetPort: tiller
-  selector:
-    app: helm
-    name: tiller
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: helm
-      name: tiller
-  template:
-    metadata:
-      labels:
-        app: helm
-        name: tiller
-    spec:
-      serviceAccountName: tiller
-      containers:
-      - env:
-        - name: TILLER_NAMESPACE
-          value: kube-system
-        - name: TILLER_HISTORY_MAX
-          value: "{{ContainerConfig "max-history"}}"
-        image: {{ContainerImage "tiller"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        name: tiller
-        ports:
-        - containerPort: 44134
-          name: tiller
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "tiller"}}
-            memory: {{ContainerMemReqs "tiller"}}
-          limits:
-            cpu: {{ContainerCPULimits "tiller"}}
-            memory: {{ContainerMemLimits "tiller"}}
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons118KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsTillerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  ports:
-  - name: tiller
-    port: 44134
-    targetPort: tiller
-  selector:
-    app: helm
-    name: tiller
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: helm
-      name: tiller
-  template:
-    metadata:
-      labels:
-        app: helm
-        name: tiller
-    spec:
-      serviceAccountName: tiller
-      containers:
-      - env:
-        - name: TILLER_NAMESPACE
-          value: kube-system
-        - name: TILLER_HISTORY_MAX
-          value: "{{ContainerConfig "max-history"}}"
-        image: {{ContainerImage "tiller"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        name: tiller
-        ports:
-        - containerPort: 44134
-          name: tiller
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "tiller"}}
-            memory: {{ContainerMemReqs "tiller"}}
-          limits:
-            cpu: {{ContainerCPULimits "tiller"}}
-            memory: {{ContainerMemLimits "tiller"}}
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons119KubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsTillerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16669,119 +16197,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml = []byte(`apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-  labels:
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  ports:
-  - name: tiller
-    port: 44134
-    targetPort: tiller
-  selector:
-    app: helm
-    name: tiller
-  type: ClusterIP
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    app: helm
-    name: tiller
-    kubernetes.io/cluster-service: "true"
-    addonmanager.kubernetes.io/mode: Reconcile
-  name: tiller-deploy
-  namespace: kube-system
-spec:
-  template:
-    metadata:
-      labels:
-        app: helm
-        name: tiller
-    spec:
-      serviceAccountName: tiller
-      containers:
-      - env:
-        - name: TILLER_NAMESPACE
-          value: kube-system
-        - name: TILLER_HISTORY_MAX
-          value: "{{ContainerConfig "max-history"}}"
-        image: {{ContainerImage "tiller"}}
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          httpGet:
-            path: /liveness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        name: tiller
-        ports:
-        - containerPort: 44134
-          name: tiller
-        readinessProbe:
-          httpGet:
-            path: /readiness
-            port: 44135
-          initialDelaySeconds: 1
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: {{ContainerCPUReqs "tiller"}}
-            memory: {{ContainerMemReqs "tiller"}}
-          limits:
-            cpu: {{ContainerCPULimits "tiller"}}
-            memory: {{ContainerMemLimits "tiller"}}
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddonsKubernetesmasteraddonsTillerDeploymentYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsTillerDeploymentYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddonsMetricsServerYaml = []byte(`apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -18056,6 +17471,125 @@ func k8sAddonsSmbFlexvolumeYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/smb-flexvolume.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sAddonsTillerYaml = []byte(`apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+  labels:
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: tiller
+  namespace: kube-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: helm
+    name: tiller
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: tiller-deploy
+  namespace: kube-system
+spec:
+  ports:
+  - name: tiller
+    port: 44134
+    targetPort: tiller
+  selector:
+    app: helm
+    name: tiller
+  type: ClusterIP
+---
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: Deployment
+metadata:
+  labels:
+    app: helm
+    name: tiller
+    kubernetes.io/cluster-service: "true"
+    addonmanager.kubernetes.io/mode: Reconcile
+  name: tiller-deploy
+  namespace: kube-system
+spec:
+{{- if IsKubernetesVersionGe "1.16.0"}}
+  selector:
+    matchLabels:
+      app: helm
+      name: tiller
+{{- end}}
+  template:
+    metadata:
+      labels:
+        app: helm
+        name: tiller
+    spec:
+      serviceAccountName: tiller
+      containers:
+      - env:
+        - name: TILLER_NAMESPACE
+          value: kube-system
+        - name: TILLER_HISTORY_MAX
+          value: "{{ContainerConfig "max-history"}}"
+        image: {{ContainerImage "tiller"}}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 44135
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        name: tiller
+        ports:
+        - containerPort: 44134
+          name: tiller
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 44135
+          initialDelaySeconds: 1
+          timeoutSeconds: 1
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "tiller"}}
+            memory: {{ContainerMemReqs "tiller"}}
+          limits:
+            cpu: {{ContainerCPULimits "tiller"}}
+            memory: {{ContainerMemLimits "tiller"}}
+      nodeSelector:
+        kubernetes.io/os: linux
+`)
+
+func k8sAddonsTillerYamlBytes() ([]byte, error) {
+	return _k8sAddonsTillerYaml, nil
+}
+
+func k8sAddonsTillerYaml() (*asset, error) {
+	bytes, err := k8sAddonsTillerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/tiller.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -29377,10 +28911,6 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovisionsource.sh":                                        dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                      iaasoutputsT,
 	"k8s/addons/1.15/calico.yaml":                                        k8sAddons115CalicoYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":      k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":      k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":      k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":      k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                       k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
 	"k8s/addons/aci-connector.yaml":                                      k8sAddonsAciConnectorYaml,
@@ -29406,7 +28936,6 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/kube-proxy.yaml":                                         k8sAddonsKubeProxyYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                   k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                               k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":           k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/metrics-server.yaml":                                     k8sAddonsMetricsServerYaml,
 	"k8s/addons/node-problem-detector.yaml":                              k8sAddonsNodeProblemDetectorYaml,
 	"k8s/addons/nvidia-device-plugin.yaml":                               k8sAddonsNvidiaDevicePluginYaml,
@@ -29414,6 +28943,7 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/scheduled-maintenance-deployment.yaml":                   k8sAddonsScheduledMaintenanceDeploymentYaml,
 	"k8s/addons/secrets-store-csi-driver.yaml":                           k8sAddonsSecretsStoreCsiDriverYaml,
 	"k8s/addons/smb-flexvolume.yaml":                                     k8sAddonsSmbFlexvolumeYaml,
+	"k8s/addons/tiller.yaml":                                             k8sAddonsTillerYaml,
 	"k8s/armparameters.t":                                                k8sArmparametersT,
 	"k8s/cloud-init/artifacts/apt-preferences":                           k8sCloudInitArtifactsAptPreferences,
 	"k8s/cloud-init/artifacts/auditd-rules":                              k8sCloudInitArtifactsAuditdRules,
@@ -29578,51 +29108,39 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"1.15": {nil, map[string]*bintree{
 				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
 			}},
-			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-tiller-deployment.yaml": {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			}},
-			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-tiller-deployment.yaml": {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			}},
-			"1.18": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-tiller-deployment.yaml": {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			}},
-			"1.19": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-tiller-deployment.yaml": {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			}},
-			"aad-default-admin-group-rbac.yaml":             {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
-			"aad-pod-identity.yaml":                         {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
-			"aci-connector.yaml":                            {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
-			"antrea.yaml":                                   {k8sAddonsAntreaYaml, map[string]*bintree{}},
-			"audit-policy.yaml":                             {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
-			"azure-cloud-provider.yaml":                     {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
-			"azure-cni-networkmonitor.yaml":                 {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
-			"azure-network-policy.yaml":                     {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
-			"azure-policy-deployment.yaml":                  {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
-			"azuredisk-csi-driver-deployment.yaml":          {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"azurefile-csi-driver-deployment.yaml":          {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
-			"blobfuse-flexvolume.yaml":                      {k8sAddonsBlobfuseFlexvolumeYaml, map[string]*bintree{}},
-			"calico.yaml":                                   {k8sAddonsCalicoYaml, map[string]*bintree{}},
-			"cilium.yaml":                                   {k8sAddonsCiliumYaml, map[string]*bintree{}},
-			"cloud-node-manager.yaml":                       {k8sAddonsCloudNodeManagerYaml, map[string]*bintree{}},
-			"cluster-autoscaler.yaml":                       {k8sAddonsClusterAutoscalerYaml, map[string]*bintree{}},
-			"container-monitoring.yaml":                     {k8sAddonsContainerMonitoringYaml, map[string]*bintree{}},
-			"coredns.yaml":                                  {k8sAddonsCorednsYaml, map[string]*bintree{}},
-			"flannel.yaml":                                  {k8sAddonsFlannelYaml, map[string]*bintree{}},
-			"ip-masq-agent.yaml":                            {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
-			"keyvault-flexvolume.yaml":                      {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
-			"kube-dns.yaml":                                 {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
-			"kube-proxy.yaml":                               {k8sAddonsKubeProxyYaml, map[string]*bintree{}},
-			"kube-rescheduler.yaml":                         {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
-			"kubernetes-dashboard.yaml":                     {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-tiller-deployment.yaml": {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
-			"metrics-server.yaml":                           {k8sAddonsMetricsServerYaml, map[string]*bintree{}},
-			"node-problem-detector.yaml":                    {k8sAddonsNodeProblemDetectorYaml, map[string]*bintree{}},
-			"nvidia-device-plugin.yaml":                     {k8sAddonsNvidiaDevicePluginYaml, map[string]*bintree{}},
-			"pod-security-policy.yaml":                      {k8sAddonsPodSecurityPolicyYaml, map[string]*bintree{}},
-			"scheduled-maintenance-deployment.yaml":         {k8sAddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
-			"secrets-store-csi-driver.yaml":                 {k8sAddonsSecretsStoreCsiDriverYaml, map[string]*bintree{}},
-			"smb-flexvolume.yaml":                           {k8sAddonsSmbFlexvolumeYaml, map[string]*bintree{}},
+			"aad-default-admin-group-rbac.yaml":     {k8sAddonsAadDefaultAdminGroupRbacYaml, map[string]*bintree{}},
+			"aad-pod-identity.yaml":                 {k8sAddonsAadPodIdentityYaml, map[string]*bintree{}},
+			"aci-connector.yaml":                    {k8sAddonsAciConnectorYaml, map[string]*bintree{}},
+			"antrea.yaml":                           {k8sAddonsAntreaYaml, map[string]*bintree{}},
+			"audit-policy.yaml":                     {k8sAddonsAuditPolicyYaml, map[string]*bintree{}},
+			"azure-cloud-provider.yaml":             {k8sAddonsAzureCloudProviderYaml, map[string]*bintree{}},
+			"azure-cni-networkmonitor.yaml":         {k8sAddonsAzureCniNetworkmonitorYaml, map[string]*bintree{}},
+			"azure-network-policy.yaml":             {k8sAddonsAzureNetworkPolicyYaml, map[string]*bintree{}},
+			"azure-policy-deployment.yaml":          {k8sAddonsAzurePolicyDeploymentYaml, map[string]*bintree{}},
+			"azuredisk-csi-driver-deployment.yaml":  {k8sAddonsAzurediskCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"azurefile-csi-driver-deployment.yaml":  {k8sAddonsAzurefileCsiDriverDeploymentYaml, map[string]*bintree{}},
+			"blobfuse-flexvolume.yaml":              {k8sAddonsBlobfuseFlexvolumeYaml, map[string]*bintree{}},
+			"calico.yaml":                           {k8sAddonsCalicoYaml, map[string]*bintree{}},
+			"cilium.yaml":                           {k8sAddonsCiliumYaml, map[string]*bintree{}},
+			"cloud-node-manager.yaml":               {k8sAddonsCloudNodeManagerYaml, map[string]*bintree{}},
+			"cluster-autoscaler.yaml":               {k8sAddonsClusterAutoscalerYaml, map[string]*bintree{}},
+			"container-monitoring.yaml":             {k8sAddonsContainerMonitoringYaml, map[string]*bintree{}},
+			"coredns.yaml":                          {k8sAddonsCorednsYaml, map[string]*bintree{}},
+			"flannel.yaml":                          {k8sAddonsFlannelYaml, map[string]*bintree{}},
+			"ip-masq-agent.yaml":                    {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
+			"keyvault-flexvolume.yaml":              {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
+			"kube-dns.yaml":                         {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
+			"kube-proxy.yaml":                       {k8sAddonsKubeProxyYaml, map[string]*bintree{}},
+			"kube-rescheduler.yaml":                 {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
+			"kubernetes-dashboard.yaml":             {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
+			"metrics-server.yaml":                   {k8sAddonsMetricsServerYaml, map[string]*bintree{}},
+			"node-problem-detector.yaml":            {k8sAddonsNodeProblemDetectorYaml, map[string]*bintree{}},
+			"nvidia-device-plugin.yaml":             {k8sAddonsNvidiaDevicePluginYaml, map[string]*bintree{}},
+			"pod-security-policy.yaml":              {k8sAddonsPodSecurityPolicyYaml, map[string]*bintree{}},
+			"scheduled-maintenance-deployment.yaml": {k8sAddonsScheduledMaintenanceDeploymentYaml, map[string]*bintree{}},
+			"secrets-store-csi-driver.yaml":         {k8sAddonsSecretsStoreCsiDriverYaml, map[string]*bintree{}},
+			"smb-flexvolume.yaml":                   {k8sAddonsSmbFlexvolumeYaml, map[string]*bintree{}},
+			"tiller.yaml":                           {k8sAddonsTillerYaml, map[string]*bintree{}},
 		}},
 		"armparameters.t": {k8sArmparametersT, map[string]*bintree{}},
 		"cloud-init": {nil, map[string]*bintree{
