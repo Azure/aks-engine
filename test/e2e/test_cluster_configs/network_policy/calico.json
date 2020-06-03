@@ -9,7 +9,16 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "calico",
-					"clusterSubnet": "10.239.0.0/16"
+					"clusterSubnet": "10.239.0.0/16",
+					"addons": [
+						{
+							"name": "calico",
+							"enabled": true,
+							"config": {
+								"logSeverityScreen": "error"
+							}
+						}
+					]
 				}
 			},
 			"masterProfile": {

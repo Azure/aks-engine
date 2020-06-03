@@ -123,6 +123,7 @@ $ aks-engine get-versions
 | [audit-policy](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-policy)                            | true                                                                                | 0    | defines rules about what events should be recorded and what data they should include                                                                                                                                                                         |
 | azure-cloud-provider                            | true                                                                                | 0    | Delivers required ClusterRole, ClusterRoleBinding, and StorageClass resources required for running the Azure cloudprovider runtime. May not be disabled.                                                                                                                                                                         |
 | aad                            | true if adminGroupID is specified in the aadProfile configuration                                                                                | 0     | ClusterRoleBinding specification that adds an admin group matching the adminGroupID                                                                                                                                                                   |
+| [calico](https://docs.projectcalico.org/archive/v3.8/introduction/)                            | true if networkPolicy is "calico";                                                                                 | 6     | A NetworkPolicy implementation by the Calico project (currently supports v3.8) |
 | [cilium](https://docs.cilium.io/en/v1.4/kubernetes/policy/#ciliumnetworkpolicy)                            | true if networkPolicy is "cilium"; currently validated against Kubernetes v1.13, v1.14, and v1.15                                                                                | 0     | A NetworkPolicy CRD implementation by the Cilium project (currently supports v1.4)                                                                                                                                                                  |
 | [flannel](https://coreos.com/flannel/docs/0.8.0/index.html)                            | false                                                                                | 0     | An addon that delivers flannel: a virtual network that gives a subnet to each host for use with container runtimes. If `networkPlugin` is set to `"flannel"` this addon will be enabled automatically. Not compatible with any other `networkPlugin` or `networkPolicy`.                                                                                                                                                                 |
 | [csi-secrets-store](../../examples/addons/csi-secrets-store/README.md)                                | true (for 1.16+ clusters)                                                                                | as many as linux agent nodes    | Integrates secrets stores (Azure keyvault) via a [Container Storage Interface (CSI)](https://kubernetes-csi.github.io/docs/) volume.                                                                                                                                                                    |
@@ -267,7 +268,29 @@ The `coredns` addon includes integration with the `cluster-proportional-autoscal
 }
 ```
 
-The above example configuration would ship a coredns configuration that has at least 3 pod replicas at all times, and then scales out to 4 when the 97th node, or the 1537th core (whichever comes frirst) is observed running in the cluster (and so on and so on).
+#### coredns
+
+The `calico` addon includes configurable verbosity via the `logSeverityScreen` configuration property. The default is "info". To override that default, (e.g., to "error"), see this example:
+
+```
+...
+"kubernetesConfig": {
+    "addons": [
+        ...
+        {
+          "name": "calico",
+          "enabled": true,
+          "config": {
+            "logSeverityScreen": "error"
+          }
+        }
+        ...
+    ]
+}
+...
+```
+
+Available options for `logSeverityScreen` are documented [here](https://docs.projectcalico.org/reference/resources/felixconfig).
 
 #### components
 

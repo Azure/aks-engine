@@ -6,7 +6,16 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "calico",
-					"networkPlugin": "azure"
+					"networkPlugin": "azure",
+					"addons": [
+						{
+							"name": "calico",
+							"enabled": true,
+							"config": {
+								"logSeverityScreen": "error"
+							}
+						}
+					]
 				}
 			},
 			"masterProfile": {

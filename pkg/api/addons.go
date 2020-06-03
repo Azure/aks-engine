@@ -350,6 +350,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.CalicoAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
+		Config: map[string]string{
+			"logSeverityScreen": "info",
+		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CalicoTyphaComponentName,
