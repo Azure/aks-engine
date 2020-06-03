@@ -33,16 +33,12 @@
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
 // ../../parts/k8s/addons/1.15/calico.yaml
-// ../../parts/k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml
-// ../../parts/k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
@@ -67,9 +63,9 @@
 // ../../parts/k8s/addons/ip-masq-agent.yaml
 // ../../parts/k8s/addons/keyvault-flexvolume.yaml
 // ../../parts/k8s/addons/kube-dns.yaml
+// ../../parts/k8s/addons/kube-proxy.yaml
 // ../../parts/k8s/addons/kube-rescheduler.yaml
 // ../../parts/k8s/addons/kubernetes-dashboard.yaml
-// ../../parts/k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml
 // ../../parts/k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml
 // ../../parts/k8s/addons/metrics-server.yaml
@@ -7188,142 +7184,6 @@ func k8sAddons115CalicoYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
-apiVersion: v1
-kind: ConfigMap
-data:
-  config.yaml: |
-    apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-    clientConnection:
-      kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
-    mode: "{{ContainerConfig "proxy-mode"}}"
-    featureGates:
-      {{ContainerConfig "featureGates"}}
-metadata:
-  name: kube-proxy-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  selector:
-    matchLabels:
-      component: kube-proxy
-      tier: node
-      k8s-app: kube-proxy
-  template:
-    metadata:
-      labels:
-        component: kube-proxy
-        tier: node
-        k8s-app: kube-proxy
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      containers:
-      - command:
-        - /hyperkube
-        - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
-        image: {{ContainerImage "kube-proxy"}}
-        imagePullPolicy: IfNotPresent
-        name: kube-proxy
-        resources:
-          requests:
-            cpu: 100m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ssl-certs-host
-          readOnly: true
-        - mountPath: /etc/kubernetes
-          name: etc-kubernetes
-          readOnly: true
-        - mountPath: /var/lib/kubelet/kubeconfig
-          name: kubeconfig
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: iptableslock
-        - mountPath: /lib/modules/
-          name: kernelmodules
-          readOnly: true
-        - mountPath: /var/lib/kube-proxy/config.yaml
-          subPath: config.yaml
-          name: kube-proxy-config-volume
-          readOnly: true
-      hostNetwork: true
-      volumes:
-      - hostPath:
-          path: /usr/share/ca-certificates
-        name: ssl-certs-host
-      - hostPath:
-          path: /var/lib/kubelet/kubeconfig
-        name: kubeconfig
-      - hostPath:
-          path: /etc/kubernetes
-        name: etc-kubernetes
-      - hostPath:
-          path: /run/xtables.lock
-        name: iptableslock
-      - hostPath:
-          path: /lib/modules/
-        name: kernelmodules
-      - configMap:
-          name: kube-proxy-config
-        name: kube-proxy-config-volume
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
-}
-
-func k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -7498,142 +7358,6 @@ func k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
-apiVersion: v1
-kind: ConfigMap
-data:
-  config.yaml: |
-    apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-    clientConnection:
-      kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
-    mode: "{{ContainerConfig "proxy-mode"}}"
-    featureGates:
-      {{ContainerConfig "featureGates"}}
-metadata:
-  name: kube-proxy-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  selector:
-    matchLabels:
-      component: kube-proxy
-      tier: node
-      k8s-app: kube-proxy
-  template:
-    metadata:
-      labels:
-        component: kube-proxy
-        tier: node
-        k8s-app: kube-proxy
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      containers:
-      - command:
-        - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
-        image: {{ContainerImage "kube-proxy"}}
-        imagePullPolicy: IfNotPresent
-        name: kube-proxy
-        resources:
-          requests:
-            cpu: 100m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ssl-certs-host
-          readOnly: true
-        - mountPath: /etc/kubernetes
-          name: etc-kubernetes
-          readOnly: true
-        - mountPath: /var/lib/kubelet/kubeconfig
-          name: kubeconfig
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: iptableslock
-        - mountPath: /lib/modules/
-          name: kernelmodules
-          readOnly: true
-        - mountPath: /var/lib/kube-proxy/config.yaml
-          subPath: config.yaml
-          name: kube-proxy-config-volume
-          readOnly: true
-      hostNetwork: true
-      volumes:
-      - hostPath:
-          path: /usr/share/ca-certificates
-        name: ssl-certs-host
-      - hostPath:
-          path: /var/lib/kubelet/kubeconfig
-        name: kubeconfig
-      - hostPath:
-          path: /etc/kubernetes
-        name: etc-kubernetes
-      - hostPath:
-          path: /run/xtables.lock
-        name: iptableslock
-      - hostPath:
-          path: /lib/modules/
-        name: kernelmodules
-      - configMap:
-          name: kube-proxy-config
-        name: kube-proxy-config-volume
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
-}
-
-func k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -7818,151 +7542,6 @@ func k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	return a, nil
 }
 
-var _k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
-apiVersion: v1
-kind: ConfigMap
-data:
-  config.yaml: |
-    apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-    clientConnection:
-      kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
-    mode: "{{ContainerConfig "proxy-mode"}}"
-    {{- if ContainerConfig "bind-address"}}
-    bindAddress: "{{ContainerConfig "bind-address"}}"
-    {{end}}
-    {{- if ContainerConfig "healthz-bind-address"}}
-    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
-    {{end}}
-    {{- if ContainerConfig "metrics-bind-address"}}
-    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
-    {{end}}
-    featureGates:
-      {{ContainerConfig "featureGates"}}
-metadata:
-  name: kube-proxy-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  selector:
-    matchLabels:
-      component: kube-proxy
-      tier: node
-      k8s-app: kube-proxy
-  template:
-    metadata:
-      labels:
-        component: kube-proxy
-        tier: node
-        k8s-app: kube-proxy
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      containers:
-      - command:
-        - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
-        image: {{ContainerImage "kube-proxy"}}
-        imagePullPolicy: IfNotPresent
-        name: kube-proxy
-        resources:
-          requests:
-            cpu: 100m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ssl-certs-host
-          readOnly: true
-        - mountPath: /etc/kubernetes
-          name: etc-kubernetes
-          readOnly: true
-        - mountPath: /var/lib/kubelet/kubeconfig
-          name: kubeconfig
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: iptableslock
-        - mountPath: /lib/modules/
-          name: kernelmodules
-          readOnly: true
-        - mountPath: /var/lib/kube-proxy/config.yaml
-          subPath: config.yaml
-          name: kube-proxy-config-volume
-          readOnly: true
-      hostNetwork: true
-      volumes:
-      - hostPath:
-          path: /usr/share/ca-certificates
-        name: ssl-certs-host
-      - hostPath:
-          path: /var/lib/kubelet/kubeconfig
-        name: kubeconfig
-      - hostPath:
-          path: /etc/kubernetes
-        name: etc-kubernetes
-      - hostPath:
-          path: /run/xtables.lock
-        name: iptableslock
-      - hostPath:
-          path: /lib/modules/
-        name: kernelmodules
-      - configMap:
-          name: kube-proxy-config
-        name: kube-proxy-config-volume
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
-}
-
-func k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml = []byte(`apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -8139,151 +7718,6 @@ func k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`---
-apiVersion: v1
-kind: ConfigMap
-data:
-  config.yaml: |
-    apiVersion: kubeproxy.config.k8s.io/v1alpha1
-    kind: KubeProxyConfiguration
-    clientConnection:
-      kubeconfig: /var/lib/kubelet/kubeconfig
-    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
-    mode: "{{ContainerConfig "proxy-mode"}}"
-    {{- if ContainerConfig "bind-address"}}
-    bindAddress: "{{ContainerConfig "bind-address"}}"
-    {{end}}
-    {{- if ContainerConfig "healthz-bind-address"}}
-    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
-    {{end}}
-    {{- if ContainerConfig "metrics-bind-address"}}
-    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
-    {{end}}
-    featureGates:
-      {{ContainerConfig "featureGates"}}
-metadata:
-  name: kube-proxy-config
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  selector:
-    matchLabels:
-      component: kube-proxy
-      tier: node
-      k8s-app: kube-proxy
-  template:
-    metadata:
-      labels:
-        component: kube-proxy
-        tier: node
-        k8s-app: kube-proxy
-      annotations:
-        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      containers:
-      - command:
-        - kube-proxy
-        - --config=/var/lib/kube-proxy/config.yaml
-        image: {{ContainerImage "kube-proxy"}}
-        imagePullPolicy: IfNotPresent
-        name: kube-proxy
-        resources:
-          requests:
-            cpu: 100m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ssl-certs-host
-          readOnly: true
-        - mountPath: /etc/kubernetes
-          name: etc-kubernetes
-          readOnly: true
-        - mountPath: /var/lib/kubelet/kubeconfig
-          name: kubeconfig
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: iptableslock
-        - mountPath: /lib/modules/
-          name: kernelmodules
-          readOnly: true
-        - mountPath: /var/lib/kube-proxy/config.yaml
-          subPath: config.yaml
-          name: kube-proxy-config-volume
-          readOnly: true
-      hostNetwork: true
-      volumes:
-      - hostPath:
-          path: /usr/share/ca-certificates
-        name: ssl-certs-host
-      - hostPath:
-          path: /var/lib/kubelet/kubeconfig
-        name: kubeconfig
-      - hostPath:
-          path: /etc/kubernetes
-        name: etc-kubernetes
-      - hostPath:
-          path: /run/xtables.lock
-        name: iptableslock
-      - hostPath:
-          path: /lib/modules/
-        name: kernelmodules
-      - configMap:
-          name: kube-proxy-config
-        name: kube-proxy-config-volume
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
-}
-
-func k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -16927,6 +16361,172 @@ func k8sAddonsKubeDnsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _k8sAddonsKubeProxyYaml = []byte(`{{if IsKubernetesVersionGe "1.16.0" -}}
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.yaml: |
+    apiVersion: kubeproxy.config.k8s.io/v1alpha1
+    kind: KubeProxyConfiguration
+    clientConnection:
+      kubeconfig: /var/lib/kubelet/kubeconfig
+    clusterCIDR: "{{ContainerConfig "cluster-cidr"}}"
+    mode: "{{ContainerConfig "proxy-mode"}}"
+  {{- if IsKubernetesVersionGe "1.18.0"}}
+    {{- if ContainerConfig "bind-address"}}
+    bindAddress: "{{ContainerConfig "bind-address"}}"
+    {{- end}}
+    {{- if ContainerConfig "healthz-bind-address"}}
+    healthzBindAddress: "{{ContainerConfig "healthz-bind-address"}}"
+    {{- end}}
+    {{- if ContainerConfig "metrics-bind-address"}}
+    metricsBindAddress: "{{ContainerConfig "metrics-bind-address"}}"
+    {{- end}}
+  {{- end}}
+    featureGates:
+      {{ContainerConfig "featureGates"}}
+metadata:
+  name: kube-proxy-config
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+    k8s-app: kube-proxy
+---
+{{- end}}
+apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
+kind: DaemonSet
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+    kubernetes.io/cluster-service: "true"
+    component: kube-proxy
+    tier: node
+    k8s-app: kube-proxy
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: kube-proxy
+{{- if IsKubernetesVersionGe "1.16.0"}}
+      component: kube-proxy
+      tier: node
+{{- end}}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        component: kube-proxy
+        tier: node
+        k8s-app: kube-proxy
+      annotations:
+{{- if IsKubernetesVersionGe "1.17.0"}}
+        cluster-autoscaler.kubernetes.io/daemonset-pod: "true"
+{{- end}}
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+      - operator: "Exists"
+        effect: NoExecute
+      - operator: "Exists"
+        effect: NoSchedule
+      - key: CriticalAddonsOnly
+        operator: Exists
+      containers:
+      - command:
+{{- if not (IsKubernetesVersionGe "1.17.0")}}
+        - /hyperkube
+{{- end}}
+        - kube-proxy
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
+        - --kubeconfig=/var/lib/kubelet/kubeconfig
+        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
+        - --feature-gates=ExperimentalCriticalPodAnnotation=true
+        - --proxy-mode={{ContainerConfig "proxy-mode"}}
+{{else}}
+        - --config=/var/lib/kube-proxy/config.yaml
+{{- end}}
+        image: {{ContainerImage "kube-proxy"}}
+        imagePullPolicy: IfNotPresent
+        name: kube-proxy
+        resources:
+          requests:
+            cpu: 100m
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/ssl/certs
+          name: ssl-certs-host
+          readOnly: true
+        - mountPath: /etc/kubernetes
+          name: etc-kubernetes
+          readOnly: true
+        - mountPath: /var/lib/kubelet/kubeconfig
+          name: kubeconfig
+          readOnly: true
+        - mountPath: /run/xtables.lock
+          name: iptableslock
+        - mountPath: /lib/modules/
+          name: kernelmodules
+          readOnly: true
+{{- if IsKubernetesVersionGe "1.16.0"}}
+        - mountPath: /var/lib/kube-proxy/config.yaml
+          subPath: config.yaml
+          name: kube-proxy-config-volume
+          readOnly: true
+{{- end}}
+      hostNetwork: true
+      volumes:
+      - hostPath:
+          path: /usr/share/ca-certificates
+        name: ssl-certs-host
+      - hostPath:
+          path: /var/lib/kubelet/kubeconfig
+        name: kubeconfig
+      - hostPath:
+          path: /etc/kubernetes
+        name: etc-kubernetes
+      - hostPath:
+          path: /run/xtables.lock
+        name: iptableslock
+      - hostPath:
+          path: /lib/modules/
+        name: kernelmodules
+{{- if IsKubernetesVersionGe "1.16.0"}}
+      - configMap:
+          name: kube-proxy-config
+        name: kube-proxy-config-volume
+{{- end}}
+      nodeSelector:
+        kubernetes.io/os: linux
+`)
+
+func k8sAddonsKubeProxyYamlBytes() ([]byte, error) {
+	return _k8sAddonsKubeProxyYaml, nil
+}
+
+func k8sAddonsKubeProxyYaml() (*asset, error) {
+	bytes, err := k8sAddonsKubeProxyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/addons/kube-proxy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _k8sAddonsKubeReschedulerYaml = []byte(`apiVersion: {{if IsKubernetesVersionGe "1.16.0"}}apps/v1{{else}}extensions/v1beta1{{end}}
 kind: Deployment
 metadata:
@@ -17319,113 +16919,6 @@ func k8sAddonsKubernetesDashboardYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "k8s/addons/kubernetes-dashboard.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml = []byte(`apiVersion: extensions/v1beta1
-kind: DaemonSet
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: Reconcile
-    kubernetes.io/cluster-service: "true"
-    component: kube-proxy
-    tier: node
-    k8s-app: kube-proxy
-  name: kube-proxy
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      k8s-app: kube-proxy
-  updateStrategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 50%
-  template:
-    metadata:
-      labels:
-        component: kube-proxy
-        tier: node
-        k8s-app: kube-proxy
-      annotations:
-        scheduler.alpha.kubernetes.io/critical-pod: ''
-    spec:
-      priorityClassName: system-node-critical
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Equal
-        value: "true"
-        effect: NoSchedule
-      - operator: "Exists"
-        effect: NoExecute
-      - operator: "Exists"
-        effect: NoSchedule
-      - key: CriticalAddonsOnly
-        operator: Exists
-      containers:
-      - command:
-        - /hyperkube
-        - kube-proxy
-        - --kubeconfig=/var/lib/kubelet/kubeconfig
-        - --cluster-cidr={{ContainerConfig "cluster-cidr"}}
-        - --feature-gates=ExperimentalCriticalPodAnnotation=true
-        - --proxy-mode={{ContainerConfig "proxy-mode"}}
-        image: {{ContainerImage "kube-proxy"}}
-        imagePullPolicy: IfNotPresent
-        name: kube-proxy
-        resources:
-          requests:
-            cpu: 100m
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ssl-certs-host
-          readOnly: true
-        - mountPath: /etc/kubernetes
-          name: etc-kubernetes
-          readOnly: true
-        - mountPath: /var/lib/kubelet/kubeconfig
-          name: kubeconfig
-          readOnly: true
-        - mountPath: /run/xtables.lock
-          name: iptableslock
-        - mountPath: /lib/modules/
-          name: kernelmodules
-          readOnly: true
-      hostNetwork: true
-      volumes:
-      - hostPath:
-          path: /usr/share/ca-certificates
-        name: ssl-certs-host
-      - hostPath:
-          path: /var/lib/kubelet/kubeconfig
-        name: kubeconfig
-      - hostPath:
-          path: /etc/kubernetes
-        name: etc-kubernetes
-      - hostPath:
-          path: /run/xtables.lock
-        name: iptableslock
-      - hostPath:
-          path: /lib/modules/
-        name: kernelmodules
-      nodeSelector:
-        kubernetes.io/os: linux
-`)
-
-func k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYamlBytes() ([]byte, error) {
-	return _k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, nil
-}
-
-func k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml() (*asset, error) {
-	bytes, err := k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -30101,49 +29594,45 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"agentoutputs.t":                                                   agentoutputsT,
-	"agentparams.t":                                                    agentparamsT,
-	"dcos/bstrap/bootstrapcustomdata.yml":                              dcosBstrapBootstrapcustomdataYml,
-	"dcos/bstrap/bootstrapparams.t":                                    dcosBstrapBootstrapparamsT,
-	"dcos/bstrap/bootstrapprovision.sh":                                dcosBstrapBootstrapprovisionSh,
-	"dcos/bstrap/bootstrapresources.t":                                 dcosBstrapBootstrapresourcesT,
-	"dcos/bstrap/bootstrapvars.t":                                      dcosBstrapBootstrapvarsT,
-	"dcos/bstrap/dcos1.11.0.customdata.t":                              dcosBstrapDcos1110CustomdataT,
-	"dcos/bstrap/dcos1.11.2.customdata.t":                              dcosBstrapDcos1112CustomdataT,
-	"dcos/bstrap/dcosbase.t":                                           dcosBstrapDcosbaseT,
-	"dcos/bstrap/dcosmasterresources.t":                                dcosBstrapDcosmasterresourcesT,
-	"dcos/bstrap/dcosmastervars.t":                                     dcosBstrapDcosmastervarsT,
-	"dcos/bstrap/dcosprovision.sh":                                     dcosBstrapDcosprovisionSh,
-	"dcos/dcosWindowsAgentResourcesVmas.t":                             dcosDcoswindowsagentresourcesvmasT,
-	"dcos/dcosWindowsAgentResourcesVmss.t":                             dcosDcoswindowsagentresourcesvmssT,
-	"dcos/dcosWindowsProvision.ps1":                                    dcosDcoswindowsprovisionPs1,
-	"dcos/dcosagentresourcesvmas.t":                                    dcosDcosagentresourcesvmasT,
-	"dcos/dcosagentresourcesvmss.t":                                    dcosDcosagentresourcesvmssT,
-	"dcos/dcosagentvars.t":                                             dcosDcosagentvarsT,
-	"dcos/dcosbase.t":                                                  dcosDcosbaseT,
-	"dcos/dcoscustomdata110.t":                                         dcosDcoscustomdata110T,
-	"dcos/dcoscustomdata184.t":                                         dcosDcoscustomdata184T,
-	"dcos/dcoscustomdata187.t":                                         dcosDcoscustomdata187T,
-	"dcos/dcoscustomdata188.t":                                         dcosDcoscustomdata188T,
-	"dcos/dcoscustomdata190.t":                                         dcosDcoscustomdata190T,
-	"dcos/dcoscustomdata198.t":                                         dcosDcoscustomdata198T,
-	"dcos/dcosmasterresources.t":                                       dcosDcosmasterresourcesT,
-	"dcos/dcosmastervars.t":                                            dcosDcosmastervarsT,
-	"dcos/dcosparams.t":                                                dcosDcosparamsT,
-	"dcos/dcosprovision.sh":                                            dcosDcosprovisionSh,
-	"dcos/dcosprovisionsource.sh":                                      dcosDcosprovisionsourceSh,
-	"iaasoutputs.t":                                                    iaasoutputsT,
-	"k8s/addons/1.15/calico.yaml":                                      k8sAddons115CalicoYaml,
-	"k8s/addons/1.16/kubernetesmasteraddons-kube-proxy-daemonset.yaml": k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml,
+	"agentoutputs.t":                       agentoutputsT,
+	"agentparams.t":                        agentparamsT,
+	"dcos/bstrap/bootstrapcustomdata.yml":  dcosBstrapBootstrapcustomdataYml,
+	"dcos/bstrap/bootstrapparams.t":        dcosBstrapBootstrapparamsT,
+	"dcos/bstrap/bootstrapprovision.sh":    dcosBstrapBootstrapprovisionSh,
+	"dcos/bstrap/bootstrapresources.t":     dcosBstrapBootstrapresourcesT,
+	"dcos/bstrap/bootstrapvars.t":          dcosBstrapBootstrapvarsT,
+	"dcos/bstrap/dcos1.11.0.customdata.t":  dcosBstrapDcos1110CustomdataT,
+	"dcos/bstrap/dcos1.11.2.customdata.t":  dcosBstrapDcos1112CustomdataT,
+	"dcos/bstrap/dcosbase.t":               dcosBstrapDcosbaseT,
+	"dcos/bstrap/dcosmasterresources.t":    dcosBstrapDcosmasterresourcesT,
+	"dcos/bstrap/dcosmastervars.t":         dcosBstrapDcosmastervarsT,
+	"dcos/bstrap/dcosprovision.sh":         dcosBstrapDcosprovisionSh,
+	"dcos/dcosWindowsAgentResourcesVmas.t": dcosDcoswindowsagentresourcesvmasT,
+	"dcos/dcosWindowsAgentResourcesVmss.t": dcosDcoswindowsagentresourcesvmssT,
+	"dcos/dcosWindowsProvision.ps1":        dcosDcoswindowsprovisionPs1,
+	"dcos/dcosagentresourcesvmas.t":        dcosDcosagentresourcesvmasT,
+	"dcos/dcosagentresourcesvmss.t":        dcosDcosagentresourcesvmssT,
+	"dcos/dcosagentvars.t":                 dcosDcosagentvarsT,
+	"dcos/dcosbase.t":                      dcosDcosbaseT,
+	"dcos/dcoscustomdata110.t":             dcosDcoscustomdata110T,
+	"dcos/dcoscustomdata184.t":             dcosDcoscustomdata184T,
+	"dcos/dcoscustomdata187.t":             dcosDcoscustomdata187T,
+	"dcos/dcoscustomdata188.t":             dcosDcoscustomdata188T,
+	"dcos/dcoscustomdata190.t":             dcosDcoscustomdata190T,
+	"dcos/dcoscustomdata198.t":             dcosDcoscustomdata198T,
+	"dcos/dcosmasterresources.t":           dcosDcosmasterresourcesT,
+	"dcos/dcosmastervars.t":                dcosDcosmastervarsT,
+	"dcos/dcosparams.t":                    dcosDcosparamsT,
+	"dcos/dcosprovision.sh":                dcosDcosprovisionSh,
+	"dcos/dcosprovisionsource.sh":          dcosDcosprovisionsourceSh,
+	"iaasoutputs.t":                        iaasoutputsT,
+	"k8s/addons/1.15/calico.yaml":          k8sAddons115CalicoYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.16/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.17/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.17/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.18/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.18/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml,
-	"k8s/addons/1.19/kubernetesmasteraddons-kube-proxy-daemonset.yaml":     k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-smb-flexvolume-installer.yaml": k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/1.19/kubernetesmasteraddons-tiller-deployment.yaml":        k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                         k8sAddonsAadDefaultAdminGroupRbacYaml,
@@ -30168,9 +29657,9 @@ var _bindata = map[string]func() (*asset, error){
 	"k8s/addons/ip-masq-agent.yaml":                                        k8sAddonsIpMasqAgentYaml,
 	"k8s/addons/keyvault-flexvolume.yaml":                                  k8sAddonsKeyvaultFlexvolumeYaml,
 	"k8s/addons/kube-dns.yaml":                                             k8sAddonsKubeDnsYaml,
+	"k8s/addons/kube-proxy.yaml":                                           k8sAddonsKubeProxyYaml,
 	"k8s/addons/kube-rescheduler.yaml":                                     k8sAddonsKubeReschedulerYaml,
 	"k8s/addons/kubernetes-dashboard.yaml":                                 k8sAddonsKubernetesDashboardYaml,
-	"k8s/addons/kubernetesmasteraddons-kube-proxy-daemonset.yaml":          k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml,
 	"k8s/addons/kubernetesmasteraddons-smb-flexvolume-installer.yaml":      k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml,
 	"k8s/addons/kubernetesmasteraddons-tiller-deployment.yaml":             k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml,
 	"k8s/addons/metrics-server.yaml":                                       k8sAddonsMetricsServerYaml,
@@ -30344,22 +29833,18 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
 			}},
 			"1.16": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons116KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons116KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons116KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.17": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons117KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons117KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons117KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.18": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons118KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons118KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons118KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
 			"1.19": {nil, map[string]*bintree{
-				"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddons119KubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddons119KubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 				"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddons119KubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			}},
@@ -30385,9 +29870,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"ip-masq-agent.yaml":                                   {k8sAddonsIpMasqAgentYaml, map[string]*bintree{}},
 			"keyvault-flexvolume.yaml":                             {k8sAddonsKeyvaultFlexvolumeYaml, map[string]*bintree{}},
 			"kube-dns.yaml":                                        {k8sAddonsKubeDnsYaml, map[string]*bintree{}},
+			"kube-proxy.yaml":                                      {k8sAddonsKubeProxyYaml, map[string]*bintree{}},
 			"kube-rescheduler.yaml":                                {k8sAddonsKubeReschedulerYaml, map[string]*bintree{}},
 			"kubernetes-dashboard.yaml":                            {k8sAddonsKubernetesDashboardYaml, map[string]*bintree{}},
-			"kubernetesmasteraddons-kube-proxy-daemonset.yaml":     {k8sAddonsKubernetesmasteraddonsKubeProxyDaemonsetYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-smb-flexvolume-installer.yaml": {k8sAddonsKubernetesmasteraddonsSmbFlexvolumeInstallerYaml, map[string]*bintree{}},
 			"kubernetesmasteraddons-tiller-deployment.yaml":        {k8sAddonsKubernetesmasteraddonsTillerDeploymentYaml, map[string]*bintree{}},
 			"metrics-server.yaml":                                  {k8sAddonsMetricsServerYaml, map[string]*bintree{}},
