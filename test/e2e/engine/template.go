@@ -123,9 +123,9 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 	if prop.HasWindows() {
 		hasWindows = true
 	}
-	var onAzureStack bool
+	var isAzureStackCloud bool
 	if prop.IsAzureStackCloud() {
-		onAzureStack = true
+		isAzureStackCloud = true
 	}
 
 	if config.ClientID != "" && config.ClientSecret != "" {
@@ -240,7 +240,7 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 			prop.OrchestratorProfile.OrchestratorVersion = config.OrchestratorVersion
 			// If ENV similarly has no version opinion, we will rely upon the aks-engine default
 		} else {
-			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows, onAzureStack)
+			prop.OrchestratorProfile.OrchestratorVersion = common.GetDefaultKubernetesVersion(hasWindows, isAzureStackCloud)
 		}
 	}
 

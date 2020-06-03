@@ -8,17 +8,33 @@ import (
 )
 
 func Test_GetAllSupportedKubernetesVersions(t *testing.T) {
-	responseFromGetter := GetAllSupportedKubernetesVersions(true, false, false)
+	isAzureStackCloud := false
+	responseFromGetter := GetAllSupportedKubernetesVersions(true, false, isAzureStackCloud)
 
 	if len(AllKubernetesSupportedVersions) != len(responseFromGetter) {
 		t.Errorf("GetAllSupportedKubernetesVersions(true, false, false) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersions))
 	}
 
-	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, false)
+	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, isAzureStackCloud)
 
 	for _, version := range responseFromGetter {
 		if !AllKubernetesSupportedVersions[version] {
 			t.Errorf("GetAllSupportedKubernetesVersions(false, false, false) returned a version %s that was not in the definitive AllKubernetesSupportedVersions map", version)
+		}
+	}
+
+	isAzureStackCloud = true
+	responseFromGetter = GetAllSupportedKubernetesVersions(true, false, isAzureStackCloud)
+
+	if len(AllKubernetesSupportedVersions) != len(responseFromGetter) {
+		t.Errorf("GetAllSupportedKubernetesVersions(true, false, true) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersions))
+	}
+
+	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, isAzureStackCloud)
+
+	for _, version := range responseFromGetter {
+		if !AllKubernetesSupportedVersions[version] {
+			t.Errorf("GetAllSupportedKubernetesVersions(false, false, true) returned a version %s that was not in the definitive AllKubernetesSupportedVersionsAzureStack map", version)
 		}
 	}
 }
@@ -415,7 +431,7 @@ func Test_GetValidPatchVersion(t *testing.T) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	for version, enabled := range AllKubernetesSupportedVersionsOnAzureStack {
+	for version, enabled := range AllKubernetesSupportedVersionsAzureStack {
 		if enabled {
 			v = GetValidPatchVersion(Kubernetes, version, false, false, true)
 			if v != version {
@@ -434,7 +450,7 @@ func Test_GetValidPatchVersion(t *testing.T) {
 		t.Errorf("Expected empty version for unsupported orchType")
 	}
 
-	for version, enabled := range AllKubernetesWindowsSupportedVersionsOnAzureStack {
+	for version, enabled := range AllKubernetesWindowsSupportedVersionsAzureStack {
 		if enabled {
 			v = GetValidPatchVersion(Kubernetes, version, false, true, true)
 			if v != version {
@@ -640,10 +656,10 @@ func Test_RationalizeReleaseAndVersion(t *testing.T) {
 func Test_IsSupportedKubernetesVersion(t *testing.T) {
 	for _, isUpdate := range []bool{true, false} {
 		for _, hasWindows := range []bool{true, false} {
-			for _, onAzureStack := range []bool{true, false} {
-				for _, version := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows, onAzureStack) {
-					if !IsSupportedKubernetesVersion(version, isUpdate, hasWindows, onAzureStack) {
-						t.Errorf("Expected version %s to be supported when isUpdate is %t and hasWindows is %t and onAzureStack is %t", version, isUpdate, hasWindows, onAzureStack)
+			for _, isAzureStackCloud := range []bool{true, false} {
+				for _, version := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows, isAzureStackCloud) {
+					if !IsSupportedKubernetesVersion(version, isUpdate, hasWindows, isAzureStackCloud) {
+						t.Errorf("Expected version %s to be supported when isUpdate is %t and hasWindows is %t and isAzureStackCloud is %t", version, isUpdate, hasWindows, isAzureStackCloud)
 					}
 				}
 			}
