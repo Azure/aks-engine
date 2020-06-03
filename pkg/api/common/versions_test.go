@@ -26,14 +26,14 @@ func Test_GetAllSupportedKubernetesVersions(t *testing.T) {
 	isAzureStackCloud = true
 	responseFromGetter = GetAllSupportedKubernetesVersions(true, false, isAzureStackCloud)
 
-	if len(AllKubernetesSupportedVersions) != len(responseFromGetter) {
-		t.Errorf("GetAllSupportedKubernetesVersions(true, false, true) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersions))
+	if len(AllKubernetesSupportedVersionsAzureStack) != len(responseFromGetter) {
+		t.Errorf("GetAllSupportedKubernetesVersions(true, false, true) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersionsAzureStack))
 	}
 
 	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, isAzureStackCloud)
 
 	for _, version := range responseFromGetter {
-		if !AllKubernetesSupportedVersions[version] {
+		if !AllKubernetesSupportedVersionsAzureStack[version] {
 			t.Errorf("GetAllSupportedKubernetesVersions(false, false, true) returned a version %s that was not in the definitive AllKubernetesSupportedVersionsAzureStack map", version)
 		}
 	}
