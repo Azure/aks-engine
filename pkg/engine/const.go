@@ -196,8 +196,6 @@ const (
 
 // addons source and destination file references
 const (
-	heapsterAddonSourceFilename                    string = "kubernetesmasteraddons-heapster-deployment.yaml"
-	heapsterAddonDestinationFilename               string = "kube-heapster-deployment.yaml"
 	metricsServerAddonSourceFilename               string = "metrics-server.yaml"
 	metricsServerAddonDestinationFilename          string = "metrics-server.yaml"
 	tillerAddonSourceFilename                      string = "kubernetesmasteraddons-tiller-deployment.yaml"

@@ -4473,7 +4473,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			t.Parallel()
 			test.cs.setAddonsConfig(test.isUpgrade)
 			for _, addonName := range []string{
-				common.HeapsterAddonName,
 				common.TillerAddonName,
 				common.ACIConnectorAddonName,
 				common.ClusterAutoscalerAddonName,
