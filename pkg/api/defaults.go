@@ -649,11 +649,12 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			if profile.VMSSOverProvisioningEnabled == nil {
 				profile.VMSSOverProvisioningEnabled = to.BoolPtr(DefaultVMSSOverProvisioningEnabled && !isUpgrade && !isScale)
 			}
-			if profile.Count > 100 {
-				profile.SinglePlacementGroup = to.BoolPtr(false)
-			}
+
 			if profile.SinglePlacementGroup == nil {
 				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
+				if profile.Count > 100 {
+					profile.SinglePlacementGroup = to.BoolPtr(false)
+				}
 			}
 		}
 		// set default OSType to Linux
