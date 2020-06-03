@@ -242,7 +242,7 @@ func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) (
 				})
 		}
 	} else {
-		if !isVersionSupported(csOrch) {
+		if !isVersionSupported(csOrch, false) {
 			return nil, errors.Errorf("DCOS version %s is not supported", csOrch.OrchestratorVersion)
 		}
 
@@ -285,7 +285,7 @@ func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) 
 		}, nil
 	}
 
-	if !isVersionSupported(csOrch) {
+	if !isVersionSupported(csOrch, false) {
 		return nil, errors.Errorf("Swarm version %s is not supported", csOrch.OrchestratorVersion)
 	}
 	return []*OrchestratorVersionProfile{
@@ -311,7 +311,7 @@ func dockerceInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack boo
 		}, nil
 	}
 
-	if !isVersionSupported(csOrch) {
+	if !isVersionSupported(csOrch, false) {
 		return nil, errors.Errorf("Docker CE version %s is not supported", csOrch.OrchestratorVersion)
 	}
 	return []*OrchestratorVersionProfile{

@@ -61,7 +61,7 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 		}
 		v, e := getKubernetesAvailableUpgradeVersions(deployedVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
 		Expect(e).To(BeNil())
-		orch, e := GetOrchestratorVersionProfile(csOrch, false)
+		orch, e := GetOrchestratorVersionProfile(csOrch, false, false)
 		Expect(e).To(BeNil())
 		Expect(len(orch.Upgrades)).To(Equal(len(v)))
 	}
@@ -71,7 +71,7 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 		OrchestratorType:    Kubernetes,
 		OrchestratorVersion: common.GetMaxVersion(common.GetAllSupportedKubernetesVersions(false, false, false), true),
 	}
-	orch, e := GetOrchestratorVersionProfile(csOrch, false)
+	orch, e := GetOrchestratorVersionProfile(csOrch, false, false)
 	Expect(e).To(BeNil())
 	Expect(len(orch.Upgrades)).To(Equal(0))
 }
@@ -79,7 +79,7 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 func TestGetOrchestratorVersionProfileList(t *testing.T) {
 	RegisterTestingT(t)
 	// kubernetes only
-	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false)
+	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false, "")
 	Expect(e).To(BeNil())
 	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false, false))))
 	for _, v := range list {
@@ -107,7 +107,7 @@ func TestKubernetesInfo(t *testing.T) {
 			OrchestratorVersion: v,
 		}
 
-		_, e := kubernetesInfo(csOrch, false)
+		_, e := kubernetesInfo(csOrch, false, false)
 		Expect(e).NotTo(BeNil())
 	}
 
@@ -130,7 +130,7 @@ func TestDcosInfo(t *testing.T) {
 			OrchestratorVersion: v,
 		}
 
-		_, e := dcosInfo(csOrch, false)
+		_, e := dcosInfo(csOrch, false, false)
 		Expect(e).NotTo(BeNil())
 	}
 
@@ -140,7 +140,7 @@ func TestDcosInfo(t *testing.T) {
 		OrchestratorVersion: common.DCOSDefaultVersion,
 	}
 
-	_, e := dcosInfo(csOrch, false)
+	_, e := dcosInfo(csOrch, false, false)
 	Expect(e).To(BeNil())
 }
 
@@ -157,7 +157,7 @@ func TestSwarmInfo(t *testing.T) {
 			OrchestratorVersion: v,
 		}
 
-		_, e := swarmInfo(csOrch, false)
+		_, e := swarmInfo(csOrch, false, false)
 		Expect(e).NotTo(BeNil())
 	}
 
@@ -167,7 +167,7 @@ func TestSwarmInfo(t *testing.T) {
 		OrchestratorVersion: common.SwarmVersion,
 	}
 
-	_, e := swarmInfo(csOrch, false)
+	_, e := swarmInfo(csOrch, false, false)
 	Expect(e).To(BeNil())
 }
 
@@ -184,7 +184,7 @@ func TestDockerceInfoInfo(t *testing.T) {
 			OrchestratorVersion: v,
 		}
 
-		_, e := dockerceInfo(csOrch, false)
+		_, e := dockerceInfo(csOrch, false, false)
 		Expect(e).NotTo(BeNil())
 	}
 
@@ -194,7 +194,7 @@ func TestDockerceInfoInfo(t *testing.T) {
 		OrchestratorVersion: common.DockerCEVersion,
 	}
 
-	_, e := dockerceInfo(csOrch, false)
+	_, e := dockerceInfo(csOrch, false, false)
 	Expect(e).To(BeNil())
 }
 

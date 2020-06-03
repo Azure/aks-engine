@@ -208,7 +208,7 @@ func (uc *upgradeCmd) loadCluster() error {
 
 func (uc *upgradeCmd) validateTargetVersion() error {
 	// Get available upgrades for container service.
-	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows())
+	orchestratorInfo, err := api.GetOrchestratorVersionProfile(uc.containerService.Properties.OrchestratorProfile, uc.containerService.Properties.HasWindows(), uc.containerService.Properties.IsAzureStackCloud())
 	if err != nil {
 		return errors.Wrap(err, "error getting list of available upgrades")
 	}
