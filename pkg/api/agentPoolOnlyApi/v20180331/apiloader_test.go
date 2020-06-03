@@ -26,8 +26,8 @@ var _ = Describe("v20180331 test suite", func() {
 	locale := gotext.NewLocale(path.Join("../../..", "../../..", "translations"), "en_US")
 	_ = i18n.Initialize(locale)
 	apiloader := &api.Apiloader{}
-	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false)
-	defaultK8sVersion := common.GetDefaultKubernetesVersion(false)
+	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false, false)
+	defaultK8sVersion := common.GetDefaultKubernetesVersion(false, false)
 
 	Context("when networkprofile is nil, enable the addon profile", func() {
 		It("should merge fields properly", func() {

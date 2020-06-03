@@ -13,10 +13,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type orchestratorsFunc func(*OrchestratorProfile, bool) ([]*OrchestratorVersionProfile, error)
+type orchestratorsFunc func(*OrchestratorProfile, bool, bool) ([]*OrchestratorVersionProfile, error)
 
 var funcmap map[string]orchestratorsFunc
 var versionsMap map[string][]string
+var versionsMapAzureStack map[string][]string
 
 func init() {
 	funcmap = map[string]orchestratorsFunc{
@@ -26,7 +27,13 @@ func init() {
 		SwarmMode:  dockerceInfo,
 	}
 	versionsMap = map[string][]string{
-		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false),
+		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, false),
+		DCOS:       common.GetAllSupportedDCOSVersions(),
+		Swarm:      common.GetAllSupportedSwarmVersions(),
+		SwarmMode:  common.GetAllSupportedDockerCEVersions(),
+	}
+	versionsMapAzureStack = map[string][]string{
+		Kubernetes: common.GetAllSupportedKubernetesVersions(true, false, true),
 		DCOS:       common.GetAllSupportedDCOSVersions(),
 		Swarm:      common.GetAllSupportedSwarmVersions(),
 		SwarmMode:  common.GetAllSupportedDockerCEVersions(),
@@ -53,21 +60,31 @@ func validate(orchestrator, version string) (string, error) {
 	return "", nil
 }
 
-func isVersionSupported(csOrch *OrchestratorProfile) bool {
+func isVersionSupported(csOrch *OrchestratorProfile, onAzureStack bool) bool {
 	supported := false
-	for _, version := range versionsMap[csOrch.OrchestratorType] {
+	if onAzureStack {
+		for _, version := range versionsMapAzureStack[csOrch.OrchestratorType] {
 
-		if version == csOrch.OrchestratorVersion {
-			supported = true
-			break
+			if version == csOrch.OrchestratorVersion {
+				supported = true
+				break
+			}
+		}
+	} else {
+		for _, version := range versionsMap[csOrch.OrchestratorType] {
+
+			if version == csOrch.OrchestratorVersion {
+				supported = true
+				break
+			}
 		}
 	}
 	return supported
 }
 
 // GetOrchestratorVersionProfileListVLabs returns vlabs OrchestratorVersionProfileList object per (optionally) specified orchestrator and version
-func GetOrchestratorVersionProfileListVLabs(orchestrator, version string, windows bool) (*vlabs.OrchestratorVersionProfileList, error) {
-	apiOrchs, err := GetOrchestratorVersionProfileList(orchestrator, version, windows)
+func GetOrchestratorVersionProfileListVLabs(orchestrator, version string, windows bool, azureEnv string) (*vlabs.OrchestratorVersionProfileList, error) {
+	apiOrchs, err := GetOrchestratorVersionProfileList(orchestrator, version, windows, azureEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -80,8 +97,9 @@ func GetOrchestratorVersionProfileListVLabs(orchestrator, version string, window
 }
 
 // GetOrchestratorVersionProfileList returns a list of unversioned OrchestratorVersionProfile objects per (optionally) specified orchestrator and version
-func GetOrchestratorVersionProfileList(orchestrator, version string, windows bool) ([]*OrchestratorVersionProfile, error) {
+func GetOrchestratorVersionProfileList(orchestrator, version string, windows bool, azureEnv string) ([]*OrchestratorVersionProfile, error) {
 	var err error
+	onAzureStack := (azureEnv == "AzureStackCloud")
 	if orchestrator, err = validate(orchestrator, version); err != nil {
 		return nil, err
 	}
@@ -90,14 +108,14 @@ func GetOrchestratorVersionProfileList(orchestrator, version string, windows boo
 		// return all orchestrators
 		for _, f := range funcmap {
 			var arr []*OrchestratorVersionProfile
-			arr, err = f(&OrchestratorProfile{}, false)
+			arr, err = f(&OrchestratorProfile{}, false, onAzureStack)
 			if err != nil {
 				return nil, err
 			}
 			orchs = append(orchs, arr...)
 		}
 	} else {
-		if orchs, err = funcmap[orchestrator](&OrchestratorProfile{OrchestratorType: orchestrator, OrchestratorVersion: version}, windows); err != nil {
+		if orchs, err = funcmap[orchestrator](&OrchestratorProfile{OrchestratorType: orchestrator, OrchestratorVersion: version}, windows, onAzureStack); err != nil {
 			return nil, err
 		}
 	}
@@ -105,13 +123,13 @@ func GetOrchestratorVersionProfileList(orchestrator, version string, windows boo
 }
 
 // GetOrchestratorVersionProfile returns orchestrator info for upgradable container service
-func GetOrchestratorVersionProfile(orch *OrchestratorProfile, hasWindows bool) (*OrchestratorVersionProfile, error) {
+func GetOrchestratorVersionProfile(orch *OrchestratorProfile, hasWindows bool, onAzureStack bool) (*OrchestratorVersionProfile, error) {
 	if orch.OrchestratorVersion == "" {
 		return nil, errors.New("Missing Orchestrator Version")
 	}
 	switch orch.OrchestratorType {
 	case Kubernetes, DCOS:
-		arr, err := funcmap[orch.OrchestratorType](orch, hasWindows)
+		arr, err := funcmap[orch.OrchestratorType](orch, hasWindows, onAzureStack)
 		if err != nil {
 			return nil, err
 		}
@@ -125,12 +143,12 @@ func GetOrchestratorVersionProfile(orch *OrchestratorProfile, hasWindows bool) (
 	}
 }
 
-func kubernetesInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
+func kubernetesInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) ([]*OrchestratorVersionProfile, error) {
 	orchs := []*OrchestratorVersionProfile{}
 	if csOrch.OrchestratorVersion == "" {
 		// get info for all supported versions
-		for _, ver := range common.GetAllSupportedKubernetesVersions(false, hasWindows) {
-			upgrades, err := kubernetesUpgrades(&OrchestratorProfile{OrchestratorVersion: ver}, hasWindows)
+		for _, ver := range common.GetAllSupportedKubernetesVersions(false, hasWindows, onAzureStack) {
+			upgrades, err := kubernetesUpgrades(&OrchestratorProfile{OrchestratorVersion: ver}, hasWindows, onAzureStack)
 			if err != nil {
 				return nil, err
 			}
@@ -140,16 +158,16 @@ func kubernetesInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*Orchestrat
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: ver,
 					},
-					Default:  ver == common.GetDefaultKubernetesVersion(hasWindows),
+					Default:  ver == common.GetDefaultKubernetesVersion(hasWindows, onAzureStack),
 					Upgrades: upgrades,
 				})
 		}
 	} else {
-		if !isVersionSupported(csOrch) {
+		if !isVersionSupported(csOrch, onAzureStack) {
 			return nil, errors.Errorf("Kubernetes version %s is not supported", csOrch.OrchestratorVersion)
 		}
 
-		upgrades, err := kubernetesUpgrades(csOrch, hasWindows)
+		upgrades, err := kubernetesUpgrades(csOrch, hasWindows, onAzureStack)
 		if err != nil {
 			return nil, err
 		}
@@ -159,17 +177,17 @@ func kubernetesInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*Orchestrat
 					OrchestratorType:    Kubernetes,
 					OrchestratorVersion: csOrch.OrchestratorVersion,
 				},
-				Default:  csOrch.OrchestratorVersion == common.GetDefaultKubernetesVersion(hasWindows),
+				Default:  csOrch.OrchestratorVersion == common.GetDefaultKubernetesVersion(hasWindows, onAzureStack),
 				Upgrades: upgrades,
 			})
 	}
 	return orchs, nil
 }
 
-func kubernetesUpgrades(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorProfile, error) {
+func kubernetesUpgrades(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) ([]*OrchestratorProfile, error) {
 	ret := []*OrchestratorProfile{}
 
-	upgradeVersions, err := getKubernetesAvailableUpgradeVersions(csOrch.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, hasWindows))
+	upgradeVersions, err := getKubernetesAvailableUpgradeVersions(csOrch.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, hasWindows, onAzureStack))
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +225,7 @@ func getKubernetesAvailableUpgradeVersions(orchestratorVersion string, supported
 
 }
 
-func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
+func dcosInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) ([]*OrchestratorVersionProfile, error) {
 	orchs := []*OrchestratorVersionProfile{}
 	if csOrch.OrchestratorVersion == "" {
 		// get info for all supported versions
@@ -255,7 +273,7 @@ func dcosUpgrades(csOrch *OrchestratorProfile) []*OrchestratorProfile {
 	return ret
 }
 
-func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
+func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) ([]*OrchestratorVersionProfile, error) {
 	if csOrch.OrchestratorVersion == "" {
 		return []*OrchestratorVersionProfile{
 			{
@@ -280,7 +298,7 @@ func swarmInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVer
 	}, nil
 }
 
-func dockerceInfo(csOrch *OrchestratorProfile, hasWindows bool) ([]*OrchestratorVersionProfile, error) {
+func dockerceInfo(csOrch *OrchestratorProfile, hasWindows bool, onAzureStack bool) ([]*OrchestratorVersionProfile, error) {
 
 	if csOrch.OrchestratorVersion == "" {
 		return []*OrchestratorVersionProfile{

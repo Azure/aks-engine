@@ -117,13 +117,13 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false)),
 					KubernetesConfig: &KubernetesConfig{
 						EnableRbac: &falseVal,
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false))),
 		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
@@ -272,7 +272,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorVersion: "1.6.0",
 				},
 			},
-			expectedError: fmt.Sprint("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"Kubernetes\", OrchestratorRelease: \"\", OrchestratorVersion: \"1.6.0\". Please use one of the following versions: ", common.GetAllSupportedKubernetesVersions(false, false)),
+			expectedError: fmt.Sprint("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"Kubernetes\", OrchestratorRelease: \"\", OrchestratorVersion: \"1.6.0\". Please use one of the following versions: ", common.GetAllSupportedKubernetesVersions(false, false, false)),
 		},
 		"kubernetes should not fail on old patch version if update": {
 			properties: &Properties{
@@ -343,7 +343,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 
 func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that should pass across all versions
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false) {
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false, false) {
 		c := KubernetesConfig{}
 		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Errorf("should not error on empty KubernetesConfig: %v, version %s", err, k8sVersion)
@@ -570,7 +570,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to 1.6 and later releases
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false, false) {
 		c := KubernetesConfig{
 			CloudProviderBackoff:   to.BoolPtr(true),
 			CloudProviderRateLimit: to.BoolPtr(true),
@@ -581,7 +581,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to 1.8 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false, false), "1.8.0", true, true) {
 		c := KubernetesConfig{
 			UseCloudControllerManager: to.BoolPtr(true),
 		}
@@ -591,7 +591,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to dualstack with 1.16 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.16.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false, false), "1.16.0", true, true) {
 		c := KubernetesConfig{
 			NetworkPlugin: "kubenet",
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
@@ -690,7 +690,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to single stack IPv6 with 1.18 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false, false), "1.18.0", true, true) {
 		c := KubernetesConfig{
 			NetworkPlugin: "azure",
 		}
@@ -1083,7 +1083,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 	}{
 		{
 			name:       "Valid WindowsProfile",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "replacePassword1234$",
@@ -1092,7 +1092,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No username",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "",
 				AdminPassword: "replacePassword1234$",
@@ -1101,7 +1101,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No password",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "",
@@ -1110,7 +1110,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "CSI proxy enabled",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.18", "", false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.18", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
@@ -1121,7 +1121,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "CSI Proxy unsupported version",
-			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false),
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
@@ -2602,7 +2602,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 }
 
 func TestWindowsVersions(t *testing.T) {
-	for _, version := range common.GetAllSupportedKubernetesVersions(false, true) {
+	for _, version := range common.GetAllSupportedKubernetesVersions(false, true, false) {
 		cs := getK8sDefaultContainerService(true)
 		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
 		if err := cs.Validate(false); err != nil {
@@ -2666,7 +2666,7 @@ func TestWindowsVersions(t *testing.T) {
 }
 
 func TestLinuxVersions(t *testing.T) {
-	for _, version := range common.GetAllSupportedKubernetesVersions(false, false) {
+	for _, version := range common.GetAllSupportedKubernetesVersions(false, false, false) {
 		cs := getK8sDefaultContainerService(false)
 		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
 		if err := cs.Validate(false); err != nil {
