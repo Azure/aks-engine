@@ -349,7 +349,7 @@ func GetK8sComponentsByVersionMap(k *KubernetesConfig) map[string]map[string]str
 		overrides = getVersionOverridesGCR
 	}
 	ret := make(map[string]map[string]string)
-	for _, version := range common.GetAllSupportedKubernetesVersions(true, false) {
+	for _, version := range common.GetAllSupportedKubernetesVersions(true, false, false) {
 		ret[version] = getK8sVersionComponents(version, k.KubernetesImageBaseType, overrides(version))
 	}
 	return ret

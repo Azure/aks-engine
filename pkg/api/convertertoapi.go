@@ -229,7 +229,8 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			vlabscs.OrchestratorRelease,
 			vlabscs.OrchestratorVersion,
 			isUpdate,
-			vp.HasWindows())
+			vp.HasWindows(),
+			vp.IsAzureStackCloud())
 
 	case DCOS:
 		if vlabscs.DcosConfig != nil {
@@ -241,6 +242,7 @@ func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProf
 			vlabscs.OrchestratorRelease,
 			vlabscs.OrchestratorVersion,
 			isUpdate,
+			false,
 			false)
 	}
 

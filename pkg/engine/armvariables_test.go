@@ -17,7 +17,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false)
+var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false, false)
 
 func TestSizeMap(t *testing.T) {
 	sizeMap := getSizeMap()

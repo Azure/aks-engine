@@ -58,8 +58,8 @@ func TestLoadContainerServiceForAgentPoolOnlyCluster(t *testing.T) {
 				Locale: locale,
 			},
 		}
-		k8sVersions := common.GetAllSupportedKubernetesVersions(true, false)
-		defaultK8sVersion := common.GetDefaultKubernetesVersion(false)
+		k8sVersions := common.GetAllSupportedKubernetesVersions(true, false, false)
+		defaultK8sVersion := common.GetDefaultKubernetesVersion(false, false)
 
 		Context("v20180331", func() {
 			It("it should return error if managed cluster body is empty", func() {

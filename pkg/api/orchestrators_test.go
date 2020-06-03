@@ -59,7 +59,7 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 			OrchestratorType:    Kubernetes,
 			OrchestratorVersion: deployedVersion,
 		}
-		v, e := getKubernetesAvailableUpgradeVersions(deployedVersion, common.GetAllSupportedKubernetesVersions(false, false))
+		v, e := getKubernetesAvailableUpgradeVersions(deployedVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
 		Expect(e).To(BeNil())
 		orch, e := GetOrchestratorVersionProfile(csOrch, false)
 		Expect(e).To(BeNil())
@@ -69,7 +69,7 @@ func TestOrchestratorUpgradeInfo(t *testing.T) {
 	// The latest version is not upgradable
 	csOrch := &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
-		OrchestratorVersion: common.GetMaxVersion(common.GetAllSupportedKubernetesVersions(false, false), true),
+		OrchestratorVersion: common.GetMaxVersion(common.GetAllSupportedKubernetesVersions(false, false, false), true),
 	}
 	orch, e := GetOrchestratorVersionProfile(csOrch, false)
 	Expect(e).To(BeNil())
@@ -81,9 +81,9 @@ func TestGetOrchestratorVersionProfileList(t *testing.T) {
 	// kubernetes only
 	list, e := GetOrchestratorVersionProfileList(common.Kubernetes, "", false)
 	Expect(e).To(BeNil())
-	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false))))
+	Expect(len(list)).To(Equal(len(common.GetAllSupportedKubernetesVersions(false, false, false))))
 	for _, v := range list {
-		Expect(common.GetAllSupportedKubernetesVersions(false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
+		Expect(common.GetAllSupportedKubernetesVersions(false, false, false)).Should(ContainElement(v.OrchestratorProfile.OrchestratorVersion))
 	}
 }
 

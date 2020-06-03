@@ -197,6 +197,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				isUpdate,
+				false,
 				false)
 			if version == "" {
 				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
@@ -217,11 +218,20 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				isUpdate,
-				a.HasWindows())
-			if version == "" && a.HasWindows() {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true))
-			} else if version == "" {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false))
+				a.HasWindows(),
+				a.IsAzureStackCloud())
+			if a.IsAzureStackCloud() {
+				if version == "" && a.HasWindows() {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, true))
+				} else if version == "" {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, true))
+				}
+			} else {
+				if version == "" && a.HasWindows() {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, false))
+				} else if version == "" {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
+				}
 			}
 
 			sv, err := semver.Make(version)
@@ -374,9 +384,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				false,
-				a.HasWindows())
+				a.HasWindows(),
+				a.IsAzureStackCloud())
 			if version == "" {
-				patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows())
+				patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
 				// if there isn't a supported patch version for this version fail
 				if patchVersion == "" {
 					if a.HasWindows() {
@@ -978,6 +989,7 @@ func (a *Properties) validateManagedIdentity() error {
 				a.OrchestratorProfile.OrchestratorRelease,
 				a.OrchestratorProfile.OrchestratorVersion,
 				false,
+				false,
 				false)
 			if version == "" {
 				return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
@@ -1113,6 +1125,7 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
 			isUpdate,
+			false,
 			false)
 		if version == "" {
 			return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
@@ -1174,7 +1187,8 @@ func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
 			isUpdate,
-			true)
+			true,
+			false)
 
 		if version == "" {
 			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
