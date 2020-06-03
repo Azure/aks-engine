@@ -66,7 +66,7 @@ Once the input is validated, the template generator is invoked which will conver
     {{range $index, $agent := .AgentPoolProfiles}}
         "{{.Name}}Index": {{$index}},
         {{template "k8s/kubernetesagentvars.t" .}}
-        {{if IsNSeriesSKU .}}
+        {{if IsNSeriesSKU .VMSize}}
           {{if IsNVIDIADevicePluginEnabled}}
           "registerWithGpuTaints": "nvidia.com/gpu=true:NoSchedule",
           {{end}}

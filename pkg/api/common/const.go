@@ -247,3 +247,53 @@ const (
 	// NodeProblemDetectorAddonName is the name of the node problem detector addon
 	NodeProblemDetectorAddonName = "node-problem-detector"
 )
+
+var (
+	// DefaultDockerConfig describes the default configuration of the docker daemon.
+	DefaultDockerConfig = DockerConfig{
+		LiveRestore: true,
+		LogDriver:   "json-file",
+		LogOpts: LogOpts{
+			MaxSize: "50m",
+			MaxFile: "5",
+		},
+	}
+
+	// DefaultContainerdConfig describes the default configuration of the containerd daemon.
+	DefaultContainerdConfig = ContainerdConfig{
+		Version:  2,
+		OomScore: 0,
+		Plugins: Plugins{
+			IoContainerdGrpcV1Cri: IoContainerdGrpcV1Cri{
+				CNI: ContainerdCNIPlugin{},
+				Containerd: ContainerdPlugin{
+					DefaultRuntimeName: "runc",
+					Runtimes: map[string]ContainerdRuntime{
+						"runc": {
+							RuntimeType: "io.containerd.runc.v2",
+						},
+						// note: runc really should not be used for untrusted workloads... should we remove this? This is here because it was here before
+						"untrusted": {
+							RuntimeType: "io.containerd.runc.v2",
+						},
+					},
+				},
+			},
+		},
+	}
+)
+
+// GetDefaultDockerConfig returns the default docker config for processing.
+func GetDefaultDockerConfig() DockerConfig {
+	return DefaultDockerConfig
+}
+
+// GetDefaultContainerdConfig returns the default containerd config for processing.
+func GetDefaultContainerdConfig() ContainerdConfig {
+	return DefaultContainerdConfig
+}
+
+// Known container runtime configuration keys
+const (
+	ContainerDataDirKey = "dataDir"
+)
