@@ -1597,9 +1597,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				for _, n := range nodes {
 					var role string
 					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						role := n.Metadata.Labels["kubernetes.azure.com/role"]
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
 					} else {
-						role := n.Metadata.Labels["kubernetes.io/role"]
+						role = n.Metadata.Labels["kubernetes.io/role"]
 					}
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
@@ -1622,9 +1622,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				for _, n := range nodes {
 					var role string
 					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						role := n.Metadata.Labels["kubernetes.azure.com/role"]
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
 					} else {
-						role := n.Metadata.Labels["kubernetes.io/role"]
+						role = n.Metadata.Labels["kubernetes.io/role"]
 					}
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
