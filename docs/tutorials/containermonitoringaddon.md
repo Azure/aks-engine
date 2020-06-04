@@ -109,6 +109,10 @@ After you enable monitoring of your AKS Engine cluster, you can stop container m
 
 For upgrading the container monitoring addon, you can disable the monitoring addon as described in Disable Monitoring section and use the HELM chart to install and upgrade.
 
+### Container Runtime(s)
+
+Starting with agent version ciprod05262020, chart will support Container Runtime Interface(CRI) compatiable runtimes such as CRI-O and ContainerD etc. in addition to Docker/Moby.
+
 ## Contact
 
 If you have any questions or feedback regarding the container monitoring addon, please reach us out through [this](mailto:askcoin@microsoft.com) email.
