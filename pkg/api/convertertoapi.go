@@ -8,6 +8,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/aks-engine/pkg/helpers"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 )
 
 ///////////////////////////////////////////////////////////
@@ -204,6 +205,9 @@ func convertVLabsWindowsProfile(vlabs *vlabs.WindowsProfile, api *WindowsProfile
 		api.SSHEnabled = vlabs.SSHEnabled
 	}
 	api.EnableAutomaticUpdates = vlabs.EnableAutomaticUpdates
+	if vlabs.EnableAHUB != nil && *vlabs.EnableAHUB {
+		api.EnableAHUB = to.BoolPtr(true)
+	}
 }
 
 func convertVLabsOrchestratorProfile(vp *vlabs.Properties, api *OrchestratorProfile, isUpdate bool) error {
