@@ -317,7 +317,7 @@
           "--etcd-certfile": "/etc/kubernetes/certs/etcdclient.crt",
           "--etcd-keyfile": "/etc/kubernetes/certs/etcdclient.key",
           "--etcd-servers": "https://<etcdEndPointUri>:2379",
-          "--insecure-port": "8080",
+          "--insecure-port": "0",
           "--kubelet-client-certificate": "/etc/kubernetes/certs/client.crt",
           "--kubelet-client-key": "/etc/kubernetes/certs/client.key",
           "--profiling": "false",
