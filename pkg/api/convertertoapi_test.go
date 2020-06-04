@@ -907,6 +907,7 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				EnableAHUB:             to.BoolPtr(true),
 			},
 			expected: WindowsProfile{
 				AdminUsername:          "user",
@@ -919,6 +920,7 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []KeyVaultSecrets{},
+				EnableAHUB:             to.BoolPtr(true),
 			},
 		},
 		{
@@ -946,9 +948,9 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			actual := WindowsProfile{}
 			convertVLabsWindowsProfile(&c.w, &actual)
 

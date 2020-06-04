@@ -918,6 +918,7 @@ https://{keyvaultname}.vault.azure.net:443/secrets/{secretName}/{version}
 | imageReference.gallery        | no       | Name of a Shared Image Gallery.                                                                                                                                                                                                                                 |
 | imageReference.version        | no       | Version of an Image from a Shared Image Gallery.                                                                                                                                                                                                                |
 | sshEnabled                    | no       | If set to `true`, OpenSSH will be installed on windows nodes to allow for ssh remoting. **Only for Windows version 1809/2019 or later**. The same SSH authorized public key(s) will be added from [linuxProfile.ssh.publicKeys](#linuxProfile). Default: `true` |
+| enableAHUB                    | no       | If set to `true`, Windows nodepools was licensed on-premises. If this element is set to `true`, the value cannot be changed to `false`. <br> For more information, see [Azure Hybrid Use Benefit for Windows Server](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-hybrid-use-benefit-licensing?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json) |
 
 #### Windows Images
 

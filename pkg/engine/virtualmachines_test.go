@@ -305,6 +305,21 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 	if diff != "" {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
+
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		SSHEnabled: &trueVar,
+		EnableAHUB: &trueVar,
+	}
+
+	actualVM = createAgentAvailabilitySetVM(cs, profile)
+	licenseType := api.WindowsLicenseTypeServer
+	expectedVM.VirtualMachine.VirtualMachineProperties.LicenseType = &licenseType
+
+	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
 }
 
 func TestCreateVmWithCustomTags(t *testing.T) {

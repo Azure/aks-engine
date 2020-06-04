@@ -8,6 +8,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/vlabs"
 	"github.com/Azure/go-autorest/autorest/azure"
+	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 )
 
@@ -210,6 +211,9 @@ func convertWindowsProfileToVLabs(api *WindowsProfile, vlabsProfile *vlabs.Windo
 		vlabsProfile.SSHEnabled = api.SSHEnabled
 	}
 	vlabsProfile.EnableAutomaticUpdates = api.EnableAutomaticUpdates
+	if api.GetEnableAHUB() {
+		vlabsProfile.EnableAHUB = to.BoolPtr(true)
+	}
 }
 
 func convertOrchestratorProfileToVLabs(api *OrchestratorProfile, o *vlabs.OrchestratorProfile) {
