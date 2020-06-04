@@ -1726,6 +1726,9 @@ func TestDistroDefaults(t *testing.T) {
 		default:
 			cs.Location = "westus2"
 		}
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			LoadBalancerSku: StandardLoadBalancerSku,
+		}
 		cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 			IsScale:    test.isScale,
 			IsUpgrade:  test.isUpgrade,
@@ -1737,6 +1740,9 @@ func TestDistroDefaults(t *testing.T) {
 		for _, agent := range cs.Properties.AgentPoolProfiles {
 			if agent.Distro != test.expectedAgentDistro {
 				t.Fatalf("SetPropertiesDefaults() test case %v did not return right pool Distro configurations %v != %v", test.name, agent.Distro, test.expectedAgentDistro)
+			}
+			if to.Bool(agent.SinglePlacementGroup) != false {
+				t.Fatalf("SetPropertiesDefaults() test case %v did not return right singlePlacementGroup configurations %v != %v", test.name, agent.SinglePlacementGroup, false)
 			}
 		}
 	}
@@ -2270,6 +2276,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 	properties = mockCS.Properties
 	properties.OrchestratorProfile.OrchestratorType = Kubernetes
 	properties.AgentPoolProfiles[0].Count = 4
+	properties.AgentPoolProfiles[0].SinglePlacementGroup = nil
 	properties.AgentPoolProfiles[0].AvailabilityZones = []string{"1", "2"}
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
@@ -2284,7 +2291,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 		t.Fatalf("AgentPoolProfiles[0].HasAvailabilityZones did not have the expected return, got %t, expected %t",
 			properties.AgentPoolProfiles[0].HasAvailabilityZones(), true)
 	}
-	singlePlacementGroup = DefaultSinglePlacementGroup
+	singlePlacementGroup = false
 	if *properties.AgentPoolProfiles[0].SinglePlacementGroup != singlePlacementGroup {
 		t.Fatalf("AgentPoolProfile[0].SinglePlacementGroup default did not have the expected configuration, got %t, expected %t",
 			*properties.AgentPoolProfiles[0].SinglePlacementGroup, singlePlacementGroup)
@@ -2299,7 +2306,7 @@ func TestSetVMSSDefaultsAndZones(t *testing.T) {
 			*properties.OrchestratorProfile.KubernetesConfig.ExcludeMasterFromStandardLB, excludeMaster)
 	}
 
-	properties.AgentPoolProfiles[0].Count = 110
+	properties.AgentPoolProfiles[0].SinglePlacementGroup = nil
 	mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
@@ -4245,6 +4252,10 @@ func TestImageReference(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
+			c.cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+				LoadBalancerSku: BasicLoadBalancerSku,
+			}
+
 			c.cs.SetPropertiesDefaults(PropertiesDefaultsParams{
 				IsUpgrade:  c.isUpgrade,
 				IsScale:    c.isScale,
@@ -4305,6 +4316,9 @@ func TestImageReference(t *testing.T) {
 						t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].ImageRef.Version, profile.ImageRef.Version)
 					}
 				}
+				if to.Bool(profile.SinglePlacementGroup) != true {
+					t.Errorf("expected %v, but got %v", true, to.Bool(profile.SinglePlacementGroup))
+				}
 			}
 		})
 	}
@@ -4325,6 +4339,9 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
 						OrchestratorType: Kubernetes,
+						KubernetesConfig: &KubernetesConfig{
+							LoadBalancerSku: BasicLoadBalancerSku,
+						},
 					},
 					MasterProfile: &MasterProfile{},
 					AgentPoolProfiles: []*AgentPoolProfile{
@@ -4351,6 +4368,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 						OrchestratorType: Kubernetes,
 						KubernetesConfig: &KubernetesConfig{
 							CustomHyperkubeImage: "myimage",
+							LoadBalancerSku:      BasicLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -4376,6 +4394,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 						OrchestratorType: Kubernetes,
 						KubernetesConfig: &KubernetesConfig{
 							CustomHyperkubeImage: "myimage",
+							LoadBalancerSku:      BasicLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{
@@ -4405,6 +4424,7 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 						OrchestratorType: Kubernetes,
 						KubernetesConfig: &KubernetesConfig{
 							CustomHyperkubeImage: "myimage",
+							LoadBalancerSku:      BasicLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -4449,6 +4469,9 @@ func TestCustomHyperkubeDistro(t *testing.T) {
 				if profile.Distro != c.expectedAgentPoolProfiles[i].Distro {
 					t.Errorf("expected %s, but got %s", c.expectedAgentPoolProfiles[i].Distro, profile.Distro)
 				}
+				if to.Bool(profile.SinglePlacementGroup) != true {
+					t.Errorf("expected %v, but got %v", true, to.Bool(profile.SinglePlacementGroup))
+				}
 			}
 		})
 	}
@@ -4470,7 +4493,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginKubenet,
+							NetworkPlugin:   NetworkPluginKubenet,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -4496,7 +4520,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
+							NetworkPlugin:   NetworkPluginAzure,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{},
@@ -4522,7 +4547,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
+							NetworkPlugin:   NetworkPluginAzure,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{
@@ -4552,7 +4578,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginKubenet,
+							NetworkPlugin:   NetworkPluginKubenet,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{
@@ -4582,7 +4609,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginAzure,
+							NetworkPlugin:   NetworkPluginAzure,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{
@@ -4619,7 +4647,8 @@ func TestDefaultIPAddressCount(t *testing.T) {
 						OrchestratorType:    Kubernetes,
 						OrchestratorVersion: "1.14.0",
 						KubernetesConfig: &KubernetesConfig{
-							NetworkPlugin: NetworkPluginKubenet,
+							NetworkPlugin:   NetworkPluginKubenet,
+							LoadBalancerSku: StandardLoadBalancerSku,
 						},
 					},
 					MasterProfile: &MasterProfile{
@@ -4667,6 +4696,9 @@ func TestDefaultIPAddressCount(t *testing.T) {
 			}
 			if c.cs.Properties.AgentPoolProfiles[1].IPAddressCount != c.expectedPool1 {
 				t.Errorf("expected %d, but got %d", c.expectedPool1, c.cs.Properties.AgentPoolProfiles[1].IPAddressCount)
+			}
+			if to.Bool(c.cs.Properties.AgentPoolProfiles[1].SinglePlacementGroup) != false {
+				t.Errorf("expected %v, but got %v", false, to.Bool(c.cs.Properties.AgentPoolProfiles[1].SinglePlacementGroup))
 			}
 		})
 	}

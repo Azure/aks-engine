@@ -344,11 +344,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		}
 
 		if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
-			if a.HasAvailabilityZones() {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
-			} else {
-				a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = DefaultLoadBalancerSku
-			}
+			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = a.GetLoadBalancerDefault()
 		}
 
 		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
@@ -651,7 +647,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			}
 
 			if profile.SinglePlacementGroup == nil {
-				if p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
+				if p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == "" {
+					p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = p.GetLoadBalancerDefault()
+				}
+				if strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
 					profile.SinglePlacementGroup = to.BoolPtr(false)
 				} else {
 					profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
