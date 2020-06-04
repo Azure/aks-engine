@@ -29,6 +29,7 @@ jobs:
     CLEANUP_ON_EXIT: true
     CLEANUP_IF_FAIL: true
     GINKGO_SKIP: ${{ parameters.skipTests }}
+    GINKGO_FOCUS: 'should be able to produce working LoadBalancers'
     STABILITY_ITERATIONS: ${{ parameters.stabilityIterations }}
     RETAIN_SSH: false
     ENABLE_KMS_ENCRYPTION: ${{ parameters.enableKMSEncryption }}
