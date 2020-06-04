@@ -18,6 +18,7 @@ import (
 )
 
 var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false, false)
+var testK8sVersionAzureStack = common.GetSupportedKubernetesVersion("1.12", false, true)
 
 func TestSizeMap(t *testing.T) {
 	sizeMap := getSizeMap()
@@ -743,7 +744,7 @@ func TestK8sVars(t *testing.T) {
 		"networkContributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
 		"nsgID":                              "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 		"nsgName":                            "[concat(variables('masterVMNamePrefix'), 'nsg')]",
-		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersion,
+		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersionAzureStack,
 		"primaryAvailabilitySetName":         "",
 		"primaryScaleSetName":                cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
