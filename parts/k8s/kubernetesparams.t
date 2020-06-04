@@ -222,7 +222,7 @@
       }
     },
     "mobyVersion": {
-      "defaultValue": "3.0.12",
+      "defaultValue": "3.0.13",
       "metadata": {
         "description": "The Azure Moby build version"
       },
@@ -237,7 +237,8 @@
          "3.0.8",
          "3.0.10",
          "3.0.11",
-         "3.0.12"
+         "3.0.12",
+         "3.0.13"
        ],
       "type": "string"
     },
