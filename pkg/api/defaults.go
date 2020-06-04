@@ -651,9 +651,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 			}
 
 			if profile.SinglePlacementGroup == nil {
-				profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
-				if profile.Count > 100 {
+				if p.OrchestratorProfile.KubernetesConfig.LoadBalancerSku == StandardLoadBalancerSku {
 					profile.SinglePlacementGroup = to.BoolPtr(false)
+				} else {
+					profile.SinglePlacementGroup = to.BoolPtr(DefaultSinglePlacementGroup)
 				}
 			}
 		}
