@@ -13,7 +13,7 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
-var defaultTestClusterVer = common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false)
+var defaultTestClusterVer = common.RationalizeReleaseAndVersion(Kubernetes, common.KubernetesDefaultRelease, "", false, false, false)
 
 func TestAPIServerConfigEnableDataEncryptionAtRest(t *testing.T) {
 	// Test EnableDataEncryptionAtRest = true

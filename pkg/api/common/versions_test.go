@@ -8,46 +8,88 @@ import (
 )
 
 func Test_GetAllSupportedKubernetesVersions(t *testing.T) {
-	responseFromGetter := GetAllSupportedKubernetesVersions(true, false)
+	isAzureStackCloud := false
+	responseFromGetter := GetAllSupportedKubernetesVersions(true, false, isAzureStackCloud)
 
 	if len(AllKubernetesSupportedVersions) != len(responseFromGetter) {
-		t.Errorf("GetAllSupportedKubernetesVersions(true, false) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersions))
+		t.Errorf("GetAllSupportedKubernetesVersions(true, false, false) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersions))
 	}
 
-	responseFromGetter = GetAllSupportedKubernetesVersions(false, false)
+	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, isAzureStackCloud)
 
 	for _, version := range responseFromGetter {
 		if !AllKubernetesSupportedVersions[version] {
-			t.Errorf("GetAllSupportedKubernetesVersions(false, false) returned a version %s that was not in the definitive AllKubernetesSupportedVersions map", version)
+			t.Errorf("GetAllSupportedKubernetesVersions(false, false, false) returned a version %s that was not in the definitive AllKubernetesSupportedVersions map", version)
+		}
+	}
+
+	isAzureStackCloud = true
+	responseFromGetter = GetAllSupportedKubernetesVersions(true, false, isAzureStackCloud)
+
+	if len(AllKubernetesSupportedVersionsAzureStack) != len(responseFromGetter) {
+		t.Errorf("GetAllSupportedKubernetesVersions(true, false, true) returned %d items, expected %d", len(responseFromGetter), len(AllKubernetesSupportedVersionsAzureStack))
+	}
+
+	responseFromGetter = GetAllSupportedKubernetesVersions(false, false, isAzureStackCloud)
+
+	for _, version := range responseFromGetter {
+		if !AllKubernetesSupportedVersionsAzureStack[version] {
+			t.Errorf("GetAllSupportedKubernetesVersions(false, false, true) returned a version %s that was not in the definitive AllKubernetesSupportedVersionsAzureStack map", version)
 		}
 	}
 }
 
 func Test_GetSupportedKubernetesVersion(t *testing.T) {
-	versions := GetAllSupportedKubernetesVersions(false, false)
+	versions := GetAllSupportedKubernetesVersions(false, false, false)
 	for _, version := range versions {
-		supportedVersion := GetSupportedKubernetesVersion(version, false)
+		supportedVersion := GetSupportedKubernetesVersion(version, false, false)
 		if supportedVersion != version {
 			t.Errorf("GetSupportedKubernetesVersion(%s) should return the same passed-in string, instead returned %s", version, supportedVersion)
 		}
 	}
 
-	defaultVersion := GetSupportedKubernetesVersion("", false)
-	if defaultVersion != GetDefaultKubernetesVersion(false) {
-		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version %s, instead returned %s", GetDefaultKubernetesVersion(false), defaultVersion)
+	defaultVersion := GetSupportedKubernetesVersion("", false, false)
+	if defaultVersion != GetDefaultKubernetesVersion(false, false) {
+		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version %s, instead returned %s", GetDefaultKubernetesVersion(false, false), defaultVersion)
 	}
 
-	winVersions := GetAllSupportedKubernetesVersions(false, true)
+	winVersions := GetAllSupportedKubernetesVersions(false, true, false)
 	for _, version := range winVersions {
-		supportedVersion := GetSupportedKubernetesVersion(version, true)
+		supportedVersion := GetSupportedKubernetesVersion(version, true, false)
 		if supportedVersion != version {
 			t.Errorf("GetSupportedKubernetesVersion(%s) should return the same passed-in string, instead returned %s", version, supportedVersion)
 		}
 	}
 
-	defaultWinVersion := GetSupportedKubernetesVersion("", true)
-	if defaultWinVersion != GetDefaultKubernetesVersion(true) {
-		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version for windows %s, instead returned %s", GetDefaultKubernetesVersion(true), defaultWinVersion)
+	defaultWinVersion := GetSupportedKubernetesVersion("", true, false)
+	if defaultWinVersion != GetDefaultKubernetesVersion(true, false) {
+		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version for windows %s, instead returned %s", GetDefaultKubernetesVersion(true, false), defaultWinVersion)
+	}
+
+	azureStackVersions := GetAllSupportedKubernetesVersions(false, false, true)
+	for _, version := range azureStackVersions {
+		supportedVersion := GetSupportedKubernetesVersion(version, false, true)
+		if supportedVersion != version {
+			t.Errorf("GetSupportedKubernetesVersion(%s) should return the same passed-in string, instead returned %s", version, supportedVersion)
+		}
+	}
+
+	defaultAzureStackVersion := GetSupportedKubernetesVersion("", false, true)
+	if defaultAzureStackVersion != GetDefaultKubernetesVersion(false, true) {
+		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version %s, instead returned %s", GetDefaultKubernetesVersion(false, true), defaultAzureStackVersion)
+	}
+
+	azureStackWinVersions := GetAllSupportedKubernetesVersions(false, true, true)
+	for _, version := range azureStackWinVersions {
+		supportedVersion := GetSupportedKubernetesVersion(version, true, true)
+		if supportedVersion != version {
+			t.Errorf("GetSupportedKubernetesVersion(%s) should return the same passed-in string, instead returned %s", version, supportedVersion)
+		}
+	}
+
+	defaultAzureStackWinVersion := GetSupportedKubernetesVersion("", true, true)
+	if defaultAzureStackWinVersion != GetDefaultKubernetesVersion(true, true) {
+		t.Errorf("GetSupportedKubernetesVersion(\"\") should return the default version for windows %s, instead returned %s", GetDefaultKubernetesVersion(true, true), defaultAzureStackWinVersion)
 	}
 }
 
@@ -351,38 +393,72 @@ func TestGetVersionsBetween(t *testing.T) {
 }
 
 func Test_GetValidPatchVersion(t *testing.T) {
-	v := GetValidPatchVersion(Kubernetes, "", false, false)
-	if v != GetDefaultKubernetesVersion(false) {
+	v := GetValidPatchVersion(Kubernetes, "", false, false, false)
+	if v != GetDefaultKubernetesVersion(false, false) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
 	for version, enabled := range AllKubernetesSupportedVersions {
 		if enabled {
-			v = GetValidPatchVersion(Kubernetes, version, false, false)
+			v = GetValidPatchVersion(Kubernetes, version, false, false, false)
 			if v != version {
 				t.Errorf("Expected version %s, instead got version %s", version, v)
 			}
 		}
 	}
 
-	v = GetValidPatchVersion(Kubernetes, "", true, true)
-	if v != GetDefaultKubernetesVersion(true) {
+	v = GetValidPatchVersion(Kubernetes, "", true, true, false)
+	if v != GetDefaultKubernetesVersion(true, false) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	v = GetValidPatchVersion(Mesos, "1.6.0", false, false)
+	v = GetValidPatchVersion(Mesos, "1.6.0", false, false, false)
 	if v != "" {
 		t.Errorf("Expected empty version for unsupported orchType")
 	}
 
 	for version, enabled := range AllKubernetesWindowsSupportedVersions {
 		if enabled {
-			v = GetValidPatchVersion(Kubernetes, version, false, true)
+			v = GetValidPatchVersion(Kubernetes, version, false, true, false)
 			if v != version {
 				t.Errorf("Expected version %s, instead got version %s", version, v)
 			}
 		}
 	}
+
+	v = GetValidPatchVersion(Kubernetes, "", false, false, true)
+	if v != GetDefaultKubernetesVersion(false, true) {
+		t.Errorf("It is not the default Kubernetes version")
+	}
+
+	for version, enabled := range AllKubernetesSupportedVersionsAzureStack {
+		if enabled {
+			v = GetValidPatchVersion(Kubernetes, version, false, false, true)
+			if v != version {
+				t.Errorf("Expected version %s, instead got version %s", version, v)
+			}
+		}
+	}
+
+	v = GetValidPatchVersion(Kubernetes, "", true, true, true)
+	if v != GetDefaultKubernetesVersion(true, true) {
+		t.Errorf("It is not the default Kubernetes version")
+	}
+
+	v = GetValidPatchVersion(Mesos, "1.6.0", false, false, true)
+	if v != "" {
+		t.Errorf("Expected empty version for unsupported orchType")
+	}
+
+	for version, enabled := range AllKubernetesWindowsSupportedVersionsAzureStack {
+		if enabled {
+			v = GetValidPatchVersion(Kubernetes, version, false, true, true)
+			if v != version {
+				t.Errorf("Expected version %s, instead got version %s", version, v)
+			}
+		}
+	}
+
 }
 
 func TestGetLatestPatchVersion(t *testing.T) {
@@ -493,85 +569,85 @@ func TestGetMinMaxVersion(t *testing.T) {
 }
 
 func Test_RationalizeReleaseAndVersion(t *testing.T) {
-	version := RationalizeReleaseAndVersion(Kubernetes, "", "", false, false)
-	if version != GetDefaultKubernetesVersion(false) {
+	version := RationalizeReleaseAndVersion(Kubernetes, "", "", false, false, false)
+	if version != GetDefaultKubernetesVersion(false, false) {
 		t.Errorf("It is not the default Kubernetes version")
 	}
 
-	latest1Dot6Version := GetLatestPatchVersion("1.6", GetAllSupportedKubernetesVersions(true, false))
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.6", "", true, false)
+	latest1Dot6Version := GetLatestPatchVersion("1.6", GetAllSupportedKubernetesVersions(true, false, false))
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.6", "", true, false, false)
 	if version != latest1Dot6Version {
 		t.Errorf("It is not Kubernetes version %s", latest1Dot6Version)
 	}
 
 	expectedVersion := "1.7.16"
-	version = RationalizeReleaseAndVersion(Kubernetes, "", expectedVersion, true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "", expectedVersion, true, false, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.7", expectedVersion, true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.7", expectedVersion, true, false, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "", "v"+expectedVersion, true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "", "v"+expectedVersion, true, false, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "v1.7", "v"+expectedVersion, true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "v1.7", "v"+expectedVersion, true, false, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "", true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "", true, false, false)
 	if version != "" {
 		t.Errorf("It is not empty string")
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "1.6.6", true, false)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "1.6.6", true, false, false)
 	if version != "" {
 		t.Errorf("It is not empty string")
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "", "", true, true)
-	if version != GetDefaultKubernetesVersion(true) {
+	version = RationalizeReleaseAndVersion(Kubernetes, "", "", true, true, false)
+	if version != GetDefaultKubernetesVersion(true, false) {
 		t.Errorf("It is not the default Windows Kubernetes version")
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.5", "", true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.5", "", true, true, false)
 	if version != "" {
 		t.Errorf("It is not empty string")
 	}
 
 	expectedVersion = "1.8.12"
-	version = RationalizeReleaseAndVersion(Kubernetes, "", expectedVersion, true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "", expectedVersion, true, true, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.8", expectedVersion, true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.8", expectedVersion, true, true, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "", "v"+expectedVersion, true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "", "v"+expectedVersion, true, true, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "v1.8", "v"+expectedVersion, true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "v1.8", "v"+expectedVersion, true, true, false)
 	if version != expectedVersion {
 		t.Errorf("It is not Kubernetes version %s", expectedVersion)
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "", true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "", true, true, false)
 	if version != "" {
 		t.Errorf("It is not empty string")
 	}
 
-	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "1.6.6", true, true)
+	version = RationalizeReleaseAndVersion(Kubernetes, "1.1", "1.6.6", true, true, false)
 	if version != "" {
 		t.Errorf("It is not empty string")
 	}
@@ -580,9 +656,11 @@ func Test_RationalizeReleaseAndVersion(t *testing.T) {
 func Test_IsSupportedKubernetesVersion(t *testing.T) {
 	for _, isUpdate := range []bool{true, false} {
 		for _, hasWindows := range []bool{true, false} {
-			for _, version := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows) {
-				if !IsSupportedKubernetesVersion(version, isUpdate, hasWindows) {
-					t.Errorf("Expected version %s to be supported when isUpdate is %t and hasWindows is %t", version, isUpdate, hasWindows)
+			for _, isAzureStackCloud := range []bool{true, false} {
+				for _, version := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows, isAzureStackCloud) {
+					if !IsSupportedKubernetesVersion(version, isUpdate, hasWindows, isAzureStackCloud) {
+						t.Errorf("Expected version %s to be supported when isUpdate is %t and hasWindows is %t and isAzureStackCloud is %t", version, isUpdate, hasWindows, isAzureStackCloud)
+					}
 				}
 			}
 		}

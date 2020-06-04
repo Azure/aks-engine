@@ -302,7 +302,7 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 	}
 	targetVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
-	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows())
+	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows(), uc.DataModel.Properties.IsAzureStackCloud())
 	if err != nil {
 		return err
 	}

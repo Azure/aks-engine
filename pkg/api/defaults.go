@@ -94,7 +94,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 	o := a.OrchestratorProfile
 	o.OrchestratorVersion = common.GetValidPatchVersion(
 		o.OrchestratorType,
-		o.OrchestratorVersion, isUpdate, a.HasWindows())
+		o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
 
 	switch o.OrchestratorType {
 	case Kubernetes:
