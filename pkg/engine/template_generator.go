@@ -818,6 +818,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
 		},
+		"HasBlockOutboundInternet": func() bool {
+			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.BlockOutboundInternet
+		},
 		"GetCSEErrorCode": func(errorType string) int {
 			return GetCSEErrorCode(errorType)
 		},
