@@ -1595,7 +1595,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role := n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role := n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1615,7 +1620,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role := n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role := n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]

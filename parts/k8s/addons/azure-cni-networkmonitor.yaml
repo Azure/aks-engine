@@ -40,11 +40,7 @@ spec:
       - operator: "Exists"
         effect: NoSchedule
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
       containers:
         - name: azure-cnms
           image: {{ContainerImage "azure-cni-networkmonitor"}}
