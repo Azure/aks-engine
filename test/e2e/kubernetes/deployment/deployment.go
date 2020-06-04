@@ -123,7 +123,7 @@ metadata:
     role: %s
   name: %s
 spec:
-  replicas: 1
+  replicas: 9
   selector:
     matchLabels:
       app: %s

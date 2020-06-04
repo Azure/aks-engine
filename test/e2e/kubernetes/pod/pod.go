@@ -328,7 +328,7 @@ func GetWithRetry(podName, namespace string, sleep, timeout time.Duration) (*Pod
 }
 
 // RunLinuxWithRetry runs a command in a Linux pod, allowing for retries
-func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool, sleep, timeout time.Duration) (*Pod, error) {
+func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool, sleep, commandTimeout, timeout time.Duration) (*Pod, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	ch := make(chan GetResult)
@@ -340,7 +340,7 @@ func RunLinuxWithRetry(image, name, namespace, command string, printOutput bool,
 			case <-ctx.Done():
 				return
 			default:
-				ch <- RunLinuxAsyncDeleteIfExists(image, name, namespace, command, printOutput, sleep, timeout, timeout)
+				ch <- RunLinuxAsyncDeleteIfExists(image, name, namespace, command, printOutput, sleep, commandTimeout, timeout)
 				time.Sleep(sleep)
 			}
 		}
