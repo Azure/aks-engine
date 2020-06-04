@@ -18316,6 +18316,11 @@ createKubeManifestDir() {
 writeKubeConfig() {
   local DIR=/home/$ADMINUSER/.kube
   local FILE=$DIR/config
+{{- if HasBlockOutboundInternet}}
+  local SERVER=https://localhost
+{{else}}
+  local SERVER=$KUBECONFIG_SERVER
+{{- end}}
   mkdir -p $DIR
   touch $FILE
   chown $ADMINUSER:$ADMINUSER $DIR $FILE
@@ -18328,7 +18333,7 @@ apiVersion: v1
 clusters:
 - cluster:
     certificate-authority-data: \"$CA_CERTIFICATE\"
-    server: $KUBECONFIG_SERVER
+    server: $SERVER
   name: \"$MASTER_FQDN\"
 contexts:
 - context:
