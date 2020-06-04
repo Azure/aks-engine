@@ -3681,7 +3681,7 @@ func TestDefaultLoadBalancerSKU(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			c.cs.setOrchestratorDefaults(false, false)
+			c.cs.Properties.setLoadBalancerSkuDefaults()
 			if c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != c.expected {
 				t.Errorf("expected %s, but got %s", c.expected, c.cs.Properties.OrchestratorProfile.KubernetesConfig.LoadBalancerSku)
 			}

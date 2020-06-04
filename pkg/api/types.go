@@ -1259,14 +1259,6 @@ func (p *Properties) HasNonRegularPriorityScaleset() bool {
 	return false
 }
 
-// GetLoadBalancerDefault returns default load balancer sku
-func (a *Properties) GetLoadBalancerDefault() string {
-	if a.HasAvailabilityZones() {
-		return StandardLoadBalancerSku
-	}
-	return DefaultLoadBalancerSku
-}
-
 // GetNonMasqueradeCIDR returns the non-masquerade CIDR for the ip-masq-agent.
 func (p *Properties) GetNonMasqueradeCIDR() string {
 	var nonMasqCidr string
