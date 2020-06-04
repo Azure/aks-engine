@@ -9226,11 +9226,7 @@ spec:
       - operator: "Exists"
         effect: NoSchedule
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
       containers:
         - name: azure-cnms
           image: {{ContainerImage "azure-cni-networkmonitor"}}
@@ -14404,16 +14400,8 @@ spec:
         value: "true"
         key: node-role.kubernetes.io/master
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.16.0"}}
-        kubernetes.azure.com/role: master
-{{else}}
-        kubernetes.io/role: master
-{{- end}}
-{{- if IsKubernetesVersionGe "1.19.0-alpha.2"}}
+        kubernetes.{{if IsKubernetesVersionGe "1.16.0"}}azure.com{{else}}io{{end}}/role: master
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
       containers:
       - image: {{ContainerImage "cluster-autoscaler"}}
         imagePullPolicy: IfNotPresent
@@ -15307,7 +15295,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
         {{- if ContainerConfig "use-host-network"}}
-        kubernetes.azure.com/role: agent
+        kubernetes.{{if IsKubernetesVersionGe "1.16.0"}}azure.com{{else}}io{{end}}/role: agent
         {{end}}
       containers:
       - name: coredns
