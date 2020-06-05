@@ -32,6 +32,7 @@
 // ../../parts/dcos/dcosprovision.sh
 // ../../parts/dcos/dcosprovisionsource.sh
 // ../../parts/iaasoutputs.t
+// ../../parts/k8s/.DS_Store
 // ../../parts/k8s/addons/1.15/calico.yaml
 // ../../parts/k8s/addons/aad-default-admin-group-rbac.yaml
 // ../../parts/k8s/addons/aad-pod-identity.yaml
@@ -6384,6 +6385,23 @@ func iaasoutputsT() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "iaasoutputs.t", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _k8sDs_store = []byte("\x00\x00\x00\x01Bud1\x00\x00\x10\x00\x00\x00\b\x00\x00\x00\x10\x00\x00\x00\x00\x86\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\b\x00\x00\x00\b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x10\x00\x00d\x00-\x00i\x00n\x00i\x00t\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\n\x00c\x00l\x00o\x00u\x00d\x00-\x00i\x00n\x00i\x00tvSrnlong\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\b\v\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00 \x00\x00\x00\x01\x00\x00\x00@\x00\x00\x00\x01\x00\x00\x00\x80\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00\x01\x00\x00\x02\x00\x00\x00\x00\x01\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x10\x00\x00\x00\x00\x01\x00\x00 \x00\x00\x00\x00\x01\x00\x00@\x00\x00\x00\x00\x01\x00\x00\x80\x00\x00\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x01\x00\x02\x00\x00\x00\x00\x00\x01\x00\x04\x00\x00\x00\x00\x00\x01\x00\b\x00\x00\x00\x00\x00\x01\x00\x10\x00\x00\x00\x00\x00\x01\x00 \x00\x00\x00\x00\x00\x01\x00@\x00\x00\x00\x00\x00\x01\x00\x80\x00\x00\x00\x00\x00\x01\x01\x00\x00\x00\x00\x00\x00\x01\x02\x00\x00\x00\x00\x00\x00\x01\x04\x00\x00\x00\x00\x00\x00\x01\b\x00\x00\x00\x00\x00\x00\x01\x10\x00\x00\x00\x00\x00\x00\x01 \x00\x00\x00\x00\x00\x00\x01@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x10\v\x00\x00\x00E\x00\x00\x00\x86\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x04DSDB\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00 \x00\x00\x00`\x00\x00\x00\x01\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x01\x00\x00\x00\x00\x01\x00\x00\x02\x00\x00\x00\x00\x01\x00\x00\x04\x00\x00\x00\x00\x02\x00\x00\b\x00\x00\x00\x18\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00 \x00\x00\x00\x00\x01\x00\x00@\x00\x00\x00\x00\x01\x00\x00\x80\x00\x00\x00\x00\x01\x00\x01\x00\x00\x00\x00\x00\x01\x00\x02\x00\x00\x00\x00\x00\x01\x00\x04\x00\x00\x00\x00\x00\x01\x00\b\x00\x00\x00\x00\x00\x01\x00\x10\x00\x00\x00\x00\x00\x01\x00 \x00\x00\x00\x00\x00\x01\x00@\x00\x00\x00\x00\x00\x01\x00\x80\x00\x00\x00\x00\x00\x01\x01\x00\x00\x00\x00\x00\x00\x01\x02\x00\x00\x00\x00\x00\x00\x01\x04\x00\x00\x00\x00\x00\x00\x01\b\x00\x00\x00\x00\x00\x00\x01\x10\x00\x00\x00\x00\x00\x00\x01 \x00\x00\x00\x00\x00\x00\x01@\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+
+func k8sDs_storeBytes() ([]byte, error) {
+	return _k8sDs_store, nil
+}
+
+func k8sDs_store() (*asset, error) {
+	bytes, err := k8sDs_storeBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "k8s/.DS_Store", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -21020,559 +21038,559 @@ func k8sCloudInitJumpboxcustomdataYml() (*asset, error) {
 var _k8sCloudInitMasternodecustomdataYml = []byte(`#cloud-config
 
 write_files:
-  - path: {{GetCSEHelpersScriptFilepath}}
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "provisionSource"}}
+- path: {{GetCSEHelpersScriptFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionSource"}}
 
-  - path: /opt/azure/containers/provision.sh
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "provisionScript"}}
+- path: /opt/azure/containers/provision.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionScript"}}
 
-  - path: {{GetCSEInstallScriptFilepath}}
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "provisionInstalls"}}
+- path: {{GetCSEInstallScriptFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionInstalls"}}
 
-  - path: {{GetCSEConfigScriptFilepath}}
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "provisionConfigs"}}
+- path: {{GetCSEConfigScriptFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionConfigs"}}
 
+{{- if not .MasterProfile.IsVHDDistro}}
+- path: /opt/azure/containers/provision_cis.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "provisionCIS"}}
+{{end}}
+
+{{- if not .MasterProfile.IsVHDDistro}}
+  {{- if .MasterProfile.IsAuditDEnabled}}
+- path: /etc/audit/rules.d/CIS.rules
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "auditdRules"}}
+  {{end}}
+{{end}}
+
+{{- if .MasterProfile.IsUbuntu1804}}
   {{- if not .MasterProfile.IsVHDDistro}}
-  - path: /opt/azure/containers/provision_cis.sh
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "provisionCIS"}}
+- path: /var/run/reboot-required
+  permissions: "0644"
+  owner: root
+  content: |
+
   {{end}}
+{{end}}
 
-  {{- if not .MasterProfile.IsVHDDistro}}
-    {{- if .MasterProfile.IsAuditDEnabled}}
-  - path: /etc/audit/rules.d/CIS.rules
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "auditdRules"}}
-    {{end}}
-  {{end}}
+{{- if IsCustomCloudProfile}}
+- path: {{GetCustomCloudConfigCSEScriptFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
 
-  {{- if .MasterProfile.IsUbuntu1804}}
-    {{- if not .MasterProfile.IsVHDDistro}}
-  - path: /var/run/reboot-required
-    permissions: "0644"
-    owner: root
-    content: |
+{{- if HasKubeReservedCgroup}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
 
-    {{end}}
-  {{end}}
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
 
-  {{- if IsCustomCloudProfile}}
-  - path: {{GetCustomCloudConfigCSEScriptFilepath}}
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{WrapAsVariable "provisionConfigsCustomCloud"}}
-  {{end}}
-
-  {{- if HasKubeReservedCgroup}}
-  - path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
-    permissions: "0644"
-    owner: root
-    content: |
-      [Unit]
-      Description=Limited resources slice for Kubernetes services
-      Documentation=man:systemd.special(7)
-      DefaultDependencies=no
-      Before=slices.target
-      Requires=-.slice
-      After=-.slice
-      #EOF
-
-  - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      [Service]
-      Slice={{- GetKubeReservedCgroup -}}.slice
-      #EOF
-
-    {{if NeedsContainerd}}
-  - path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      [Service]
-      Slice={{- GetKubeReservedCgroup -}}.slice
-      #EOF
-    {{else}}
-  - path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      [Service]
-      Slice={{- GetKubeReservedCgroup -}}.slice
-      #EOF
-    {{end}}
-  {{end}}
-
-  - path: /etc/systemd/system/kubelet.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "kubeletSystemdService"}}
-
-  {{- if not .MasterProfile.IsVHDDistro}}
-  - path: /usr/local/bin/health-monitor.sh
-    permissions: "0544"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "healthMonitorScript"}}
-
-  - path: /etc/systemd/system/kubelet-monitor.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "kubeletMonitorSystemdService"}}
-
-  - path: /etc/systemd/system/docker-monitor.timer
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "dockerMonitorSystemdTimer"}}
-
-  - path: /etc/systemd/system/docker-monitor.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "dockerMonitorSystemdService"}}
-
-  - path: /opt/azure/containers/label-nodes.sh
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "labelNodesScript"}}
-
-  - path: /etc/systemd/system/label-nodes.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "labelNodesSystemdService"}}
-
-  - path: /etc/systemd/system/kms.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "kmsSystemdService"}}
-
-  - path: /etc/apt/preferences
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "aptPreferences"}}
-  {{end}}
-
-  {{if IsAADPodIdentityAddonEnabled}}
-  - path: /opt/azure/containers/untaint-nodes.sh
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "untaintNodesScript"}}
-
-  - path: /etc/systemd/system/untaint-nodes.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "untaintNodesSystemdService"}}
-  {{end}}
-
-  - path: /etc/apt/apt.conf.d/99periodic
-    permissions: "0644"
-    owner: root
-    content: |
-      APT::Periodic::Update-Package-Lists "0";
-      APT::Periodic::Download-Upgradeable-Packages "0";
-      APT::Periodic::AutocleanInterval "0";
-      APT::Periodic::Unattended-Upgrade "0";
-
-  {{- if IsIPv6Enabled}}
-  - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "dhcpv6SystemdService"}}
-
-  - path: {{GetDHCPv6ConfigCSEScriptFilepath}}
-    permissions: "0544"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "dhcpv6ConfigurationScript"}}
-  {{end}}
-
-  {{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-      {{- if not .MasterProfile.IsVHDDistro}}
-  - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "dockerClearMountPropagationFlags"}}
-      {{end}}
-
-  - path: /etc/systemd/system/docker.service.d/exec_start.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      [Service]
-      ExecStart=
-      ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-      ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
-      #EOF
-
-  - path: /etc/docker/daemon.json
-    permissions: "0644"
-    owner: root
-    content: |
-  {{IndentString (GetDockerConfig false) 4}}
-  {{end}}
-
-  {{- if HasCiliumNetworkPlugin}}
-  - path: /etc/systemd/system/sys-fs-bpf.mount
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "systemdBPFMount"}}
-  {{end}}
-
-  - path: /etc/sysctl.d/11-aks-engine.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
-      #EOF
-
-  {{- if NeedsContainerd}}
-  - path: /etc/systemd/system/containerd.service.d/exec_start.conf
-    permissions: "0644"
-    owner: root
-    content: |
-      [Service]
-      ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
-      #EOF
-
-  - path: /etc/containerd/config.toml
-    permissions: "0644"
-    owner: root
-    content: |
-  {{IndentString GetContainerdConfig 4}}
-      #EOF
-
-    {{- if IsKubenet}}
-  - path: /etc/containerd/kubenet_template.conf
-    permissions: "0644"
-    owner: root
-    content: |
-        {
-            "cniVersion": "0.3.1",
-            "name": "kubenet",
-            "plugins": [{
-              "type": "bridge",
-              "bridge": "cbr0",
-              "mtu": 1500,
-              "addIf": "eth0",
-              "isGateway": true,
-              "ipMasq": false,
-              "hairpinMode": false,
-              "ipam": {
-                  "type": "host-local",
-                  "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
-                  "routes": [{ "dst": "0.0.0.0/0" }]
-              }
-            }]
-        }
-      {{end}}
-  {{end}}
-
-  - path: /etc/kubernetes/certs/ca.crt
-    permissions: "0644"
-    encoding: base64
-    owner: root
-    content: |
-      {{WrapAsParameter "caCertificate"}}
-
-  - path: /etc/kubernetes/certs/client.crt
-    permissions: "0644"
-    encoding: "base64"
-    owner: "root"
-    content: |
-      {{WrapAsParameter "clientCertificate"}}
-
-  {{- if EnableAggregatedAPIs}}
-  - path: /etc/kubernetes/generate-proxy-certs.sh
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "generateProxyCertsScript"}}
-  {{end}}
-
-  {{- if HasCustomSearchDomain}}
-  - path: {{GetCustomSearchDomainsCSEScriptFilepath}}
-    permissions: "0744"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "customSearchDomainsScript"}}
-  {{end}}
-
-  - path: /var/lib/kubelet/kubeconfig
-    permissions: "0644"
-    owner: root
-    content: |
-      apiVersion: v1
-      kind: Config
-      clusters:
-      - name: localcluster
-        cluster:
-          certificate-authority: /etc/kubernetes/certs/ca.crt
-        {{if IsMasterVirtualMachineScaleSets}}
-          server: <SERVERIP>
-        {{else}}
-          server: {{WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')"}}
-        {{end}}
-      users:
-      - name: client
-        user:
-          client-certificate: /etc/kubernetes/certs/client.crt
-          client-key: /etc/kubernetes/certs/client.key
-      contexts:
-      - context:
-          cluster: localcluster
-          user: client
-        name: localclustercontext
-      current-context: localclustercontext
-      #EOF
-
-  {{- if EnableDataEncryptionAtRest}}
-  - path: /etc/kubernetes/encryption-config.yaml
-    permissions: "0600"
-    owner: root
-    content: |
-      kind: EncryptionConfiguration
-      apiVersion: apiserver.config.k8s.io/v1
-      resources:
-        - resources:
-            - secrets
-          providers:
-            - aescbc:
-                keys:
-                  - name: key1
-                    secret: <etcdEncryptionSecret>
-            - identity: {}
-  {{end}}
-
-  {{- if EnableEncryptionWithExternalKms}}
-  - path: /etc/kubernetes/encryption-config.yaml
-    permissions: "0444"
-    owner: root
-    content: |
-      kind: EncryptionConfiguration
-      apiVersion: apiserver.config.k8s.io/v1
-      resources:
-        - resources:
-          - secrets
-          providers:
-          - kms:
-              name: azurekmsprovider
-              endpoint: unix:///opt/azurekms.socket
-              cachesize: 1000
-          - identity: {}
-  {{end}}
-
-  MASTER_MANIFESTS_CONFIG_PLACEHOLDER
-
-  MASTER_CUSTOM_FILES_PLACEHOLDER
-
-  MASTER_CONTAINER_ADDONS_PLACEHOLDER
-
-  - path: /etc/default/kubelet
-    permissions: "0644"
-    owner: root
-    content: |
-      KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-  {{- if IsKubernetesVersionGe "1.16.0"}}
-      KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
   {{else}}
-      KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
   {{end}}
-  {{- if IsCustomCloudProfile }}
-      AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-  {{end}}
-      #EOF
+{{end}}
 
-  - path: /opt/azure/containers/kubelet.sh
-    permissions: "0755"
-    owner: root
-    content: |
-      #!/bin/bash
-      set -e
-      MOUNT_DIR=/var/lib/kubelet
-      mkdir -p $MOUNT_DIR /var/lib/cni
-      if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
-        mount --bind $MOUNT_DIR $MOUNT_DIR
-      fi
-      mount --make-shared $MOUNT_DIR
-      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-  {{- if IsMasterVirtualMachineScaleSets}}
-      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-      sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-  {{end}}
-  {{- if gt .MasterProfile.Count 1}}
-      {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
-      iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
-  {{end}}
-      sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-  {{- if EnableDataEncryptionAtRest }}
-      sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-  {{end}}
-  {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-      sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
-      {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-      sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
-      {{else}}
-      sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
-      sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
-      {{end}}
-  {{end}}
-  {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-      sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
-  {{end}}
-      #EOF
+- path: /etc/systemd/system/kubelet.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletSystemdService"}}
 
-  {{- if not HasCosmosEtcd  }}
-  - path: /etc/systemd/system/etcd.service
-    permissions: "0644"
-    encoding: gzip
-    owner: root
-    content: !!binary |
-      {{CloudInitData "etcdSystemdService"}}
+{{- if not .MasterProfile.IsVHDDistro}}
+- path: /usr/local/bin/health-monitor.sh
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "healthMonitorScript"}}
 
-  - path: /opt/azure/containers/setup-etcd.sh
-    permissions: "0744"
-    owner: root
-    content: |
-      #!/bin/bash
-      set -x
-      if [[ ! -s /etc/environment ]]; then
-          {{- /* /etc/environment is empty, which will break subsequent sed commands
-                 Append a blank line... */}}
-          echo "" >> /etc/environment
-      fi
-    {{- if IsMasterVirtualMachineScaleSets}}
-      MASTER_VM_NAME=$(hostname)
-      MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
-      MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
-      MASTER_INDEX=$(hostname | tail -c 2)
-      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-      MASTER_COUNT={{WrapAsVariable "masterCount"}}
-      IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
-      echo $IPADDRESS_COUNT
-      ETCD_SERVER_PORT={{WrapAsVariable "masterEtcdServerPort"}}
-      ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
-      MASTER_URLS=""
-      index=0
-      IFS=. read -r a b c d <<< "$MASTER_FIRSTADDR"
-      d=$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))
-      echo $d
-      while [ $index -lt $MASTER_COUNT ]
-      do
-          echo $index
-          x=` + "`" + `expr $d + $IPADDRESS_COUNT \\* $index` + "`" + `
-          echo $x
-          s=""
-          for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
-          s=$(echo $s | tail -c +2)
-          MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
-          index=` + "`" + `expr $index + 1` + "`" + `
-      done
-      MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
-      echo $MASTER_URLS
-      sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:$ETCD_CLIENT_PORT" /etc/environment
-      sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-      sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-      sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
-      sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-      /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "http://$PRIVATE_IP:2480" | tee -a /etc/default/etcd
-    {{else}}
-      sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
-      sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-      sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-      sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
-      sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-      /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "{{WrapAsVerbatim "variables('masterEtcdMetricURLs')[copyIndex(variables('masterOffset'))]"}}" | tee -a /etc/default/etcd
+- path: /etc/systemd/system/kubelet-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kubeletMonitorSystemdService"}}
+
+- path: /etc/systemd/system/docker-monitor.timer
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdTimer"}}
+
+- path: /etc/systemd/system/docker-monitor.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dockerMonitorSystemdService"}}
+
+- path: /opt/azure/containers/label-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesScript"}}
+
+- path: /etc/systemd/system/label-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "labelNodesSystemdService"}}
+
+- path: /etc/systemd/system/kms.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "kmsSystemdService"}}
+
+- path: /etc/apt/preferences
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "aptPreferences"}}
+{{end}}
+
+{{if IsAADPodIdentityAddonEnabled}}
+- path: /opt/azure/containers/untaint-nodes.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesScript"}}
+
+- path: /etc/systemd/system/untaint-nodes.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "untaintNodesSystemdService"}}
+{{end}}
+
+- path: /etc/apt/apt.conf.d/99periodic
+  permissions: "0644"
+  owner: root
+  content: |
+    APT::Periodic::Update-Package-Lists "0";
+    APT::Periodic::Download-Upgradeable-Packages "0";
+    APT::Periodic::AutocleanInterval "0";
+    APT::Periodic::Unattended-Upgrade "0";
+
+{{- if IsIPv6Enabled}}
+- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6SystemdService"}}
+
+- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
+  permissions: "0544"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dhcpv6ConfigurationScript"}}
+{{end}}
+
+{{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
+    {{- if not .MasterProfile.IsVHDDistro}}
+- path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "dockerClearMountPropagationFlags"}}
     {{end}}
-  {{end}}
-      #EOF
 
-  {{- if IsCustomCloudProfile}}
-  - path: "/etc/kubernetes/azurestackcloud.json"
-    permissions: "0600"
-    owner: "root"
-    content: |
-      {{WrapAsVariable "environmentJSON"}}
-  {{end}}
+- path: /etc/systemd/system/docker.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStart=
+    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
 
-  disk_setup:
-    /dev/disk/azure/scsi1/lun0:
-      table_type: gpt
-      layout: true
-      overwrite: false
-  fs_setup:
-    - label: etcd_disk
-      filesystem: ext4
-      device: /dev/disk/azure/scsi1/lun0
-      extra_opts:
-        - -E
-        - lazy_itable_init=1,lazy_journal_init=1
-  {{- /* ephemeral (/mnt) filesystem is explicitly configured, see: */}}
-  {{- /* https://bugs.launchpad.net/cloud-init/+bug/1879552 */}}
-    - label: ephemeral0
-      filesystem: ext4
-      device: ephemeral0.1
-      replace_fs: ntfs
-  mounts:
-    - - LABEL=etcd_disk
-      - /var/lib/etcddisk
-  runcmd:
-  - set -x
-  - . {{GetCSEHelpersScriptFilepath}}
-  - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
+- path: /etc/docker/daemon.json
+  permissions: "0644"
+  owner: root
+  content: |
+{{IndentString (GetDockerConfig false) 4}}
+{{end}}
+
+{{- if HasCiliumNetworkPlugin}}
+- path: /etc/systemd/system/sys-fs-bpf.mount
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "systemdBPFMount"}}
+{{end}}
+
+- path: /etc/sysctl.d/11-aks-engine.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
+    #EOF
+
+{{- if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/exec_start.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+    #EOF
+
+- path: /etc/containerd/config.toml
+  permissions: "0644"
+  owner: root
+  content: |
+{{IndentString GetContainerdConfig 4}}
+    #EOF
+
+  {{- if IsKubenet}}
+- path: /etc/containerd/kubenet_template.conf
+  permissions: "0644"
+  owner: root
+  content: |
+      {
+          "cniVersion": "0.3.1",
+          "name": "kubenet",
+          "plugins": [{
+            "type": "bridge",
+            "bridge": "cbr0",
+            "mtu": 1500,
+            "addIf": "eth0",
+            "isGateway": true,
+            "ipMasq": false,
+            "hairpinMode": false,
+            "ipam": {
+                "type": "host-local",
+                "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
+                "routes": [{ "dst": "0.0.0.0/0" }]
+            }
+          }]
+      }
+    {{end}}
+{{end}}
+
+- path: /etc/kubernetes/certs/ca.crt
+  permissions: "0644"
+  encoding: base64
+  owner: root
+  content: |
+    {{WrapAsParameter "caCertificate"}}
+
+- path: /etc/kubernetes/certs/client.crt
+  permissions: "0644"
+  encoding: "base64"
+  owner: "root"
+  content: |
+    {{WrapAsParameter "clientCertificate"}}
+
+{{- if EnableAggregatedAPIs}}
+- path: /etc/kubernetes/generate-proxy-certs.sh
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "generateProxyCertsScript"}}
+{{end}}
+
+{{- if HasCustomSearchDomain}}
+- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
+  permissions: "0744"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "customSearchDomainsScript"}}
+{{end}}
+
+- path: /var/lib/kubelet/kubeconfig
+  permissions: "0644"
+  owner: root
+  content: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+    - name: localcluster
+      cluster:
+        certificate-authority: /etc/kubernetes/certs/ca.crt
+      {{if IsMasterVirtualMachineScaleSets}}
+        server: <SERVERIP>
+      {{else}}
+        server: {{WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')"}}
+      {{end}}
+    users:
+    - name: client
+      user:
+        client-certificate: /etc/kubernetes/certs/client.crt
+        client-key: /etc/kubernetes/certs/client.key
+    contexts:
+    - context:
+        cluster: localcluster
+        user: client
+      name: localclustercontext
+    current-context: localclustercontext
+    #EOF
+
+{{- if EnableDataEncryptionAtRest}}
+- path: /etc/kubernetes/encryption-config.yaml
+  permissions: "0600"
+  owner: root
+  content: |
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
+    resources:
+      - resources:
+          - secrets
+        providers:
+          - aescbc:
+              keys:
+                - name: key1
+                  secret: <etcdEncryptionSecret>
+          - identity: {}
+{{end}}
+
+{{- if EnableEncryptionWithExternalKms}}
+- path: /etc/kubernetes/encryption-config.yaml
+  permissions: "0444"
+  owner: root
+  content: |
+    kind: EncryptionConfiguration
+    apiVersion: apiserver.config.k8s.io/v1
+    resources:
+      - resources:
+        - secrets
+        providers:
+        - kms:
+            name: azurekmsprovider
+            endpoint: unix:///opt/azurekms.socket
+            cachesize: 1000
+        - identity: {}
+{{end}}
+
+MASTER_MANIFESTS_CONFIG_PLACEHOLDER
+
+MASTER_CUSTOM_FILES_PLACEHOLDER
+
+MASTER_CONTAINER_ADDONS_PLACEHOLDER
+
+- path: /etc/default/kubelet
+  permissions: "0644"
+  owner: root
+  content: |
+    KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
+    KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
+{{else}}
+    KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
+{{end}}
+{{- if IsCustomCloudProfile }}
+    AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
+{{end}}
+    #EOF
+
+- path: /opt/azure/containers/kubelet.sh
+  permissions: "0755"
+  owner: root
+  content: |
+    #!/bin/bash
+    set -e
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+{{- if IsMasterVirtualMachineScaleSets}}
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
+{{end}}
+{{- if gt .MasterProfile.Count 1}}
+    {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
+    iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
+{{end}}
+    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
+{{- if EnableDataEncryptionAtRest }}
+    sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
+{{end}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
+    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
+    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
+    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
+    {{else}}
+    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
+    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
+    {{end}}
+{{end}}
+{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
+    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
+{{end}}
+    #EOF
+
+{{- if not HasCosmosEtcd  }}
+- path: /etc/systemd/system/etcd.service
+  permissions: "0644"
+  encoding: gzip
+  owner: root
+  content: !!binary |
+    {{CloudInitData "etcdSystemdService"}}
+
+- path: /opt/azure/containers/setup-etcd.sh
+  permissions: "0744"
+  owner: root
+  content: |
+    #!/bin/bash
+    set -x
+    if [[ ! -s /etc/environment ]]; then
+        {{- /* /etc/environment is empty, which will break subsequent sed commands
+               Append a blank line... */}}
+        echo "" >> /etc/environment
+    fi
+  {{- if IsMasterVirtualMachineScaleSets}}
+    MASTER_VM_NAME=$(hostname)
+    MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
+    MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
+    MASTER_INDEX=$(hostname | tail -c 2)
+    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+    MASTER_COUNT={{WrapAsVariable "masterCount"}}
+    IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
+    echo $IPADDRESS_COUNT
+    ETCD_SERVER_PORT={{WrapAsVariable "masterEtcdServerPort"}}
+    ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
+    MASTER_URLS=""
+    index=0
+    IFS=. read -r a b c d <<< "$MASTER_FIRSTADDR"
+    d=$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))
+    echo $d
+    while [ $index -lt $MASTER_COUNT ]
+    do
+        echo $index
+        x=` + "`" + `expr $d + $IPADDRESS_COUNT \\* $index` + "`" + `
+        echo $x
+        s=""
+        for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
+        s=$(echo $s | tail -c +2)
+        MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
+        index=` + "`" + `expr $index + 1` + "`" + `
+    done
+    MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
+    echo $MASTER_URLS
+    sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:$ETCD_CLIENT_PORT" /etc/environment
+    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
+    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "http://$PRIVATE_IP:2480" | tee -a /etc/default/etcd
+  {{else}}
+    sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
+    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
+    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
+    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "{{WrapAsVerbatim "variables('masterEtcdMetricURLs')[copyIndex(variables('masterOffset'))]"}}" | tee -a /etc/default/etcd
+  {{end}}
+{{end}}
+    #EOF
+
+{{- if IsCustomCloudProfile}}
+- path: "/etc/kubernetes/azurestackcloud.json"
+  permissions: "0600"
+  owner: "root"
+  content: |
+    {{WrapAsVariable "environmentJSON"}}
+{{end}}
+
+disk_setup:
+  /dev/disk/azure/scsi1/lun0:
+    table_type: gpt
+    layout: true
+    overwrite: false
+fs_setup:
+  - label: etcd_disk
+    filesystem: ext4
+    device: /dev/disk/azure/scsi1/lun0
+    extra_opts:
+      - -E
+      - lazy_itable_init=1,lazy_journal_init=1
+{{- /* ephemeral (/mnt) filesystem is explicitly configured, see: */}}
+{{- /* https://bugs.launchpad.net/cloud-init/+bug/1879552 */}}
+  - label: ephemeral0
+    filesystem: ext4
+    device: ephemeral0.1
+    replace_fs: ntfs
+mounts:
+  - - LABEL=etcd_disk
+    - /var/lib/etcddisk
+runcmd:
+- set -x
+- . {{GetCSEHelpersScriptFilepath}}
+- aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 `)
 
 func k8sCloudInitMasternodecustomdataYmlBytes() ([]byte, error) {
@@ -29069,6 +29087,7 @@ var _bindata = map[string]func() (*asset, error){
 	"dcos/dcosprovision.sh":                                              dcosDcosprovisionSh,
 	"dcos/dcosprovisionsource.sh":                                        dcosDcosprovisionsourceSh,
 	"iaasoutputs.t":                                                      iaasoutputsT,
+	"k8s/.DS_Store":                                                      k8sDs_store,
 	"k8s/addons/1.15/calico.yaml":                                        k8sAddons115CalicoYaml,
 	"k8s/addons/aad-default-admin-group-rbac.yaml":                       k8sAddonsAadDefaultAdminGroupRbacYaml,
 	"k8s/addons/aad-pod-identity.yaml":                                   k8sAddonsAadPodIdentityYaml,
@@ -29263,6 +29282,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	}},
 	"iaasoutputs.t": {iaasoutputsT, map[string]*bintree{}},
 	"k8s": {nil, map[string]*bintree{
+		".DS_Store": {k8sDs_store, map[string]*bintree{}},
 		"addons": {nil, map[string]*bintree{
 			"1.15": {nil, map[string]*bintree{
 				"calico.yaml": {k8sAddons115CalicoYaml, map[string]*bintree{}},
