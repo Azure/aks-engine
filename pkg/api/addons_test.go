@@ -2156,34 +2156,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			},
 		},
 		{
-			name: "Flatcar addons",
-			cs: &ContainerService{
-				Properties: &Properties{
-					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.15.4",
-						KubernetesConfig: &KubernetesConfig{
-							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
-							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
-							KubeletConfig: map[string]string{
-								"--cluster-domain": "cluster.local",
-							},
-							ClusterSubnet: DefaultKubernetesSubnet,
-							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
-						},
-					},
-					AgentPoolProfiles: []*AgentPoolProfile{
-						{
-							Distro: Flatcar,
-							VMSize: "Standard_NC6", // to validate that Flatcar distro does not get nvidia addon
-						},
-					},
-				},
-			},
-			isUpgrade:      false,
-			expectedAddons: omitFromAddons([]string{common.BlobfuseFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName}, getDefaultAddons("1.15.4", "", common.KubernetesImageBaseTypeGCR)),
-		},
-		{
 			name: "azure disk and azure file csi driver enabled for k8s >= 1.13.0 and UseCloudControllerManager is true",
 			cs: &ContainerService{
 				Properties: &Properties{

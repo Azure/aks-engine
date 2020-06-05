@@ -11978,6 +11978,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -15437,6 +15446,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       tolerations:
       containers:
       - name: keyvault-flexvolume
@@ -17499,6 +17517,15 @@ spec:
 {{- end}}
     spec:
       containers:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
         imagePullPolicy: Always

@@ -27,6 +27,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       tolerations:
       containers:
       - name: keyvault-flexvolume
