@@ -65,9 +65,5 @@ spec:
           hostPath:
             path: /var/lib/kubelet/device-plugins
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
         accelerator: nvidia

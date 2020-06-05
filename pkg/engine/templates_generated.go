@@ -16152,7 +16152,7 @@ spec:
           emptyDir: {}
       serviceAccountName: kubernetes-dashboard
       nodeSelector:
-        "kubernetes.io/os": linux
+        kubernetes.io/os: linux
       # Comment the following tolerations if Dashboard must not be deployed on master
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -16228,7 +16228,7 @@ spec:
             runAsGroup: 2001
       serviceAccountName: kubernetes-dashboard
       nodeSelector:
-        "kubernetes.io/os": linux
+        kubernetes.io/os: linux
       # Comment the following tolerations if Dashboard must not be deployed on master
       tolerations:
         - key: node-role.kubernetes.io/master
@@ -16395,11 +16395,7 @@ spec:
         - --source=kubernetes.summary_api:''
 {{- end}}
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
 ---
 apiVersion: apiregistration.k8s.io/v1beta1
 kind: APIService
@@ -16635,11 +16631,7 @@ spec:
           hostPath:
             path: /var/lib/kubelet/device-plugins
       nodeSelector:
-{{- if IsKubernetesVersionGe "1.19.0-alpha.3"}}
         kubernetes.io/os: linux
-{{else}}
-        kubernetes.io/os: linux
-{{- end}}
         accelerator: nvidia
 `)
 
