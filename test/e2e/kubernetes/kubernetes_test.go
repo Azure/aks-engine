@@ -1424,6 +1424,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1433,9 +1434,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ELB service on the service IP")
 				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can connect to the ELB service from another pod")
 				elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we can donwnload files through the ELB")
+				pods, err := pod.GetAllByPrefixWithRetry(deploymentPrefix, "default", 3*time.Second, cfg.Timeout)
+				for _, p := range pods {
+					out, err := p.Exec("--", "/bin/bash", "-c", "base64 /dev/urandom | head -c 500000 | tee -a /usr/share/nginx/html/index.html > /dev/null")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
@@ -1896,6 +1909,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(err).NotTo(HaveOccurred())
 					Expect(pass).To(BeTrue())
 				}
+
+				By("Ensuring we can donwnload files through the ELB")
+				for _, iisPod := range iisPods {
+					fileGenCmd := "(1..(500kb/34)).foreach({-join ('4489bfc5648d4ab58c7129a1d5f2f061') }) | Add-Content C:\\inetpub\\wwwroot\\iisstart.htm"
+					out, err := iisPod.Exec("--", "powershell", "-command", fileGenCmd)
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 
 				By("Verifying pods & services can be deleted")
 				err = iisDeploy.Delete(util.DefaultDeleteRetries)
