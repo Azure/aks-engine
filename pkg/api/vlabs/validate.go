@@ -1925,19 +1925,6 @@ func validateDistro(distro Distro, distroValues []Distro) bool {
 	return false
 }
 
-// Check that the MasterProfile distro has a valid value
-func validateMasterProfileDistro(distro Distro, distroValues []Distro) bool {
-	if distro == Flatcar {
-		return false
-	}
-	for _, d := range distroValues {
-		if distro == d {
-			return true
-		}
-	}
-	return false
-}
-
 func (i *ImageReference) validateImageNameAndGroup() error {
 	if i.Name == "" && i.ResourceGroup != "" {
 		return errors.New("imageName needs to be specified when imageResourceGroup is provided")
