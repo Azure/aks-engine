@@ -175,7 +175,7 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 		vmExtension.Publisher = to.StringPtr("Microsoft.Azure.Extensions")
 		vmExtension.VirtualMachineExtensionProperties.Type = to.StringPtr("CustomScript")
 		vmExtension.TypeHandlerVersion = to.StringPtr("2.0")
-		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; %s', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"')]", outBoundCmd, initAKSCustomCloud, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
+		commandExec := fmt.Sprintf("[concat('echo $(date),$(hostname); %s for i in $(seq 1 1200); do grep -Fq \"EOF\" /opt/azure/containers/provision.sh && break; if [ $i -eq 1200 ]; then exit 100; else sleep 1; fi; done; %s', variables('provisionScriptParametersCommon'),%s,' IS_VHD=%s GPU_NODE=%s SGX_NODE=%s AUDITD_ENABLED=%s /usr/bin/nohup /bin/bash -c \"/bin/bash /opt/azure/containers/provision.sh >> /var/log/azure/cluster-provision.log 2>&1%s\"; systemctl --no-pager -l status kubelet 2>&1 | head -n 100')]", outBoundCmd, initAKSCustomCloud, generateUserAssignedIdentityClientIDParameter(userAssignedIDEnabled), isVHD, nVidiaEnabled, sgxEnabled, auditDEnabled, runInBackground)
 		vmExtension.ProtectedSettings = &map[string]interface{}{
 			"commandToExecute": commandExec,
 		}

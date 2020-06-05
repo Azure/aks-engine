@@ -312,7 +312,6 @@ ensureKubelet() {
     KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
     wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit $ERR_FILE_WATCH_TIMEOUT
     systemctlEnableAndStart kubelet || exit $ERR_KUBELET_START_FAIL
-    systemctl --no-pager -l status kubelet 2>&1
     {{if HasCiliumNetworkPolicy}}
     while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
         sleep 3
