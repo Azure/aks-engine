@@ -653,6 +653,7 @@ func TestIsVMSSNameInAgentPoolsArray(t *testing.T) {
 }
 
 func TestValidateSinglePoolTargetVersion(t *testing.T) {
+	g := NewGomegaWithT(t)
 	cases := []struct {
 		uc            *upgradeCmd
 		cs            *api.ContainerService
@@ -677,7 +678,7 @@ func TestValidateSinglePoolTargetVersion(t *testing.T) {
 				"1.15.4": true,
 			},
 			expected: nil,
-			name:     "ValidInputForSinglePoolUpgrade",
+			name:     "UpgradePoolToMasterVersion",
 		},
 		{
 			uc: &upgradeCmd{
@@ -693,14 +694,14 @@ func TestValidateSinglePoolTargetVersion(t *testing.T) {
 				},
 			},
 			validVersions: map[string]bool{
-				"1.15.4": true,
+				"1.15.3": true,
 			},
-			expected: errors.New("upgrading individual node pools requires a target version equal to the control plane version (1.15.4)"),
-			name:     "BlockPoolUpgradeToDifferentMasterVersion",
+			expected: nil,
+			name:     "UpgradePoolToLowerMasterVersion",
 		},
 		{
 			uc: &upgradeCmd{
-				upgradeVersion:     "1.15.4",
+				upgradeVersion:     "1.15.5",
 				agentPoolToUpgrade: "linuxpool1",
 				containerService: &api.ContainerService{
 					Properties: &api.Properties{
@@ -712,22 +713,41 @@ func TestValidateSinglePoolTargetVersion(t *testing.T) {
 				},
 			},
 			validVersions: map[string]bool{
-				"1.15.4": false,
+				"1.15.5": true,
 			},
-			expected: errors.New("upgrading to version 1.15.4 is not supported, use 'aks-engine get-versions' to see a list of available upgrades"),
-			name:     "BlockPoolUpgradeToUnsupportedVersion",
+			expected: nil,
+			name:     "UpgradePoolToHigherMasterVersion",
+		},
+		{
+			uc: &upgradeCmd{
+				upgradeVersion:     "1.15.5",
+				agentPoolToUpgrade: "linuxpool1",
+				containerService: &api.ContainerService{
+					Properties: &api.Properties{
+						OrchestratorProfile: &api.OrchestratorProfile{
+							OrchestratorType:    api.Kubernetes,
+							OrchestratorVersion: "1.15.4",
+						},
+					},
+				},
+			},
+			validVersions: map[string]bool{
+				"1.15.5": false,
+			},
+			expected: errors.New("upgrading from Kubernetes version 1.15.4 to version 1.15.5 is not supported. To see a list of available upgrades, use 'aks-engine get-versions --version 1.15.4'"),
+			name:     "UpgradePoolToUnsupportedVersion",
 		},
 	}
 	for _, tc := range cases {
 		c := tc
-		t.Run(c.name, func(t *testing.T) {
-			setupValidVersions(c.validVersions)
-			ret := c.uc.validateTargetVersion()
-			if ret != nil && ret.Error() != c.expected.Error() {
-				t.Errorf("expected %t to be %t", ret, c.expected)
-			}
-			resetValidVersions()
-		})
+		setupValidVersions(c.validVersions)
+		err := c.uc.validateTargetVersion()
+		if c.expected != nil {
+			g.Expect(c.expected.Error()).To(Equal(err.Error()))
+		} else {
+			g.Expect(c.expected).To(Not(HaveOccurred()))
+		}
+		resetValidVersions()
 	}
 }
 

@@ -214,15 +214,9 @@ func (uc *upgradeCmd) loadCluster() error {
 
 func (uc *upgradeCmd) validateTargetVersion() error {
 	cpVersion := uc.containerService.Properties.OrchestratorProfile.OrchestratorVersion
-	if uc.isSinglePoolUpgrade() {
-		// Make sure node pool is upgraded to the control plane version
-		// Is it OK for --force to be able to bypass this validation?
-		if !strings.EqualFold(uc.upgradeVersion, cpVersion) {
-			return errors.Errorf("upgrading individual node pools requires a target version equal to the control plane version (%s)", cpVersion)
-		}
-		if !common.AllKubernetesSupportedVersions[cpVersion] {
-			return errors.Errorf("upgrading to version %s is not supported, use 'aks-engine get-versions' to see a list of available upgrades", uc.upgradeVersion)
-		}
+
+	// Allow updating single node pool to the CP version
+	if uc.isSinglePoolUpgrade() && cpVersion == uc.upgradeVersion && common.AllKubernetesSupportedVersions[cpVersion] {
 		return nil
 	}
 
