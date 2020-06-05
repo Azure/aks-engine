@@ -431,7 +431,7 @@ ensureJournal() {
 installKubeletAndKubectl() {
   path=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    path=/opt
+    path=/opt/bin
   fi
   if [[ ! -f "${path}/kubectl-${KUBERNETES_VERSION}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then

@@ -186,14 +186,14 @@ extractHyperkube() {
   path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
   targetpath="/usr/local/bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    targetpath="/opt"
+    targetpath="/opt/bin"
   fi
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
   if [[ $CLI_TOOL == "docker" ]]; then
     mkdir -p "$path"
     if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
-      mv "$path/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-      mv "$path/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+      mv "${path}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+      mv "${path}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
       return
     else
       docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
@@ -202,13 +202,10 @@ extractHyperkube() {
     img unpack -o "$path" ${HYPERKUBE_URL}
   fi
 
+  cp "${path}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+  mv "${path}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    cp "$path/hyperkube" "/opt/kubelet"
-    mv "$path/hyperkube" "/opt/kubectl"
-    chmod a+x /opt/kubelet /opt/kubectl
-  else
-    cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-    mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+    chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
   fi
 }
 extractKubeBinaries() {
@@ -218,7 +215,7 @@ extractKubeBinaries() {
   retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
   path=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    path=/opt
+    path=/opt/bin
   fi
   tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
     --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl

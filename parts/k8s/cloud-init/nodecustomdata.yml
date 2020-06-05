@@ -415,10 +415,10 @@ coreos:
             [Unit]
             Requires=rpc-statd.service
             ConditionPathExists=
-            ConditionPathExists=/opt/kubelet
+            ConditionPathExists=/opt/bin/kubelet
             [Service]
             ExecStart=
-            ExecStart=/opt/kubelet \
+            ExecStart=/opt/bin/kubelet \
               --enable-server \
               --node-labels="${KUBELET_NODE_LABELS}" \
               --v=2 \
