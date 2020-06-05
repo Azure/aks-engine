@@ -14072,7 +14072,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 ---
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: omsagent-reader
   labels:
@@ -14080,7 +14080,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
-    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "namespaces", "services"]
+    resources: ["pods", "events", "nodes", "nodes/stats", "nodes/metrics", "nodes/spec", "nodes/proxy", "namespaces", "services"]
     verbs: ["list", "get", "watch"]
   - apiGroups: ["extensions", "apps"]
     resources: ["replicasets"]
@@ -14092,7 +14092,7 @@ rules:
     verbs: ["get"]
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: omsagentclusterrolebinding
   labels:
