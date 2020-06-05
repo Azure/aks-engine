@@ -489,8 +489,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
-	// multiple v6 configs are not supported. this flag is set after creating 1 v6 config.
-	var isV6ConfigCreated bool
 	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
@@ -552,7 +550,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 
-		if !isV6ConfigCreated && (cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")) {
+		// multiple v6 configs are not supported. creating 1 IPv6 config.
+		if i == 1 && (cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")) {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
@@ -564,7 +563,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				},
 			}
 			ipConfigurations = append(ipConfigurations, ipconfigv6)
-			isV6ConfigCreated = true
 		}
 	}
 
