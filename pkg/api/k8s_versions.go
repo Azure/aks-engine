@@ -29,8 +29,8 @@ const (
 	antreaOVSImageReference                                  = antreaControllerImageReference
 	antreaInstallCNIImageReference                           = antreaControllerImageReference
 	azureNPMContainerImageReference                   string = "mcr.microsoft.com/containernetworking/azure-npm:v1.1.2"
-	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.2"
-	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.2"
+	aadPodIdentityNMIImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/nmi:1.6.1"
+	aadPodIdentityMICImageReference                   string = "mcr.microsoft.com/k8s/aad-pod-identity/mic:1.6.1"
 	azurePolicyImageReference                         string = "mcr.microsoft.com/azure-policy/policy-kubernetes-addon-prod:prod_20200505.1"
 	gatekeeperImageReference                          string = "mcr.microsoft.com/oss/open-policy-agent/gatekeeper:v3.1.0-beta.8"
 	nodeProblemDetectorImageReference                 string = "k8s.gcr.io/node-problem-detector:v0.8.2"
