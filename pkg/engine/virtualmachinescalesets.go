@@ -862,7 +862,7 @@ func associateAddonIdentitiesToVMSS(addonProfiles map[string]api.AddonProfile, v
 			// Note: virtualMachineScaleSet.Identity is not nil and its type is None will NEVER happen in current AKS-Engine's implementation.
 			if virtualMachineScaleSet.Identity == nil {
 				virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
-					Type: compute.ResourceIdentityTypeUserAssigned,
+					Type:                   compute.ResourceIdentityTypeUserAssigned,
 					UserAssignedIdentities: make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue),
 				}
 			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
