@@ -7453,6 +7453,8 @@ spec:
       - name: k8s-azure-file
         hostPath:
           path: /etc/kubernetes/azure.json
+      nodeSelector:
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsAadPodIdentityYamlBytes() ([]byte, error) {
