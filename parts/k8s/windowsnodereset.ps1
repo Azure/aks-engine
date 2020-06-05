@@ -66,6 +66,8 @@ if ($hnsNetwork) {
         "c:\k\azure-vnet.json.lock",
         "c:\k\azure-vnet-ipam.json",
         "c:\k\azure-vnet-ipam.json.lock"
+        "c:\k\azure-vnet-ipamv6.json",
+        "c:\k\azure-vnet-ipamv6.json.lock"
     )
 
     foreach ($file in $filesToRemove) {

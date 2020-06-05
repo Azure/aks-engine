@@ -357,7 +357,8 @@ try
                 -KubeServiceCIDR $global:KubeServiceCIDR `
                 -VNetCIDR $global:VNetCIDR `
                 {{- /* Azure Stack has discrete Azure CNI config requirements */}}
-                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
+                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}} `
+                -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `
@@ -382,7 +383,7 @@ try
             }
         }
 
-        New-ExternalHnsNetwork
+        New-ExternalHnsNetwork -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
         Install-KubernetesServices `
             -KubeDir $global:KubeDir

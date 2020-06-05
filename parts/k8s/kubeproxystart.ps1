@@ -24,4 +24,9 @@ Import-Module $global:HNSModule
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
-.$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
+if (("--feature-gates=IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null) {
+    .$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --feature-gates=IPv6DualStack=true --hostname-override=$env:computername --kubeconfig=$KubeDir\config
+}
+else {
+    .$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
+}

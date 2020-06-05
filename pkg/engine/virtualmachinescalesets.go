@@ -489,7 +489,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
-
+	// multiple v6 configs are not supported. this flag is set after creating 1 v6 config.
+	var isV6ConfigCreated bool
 	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
@@ -551,7 +552,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		if !isV6ConfigCreated && (cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")) {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
@@ -563,6 +564,7 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 				},
 			}
 			ipConfigurations = append(ipConfigurations, ipconfigv6)
+			isV6ConfigCreated = true
 		}
 	}
 
@@ -862,7 +864,7 @@ func associateAddonIdentitiesToVMSS(addonProfiles map[string]api.AddonProfile, v
 			// Note: virtualMachineScaleSet.Identity is not nil and its type is None will NEVER happen in current AKS-Engine's implementation.
 			if virtualMachineScaleSet.Identity == nil {
 				virtualMachineScaleSet.Identity = &compute.VirtualMachineScaleSetIdentity{
-					Type:                   compute.ResourceIdentityTypeUserAssigned,
+					Type: compute.ResourceIdentityTypeUserAssigned,
 					UserAssignedIdentities: make(map[string]*compute.VirtualMachineScaleSetIdentityUserAssignedIdentitiesValue),
 				}
 			} else if virtualMachineScaleSet.Identity.Type == compute.ResourceIdentityTypeSystemAssigned {
