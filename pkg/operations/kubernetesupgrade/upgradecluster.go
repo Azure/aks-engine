@@ -21,7 +21,7 @@ import (
 )
 
 // IsVMSSToBeUpgradedCb - Call back for checking whether the given vmss is to be upgraded or not.
-type IsVMSSToBeUpgradedCb func(vmss string, cs *api.ContainerService, targetPools map[string]bool) bool
+type IsVMSSToBeUpgradedCb func(vmss string, cs *api.ContainerService, agentPoolsToUpgrade map[string]bool) bool
 
 // ClusterTopology contains resources of the cluster the upgrade operation
 // is targeting
@@ -179,7 +179,7 @@ func (uc *UpgradeCluster) getUpgradeWorkflow(kubeConfig string, aksEngineVersion
 		return uc.UpgradeWorkFlow
 	}
 	u := &Upgrader{}
-	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion, uc.ControlPlaneOnly)
+	u.Init(uc.Translator, uc.Logger, uc.ClusterTopology, uc.Client, kubeConfig, uc.StepTimeout, uc.CordonDrainTimeout, aksEngineVersion, uc.ControlPlaneOnly, uc.AgentPoolsToUpgrade)
 	u.CurrentVersion = uc.CurrentVersion
 	return u
 }
@@ -266,6 +266,11 @@ func (uc *UpgradeCluster) getClusterNodeStatus(kubeClient armhelpers.KubernetesC
 					*vm.Name, uc.NameSuffix)
 				continue
 			}
+			if !isVMInTargetPool(vm.Tags, uc.AgentPoolsToUpgrade) {
+				uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to a target node pool", *vm.Name)
+				continue
+			}
+
 			currentVersion := uc.getNodeVersion(kubeClient, strings.ToLower(*vm.Name), vm.Tags, true)
 
 			if uc.Force {
@@ -457,4 +462,18 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
 		}
 	}
+}
+
+func isVMInTargetPool(tags map[string]*string, agentPoolsToUpgrade map[string]bool) bool {
+	if tags == nil {
+		return true
+	}
+	poolName, ok := tags["poolName"]
+	if !ok {
+		return true
+	}
+	if isTargetPool, ok := agentPoolsToUpgrade[*poolName]; ok {
+		return isTargetPool
+	}
+	return false
 }

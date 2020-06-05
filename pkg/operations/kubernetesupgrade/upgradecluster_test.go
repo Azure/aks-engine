@@ -979,7 +979,11 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		}
 
 		u := &Upgrader{}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
+		agentPoolsToUpgrade := map[string]bool{
+			MasterPoolName: true,
+			"agentnode1":   true,
+		}
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false, agentPoolsToUpgrade)
 
 		vmname, err := u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal("aks-agentnode1-123456-vmss000005"))
@@ -993,7 +997,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 				mockClient.MakeFakeVirtualMachineScaleSetVMWithGivenName("Kubernetes:1.9.10", ""),
 			}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false, agentPoolsToUpgrade)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -1002,7 +1006,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		mockClient.FakeListVirtualMachineScaleSetVMsResult = func() []compute.VirtualMachineScaleSetVM {
 			return []compute.VirtualMachineScaleSetVM{}
 		}
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, &mockClient, "", nil, nil, TestAKSEngineVersion, false, agentPoolsToUpgrade)
 
 		vmname, err = u.getLastVMNameInVMSS(ctx, "resourcegroup", "scalesetName")
 		Expect(vmname).To(Equal(""))
@@ -1011,11 +1015,14 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 
 	It("Tests CopyCustomPropertiesToNewNode", func() {
 		u := &Upgrader{}
-
+		agentPoolsToUpgrade := map[string]bool{
+			MasterPoolName: true,
+			"agentnode1":   true,
+		}
 		mockClient := &armhelpers.MockAKSEngineClient{MockKubernetesClient: &armhelpers.MockKubernetesClient{}}
 		mockClient.MockKubernetesClient.FailGetNode = true
 
-		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion, false)
+		u.Init(&i18n.Translator{}, log.NewEntry(log.New()), ClusterTopology{}, nil, "", nil, nil, TestAKSEngineVersion, false, agentPoolsToUpgrade)
 		err := u.copyCustomPropertiesToNewNode(mockClient.MockKubernetesClient, "oldNodeName", "newNodeName")
 		Expect(err).To(HaveOccurred())
 
@@ -1071,3 +1078,57 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		Expect(len(newNode.Spec.Taints)).To(Equal(2))
 	})
 })
+
+func TestIsVMInTargetPool(t *testing.T) {
+	g := NewGomegaWithT(t)
+	cases := []struct {
+		poolsToUpgrade map[string]bool
+		vmTags         map[string]*string
+		expected       bool
+		name           string
+	}{
+		{
+			poolsToUpgrade: map[string]bool{
+				"linuxpool1": true,
+			},
+			vmTags:   nil,
+			expected: true,
+			name:     "TagsIsNil",
+		},
+		{
+			poolsToUpgrade: map[string]bool{
+				"linuxpool1": true,
+			},
+			vmTags: map[string]*string{
+				"foo": to.StringPtr("bar"),
+			},
+			expected: true,
+			name:     "PoolNameTagMissing",
+		},
+		{
+			poolsToUpgrade: map[string]bool{
+				"linuxpool1": true,
+			},
+			vmTags: map[string]*string{
+				"poolName": to.StringPtr("linuxpool1"),
+			},
+			expected: true,
+			name:     "PoolNameMatchesTagAndShouldBeUpgraded",
+		},
+		{
+			poolsToUpgrade: map[string]bool{
+				"linuxpool1": false,
+			},
+			vmTags: map[string]*string{
+				"poolName": to.StringPtr("linuxpool1"),
+			},
+			expected: false,
+			name:     "PoolNameMatchesTagAndShouldNotBeUpgraded",
+		},
+	}
+	for _, tc := range cases {
+		c := tc
+		res := isVMInTargetPool(c.vmTags, c.poolsToUpgrade)
+		g.Expect(res).To(Equal(c.expected))
+	}
+}

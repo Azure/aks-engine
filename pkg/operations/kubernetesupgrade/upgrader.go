@@ -40,6 +40,7 @@ type Upgrader struct {
 	AKSEngineVersion   string
 	CurrentVersion     string
 	ControlPlaneOnly   bool
+	AgentPoolsToUpgrade map[string]bool
 }
 
 type vmStatus int
@@ -61,7 +62,7 @@ type vmInfo struct {
 }
 
 // Init initializes an upgrader struct
-func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string, controlPlaneOnly bool) {
+func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clusterTopology ClusterTopology, client armhelpers.AKSEngineClient, kubeConfig string, stepTimeout *time.Duration, cordonDrainTimeout *time.Duration, aksEngineVersion string, controlPlaneOnly bool, agentPoolsToUpgrade map[string]bool) {
 	ku.Translator = translator
 	ku.logger = logger
 	ku.ClusterTopology = clusterTopology
@@ -71,10 +72,12 @@ func (ku *Upgrader) Init(translator *i18n.Translator, logger *logrus.Entry, clus
 	ku.cordonDrainTimeout = cordonDrainTimeout
 	ku.AKSEngineVersion = aksEngineVersion
 	ku.ControlPlaneOnly = controlPlaneOnly
+	ku.AgentPoolsToUpgrade = agentPoolsToUpgrade
 }
 
 // RunUpgrade runs the upgrade pipeline
 func (ku *Upgrader) RunUpgrade() error {
+<<<<<<< HEAD
 	controlPlaneUpgradeTimeout := perNodeUpgradeTimeout
 	if ku.ClusterTopology.DataModel.Properties.MasterProfile.Count > 0 {
 		controlPlaneUpgradeTimeout = perNodeUpgradeTimeout * time.Duration(ku.ClusterTopology.DataModel.Properties.MasterProfile.Count)
@@ -87,6 +90,15 @@ func (ku *Upgrader) RunUpgrade() error {
 
 	ku.handleUnreconcilableAddons()
 
+=======
+	ctx, cancel := context.WithTimeout(context.Background(), clusterUpgradeTimeout)
+	defer cancel()
+	if ku.AgentPoolsToUpgrade[MasterPoolName] {
+		if err := ku.upgradeMasterNodes(ctx); err != nil {
+			return err
+		}
+	}
+>>>>>>> wip
 	if ku.ControlPlaneOnly {
 		return nil
 	}
