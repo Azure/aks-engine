@@ -2311,62 +2311,6 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.AgentPoolProfiles = []*AgentPoolProfile{
-		{
-			AvailabilityProfile: AvailabilitySet,
-			Distro:              Flatcar,
-		},
-	}
-
-	p.MasterProfile = &MasterProfile{
-		Distro: Flatcar,
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "smb-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with flatcar (smb-flexvolume)",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "keyvault-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with flatcar (keyvault-flexvolume)",
-		)
-	}
-
-	p.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
-		Addons: []KubernetesAddon{
-			{
-				Name:    "blobfuse-flexvolume",
-				Enabled: to.BoolPtr(true),
-			},
-		},
-	}
-
-	if err := p.validateAddons(); err == nil {
-		t.Errorf(
-			"should error using incompatible addon with flatcar (blobfuse-flexvolume)",
-		)
-	}
-
 	// appgw-ingress add-on
 
 	// Basic test with UseManagedIdentity
@@ -3949,16 +3893,11 @@ func TestValidateProperties_OrchestratorSpecificProperties(t *testing.T) {
 		for _, featureFlags := range []FeatureFlags{{EnableIPv6DualStack: true}, {EnableIPv6Only: true}} {
 			cs.Properties.FeatureFlags = &featureFlags
 			masterProfile := cs.Properties.MasterProfile
-			masterProfile.Distro = Flatcar
-			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", masterProfile.Distro)
-			if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
-				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
-			}
 
 			masterProfile.Distro = Ubuntu
 			agentPoolProfiles := cs.Properties.AgentPoolProfiles
 			agentPoolProfiles[0].OSType = Windows
-			expectedMsg = fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
+			expectedMsg := fmt.Sprintf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfiles[0].Name, agentPoolProfiles[0].OSType)
 			if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 				t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 			}

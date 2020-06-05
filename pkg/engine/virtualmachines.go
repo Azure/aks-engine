@@ -70,14 +70,6 @@ func CreateMasterVM(cs *api.ContainerService) VirtualMachineARM {
 		Type:     to.StringPtr("Microsoft.Compute/virtualMachines"),
 	}
 
-	if cs.Properties.MasterProfile.IsFlatcar() {
-		virtualMachine.Plan = &compute.Plan{
-			Publisher: to.StringPtr("[parameters('osImagePublisher')]"),
-			Name:      to.StringPtr("[parameters('osImageSku')]"),
-			Product:   to.StringPtr("[parameters('osImageOffer')]"),
-		}
-	}
-
 	addCustomTagsToVM(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
 
 	if hasAvailabilityZones {

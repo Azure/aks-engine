@@ -17909,9 +17909,6 @@ var _k8sCloudInitArtifactsCse_configSh = []byte(`#!/bin/bash
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
-if [[ $OS == $FLATCAR_OS_NAME ]]; then
-  PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
@@ -19115,10 +19112,6 @@ installEtcd() {
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
     local path="/usr/bin"
-    if [[ $OS == $FLATCAR_OS_NAME ]]; then
-      path="/opt/bin"
-    fi
-
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
     removeEtcd
@@ -19404,10 +19397,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
-if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    KUBECTL=/opt/kubectl
-fi
-
 if [ -f /var/run/reboot-required ]; then
   REBOOTREQUIRED=true
   trace_info "RebootRequired" "reboot=true"
@@ -19599,7 +19588,7 @@ if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureTaints" ensureTaints
 {{end}}
   if [[ -z ${COSMOS_URI} ]]; then
-    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${OS} == ${UBUNTU_OS_NAME} ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
     fi
   fi
@@ -21031,656 +21020,559 @@ func k8sCloudInitJumpboxcustomdataYml() (*asset, error) {
 var _k8sCloudInitMasternodecustomdataYml = []byte(`#cloud-config
 
 write_files:
-- path: {{GetCSEHelpersScriptFilepath}}
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionSource"}}
+  - path: {{GetCSEHelpersScriptFilepath}}
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "provisionSource"}}
 
-- path: /opt/azure/containers/provision.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionScript"}}
+  - path: /opt/azure/containers/provision.sh
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "provisionScript"}}
 
-- path: {{GetCSEInstallScriptFilepath}}
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionInstalls"}}
+  - path: {{GetCSEInstallScriptFilepath}}
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "provisionInstalls"}}
 
-- path: {{GetCSEConfigScriptFilepath}}
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionConfigs"}}
+  - path: {{GetCSEConfigScriptFilepath}}
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "provisionConfigs"}}
 
-{{- if not .MasterProfile.IsVHDDistro}}
-- path: /opt/azure/containers/provision_cis.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "provisionCIS"}}
-{{end}}
-
-{{- if not .MasterProfile.IsVHDDistro}}
-  {{- if .MasterProfile.IsAuditDEnabled}}
-- path: /etc/audit/rules.d/CIS.rules
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "auditdRules"}}
-  {{end}}
-{{end}}
-
-{{- if .MasterProfile.IsUbuntu1804}}
   {{- if not .MasterProfile.IsVHDDistro}}
-- path: /var/run/reboot-required
-  permissions: "0644"
-  owner: root
-  content: |
-
+  - path: /opt/azure/containers/provision_cis.sh
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "provisionCIS"}}
   {{end}}
-{{end}}
 
-{{- if IsCustomCloudProfile}}
-- path: {{GetCustomCloudConfigCSEScriptFilepath}}
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{WrapAsVariable "provisionConfigsCustomCloud"}}
-{{end}}
-
-{{- if HasKubeReservedCgroup}}
-- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
-  permissions: "0644"
-  owner: root
-  content: |
-    [Unit]
-    Description=Limited resources slice for Kubernetes services
-    Documentation=man:systemd.special(7)
-    DefaultDependencies=no
-    Before=slices.target
-    Requires=-.slice
-    After=-.slice
-    #EOF
-
-- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-
-  {{if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{else}}
-- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    Slice={{- GetKubeReservedCgroup -}}.slice
-    #EOF
-  {{end}}
-{{end}}
-
-- path: /etc/systemd/system/kubelet.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletSystemdService"}}
-
-{{- if not .MasterProfile.IsVHDDistro}}
-    {{- if .MasterProfile.IsFlatcar}}
-- path: /opt/bin/health-monitor.sh
-    {{else}}
-- path: /usr/local/bin/health-monitor.sh
-    {{- end}}
-  permissions: "0544"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "healthMonitorScript"}}
-
-- path: /etc/systemd/system/kubelet-monitor.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kubeletMonitorSystemdService"}}
-
-- path: /etc/systemd/system/docker-monitor.timer
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdTimer"}}
-
-- path: /etc/systemd/system/docker-monitor.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerMonitorSystemdService"}}
-
-- path: /opt/azure/containers/label-nodes.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesScript"}}
-
-- path: /etc/systemd/system/label-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "labelNodesSystemdService"}}
-
-- path: /etc/systemd/system/kms.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "kmsSystemdService"}}
-
-- path: /etc/apt/preferences
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "aptPreferences"}}
-{{end}}
-
-{{if IsAADPodIdentityAddonEnabled}}
-- path: /opt/azure/containers/untaint-nodes.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "untaintNodesScript"}}
-
-- path: /etc/systemd/system/untaint-nodes.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "untaintNodesSystemdService"}}
-{{- end}}
-
-- path: /etc/apt/apt.conf.d/99periodic
-  permissions: "0644"
-  owner: root
-  content: |
-    APT::Periodic::Update-Package-Lists "0";
-    APT::Periodic::Download-Upgradeable-Packages "0";
-    APT::Periodic::AutocleanInterval "0";
-    APT::Periodic::Unattended-Upgrade "0";
-
-{{- if IsIPv6Enabled}}
-- path: {{GetDHCPv6ServiceCSEScriptFilepath}}
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dhcpv6SystemdService"}}
-
-- path: {{GetDHCPv6ConfigCSEScriptFilepath}}
-  permissions: "0544"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dhcpv6ConfigurationScript"}}
-{{end}}
-
-{{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-    {{- if not .MasterProfile.IsFlatcar}}
-        {{- if not .MasterProfile.IsVHDDistro}}
-- path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "dockerClearMountPropagationFlags"}}
-         {{- end}}
-    {{- end}}
-
-- path: /etc/systemd/system/docker.service.d/exec_start.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    ExecStart=
-    {{- if .MasterProfile.IsFlatcar}}
-    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
-    {{else}}
-    ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
-    {{- end}}
-    ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
-    #EOF
-
-- path: /etc/docker/daemon.json
-  permissions: "0644"
-  owner: root
-  content: |
-{{IndentString (GetDockerConfig false) 4}}
-{{end}}
-
-{{- if HasCiliumNetworkPlugin}}
-- path: /etc/systemd/system/sys-fs-bpf.mount
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "systemdBPFMount"}}
-{{end}}
-
-- path: /etc/sysctl.d/11-aks-engine.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
-    #EOF
-
-{{- if NeedsContainerd}}
-- path: /etc/systemd/system/containerd.service.d/exec_start.conf
-  permissions: "0644"
-  owner: root
-  content: |
-    [Service]
-    ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
-    #EOF
-
-- path: /etc/containerd/config.toml
-  permissions: "0644"
-  owner: root
-  content: |
-{{IndentString GetContainerdConfig 4}}
-    #EOF
-
-  {{- if IsKubenet}}
-- path: /etc/containerd/kubenet_template.conf
-  permissions: "0644"
-  owner: root
-  content: |
-      {
-          "cniVersion": "0.3.1",
-          "name": "kubenet",
-          "plugins": [{
-            "type": "bridge",
-            "bridge": "cbr0",
-            "mtu": 1500,
-            "addIf": "eth0",
-            "isGateway": true,
-            "ipMasq": false,
-            "hairpinMode": false,
-            "ipam": {
-                "type": "host-local",
-                "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
-                "routes": [{ "dst": "0.0.0.0/0" }]
-            }
-          }]
-      }
+  {{- if not .MasterProfile.IsVHDDistro}}
+    {{- if .MasterProfile.IsAuditDEnabled}}
+  - path: /etc/audit/rules.d/CIS.rules
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "auditdRules"}}
     {{end}}
-{{end}}
-
-- path: /etc/kubernetes/certs/ca.crt
-  permissions: "0644"
-  encoding: base64
-  owner: root
-  content: |
-    {{WrapAsParameter "caCertificate"}}
-
-- path: /etc/kubernetes/certs/client.crt
-  permissions: "0644"
-  encoding: "base64"
-  owner: "root"
-  content: |
-    {{WrapAsParameter "clientCertificate"}}
-
-{{- if EnableAggregatedAPIs}}
-- path: /etc/kubernetes/generate-proxy-certs.sh
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "generateProxyCertsScript"}}
-{{end}}
-
-{{- if HasCustomSearchDomain}}
-- path: {{GetCustomSearchDomainsCSEScriptFilepath}}
-  permissions: "0744"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "customSearchDomainsScript"}}
-{{end}}
-
-- path: /var/lib/kubelet/kubeconfig
-  permissions: "0644"
-  owner: root
-  content: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-    - name: localcluster
-      cluster:
-        certificate-authority: /etc/kubernetes/certs/ca.crt
-      {{if IsMasterVirtualMachineScaleSets}}
-        server: <SERVERIP>
-      {{else}}
-        server: {{WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')"}}
-      {{end}}
-    users:
-    - name: client
-      user:
-        client-certificate: /etc/kubernetes/certs/client.crt
-        client-key: /etc/kubernetes/certs/client.key
-    contexts:
-    - context:
-        cluster: localcluster
-        user: client
-      name: localclustercontext
-    current-context: localclustercontext
-    #EOF
-
-{{- if EnableDataEncryptionAtRest}}
-- path: /etc/kubernetes/encryption-config.yaml
-  permissions: "0600"
-  owner: root
-  content: |
-    kind: EncryptionConfiguration
-    apiVersion: apiserver.config.k8s.io/v1
-    resources:
-      - resources:
-          - secrets
-        providers:
-          - aescbc:
-              keys:
-                - name: key1
-                  secret: <etcdEncryptionSecret>
-          - identity: {}
-{{end}}
-
-{{- if EnableEncryptionWithExternalKms}}
-- path: /etc/kubernetes/encryption-config.yaml
-  permissions: "0444"
-  owner: root
-  content: |
-    kind: EncryptionConfiguration
-    apiVersion: apiserver.config.k8s.io/v1
-    resources:
-      - resources:
-        - secrets
-        providers:
-        - kms:
-            name: azurekmsprovider
-            endpoint: unix:///opt/azurekms.socket
-            cachesize: 1000
-        - identity: {}
-{{end}}
-
-MASTER_MANIFESTS_CONFIG_PLACEHOLDER
-
-MASTER_CUSTOM_FILES_PLACEHOLDER
-
-MASTER_CONTAINER_ADDONS_PLACEHOLDER
-
-- path: /etc/default/kubelet
-  permissions: "0644"
-  owner: root
-  content: |
-    KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
-{{- if IsKubernetesVersionGe "1.16.0"}}
-    KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
-{{else}}
-    KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
-{{end}}
-{{- if IsCustomCloudProfile }}
-    AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
-{{end}}
-    #EOF
-
-- path: /opt/azure/containers/kubelet.sh
-  permissions: "0755"
-  owner: root
-  content: |
-    #!/bin/bash
-    set -e
-    MOUNT_DIR=/var/lib/kubelet
-    mkdir -p $MOUNT_DIR /var/lib/cni
-    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
-      mount --bind $MOUNT_DIR $MOUNT_DIR
-    fi
-    mount --make-shared $MOUNT_DIR
-    {{- if .MasterProfile.IsFlatcar}}
-    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{- end}}
-{{- if IsMasterVirtualMachineScaleSets}}
-    sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
-{{- end}}
-{{- if gt .MasterProfile.Count 1}}
-    {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
-    iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
-{{- end}}
-    sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
-{{- if EnableDataEncryptionAtRest }}
-    sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
-{{- end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
-    {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
-    sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
-    {{else}}
-    sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
-    sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
-    {{end}}
-{{- end}}
-{{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
-    sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
-{{- end}}
-    #EOF
-
-{{- if not HasCosmosEtcd  }}
-- path: /etc/systemd/system/etcd.service
-  permissions: "0644"
-  encoding: gzip
-  owner: root
-  content: !!binary |
-    {{CloudInitData "etcdSystemdService"}}
-
-- path: /opt/azure/containers/setup-etcd.sh
-  permissions: "0744"
-  owner: root
-  content: |
-    #!/bin/bash
-    set -x
-    if [[ ! -s /etc/environment ]]; then
-        {{- /* /etc/environment is empty, which will break subsequent sed commands
-               Append a blank line... */}}
-        echo "" >> /etc/environment
-    fi
-  {{- if IsMasterVirtualMachineScaleSets}}
-    MASTER_VM_NAME=$(hostname)
-    MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
-    MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
-    MASTER_INDEX=$(hostname | tail -c 2)
-    {{- if .MasterProfile.IsFlatcar}}
-    PRIVATE_IP=$(hostname -I | cut -d" " -f1)
-    {{else}}
-    PRIVATE_IP=$(hostname -i | cut -d" " -f1)
-    {{- end}}
-    MASTER_COUNT={{WrapAsVariable "masterCount"}}
-    IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
-    echo $IPADDRESS_COUNT
-    ETCD_SERVER_PORT={{WrapAsVariable "masterEtcdServerPort"}}
-    ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
-    MASTER_URLS=""
-    index=0
-    IFS=. read -r a b c d <<< "$MASTER_FIRSTADDR"
-    d=$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))
-    echo $d
-    while [ $index -lt $MASTER_COUNT ]
-    do
-        echo $index
-        x=` + "`" + `expr $d + $IPADDRESS_COUNT \\* $index` + "`" + `
-        echo $x
-        s=""
-        for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
-        s=$(echo $s | tail -c +2)
-        MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
-        index=` + "`" + `expr $index + 1` + "`" + `
-    done
-    MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
-    echo $MASTER_URLS
-    sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:$ETCD_CLIENT_PORT" /etc/environment
-    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
-    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "http://$PRIVATE_IP:2480" | tee -a /etc/default/etcd
-  {{else}}
-    sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
-    sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
-    sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
-    sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
-    /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "{{WrapAsVerbatim "variables('masterEtcdMetricURLs')[copyIndex(variables('masterOffset'))]"}}" | tee -a /etc/default/etcd
   {{end}}
-{{end}}
-    #EOF
 
-{{- if IsCustomCloudProfile}}
-- path: "/etc/kubernetes/azurestackcloud.json"
-  permissions: "0600"
-  owner: "root"
-  content: |
-    {{WrapAsVariable "environmentJSON"}}
-{{end}}
+  {{- if .MasterProfile.IsUbuntu1804}}
+    {{- if not .MasterProfile.IsVHDDistro}}
+  - path: /var/run/reboot-required
+    permissions: "0644"
+    owner: root
+    content: |
 
-{{- if .MasterProfile.IsFlatcar}}
-- path: /opt/azure/containers/provision-setup.sh
-  permissions: "0755"
-  owner: root
-  content: |
-    #!/bin/bash
-    source {{GetCSEHelpersScriptFilepath}}
-    /opt/azure/containers/mountetcd.sh
-    retrycmd_if_failure 5 5 10 curl --retry 5 --retry-delay 10 --retry-max-time 10 --max-time 60 https://127.0.0.1:2379/v2/machines
-    {{- if EnableAggregatedAPIs}}
-    sudo bash /etc/kubernetes/generate-proxy-certs.sh
-    {{- end}}
-    touch /opt/azure/containers/runcmd.complete
+    {{end}}
+  {{end}}
 
-- path: "/etc/kubernetes/manifests/.keep"
+  {{- if IsCustomCloudProfile}}
+  - path: {{GetCustomCloudConfigCSEScriptFilepath}}
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{WrapAsVariable "provisionConfigsCustomCloud"}}
+  {{end}}
+
+  {{- if HasKubeReservedCgroup}}
+  - path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+    permissions: "0644"
+    owner: root
+    content: |
+      [Unit]
+      Description=Limited resources slice for Kubernetes services
+      Documentation=man:systemd.special(7)
+      DefaultDependencies=no
+      Before=slices.target
+      Requires=-.slice
+      After=-.slice
+      #EOF
+
+  - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      [Service]
+      Slice={{- GetKubeReservedCgroup -}}.slice
+      #EOF
+
+    {{if NeedsContainerd}}
+  - path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      [Service]
+      Slice={{- GetKubeReservedCgroup -}}.slice
+      #EOF
+    {{else}}
+  - path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      [Service]
+      Slice={{- GetKubeReservedCgroup -}}.slice
+      #EOF
+    {{end}}
+  {{end}}
+
+  - path: /etc/systemd/system/kubelet.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "kubeletSystemdService"}}
+
+  {{- if not .MasterProfile.IsVHDDistro}}
+  - path: /usr/local/bin/health-monitor.sh
+    permissions: "0544"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "healthMonitorScript"}}
+
+  - path: /etc/systemd/system/kubelet-monitor.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "kubeletMonitorSystemdService"}}
+
+  - path: /etc/systemd/system/docker-monitor.timer
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "dockerMonitorSystemdTimer"}}
+
+  - path: /etc/systemd/system/docker-monitor.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "dockerMonitorSystemdService"}}
+
+  - path: /opt/azure/containers/label-nodes.sh
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "labelNodesScript"}}
+
+  - path: /etc/systemd/system/label-nodes.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "labelNodesSystemdService"}}
+
+  - path: /etc/systemd/system/kms.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "kmsSystemdService"}}
+
+  - path: /etc/apt/preferences
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "aptPreferences"}}
+  {{end}}
+
+  {{if IsAADPodIdentityAddonEnabled}}
+  - path: /opt/azure/containers/untaint-nodes.sh
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "untaintNodesScript"}}
+
+  - path: /etc/systemd/system/untaint-nodes.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "untaintNodesSystemdService"}}
+  {{end}}
+
+  - path: /etc/apt/apt.conf.d/99periodic
+    permissions: "0644"
+    owner: root
+    content: |
+      APT::Periodic::Update-Package-Lists "0";
+      APT::Periodic::Download-Upgradeable-Packages "0";
+      APT::Periodic::AutocleanInterval "0";
+      APT::Periodic::Unattended-Upgrade "0";
+
+  {{- if IsIPv6Enabled}}
+  - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "dhcpv6SystemdService"}}
+
+  - path: {{GetDHCPv6ConfigCSEScriptFilepath}}
+    permissions: "0544"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "dhcpv6ConfigurationScript"}}
+  {{end}}
 
   {{- if .OrchestratorProfile.KubernetesConfig.RequiresDocker}}
-groups:
-  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
-  {{- end}}
+      {{- if not .MasterProfile.IsVHDDistro}}
+  - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "dockerClearMountPropagationFlags"}}
+      {{end}}
 
-# This must be coreos, not flatcar until (put reference link here)
-# hits all the channels.
-coreos:
-  units:
-    - name: start-provision-setup.service
-      command: "start"
-      content: |
-        [Unit]
-        Description=Start provision setup service
+  - path: /etc/systemd/system/docker.service.d/exec_start.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+      ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+      #EOF
 
-        [Service]
-        ExecStart=/opt/azure/containers/provision-setup.sh
-    - name: kubelet.service
-      enable: true
-      drop-ins:
-        - name: "10-flatcar.conf"
-          content: |
-            [Unit]
-            Requires=rpc-statd.service
-            After=etcd.service
-            ConditionPathExists=
-            ConditionPathExists=/opt/kubelet
-            [Service]
-            ExecStart=
-            ExecStart=/opt/kubelet \
-              --enable-server \
-              --node-labels="${KUBELET_NODE_LABELS}" \
-              --v=2 \
-              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
-              $KUBELET_CONFIG $KUBELET_OPTS \
-              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
-    - name: kubelet-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-flatcar.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh kubelet
-    - name: docker-monitor.service
-      enable: true
-      drop-ins:
-        - name: "10-flatcar.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/health-monitor.sh container-runtime
-    - name: etcd.service
-      enable: true
-      drop-ins:
-        - name: "10-flatcar.conf"
-          content: |
-            [Service]
-            ExecStart=
-            ExecStart=/opt/bin/etcd $DAEMON_ARGS
-    - name: etcd-member.service
-      mask: true
-{{else}}
-disk_setup:
-  /dev/disk/azure/scsi1/lun0:
-    table_type: gpt
-    layout: true
-    overwrite: false
-fs_setup:
-  - label: etcd_disk
-    filesystem: ext4
-    device: /dev/disk/azure/scsi1/lun0
-    extra_opts:
-      - -E
-      - lazy_itable_init=1,lazy_journal_init=1
-{{- /* ephemeral (/mnt) filesystem is explicitly configured, see: */}}
-{{- /* https://bugs.launchpad.net/cloud-init/+bug/1879552 */}}
-  - label: ephemeral0
-    filesystem: ext4
-    device: ephemeral0.1
-    replace_fs: ntfs
-mounts:
-  - - LABEL=etcd_disk
-    - /var/lib/etcddisk
-runcmd:
-- set -x
-- . {{GetCSEHelpersScriptFilepath}}
-- aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
-{{- end}}
+  - path: /etc/docker/daemon.json
+    permissions: "0644"
+    owner: root
+    content: |
+  {{IndentString (GetDockerConfig false) 4}}
+  {{end}}
+
+  {{- if HasCiliumNetworkPlugin}}
+  - path: /etc/systemd/system/sys-fs-bpf.mount
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "systemdBPFMount"}}
+  {{end}}
+
+  - path: /etc/sysctl.d/11-aks-engine.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      {{GetSysctlDConfigKeyVals .MasterProfile.SysctlDConfig}}
+      #EOF
+
+  {{- if NeedsContainerd}}
+  - path: /etc/systemd/system/containerd.service.d/exec_start.conf
+    permissions: "0644"
+    owner: root
+    content: |
+      [Service]
+      ExecStartPre=/sbin/iptables -P FORWARD ACCEPT
+      #EOF
+
+  - path: /etc/containerd/config.toml
+    permissions: "0644"
+    owner: root
+    content: |
+  {{IndentString GetContainerdConfig 4}}
+      #EOF
+
+    {{- if IsKubenet}}
+  - path: /etc/containerd/kubenet_template.conf
+    permissions: "0644"
+    owner: root
+    content: |
+        {
+            "cniVersion": "0.3.1",
+            "name": "kubenet",
+            "plugins": [{
+              "type": "bridge",
+              "bridge": "cbr0",
+              "mtu": 1500,
+              "addIf": "eth0",
+              "isGateway": true,
+              "ipMasq": false,
+              "hairpinMode": false,
+              "ipam": {
+                  "type": "host-local",
+                  "subnet": "{{` + "`" + `{{.PodCIDR}}` + "`" + `}}",
+                  "routes": [{ "dst": "0.0.0.0/0" }]
+              }
+            }]
+        }
+      {{end}}
+  {{end}}
+
+  - path: /etc/kubernetes/certs/ca.crt
+    permissions: "0644"
+    encoding: base64
+    owner: root
+    content: |
+      {{WrapAsParameter "caCertificate"}}
+
+  - path: /etc/kubernetes/certs/client.crt
+    permissions: "0644"
+    encoding: "base64"
+    owner: "root"
+    content: |
+      {{WrapAsParameter "clientCertificate"}}
+
+  {{- if EnableAggregatedAPIs}}
+  - path: /etc/kubernetes/generate-proxy-certs.sh
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "generateProxyCertsScript"}}
+  {{end}}
+
+  {{- if HasCustomSearchDomain}}
+  - path: {{GetCustomSearchDomainsCSEScriptFilepath}}
+    permissions: "0744"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "customSearchDomainsScript"}}
+  {{end}}
+
+  - path: /var/lib/kubelet/kubeconfig
+    permissions: "0644"
+    owner: root
+    content: |
+      apiVersion: v1
+      kind: Config
+      clusters:
+      - name: localcluster
+        cluster:
+          certificate-authority: /etc/kubernetes/certs/ca.crt
+        {{if IsMasterVirtualMachineScaleSets}}
+          server: <SERVERIP>
+        {{else}}
+          server: {{WrapAsVerbatim "concat('https://', variables('masterPrivateIpAddrs')[copyIndex(variables('masterOffset'))], ':443')"}}
+        {{end}}
+      users:
+      - name: client
+        user:
+          client-certificate: /etc/kubernetes/certs/client.crt
+          client-key: /etc/kubernetes/certs/client.key
+      contexts:
+      - context:
+          cluster: localcluster
+          user: client
+        name: localclustercontext
+      current-context: localclustercontext
+      #EOF
+
+  {{- if EnableDataEncryptionAtRest}}
+  - path: /etc/kubernetes/encryption-config.yaml
+    permissions: "0600"
+    owner: root
+    content: |
+      kind: EncryptionConfiguration
+      apiVersion: apiserver.config.k8s.io/v1
+      resources:
+        - resources:
+            - secrets
+          providers:
+            - aescbc:
+                keys:
+                  - name: key1
+                    secret: <etcdEncryptionSecret>
+            - identity: {}
+  {{end}}
+
+  {{- if EnableEncryptionWithExternalKms}}
+  - path: /etc/kubernetes/encryption-config.yaml
+    permissions: "0444"
+    owner: root
+    content: |
+      kind: EncryptionConfiguration
+      apiVersion: apiserver.config.k8s.io/v1
+      resources:
+        - resources:
+          - secrets
+          providers:
+          - kms:
+              name: azurekmsprovider
+              endpoint: unix:///opt/azurekms.socket
+              cachesize: 1000
+          - identity: {}
+  {{end}}
+
+  MASTER_MANIFESTS_CONFIG_PLACEHOLDER
+
+  MASTER_CUSTOM_FILES_PLACEHOLDER
+
+  MASTER_CONTAINER_ADDONS_PLACEHOLDER
+
+  - path: /etc/default/kubelet
+    permissions: "0644"
+    owner: root
+    content: |
+      KUBELET_CONFIG={{GetKubeletConfigKeyVals .MasterProfile.KubernetesConfig}}
+  {{- if IsKubernetesVersionGe "1.16.0"}}
+      KUBELET_NODE_LABELS={{GetMasterKubernetesLabels "',variables('labelResourceGroup'),'"}}
+  {{else}}
+      KUBELET_NODE_LABELS={{GetMasterKubernetesLabelsDeprecated "',variables('labelResourceGroup'),'"}}
+  {{end}}
+  {{- if IsCustomCloudProfile }}
+      AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
+  {{end}}
+      #EOF
+
+  - path: /opt/azure/containers/kubelet.sh
+    permissions: "0755"
+    owner: root
+    content: |
+      #!/bin/bash
+      set -e
+      MOUNT_DIR=/var/lib/kubelet
+      mkdir -p $MOUNT_DIR /var/lib/cni
+      if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+        mount --bind $MOUNT_DIR $MOUNT_DIR
+      fi
+      mount --make-shared $MOUNT_DIR
+      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+  {{- if IsMasterVirtualMachineScaleSets}}
+      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+      sed -i "s|<SERVERIP>|https://$PRIVATE_IP:443|g" "/var/lib/kubelet/kubeconfig"
+  {{end}}
+  {{- if gt .MasterProfile.Count 1}}
+      {{- /* Redirect ILB (4443) traffic to port 443 (ELB) in the prerouting chain */}}
+      iptables -t nat -A PREROUTING -p tcp --dport 4443 -j REDIRECT --to-port 443
+  {{end}}
+      sed -i "s|<advertiseAddr>|$PRIVATE_IP|g" /etc/kubernetes/manifests/kube-apiserver.yaml
+  {{- if EnableDataEncryptionAtRest }}
+      sed -i "s|<etcdEncryptionSecret>|\"{{WrapAsParameter "etcdEncryptionKey"}}\"|g" /etc/kubernetes/encryption-config.yaml
+  {{end}}
+  {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPolicy "calico"}}
+      sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/calico.yaml
+      {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "azure"}}
+      sed -i "/Start of install-cni initContainer/,/End of install-cni initContainer/d" /etc/kubernetes/addons/calico.yaml
+      {{else}}
+      sed -i "s|<calicoIPAMConfig>|{\"type\": \"host-local\", \"subnet\": \"usePodCidr\"}|g" /etc/kubernetes/addons/calico.yaml
+      sed -i "s|azv|cali|g" /etc/kubernetes/addons/calico.yaml
+      {{end}}
+  {{end}}
+  {{- if eq .OrchestratorProfile.KubernetesConfig.NetworkPlugin "flannel"}}
+      sed -i "s|<kubeClusterCidr>|{{WrapAsParameter "kubeClusterCidr"}}|g" /etc/kubernetes/addons/flannel.yaml
+  {{end}}
+      #EOF
+
+  {{- if not HasCosmosEtcd  }}
+  - path: /etc/systemd/system/etcd.service
+    permissions: "0644"
+    encoding: gzip
+    owner: root
+    content: !!binary |
+      {{CloudInitData "etcdSystemdService"}}
+
+  - path: /opt/azure/containers/setup-etcd.sh
+    permissions: "0744"
+    owner: root
+    content: |
+      #!/bin/bash
+      set -x
+      if [[ ! -s /etc/environment ]]; then
+          {{- /* /etc/environment is empty, which will break subsequent sed commands
+                 Append a blank line... */}}
+          echo "" >> /etc/environment
+      fi
+    {{- if IsMasterVirtualMachineScaleSets}}
+      MASTER_VM_NAME=$(hostname)
+      MASTER_VM_NAME_BASE=$(hostname | sed "s/.$//")
+      MASTER_FIRSTADDR={{WrapAsParameter "firstConsecutiveStaticIP"}}
+      MASTER_INDEX=$(hostname | tail -c 2)
+      PRIVATE_IP=$(hostname -i | cut -d" " -f1)
+      MASTER_COUNT={{WrapAsVariable "masterCount"}}
+      IPADDRESS_COUNT={{WrapAsVariable "masterIpAddressCount"}}
+      echo $IPADDRESS_COUNT
+      ETCD_SERVER_PORT={{WrapAsVariable "masterEtcdServerPort"}}
+      ETCD_CLIENT_PORT={{WrapAsVariable "masterEtcdClientPort"}}
+      MASTER_URLS=""
+      index=0
+      IFS=. read -r a b c d <<< "$MASTER_FIRSTADDR"
+      d=$((a * 256 ** 3 + b * 256 ** 2 + c * 256 + d))
+      echo $d
+      while [ $index -lt $MASTER_COUNT ]
+      do
+          echo $index
+          x=` + "`" + `expr $d + $IPADDRESS_COUNT \\* $index` + "`" + `
+          echo $x
+          s=""
+          for i in 1 2 3 4; do s="."$((x%256))$s && ((x>>=8)); done;
+          s=$(echo $s | tail -c +2)
+          MASTER_URLS="$MASTER_URLS$MASTER_VM_NAME_BASE$index=https://$s:$ETCD_SERVER_PORT,"
+          index=` + "`" + `expr $index + 1` + "`" + `
+      done
+      MASTER_URLS=$(echo $MASTER_URLS | sed "s/.$//")
+      echo $MASTER_URLS
+      sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:$ETCD_CLIENT_PORT" /etc/environment
+      sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
+      sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
+      sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+      sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
+      /bin/echo DAEMON_ARGS=--name $MASTER_VM_NAME --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.crt --peer-key-file=/etc/kubernetes/certs/etcdpeer$MASTER_INDEX.key --initial-advertise-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --listen-peer-urls "https://$PRIVATE_IP:$ETCD_SERVER_PORT" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT" --listen-client-urls "https://$PRIVATE_IP:$ETCD_CLIENT_PORT,https://127.0.0.1:$ETCD_CLIENT_PORT" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster $MASTER_URLS --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "http://$PRIVATE_IP:2480" | tee -a /etc/default/etcd
+    {{else}}
+      sudo sed -i "1iETCDCTL_ENDPOINTS=https://127.0.0.1:2379" /etc/environment
+      sudo sed -i "1iETCDCTL_CA_FILE={{WrapAsVariable "etcdCaFilepath"}}" /etc/environment
+      sudo sed -i "1iETCDCTL_KEY_FILE={{WrapAsVariable "etcdClientKeyFilepath"}}" /etc/environment
+      sudo sed -i "1iETCDCTL_CERT_FILE={{WrapAsVariable "etcdClientCertFilepath"}}" /etc/environment
+      sudo sed -i "/^DAEMON_ARGS=/d" /etc/default/etcd
+      /bin/echo DAEMON_ARGS=--name "{{WrapAsVerbatim "variables('masterVMNames')[copyIndex(variables('masterOffset'))]"}}" --peer-client-cert-auth --peer-trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --peer-cert-file={{WrapAsVerbatim "variables('etcdPeerCertFilepath')[copyIndex(variables('masterOffset'))]"}} --peer-key-file={{WrapAsVerbatim "variables('etcdPeerKeyFilepath')[copyIndex(variables('masterOffset'))]"}} --initial-advertise-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-peer-urls "{{WrapAsVerbatim "variables('masterEtcdPeerURLs')[copyIndex(variables('masterOffset'))]"}}" --client-cert-auth --trusted-ca-file={{WrapAsVariable "etcdCaFilepath"}} --cert-file={{WrapAsVariable "etcdServerCertFilepath"}} --key-file={{WrapAsVariable "etcdServerKeyFilepath"}} --advertise-client-urls "{{WrapAsVerbatim "variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))]"}}" --listen-client-urls "{{WrapAsVerbatim "concat(variables('masterEtcdClientURLs')[copyIndex(variables('masterOffset'))], ',https://127.0.0.1:', variables('masterEtcdClientPort'))"}}" --initial-cluster-token "k8s-etcd-cluster" --initial-cluster {{WrapAsVerbatim "variables('masterEtcdClusterStates')[div(variables('masterCount'), 2)]"}} --data-dir "/var/lib/etcddisk" --initial-cluster-state "new" --listen-metrics-urls "{{WrapAsVerbatim "variables('masterEtcdMetricURLs')[copyIndex(variables('masterOffset'))]"}}" | tee -a /etc/default/etcd
+    {{end}}
+  {{end}}
+      #EOF
+
+  {{- if IsCustomCloudProfile}}
+  - path: "/etc/kubernetes/azurestackcloud.json"
+    permissions: "0600"
+    owner: "root"
+    content: |
+      {{WrapAsVariable "environmentJSON"}}
+  {{end}}
+
+  disk_setup:
+    /dev/disk/azure/scsi1/lun0:
+      table_type: gpt
+      layout: true
+      overwrite: false
+  fs_setup:
+    - label: etcd_disk
+      filesystem: ext4
+      device: /dev/disk/azure/scsi1/lun0
+      extra_opts:
+        - -E
+        - lazy_itable_init=1,lazy_journal_init=1
+  {{- /* ephemeral (/mnt) filesystem is explicitly configured, see: */}}
+  {{- /* https://bugs.launchpad.net/cloud-init/+bug/1879552 */}}
+    - label: ephemeral0
+      filesystem: ext4
+      device: ephemeral0.1
+      replace_fs: ntfs
+  mounts:
+    - - LABEL=etcd_disk
+      - /var/lib/etcddisk
+  runcmd:
+  - set -x
+  - . {{GetCSEHelpersScriptFilepath}}
+  - aptmarkWALinuxAgent hold{{GetKubernetesMasterPreprovisionYaml}}
 `)
 
 func k8sCloudInitMasternodecustomdataYmlBytes() ([]byte, error) {

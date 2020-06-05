@@ -418,12 +418,6 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.IsVirtualMachineScaleSets() && m.VnetSubnetID != "" && m.FirstConsecutiveStaticIP != "" {
 			return errors.New("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
 		}
-		// validate distro is ubuntu if dual stack or ipv6 only feature is enabled
-		if a.FeatureFlags.IsIPv6DualStackEnabled() || a.FeatureFlags.IsIPv6OnlyEnabled() {
-			if m.Distro == Flatcar {
-				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but master is of distro type %s", m.Distro)
-			}
-		}
 	}
 
 	if m.ImageRef != nil {
@@ -697,7 +691,7 @@ func (a *Properties) validateLinuxProfile() error {
 func (a *Properties) validateAddons() error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
-		var IsNSeriesSKU bool
+		var hasNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
 		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
@@ -708,7 +702,7 @@ func (a *Properties) validateAddons() error {
 			}
 
 			if agentPool.IsNSeriesSKU() {
-				IsNSeriesSKU = true
+				hasNSeriesSKU = true
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
@@ -766,11 +760,8 @@ func (a *Properties) validateAddons() error {
 					if err != nil {
 						return err
 					}
-					if IsNSeriesSKU && !isValidVersion {
+					if hasNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
-					}
-					if a.HasFlatcar() {
-						return errors.New("NVIDIA Device Plugin add-on not currently supported on flatcar. Please use node pools with Ubuntu only")
 					}
 				case "aad":
 					if !a.HasAADAdminGroupID() {
@@ -780,17 +771,6 @@ func (a *Properties) validateAddons() error {
 					keyvaultFlexvolumeEnabled = true
 					if common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
 						log.Warnf("%s add-on will be DEPRECATED in favor of csi-secrets-store addon for 1.16+", addon.Name)
-					}
-					if a.HasFlatcar() {
-						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
-					}
-				case "blobfuse-flexvolume":
-					if a.HasFlatcar() {
-						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
-					}
-				case "smb-flexvolume":
-					if a.HasFlatcar() {
-						return errors.New("flexvolume add-ons not currently supported on flatcar distro. Please use Ubuntu")
 					}
 				case "appgw-ingress":
 					if (a.ServicePrincipalProfile == nil || len(a.ServicePrincipalProfile.ObjectID) == 0) &&
@@ -1937,6 +1917,19 @@ func validateContainerdVersion(containerdVersion string) error {
 
 // Check that distro has a valid value
 func validateDistro(distro Distro, distroValues []Distro) bool {
+	for _, d := range distroValues {
+		if distro == d {
+			return true
+		}
+	}
+	return false
+}
+
+// Check that the MasterProfile distro has a valid value
+func validateMasterProfileDistro(distro Distro, distroValues []Distro) bool {
+	if distro == Flatcar {
+		return false
+	}
 	for _, d := range distroValues {
 		if distro == d {
 			return true

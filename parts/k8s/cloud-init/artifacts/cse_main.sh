@@ -46,10 +46,6 @@ ETCD_PEER_CERT=$(echo ${ETCD_PEER_CERTIFICATES} | cut -d'[' -f 2 | cut -d']' -f 
 ETCD_PEER_KEY=$(echo ${ETCD_PEER_PRIVATE_KEYS} | cut -d'[' -f 2 | cut -d']' -f 1 | cut -d',' -f $((NODE_INDEX + 1)))
 set -x
 
-if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    KUBECTL=/opt/kubectl
-fi
-
 if [ -f /var/run/reboot-required ]; then
   REBOOTREQUIRED=true
   trace_info "RebootRequired" "reboot=true"
@@ -241,7 +237,7 @@ if [[ -n ${MASTER_NODE} ]]; then
   time_metric "EnsureTaints" ensureTaints
 {{end}}
   if [[ -z ${COSMOS_URI} ]]; then
-    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${OS} == ${UBUNTU_OS_NAME} ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
+    if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
     fi
   fi

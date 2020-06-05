@@ -728,11 +728,6 @@ func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
 }
 
-// IsFlatcar returns true if the master specified a Flatcar distro
-func (m *MasterProfile) IsFlatcar() bool {
-	return m.Distro == Flatcar
-}
-
 // IsUbuntu1604 returns true if the master profile distro is based on Ubuntu 16.04
 func (m *MasterProfile) IsUbuntu1604() bool {
 	switch m.Distro {
@@ -853,7 +848,7 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 
 // IsFlatcar returns true if the agent specified a Flatcar distro
 func (a *AgentPoolProfile) IsFlatcar() bool {
-	return a.OSType == Linux && a.Distro == Flatcar
+	return a.Distro == Flatcar
 }
 
 // IsAvailabilitySets returns true if the customer specified disks

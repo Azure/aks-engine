@@ -2,9 +2,6 @@
 NODE_INDEX=$(hostname | tail -c 2)
 NODE_NAME=$(hostname)
 PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
-if [[ $OS == $FLATCAR_OS_NAME ]]; then
-  PRIVATE_IP=$(ip a show eth0 | grep -Po 'inet \K[\d.]+')
-fi
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"

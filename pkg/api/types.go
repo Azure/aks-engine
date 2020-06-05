@@ -1469,11 +1469,6 @@ func (m *MasterProfile) IsRHEL() bool {
 	return m.Distro == RHEL
 }
 
-// IsFlatcar returns true if the master specified a Flatcar distro
-func (m *MasterProfile) IsFlatcar() bool {
-	return m.Distro == Flatcar
-}
-
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
 	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
@@ -1610,7 +1605,7 @@ func (a *AgentPoolProfile) IsRHEL() bool {
 
 // IsFlatcar returns true if the agent specified a Flatcar distro
 func (a *AgentPoolProfile) IsFlatcar() bool {
-	return a.OSType == Linux && a.Distro == Flatcar
+	return a.Distro == Flatcar
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs

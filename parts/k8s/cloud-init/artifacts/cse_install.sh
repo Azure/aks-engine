@@ -19,10 +19,6 @@ installEtcd() {
   if [[ $CURRENT_VERSION != "${ETCD_VERSION}" ]]; then
     CLI_TOOL=$1
     local path="/usr/bin"
-    if [[ $OS == $FLATCAR_OS_NAME ]]; then
-      path="/opt/bin"
-    fi
-
     CONTAINER_IMAGE=${ETCD_DOWNLOAD_URL}etcd:v${ETCD_VERSION}
     pullContainerImage $CLI_TOOL ${CONTAINER_IMAGE}
     removeEtcd

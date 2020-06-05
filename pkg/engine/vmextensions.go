@@ -53,9 +53,6 @@ func CreateCustomScriptExtension(cs *api.ContainerService) VirtualMachineExtensi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsFlatcar() {
-		ncBinary = "ncat"
-	}
 	var userAssignedIDEnabled bool
 	if cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.KubernetesConfig != nil {
 		userAssignedIDEnabled = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()

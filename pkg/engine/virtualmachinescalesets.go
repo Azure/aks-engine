@@ -82,14 +82,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		Type:     to.StringPtr("Microsoft.Compute/virtualMachineScaleSets"),
 	}
 
-	if masterProfile.IsFlatcar() {
-		virtualMachine.Plan = &compute.Plan{
-			Publisher: to.StringPtr("[parameters('osImagePublisher')]"),
-			Name:      to.StringPtr("[parameters('osImageSku')]"),
-			Product:   to.StringPtr("[parameters('osImageOffer')]"),
-		}
-	}
-
 	addCustomTagsToVMScaleSets(cs.Properties.MasterProfile.CustomVMTags, &virtualMachine)
 
 	if hasAvailabilityZones {
@@ -289,9 +281,6 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
-	if cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsFlatcar() {
-		ncBinary = "ncat"
-	}
 	// TODO The AzureStack constraint has to be relaxed, it should only apply to *disconnected* instances
 	if !cs.Properties.FeatureFlags.IsFeatureEnabled("BlockOutboundInternet") && !cs.Properties.IsAzureStackCloud() && cs.Properties.IsHostedMasterProfile() {
 		if cs.GetCloudSpecConfig().CloudName == api.AzureChinaCloud {

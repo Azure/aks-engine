@@ -176,11 +176,6 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsRHEL() to return true but instead returned false")
 	}
 
-	if p.MasterProfile.IsFlatcar() {
-		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
-	}
-
-	p.MasterProfile.Distro = Flatcar
 	p.AgentPoolProfiles[0].OSType = Windows
 	p.AgentPoolProfiles[1].Distro = Flatcar
 
@@ -213,14 +208,6 @@ func TestOSType(t *testing.T) {
 	}
 
 	if !p.AgentPoolProfiles[1].IsFlatcar() {
-		t.Fatalf("expected IsFlatcar() to return true but instead returned false")
-	}
-
-	if p.MasterProfile.IsRHEL() {
-		t.Fatalf("expected IsRHEL() to return false but instead returned true")
-	}
-
-	if !p.MasterProfile.IsFlatcar() {
 		t.Fatalf("expected IsFlatcar() to return true but instead returned false")
 	}
 }
@@ -529,13 +516,6 @@ func TestMasterProfileIsVHDDistro(t *testing.T) {
 			expected: true,
 		},
 		{
-			name: "flatcar distro",
-			m: MasterProfile{
-				Distro: Flatcar,
-			},
-			expected: false,
-		},
-		{
 			name: "ubuntu 16.04 non-VHD distro",
 			m: MasterProfile{
 				Distro: Ubuntu,
@@ -586,13 +566,6 @@ func TestMasterProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 VHD distro",
 			m: MasterProfile{
 				Distro: AKSUbuntu1804,
-			},
-			expected: false,
-		},
-		{
-			name: "flatcar distro",
-			m: MasterProfile{
-				Distro: Flatcar,
 			},
 			expected: false,
 		},
@@ -2061,15 +2034,6 @@ func TestMasterIsUbuntu(t *testing.T) {
 				},
 			},
 			expected: true,
-		},
-		{
-			p: Properties{
-				MasterProfile: &MasterProfile{
-					Count:  1,
-					Distro: Flatcar,
-				},
-			},
-			expected: false,
 		},
 		{
 			p: Properties{
