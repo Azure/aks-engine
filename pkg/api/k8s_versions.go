@@ -57,8 +57,8 @@ const (
 	virtualKubeletImageReference                      string = "virtual-kubelet:latest"
 	azureCNINetworkMonitorImageReference              string = "networkmonitor:v0.0.8"
 	tillerImageReference                              string = "oss/kubernetes/tiller:v2.13.1"
-	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.5"
-	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.10"
+	csiSecretsStoreProviderAzureImageReference        string = "k8s/csi/secrets-store/provider-azure:0.0.6"
+	csiSecretsStoreDriverImageReference               string = "k8s/csi/secrets-store/driver:v0.0.11"
 	clusterProportionalAutoscalerImageReference       string = "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1"
 )
 
