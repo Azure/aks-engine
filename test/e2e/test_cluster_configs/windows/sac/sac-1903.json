@@ -1,0 +1,61 @@
+{
+	"env": {
+		"REGION_OPTIONS": "westus2"
+	},
+	"options": {
+		"allowedOrchestratorVersions": ["latestReleasedVersion"]
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes"
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "linuxpool1",
+					"count": 1,
+					"vmSize": "Standard_D2_v3",
+					"availabilityProfile": "VirtualMachineScaleSets"
+				},
+				{
+					"name": "agentwin",
+					"count": 3,
+					"vmSize": "Standard_D2_v3",
+					"osType": "Windows",
+					"availabilityProfile": "VirtualMachineScaleSets",
+					"scalesetPriority": "Spot"
+				}
+			],
+			"windowsProfile": {
+				"adminUsername": "azureuser",
+				"adminPassword": "replacepassword1234$",
+				"enableAutomaticUpdates": false,
+				"sshEnabled": true,
+				"windowsPublisher": "MicrosoftWindowsServer",
+				"windowsOffer": "WindowsServer",
+				"windowsSku": "Datacenter-Core-1903-with-Containers-smalldisk",
+				"imageVersion": "latest"
+			},
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}
