@@ -11,6 +11,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
@@ -62,7 +63,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10 3.3.13 3.3.15 3.3.18 3.3.19]",
+			expectedError: "Invalid etcd version \"1.0.0\", please use one of the following versions: [2.2.5 2.3.0 2.3.1 2.3.2 2.3.3 2.3.4 2.3.5 2.3.6 2.3.7 2.3.8 3.0.0 3.0.1 3.0.2 3.0.3 3.0.4 3.0.5 3.0.6 3.0.7 3.0.8 3.0.9 3.0.10 3.0.11 3.0.12 3.0.13 3.0.14 3.0.15 3.0.16 3.0.17 3.1.0 3.1.1 3.1.2 3.1.2 3.1.3 3.1.4 3.1.5 3.1.6 3.1.7 3.1.8 3.1.9 3.1.10 3.2.0 3.2.1 3.2.2 3.2.3 3.2.4 3.2.5 3.2.6 3.2.7 3.2.8 3.2.9 3.2.11 3.2.12 3.2.13 3.2.14 3.2.15 3.2.16 3.2.23 3.2.24 3.2.25 3.2.26 3.3.0 3.3.1 3.3.8 3.3.9 3.3.10 3.3.13 3.3.15 3.3.18 3.3.19 3.3.22]",
 		},
 		"should error when KubernetesConfig has invalid containerd version for containerd runtime": {
 			properties: &Properties{
@@ -116,13 +117,13 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false)),
+					OrchestratorVersion: common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false)),
 					KubernetesConfig: &KubernetesConfig{
 						EnableRbac: &falseVal,
 					},
 				},
 			},
-			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false))),
+			expectedError: fmt.Sprintf("RBAC support is required for Kubernetes version 1.15.0 or greater; unable to build Kubernetes v%s cluster with enableRbac=false", common.GetLatestPatchVersion("1.15", common.GetAllSupportedKubernetesVersions(false, false, false))),
 		},
 		"should error when KubernetesConfig has enableDataEncryptionAtRest enabled with invalid version": {
 			properties: &Properties{
@@ -177,7 +178,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.1",
+					OrchestratorVersion: "1.18.3",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerSku:             BasicLoadBalancerSku,
 						ExcludeMasterFromStandardLB: to.BoolPtr(true),
@@ -191,7 +192,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 			properties: &Properties{
 				OrchestratorProfile: &OrchestratorProfile{
 					OrchestratorType:    "Kubernetes",
-					OrchestratorVersion: "1.18.1",
+					OrchestratorVersion: "1.18.3",
 					KubernetesConfig: &KubernetesConfig{
 						LoadBalancerOutboundIPs: to.IntPtr(17),
 					},
@@ -271,7 +272,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 					OrchestratorVersion: "1.6.0",
 				},
 			},
-			expectedError: fmt.Sprint("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"Kubernetes\", OrchestratorRelease: \"\", OrchestratorVersion: \"1.6.0\". Please use one of the following versions: ", common.GetAllSupportedKubernetesVersions(false, false)),
+			expectedError: fmt.Sprint("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"Kubernetes\", OrchestratorRelease: \"\", OrchestratorVersion: \"1.6.0\". Please use one of the following versions: ", common.GetAllSupportedKubernetesVersions(false, false, false)),
 		},
 		"kubernetes should not fail on old patch version if update": {
 			properties: &Properties{
@@ -342,7 +343,7 @@ func Test_OrchestratorProfile_Validate(t *testing.T) {
 
 func Test_KubernetesConfig_Validate(t *testing.T) {
 	// Tests that should pass across all versions
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false) {
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(true, false, false) {
 		c := KubernetesConfig{}
 		if err := c.Validate(k8sVersion, false, false, false); err != nil {
 			t.Errorf("should not error on empty KubernetesConfig: %v, version %s", err, k8sVersion)
@@ -569,7 +570,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to 1.6 and later releases
-	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false) {
+	for _, k8sVersion := range common.GetAllSupportedKubernetesVersions(false, false, false) {
 		c := KubernetesConfig{
 			CloudProviderBackoff:   to.BoolPtr(true),
 			CloudProviderRateLimit: to.BoolPtr(true),
@@ -580,7 +581,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to 1.8 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false), "1.8.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(true, false, false), "1.8.0", true, true) {
 		c := KubernetesConfig{
 			UseCloudControllerManager: to.BoolPtr(true),
 		}
@@ -590,7 +591,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to dualstack with 1.16 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.16.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false, false), "1.16.0", true, true) {
 		c := KubernetesConfig{
 			NetworkPlugin: "kubenet",
 			ClusterSubnet: "10.244.0.0/16,ace:cab:deca::/8",
@@ -689,7 +690,7 @@ func Test_KubernetesConfig_Validate(t *testing.T) {
 	}
 
 	// Tests that apply to single stack IPv6 with 1.18 and later releases
-	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false), "1.18.0", true, true) {
+	for _, k8sVersion := range common.GetVersionsGt(common.GetAllSupportedKubernetesVersions(false, false, false), "1.18.0", true, true) {
 		c := KubernetesConfig{
 			NetworkPlugin: "azure",
 		}
@@ -1075,13 +1076,14 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 	var trueVar = true
 	tests := []struct {
 		name          string
-		k8sRelease    string
+		k8sVersion    string
 		wp            *WindowsProfile
+		isUpdate      bool
 		expectedError error
 	}{
 		{
 			name:       "Valid WindowsProfile",
-			k8sRelease: "1.17",
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "replacePassword1234$",
@@ -1090,7 +1092,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No username",
-			k8sRelease: "1.17",
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "",
 				AdminPassword: "replacePassword1234$",
@@ -1099,7 +1101,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "No password",
-			k8sRelease: "1.17",
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername: "AzureUser",
 				AdminPassword: "",
@@ -1108,7 +1110,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "CSI proxy enabled",
-			k8sRelease: "1.18",
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.18", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
@@ -1119,7 +1121,7 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 		},
 		{
 			name:       "CSI Proxy unsupported version",
-			k8sRelease: "1.17",
+			k8sVersion: common.RationalizeReleaseAndVersion(common.Kubernetes, "1.17", "", false, false, false),
 			wp: &WindowsProfile{
 				AdminUsername:  "AzureUser",
 				AdminPassword:  "replacePassword1234$",
@@ -1128,19 +1130,35 @@ func TestProperties_ValidateWindowsProfile(t *testing.T) {
 			},
 			expectedError: errors.New("CSI proxy for Windows is only available in Kubernetes versions 1.18.0 or greater"),
 		},
+		{
+			name:       "Invalid Windows version",
+			k8sVersion: "1.15.7",
+			wp: &WindowsProfile{
+				AdminUsername: "AzureUser",
+				AdminPassword: "replacePassword1234$",
+			},
+			expectedError: errors.New("Orchestrator Kubernetes version 1.15.7 does not support Windows"),
+		},
+		{
+			name:       "Old Windows version during upgrade",
+			k8sVersion: "1.15.7",
+			wp: &WindowsProfile{
+				AdminUsername: "AzureUser",
+				AdminPassword: "replacePassword1234$",
+			},
+			isUpdate:      true,
+			expectedError: nil,
+		},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-
-			k8sVersion := common.RationalizeReleaseAndVersion(common.Kubernetes, test.k8sRelease, "", false, false)
-
 			cs := getK8sDefaultContainerService(true)
-			cs.Properties.OrchestratorProfile.OrchestratorVersion = k8sVersion
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = test.k8sVersion
 			cs.Properties.WindowsProfile = test.wp
-			err := cs.Properties.validateWindowsProfile()
+			err := cs.Properties.validateWindowsProfile(test.isUpdate)
 			if !helpers.EqualError(err, test.expectedError) {
 				t.Errorf("expected error : '%v', but got '%v'", test.expectedError, err)
 			}
@@ -2006,7 +2024,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 		)
 	}
 
-	p.OrchestratorProfile.OrchestratorRelease = "1.14"
+	p.OrchestratorProfile.OrchestratorRelease = "1.18"
 	if err := p.validateAddons(); err != nil {
 		t.Errorf(
 			"should not error on azure-policy with k8s >= 1.14",
@@ -2584,7 +2602,7 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 }
 
 func TestWindowsVersions(t *testing.T) {
-	for _, version := range common.GetAllSupportedKubernetesVersions(false, true) {
+	for _, version := range common.GetAllSupportedKubernetesVersions(false, true, false) {
 		cs := getK8sDefaultContainerService(true)
 		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
 		if err := cs.Validate(false); err != nil {
@@ -2648,7 +2666,7 @@ func TestWindowsVersions(t *testing.T) {
 }
 
 func TestLinuxVersions(t *testing.T) {
-	for _, version := range common.GetAllSupportedKubernetesVersions(false, false) {
+	for _, version := range common.GetAllSupportedKubernetesVersions(false, false, false) {
 		cs := getK8sDefaultContainerService(false)
 		cs.Properties.OrchestratorProfile.OrchestratorVersion = version
 		if err := cs.Validate(false); err != nil {
@@ -2881,6 +2899,39 @@ func TestMasterProfileValidate(t *testing.T) {
 			},
 			expectedErr: "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles",
 		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: None",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "foo",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesNone),
+			},
+		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: ReadWrite",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "bar",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesReadWrite),
+			},
+		},
+		{
+			name: "Master Profile with valid OSDiskCachingType: ReadOnly",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "baz",
+				Count:             3,
+				OSDiskCachingType: string(compute.CachingTypesReadOnly),
+			},
+		},
+		{
+			name: "Master Profile with invalid OSDiskCachingType",
+			masterProfile: MasterProfile{
+				DNSPrefix:         "whizbang",
+				Count:             3,
+				OSDiskCachingType: "NotExist",
+			},
+			expectedErr: fmt.Sprintf("Invalid masterProfile osDiskCachingType value \"%s\", please use one of the following versions: %s", "NotExist", cachingTypesValidValues),
+		},
 	}
 
 	for _, test := range tests {
@@ -3059,6 +3110,21 @@ func TestProperties_ValidateZones(t *testing.T) {
 	}
 }
 
+func ExampleProperties_validateLocation() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+	cs.Location = ""
+	if err := cs.validateLocation(); err != nil {
+		fmt.Printf("error in validateLocation: %s", err)
+	}
+	// Output:
+	// level=warning msg="No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only"
+}
+
 func ExampleProperties_validateZones() {
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&log.TextFormatter{
@@ -3083,7 +3149,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityProfile: AvailabilitySet,
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pool \"agentpool\""
 
@@ -3103,7 +3171,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityZones:   []string{"1", "2"},
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for pool \"anotherpool\", but not for master VMs"
 
@@ -3136,7 +3206,9 @@ func ExampleProperties_validateZones() {
 			AvailabilityZones:   []string{"1", "2"},
 		},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for pools \"anotherpool2\" and \"anotherpool4\", but not for pools \"anotherpool\" and \"anotherpool3\", nor for master VMs"
 
@@ -3148,7 +3220,9 @@ func ExampleProperties_validateZones() {
 		AvailabilityProfile: VirtualMachineScaleSets,
 		AvailabilityZones:   []string{"1", "2"},
 	}
-	cs.Properties.validateZones()
+	if err := cs.Properties.validateZones(); err != nil {
+		log.Error(err)
+	}
 	// Should yield:
 	// level=warning msg="This cluster is using Availability Zones for master VMs, but not for pools \"anotherpool\" and \"anotherpool3\""
 	// The ordered collection of all output is validated below:
@@ -3873,7 +3947,7 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 		cs := getK8sDefaultContainerService(false)
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(true)
-		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		expectedMsg := "singlePlacementGroup is only supported with VirtualMachineScaleSets"
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -3884,7 +3958,7 @@ func TestAgentPoolProfile_ValidateAvailabilityProfile(t *testing.T) {
 		cs := getK8sDefaultContainerService(false)
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].SinglePlacementGroup = to.BoolPtr(false)
-		expectedMsg := fmt.Sprintf("singlePlacementGroup is only supported with VirtualMachineScaleSets")
+		expectedMsg := "singlePlacementGroup is only supported with VirtualMachineScaleSets"
 		if err := cs.Properties.validateAgentPoolProfiles(true); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -3934,7 +4008,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
 		cs.Properties.MasterProfile.VnetSubnetID = "vnet"
 		cs.Properties.MasterProfile.FirstConsecutiveStaticIP = "10.10.10.240"
-		expectedMsg := fmt.Sprintf("when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr")
+		expectedMsg := "when masterProfile's availabilityProfile is VirtualMachineScaleSets and a vnetSubnetID is specified, the firstConsecutiveStaticIP should be empty and will be determined by an offset from the first IP in the vnetCidr"
 		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -3946,7 +4020,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		cs.Properties.MasterProfile.AvailabilityProfile = VirtualMachineScaleSets
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = AvailabilitySet
-		expectedMsg := fmt.Sprintf("VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles")
+		expectedMsg := "VirtualMachineScaleSets for master profile must be used together with virtualMachineScaleSets for agent profiles. Set \"availabilityProfile\" to \"VirtualMachineScaleSets\" for agent profiles"
 		if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -3976,7 +4050,7 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		agentPoolProfiles := cs.Properties.AgentPoolProfiles
 		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
 		agentPoolProfiles[1].AvailabilityProfile = AvailabilitySet
-		expectedMsg := fmt.Sprintf("mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools")
+		expectedMsg := "mixed mode availability profiles are not allowed. Please set either VirtualMachineScaleSets or AvailabilitySet in availabilityProfile for all agent pools"
 		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
 			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 		}
@@ -4028,7 +4102,7 @@ func TestMasterProfile_ValidateAuditDEnabled(t *testing.T) {
 			masterProfile.AuditDEnabled = to.BoolPtr(true)
 			switch distro {
 			case RHEL:
-				expectedMsg := fmt.Sprintf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
+				expectedMsg := "You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro."
 				if err := cs.Properties.validateMasterProfile(false); err.Error() != expectedMsg {
 					t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
 				}
@@ -4771,6 +4845,162 @@ func TestValidateAgentPoolProfilesImageRef(t *testing.T) {
 			},
 			isUpdate:      true,
 			expectedError: nil,
+		},
+	}
+
+	for testName, test := range tests {
+		test := test
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+			err := test.properties.validateAgentPoolProfiles(test.isUpdate)
+			if !helpers.EqualError(err, test.expectedError) {
+				t.Errorf("expected error: %v, got: %v", test.expectedError, err)
+			}
+		})
+	}
+}
+
+func TestValidateAgentPoolProfilesOSDiskCachingType(t *testing.T) {
+	tests := map[string]struct {
+		properties    *Properties
+		isUpdate      bool
+		expectedError error
+	}{
+		"AgentPoolProfile with valid OSDiskCachingType: None": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "foo",
+						OSDiskCachingType: string(compute.CachingTypesNone),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: None": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "foo",
+						DataDiskCachingType: string(compute.CachingTypesNone),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid OSDiskCachingType: ReadWrite": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "bar",
+						OSDiskCachingType: string(compute.CachingTypesReadWrite),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: ReadWrite": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "bar",
+						DataDiskCachingType: string(compute.CachingTypesReadWrite),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid OSDiskCachingType: ReadOnly": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "baz",
+						OSDiskCachingType: string(compute.CachingTypesReadOnly),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with valid DataDiskCachingType: ReadOnly": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "baz",
+						DataDiskCachingType: string(compute.CachingTypesReadOnly),
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: nil,
+		},
+		"AgentPoolProfile with invalid OSDiskCachingType": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "frick",
+						OSDiskCachingType: "The Magnificent Ambersons original cut",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", "The Magnificent Ambersons original cut", "frick", cachingTypesValidValues),
+		},
+		"AgentPoolProfile with invalid DataDiskCachingType": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:                "frack",
+						DataDiskCachingType: "Spear of Longinus",
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid dataDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", "Spear of Longinus", "frack", cachingTypesValidValues),
+		},
+		"AgentPoolProfile with invalid OSDiskCachingType for Ephemeral Disk": {
+			properties: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+				},
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Name:              "foo",
+						OSDiskCachingType: string(compute.CachingTypesReadWrite),
+						StorageProfile:    Ephemeral,
+					},
+				},
+			},
+			isUpdate:      false,
+			expectedError: errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\" using Ephemeral Disk, you must use: %s", string(compute.CachingTypesReadWrite), "foo", string(compute.CachingTypesReadOnly)),
 		},
 	}
 

@@ -128,8 +128,6 @@ const (
 const publicAgentPoolSuffix = "-public"
 
 const (
-	// DefaultHeapsterAddonEnabled determines the aks-engine provided default for enabling heapster addon
-	DefaultHeapsterAddonEnabled = false
 	// DefaultTillerAddonEnabled determines the aks-engine provided default for enabling tiller addon
 	DefaultTillerAddonEnabled = false
 	// DefaultAADPodIdentityAddonEnabled determines the aks-engine provided default for enabling aad-pod-identity addon
@@ -334,14 +332,14 @@ const (
 	// AzureCniPluginVerLinux specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-linux-amd64-${AZURE_PLUGIN_VER}.tgz
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerLinux = "v1.1.0"
+	AzureCniPluginVerLinux = "v1.1.3"
 	// AzureCniPluginVerWindows specifies version of Azure CNI plugin, which has been mirrored from
 	// https://github.com/Azure/azure-container-networking/releases/download/${AZURE_PLUGIN_VER}/azure-vnet-cni-windows-amd64-${AZURE_PLUGIN_VER}.zip
 	// to https://kubernetesartifacts.azureedge.net/azure-cni
-	AzureCniPluginVerWindows = "v1.1.0"
+	AzureCniPluginVerWindows = "v1.1.3"
 	// CNIPluginVer specifies the version of CNI implementation
 	// https://github.com/containernetworking/plugins
-	CNIPluginVer = "v0.8.5"
+	CNIPluginVer = "v0.8.6"
 )
 
 const (
@@ -428,7 +426,7 @@ const (
 	//DefaultKubernetesGCLowThreshold specifies the value for the image-gc-low-threshold kubelet flag
 	DefaultKubernetesGCLowThreshold = 80
 	// DefaultEtcdVersion specifies the default etcd version to install
-	DefaultEtcdVersion = "3.3.19"
+	DefaultEtcdVersion = "3.3.22"
 	// DefaultEtcdDiskSize specifies the default size for Kubernetes master etcd disk volumes in GB
 	DefaultEtcdDiskSize = "256"
 	// DefaultEtcdDiskSizeGT3Nodes = size for Kubernetes master etcd disk volumes in GB if > 3 nodes
@@ -464,7 +462,7 @@ const (
 	// DefaultKubernetesDNSServiceIPv6 specifies the IPv6 address that kube-dns listens on by default. must by in the default Service CIDR range.
 	DefaultKubernetesDNSServiceIPv6 = "fd00::10"
 	// DefaultMobyVersion specifies the default Azure build version of Moby to install.
-	DefaultMobyVersion = "3.0.11"
+	DefaultMobyVersion = "3.0.12"
 	// DefaultContainerdVersion specifies the default containerd version to install.
 	DefaultContainerdVersion = "1.3.2"
 	// DefaultDockerBridgeSubnet specifies the default subnet for the docker bridge network for masters and agents.
@@ -483,6 +481,8 @@ const (
 	DefaultNonMasqueradeCIDR = "0.0.0.0/0"
 	// DefaultKubeProxyMode is the default KubeProxyMode value
 	DefaultKubeProxyMode KubeProxyMode = KubeProxyModeIPTables
+	// DefaultWindowsSSHEnabled is the default windowsProfile.sshEnabled value
+	DefaultWindowsSSHEnabled = true
 )
 
 const (

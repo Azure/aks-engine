@@ -1,0 +1,1876 @@
+root@576216146d85:/aks-engine# ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
+make -C ./test/e2e build
+make[1]: Entering directory '/aks-engine/test/e2e'
+rm -f ./kubernetes/kubernetes.test
+rm -f ./bin/e2e-runner
+go build -tags=test -o ./bin/e2e-runner -ldflags '-X github.com/Azure//pkg/telemetry.AKSEngineAppInsightsKey=c92d8284-b550-4b06-b7ba-e80fd7178faa' .
+ginkgo build -tags=test -ldflags '-X github.com/Azure//pkg/telemetry.AKSEngineAppInsightsKey=c92d8284-b550-4b06-b7ba-e80fd7178faa' ./kubernetes
+Compiling kubernetes...
+    compiled kubernetes.test
+make[1]: Leaving directory '/aks-engine/test/e2e'
+Agent pid 5604
+
+$ which timeout
+
+$ timeout 60 az account set --subscription *******
+
+$ ssh-keygen -f /aks-engine/_output/kubernetes-westus2-13811-ssh -q -N  -b 2048 -t rsa
+
+$ timeout 60 az group create --name kubernetes-westus2-13811 --location westus2 --tags now=1587661164
+
+$ timeout 60 az group show -n kubernetes-westus2-13811
+
+$ ./bin/aks-engine generate /aks-engine/_output/kubernetes-westus2-13811.json --output-directory /aks-engine/_output/kubernetes-westus2-13811
+
+$ timeout 60 az group show -n kubernetes-westus2-13811
+2020/04/23 16:59:41
+Kubeconfig:/aks-engine/_output/kubernetes-westus2-13811/kubeconfig/kubeconfig.westus2.json
+
+$ az deployment group create --name kubernetes-westus2-13811 --resource-group kubernetes-westus2-13811 --template-file /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.json --parameters /aks-engine/_output/kubernetes-westus2-13811/azuredeploy.parameters.json
+
+$ timeout 60 az group create --name kubernetes-westus2-13811 --location westus2 --tags now=1587661198
+...
+
+$ timeout 60 az group show -n kubernetes-westus2-13811
+
+$ timeout 60 az vm list -g kubernetes-westus2-13811
+2020/04/23 17:03:38 Waiting on nodes to go into ready state...
+2020/04/23 17:03:38 Checking for 3 Ready nodes
+
+$ k get nodes -o json
+
+$ timeout 60 az group show -n kubernetes-westus2-13811
+2020/04/23 17:03:42 NAME                                 STATUS   ROLES    AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+k8s-agentpool1-24731180-vmss000000   Ready    <none>   20s   v1.18.2   10.240.0.34    <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+k8s-agentpool1-24731180-vmss000001   Ready    <none>   33s   v1.18.2   10.240.0.65    <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+k8s-master-24731180-0                Ready    <none>   33s   v1.18.2   10.255.255.5   <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+
+
+$ k get nodes -o json
+
+$ k label node k8s-agentpool1-24731180-vmss000000 foo=bar
+2020/04/23 17:03:43 node/k8s-agentpool1-24731180-vmss000000 labeled
+
+
+$ k annotate node k8s-agentpool1-24731180-vmss000000 foo=bar
+2020/04/23 17:03:43 node/k8s-agentpool1-24731180-vmss000000 annotated
+
+
+$ k label node k8s-agentpool1-24731180-vmss000001 foo=bar
+2020/04/23 17:03:44 node/k8s-agentpool1-24731180-vmss000001 labeled
+
+
+$ k annotate node k8s-agentpool1-24731180-vmss000001 foo=bar
+2020/04/23 17:03:45 node/k8s-agentpool1-24731180-vmss000001 annotated
+
+
+$ ginkgo -slowSpecThreshold 180  -r -v --focus  --skip  test/e2e/kubernetes/kubernetes.test
+Running Suite: Kubernetes Suite
+===============================
+Random Seed: 1587661425
+Will run 54 of 54 specs
+
+
+$ k get nodes -o json
+
+$ k config view -o json
+
+$ ssh-add -D
+
+$ ssh-add /aks-engine/_output/kubernetes-westus2-13811-ssh
+2020/04/23 17:03:46 All identities removed.
+
+2020/04/23 17:03:46 Identity added: /aks-engine/_output/kubernetes-westus2-13811-ssh (/aks-engine/_output/kubernetes-westus2-13811-ssh)
+
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/host-os-dns-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/host-os-dns-validate.sh
+
+$ NODE_HOSTNAMES='k8s-agentpool1-24731180-vmss000000 k8s-agentpool1-24731180-vmss000001 k8s-master-24731180-0 ' LOOKUP_RETRIES=3 /tmp/host-os-dns-validate.sh
+2020/04/23 17:03:49 + sudo ifconfig -a -v
+azure0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.255.255.5  netmask 255.240.0.0  broadcast 0.0.0.0
+        inet6 fe80::20d:3aff:fec4:b402  prefixlen 64  scopeid 0x20<link>
+        ether 00:0d:3a:c4:b4:02  txqueuelen 1000  (Ethernet)
+        RX packets 725  bytes 242510 (242.5 KB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 709  bytes 679223 (679.2 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+azvd0050664e47: flags=67<UP,BROADCAST,RUNNING>  mtu 1500
+        inet6 fe80::605f:26ff:fe86:4419  prefixlen 64  scopeid 0x20<link>
+        ether 62:5f:26:86:44:19  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 14  bytes 1060 (1.0 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+        ether 02:42:5d:27:a7:33  txqueuelen 0  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth0: flags=67<UP,BROADCAST,RUNNING>  mtu 1500
+        inet6 fe80::20d:3aff:fec4:b402  prefixlen 64  scopeid 0x20<link>
+        ether 00:0d:3a:c4:b4:02  txqueuelen 1000  (Ethernet)
+        RX packets 11201  bytes 10940339 (10.9 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 5308  bytes 2525226 (2.5 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 36126  bytes 16984554 (16.9 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 36126  bytes 16984554 (16.9 MB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
++ cat /etc/resolv.conf
++ set +x
+# This file is managed by man:systemd-resolved(8). Do not edit.
+#
+# This is a dynamic resolv.conf file for connecting local clients to the
+# internal DNS stub resolver of systemd-resolved. This file lists all
+# configured search domains.
+#
+# Run "systemd-resolve --status" to see details about the uplink DNS servers
+# currently in use.
+#
+# Third party programs must not access this file directly, but only through the
+# symlink at /etc/resolv.conf. To manage man:resolv.conf(5) in a different way,
+# replace this symlink by a static file or a different symlink.
+#
+# See man:systemd-resolved.service(8) for details about the supported modes of
+# operation for /etc/resolv.conf.
+
+nameserver 127.0.0.53
+options edns0
+search 5asnemke5nku1hn21otkw4icbe.xx.internal.cloudapp.net
+++ dig +short +search +answer k8s-agentpool1-24731180-vmss000000
++ addrs=10.240.0.34
++ '[' -z 10.240.0.34 ']'
++ set +x
+++ dig +short +search +answer k8s-agentpool1-24731180-vmss000001
++ addrs=10.240.0.65
++ '[' -z 10.240.0.65 ']'
++ set +x
+++ dig +short +search +answer k8s-master-24731180-0
++ addrs=10.255.255.5
++ '[' -z 10.255.255.5 ']'
++ set +x
+++ dig +short +search +answer www.bing.com
++ addrs='a-0001.a-afdentry.net.trafficmanager.net.
+dual-a-0001.a-msedge.net.
+204.79.197.200
+13.107.21.200'
++ '[' -z 'a-0001.a-afdentry.net.trafficmanager.net.
+dual-a-0001.a-msedge.net.
+204.79.197.200
+13.107.21.200' ']'
++ set +x
+++ dig +short +search +answer google.com
++ addrs=172.217.3.206
++ '[' -z 172.217.3.206 ']'
++ set +x
+++ dig +short +search +answer www.bing.com @8.8.8.8
++ addrs='a-0001.a-afdentry.net.trafficmanager.net.
+dual-a-0001.a-msedge.net.
+204.79.197.200
+13.107.21.200'
++ '[' -z 'a-0001.a-afdentry.net.trafficmanager.net.
+dual-a-0001.a-msedge.net.
+204.79.197.200
+13.107.21.200' ']'
++ set +x
+++ dig +short +search +answer google.com @8.8.8.8
++ addrs=172.217.3.206
++ '[' -z 172.217.3.206 ']'
++ set +x
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/host-os-dns-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/host-os-dns-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "NODE_HOSTNAMES='k8s-agentpool1-24731180-vmss000000 k8s-agentpool1-24731180-vmss000001 k8s-master-24731180-0 ' LOOKUP_RETRIES=3 /tmp/host-os-dns-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/host-os-dns-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/host-os-dns-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/host-os-dns-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/host-os-dns-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "NODE_HOSTNAMES='k8s-agentpool1-24731180-vmss000000 k8s-agentpool1-24731180-vmss000001 k8s-master-24731180-0 ' LOOKUP_RETRIES=3 /tmp/host-os-dns-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "NODE_HOSTNAMES='k8s-agentpool1-24731180-vmss000000 k8s-agentpool1-24731180-vmss000001 k8s-master-24731180-0 ' LOOKUP_RETRIES=3 /tmp/host-os-dns-validate.sh"
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/cloudprovider-config-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/cloudprovider-config-validate.sh
+
+$ BACKOFF_MODE=v2 /tmp/cloudprovider-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/cloudprovider-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/cloudprovider-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/host-os-dns-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/host-os-dns-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 BACKOFF_MODE=v2 /tmp/cloudprovider-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/cloudprovider-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/cloudprovider-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "NODE_HOSTNAMES='k8s-agentpool1-24731180-vmss000000 k8s-agentpool1-24731180-vmss000001 k8s-master-24731180-0 ' LOOKUP_RETRIES=3 /tmp/host-os-dns-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 BACKOFF_MODE=v2 /tmp/cloudprovider-config-validate.sh
+•
+$ k get nodes -o json
+2020/04/23 17:04:07 $ k describe node k8s-agentpool1-24731180-vmss000000
+2020/04/23 17:04:08 #### $ k describe node k8s-agentpool1-24731180-vmss000000 completed in 356.562939ms
+2020/04/23 17:04:08
+Name:               k8s-agentpool1-24731180-vmss000000
+Roles:              agent
+Labels:             agentpool=agentpool1
+                    beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=Standard_D2_v3
+                    kubernetes.io/os=linux
+                    failure-domain.beta.kubernetes.io/region=westus2
+                    failure-domain.beta.kubernetes.io/zone=0
+                    foo=bar
+                    kubernetes.azure.com/cluster=kubernetes-westus2-13811
+                    kubernetes.azure.com/role=agent
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=k8s-agentpool1-24731180-vmss000000
+                    kubernetes.io/os=linux
+                    kubernetes.io/role=agent
+                    node-role.kubernetes.io/agent=
+                    node.kubernetes.io/instance-type=Standard_D2_v3
+                    storageprofile=managed
+                    storagetier=Standard_LRS
+                    topology.kubernetes.io/region=westus2
+                    topology.kubernetes.io/zone=0
+Annotations:        foo: bar
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 23 Apr 2020 17:03:22 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  k8s-agentpool1-24731180-vmss000000
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 23 Apr 2020 17:04:02 +0000
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 23 Apr 2020 17:03:23 +0000   Thu, 23 Apr 2020 17:03:22 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 23 Apr 2020 17:03:23 +0000   Thu, 23 Apr 2020 17:03:22 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 23 Apr 2020 17:03:23 +0000   Thu, 23 Apr 2020 17:03:22 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 23 Apr 2020 17:03:23 +0000   Thu, 23 Apr 2020 17:03:23 +0000   KubeletReady                 kubelet is posting ready status. AppArmor enabled
+Addresses:
+  Hostname:    k8s-agentpool1-24731180-vmss000000
+  InternalIP:  10.240.0.34
+Capacity:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              30309264Ki
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         8144516Ki
+  pods:                           30
+Allocatable:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              27933017657
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         7376516Ki
+  pods:                           30
+System Info:
+  Machine ID:                 1dc2670a91224ae89f3c6fa6021b67f8
+  System UUID:                5fbf9857-cf77-d14b-8dc0-77e5979d01d9
+  Boot ID:                    7935fc76-4513-4b5b-9187-a048d076d8d0
+  Kernel Version:             5.0.0-1036-azure
+  OS Image:                   Ubuntu 18.04.4 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  docker://3.0.11+azure
+  Kubelet Version:            v1.18.2
+  Kube-Proxy Version:         v1.18.2
+ProviderID:                   azure:///subscriptions/*******/resourceGroups/kubernetes-westus2-13811/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-agentpool1-24731180-vmss/virtualMachines/0
+Non-terminated Pods:          (7 in total)
+  Namespace                   Name                                      CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                   ----                                      ------------  ----------  ---------------  -------------  ---
+  kube-system                 azure-cni-networkmonitor-qj682            0 (0%)        0 (0%)      0 (0%)           0 (0%)         33s
+  kube-system                 azure-ip-masq-agent-hpgn5                 50m (2%)      50m (2%)    50Mi (0%)        250Mi (3%)     28s
+  kube-system                 blobfuse-flexvol-installer-shmmh          50m (2%)      50m (2%)    100Mi (1%)       100Mi (1%)     29s
+  kube-system                 coredns-autoscaler-75899bd56c-phcdd       20m (1%)      0 (0%)      10Mi (0%)        0 (0%)         32s
+  kube-system                 csi-secrets-store-provider-azure-lnmhr    50m (2%)      200m (10%)  100Mi (1%)       200Mi (2%)     32s
+  kube-system                 csi-secrets-store-vwrnk                   70m (3%)      600m (30%)  140Mi (1%)       600Mi (8%)     32s
+  kube-system                 kube-proxy-jp7sk                          100m (5%)     0 (0%)      0 (0%)           0 (0%)         29s
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                       Requests    Limits
+  --------                       --------    ------
+  cpu                            340m (17%)  900m (45%)
+  memory                         400Mi (5%)  1150Mi (15%)
+  ephemeral-storage              0 (0%)      0 (0%)
+  hugepages-1Gi                  0 (0%)      0 (0%)
+  hugepages-2Mi                  0 (0%)      0 (0%)
+  attachable-volumes-azure-disk  0           0
+Events:
+  Type    Reason                   Age                From                                         Message
+  ----    ------                   ----               ----                                         -------
+  Normal  Starting                 46s                kubelet, k8s-agentpool1-24731180-vmss000000  Starting kubelet.
+  Normal  NodeHasSufficientMemory  46s (x2 over 46s)  kubelet, k8s-agentpool1-24731180-vmss000000  Node k8s-agentpool1-24731180-vmss000000 status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure    46s (x2 over 46s)  kubelet, k8s-agentpool1-24731180-vmss000000  Node k8s-agentpool1-24731180-vmss000000 status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID     46s (x2 over 46s)  kubelet, k8s-agentpool1-24731180-vmss000000  Node k8s-agentpool1-24731180-vmss000000 status is now: NodeHasSufficientPID
+  Normal  NodeAllocatableEnforced  45s                kubelet, k8s-agentpool1-24731180-vmss000000  Updated Node Allocatable limit across pods
+  Normal  NodeReady                45s                kubelet, k8s-agentpool1-24731180-vmss000000  Node k8s-agentpool1-24731180-vmss000000 status is now: NodeReady
+
+2020/04/23 17:04:08 $ k describe node k8s-agentpool1-24731180-vmss000001
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/cloudprovider-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/cloudprovider-config-validate.sh
+2020/04/23 17:04:08 #### $ k describe node k8s-agentpool1-24731180-vmss000001 completed in 495.428953ms
+2020/04/23 17:04:08
+Name:               k8s-agentpool1-24731180-vmss000001
+Roles:              agent
+Labels:             agentpool=agentpool1
+                    beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=Standard_D2_v3
+                    kubernetes.io/os=linux
+                    failure-domain.beta.kubernetes.io/region=westus2
+                    failure-domain.beta.kubernetes.io/zone=1
+                    foo=bar
+                    kubernetes.azure.com/cluster=kubernetes-westus2-13811
+                    kubernetes.azure.com/role=agent
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=k8s-agentpool1-24731180-vmss000001
+                    kubernetes.io/os=linux
+                    kubernetes.io/role=agent
+                    node-role.kubernetes.io/agent=
+                    node.kubernetes.io/instance-type=Standard_D2_v3
+                    storageprofile=managed
+                    storagetier=Standard_LRS
+                    topology.kubernetes.io/region=westus2
+                    topology.kubernetes.io/zone=1
+Annotations:        csi.volume.kubernetes.io/nodeid: {"secrets-store.csi.k8s.io":"k8s-agentpool1-24731180-vmss000001"}
+                    foo: bar
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 23 Apr 2020 17:03:09 +0000
+Taints:             <none>
+Unschedulable:      false
+Lease:
+  HolderIdentity:  k8s-agentpool1-24731180-vmss000001
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 23 Apr 2020 17:04:00 +0000
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:04 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:04 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:04 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:19 +0000   KubeletReady                 kubelet is posting ready status. AppArmor enabled
+Addresses:
+  Hostname:    k8s-agentpool1-24731180-vmss000001
+  InternalIP:  10.240.0.65
+Capacity:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              30309264Ki
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         8144320Ki
+  pods:                           30
+Allocatable:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              27933017657
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         7376320Ki
+  pods:                           30
+System Info:
+  Machine ID:                 33764a6812a9427b8d0fe5d4b17b18a3
+  System UUID:                a398097a-369e-a042-9d63-ce94885e751c
+  Boot ID:                    fc46d9e7-0a7c-466f-bebe-627b1765c936
+  Kernel Version:             5.0.0-1036-azure
+  OS Image:                   Ubuntu 18.04.4 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  docker://3.0.11+azure
+  Kubelet Version:            v1.18.2
+  Kube-Proxy Version:         v1.18.2
+ProviderID:                   azure:///subscriptions/*******/resourceGroups/kubernetes-westus2-13811/providers/Microsoft.Compute/virtualMachineScaleSets/k8s-agentpool1-24731180-vmss/virtualMachines/1
+Non-terminated Pods:          (7 in total)
+  Namespace                   Name                                      CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                   ----                                      ------------  ----------  ---------------  -------------  ---
+  kube-system                 azure-cni-networkmonitor-wsbx8            0 (0%)        0 (0%)      0 (0%)           0 (0%)         33s
+  kube-system                 azure-ip-masq-agent-xlpgb                 50m (2%)      50m (2%)    50Mi (0%)        250Mi (3%)     28s
+  kube-system                 blobfuse-flexvol-installer-zclxf          50m (2%)      50m (2%)    100Mi (1%)       100Mi (1%)     29s
+  kube-system                 csi-secrets-store-provider-azure-n7xjg    50m (2%)      200m (10%)  100Mi (1%)       200Mi (2%)     32s
+  kube-system                 csi-secrets-store-r6p6c                   70m (3%)      600m (30%)  140Mi (1%)       600Mi (8%)     32s
+  kube-system                 kube-proxy-9v5vs                          100m (5%)     0 (0%)      0 (0%)           0 (0%)         29s
+  kube-system                 metrics-server-7f6c5b76b9-jp5jb           0 (0%)        0 (0%)      0 (0%)           0 (0%)         32s
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                       Requests    Limits
+  --------                       --------    ------
+  cpu                            320m (16%)  900m (45%)
+  memory                         390Mi (5%)  1150Mi (15%)
+  ephemeral-storage              0 (0%)      0 (0%)
+  hugepages-1Gi                  0 (0%)      0 (0%)
+  hugepages-2Mi                  0 (0%)      0 (0%)
+  attachable-volumes-azure-disk  0           0
+Events:
+  Type    Reason                   Age                From                                            Message
+  ----    ------                   ----               ----                                            -------
+  Normal  NodeHasSufficientPID     78s (x7 over 85s)  kubelet, k8s-agentpool1-24731180-vmss000001     Node k8s-agentpool1-24731180-vmss000001 status is now: NodeHasSufficientPID
+  Normal  NodeHasSufficientMemory  71s (x8 over 85s)  kubelet, k8s-agentpool1-24731180-vmss000001     Node k8s-agentpool1-24731180-vmss000001 status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure    71s (x8 over 85s)  kubelet, k8s-agentpool1-24731180-vmss000001     Node k8s-agentpool1-24731180-vmss000001 status is now: NodeHasNoDiskPressure
+  Normal  Starting                 17s                kube-proxy, k8s-agentpool1-24731180-vmss000001  Starting kube-proxy.
+
+2020/04/23 17:04:08 $ k describe node k8s-master-24731180-0
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 BACKOFF_MODE=v2 /tmp/cloudprovider-config-validate.sh
+•2020/04/23 17:04:08 #### $ k describe node k8s-master-24731180-0 completed in 390.937042ms
+2020/04/23 17:04:08
+Name:               k8s-master-24731180-0
+Roles:              master
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/instance-type=Standard_D2_v3
+                    kubernetes.io/os=linux
+                    failure-domain.beta.kubernetes.io/region=westus2
+                    failure-domain.beta.kubernetes.io/zone=0
+                    kubernetes.azure.com/cluster=kubernetes-westus2-13811
+                    kubernetes.azure.com/role=master
+                    kubernetes.io/arch=amd64
+                    kubernetes.io/hostname=k8s-master-24731180-0
+                    kubernetes.io/os=linux
+                    kubernetes.io/role=master
+                    node-role.kubernetes.io/master=
+                    node.kubernetes.io/exclude-disruption=true
+                    node.kubernetes.io/exclude-from-external-load-balancers=true
+                    node.kubernetes.io/instance-type=Standard_D2_v3
+                    topology.kubernetes.io/region=westus2
+                    topology.kubernetes.io/zone=0
+Annotations:        node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Thu, 23 Apr 2020 17:03:09 +0000
+Taints:             node-role.kubernetes.io/master=true:NoSchedule
+Unschedulable:      false
+Lease:
+  HolderIdentity:  k8s-master-24731180-0
+  AcquireTime:     <unset>
+  RenewTime:       Thu, 23 Apr 2020 17:04:00 +0000
+Conditions:
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:07 +0000   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:07 +0000   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:07 +0000   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 23 Apr 2020 17:03:19 +0000   Thu, 23 Apr 2020 17:03:19 +0000   KubeletReady                 kubelet is posting ready status. AppArmor enabled
+Addresses:
+  Hostname:    k8s-master-24731180-0
+  InternalIP:  10.255.255.5
+Capacity:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              30309264Ki
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         8144320Ki
+  pods:                           30
+Allocatable:
+  attachable-volumes-azure-disk:  4
+  cpu:                            2
+  ephemeral-storage:              27933017657
+  hugepages-1Gi:                  0
+  hugepages-2Mi:                  0
+  memory:                         7376320Ki
+  pods:                           30
+System Info:
+  Machine ID:                 a109bce6c2e345e4af241785be5a3f83
+  System UUID:                36550468-ca07-dd45-ba2e-522a7d720185
+  Boot ID:                    02005169-782e-4fda-a316-0af311facdcd
+  Kernel Version:             5.0.0-1036-azure
+  OS Image:                   Ubuntu 18.04.4 LTS
+  Operating System:           linux
+  Architecture:               amd64
+  Container Runtime Version:  docker://3.0.11+azure
+  Kubelet Version:            v1.18.2
+  Kube-Proxy Version:         v1.18.2
+ProviderID:                   azure:///subscriptions/*******/resourceGroups/kubernetes-westus2-13811/providers/Microsoft.Compute/virtualMachines/k8s-master-24731180-0
+Non-terminated Pods:          (5 in total)
+  Namespace                   Name                                    CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                   ----                                    ------------  ----------  ---------------  -------------  ---
+  kube-system                 azure-cni-networkmonitor-g9rbf          0 (0%)        0 (0%)      0 (0%)           0 (0%)         33s
+  kube-system                 azure-ip-masq-agent-l2tcc               50m (2%)      50m (2%)    50Mi (0%)        250Mi (3%)     28s
+  kube-system                 coredns-85f58d59cc-c8wb6                100m (5%)     0 (0%)      70Mi (0%)        170Mi (2%)     32s
+  kube-system                 kube-apiserver-k8s-master-24731180-0    0 (0%)        0 (0%)      0 (0%)           0 (0%)         7s
+  kube-system                 kube-proxy-x6685                        100m (5%)     0 (0%)      0 (0%)           0 (0%)         29s
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                       Requests    Limits
+  --------                       --------    ------
+  cpu                            250m (12%)  50m (2%)
+  memory                         120Mi (1%)  420Mi (5%)
+  ephemeral-storage              0 (0%)      0 (0%)
+  hugepages-1Gi                  0 (0%)      0 (0%)
+  hugepages-2Mi                  0 (0%)      0 (0%)
+  attachable-volumes-azure-disk  0           0
+Events:
+  Type    Reason                   Age                From                               Message
+  ----    ------                   ----               ----                               -------
+  Normal  NodeHasSufficientMemory  82s (x8 over 83s)  kubelet, k8s-master-24731180-0     Node k8s-master-24731180-0 status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure    82s (x8 over 83s)  kubelet, k8s-master-24731180-0     Node k8s-master-24731180-0 status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID     82s (x7 over 83s)  kubelet, k8s-master-24731180-0     Node k8s-master-24731180-0 status is now: NodeHasSufficientPID
+  Normal  Starting                 18s                kube-proxy, k8s-master-24731180-0  Starting kube-proxy.
+
+
+$ lsb_release -a && uname -r
+2020/04/23 17:04:09 No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 18.04.4 LTS
+Release:	18.04
+Codename:	bionic
+5.0.0-1036-azure
+
+
+$ cat /proc/version
+•2020/04/23 17:04:09 Linux version 5.0.0-1036-azure (buildd@lgw01-amd64-038) (gcc version 7.5.0 (Ubuntu 7.5.0-3ubuntu1~18.04)) #38-Ubuntu SMP Sun Mar 22 21:27:21 UTC 2020
+
+
+$ k get nodes -o json
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "docker version"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/cloudprovider-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/cloudprovider-config-validate.sh
+2020/04/23 17:04:10 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "docker version"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 BACKOFF_MODE=v2 /tmp/cloudprovider-config-validate.sh
+2020/04/23 17:04:11 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "docker version"
+•2020/04/23 17:04:11 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ k get nodes -o json
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+2020/04/23 17:04:12
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "docker version"
+2020/04/23 17:04:13
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "docker version"
+•2020/04/23 17:04:14
+
+$ k get nodes -o json
+2020/04/23 17:04:14 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "docker version"
+2020/04/23 17:04:14 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+2020/04/23 17:04:15 Client:
+ Version:           3.0.11+azure
+ API version:       1.40
+ Go version:        go1.12.17
+ Git commit:        eb310fca49568dccd87c6136f774ef6fff2a1b51
+ Built:             Tue Mar  3 21:59:52 2020
+ OS/Arch:           linux/amd64
+ Experimental:      false
+
+Server:
+ Engine:
+  Version:          3.0.11+azure
+  API version:      1.40 (minimum version 1.12)
+  Go version:       go1.12.17
+  Git commit:       aa6a9891b0
+  Built:            Tue Mar 10 18:53:36 2020
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v1.2.13
+  GitCommit:        7ad184331fa3e55e52b890ea95e65ba581ae3429
+ runc:
+  Version:          1.0.0-rc10
+  GitCommit:        dc9208a3303feef5b3839f4323d9beb36df0a9dd
+ docker-init:
+  Version:          0.18.0
+  GitCommit:        fec3683
+
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+2020/04/23 17:04:17
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "sudo grep '^root:[!*]:' /etc/shadow" && exit 1 || exit 0
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+2020/04/23 17:04:17
+2020/04/23 17:04:18
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.message_burst | grep '= 80'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.message_burst | grep '= 80'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.somaxconn | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh1 | grep '= 4096'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh2 | grep '= 8192'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.neigh.default.gc_thresh3 | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.message_burst | grep '= 80'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.message_burst | grep '= 80'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.tcp_max_syn_backlog | grep '= 16384'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.ipv4.tcp_retries2 | grep '= 8'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.message_burst | grep '= 80'
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/net-config-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/net-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/net-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/net-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.message_burst | grep '= 80'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "GT_8_CORE_SKU= /tmp/net-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/net-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/net-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 sysctl net.core.message_cost | grep '= 40'
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "GT_8_CORE_SKU= /tmp/net-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/net-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/net-config-validate.sh
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/CIS-files-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/CIS-files-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "GT_8_CORE_SKU= /tmp/net-config-validate.sh"
+
+$ "/tmp/CIS-files-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/CIS-files-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/CIS-files-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/CIS-files-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/net-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/net-config-validate.sh
+<nil>
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/CIS-files-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/CIS-files-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "GT_8_CORE_SKU= /tmp/net-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/CIS-files-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/CIS-files-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/CIS-files-validate.sh
+<nil>
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/modprobe-config-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/modprobe-config-validate.sh
+
+$ "/tmp/modprobe-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/modprobe-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/modprobe-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/CIS-files-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/modprobe-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/CIS-files-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/CIS-files-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/modprobe-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/modprobe-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/CIS-files-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/modprobe-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/modprobe-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/modprobe-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/modprobe-config-validate.sh"
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/ubuntu-installed-packages-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/ubuntu-installed-packages-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/modprobe-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/modprobe-config-validate.sh
+
+$ "/tmp/ubuntu-installed-packages-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/modprobe-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/ubuntu-installed-packages-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/ubuntu-installed-packages-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/ubuntu-installed-packages-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/ubuntu-installed-packages-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/ubuntu-installed-packages-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/ubuntu-installed-packages-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/ubuntu-installed-packages-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/ubuntu-installed-packages-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/ubuntu-installed-packages-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/ubuntu-installed-packages-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/ubuntu-installed-packages-validate.sh
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/sshd-config-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/sshd-config-validate.sh
+
+$ "/tmp/sshd-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/sshd-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/sshd-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/sshd-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/ubuntu-installed-packages-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/sshd-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/sshd-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/sshd-config-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/sshd-config-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/sshd-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/sshd-config-validate.sh"
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/pwquality-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/pwquality-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/sshd-config-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/sshd-config-validate.sh
+
+$ "/tmp/pwquality-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/pwquality-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/pwquality-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/sshd-config-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/pwquality-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/pwquality-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/pwquality-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/pwquality-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/pwquality-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/pwquality-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/pwquality-validate.sh"
+•
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/auditd-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/pwquality-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/pwquality-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "ENABLED=false /tmp/auditd-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/pwquality-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "ENABLED=false /tmp/auditd-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-master-24731180-0:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "ENABLED=false /tmp/auditd-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "ENABLED=false /tmp/auditd-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "ENABLED=false /tmp/auditd-validate.sh"
+•2020/04/23 17:05:56 Checking for 3 Ready nodes
+
+$ k get nodes -o json
+•2020/04/23 17:05:57 NAME                                 STATUS   ROLES    AGE     VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME
+k8s-agentpool1-24731180-vmss000000   Ready    agent    2m35s   v1.18.2   10.240.0.34    <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+k8s-agentpool1-24731180-vmss000001   Ready    agent    2m48s   v1.18.2   10.240.0.65    <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+k8s-master-24731180-0                Ready    master   2m48s   v1.18.2   10.255.255.5   <none>        Ubuntu 18.04.4 LTS   5.0.0-1036-azure   docker://3.0.11+azure
+
+
+$ k get nodes -o json
+
+$ k get nodes -o json
+•
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/auditd-validate.sh k8s-master-24731180-0:/tmp/auditd-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-master-24731180-0 "ENABLED=false /tmp/auditd-validate.sh"
+•
+------------------------------
+S [SKIPPING] [0.000 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  regardless of agent pool type
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:176
+    Should not have any unready or crashing pods right after deployment [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:677
+
+    Skipping this DEBUG test
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:694
+------------------------------
+•2020/04/23 17:06:37 NAMESPACE     NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE    CONTAINERS       IMAGES                                                                              SELECTOR
+kube-system   deployment.apps/coredns              1/1     1            1           3m5s   coredns          mcr.microsoft.com/oss/kubernetes/coredns:1.6.7                                      k8s-app=kube-dns
+kube-system   deployment.apps/coredns-autoscaler   1/1     1            1           3m5s   autoscaler       mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1   k8s-app=coredns-autoscaler
+kube-system   deployment.apps/metrics-server       1/1     1            1           3m3s   metrics-server   mcr.microsoft.com/oss/kubernetes/metrics-server:v0.3.5                              k8s-app=metrics-server
+
+NAMESPACE     NAME                                                READY   STATUS    RESTARTS   AGE     IP             NODE                                 NOMINATED NODE   READINESS GATES
+kube-system   pod/azure-cni-networkmonitor-g9rbf                  1/1     Running   0          3m1s    10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/azure-cni-networkmonitor-qj682                  1/1     Running   0          3m1s    10.240.0.34    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/azure-cni-networkmonitor-wsbx8                  1/1     Running   0          3m1s    10.240.0.65    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/azure-ip-masq-agent-hpgn5                       1/1     Running   0          2m56s   10.240.0.34    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/azure-ip-masq-agent-l2tcc                       1/1     Running   0          2m56s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/azure-ip-masq-agent-xlpgb                       1/1     Running   0          2m56s   10.240.0.65    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/blobfuse-flexvol-installer-shmmh                1/1     Running   0          2m57s   10.240.0.64    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/blobfuse-flexvol-installer-zclxf                1/1     Running   0          2m57s   10.240.0.67    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/coredns-85f58d59cc-c8wb6                        1/1     Running   0          3m      10.240.0.26    k8s-master-24731180-0                <none>           <none>
+kube-system   pod/coredns-autoscaler-75899bd56c-phcdd             1/1     Running   0          3m      10.240.0.47    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/csi-secrets-store-provider-azure-lnmhr          1/1     Running   0          3m      10.240.0.35    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/csi-secrets-store-provider-azure-n7xjg          1/1     Running   0          3m      10.240.0.77    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/csi-secrets-store-r6p6c                         3/3     Running   0          3m      10.240.0.65    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/csi-secrets-store-vwrnk                         3/3     Running   0          3m      10.240.0.34    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/kube-addon-manager-k8s-master-24731180-0        1/1     Running   0          2m13s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/kube-apiserver-k8s-master-24731180-0            1/1     Running   0          2m35s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/kube-controller-manager-k8s-master-24731180-0   1/1     Running   0          2m12s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/kube-proxy-9v5vs                                1/1     Running   0          2m57s   10.240.0.65    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+kube-system   pod/kube-proxy-jp7sk                                1/1     Running   0          2m57s   10.240.0.34    k8s-agentpool1-24731180-vmss000000   <none>           <none>
+kube-system   pod/kube-proxy-x6685                                1/1     Running   0          2m57s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/kube-scheduler-k8s-master-24731180-0            1/1     Running   0          2m20s   10.255.255.5   k8s-master-24731180-0                <none>           <none>
+kube-system   pod/metrics-server-7f6c5b76b9-jp5jb                 1/1     Running   1          3m      10.240.0.88    k8s-agentpool1-24731180-vmss000001   <none>           <none>
+
+NAMESPACE     NAME                     TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)                  AGE     SELECTOR
+default       service/kubernetes       ClusterIP   10.0.0.1      <none>        443/TCP                  3m21s   <none>
+kube-system   service/kube-dns         ClusterIP   10.0.0.10     <none>        53/UDP,53/TCP,9153/TCP   3m5s    k8s-app=kube-dns
+kube-system   service/metrics-server   ClusterIP   10.0.87.235   <none>        443/TCP                  3m3s    k8s-app=metrics-server
+
+NAMESPACE     NAME                                              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE    CONTAINERS                                           IMAGES                                                                                                                                                                                  SELECTOR
+kube-system   daemonset.apps/azure-cni-networkmonitor           3         3         3       3            3           kubernetes.io/os=linux        3m1s   azure-cnms                                           mcr.microsoft.com/containernetworking/networkmonitor:v0.0.8                                                                                                                             k8s-app=azure-cnms
+kube-system   daemonset.apps/azure-ip-masq-agent                3         3         3       3            3           kubernetes.io/os=linux        3m3s   azure-ip-masq-agent                                  mcr.microsoft.com/oss/kubernetes/ip-masq-agent:v2.5.0                                                                                                                                   k8s-app=azure-ip-masq-agent,tier=node
+kube-system   daemonset.apps/blobfuse-flexvol-installer         2         2         2       2            2           kubernetes.io/os=linux        3m4s   blobfuse-flexvol-installer                           mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8                                                                                                                              name=blobfuse
+kube-system   daemonset.apps/csi-secrets-store                  2         2         2       2            2           kubernetes.io/os=linux        3m     node-driver-registrar,secrets-store,liveness-probe   mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.0,mcr.microsoft.com/k8s/csi/secrets-store/driver:v0.0.9,mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v1.1.0   app=csi-secrets-store
+kube-system   daemonset.apps/csi-secrets-store-provider-azure   2         2         2       2            2           kubernetes.io/os=linux        3m     provider-azure-installer                             mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:0.0.4                                                                                                                            app=csi-secrets-store-provider-azure
+kube-system   daemonset.apps/kube-proxy                         3         3         3       3            3           kubernetes.io/os=linux        3m3s   kube-proxy                                           mcr.microsoft.com/oss/kubernetes/kube-proxy:v1.18.2                                                                                                                                     component=kube-proxy,k8s-app=kube-proxy,tier=node
+
+NAMESPACE     NAME                                           DATA   AGE
+kube-system   configmap/azure-ip-masq-agent-config           1      3m5s
+kube-system   configmap/coredns                              1      3m5s
+kube-system   configmap/coredns-autoscaler                   1      109s
+kube-system   configmap/coredns-custom                       1      3m5s
+kube-system   configmap/extension-apiserver-authentication   6      3m27s
+kube-system   configmap/kube-proxy-config                    1      3m3s
+
+NAMESPACE     NAME                                ENDPOINTS                                        AGE
+default       endpoints/kubernetes                10.255.255.5:443                                 3m21s
+kube-system   endpoints/kube-controller-manager   <none>                                           3m24s
+kube-system   endpoints/kube-dns                  10.240.0.26:53,10.240.0.26:9153,10.240.0.26:53   3m5s
+kube-system   endpoints/kube-scheduler            <none>                                           3m27s
+kube-system   endpoints/metrics-server            10.240.0.88:443                                  3m3s
+
+NAMESPACE   NAME                                                                                                         CREATED AT
+            clusterrole.rbac.authorization.k8s.io/admin                                                                  2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/cluster-admin                                                          2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/coredns-autoscaler                                                     2020-04-23T17:03:31Z
+            clusterrole.rbac.authorization.k8s.io/edit                                                                   2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/psp:privileged                                                         2020-04-23T17:03:35Z
+            clusterrole.rbac.authorization.k8s.io/psp:restricted                                                         2020-04-23T17:03:35Z
+            clusterrole.rbac.authorization.k8s.io/secretproviderclasses-role                                             2020-04-23T17:03:35Z
+            clusterrole.rbac.authorization.k8s.io/system:aggregate-to-admin                                              2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:aggregate-to-edit                                               2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:aggregate-to-view                                               2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:auth-delegator                                                  2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:azure-cloud-provider                                            2020-04-23T17:03:32Z
+            clusterrole.rbac.authorization.k8s.io/system:azure-cloud-provider-secret-getter                              2020-04-23T17:03:32Z
+            clusterrole.rbac.authorization.k8s.io/system:azure-persistent-volume-binder                                  2020-04-23T17:03:32Z
+            clusterrole.rbac.authorization.k8s.io/system:basic-user                                                      2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:certificatesigningrequests:nodeclient       2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:certificatesigningrequests:selfnodeclient   2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:kube-apiserver-client-approver              2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:kube-apiserver-client-kubelet-approver      2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:kubelet-serving-approver                    2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:certificates.k8s.io:legacy-unknown-approver                     2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:attachdetach-controller                              2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:certificate-controller                               2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:clusterrole-aggregation-controller                   2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:cronjob-controller                                   2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:daemon-set-controller                                2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:deployment-controller                                2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:disruption-controller                                2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:endpoint-controller                                  2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:endpointslice-controller                             2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:expand-controller                                    2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:generic-garbage-collector                            2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:horizontal-pod-autoscaler                            2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:job-controller                                       2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:namespace-controller                                 2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:node-controller                                      2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:persistent-volume-binder                             2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:pod-garbage-collector                                2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:pv-protection-controller                             2020-04-23T17:03:13Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:pvc-protection-controller                            2020-04-23T17:03:13Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:replicaset-controller                                2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:replication-controller                               2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:resourcequota-controller                             2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:route-controller                                     2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:service-account-controller                           2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:service-controller                                   2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:statefulset-controller                               2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:controller:ttl-controller                                       2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:coredns                                                         2020-04-23T17:03:30Z
+            clusterrole.rbac.authorization.k8s.io/system:discovery                                                       2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/system:heapster                                                        2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:kube-aggregator                                                 2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:kube-controller-manager                                         2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:kube-dns                                                        2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:kube-scheduler                                                  2020-04-23T17:03:12Z
+            clusterrole.rbac.authorization.k8s.io/system:kubelet-api-admin                                               2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:metrics-server                                                  2020-04-23T17:03:33Z
+            clusterrole.rbac.authorization.k8s.io/system:node                                                            2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:node-bootstrapper                                               2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:node-problem-detector                                           2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:node-proxier                                                    2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:persistent-volume-provisioner                                   2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/system:public-info-viewer                                              2020-04-23T17:03:10Z
+            clusterrole.rbac.authorization.k8s.io/system:volume-scheduler                                                2020-04-23T17:03:11Z
+            clusterrole.rbac.authorization.k8s.io/view                                                                   2020-04-23T17:03:11Z
+
+NAMESPACE   NAME                                                                                                ROLE                                                               AGE     USERS                            GROUPS                                         SERVICEACCOUNTS
+            clusterrolebinding.rbac.authorization.k8s.io/cluster-admin                                          ClusterRole/cluster-admin                                          3m23s                                    system:masters
+            clusterrolebinding.rbac.authorization.k8s.io/coredns-autoscaler                                     ClusterRole/coredns-autoscaler                                     3m5s                                                                                    kube-system/coredns-autoscaler
+            clusterrolebinding.rbac.authorization.k8s.io/default:privileged                                     ClusterRole/psp:privileged                                         3m1s                                     system:authenticated, system:nodes
+            clusterrolebinding.rbac.authorization.k8s.io/default:restricted                                     ClusterRole/psp:restricted                                         3m1s                                     system:authenticated
+            clusterrolebinding.rbac.authorization.k8s.io/metrics-server:system:auth-delegator                   ClusterRole/system:auth-delegator                                  3m3s                                                                                    kube-system/metrics-server
+            clusterrolebinding.rbac.authorization.k8s.io/secretproviderclasses-rolebinding                      ClusterRole/secretproviderclasses-role                             3m1s                                                                                    kube-system/secrets-store-csi-driver
+            clusterrolebinding.rbac.authorization.k8s.io/system:azure-cloud-provider                            ClusterRole/system:azure-cloud-provider                            3m4s                                                                                    kube-system/azure-cloud-provider
+            clusterrolebinding.rbac.authorization.k8s.io/system:azure-cloud-provider-secret-getter              ClusterRole/system:azure-cloud-provider-secret-getter              3m4s                                                                                    kube-system/azure-cloud-provider
+            clusterrolebinding.rbac.authorization.k8s.io/system:azure-persistent-volume-binder                  ClusterRole/system:azure-persistent-volume-binder                  3m4s                                                                                    kube-system/persistent-volume-binder
+            clusterrolebinding.rbac.authorization.k8s.io/system:basic-user                                      ClusterRole/system:basic-user                                      3m23s                                    system:authenticated
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:attachdetach-controller              ClusterRole/system:controller:attachdetach-controller              3m23s                                                                                   kube-system/attachdetach-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:certificate-controller               ClusterRole/system:controller:certificate-controller               3m22s                                                                                   kube-system/certificate-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:clusterrole-aggregation-controller   ClusterRole/system:controller:clusterrole-aggregation-controller   3m23s                                                                                   kube-system/clusterrole-aggregation-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:cronjob-controller                   ClusterRole/system:controller:cronjob-controller                   3m23s                                                                                   kube-system/cronjob-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:daemon-set-controller                ClusterRole/system:controller:daemon-set-controller                3m23s                                                                                   kube-system/daemon-set-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:deployment-controller                ClusterRole/system:controller:deployment-controller                3m23s                                                                                   kube-system/deployment-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:disruption-controller                ClusterRole/system:controller:disruption-controller                3m23s                                                                                   kube-system/disruption-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:endpoint-controller                  ClusterRole/system:controller:endpoint-controller                  3m23s                                                                                   kube-system/endpoint-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:endpointslice-controller             ClusterRole/system:controller:endpointslice-controller             3m23s                                                                                   kube-system/endpointslice-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:expand-controller                    ClusterRole/system:controller:expand-controller                    3m22s                                                                                   kube-system/expand-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:generic-garbage-collector            ClusterRole/system:controller:generic-garbage-collector            3m22s                                                                                   kube-system/generic-garbage-collector
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:horizontal-pod-autoscaler            ClusterRole/system:controller:horizontal-pod-autoscaler            3m22s                                                                                   kube-system/horizontal-pod-autoscaler
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:job-controller                       ClusterRole/system:controller:job-controller                       3m22s                                                                                   kube-system/job-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:namespace-controller                 ClusterRole/system:controller:namespace-controller                 3m22s                                                                                   kube-system/namespace-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:node-controller                      ClusterRole/system:controller:node-controller                      3m22s                                                                                   kube-system/node-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:persistent-volume-binder             ClusterRole/system:controller:persistent-volume-binder             3m22s                                                                                   kube-system/persistent-volume-binder
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:pod-garbage-collector                ClusterRole/system:controller:pod-garbage-collector                3m22s                                                                                   kube-system/pod-garbage-collector
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:pv-protection-controller             ClusterRole/system:controller:pv-protection-controller             3m22s                                                                                   kube-system/pv-protection-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:pvc-protection-controller            ClusterRole/system:controller:pvc-protection-controller            3m22s                                                                                   kube-system/pvc-protection-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:replicaset-controller                ClusterRole/system:controller:replicaset-controller                3m22s                                                                                   kube-system/replicaset-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:replication-controller               ClusterRole/system:controller:replication-controller               3m22s                                                                                   kube-system/replication-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:resourcequota-controller             ClusterRole/system:controller:resourcequota-controller             3m22s                                                                                   kube-system/resourcequota-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:route-controller                     ClusterRole/system:controller:route-controller                     3m22s                                                                                   kube-system/route-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:service-account-controller           ClusterRole/system:controller:service-account-controller           3m22s                                                                                   kube-system/service-account-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:service-controller                   ClusterRole/system:controller:service-controller                   3m22s                                                                                   kube-system/service-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:statefulset-controller               ClusterRole/system:controller:statefulset-controller               3m22s                                                                                   kube-system/statefulset-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:controller:ttl-controller                       ClusterRole/system:controller:ttl-controller                       3m22s                                                                                   kube-system/ttl-controller
+            clusterrolebinding.rbac.authorization.k8s.io/system:coredns                                         ClusterRole/system:coredns                                         3m5s                                                                                    kube-system/coredns
+            clusterrolebinding.rbac.authorization.k8s.io/system:discovery                                       ClusterRole/system:discovery                                       3m23s                                    system:authenticated
+            clusterrolebinding.rbac.authorization.k8s.io/system:kube-controller-manager                         ClusterRole/system:kube-controller-manager                         3m23s   system:kube-controller-manager
+            clusterrolebinding.rbac.authorization.k8s.io/system:kube-dns                                        ClusterRole/system:kube-dns                                        3m23s                                                                                   kube-system/kube-dns
+            clusterrolebinding.rbac.authorization.k8s.io/system:kube-scheduler                                  ClusterRole/system:kube-scheduler                                  3m23s   system:kube-scheduler
+            clusterrolebinding.rbac.authorization.k8s.io/system:metrics-server                                  ClusterRole/system:metrics-server                                  3m3s                                                                                    kube-system/metrics-server
+            clusterrolebinding.rbac.authorization.k8s.io/system:node                                            ClusterRole/system:node                                            3m23s
+            clusterrolebinding.rbac.authorization.k8s.io/system:node-proxier                                    ClusterRole/system:node-proxier                                    3m23s   system:kube-proxy
+            clusterrolebinding.rbac.authorization.k8s.io/system:public-info-viewer                              ClusterRole/system:public-info-viewer                              3m23s                                    system:authenticated, system:unauthenticated
+            clusterrolebinding.rbac.authorization.k8s.io/system:volume-scheduler                                ClusterRole/system:volume-scheduler                                3m23s   system:kube-scheduler
+
+NAMESPACE     NAME                                                                            CREATED AT
+kube-public   role.rbac.authorization.k8s.io/system:controller:bootstrap-signer               2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/extension-apiserver-authentication-reader        2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/system::leader-locking-kube-controller-manager   2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/system::leader-locking-kube-scheduler            2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/system:controller:bootstrap-signer               2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/system:controller:cloud-provider                 2020-04-23T17:03:15Z
+kube-system   role.rbac.authorization.k8s.io/system:controller:token-cleaner                  2020-04-23T17:03:15Z
+
+NAMESPACE     NAME                                                                                      ROLE                                                  AGE     USERS                                                   GROUPS   SERVICEACCOUNTS
+kube-public   rolebinding.rbac.authorization.k8s.io/system:controller:bootstrap-signer                  Role/system:controller:bootstrap-signer               3m21s                                                                    kube-system/bootstrap-signer
+kube-system   rolebinding.rbac.authorization.k8s.io/metrics-server-auth-reader                          Role/extension-apiserver-authentication-reader        3m3s                                                                     kube-system/metrics-server
+kube-system   rolebinding.rbac.authorization.k8s.io/system::extension-apiserver-authentication-reader   Role/extension-apiserver-authentication-reader        3m21s   system:kube-controller-manager, system:kube-scheduler
+kube-system   rolebinding.rbac.authorization.k8s.io/system::leader-locking-kube-controller-manager      Role/system::leader-locking-kube-controller-manager   3m21s   system:kube-controller-manager                                   kube-system/kube-controller-manager
+kube-system   rolebinding.rbac.authorization.k8s.io/system::leader-locking-kube-scheduler               Role/system::leader-locking-kube-scheduler            3m21s   system:kube-scheduler                                            kube-system/kube-scheduler
+kube-system   rolebinding.rbac.authorization.k8s.io/system:controller:bootstrap-signer                  Role/system:controller:bootstrap-signer               3m21s                                                                    kube-system/bootstrap-signer
+kube-system   rolebinding.rbac.authorization.k8s.io/system:controller:cloud-provider                    Role/system:controller:cloud-provider                 3m21s                                                                    kube-system/cloud-provider
+kube-system   rolebinding.rbac.authorization.k8s.io/system:controller:token-cleaner                     Role/system:controller:token-cleaner                  3m21s                                                                    kube-system/token-cleaner
+
+NAMESPACE   NAME                                            PROVISIONER                RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+            storageclass.storage.k8s.io/azurefile           kubernetes.io/azure-file   Delete          Immediate           false                  3m4s
+            storageclass.storage.k8s.io/default (default)   kubernetes.io/azure-disk   Delete          Immediate           false                  3m4s
+            storageclass.storage.k8s.io/managed-premium     kubernetes.io/azure-disk   Delete          Immediate           false                  3m4s
+            storageclass.storage.k8s.io/managed-standard    kubernetes.io/azure-disk   Delete          Immediate           false                  3m4s
+
+2020/04/23 17:06:45 $ k logs coredns-85f58d59cc-c8wb6 -c coredns -n kube-system
+2020/04/23 17:06:45 #### $ k logs coredns-85f58d59cc-c8wb6 -c coredns -n kube-system completed in 390.755006ms
+2020/04/23 17:06:45
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+.:53
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+[INFO] plugin/reload: Running configuration MD5 = 78c476309821d46410e1a1bc81f7643a
+CoreDNS-1.6.7
+linux/amd64, go1.13.4, da7f65b3
+[INFO] plugin/ready: Still waiting on: "kubernetes"
+[INFO] plugin/ready: Still waiting on: "kubernetes"
+[INFO] plugin/ready: Still waiting on: "kubernetes"
+I0423 17:04:20.401548       1 trace.go:116] Trace[2019727887]: "Reflector ListAndWatch" name:pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105 (started: 2020-04-23 17:03:50.384745719 +0000 UTC m=+2.931198301) (total time: 30.0166893s):
+Trace[2019727887]: [30.0166893s] [30.0166893s] END
+I0423 17:04:20.401583       1 trace.go:116] Trace[1427131847]: "Reflector ListAndWatch" name:pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105 (started: 2020-04-23 17:03:50.348037519 +0000 UTC m=+2.894490101) (total time: 30.0534173s):
+Trace[1427131847]: [30.0534173s] [30.0534173s] END
+E0423 17:04:20.401583       1 reflector.go:153] pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105: Failed to list *v1.Service: Get https://10.0.0.1:443/api/v1/services?limit=500&resourceVersion=0: dial tcp 10.0.0.1:443: i/o timeout
+E0423 17:04:20.401594       1 reflector.go:153] pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105: Failed to list *v1.Endpoints: Get https://10.0.0.1:443/api/v1/endpoints?limit=500&resourceVersion=0: dial tcp 10.0.0.1:443: i/o timeout
+I0423 17:04:20.433119       1 trace.go:116] Trace[939984059]: "Reflector ListAndWatch" name:pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105 (started: 2020-04-23 17:03:50.348030719 +0000 UTC m=+2.894483301) (total time: 30.0850652s):
+Trace[939984059]: [30.0850652s] [30.0850652s] END
+E0423 17:04:20.433140       1 reflector.go:153] pkg/mod/k8s.io/client-go@v0.17.2/tools/cache/reflector.go:105: Failed to list *v1.Namespace: Get https://10.0.0.1:443/api/v1/namespaces?limit=500&resourceVersion=0: dial tcp 10.0.0.1:443: i/o timeout
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+[WARNING] No files matching import glob pattern: custom/*.override
+[WARNING] No files matching import glob pattern: custom/*.server
+
+2020/04/23 17:06:45 $ k describe pod coredns-85f58d59cc-c8wb6 -n kube-system
+2020/04/23 17:06:45 #### $ k describe pod coredns-85f58d59cc-c8wb6 -n kube-system completed in 379.574026ms
+2020/04/23 17:06:45
+Name:                 coredns-85f58d59cc-c8wb6
+Namespace:            kube-system
+Priority:             2000000000
+Priority Class Name:  system-cluster-critical
+Node:                 k8s-master-24731180-0/10.255.255.5
+Start Time:           Thu, 23 Apr 2020 17:03:40 +0000
+Labels:               k8s-app=kube-dns
+                      pod-template-hash=85f58d59cc
+Annotations:          kubernetes.io/psp: privileged
+                      seccomp.security.alpha.kubernetes.io/pod: docker/default
+Status:               Running
+IP:                   10.240.0.26
+IPs:
+  IP:           10.240.0.26
+Controlled By:  ReplicaSet/coredns-85f58d59cc
+Containers:
+  coredns:
+    Container ID:  docker://c01a65d0dca2b9f36f374c70fac9c26159df4c4668db67aeae7c98f3b3419b09
+    Image:         mcr.microsoft.com/oss/kubernetes/coredns:1.6.7
+    Image ID:      docker-pullable://mcr.microsoft.com/oss/kubernetes/coredns@sha256:96a2d8fda7c12bd397980f1c8ac55781e6cd41f9292614958cbd3aee439777ac
+    Ports:         53/UDP, 53/TCP, 9153/TCP
+    Host Ports:    0/UDP, 0/TCP, 0/TCP
+    Args:
+      -conf
+      /etc/coredns/Corefile
+    State:          Running
+      Started:      Thu, 23 Apr 2020 17:03:46 +0000
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      memory:  170Mi
+    Requests:
+      cpu:        100m
+      memory:     70Mi
+    Liveness:     http-get http://:8080/health delay=60s timeout=5s period=10s #success=1 #failure=5
+    Readiness:    http-get http://:8181/ready delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:  <none>
+    Mounts:
+      /etc/coredns from config-volume (ro)
+      /etc/coredns/conf.d from config-custom (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from coredns-token-rlkf7 (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  config-volume:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      coredns
+    Optional:  false
+  config-custom:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      coredns-custom
+    Optional:  true
+  coredns-token-rlkf7:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  coredns-token-rlkf7
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  kubernetes.io/os=linux
+Tolerations:     :NoExecute
+                 :NoSchedule
+                 CriticalAddonsOnly
+                 node-role.kubernetes.io/master:NoSchedule
+Events:
+  Type     Reason     Age                    From                            Message
+  ----     ------     ----                   ----                            -------
+  Normal   Scheduled  3m5s                   default-scheduler               Successfully assigned kube-system/coredns-85f58d59cc-c8wb6 to k8s-master-24731180-0
+  Normal   Pulled     3m2s                   kubelet, k8s-master-24731180-0  Container image "mcr.microsoft.com/oss/kubernetes/coredns:1.6.7" already present on machine
+  Normal   Created    3m                     kubelet, k8s-master-24731180-0  Created container coredns
+  Normal   Started    2m59s                  kubelet, k8s-master-24731180-0  Started container coredns
+  Warning  Unhealthy  2m29s (x3 over 2m49s)  kubelet, k8s-master-24731180-0  Readiness probe failed: HTTP probe failed with statuscode: 503
+
+2020/04/23 17:06:45 $ k logs coredns-autoscaler-75899bd56c-phcdd -c autoscaler -n kube-system
+2020/04/23 17:06:46 #### $ k logs coredns-autoscaler-75899bd56c-phcdd -c autoscaler -n kube-system completed in 366.779972ms
+2020/04/23 17:06:46
+I0423 17:04:14.824453       1 autoscaler.go:49] Scaling Namespace: kube-system, Target: deployment/coredns
+E0423 17:04:19.976706       1 autoscaler_server.go:86] Error while getting cluster status: timed out waiting for the condition
+E0423 17:04:29.879439       1 autoscaler_server.go:86] Error while getting cluster status: timed out waiting for the condition
+E0423 17:04:39.879181       1 autoscaler_server.go:86] Error while getting cluster status: timed out waiting for the condition
+E0423 17:04:45.292972       1 reflector.go:125] github.com/kubernetes-incubator/cluster-proportional-autoscaler/pkg/autoscaler/k8sclient/k8sclient.go:96: Failed to list *v1.Node: Get https://10.0.0.1:443/api/v1/nodes: dial tcp 10.0.0.1:443: i/o timeout
+I0423 17:04:47.132762       1 autoscaler_server.go:133] ConfigMap not found: configmaps "coredns-autoscaler" not found, will create one with default params
+I0423 17:04:47.364154       1 k8sclient.go:147] Created ConfigMap coredns-autoscaler in namespace kube-system
+I0423 17:04:47.364181       1 plugin.go:50] Set control mode to linear
+I0423 17:04:47.364187       1 linear_controller.go:59] ConfigMap version change (old:  new: 1006) - rebuilding params
+I0423 17:04:47.364193       1 linear_controller.go:60] Params from apiserver:
+{"coresPerReplica":512,"min":1,"nodesPerReplica":32}
+
+2020/04/23 17:06:46 $ k describe pod coredns-autoscaler-75899bd56c-phcdd -n kube-system
+•2020/04/23 17:06:46 #### $ k describe pod coredns-autoscaler-75899bd56c-phcdd -n kube-system completed in 294.966513ms
+2020/04/23 17:06:46
+Name:                 coredns-autoscaler-75899bd56c-phcdd
+Namespace:            kube-system
+Priority:             2000000000
+Priority Class Name:  system-cluster-critical
+Node:                 k8s-agentpool1-24731180-vmss000000/10.240.0.34
+Start Time:           Thu, 23 Apr 2020 17:03:45 +0000
+Labels:               k8s-app=coredns-autoscaler
+                      pod-template-hash=75899bd56c
+Annotations:          kubernetes.io/psp: privileged
+Status:               Running
+IP:                   10.240.0.47
+IPs:
+  IP:           10.240.0.47
+Controlled By:  ReplicaSet/coredns-autoscaler-75899bd56c
+Containers:
+  autoscaler:
+    Container ID:  docker://3f3026c8b8397a2751c22194da2b231f9ceb36aa5da9915a7e8bb376ac27a051
+    Image:         mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1
+    Image ID:      docker-pullable://mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler@sha256:753e3ca79dc833feed24ee4107ff4f06a96abbd6cefba8d41d7dec6f4d3e75f0
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /cluster-proportional-autoscaler
+      --namespace=kube-system
+      --configmap=coredns-autoscaler
+      --target=Deployment/coredns
+      --default-params={"linear":{"coresPerReplica":512,"nodesPerReplica":32,"min":1}}
+      --logtostderr=true
+      --v=2
+    State:          Running
+      Started:      Thu, 23 Apr 2020 17:04:05 +0000
+    Ready:          True
+    Restart Count:  0
+    Requests:
+      cpu:        20m
+      memory:     10Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from coredns-autoscaler-token-wczlj (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  coredns-autoscaler-token-wczlj:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  coredns-autoscaler-token-wczlj
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  kubernetes.io/os=linux
+Tolerations:     :NoExecute
+                 :NoSchedule
+                 CriticalAddonsOnly
+                 node-role.kubernetes.io/master:NoSchedule
+Events:
+  Type    Reason     Age    From                                         Message
+  ----    ------     ----   ----                                         -------
+  Normal  Scheduled  3m6s   default-scheduler                            Successfully assigned kube-system/coredns-autoscaler-75899bd56c-phcdd to k8s-agentpool1-24731180-vmss000000
+  Normal  Pulled     2m49s  kubelet, k8s-agentpool1-24731180-vmss000000  Container image "mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-proportional-autoscaler:1.7.1" already present on machine
+  Normal  Created    2m45s  kubelet, k8s-agentpool1-24731180-vmss000000  Created container autoscaler
+  Normal  Started    2m40s  kubelet, k8s-agentpool1-24731180-vmss000000  Started container autoscaler
+
+
+$ k get jobs validate-dns-linux -n default -o json
+
+$ k create -f workloads/validate-dns-linux.yaml
+
+$ k get jobs validate-dns-linux -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+•2020/04/23 17:06:58 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:06:58 Ran command on 0 of 0 desired attempts with 0 successes
+
+
+$ k apply -f workloads/dns-liveness.yaml
+•
+$ k get deploy php-apache-long-running -n default -o json
+2020/04/23 17:07:18 Error getting deployment: exit status 1
+
+$ k get deploy php-apache-long-running -n default -o json
+2020/04/23 17:07:22 Error getting deployment: exit status 1
+
+$ k get deploy php-apache-long-running -n default -o json
+2020/04/23 17:07:25 Error getting deployment: exit status 1
+2020/04/23 17:07:28 $ k apply -n default -f /tmp/e2e-linux-deployment-494770295.yaml
+2020/04/23 17:07:28 #### $ k apply -n default -f /tmp/e2e-linux-deployment-494770295.yaml completed in 506.621133ms
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl www.bing.com
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl google.com
+
+$ k get svc -o json -n default php-apache-long-running
+2020/04/23 17:08:22 Error getting svc:
+2020/04/23 17:08:22 $ k expose deployment php-apache-long-running --type ClusterIP -n default --target-port 80 --port 80
+•2020/04/23 17:08:23 #### $ k expose deployment php-apache-long-running --type ClusterIP -n default --target-port 80 --port 80 completed in 335.944381ms
+
+$ k get jobs busybox-master -n default -o json
+
+$ k create -f workloads/busybox-master.yaml
+
+$ k get jobs busybox-master -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+•
+$ k get jobs busybox-agent -n default -o json
+
+$ k create -f workloads/busybox-agent.yaml
+
+$ k get jobs busybox-agent -n default -o json
+
+$ k get jobs -n default -o json
+
+$ k get jobs -n default -o json
+••2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:26 Ran command on 0 of 0 desired attempts with 0 successes
+
+•
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl www.bing.com
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl google.com
+•tiller disabled for this cluster, will not test
+aci-connector disabled for this cluster, will not test
+cluster-autoscaler disabled for this cluster, will not test
+2020/04/23 17:09:48 Ran command on 0 of 0 desired attempts with 0 successes
+
+2020/04/23 17:09:48 Ran command on 0 of 0 desired attempts with 0 successes
+
+smb-flexvolume disabled for this cluster, will not test
+keyvault-flexvolume disabled for this cluster, will not test
+kubernetes-dashboard disabled for this cluster, will not test
+rescheduler disabled for this cluster, will not test
+nvidia-device-plugin disabled for this cluster, will not test
+container-monitoring disabled for this cluster, will not test
+azure-npm-daemonset disabled for this cluster, will not test
+azure-policy disabled for this cluster, will not test
+node-problem-detector disabled for this cluster, will not test
+••
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  regardless of agent pool type
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:176
+    should have the correct tiller configuration [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:964
+
+    tiller disabled for this cluster, will not test
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:978
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  regardless of agent pool type
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:176
+    should have the expected omsagent cluster footprint [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:982
+
+    container monitoring disabled for this cluster, will not test
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1013
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  regardless of agent pool type
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:176
+    should be able to access the dashboard [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1017
+
+    kubernetes-dashboard disabled for this cluster, will not test
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1056
+------------------------------
+
+$ k get storageclass default -o json
+
+$ k get storageclass managed-premium -o json
+
+$ k get storageclass managed-standard -o json
+
+$ k get storageclass azurefile -o json
+•
+$ k get deployments -n default -o json
+2020/04/23 17:10:20 $ k apply -n default -f /tmp/e2e-linux-deployment-855148394.yaml
+2020/04/23 17:10:21 #### $ k apply -n default -f /tmp/e2e-linux-deployment-855148394.yaml completed in 394.038284ms
+
+$ k port-forward portforwardlinux-2557-74945b6cd5-jmgtx 8123:80
+2020/04/23 17:11:03 kubectl port-forward stdout: Forwarding from 127.0.0.1:8123 -> 80
+
+2020/04/23 17:11:03 kubectl port-forward running as pid: 10007
+
+$ curl --max-time 60 --retry 10 --retry-delay 10 --retry-max-time 120 http://localhost:8123
+2020/04/23 17:11:04   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   612  100   612    0     0   1324      0 --:--:-- --:--:-- --:--:--  1321
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+2020/04/23 17:11:04 kubectl port-forward - wait returned err: <nil>
+2020/04/23 17:11:04 $ k delete deploy -n default portforwardlinux-2557
+••2020/04/23 17:11:04 #### $ k delete deploy -n default portforwardlinux-2557 completed in 262.889358ms
+
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a windows agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1286
+    kubelet service should be able to recover when the docker service is stopped [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1287
+
+    Docker service recovery test is Windows only
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1338
+------------------------------
+
+$ k get deployments -n default -o json
+2020/04/23 17:11:05 $ k apply -n default -f /tmp/e2e-linux-deployment-977024449.yaml
+2020/04/23 17:11:05 #### $ k apply -n default -f /tmp/e2e-linux-deployment-977024449.yaml completed in 388.694277ms
+
+$ k get svc -o json -n default ingress-nginx-ilb
+2020/04/23 17:11:08 Error getting svc:
+
+$ k create -f workloads/ingress-nginx-ilb.yaml
+
+$ k get svc -o json -n default ingress-nginx-elb
+2020/04/23 17:12:42 Error getting svc:
+
+$ k create -f workloads/ingress-nginx-elb.yaml
+2020/04/23 17:14:00 $ k delete svc -n default ingress-nginx-ilb
+2020/04/23 17:15:20 #### $ k delete svc -n default ingress-nginx-ilb completed in 1m19.614072891s
+2020/04/23 17:15:20 $ k delete svc -n default ingress-nginx-elb
+2020/04/23 17:15:31 #### $ k delete svc -n default ingress-nginx-elb completed in 11.76641509s
+2020/04/23 17:15:31 $ k delete po -n default curl-to-ilb
+2020/04/23 17:15:32 #### $ k delete po -n default curl-to-ilb completed in 317.061356ms
+2020/04/23 17:15:32 $ k delete po -n default curl-to-elb
+2020/04/23 17:15:32 #### $ k delete po -n default curl-to-elb completed in 265.559285ms
+2020/04/23 17:15:32 $ k delete deploy -n default ingress-nginx-kubernetes-westus2-13811-49599
+• [SLOW TEST:268.138 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+2020/04/23 17:15:32 #### $ k delete deploy -n default ingress-nginx-kubernetes-westus2-13811-49599 completed in 257.875215ms
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a linux agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1346
+    should be able to produce working LoadBalancers
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1347
+------------------------------
+
+$ k top nodes
+•
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a linux agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1346
+    should create a pv by deploying a pod that consumes a pvc [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1417
+
+    Skip per-node tests in low-priority VMSS cluster configuration scenario
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1488
+------------------------------
+S [SKIPPING] [0.000 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a GPU-enabled agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1493
+    should be able to run a nvidia-gpu job [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1494
+
+    This is not a GPU-enabled cluster
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1507
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a DC-series SKU agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1512
+    should be able to run an SGX job [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1513
+
+    This cluster does not have a DC-series SKU agent pool
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1526
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with zoned master profile
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1531
+    should be labeled with zones for each masternode [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1532
+
+    Availability zones was not configured for master profile for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1546
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with all zoned agent pools
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1551
+    should be labeled with zones for each node [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1552
+
+    Availability zones was not configured for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1566
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with NetworkPolicy enabled
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1571
+    should apply various network policies and enforce access to nginx pod [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1572
+
+    Calico or Azure or Cilium or Antrea network policy was not provisioned for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1730
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a windows agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1735
+    should be able to deploy and scale an iis webserver [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1736
+
+    No windows agent was provisioned for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1835
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a windows agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1735
+    should be able to resolve DNS across windows and linux deployments [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1839
+
+    No windows agent was provisioned for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1909
+------------------------------
+S [SKIPPING] [0.001 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  with a windows agent pool
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1735
+    should be able to attach azure file [It]
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1941
+
+    No windows agent was provisioned for this Cluster Definition
+
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:1997
+------------------------------
+2020/04/23 17:15:56 $ k delete po -n default dns-liveness
+•2020/04/23 17:16:29 #### $ k delete po -n default dns-liveness completed in 32.847833283s
+
+$ k get nodes -o json
+
+$ scp -i /aks-engine/_output/kubernetes-westus2-13811-ssh -P 22 -o StrictHostKeyChecking=no scripts/time-sync-validate.sh azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com:/tmp/time-sync-validate.sh
+
+$ "/tmp/time-sync-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/time-sync-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/time-sync-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/time-sync-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/time-sync-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/time-sync-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/time-sync-validate.sh"
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/time-sync-validate.sh k8s-agentpool1-24731180-vmss000000:/tmp/time-sync-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000000 "/tmp/time-sync-validate.sh"
+•
+$ k get nodes -o json
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -o ConnectTimeout=30 -o StrictHostKeyChecking=no azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com -p 22 scp -o StrictHostKeyChecking=no /tmp/time-sync-validate.sh k8s-agentpool1-24731180-vmss000001:/tmp/time-sync-validate.sh
+
+$ ssh -A -i /aks-engine/_output/kubernetes-westus2-13811-ssh -p 22 -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR azureuser@kubernetes-westus2-13811.westus2.cloudapp.azure.com ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=ERROR k8s-agentpool1-24731180-vmss000001 "/tmp/time-sync-validate.sh"
+2020/04/23 17:16:40 2 coredns pods before scaling out
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl www.bing.com
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt update
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- /usr/bin/apt install -y curl
+
+$ k exec php-apache-long-running-86b5f59d68-qzmd6 -n default -- curl google.com
+
+$ k get hpa -o json -n default php-apache-long-running
+2020/04/23 17:17:03 Error getting hpa: exit status 1
+
+$ k get hpa -o json -n default php-apache-long-running
+2020/04/23 17:17:07 Error getting hpa: exit status 1
+
+$ k get hpa -o json -n default php-apache-long-running
+2020/04/23 17:17:10 Error getting hpa: exit status 1
+
+$ k get hpa -o json -n default php-apache-long-running
+2020/04/23 17:17:13 Error getting hpa: exit status 1
+
+$ k get hpa -o json -n default php-apache-long-running
+2020/04/23 17:17:17 Error getting hpa: exit status 1
+2020/04/23 17:17:20 $ k autoscale deployment php-apache-long-running --cpu-percent=50 --min=1 --max=11
+2020/04/23 17:17:20 #### $ k autoscale deployment php-apache-long-running --cpu-percent=50 --min=1 --max=11 completed in 334.154978ms
+
+$ k get deployments -n default -o json
+2020/04/23 17:17:53 $ k apply -n default -f /tmp/e2e-linux-deployment-066714668.yaml
+2020/04/23 17:17:53 #### $ k apply -n default -f /tmp/e2e-linux-deployment-066714668.yaml completed in 467.014694ms
+2020/04/23 17:18:45 $ k delete deploy -n default load-test-kubernetes-westus2-13811-10571
+2020/04/23 17:18:45 #### $ k delete deploy -n default load-test-kubernetes-westus2-13811-10571 completed in 238.687738ms
+2020/04/23 17:21:37 $ k delete hpa -n default php-apache-long-running
+
+------------------------------
+• [SLOW TEST:301.475 seconds]
+Azure Container Cluster using the Kubernetes Orchestrator
+/aks-engine/test/e2e/kubernetes/kubernetes_test.go:175
+  after the cluster has been up for awhile
+  /aks-engine/test/e2e/kubernetes/kubernetes_test.go:2002
+    should be able to autoscale
+    /aks-engine/test/e2e/kubernetes/kubernetes_test.go:2044
+------------------------------
+2020/04/23 17:21:38 #### $ k delete hpa -n default php-apache-long-running completed in 268.400552ms
+2020/04/23 17:21:41 $ k delete svc -n default php-apache-long-running
+2020/04/23 17:21:42 #### $ k delete svc -n default php-apache-long-running completed in 310.184178ms
+2020/04/23 17:21:42 $ k delete deploy -n default php-apache-long-running
+•2020/04/23 17:21:42 #### $ k delete deploy -n default php-apache-long-running completed in 302.347615ms
+
+$ k get nodes -o json
+•
+JUnit report was created: /aks-engine/test/e2e/kubernetes/junit.xml
+
+Ran 40 of 54 Specs in 1077.006 seconds
+SUCCESS! -- 40 Passed | 0 Failed | 0 Pending | 14 Skipped
+PASS
+
+Ginkgo ran 1 suite in 17m57.156649436s
+Test Suite Passed

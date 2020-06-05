@@ -266,19 +266,19 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	switch component {
 	case common.APIServerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-			return kubernetesImageBase + k8sComponents[common.APIServerComponentName]
+			return kubernetesImageBase + k8sComponents[common.APIServerComponentName] + componentImageSuffix(*cs)
 		}
 		return hyperkubeImage
 	case common.ControllerManagerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-			return kubernetesImageBase + k8sComponents[common.ControllerManagerComponentName]
+			return kubernetesImageBase + k8sComponents[common.ControllerManagerComponentName] + componentImageSuffix(*cs)
 		}
 		return hyperkubeImage
 	case common.CloudControllerManagerComponentName:
-		return controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName]
+		return controllerManagerBase + k8sComponents[common.CloudControllerManagerComponentName] + componentImageSuffix(*cs)
 	case common.SchedulerComponentName:
 		if common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName]
+			return kubernetesImageBase + k8sComponents[common.SchedulerComponentName] + componentImageSuffix(*cs)
 		}
 		return hyperkubeImage
 	case common.AddonManagerComponentName:
@@ -286,4 +286,12 @@ func getComponentDefaultContainerImage(component string, cs *ContainerService) s
 	default:
 		return ""
 	}
+}
+
+// componentImageSuffix returns '-azs' if target cloud is Azure Stack. Otherwise, it returns empty string.
+func componentImageSuffix(cs ContainerService) string {
+	if cs.Properties.IsAzureStackCloud() {
+		return common.AzureStackSuffix
+	}
+	return ""
 }

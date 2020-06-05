@@ -146,6 +146,14 @@ func TestConvertVLabsKubernetesConfigProfile(t *testing.T) {
 				WindowsSdnPluginURL: "http://test/testsdnplugin.tar.gz",
 			},
 		},
+		"KubeReservedCgroup": {
+			props: &vlabs.KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+			expect: &KubernetesConfig{
+				KubeReservedCgroup: "kubesystem.slice",
+			},
+		},
 	}
 
 	for name, test := range tests {
@@ -894,23 +902,25 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				EnableAHUB:             to.BoolPtr(true),
 			},
 			expected: WindowsProfile{
 				AdminUsername:          "user",
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []KeyVaultSecrets{},
+				EnableAHUB:             to.BoolPtr(true),
 			},
 		},
 		{
@@ -938,9 +948,9 @@ func TestConvertVLabsWindowsProfile(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			actual := WindowsProfile{}
 			convertVLabsWindowsProfile(&c.w, &actual)
 

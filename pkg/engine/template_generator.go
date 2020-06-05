@@ -263,6 +263,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsMasterVirtualMachineScaleSets": func() bool {
 			return cs.Properties.MasterProfile != nil && cs.Properties.MasterProfile.IsVirtualMachineScaleSets()
 		},
+		"IsVirtualMachineScaleSets": func(profile *api.AgentPoolProfile) bool {
+			return profile.IsVirtualMachineScaleSets()
+		},
 		"IsHostedMaster": func() bool {
 			return cs.Properties.IsHostedMasterProfile()
 		},
@@ -301,6 +304,18 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 				return ""
 			}
 			return kc.GetOrderedKubeletConfigStringForPowershell()
+		},
+		"HasKubeReservedCgroup": func() bool {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
+			return kc != nil && kc.KubeReservedCgroup != ""
+		},
+
+		"GetKubeReservedCgroup": func() string {
+			kc := cs.Properties.OrchestratorProfile.KubernetesConfig
+			if kc == nil {
+				return ""
+			}
+			return kc.KubeReservedCgroup
 		},
 		"GetK8sRuntimeConfigKeyVals": func(config map[string]string) string {
 			return common.GetOrderedEscapedKeyValsString(config)
@@ -610,7 +625,7 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 			return cs.Properties.WindowsProfile.HasCustomImage()
 		},
 		"WindowsSSHEnabled": func() bool {
-			return cs.Properties.WindowsProfile.SSHEnabled
+			return cs.Properties.WindowsProfile.GetSSHEnabled()
 		},
 		"GetConfigurationScriptRootURL": func() string {
 			linuxProfile := cs.Properties.LinuxProfile
@@ -741,6 +756,23 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsClusterAutoscalerAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.ClusterAutoscalerAddonName)
 		},
+		"IsAADPodIdentityAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName)
+		},
+		"GetAADPodIdentityTaintKey": func() string {
+			return common.AADPodIdentityTaintKey
+		},
+		"HasCustomPodSecurityPolicy": func() bool {
+			if to.Bool(cs.Properties.OrchestratorProfile.KubernetesConfig.EnablePodSecurityPolicy) &&
+				cs.Properties.OrchestratorProfile.KubernetesConfig.PodSecurityPolicyConfig != nil {
+				return true
+			}
+			if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.PodSecurityPolicyAddonName) {
+				return cs.Properties.OrchestratorProfile.KubernetesConfig.GetAddonByName(common.PodSecurityPolicyAddonName).Data != ""
+
+			}
+			return false
+		},
 		"GetHyperkubeImageReference": func() string {
 			hyperkubeImageBase := cs.Properties.OrchestratorProfile.KubernetesConfig.KubernetesImageBase
 			k8sComponents := api.GetK8sComponentsByVersionMap(cs.Properties.OrchestratorProfile.KubernetesConfig)[cs.Properties.OrchestratorProfile.OrchestratorVersion]
@@ -785,6 +817,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		},
 		"HasTelemetryEnabled": func() bool {
 			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.EnableTelemetry
+		},
+		"HasBlockOutboundInternet": func() bool {
+			return cs.Properties.FeatureFlags != nil && cs.Properties.FeatureFlags.BlockOutboundInternet
 		},
 		"GetCSEErrorCode": func(errorType string) int {
 			return GetCSEErrorCode(errorType)
@@ -927,6 +962,13 @@ func generateUserAssignedIdentityClientIDParameter(isUserAssignedIdentity bool) 
 		return "' USER_ASSIGNED_IDENTITY_ID=',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId, ' '"
 	}
 	return "' USER_ASSIGNED_IDENTITY_ID=',' '"
+}
+
+func generateUserAssignedIdentityClientIDParameterForWindows(isUserAssignedIdentity bool) string {
+	if isUserAssignedIdentity {
+		return "' -UserAssignedClientID ',reference(variables('userAssignedIDReference'), variables('apiVersionManagedIdentity')).clientId,"
+	}
+	return ""
 }
 
 func getDockerConfig(cs *api.ContainerService, hasGPU bool) (string, error) {

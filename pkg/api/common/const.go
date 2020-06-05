@@ -65,9 +65,13 @@ const (
 
 const (
 	// KubernetesDefaultRelease is the default Kubernetes release
-	KubernetesDefaultRelease string = "1.15"
-	// KubernetesDefaultReleaseWindows is the default Kubernetes release
-	KubernetesDefaultReleaseWindows string = "1.15"
+	KubernetesDefaultRelease string = "1.18"
+	// KubernetesDefaultReleaseWindows is the default Kubernetes release for Windows
+	KubernetesDefaultReleaseWindows string = "1.18"
+	// KubernetesDefaultReleaseAzureStack is the default Kubernetes release on Azure Stack
+	KubernetesDefaultReleaseAzureStack string = "1.17"
+	// KubernetesDefaultReleaseWindowsAzureStack is the default Kubernetes release for Windows on Azure Stack
+	KubernetesDefaultReleaseWindowsAzureStack string = "1.17"
 )
 
 const (
@@ -124,8 +128,6 @@ const MinCloudProviderQPSToBucketFactor float64 = 0.1
 
 // Addon name consts
 const (
-	// HeapsterAddonName is the name of the heapster addon
-	HeapsterAddonName = "heapster"
 	// TillerAddonName is the name of the tiller addon deployment
 	TillerAddonName = "tiller"
 	// ACIConnectorAddonName is the name of the aci-connector addon deployment
@@ -140,6 +142,8 @@ const (
 	KeyVaultFlexVolumeAddonName = "keyvault-flexvolume"
 	// DashboardAddonName is the name of the kubernetes-dashboard addon deployment
 	DashboardAddonName = "kubernetes-dashboard"
+	// DashboardMetricsScraperContainerName is the name of the metrics-scraper container in the kubernetes-dashboard addon
+	DashboardMetricsScraperContainerName = "kubernetes-dashboard-metrics-scraper"
 	// ReschedulerAddonName is the name of the rescheduler addon deployment
 	ReschedulerAddonName = "rescheduler"
 	// ExecHealthZComponentName is the name of the exechealthz component
@@ -299,6 +303,7 @@ const (
 )
 
 const WindowsArtifactComponentName = "windowszip"
+const WindowsArtifactAzureStackComponentName = "windowszip-azs"
 
 const (
 	// AzureStackSuffix is appended to kubernetes version on Azure Stack instances
@@ -362,4 +367,20 @@ func GetDefaultContainerdConfig() ContainerdConfig {
 // Known container runtime configuration keys
 const (
 	ContainerDataDirKey = "dataDir"
+)
+
+// Antrea Plugin Const
+const (
+	AntreaDefaultTrafficEncapMode = "Encap"
+	AntreaDefaultInstallCniCmd    = "install_cni"
+	AntreaInstallCniChainCmd      = "install_cni_chaining"
+	AntreaNetworkPolicyOnlyMode   = "networkPolicyOnly"
+)
+
+// Node Taint consts
+const (
+	// MasterNodeTaint is the node taint we apply to all master nodes
+	MasterNodeTaint string = "node-role.kubernetes.io/master=true:NoSchedule"
+	// AADPodIdentityTaintKey is the node taint key for AAD Pod Identity-enabled clusters before NMI daemonset is ready
+	AADPodIdentityTaintKey string = "node.kubernetes.io/aad-pod-identity-not-ready"
 )

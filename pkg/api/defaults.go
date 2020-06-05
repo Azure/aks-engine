@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/blang/semver"
@@ -93,7 +94,7 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 	o := a.OrchestratorProfile
 	o.OrchestratorVersion = common.GetValidPatchVersion(
 		o.OrchestratorType,
-		o.OrchestratorVersion, isUpdate, a.HasWindows())
+		o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
 
 	switch o.OrchestratorType {
 	case Kubernetes:
@@ -121,7 +122,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		case NetworkPolicyCilium:
 			o.KubernetesConfig.NetworkPlugin = NetworkPluginCilium
 		case NetworkPolicyAntrea:
-			o.KubernetesConfig.NetworkPlugin = NetworkPluginAntrea
+			if o.KubernetesConfig.NetworkPlugin == "" {
+				o.KubernetesConfig.NetworkPlugin = NetworkPluginAzure
+			}
 		}
 
 		if a.IsAzureStackCloud() {
@@ -389,9 +392,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
-		if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(BasicLoadBalancerSku) {
+		if strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = BasicLoadBalancerSku
-		} else if strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) == strings.ToLower(StandardLoadBalancerSku) {
+		} else if strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
 			a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku = StandardLoadBalancerSku
 		}
 
@@ -689,6 +692,10 @@ func (p *Properties) setMasterProfileDefaults(isUpgrade bool) {
 	if p.MasterProfile.PlatformUpdateDomainCount == nil {
 		p.MasterProfile.PlatformUpdateDomainCount = to.IntPtr(3)
 	}
+
+	if p.MasterProfile.OSDiskCachingType == "" {
+		p.MasterProfile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+	}
 }
 
 func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
@@ -759,6 +766,17 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 		if !p.OrchestratorProfile.IsKubernetes() {
 			profile.Distro = Ubuntu
 		}
+
+		if profile.OSDiskCachingType == "" {
+			if profile.IsEphemeral() {
+				profile.OSDiskCachingType = string(compute.CachingTypesReadOnly)
+			} else {
+				profile.OSDiskCachingType = string(compute.CachingTypesReadWrite)
+			}
+		}
+		if profile.DataDiskCachingType == "" {
+			profile.DataDiskCachingType = string(compute.CachingTypesReadOnly)
+		}
 	}
 }
 
@@ -766,6 +784,10 @@ func (p *Properties) setAgentProfileDefaults(isUpgrade, isScale bool) {
 func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 	windowsProfile := p.WindowsProfile
 	if !isUpgrade && !isScale {
+		if windowsProfile.SSHEnabled == nil {
+			windowsProfile.SSHEnabled = to.BoolPtr(DefaultWindowsSSHEnabled)
+		}
+
 		// This allows caller to use the latest ImageVersion and WindowsSku for adding a new Windows pool to an existing cluster.
 		// We must assure that same WindowsPublisher and WindowsOffer are used in an existing cluster.
 		if windowsProfile.WindowsPublisher == AKSWindowsServer2019OSImageConfig.ImagePublisher && windowsProfile.WindowsOffer == AKSWindowsServer2019OSImageConfig.ImageOffer {
@@ -1098,7 +1120,7 @@ func mapToString(valueMap map[string]string) string {
 
 func generateEtcdEncryptionKey() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	_, _ = rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
 }
 

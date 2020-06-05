@@ -1,38 +1,38 @@
 # Quickstart Guide
 
-The Azure Kubernetes Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure. The input to aks-engine is a cluster definition file which describes the desired cluster, including orchestrator, features, and agents. The structure of the input files is very similar to the public API for Azure Kubernetes Service.
+AKS Engine (`aks-engine`) generates ARM (Azure Resource Manager) templates for Kubernetes clusters on Microsoft Azure. The input to the `aks-engine` binary is a cluster definition JSON file (referred to throughout the docs interchangeably as either "cluster config", "cluster definition", or "API model") which describes the desired cluster configuration, including enabled or disabled features, for both the control plane running on "master" VMs and one or more node pools (referred to throughout the docs interchangeably as either "node pools" or "agent pools").
 
 ## Prerequisites
 
-The following prerequisites are required for a successful use of AKS Engine.
+The following prerequisites are required:
 
 1. An [Azure Subscription][azure]
 1. The [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 
 <a href="#install-aks-engine"></a>
 
-## Install AKS Engine
+## Install the `aks-engine` binary
 
-Binary downloads for the latest version of aks-engine are available [on Github](https://github.com/Azure/aks-engine/releases/latest). Download AKS Engine for your operating system, extract the binary and copy it to your `$PATH`.
+Binary downloads for the latest version of AKS Engine are available [on Github](https://github.com/Azure/aks-engine/releases/latest). Download the package for your operating system, and extract the `aks-engine` binary (and optionally integrate it to your `$PATH` for more convenient CLI usage).
 
-You can also choose to install aks-engine using [gofish][gofish-about]. To do so, execute the command `gofish install aks-engine`. You can install gofish following the [instructions][gofish-install] for your OS.
+You can also choose to install the `aks-engine` binary using [gofish][gofish-about]. To do so, execute the command `gofish install aks-engine`. You can install gofish following the [instructions][gofish-install] for your OS.
 
-On macOS, you can install aks-engine with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following these [instructions][homebrew-install].
+On macOS, you can install the `aks-engine` binary with [Homebrew][homebrew]. Run the command `brew install Azure/aks-engine/aks-engine` to do so. You can install Homebrew following these [instructions][homebrew-install].
 
-On Windows, you can install aks-engine via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following these [instructions][choco-install].
+On Windows, you can install `aks-engine.exe` via [Chocolatey][choco] by executing the command `choco install aks-engine`. You can install Chocolatey following these [instructions][choco-install]. You can also install `aks-engine.exe` via [Scoop][scoop] by executing the command `scoop install aks-engine`. You can install Scoop following these [instructions][scoop-install].
 
-On Linux, if you prefer, you can install aks-engine via install script doing:
+On Linux, if you prefer, you can install the `aks-engine` binary via install script doing:
 ```bash
 $ curl -o get-akse.sh https://raw.githubusercontent.com/Azure/aks-engine/master/scripts/get-akse.sh
 $ chmod 700 get-akse.sh
 $ ./get-akse.sh
 ```
 
-If you would prefer to build AKS Engine from source, or you are interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
+If you would prefer to build the `aks-engine` binary from source, or if you're interested in contributing to AKS Engine, see [the developer guide][developer-guide] for more information.
 
 ## Completion
 
-AKS Engine supports bash completion. To enable this, add the following to your `.bashrc` or `~/.profile`
+`aks-engine` supports bash completion. To enable this, add the following to your `.bashrc` or `~/.profile`
 
 ```bash
 source <(aks-engine completion)
@@ -40,20 +40,21 @@ source <(aks-engine completion)
 
 ## Deploy your First Cluster
 
-`aks-engine` reads a cluster definition which describes the size, shape, and configuration of your cluster. This guide takes the default configuration of one master and two Linux agents. If you would like to change the configuration, edit `examples/kubernetes.json` before continuing.
+`aks-engine` reads a cluster definition which describes the size, shape, and configuration of your cluster. This guide takes the default configuration of a control plane configuration with one master VM, and a single node pool with two Linux nodes. If you would like to change the configuration, edit `examples/kubernetes.json` before continuing.
 
 The `aks-engine deploy` command automates creation of a Service Principal, Resource Group and SSH key for your cluster. If operators need more control or are interested in the individual steps see the ["Long Way" section below](#aks-engine-the-long-way).
 
-**NOTE:** AKS Engine creates a _cluster_; it _doesn't_ create an Azure Kubernetes Service (AKS) resource. Clusters that you create using the `aks-engine` command (or ARM templates generated by the `aks-engine` command) won't show up as AKS resources, for example when you run `az aks list`.  Think of `aks-engine` as the, err, engine which AKS uses to create clusters: you can use the same engine yourself, but AKS won't know about the results.
+**NOTE:** AKS Engine creates a _cluster_; it _doesn't_ create an Azure Kubernetes Service (AKS) resource. Clusters that you create using the `aks-engine` command (or ARM templates generated by the `aks-engine` command) won't show up as AKS resources, for example when you run `az aks list`. The resultant resource group + IaaS will be entirely under your own control and management, and unknown to AKS or any other Azure service.
 
-After the cluster is deployed, the upgrade and [scale][] commands can be used to make updates to your cluster.
+After the cluster is deployed, the [upgrade][] and [scale][] commands may be used to make updates to your cluster, with some conditions ([upgrade][] and [scale][] docs will enumerate these conditions).
 
 ### Gather Information
 
 * The subscription in which you would like to provision the cluster. This is a UUID which can be found with `az account list -o table`.
 * Proper access rights within the subscription; especially the right to create and assign [service principals][sp] to applications
-* A `dnsPrefix` which forms part of the hostname for your cluster (e.g. staging, prodwest, blueberry). The DNS prefix must be unique so pick a random name.
-* A location to provision the cluster e.g. `westus2`.
+* A `dnsPrefix` which forms part of the hostname for your cluster (e.g. staging, prodwest, blueberry). In the [example](/examples/kubernetes.json) we're using we are not building a private cluster (a `true` value of `properties.orchestratorProfile.kubernetesConfig.privateCluster.enabled` indicates a private cluster configuration, see [this example](/examples/kubernetes-config/kubernetes-private-cluster.json), and so we have to consider that the value of `dnsPrefix` *must* produce a unique fully-qualified domain name DNS record composed of <value of `dnsPrefix`>.<value of `location`>.cloudapp.azure.com. Depending on the uniqueness of your `dnsPrefix`, it may be a good idea to pre-check the availability of the resultant DNS record prior to deployment. (Also see the `--auto-suffix` option below if this is onerous.)
+  * **NOTE:** The `location` value may be omitted in your cluster definition JSON file if you are deploying to Azure Public Cloud; it will be automatically inferred during ARM template deployment as equal to the location of the resource group at the time of resource group creation. Also **NOTE:** that the ".cloudapp.azure.com" FQDN suffix example above also assumes an Azure Public Cloud deployment. When you provide a `location` value that maps to a non-public cloud, the FQDN suffix will be concatenated appropriately for that supported cloud environment, e.g., ".cloudapp.chinacloudapi.cn" for mooncake (Azure China Cloud); or ".cloudapp.usgovcloudapi.net" for usgov (Azure Government Cloud)
+* Choose a location to provision the cluster e.g. `westus2`.
 
 ```sh
 $ az account list -o table
@@ -90,6 +91,16 @@ $ az group create --name contoso-apple --location westus2
 }
 ```
 
+Again, because in this example we are deploying to Azure Public Cloud, we may omit the `location` property from our cluster configuration JSON; although strictly speaking we could add this to our [example](/examples/kubernetes.json) and it would be equivalent:
+
+```
+{
+  "apiVersion": "vlabs",
+  "location": "westus2",
+  "properties": {
+  (etc ...)
+```
+
 Once that's done, we need to create a [service principal][sp] for the Kubernetes cluster so it can talk to any resources that are a part of the same resource group.
 
 ```console
@@ -118,25 +129,24 @@ $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --set servicePrincipalProfile.clientId="47a62f0b-917c-4def-aa85-9b010455e591" \
     --set servicePrincipalProfile.secret="26054d2b-799b-448e-962a-783d0d6f976b"
 
-INFO[0000] new api model file has been generated during merge: /tmp/mergedApiModel619868596
+INFO[0000] new API model file has been generated during merge: /tmp/mergedApiModel619868596
 WARN[0002] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
 INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group contoso-apple. This will take some time...
 INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
 ```
 
-`aks-engine` will output Azure Resource Manager (ARM) templates, SSH keys, and a kubeconfig file in `_output/contoso-apple-59769a59` directory:
+`aks-engine` will output ARM templates, SSH keys, and a kubeconfig (A specification that may be used as input to the `kubectl` command to establish a privileged connection to the Kubernetes apiserver, see [here](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for more documentation.) file in `_output/contoso-apple-59769a59` directory:
 
 * `_output/contoso-apple-59769a59/azureuser_rsa`
 * `_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json`
 
-aks-engine generates kubeconfig files for each possible region. Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is `_output/<clustername>/kubeconfig/kubeconfig.westus2.json`:
+`aks-engine` generates kubeconfig files for each possible region. Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is `_output/<clustername>/kubeconfig/kubeconfig.westus2.json`:
 
 ```sh
 $ KUBECONFIG=_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json kubectl cluster-info
 Kubernetes master is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com
-Heapster is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/heapster
-KubeDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kube-dns
-kubernetes-dashboard is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard
+CoreDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
@@ -149,32 +159,24 @@ Administrative note: By default, the directory where aks-engine stores cluster c
 
 ## AKS Engine the Long Way
 
-This example uses the more traditional method of generating raw ARM templates, which are submitted to Azure using the `az group deployment create` command.
+This example uses the more traditional method of generating raw ARM templates, which are submitted to Azure using the `az deployment group create` command.
 
-For this example, we will use the same information as before: the subscription id is `51ac25de-afdg-9201-d923-8d8e8e8e8e8e`, the DNS prefix is `contoso-apple`, and the location is `westus2`.
-
-Before we do anything, we need to log in to Azure:
-
-```console
-$ az login
-Note, we have launched a browser for you to login. For old experience with device code, use "az login --use-device-code"
-You have logged in. Now let us find all the subscriptions to which you have access...
-```
+For this example, we will use the same information as before: the subscription id is `51ac25de-afdg-9201-d923-8d8e8e8e8e8e`, the DNS prefix is `contoso-apple-5eac6ed8` (note the manual use of a unique string suffix to better ensure uniqueness), and the location is `westus2`.
 
 We will also need to generate an SSH key. When creating VMs, you will need an SSH RSA key for SSH access. Use the following articles to create your SSH RSA Key:
 
 1. Windows - https://www.digitalocean.com/community/tutorials/how-to-create-ssh-keys-with-putty-to-connect-to-a-vps
 1. Mac and Linux - https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
 
-Next, we'll create a resource group. A resource group is a container that holds related resources for an Azure solution. In Azure, you logically group related resources such as storage accounts, virtual networks, and virtual machines (VMs) to deploy, manage, and maintain them as a single entity. In this case, we want to deploy, manage and maintain the whole Kubernetes cluster as a single entity.
+Next, we'll create a resource group as we did in the "deploy" method above.
 
 ```console
-$ az group create --name contoso-apple --location westus2
+$ az group create --name contoso-apple-5eac6ed8 --location westus2
 {
-  "id": "/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple",
+  "id": "/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple-5eac6ed8",
   "location": "westus2",
   "managedBy": null,
-  "name": "contoso-apple",
+  "name": "contoso-apple-5eac6ed8",
   "properties": {
     "provisioningState": "Succeeded"
   },
@@ -182,10 +184,10 @@ $ az group create --name contoso-apple --location westus2
 }
 ```
 
-Once that's done, we need to create a [service principal][sp] for the Kubernetes cluster so it can talk to any resources that are a part of the same resource group.
+Again, we need to create a [service principal][sp].
 
 ```console
-$ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple"
+$ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/51ac25de-afdg-9201-d923-8d8e8e8e8e8e/resourceGroups/contoso-apple-5eac6ed8"
 {
   "appId": "47a62f0b-917c-4def-aa85-9b010455e591",
   "displayName": "azure-cli-2019-01-11-22-22-06",
@@ -195,13 +197,11 @@ $ az ad sp create-for-rbac --role="Contributor" --scopes="/subscriptions/51ac25d
 }
 ```
 
-Make a note of the `appId` and the `password` fields, as we will be providing them in the next step.
-
-AKS Engine consumes a cluster definition which outlines the desired shape, size, and configuration of Kubernetes. There are a number of features that can be enabled through the cluster definition: check the `examples` directory for a number of... examples.
+We again make a note of the `appId` and the `password` fields, as we will be providing them in the next step.
 
 Edit the [simple Kubernetes cluster definition](/examples/kubernetes.json) and fill out the required values:
 
-* `dnsPrefix`: must be a region-unique name and will form part of the hostname (e.g. myprod1, staging, leapingllama) - be unique!
+* `dnsPrefix`: in this example we're using "contoso-apple-5eac6ed8"
 * `keyData`: must contain the public portion of the SSH key we generated - this will be associated with the `adminUsername` value found in the same section of the cluster definition (e.g. 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABA....')
 * `clientId`: this is the service principal's appId UUID or name from earlier
 * `secret`: this is the service principal's password or randomly-generated password from earlier
@@ -210,7 +210,7 @@ Optional: attach to an existing virtual network (VNET). Details [here][custom-vn
 
 ### Generate the Templates
 
-The generate command takes a cluster definition and outputs a number of templates which describe your Kubernetes cluster. By default, `generate` will create a new directory named after your cluster nested in the `_output` directory. If your dnsPrefix was `contoso-apple`, your cluster templates would be found in `_output/contoso-apple-`.
+The generate command takes a cluster definition and outputs a number of templates which describe your Kubernetes cluster. By default, `generate` will create a new directory named after your cluster nested in the `_output` directory. If your dnsPrefix was `contoso-apple-5eac6ed8`, your cluster templates would be found in `_output/contoso-apple-5eac6ed8-`.
 
 Run `aks-engine generate examples/kubernetes.json`
 
@@ -235,14 +235,20 @@ Now we can deploy the files `azuredeploy.json` and `azuredeploy.parameters.json`
 Using the CLI:
 
 ```console
-$ az group deployment create \
+$ az deployment group create \
     --name "contoso-apple-k8s" \
-    --resource-group "contoso-apple" \
-    --template-file "./_output/contoso-apple-abc123/azuredeploy.json" \
-    --parameters "./_output/contoso-apple-abc123/azuredeploy.parameters.json"
+    --resource-group "contoso-apple-5eac6ed8" \
+    --template-file "./_output/contoso-apple-5eac6ed8/azuredeploy.json" \
+    --parameters "./_output/contoso-apple-5eac6ed8/azuredeploy.parameters.json"
 ```
 
-**Note**: If the cluster is using an existing VNET, please see the [Custom VNET][custom-vnet] feature documentation for additional steps that must be completed after cluster provisioning.
+When your ARM template deployment is complete you should return some JSON output, and a `0` exit code. You now have a Kubernetes cluster with the (mostly complete) set of default configurations.
+
+```sh
+export KUBECONFIG=_output/contoso-apple-5eac6ed8/kubeconfig/kubeconfig.westus2.json
+```
+
+Now you're ready to start using your Kubernetes cluster with `kubectl`!
 
 [azure]: https://azure.microsoft.com/
 [choco]: https://chocolatey.org/
@@ -254,4 +260,7 @@ $ az group deployment create \
 [homebrew]: https://brew.sh/
 [homebrew-install]: https://brew.sh/#install
 [scale]: ../topics/scale.md
+[scoop]: https://scoop.sh/
+[scoop-install]: https://github.com/lukesampson/scoop#installation
 [sp]: ../topics/service-principals.md
+[upgrade]: ../topics/upgrade.md

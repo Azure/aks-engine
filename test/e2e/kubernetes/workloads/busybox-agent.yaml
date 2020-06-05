@@ -25,5 +25,5 @@ spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/role: agent
-        beta.kubernetes.io/os: linux
+        kubernetes.io/os: linux
   backoffLimit: 0

@@ -225,11 +225,14 @@ function Write-KubeClusterConfig {
         [Parameter(Mandatory = $true)][string]	
         $KubeDnsServiceIp
     )
-    $ConfigFile = "c:\k\kubeclusterconfig.json"
+
     $Global:ClusterConfiguration = [PSCustomObject]@{ }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
+        Images = @{
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.1"
+        }
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cni -Value @{
@@ -240,7 +243,7 @@ function Write-KubeClusterConfig {
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Csi -Value @{
-        EnableProxy = "true"
+        EnableProxy = $global:EnableCsiProxy
     }
 
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Kubernetes -Value @{
@@ -248,16 +251,16 @@ function Write-KubeClusterConfig {
             Release = $global:KubeBinariesVersion;
         };
         ControlPlane = @{
-            IpAddress = $MasterIP;
-            Username  = "azureuser"
+            IpAddress    = $MasterIP;
+            Username     = "azureuser"
             MasterSubnet = $global:MasterSubnet
         };
-        Network = @{
+        Network      = @{
             ServiceCidr = $global:KubeServiceCIDR;
             ClusterCidr = $global:KubeClusterCIDR;
-            DnsIp = $KubeDnsServiceIp
+            DnsIp       = $KubeDnsServiceIp
         };
-        Kubelet = @{
+        Kubelet      = @{
             NodeLabels = $global:KubeletNodeLabels;
             ConfigArgs = $global:KubeletConfigArgs
         };
@@ -267,7 +270,7 @@ function Write-KubeClusterConfig {
         Destination = "c:\k";
     }
     
-    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $ConfigFile
+    $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
 function Assert-FileExists {
@@ -286,5 +289,9 @@ function Update-DefenderPreferences {
 
     if ($global:EnableCsiProxy) {
         Add-MpPreference -ExclusionProcess "c:\k\csi-proxy-server.exe"
+    }
+
+    if ($global:ContainerRuntime -eq 'containerd') {
+        Add-MpPreference -ExclusionProcess "c:\program files\containerd\containerd.exe"
     }
 }

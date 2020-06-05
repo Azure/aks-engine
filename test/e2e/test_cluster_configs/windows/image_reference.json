@@ -1,7 +1,8 @@
 {
 	"env": {
-		"REGION_OPTIONS": "westus",
-		"WINDOWS_NODE_IMAGE_NAME": "WS2019-1908",
+		"REGION_OPTIONS": "westus2",
+		"SKIP_TESTS": "true",
+		"WINDOWS_NODE_IMAGE_NAME": "WS2019-westus2",
 		"WINDOWS_NODE_IMAGE_RESOURCE_GROUP": "acse-test-infrastructure"
 	},
 	"options": {

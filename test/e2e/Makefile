@@ -21,3 +21,7 @@ ginkgo-build:
 clean:
 	rm -f ./kubernetes/kubernetes.test
 	rm -f ./$(BINDIR)/e2e-runner
+
+.PHONY: tidy
+tidy:
+	$(GO) mod tidy

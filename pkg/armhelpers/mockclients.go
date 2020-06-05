@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	defaultK8sVersionForFakeVMs = "Kubernetes:1.11.10"
+	defaultK8sVersionForFakeVMs = "Kubernetes:1.17.5"
 	//DefaultFakeVMName is the default name assigned to VMs part of FakeListVirtualMachineScaleSetVMsResult and FakeListVirtualMachineResult
 	DefaultFakeVMName = "k8s-agentpool1-12345678-0"
 )
@@ -351,7 +351,7 @@ func (mkc *MockKubernetesClient) GetNode(name string) (*v1.Node, error) {
 	}
 	node := &v1.Node{}
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
-	node.Status.NodeInfo.KubeletVersion = "1.11.10"
+	node.Status.NodeInfo.KubeletVersion = "1.17.5"
 	return node, nil
 }
 

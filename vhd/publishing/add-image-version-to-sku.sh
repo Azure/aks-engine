@@ -34,7 +34,7 @@ do
 done
 
 echo "Getting pub..."
-(set -x ; go get -u github.com/devigned/pub@v0.2.0 > /dev/null 2>&1)
+(set -x ; go get -u github.com/devigned/pub@v0.2.3 > /dev/null 2>&1)
 
 echo "Sku publishing info:"
 cat $SKU_INFO

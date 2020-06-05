@@ -37,7 +37,7 @@ Available Commands:
   help          Help about any command
   scale         Scale an existing Kubernetes cluster
   upgrade       Upgrade an existing Kubernetes cluster
-  version       Print the version of AKS Engine
+  version       Print the version of aks-engine
 
 Flags:
       --debug                enable verbose debug logs

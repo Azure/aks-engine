@@ -68,13 +68,13 @@ echo "  - apmz $apmz_version" >> ${VHD_LOGS_FILEPATH}
 installBpftrace
 echo "  - bpftrace" >> ${VHD_LOGS_FILEPATH}
 
-MOBY_VERSION="3.0.11"
+MOBY_VERSION="3.0.12"
 installMoby
 echo "  - moby v${MOBY_VERSION}" >> ${VHD_LOGS_FILEPATH}
 downloadGPUDrivers
 echo "  - nvidia-docker2 nvidia-container-runtime" >> ${VHD_LOGS_FILEPATH}
 
-ETCD_VERSION="3.3.19"
+ETCD_VERSION="3.3.22"
 ETCD_DOWNLOAD_URL="mcr.microsoft.com/oss/etcd-io/"
 installEtcd "docker"
 echo "  - etcd v${ETCD_VERSION}" >> ${VHD_LOGS_FILEPATH}
@@ -86,9 +86,9 @@ cat << EOF >> ${VHD_LOGS_FILEPATH}
 EOF
 
 VNET_CNI_VERSIONS="
+1.1.3
+1.1.2
 1.1.0
-1.0.33
-1.0.30
 "
 for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
     VNET_CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/azure-cni/v${VNET_CNI_VERSION}/binaries/azure-vnet-cni-linux-amd64-v${VNET_CNI_VERSION}.tgz"
@@ -97,7 +97,7 @@ for VNET_CNI_VERSION in $VNET_CNI_VERSIONS; do
 done
 
 CNI_PLUGIN_VERSIONS="
-0.8.5
+0.8.6
 "
 for CNI_PLUGIN_VERSION in $CNI_PLUGIN_VERSIONS; do
     CNI_PLUGINS_URL="https://kubernetesartifacts.azureedge.net/cni-plugins/v${CNI_PLUGIN_VERSION}/binaries/cni-plugins-linux-amd64-v${CNI_PLUGIN_VERSION}.tgz"
@@ -110,12 +110,21 @@ echo "  - img" >> ${VHD_LOGS_FILEPATH}
 
 echo "Docker images pre-pulled:" >> ${VHD_LOGS_FILEPATH}
 
-DASHBOARD_VERSIONS="1.10.1"
+DASHBOARD_VERSIONS="
+2.0.1
+2.0.0
+"
 for DASHBOARD_VERSION in ${DASHBOARD_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/kubernetes-dashboard-amd64:v${DASHBOARD_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/dashboard:v${DASHBOARD_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
-    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kubernetes-dashboard:v${DASHBOARD_VERSION}"
+done
+
+DASHBOARD_METRICS_SCRAPER_VERSIONS="
+1.0.4
+"
+for DASHBOARD_METRICS_SCRAPER_VERSION in ${DASHBOARD_METRICS_SCRAPER_VERSIONS}; do
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/metrics-scraper:v${DASHBOARD_METRICS_SCRAPER_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -160,7 +169,7 @@ for KUBE_DNS_VERSION in ${KUBE_DNS_VERSIONS}; do
 done
 
 KUBE_ADDON_MANAGER_VERSIONS="
-9.0.2
+9.1.1
 "
 for KUBE_ADDON_MANAGER_VERSION in ${KUBE_ADDON_MANAGER_VERSIONS}; do
     CONTAINER_IMAGE="k8s.gcr.io/kube-addon-manager-amd64:v${KUBE_ADDON_MANAGER_VERSION}"
@@ -183,10 +192,10 @@ for KUBE_DNS_MASQ_VERSION in ${KUBE_DNS_MASQ_VERSIONS}; do
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
 
-MCR_PAUSE_VERSIONS="1.2.0"
+MCR_PAUSE_VERSIONS="1.3.1"
 for PAUSE_VERSION in ${MCR_PAUSE_VERSIONS}; do
     # Pull the arch independent MCR pause image which is built for Linux and Windows
-    CONTAINER_IMAGE="mcr.microsoft.com/k8s/core/pause:${PAUSE_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/pause:${PAUSE_VERSION}"
     pullContainerImage "docker" "${CONTAINER_IMAGE}"
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -215,7 +224,6 @@ CLUSTER_AUTOSCALER_VERSIONS="
 1.17.2
 1.16.5
 1.15.6
-1.14.8
 "
 for CLUSTER_AUTOSCALER_VERSION in ${CLUSTER_AUTOSCALER_VERSIONS}; do
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/autoscaler/cluster-autoscaler:v${CLUSTER_AUTOSCALER_VERSION}"
@@ -236,12 +244,10 @@ for K8S_DNS_SIDECAR_VERSION in ${K8S_DNS_SIDECAR_VERSIONS}; do
 done
 
 CORE_DNS_VERSIONS="
+1.6.9
 1.6.7
 "
 for CORE_DNS_VERSION in ${CORE_DNS_VERSIONS}; do
-    CONTAINER_IMAGE="k8s.gcr.io/coredns:${CORE_DNS_VERSION}"
-    pullContainerImage "docker" ${CONTAINER_IMAGE}
-    echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/coredns:${CORE_DNS_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
@@ -277,8 +283,7 @@ for AZURE_CNI_NETWORKMONITOR_VERSION in ${AZURE_CNI_NETWORKMONITOR_VERSIONS}; do
 done
 
 AZURE_NPM_VERSIONS="
-1.0.33
-1.0.32
+1.1.2
 "
 for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
     CONTAINER_IMAGE="${AZURE_CNIIMAGEBASE}/azure-npm:v${AZURE_NPM_VERSION}"
@@ -287,10 +292,10 @@ for AZURE_NPM_VERSION in ${AZURE_NPM_VERSIONS}; do
 done
 
 NVIDIA_DEVICE_PLUGIN_VERSIONS="
-1.11
+1.0.0-beta6
 "
 for NVIDIA_DEVICE_PLUGIN_VERSION in ${NVIDIA_DEVICE_PLUGIN_VERSIONS}; do
-    CONTAINER_IMAGE="nvidia/k8s-device-plugin:${NVIDIA_DEVICE_PLUGIN_VERSION}"
+    CONTAINER_IMAGE="mcr.microsoft.com/oss/nvidia/k8s-device-plugin:${NVIDIA_DEVICE_PLUGIN_VERSION}"
     pullContainerImage "docker" ${CONTAINER_IMAGE}
     echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
 done
@@ -342,18 +347,21 @@ pullContainerImage "docker" "busybox"
 echo "  - busybox" >> ${VHD_LOGS_FILEPATH}
 
 K8S_VERSIONS="
+1.19.0-beta.1
+1.18.3
 1.18.2
-1.18.1
+1.17.6
+1.17.6-azs
 1.17.5
-1.17.4
+1.17.5-azs
+1.16.10
+1.16.10-azs
 1.16.9
-1.16.8
+1.16.9-azs
+1.15.12
+1.15.12-azs
 1.15.11
-1.15.10
-1.15.10-azs
-1.14.8
-1.14.7
-1.14.7-azs
+1.15.11-azs
 "
 for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 17 )); then
@@ -366,7 +374,7 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
       pullContainerImage "docker" ${CONTAINER_IMAGE}
       echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
     done
-    KUBE_BINARY_URL="https://dl.k8s.io/v${KUBERNETES_VERSION}/kubernetes-node-linux-amd64.tar.gz"
+    KUBE_BINARY_URL="https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"
     extractKubeBinaries
   fi
   if (( $(echo ${KUBERNETES_VERSION} | cut -d"." -f2) < 16 )) && [[ $KUBERNETES_VERSION != *"azs"* ]]; then
@@ -472,7 +480,7 @@ for SNAPSHOT_CONTROLLER_VERSION in ${SNAPSHOT_CONTROLLER_VERSIONS}; do
 done
 
 NODE_PROBLEM_DETECTOR_VERSIONS="
-0.8.1
+0.8.2
 "
 for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
   CONTAINER_IMAGE="k8s.gcr.io/node-problem-detector:v${NODE_PROBLEM_DETECTOR_VERSION}"
@@ -481,7 +489,7 @@ for NODE_PROBLEM_DETECTOR_VERSION in ${NODE_PROBLEM_DETECTOR_VERSIONS}; do
 done
 
 CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS="
-0.0.4
+0.0.5
 "
 for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/provider-azure:${CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION}"
@@ -490,7 +498,7 @@ for CSI_SECRETS_STORE_PROVIDER_AZURE_VERSION in ${CSI_SECRETS_STORE_PROVIDER_AZU
 done
 
 CSI_SECRETS_STORE_DRIVER_VERSIONS="
-0.0.9
+0.0.10
 "
 for CSI_SECRETS_STORE_DRIVER_VERSION in ${CSI_SECRETS_STORE_DRIVER_VERSIONS}; do
   CONTAINER_IMAGE="mcr.microsoft.com/k8s/csi/secrets-store/driver:v${CSI_SECRETS_STORE_DRIVER_VERSION}"

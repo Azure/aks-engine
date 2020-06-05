@@ -10,9 +10,9 @@
   - [Create a Resource Group and Service Principal](#create-a-resource-group-and-service-principal)
     - [Create a Resource Group and Service Principal (Windows)](#create-a-resource-group-and-service-principal-windows)
     - [Create a Resource Group and Service Principal (Mac+Linux)](#create-a-resource-group-and-service-principal-maclinux)
-  - [Create an aks-engine apimodel](#create-an-aks-engine-apimodel)
-    - [Filling out apimodel (Windows)](#filling-out-apimodel-windows)
-    - [Filling out apimodel (Mac & Linux)](#filling-out-apimodel-mac--linux)
+  - [Create an AKS Engine apimodel](#create-an-aks-engine-apimodel)
+    - [Filling out API model (Windows)](#filling-out-apimodel-windows)
+    - [Filling out API model (Mac & Linux)](#filling-out-apimodel-mac--linux)
   - [Generate Azure Resource Manager template](#generate-azure-resource-manager-template)
   - [Deploy the cluster](#deploy-the-cluster)
     - [Check that the cluster is up](#check-that-the-cluster-is-up)
@@ -27,7 +27,7 @@
 This guide will step through everything needed to build your first Kubernetes cluster and deploy a Windows web server on it. The steps include:
 
 - Getting the right tools
-- Completing an AKS Engine apimodel which describes what you want to deploy
+- Completing an AKS Engine API model which describes what you want to deploy
 - Running AKS Engine to generate Azure Resource Model templates
 - Deploying your first Kubernetes cluster with Windows Server 2019 nodes
 - Managing the cluster from your Windows machine
@@ -315,7 +315,7 @@ After downloading that file, you will need to
 1. Set the ssh public key that will be used to log into the Linux VM
 1. Set the Azure service principal for the deployments
 
-#### Filling out apimodel (Windows)
+#### Filling out API model (Windows)
 
 You can use the same PowerShell window from earlier to run this next script to do all that for you. Be sure to replace `$dnsPrefix` with something unique and descriptive, `$windowsUser` and `$windowsPassword` to meet the requirements.
 
@@ -349,7 +349,7 @@ $inJson.properties.servicePrincipalProfile.secret = $sp.password
 $inJson | ConvertTo-Json -Depth 5 | Out-File -Encoding ascii -FilePath "kubernetes-windows-complete.json"
 ```
 
-#### Filling out apimodel (Mac & Linux)
+#### Filling out API model (Mac & Linux)
 
 Using the same terminal as before, you can use this script to download the template and fill it out. Be sure to set DNSPREFIX, WINDOWSUSER, and WINDOWSPASSWORD to meet the requirements.
 
@@ -382,10 +382,10 @@ It will also create a working Kubernetes client config file in `_output/<dnspref
 
 ### Deploy the cluster
 
-Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az group deployment create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
+Get the paths to `azuredeploy.json` and `azuredeploy.parameters.json` from the last step, and pass them into `az deployment group create --name <name for deployment> --resource-group <resource group name> --template-file <...azuredeploy.json> --parameters <...azuredeploy.parameters.json>`
 
 ```console
-$ az group deployment create --name k8s-win1-deploy --resource-group k8s-win1 --template-file "./_output/wink8s1/azuredeploy.json" --parameters "./_output/wink8s1/azuredeploy.parameters.json"
+$ az deployment group create --name k8s-win1-deploy --resource-group k8s-win1 --template-file "./_output/wink8s1/azuredeploy.json" --parameters "./_output/wink8s1/azuredeploy.parameters.json"
 ```
 
 After several minutes, it will return the list of resources created in JSON. Look for `masterFQDN`.
@@ -471,7 +471,7 @@ spec:
         ports:
           - containerPort: 80
       nodeSelector:
-        "beta.kubernetes.io/os": windows
+        "kubernetes.io/os": windows
   selector:
     matchLabels:
       app: iis-2019

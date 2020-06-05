@@ -26,53 +26,58 @@ import (
 // Config holds global test configuration
 type Config struct {
 	SkipTest            bool          `envconfig:"SKIP_TEST" default:"false"`
-	SkipLogsCollection  bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"false"`
+	SkipLogsCollection  bool          `envconfig:"SKIP_LOGS_COLLECTION" default:"true"`
 	Orchestrator        string        `envconfig:"ORCHESTRATOR" default:"kubernetes"`
-	Name                string        `envconfig:"NAME"`                                                                  // Name allows you to set the name of a cluster already created
-	Location            string        `envconfig:"LOCATION"`                                                              // Location where you want to create the cluster
-	Regions             []string      `envconfig:"REGIONS"`                                                               // A whitelist of availableregions
+	Name                string        `envconfig:"NAME" default:""`                                                       // Name allows you to set the name of a cluster already created
+	Location            string        `envconfig:"LOCATION" default:""`                                                   // Location where you want to create the cluster
+	Regions             []string      `envconfig:"REGIONS" default:""`                                                    // A whitelist of availableregions
 	ClusterDefinition   string        `envconfig:"CLUSTER_DEFINITION" required:"true" default:"examples/kubernetes.json"` // ClusterDefinition is the path on disk to the json template these are normally located in examples/
 	CleanUpOnExit       bool          `envconfig:"CLEANUP_ON_EXIT" default:"false"`                                       // if true the tests will clean up rgs when tests finish
-	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"true"`
+	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
 	RetainSSH           bool          `envconfig:"RETAIN_SSH" default:"true"`
-	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS"`
+	StabilityIterations int           `envconfig:"STABILITY_ITERATIONS" default:"3"`
 	ClusterInitPodName  string        `envconfig:"CLUSTER_INIT_POD_NAME" default:""`
 	ClusterInitJobName  string        `envconfig:"CLUSTER_INIT_JOB_NAME" default:""`
 	Timeout             time.Duration `envconfig:"TIMEOUT" default:"20m"`
 	LBTimeout           time.Duration `envconfig:"LB_TIMEOUT" default:"20m"`
 	CurrentWorkingDir   string
-	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME"`
-	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY"`
-	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND"`
-	GinkgoFocus         string `envconfig:"GINKGO_FOCUS"`
-	GinkgoSkip          string `envconfig:"GINKGO_SKIP"`
-	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"false"`
+	ResourceGroup       string `envconfig:"RESOURCE_GROUP" default:""`
+	SoakClusterName     string `envconfig:"SOAK_CLUSTER_NAME" default:""`
+	ForceDeploy         bool   `envconfig:"FORCE_DEPLOY" default:"false"`
+	UseDeployCommand    bool   `envconfig:"USE_DEPLOY_COMMAND" default:"false"`
+	GinkgoFocus         string `envconfig:"GINKGO_FOCUS" default:""`
+	GinkgoSkip          string `envconfig:"GINKGO_SKIP" default:""`
+	GinkgoFailFast      bool   `envconfig:"GINKGO_FAIL_FAST" default:"true"`
 	DebugAfterSuite     bool   `envconfig:"DEBUG_AFTERSUITE" default:"false"`
 	BlockSSHPort        bool   `envconfig:"BLOCK_SSH" default:"false"`
 	AddNodePoolInput    string `envconfig:"ADD_NODE_POOL_INPUT" default:""`
 	TestPVC             bool   `envconfig:"TEST_PVC" default:"false"`
+	SubscriptionID      string `envconfig:"SUBSCRIPTION_ID"`
+	ClientID            string `envconfig:"CLIENT_ID"`
+	ClientSecret        string `envconfig:"CLIENT_SECRET"`
 }
 
-// CustomCloudConfig holds configurations for custom clould
+// CustomCloudConfig holds configurations for custom cloud
 type CustomCloudConfig struct {
-	ServiceManagementEndpoint    string `envconfig:"SERVICE_MANAGEMENT_ENDPOINT"`
-	ResourceManagerEndpoint      string `envconfig:"RESOURCE_MANAGER_ENDPOINT"`
-	ActiveDirectoryEndpoint      string `envconfig:"ACTIVE_DIRECTORY_ENDPOINT"`
-	GalleryEndpoint              string `envconfig:"GALLERY_ENDPOINT"`
-	StorageEndpointSuffix        string `envconfig:"STORAGE_ENDPOINT_SUFFIX"`
-	KeyVaultDNSSuffix            string `envconfig:"KEY_VAULT_DNS_SUFFIX"`
-	GraphEndpoint                string `envconfig:"GRAPH_ENDPOINT"`
-	ServiceManagementVMDNSSuffix string `envconfig:"SERVICE_MANAGEMENT_VM_DNS_SUFFIX"`
-	ResourceManagerVMDNSSuffix   string `envconfig:"RESOURCE_MANAGER_VM_DNS_SUFFIX"`
-	IdentitySystem               string `envconfig:"IDENTITY_SYSTEM"`
-	AuthenticationMethod         string `envconfig:"AUTHENTICATION_METHOD"`
-	VaultID                      string `envconfig:"VAULT_ID"`
-	SecretName                   string `envconfig:"SECRET_NAME"`
-	CustomCloudClientID          string `envconfig:"CUSTOM_CLOUD_CLIENT_ID"`
-	CustomCloudSecret            string `envconfig:"CUSTOM_CLOUD_SECRET"`
-	APIProfile                   string `envconfig:"API_PROFILE"`
-	PortalURL                    string `envconfig:"PORTAL_ENDPOINT"`
+	ServiceManagementEndpoint    string `envconfig:"SERVICE_MANAGEMENT_ENDPOINT" default:""`
+	ResourceManagerEndpoint      string `envconfig:"RESOURCE_MANAGER_ENDPOINT" default:""`
+	ActiveDirectoryEndpoint      string `envconfig:"ACTIVE_DIRECTORY_ENDPOINT" default:""`
+	GalleryEndpoint              string `envconfig:"GALLERY_ENDPOINT" default:""`
+	StorageEndpointSuffix        string `envconfig:"STORAGE_ENDPOINT_SUFFIX" default:""`
+	KeyVaultDNSSuffix            string `envconfig:"KEY_VAULT_DNS_SUFFIX" default:""`
+	GraphEndpoint                string `envconfig:"GRAPH_ENDPOINT" default:""`
+	ServiceManagementVMDNSSuffix string `envconfig:"SERVICE_MANAGEMENT_VM_DNS_SUFFIX" default:""`
+	ResourceManagerVMDNSSuffix   string `envconfig:"RESOURCE_MANAGER_VM_DNS_SUFFIX" default:""`
+	IdentitySystem               string `envconfig:"IDENTITY_SYSTEM" default:""`
+	AuthenticationMethod         string `envconfig:"AUTHENTICATION_METHOD" default:""`
+	VaultID                      string `envconfig:"VAULT_ID" default:""`
+	SecretName                   string `envconfig:"SECRET_NAME" default:""`
+	CustomCloudClientID          string `envconfig:"CUSTOM_CLOUD_CLIENT_ID" default:""`
+	CustomCloudSecret            string `envconfig:"CUSTOM_CLOUD_SECRET" default:""`
+	APIProfile                   string `envconfig:"API_PROFILE" default:""`
+	PortalURL                    string `envconfig:"PORTAL_ENDPOINT" default:""`
 	TimeoutCommands              bool
+	CustomCloudName              string `envconfig:"CUSTOM_CLOUD_NAME"`
 }
 
 const (
@@ -113,16 +118,9 @@ func (c *Config) GetKubeConfig() string {
 
 // IsCustomCloudProfile returns true if the cloud is a custom cloud
 func (c *Config) IsCustomCloudProfile() bool {
-	clusterDefinitionFullPath := fmt.Sprintf("%s/%s", c.CurrentWorkingDir, c.ClusterDefinition)
-	cs := parseVlabsContainerSerice(clusterDefinitionFullPath)
-	return cs.Properties.IsCustomCloudProfile()
-}
-
-// IsAzureStackCloud returns true if the cloud is AzureStack
-func (c *Config) IsAzureStackCloud() bool {
-	clusterDefinitionFullPath := fmt.Sprintf("%s/%s", c.CurrentWorkingDir, c.ClusterDefinition)
-	cs := parseVlabsContainerSerice(clusterDefinitionFullPath)
-	return cs.Properties.IsAzureStackCloud()
+	// c.ClusterDefinition is only set for new deployments
+	// Not for upgrade/scale operations
+	return os.Getenv("CUSTOM_CLOUD_NAME") != ""
 }
 
 // UpdateCustomCloudClusterDefinition updates the cluster definition from environment variables
@@ -173,6 +171,23 @@ func parseVlabsContainerSerice(clusterDefinitionFullPath string) api.VlabsARMCon
 // SetEnvironment will set the cloud context
 func (ccc *CustomCloudConfig) SetEnvironment() error {
 	var cmd *exec.Cmd
+	var err error
+
+	// Add to python cert store the self-signed root CA generated by Azure Stack's CI
+	// as azure-cli complains otherwise
+	azsSelfSignedCaPath := "/aks-engine/Certificates.pem"
+	if _, err = os.Stat(azsSelfSignedCaPath); err == nil {
+		// latest dev_image has an azure-cli version that requires python3
+		cmd := exec.Command("/bin/bash", "-c",
+			fmt.Sprintf(`VER=$(python3 -V | grep -o [0-9].[0-9]*. | grep -o [0-9].[0-9]*);
+		CA=/usr/local/lib/python${VER}/dist-packages/certifi/cacert.pem;
+		if [ -f ${CA} ]; then cat %s >> ${CA}; fi;`, azsSelfSignedCaPath))
+		if out, err := cmd.CombinedOutput(); err != nil {
+			log.Printf("output:%s\n", out)
+			return err
+		}
+	}
+
 	environmentName := fmt.Sprintf("AzureStack%v", time.Now().Unix())
 	if ccc.TimeoutCommands {
 		cmd = exec.Command("timeout", "60", "az", "cloud", "register",
@@ -193,36 +208,27 @@ func (ccc *CustomCloudConfig) SetEnvironment() error {
 			"--endpoint-active-directory", ccc.ActiveDirectoryEndpoint,
 			"--endpoint-active-directory-graph-resource-id", ccc.GraphEndpoint)
 	}
-	out, err := cmd.CombinedOutput()
-	if err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("output:%s\n", out)
 		return err
 	}
 
 	if ccc.TimeoutCommands {
-		cmd = exec.Command("timeout", "60", "az", "cloud", "set",
-			"-n", environmentName)
-
+		cmd = exec.Command("timeout", "60", "az", "cloud", "set", "-n", environmentName)
 	} else {
-		cmd = exec.Command("az", "cloud", "set",
-			"-n", environmentName)
+		cmd = exec.Command("az", "cloud", "set", "-n", environmentName)
 	}
-	out, err = cmd.CombinedOutput()
-	if err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("output:%s\n", out)
 		return err
 	}
 
 	if ccc.TimeoutCommands {
-		cmd = exec.Command("timeout", "60", "az", "cloud", "update",
-			"--profile", ccc.APIProfile)
-
+		cmd = exec.Command("timeout", "60", "az", "cloud", "update", "--profile", ccc.APIProfile)
 	} else {
-		cmd = exec.Command("az", "cloud", "update",
-			"--profile", ccc.APIProfile)
+		cmd = exec.Command("az", "cloud", "update", "--profile", ccc.APIProfile)
 	}
-	out, err = cmd.CombinedOutput()
-	if err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("output:%s\n", out)
 		return err
 	}

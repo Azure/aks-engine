@@ -17,7 +17,7 @@ pr:
 resources:
   containers:
   - container: dev1
-    image: quay.io/deis/go-dev:v1.25.0-go113
+    image: quay.io/deis/go-dev:v1.27.0
 
 jobs:
 - job: unit_tests
@@ -45,14 +45,14 @@ jobs:
     displayName: 'Set up the Go workspace'
   - script: make bootstrap
     displayName: Install dependencies
-  - script: make validate-dependencies
-    displayName: Check if imports, Gopkg.toml, and Gopkg.lock are in sync
   - script: make ensure-generated
     displayName: Check if generated code is up to date
   - script: make generate test-style
     displayName: Run linting rules
   - script: make build-cross
     displayName: Build cross-architectural binaries
+  - script: make validate-dependencies
+    displayName: Check if go mod is up-to-date
   - script: |
         export CODECOV_TOKEN=$(CODECOV_TOKEN)
         make coverage
@@ -62,6 +62,14 @@ jobs:
   parameters:
     name: 'k8s_1_18_release_e2e'
     k8sRelease: '1.18'
+    apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
+    createVNET: true
+    enableKMSEncryption: false
+
+- template: e2e-job-template.yaml
+  parameters:
+    name: 'k8s_1_19_release_e2e'
+    k8sRelease: '1.19'
     apimodel: 'examples/e2e-tests/kubernetes/release/default/definition.json'
     createVNET: true
     enableKMSEncryption: false

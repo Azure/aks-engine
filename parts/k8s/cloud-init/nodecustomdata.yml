@@ -37,7 +37,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "provisionConfigs"}}
 
-{{if not .IsVHDDistro}}
+{{- if not .IsVHDDistro}}
 - path: /opt/azure/containers/provision_cis.sh
   permissions: "0744"
   encoding: gzip
@@ -46,8 +46,8 @@ write_files:
     {{CloudInitData "provisionCIS"}}
 {{end}}
 
-{{if not .IsVHDDistro}}
-  {{if .IsAuditDEnabled}}
+{{- if not .IsVHDDistro}}
+  {{- if .IsAuditDEnabled}}
 - path: /etc/audit/rules.d/CIS.rules
   permissions: "0744"
   encoding: gzip
@@ -67,13 +67,54 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: {{GetCustomCloudConfigCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
   owner: root
   content: !!binary |
     {{WrapAsVariable "provisionConfigsCustomCloud"}}
+{{end}}
+
+{{- if HasKubeReservedCgroup}}
+- path: /etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+  permissions: "0644"
+  owner: root
+  content: |
+    [Unit]
+    Description=Limited resources slice for Kubernetes services
+    Documentation=man:systemd.special(7)
+    DefaultDependencies=no
+    Before=slices.target
+    Requires=-.slice
+    After=-.slice
+    #EOF
+    
+- path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+
+  {{if NeedsContainerd}}
+- path: /etc/systemd/system/containerd.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{else}}
+- path: /etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  permissions: "0644"
+  owner: root
+  content: |
+    [Service]
+    Slice={{- GetKubeReservedCgroup -}}.slice
+    #EOF
+  {{end}}
 {{end}}
 
 - path: /etc/systemd/system/kubelet.service
@@ -83,7 +124,7 @@ write_files:
   content: !!binary |
     {{CloudInitData "kubeletSystemdService"}}
 
-{{if not .IsVHDDistro}}
+{{- if not .IsVHDDistro}}
 - path: /usr/local/bin/health-monitor.sh
   permissions: "0544"
   encoding: gzip
@@ -136,7 +177,7 @@ write_files:
     APT::Periodic::AutocleanInterval "0";
     APT::Periodic::Unattended-Upgrade "0";
 
-{{if IsIPv6Enabled}}
+{{- if IsIPv6Enabled}}
 - path: {{GetDHCPv6ServiceCSEScriptFilepath}}
   permissions: "0644"
   encoding: gzip
@@ -152,7 +193,7 @@ write_files:
     {{CloudInitData "dhcpv6ConfigurationScript"}}
 {{end}}
 
-{{if .KubernetesConfig.RequiresDocker}}
+{{- if .KubernetesConfig.RequiresDocker}}
     {{if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
@@ -179,7 +220,7 @@ write_files:
 {{IndentString (GetDockerConfig (IsNSeriesSKU .VMSize)) 4}}
 {{end}}
 
-{{if HasCiliumNetworkPlugin}}
+{{- if HasCiliumNetworkPlugin}}
 - path: /etc/systemd/system/sys-fs-bpf.mount
   permissions: "0644"
   encoding: gzip
@@ -195,7 +236,7 @@ write_files:
     {{GetSysctlDConfigKeyVals .SysctlDConfig}}
     #EOF
 
-{{if NeedsContainerd}}
+{{- if NeedsContainerd}}
 - path: /etc/systemd/system/containerd.service.d/exec_start.conf
   permissions: "0644"
   owner: root
@@ -237,7 +278,7 @@ write_files:
   {{end}}
 {{end}}
 
-{{if IsNSeriesSKU .VMSize}}
+{{- if IsNSeriesSKU .VMSize}}
 - path: /etc/systemd/system/nvidia-modprobe.service
   permissions: "0644"
   owner: root
@@ -268,7 +309,7 @@ write_files:
   content: |
     {{WrapAsParameter "clientCertificate"}}
 
-{{if HasCustomSearchDomain}}
+{{- if HasCustomSearchDomain}}
 - path: {{GetCustomSearchDomainsCSEScriptFilepath}}
   permissions: "0744"
   encoding: gzip
@@ -306,16 +347,12 @@ write_files:
   owner: root
   content: |
     KUBELET_CONFIG={{GetKubeletConfigKeyVals .KubernetesConfig }}
-    KUBELET_REGISTER_SCHEDULABLE=true
-{{- if not (IsKubernetesVersionGe "1.17.0")}}
-    KUBELET_IMAGE={{GetHyperkubeImageReference}}
-{{end}}
-{{if IsKubernetesVersionGe "1.16.0"}}
+{{- if IsKubernetesVersionGe "1.16.0"}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabels . "',variables('labelResourceGroup'),'"}}
 {{else}}
     KUBELET_NODE_LABELS={{GetAgentKubernetesLabelsDeprecated . "',variables('labelResourceGroup'),'"}}
 {{end}}
-{{if IsCustomCloudProfile }}
+{{- if IsCustomCloudProfile }}
     AZURE_ENVIRONMENT_FILEPATH=/etc/kubernetes/azurestackcloud.json
 {{end}}
     #EOF
@@ -325,14 +362,24 @@ write_files:
   owner: root
   content: |
     #!/bin/bash
-{{if not IsIPMasqAgentEnabled}}
+    MOUNT_DIR=/var/lib/kubelet
+    mkdir -p $MOUNT_DIR /var/lib/cni
+    if ! [[ $(findmnt -rno SOURCE,TARGET ${MOUNT_DIR}) ]]; then
+      mount --bind $MOUNT_DIR $MOUNT_DIR
+    fi
+    mount --make-shared $MOUNT_DIR
+{{- if and (IsVirtualMachineScaleSets .) IsAADPodIdentityAddonEnabled UseManagedIdentity}}
+    {{- /* Disable TCP access to IMDS endpoint, aad-pod-identity nmi component will provide a complementary iptables rule to re-route this traffic */}}
+    iptables -A OUTPUT -s 127.0.0.1/32 -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DROP
+{{end}}
+{{- if not IsIPMasqAgentEnabled}}
     {{if IsAzureCNI}}
     iptables -t nat -A POSTROUTING -m iprange ! --dst-range 168.63.129.16 -m addrtype ! --dst-type local ! -d {{WrapAsParameter "vnetCidr"}} -j MASQUERADE
     {{end}}
 {{end}}
     #EOF
 
-{{if IsCustomCloudProfile}}
+{{- if IsCustomCloudProfile}}
 - path: "/etc/kubernetes/azurestackcloud.json"
   permissions: "0600"
   owner: "root"

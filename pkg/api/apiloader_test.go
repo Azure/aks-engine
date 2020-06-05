@@ -26,7 +26,9 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 		Properties: &Properties{OrchestratorProfile: &OrchestratorProfile{OrchestratorType: Kubernetes, OrchestratorVersion: "1.7.16"}}}
 
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 	apiloader := &Apiloader{
 		Translator: &i18n.Translator{
 			Locale: locale,
@@ -48,14 +50,16 @@ func TestLoadContainerServiceFromFile(t *testing.T) {
 func TestLoadContainerServiceForAgentPoolOnlyCluster(t *testing.T) {
 	var _ = Describe("create/update cluster operations", func() {
 		locale := gotext.NewLocale(path.Join("../../..", "../../..", "translations"), "en_US")
-		i18n.Initialize(locale)
+		if err := i18n.Initialize(locale); err != nil {
+			t.Error(err)
+		}
 		apiloader := &Apiloader{
 			Translator: &i18n.Translator{
 				Locale: locale,
 			},
 		}
-		k8sVersions := common.GetAllSupportedKubernetesVersions(true, false)
-		defaultK8sVersion := common.GetDefaultKubernetesVersion(false)
+		k8sVersions := common.GetAllSupportedKubernetesVersions(true, false, false)
+		defaultK8sVersion := common.GetDefaultKubernetesVersion(false, false)
 
 		Context("v20180331", func() {
 			It("it should return error if managed cluster body is empty", func() {
@@ -173,10 +177,16 @@ func TestLoadContainerServiceWithNilProperties(t *testing.T) {
         }`
 
 	tmpFile, err := ioutil.TempFile("", "containerService-invalid")
+	if err != nil {
+		t.Error(err)
+	}
 	fileName := tmpFile.Name()
 	defer os.Remove(fileName)
 
 	err = ioutil.WriteFile(fileName, []byte(jsonWithoutProperties), os.ModeAppend)
+	if err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &Apiloader{}
 	existingContainerService := &ContainerService{Name: "test",
@@ -261,10 +271,16 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 	}`
 
 	tmpFile, err := ioutil.TempFile("", "containerService-nolocation")
+	if err != nil {
+		t.Error(err)
+	}
 	fileName := tmpFile.Name()
 	defer os.Remove(fileName)
 
 	err = ioutil.WriteFile(fileName, []byte(jsonWithoutlocationcustomcloud), os.ModeAppend)
+	if err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &Apiloader{}
 	_, _, err = apiloader.LoadContainerServiceFromFile(fileName, true, false, nil)
@@ -324,10 +340,16 @@ func TestLoadContainerServiceWithEmptyLocationCustomCloud(t *testing.T) {
 	}`
 
 	tmpFilewithoutlocationpubliccloud, err := ioutil.TempFile("", "containerService-nolocationpubliccloud")
+	if err != nil {
+		t.Error(err)
+	}
 	fileNamewithoutlocationpubliccloud := tmpFilewithoutlocationpubliccloud.Name()
 	defer os.Remove(fileNamewithoutlocationpubliccloud)
 
 	err = ioutil.WriteFile(fileNamewithoutlocationpubliccloud, []byte(jsonWithoutlocationpubliccloud), os.ModeAppend)
+	if err != nil {
+		t.Error(err)
+	}
 
 	apiloaderwithoutlocationpubliccloud := &Apiloader{}
 	_, _, err = apiloaderwithoutlocationpubliccloud.LoadContainerServiceFromFile(fileNamewithoutlocationpubliccloud, true, false, nil)

@@ -32,7 +32,7 @@ func TestGetTenantID(t *testing.T) {
 	mux.HandleFunc("/subscriptions/foobarsubscription", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("WWW-Authenticate", `authorization_uri="https://login.windows.net/`+expectedTenantID+`"`)
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		_, _ = w.Write([]byte("Unauthorized"))
 	})
 
 	tenantID, err := GetTenantID(server.URL, "foobarsubscription")
@@ -91,7 +91,7 @@ func TestGetTenantID_InvalidHeaderValue(t *testing.T) {
 	mux.HandleFunc("/subscriptions/foobarsubscription", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("WWW-Authenticate", `sample_invalid_auth_uri`)
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("Unauthorized"))
+		_, _ = w.Write([]byte("Unauthorized"))
 	})
 
 	_, err := GetTenantID(server.URL, "foobarsubscription")

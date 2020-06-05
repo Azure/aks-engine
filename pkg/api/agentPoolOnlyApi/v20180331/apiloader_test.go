@@ -19,20 +19,15 @@ import (
 )
 
 func TestRegisterHandler(t *testing.T) {
-	//RegisterFailHandler(Fail)
 	RunSpecsWithReporters(t, "apiloader", "v20180331 Suite")
 }
 
 var _ = Describe("v20180331 test suite", func() {
 	locale := gotext.NewLocale(path.Join("../../..", "../../..", "translations"), "en_US")
-	i18n.Initialize(locale)
-	apiloader := &api.Apiloader{
-		Translator: &i18n.Translator{
-			Locale: locale,
-		},
-	}
-	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false)
-	defaultK8sVersion := common.GetDefaultKubernetesVersion(false)
+	_ = i18n.Initialize(locale)
+	apiloader := &api.Apiloader{}
+	k8sVersions := common.GetAllSupportedKubernetesVersions(false, false, false)
+	defaultK8sVersion := common.GetDefaultKubernetesVersion(false, false)
 
 	Context("when networkprofile is nil, enable the addon profile", func() {
 		It("should merge fields properly", func() {

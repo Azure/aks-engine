@@ -711,7 +711,7 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 				Count: 1,
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
-				OrchestratorVersion: "1.14.4",
+				OrchestratorVersion: "1.18.2",
 				KubernetesConfig: &api.KubernetesConfig{
 					LoadBalancerSku: StandardLoadBalancerSku,
 				},
@@ -786,7 +786,7 @@ func TestCreateAgentLoadBalancer(t *testing.T) {
 				Count: 1,
 			},
 			OrchestratorProfile: &api.OrchestratorProfile{
-				OrchestratorVersion: "1.14.4",
+				OrchestratorVersion: "1.18.2",
 				KubernetesConfig: &api.KubernetesConfig{
 					LoadBalancerSku:         StandardLoadBalancerSku,
 					LoadBalancerOutboundIPs: to.IntPtr(6),

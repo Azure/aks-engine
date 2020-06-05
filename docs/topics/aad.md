@@ -1,6 +1,6 @@
 # AAD integration Walkthrough
 
-This walkthrough is to help you get start with Azure Active Directory(AAD) integeration with an AKS Engine Kubernetes cluster.
+This walkthrough is to help you get start with Azure Active Directory(AAD) integration with an AKS Engine-created Kubernetes cluster.
 
 [OpenID Connect](http://openid.net/connect/) is a simple identity layer built on top of the OAuth 2.0 protocol, and it is supported by both AAD and Kubernetes. Here we're going to use OpenID Connect as the communication protocol.
 

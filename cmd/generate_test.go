@@ -159,9 +159,15 @@ func TestGenerateCmdMLoadAPIModel(t *testing.T) {
 	g.apimodelPath = "../pkg/engine/testdata/simple/kubernetes.json"
 	g.set = []string{"agentPoolProfiles[0].count=1"}
 
-	g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
-	g.mergeAPIModel()
-	err := g.loadAPIModel()
+	err := g.validate(r, []string{"../pkg/engine/testdata/simple/kubernetes.json"})
+	if err != nil {
+		t.Fatalf("unexpected error validating api model: %s", err.Error())
+	}
+	err = g.mergeAPIModel()
+	if err != nil {
+		t.Fatalf("unexpected error merging api model: %s", err.Error())
+	}
+	err = g.loadAPIModel()
 	if err != nil {
 		t.Fatalf("unexpected error loading api model: %s", err.Error())
 	}
@@ -541,11 +547,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "1.14 example",
-			apiModelPath: "../examples/kubernetes-releases/kubernetes1.14.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "1.15 example",
 			apiModelPath: "../examples/kubernetes-releases/kubernetes1.15.json",
 			setArgs:      defaultSet,
@@ -811,11 +812,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "e2e rbac disabled",
-			apiModelPath: "../examples/e2e-tests/kubernetes/kubernetes-config/rbac-disabled.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "e2e 50 nodes",
 			apiModelPath: "../examples/e2e-tests/kubernetes/node-count/50-nodes/definition.json",
 			setArgs:      defaultSet,
@@ -871,15 +867,17 @@ func TestExampleAPIModels(t *testing.T) {
 			g.set = test.setArgs
 			r := &cobra.Command{}
 
-			g.validate(r, []string{})
-			g.mergeAPIModel()
-			err := g.loadAPIModel()
-			if err != nil {
+			if err := g.validate(r, []string{}); err != nil {
+				t.Fatalf("unexpected error validating api model: %s", err.Error())
+			}
+			if err := g.mergeAPIModel(); err != nil {
+				t.Fatalf("unexpected error merging api model: %s", err.Error())
+			}
+			if err := g.loadAPIModel(); err != nil {
 				t.Fatalf("unexpected error loading api model: %s", err.Error())
 			}
 
-			err = g.validateAPIModelAsVLabs()
-			if err != nil {
+			if err := g.validateAPIModelAsVLabs(); err != nil {
 				t.Fatalf("unexpected error validateAPIModelAsVLabs the example apimodel: %s", err)
 			}
 		})

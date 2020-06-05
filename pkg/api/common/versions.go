@@ -132,7 +132,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.14.4":         false,
 	"1.14.5":         false,
 	"1.14.6":         false,
-	"1.14.7":         true,
+	"1.14.7":         false,
 	"1.14.8":         false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.14.10":        false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
 	"1.15.0-alpha.1": false,
@@ -150,8 +150,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.15.7":         false,
 	"1.15.8":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
 	"1.15.9":         false,
-	"1.15.10":        true,
+	"1.15.10":        false,
 	"1.15.11":        true,
+	"1.15.12":        true,
 	"1.16.0-alpha.1": false,
 	"1.16.0-alpha.2": false,
 	"1.16.0-alpha.3": false,
@@ -165,8 +166,9 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.5":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
 	"1.16.6":         false,
 	"1.16.7":         false,
-	"1.16.8":         true,
+	"1.16.8":         false,
 	"1.16.9":         true,
+	"1.16.10":        true,
 	"1.17.0-alpha.1": false,
 	"1.17.0-alpha.2": false,
 	"1.17.0-alpha.3": false,
@@ -178,31 +180,72 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.17.1":         false,
 	"1.17.2":         false,
 	"1.17.3":         false,
-	"1.17.4":         true,
+	"1.17.4":         false,
 	"1.17.5":         true,
+	"1.17.6":         true,
 	"1.18.0-alpha.1": false,
 	"1.18.0-alpha.2": false,
 	"1.18.0-alpha.3": false,
 	"1.18.0-alpha.5": false,
 	"1.18.0-beta.1":  false,
 	"1.18.0":         false,
-	"1.18.1":         true,
+	"1.18.1":         false,
 	"1.18.2":         true,
+	"1.18.3":         true,
 	"1.19.0-alpha.1": true,
+	"1.19.0-alpha.2": true,
+	"1.19.0-alpha.3": true,
+	"1.19.0-beta.0":  true,
+	"1.19.0-beta.1":  true,
+}
+
+// AllKubernetesSupportedVersionsAzureStack is a whitelist map of all supported Kubernetes version strings on Azure Stack
+// The bool value indicates if creating new clusters with this version is allowed
+var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
+	"1.14.7":  false,
+	"1.14.8":  false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
+	"1.15.4":  false,
+	"1.15.5":  false, // disabled because of https://github.com/Azure/aks-engine/issues/2312
+	"1.15.10": false,
+	"1.15.11": true,
+	"1.15.12": true,
+	"1.16.9":  true,
+	"1.16.10": true,
+	"1.17.4":  false,
+	"1.17.5":  true,
+	"1.17.6":  true,
+}
+
+// AllKubernetesWindowsSupportedVersionsAzureStack maintain a set of available k8s Windows versions in aks-engine on Azure Stack
+var AllKubernetesWindowsSupportedVersionsAzureStack = map[string]bool{
+	"1.15.10": false,
+	"1.15.11": true,
+	"1.15.12": true,
+	"1.16.9":  true,
+	"1.16.10": true,
+	"1.17.4":  false,
+	"1.17.5":  true,
+	"1.17.6":  true,
 }
 
 // GetDefaultKubernetesVersion returns the default Kubernetes version, that is the latest patch of the default release
-func GetDefaultKubernetesVersion(hasWindows bool) string {
+func GetDefaultKubernetesVersion(hasWindows bool, isAzureStackCloud bool) string {
 	defaultRelease := KubernetesDefaultRelease
 	if hasWindows {
 		defaultRelease = KubernetesDefaultReleaseWindows
 	}
-	return GetLatestPatchVersion(defaultRelease, GetAllSupportedKubernetesVersions(false, hasWindows))
+	if isAzureStackCloud && hasWindows {
+		defaultRelease = KubernetesDefaultReleaseWindowsAzureStack
+	}
+	if isAzureStackCloud && !hasWindows {
+		defaultRelease = KubernetesDefaultReleaseAzureStack
+	}
+	return GetLatestPatchVersion(defaultRelease, GetAllSupportedKubernetesVersions(false, hasWindows, isAzureStackCloud))
 }
 
 // GetSupportedKubernetesVersion verifies that a passed-in version string is supported, or returns a default version string if not
-func GetSupportedKubernetesVersion(version string, hasWindows bool) string {
-	k8sVersion := GetDefaultKubernetesVersion(hasWindows)
+func GetSupportedKubernetesVersion(version string, hasWindows bool, isAzureStackCloud bool) string {
+	k8sVersion := GetDefaultKubernetesVersion(hasWindows, isAzureStackCloud)
 	if hasWindows {
 		if AllKubernetesWindowsSupportedVersions[version] {
 			k8sVersion = version
@@ -212,16 +255,35 @@ func GetSupportedKubernetesVersion(version string, hasWindows bool) string {
 			k8sVersion = version
 		}
 	}
+	if isAzureStackCloud {
+		if hasWindows {
+			if AllKubernetesWindowsSupportedVersionsAzureStack[version] {
+				k8sVersion = version
+			}
+		} else {
+			if AllKubernetesSupportedVersionsAzureStack[version] {
+				k8sVersion = version
+			}
+		}
+	}
 	return k8sVersion
 }
 
 // GetAllSupportedKubernetesVersions returns a slice of all supported Kubernetes versions
-func GetAllSupportedKubernetesVersions(isUpdate, hasWindows bool) []string {
+func GetAllSupportedKubernetesVersions(isUpdate, hasWindows bool, isAzureStackCloud bool) []string {
 	var versions []string
 	allSupportedVersions := AllKubernetesSupportedVersions
 	if hasWindows {
 		allSupportedVersions = AllKubernetesWindowsSupportedVersions
 	}
+
+	if isAzureStackCloud && hasWindows {
+		allSupportedVersions = AllKubernetesWindowsSupportedVersionsAzureStack
+	}
+	if isAzureStackCloud && !hasWindows {
+		allSupportedVersions = AllKubernetesSupportedVersionsAzureStack
+	}
+
 	for ver, supported := range allSupportedVersions {
 		if isUpdate || supported {
 			versions = append(versions, ver)
@@ -355,10 +417,10 @@ func getAllKubernetesWindowsSupportedVersionsMap() map[string]bool {
 }
 
 // GetSupportedVersions get supported version list for a certain orchestrator
-func GetSupportedVersions(orchType string, isUpdate, hasWindows bool) (versions []string, defaultVersion string) {
+func GetSupportedVersions(orchType string, isUpdate, hasWindows bool, isAzureStackCloud bool) (versions []string, defaultVersion string) {
 	switch orchType {
 	case Kubernetes:
-		return GetAllSupportedKubernetesVersions(isUpdate, hasWindows), GetDefaultKubernetesVersion(hasWindows)
+		return GetAllSupportedKubernetesVersions(isUpdate, hasWindows, isAzureStackCloud), GetDefaultKubernetesVersion(hasWindows, isAzureStackCloud)
 	case DCOS:
 		return AllDCOSSupportedVersions, DCOSDefaultVersion
 	default:
@@ -367,14 +429,15 @@ func GetSupportedVersions(orchType string, isUpdate, hasWindows bool) (versions 
 }
 
 //GetValidPatchVersion gets the current valid patch version for the minor version of the passed in version
-func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool) string {
+func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool, isAzureStackCloud bool) string {
 	if orchVer == "" {
 		return RationalizeReleaseAndVersion(
 			orchType,
 			"",
 			"",
 			isUpdate,
-			hasWindows)
+			hasWindows,
+			isAzureStackCloud)
 	}
 
 	// check if the current version is valid, this allows us to have multiple supported patch versions in the future if we need it
@@ -383,7 +446,8 @@ func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool) s
 		"",
 		orchVer,
 		isUpdate,
-		hasWindows)
+		hasWindows,
+		isAzureStackCloud)
 
 	if version == "" {
 		sv, err := semver.Make(orchVer)
@@ -397,17 +461,18 @@ func GetValidPatchVersion(orchType, orchVer string, isUpdate, hasWindows bool) s
 			sr,
 			"",
 			isUpdate,
-			hasWindows)
+			hasWindows,
+			isAzureStackCloud)
 	}
 	return version
 }
 
 // RationalizeReleaseAndVersion return a version when it can be rationalized from the input, otherwise ""
-func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, hasWindows bool) (version string) {
+func RationalizeReleaseAndVersion(orchType, orchRel, orchVer string, isUpdate, hasWindows bool, isAzureStackCloud bool) (version string) {
 	// ignore "v" prefix in orchestrator version and release: "v1.8.0" is equivalent to "1.8.0", "v1.9" is equivalent to "1.9"
 	orchVer = strings.TrimPrefix(orchVer, "v")
 	orchRel = strings.TrimPrefix(orchRel, "v")
-	supportedVersions, defaultVersion := GetSupportedVersions(orchType, isUpdate, hasWindows)
+	supportedVersions, defaultVersion := GetSupportedVersions(orchType, isUpdate, hasWindows, isAzureStackCloud)
 	if supportedVersions == nil {
 		return ""
 	}
@@ -449,6 +514,7 @@ func IsValidMinVersion(orchType, orchRelease, orchVersion, minVersion string) (b
 		orchType,
 		orchRelease,
 		orchVersion,
+		false,
 		false,
 		false)
 	if version == "" {
@@ -503,8 +569,8 @@ func GetLatestPatchVersion(majorMinor string, versionsList []string) (version st
 }
 
 // IsSupportedKubernetesVersion return true if the provided Kubernetes version is supported
-func IsSupportedKubernetesVersion(version string, isUpdate, hasWindows bool) bool {
-	for _, ver := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows) {
+func IsSupportedKubernetesVersion(version string, isUpdate, hasWindows bool, isAzureStackCloud bool) bool {
+	for _, ver := range GetAllSupportedKubernetesVersions(isUpdate, hasWindows, isAzureStackCloud) {
 		if ver == version {
 			return true
 		}

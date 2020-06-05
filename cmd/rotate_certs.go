@@ -32,7 +32,7 @@ import (
 
 const (
 	rotateCertsName             = "rotate-certs"
-	rotateCertsShortDescription = "Rotate certificates on an existing Kubernetes cluster"
+	rotateCertsShortDescription = "Rotate certificates on an existing AKS Engine-created Kubernetes cluster"
 	rotateCertsLongDescription  = "Rotate CA, etcd, kubelet, kubeconfig and apiserver certificates in a cluster built with AKS Engine. Rotating certificates can break component connectivity and leave the cluster in an unrecoverable state. Before performing any of these instructions on a live cluster, it is preferrable to backup your cluster state and migrate critical workloads to another cluster."
 	kubeSystemNamespace         = "kube-system"
 )
@@ -81,7 +81,7 @@ func newRotateCertsCmd() *cobra.Command {
 	f.StringVar(&rcc.masterFQDN, "apiserver", "", "apiserver endpoint (required)")
 	f.StringVarP(&rcc.outputDirectory, "output-directory", "o", "", "output directory where generated TLS artifacts will be saved (derived from DNS prefix if absent)")
 
-	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
+	_ = f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
 
 	addAuthFlags(rcc.getAuthArgs(), f)
 

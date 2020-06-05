@@ -302,7 +302,7 @@ func (uc *UpgradeCluster) upgradable(currentVersion string) error {
 	}
 	targetVersion := uc.DataModel.Properties.OrchestratorProfile.OrchestratorVersion
 
-	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows())
+	orch, err := api.GetOrchestratorVersionProfile(nodeVersion, uc.DataModel.Properties.HasWindows(), uc.DataModel.Properties.IsAzureStackCloud())
 	if err != nil {
 		return err
 	}
@@ -380,6 +380,10 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 
 	if vm.StorageProfile.OsDisk.OsType == compute.Windows {
 		poolPrefix, _, _, _, err = utils.WindowsVMNameParts(*vm.Name)
+		if err != nil {
+			uc.Logger.Errorf(err.Error())
+			return err
+		}
 		if !strings.Contains(uc.NameSuffix, poolPrefix) {
 			uc.Logger.Infof("Skipping VM: %s for upgrade as it does not belong to cluster with expected name suffix: %s",
 				*vm.Name, uc.NameSuffix)
@@ -437,7 +441,9 @@ func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentV
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)", *vm.Name, currentVersion)
 		*uc.MasterVMs = append(*uc.MasterVMs, vm)
 	} else {
-		uc.addVMToAgentPool(vm, true)
+		if err := uc.addVMToAgentPool(vm, true); err != nil {
+			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
+		}
 	}
 }
 
@@ -446,6 +452,8 @@ func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, current
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)", *vm.Name, currentVersion)
 		*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 	} else {
-		uc.addVMToAgentPool(vm, false)
+		if err := uc.addVMToAgentPool(vm, false); err != nil {
+			uc.Logger.Errorf("Failed to add VM %s to agent pool: %s", *vm.Name, err)
+		}
 	}
 }

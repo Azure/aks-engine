@@ -1699,6 +1699,71 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "info",
+					},
+					Containers: []KubernetesContainerSpec{
+						{
+							Name:  common.CalicoTyphaComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoTyphaComponentName],
+						},
+						{
+							Name:  common.CalicoCNIComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoCNIComponentName],
+						},
+						{
+							Name:  common.CalicoNodeComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoNodeComponentName],
+						},
+						{
+							Name:  common.CalicoPod2DaemonComponentName,
+							Image: specConfig.CalicoImageBase + k8sComponentsByVersionMap["1.15.4"][common.CalicoPod2DaemonComponentName],
+						},
+						{
+							Name:  common.CalicoClusterAutoscalerComponentName,
+							Image: k8sComponentsByVersionMap["1.15.4"][common.CalicoClusterAutoscalerComponentName],
+						},
+					},
+				},
+			}, "1.15.4")),
+		},
+		{
+			name: "calico addon enabled with configurable log severity",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPlugin: NetworkPluginAzure,
+							NetworkPolicy: NetworkPolicyCalico,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.CalicoAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"logSeverityScreen": "error",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.CalicoAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "error",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CalicoTyphaComponentName,
@@ -1744,6 +1809,9 @@ func TestSetAddonsConfig(t *testing.T) {
 								{
 									Name:    common.CalicoAddonName,
 									Enabled: to.BoolPtr(false),
+									Config: map[string]string{
+										"logSeverityScreen": "info",
+									},
 									Containers: []KubernetesContainerSpec{
 										{
 											Name:  common.CalicoTyphaComponentName,
@@ -1777,6 +1845,9 @@ func TestSetAddonsConfig(t *testing.T) {
 				{
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"logSeverityScreen": "info",
+					},
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CalicoTyphaComponentName,
@@ -1959,7 +2030,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
-						OrchestratorVersion: "1.14.0",
+						OrchestratorVersion: "1.15.12",
 						KubernetesConfig: &KubernetesConfig{
 							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
 							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
@@ -1995,7 +2066,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "150Mi",
 							CPULimits:      "300m",
 							MemoryLimits:   "150Mi",
-							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.DashboardAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.DashboardAddonName],
 						},
 					},
 				},
@@ -2005,7 +2076,7 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.MetricsServerAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.MetricsServerAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.MetricsServerAddonName],
 						},
 					},
 				},
@@ -2019,7 +2090,7 @@ func TestSetAddonsConfig(t *testing.T) {
 							MemoryRequests: "50Mi",
 							CPULimits:      "50m",
 							MemoryLimits:   "250Mi",
-							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.IPMASQAgentAddonName],
+							Image:          "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.IPMASQAgentAddonName],
 						},
 					},
 					Config: map[string]string{
@@ -2033,8 +2104,12 @@ func TestSetAddonsConfig(t *testing.T) {
 					Enabled: to.BoolPtr(true),
 					Containers: []KubernetesContainerSpec{
 						{
-							Name:  common.AzureCNINetworkMonitorAddonName,
-							Image: "AzureCNIImageBase" + k8sComponentsByVersionMap["1.14.0"][common.AzureCNINetworkMonitorAddonName],
+							Name:           common.AzureCNINetworkMonitorAddonName,
+							Image:          "AzureCNIImageBase" + k8sComponentsByVersionMap["1.15.12"][common.AzureCNINetworkMonitorAddonName],
+							CPURequests:    "30m",
+							MemoryRequests: "25Mi",
+							CPULimits:      "200m",
+							MemoryLimits:   "256Mi",
 						},
 					},
 				},
@@ -2051,11 +2126,11 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.CoreDNSAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAddonName],
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.CoreDNSAddonName],
 						},
 						{
 							Name:  common.CoreDNSAutoscalerName,
-							Image: k8sComponentsByVersionMap["1.14.0"][common.CoreDNSAutoscalerName],
+							Image: k8sComponentsByVersionMap["1.15.12"][common.CoreDNSAutoscalerName],
 						},
 					},
 				},
@@ -2070,9 +2145,13 @@ func TestSetAddonsConfig(t *testing.T) {
 					Containers: []KubernetesContainerSpec{
 						{
 							Name:  common.KubeProxyAddonName,
-							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.14.0"][common.KubeProxyAddonName] + common.AzureStackSuffix,
+							Image: "MCRKubernetesImageBase" + k8sComponentsByVersionMap["1.15.12"][common.KubeProxyAddonName] + common.AzureStackSuffix,
 						},
 					},
+				},
+				{
+					Name:    common.PodSecurityPolicyAddonName,
+					Enabled: to.BoolPtr(true),
 				},
 			},
 		},
@@ -3860,7 +3939,7 @@ func TestSetAddonsConfig(t *testing.T) {
 						"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
 						"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
 						"systemStatsMonitor":  "/config/system-stats-monitor.json",
-						"versionLabel":        "v0.8.1",
+						"versionLabel":        "v0.8.2",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
@@ -4028,21 +4107,76 @@ func TestSetAddonsConfig(t *testing.T) {
 							},
 							ClusterSubnet: DefaultKubernetesSubnet,
 							ProxyMode:     KubeProxyModeIPTables,
-							NetworkPlugin: NetworkPluginAzure,
+							NetworkPlugin: NetworkPluginAntrea,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr":      DefaultKubernetesServiceCIDR,
+										"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+										"installCniCmd":    common.AntreaDefaultInstallCniCmd,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 			isUpgrade: false,
-			expectedAddons: concatenateDefaultAddons([]KubernetesAddon{
+			expectedAddons: omitFromAddons([]string{common.IPMASQAgentAddonName, common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
 				{
 					Name:    common.AntreaAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"serviceCidr": DefaultKubernetesServiceCIDR,
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+						"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+						"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 					},
 				},
-			}, "1.15.4"),
+			}, "1.15.4")),
+		},
+		{
+			name: "antrea addon enabled with azure",
+			cs: &ContainerService{
+				Properties: &Properties{
+					OrchestratorProfile: &OrchestratorProfile{
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &KubernetesConfig{
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeMCR,
+							DNSServiceIP:            DefaultKubernetesDNSServiceIP,
+							KubeletConfig: map[string]string{
+								"--cluster-domain": "cluster.local",
+							},
+							ClusterSubnet: DefaultKubernetesSubnet,
+							ProxyMode:     KubeProxyModeIPTables,
+							NetworkPolicy: NetworkPolicyAntrea,
+							NetworkPlugin: NetworkPluginAzure,
+							Addons: []KubernetesAddon{
+								{
+									Name:    common.AntreaAddonName,
+									Enabled: to.BoolPtr(true),
+									Config: map[string]string{
+										"serviceCidr": DefaultKubernetesServiceCIDR,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			isUpgrade: false,
+			expectedAddons: omitFromAddons([]string{common.AzureCNINetworkMonitorAddonName}, concatenateDefaultAddons([]KubernetesAddon{
+				{
+					Name:    common.AntreaAddonName,
+					Enabled: to.BoolPtr(true),
+					Config: map[string]string{
+						"trafficEncapMode": common.AntreaNetworkPolicyOnlyMode,
+						"installCniCmd":    common.AntreaInstallCniChainCmd,
+						"serviceCidr":      DefaultKubernetesServiceCIDR,
+					},
+				},
+			}, "1.15.4")),
 		},
 		{
 			name: "addons with IPv6 single stack",
@@ -4410,7 +4544,6 @@ func TestSetAddonsConfig(t *testing.T) {
 			t.Parallel()
 			test.cs.setAddonsConfig(test.isUpgrade)
 			for _, addonName := range []string{
-				common.HeapsterAddonName,
 				common.TillerAddonName,
 				common.ACIConnectorAddonName,
 				common.ClusterAutoscalerAddonName,
@@ -4438,6 +4571,7 @@ func TestSetAddonsConfig(t *testing.T) {
 				common.PodSecurityPolicyAddonName,
 				common.AADAdminGroupAddonName,
 				common.SecretsStoreCSIDriverAddonName,
+				common.AntreaAddonName,
 			} {
 				addon := test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons[getAddonsIndexByName(test.cs.Properties.OrchestratorProfile.KubernetesConfig.Addons, addonName)]
 				if addon.IsEnabled() {
@@ -4902,6 +5036,20 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 		imageBase = kubernetesImageBase
 	}
 	k8sComponentsByVersionMap := GetK8sComponentsByVersionMap(&KubernetesConfig{KubernetesImageBaseType: kubernetesImageBaseType})
+	metricsServerAddon := KubernetesAddon{
+		Name:    common.MetricsServerAddonName,
+		Enabled: to.BoolPtr(true),
+		Mode:    AddonModeEnsureExists,
+		Containers: []KubernetesContainerSpec{
+			{
+				Name:  common.MetricsServerAddonName,
+				Image: imageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
+			},
+		},
+	}
+	if common.IsKubernetesVersionGe(version, "1.16.0") {
+		metricsServerAddon.Mode = AddonModeReconcile
+	}
 	addons := []KubernetesAddon{
 		{
 			Name:    common.BlobfuseFlexVolumeAddonName,
@@ -4931,16 +5079,7 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 				},
 			},
 		},
-		{
-			Name:    common.MetricsServerAddonName,
-			Enabled: to.BoolPtr(true),
-			Containers: []KubernetesContainerSpec{
-				{
-					Name:  common.MetricsServerAddonName,
-					Image: imageBase + k8sComponentsByVersionMap[version][common.MetricsServerAddonName],
-				},
-			},
-		},
+		metricsServerAddon,
 		{
 			Name:    common.IPMASQAgentAddonName,
 			Enabled: to.BoolPtr(true),
@@ -4965,8 +5104,12 @@ func getDefaultAddons(version, kubernetesImageBase, kubernetesImageBaseType stri
 			Enabled: to.BoolPtr(true),
 			Containers: []KubernetesContainerSpec{
 				{
-					Name:  common.AzureCNINetworkMonitorAddonName,
-					Image: specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					Name:           common.AzureCNINetworkMonitorAddonName,
+					Image:          specConfig.AzureCNIImageBase + k8sComponentsByVersionMap[version][common.AzureCNINetworkMonitorAddonName],
+					CPURequests:    "30m",
+					MemoryRequests: "25Mi",
+					CPULimits:      "200m",
+					MemoryLimits:   "256Mi",
 				},
 			},
 		},
@@ -5093,25 +5236,13 @@ func TestKubeProxyImageSuffix(t *testing.T) {
 	}{
 		{
 			name:       "return empty string if target cloud is NOT Azure Stack",
-			cs:         getMockBaseContainerService("1.16.0"),
-			azurestack: false,
-			expected:   "",
-		},
-		{
-			name:       "return empty string if target cloud is NOT Azure Stack",
 			cs:         getMockBaseContainerService("1.17.0"),
 			azurestack: false,
 			expected:   "",
 		},
 		{
-			name:       "return empty string if target version is v1.17 or greater",
+			name:       "return '-azs' if target cloud is Azure Stack",
 			cs:         getMockBaseContainerService("1.17.0"),
-			azurestack: true,
-			expected:   "",
-		},
-		{
-			name:       "return '-azs' if target cloud is Azure Stack and K8s version lower than v1.17",
-			cs:         getMockBaseContainerService("1.16.0"),
 			azurestack: true,
 			expected:   common.AzureStackSuffix,
 		},

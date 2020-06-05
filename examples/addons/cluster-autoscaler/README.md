@@ -13,7 +13,7 @@ The remaining documentation below will assume all node pools are VMSS.
 
 # Example
 
-Here's a simple example of a cluster configuration (api model) that includes the cluster-autoscaler addon:
+Here's a simple example of a cluster configuration (API model) that includes the cluster-autoscaler addon:
 
 ```json
 {
@@ -227,7 +227,7 @@ By default we set the mode to `"EnsureExists"` so that you are able to continous
 
 If you are already running a cluster built via `aks-engine` v0.43._n_ or earlier with the AKS Engine-provided `cluster-autoscaler` addon enabled, you have been running a cluster-autoscaler configuration that is only aware of the first VMSS node pool in your cluster. If you run `aks-engine upgrade` against the cluster using `aks-engine` v0.44._n_ or later, the `cluster-autoscaler` addon configuration will be automatically updated to the current addon spec as outlined above, including per-pool configuration, and with all the documented cluster-autoscaler runtime configuration options (default values will be assigned). The per-pool addon spec update will adhere to the following logic:
 
-- For each additional pool in the cluster, cluster-autoscaler will be configured with a `min-nodes` and `max-nodes` value equal to the pool's `count` value in the api model (i.e., the number of current nodes in the pool)
+- For each additional pool in the cluster, cluster-autoscaler will be configured with a `min-nodes` and `max-nodes` value equal to the pool's `count` value in the API model (i.e., the number of current nodes in the pool)
 
 The above logic essentially engages cluster-autoscaler against these node pools, but configures the scaling mechanism not to scale up or down, assuming the number of nodes in the pool stays static over time. To maintain the `cluster-autoscaler` configuration over time, you may administer its configuration via `kubectl edit deployment cluster-autoscaler -n kube-system`. For per-pool configuration, look for the `--nodes=` lines that correlate with the specific pool. To remove cluster-autoscaler enforcement entirely from those pools, simply remove the line with the `--nodes=` reference to the pool you wish to no longer use with cluster-autoscaler. To modify the min and max values, simply change the integer values in that line that correlate to min/max. E.g.:
 

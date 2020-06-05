@@ -5,7 +5,7 @@ This guide explains how to set up your environment for development on AKS Engine
 ## Prerequisites
 
 - [`git`](https://git-scm.com/)
-- [`go`](https://golang.org/dl) 1.13
+- [`go`](https://golang.org/dl) 1.14.2 or later
 - [`dep`](https://github.com/golang/dep) 0.5.1 or later
 - An [Azure](https://azure.microsoft.com/en-us/) subscription
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
@@ -38,13 +38,15 @@ Or on Windows (ensure Docker is configured for Linux containers on Windows):
 powershell ./makedev.ps1
 ```
 
-This make target mounts the `aks-engine` source directory as a volume into the Docker container, which means you can edit your source code in your favorite editor on your machine, while still being able to compile and test inside of the Docker container. This environment mirrors the environment used in the AKS Engine continuous integration (CI) system.
+This make target mounts the AKS Engine source directory as a volume into the Docker container, which means you can edit your source code in your favorite editor on your machine, while still being able to compile and test inside of the Docker container. This environment mirrors the environment used in the AKS Engine continuous integration (CI) system.
 
 When `make dev` completes, you will be left at a command prompt inside a Docker container.
 
 Run the following commands to pull the latest dependencies and build the `aks-engine` tool.
 
 ```sh
+# set up the hack/tools directory for your platform
+make -C hack/tools clean install
 # install and download build dependencies
 make bootstrap
 # build the `aks-engine` binary
@@ -60,15 +62,17 @@ Usage:
   aks-engine [command]
 
 Available Commands:
+  addpool       Add a node pool to an existing AKS Engine-created Kubernetes cluster
   completion    Generates bash completion scripts
   deploy        Deploy an Azure Resource Manager template
   generate      Generate an Azure Resource Manager template
+  get-logs      Collect logs and current cluster nodes configuration.
   get-versions  Display info about supported Kubernetes versions
   help          Help about any command
-  rotate-certs  Rotate certificates on an existing Kubernetes cluster
-  scale         Scale an existing Kubernetes cluster
-  upgrade       Upgrade an existing Kubernetes cluster
-  version       Print the version of AKS Engine
+  rotate-certs  Rotate certificates on an existing AKS Engine-created Kubernetes cluster
+  scale         Scale an existing AKS Engine-created Kubernetes cluster
+  upgrade       Upgrade an existing AKS Engine-created Kubernetes cluster
+  version       Print the version of aks-engine
 
 Flags:
       --debug                enable verbose debug logs
@@ -78,13 +82,13 @@ Flags:
 Use "aks-engine [command] --help" for more information about a command.
 ```
 
-[Here is a reference to the information on Kubernetes cluster upgrade.](https://github.com/Azure/aks-engine/blob/master/examples/k8s-upgrade/README.md)
-
 [Here's a quick demo video showing the dev/build/test cycle with this setup.](https://www.youtube.com/watch?v=lc6UZmqxQMs)
 
 ### Building on Windows, OSX, and Linux
 
-Building AKS Engine from source has a few requirements for each of the platforms. Download and install the prerequisites for your platform: Windows, Linux, or Mac:
+If the above docker container conveniences don't work for your developer environment, below is per-platform guidance to help you set up your local dev environment manually to build an `aks-engine` binary from source.
+
+Building an `aks-engine` binary from source has a few requirements for each of the platforms. Download and install the prerequisites for your platform: Windows, Linux, or Mac:
 
 #### Windows
 
@@ -134,7 +138,7 @@ Build aks-engine:
 
 ### Structure of the Code
 
-The code for the aks-engine project is organized as follows:
+The code for the AKS Engine project is organized as follows:
 
 - The individual programs are located in `cmd/`. Code inside of `cmd/`
   is not designed for library re-use.
@@ -190,39 +194,30 @@ Unit tests may be run locally via `make test`.
 
 ### End-to-end Tests
 
-End-to-end tests for Kubernetes may be run
-via `make test-kubernetes`.  The test process can optionally
-deploy and tear down a cluster as part of the test (this is enabled by default).
-You'll need access to an Azure subscription, as well as at least the following
-environment variables to be set:
+AKS Engine maintains its own E2E test implementation (see the `test/e2e/` source directory) to validate Kubernetes on Azure functionality from AKS Engine source.
 
-* `CLIENT_ID`: "name" field (a URL) from an Azure service principal
-* `CLIENT_SECRET`: "password" field from an Azure service principal
-* `SUBSCRIPTION_ID`: Azure subscription UUID
-* `TENANT_ID`: Azure tenant UUID
+A `make` target convenience is maintained to easily run these tests:
 
-You can set these optional environment variable to configure how the end-to-end tests run
-* `CLUSTER_DEFINITION`: Input apimodel. Defaults to `examples/kubernetes.json`
-* `LOCATION`: Azure region where the resources for the test cluster will be created.
-* `NAME`: Name of an existing cluster to use for testing
-
-The end-to-end tests also require the `k` script from the `scripts/` folder in to
-be in your search $PATH. This ensures that testing uses a `kubectl` client that
-matches the version of the Kubernetes server.
-
-Below is an example command to run end-to-end tests for Kubernetes. Make sure the `NAME` environment variable is not set if you want a new cluster to be deployed.
-```bash
-CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID="<YOUR_SUB_ID>" CLIENT_ID="<YOUR_CLIENT_ID" CLIENT_SECRET="<YOUR_CLIENT_SECRET>" TENANT_ID="<YOUR_TENANT_ID>" LOCATION=<REGION> CLEANUP_ON_EXIT=true make test-kubernetes
+```sh
+$ make test-kubernetes
 ```
+
+In practice, running E2E tests locally requires lots of environmental context, in order to tell the E2E runner what kind of cluster configuration you want to test, which tests you may want to run or skip, what level of timeout tolerance to permit, and many other runtime-configurable options that express the exact test criteria you intend to validate. A real-world E2E invocation may look this this instead:
+
+```sh
+$ ORCHESTRATOR_RELEASE=1.18 CLUSTER_DEFINITION=examples/kubernetes.json SUBSCRIPTION_ID=$TEST_AZURE_SUB_ID CLIENT_ID=$TEST_AZURE_SP_ID CLIENT_SECRET=$TEST_AZURE_SP_PW TENANT_ID=$TEST_AZURE_TENANT_ID LOCATION=$TEST_AZURE_REGION CLEANUP_ON_EXIT=false make test-kubernetes
+```
+
+Thorough guidance around effectively running E2E tests to validate source code changes can be found [here](running-tests.md).
 
 ### Debugging
 
-To debug `aks-engine` code directly, use the [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go)
+To debug AKS Engine code directly, use the [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go)
 for Visual Studio Code or use [Delve](https://github.com/go-delve/delve) at the command line.
 
 #### Visual Studio Code
 
-To debug `aks-engine` with [VS Code](https://code.visualstudio.com/), first ensure that you have the
+To debug AKS Engine with [VS Code](https://code.visualstudio.com/), first ensure that you have the
 [Go extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.Go) installed. Click
 the "Extensions" icon in the Activity Bar (on the far left), search for "go", then install the
 official Microsoft extension titled "Rich Go language support for Visual Studio Code."
@@ -233,8 +228,7 @@ Once installed, the Go extension will `go get` several helper applications, incl
 debugging support. You can read more about VS Code integration with Delve
 [here](https://github.com/Microsoft/vscode-go/wiki/Debugging-Go-code-using-VS-Code).
 
-Make sure you have the `aks-engine` code checked out to the appropriate location in your `$GOPATH`
-and open that directory in VS Code.
+Open the directory that you checked out the `aks-engine` repo to in VS Code.
 
 ##### Debugging Tests
 
@@ -248,7 +242,7 @@ To the right of "run test" appears a link saying "debug test": click it!
 
 ##### Debugging AKS Engine
 
-To debug `aks-engine` itself, the default Go debugging configuration in `.vscode/launch.json` needs
+To debug changes to AKS Engine source during active development, the default Go debugging configuration in `.vscode/launch.json` needs
 to be edited. Open that file (or just click the gear-shaped "Open launch.json" icon if you have the
 Debug panel open).
 
@@ -338,7 +332,7 @@ The following steps constitute the AKS Engine CI pipeline:
 
 ## Pull Requests and Generated Code
 
-To make it easier use AKS Engine as a library and to `go get github.com/Azure/aks-engine`, some
+To make it easier use AKS Engine source code as a library and to `go get github.com/Azure/aks-engine`, some
 generated Go code is committed to the repository. Your pull request may need to regenerate those
 files before it will pass the required `make ensure-generated` step.
 

@@ -7,6 +7,7 @@ TMP_BASENAME=$(basename ${TMP_DIR})
 GOPATH="/go"
 WORK_DIR="/aks-engine"
 MASTER_VM_UPGRADE_SKU="${MASTER_VM_UPGRADE_SKU:-Standard_D4_v3}"
+AZURE_ENV="${AZURE_ENV:-AzurePublicCloud}"
 mkdir -p _output || exit 1
 
 # Assumes we're running from the git root of aks-engine
@@ -71,6 +72,7 @@ fi
 
 docker run --rm \
 -v $(pwd):${WORK_DIR} \
+-v /etc/ssl/certs:/etc/ssl/certs \
 -w ${WORK_DIR} \
 -e CLUSTER_DEFINITION=${TMP_BASENAME}/apimodel-input.json \
 -e CLIENT_ID="${AZURE_CLIENT_ID}" \
@@ -110,6 +112,23 @@ docker run --rm \
 -e GINKGO_FAIL_FAST=true \
 -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
 -e GINKGO_SKIP="${GINKGO_SKIP}" \
+-e API_PROFILE="${API_PROFILE}" \
+-e CUSTOM_CLOUD_NAME="${ENVIRONMENT_NAME}" \
+-e IDENTITY_SYSTEM="${IDENTITY_SYSTEM}" \
+-e AUTHENTICATION_METHOD="${AUTHENTICATION_METHOD}" \
+-e LOCATION="${LOCATION}" \
+-e CUSTOM_CLOUD_CLIENT_ID="${CUSTOM_CLOUD_CLIENT_ID}" \
+-e CUSTOM_CLOUD_SECRET="${CUSTOM_CLOUD_SECRET}" \
+-e PORTAL_ENDPOINT="${PORTAL_ENDPOINT}" \
+-e SERVICE_MANAGEMENT_ENDPOINT="${SERVICE_MANAGEMENT_ENDPOINT}" \
+-e RESOURCE_MANAGER_ENDPOINT="${RESOURCE_MANAGER_ENDPOINT}" \
+-e STORAGE_ENDPOINT_SUFFIX="${STORAGE_ENDPOINT_SUFFIX}" \
+-e KEY_VAULT_DNS_SUFFIX="${KEY_VAULT_DNS_SUFFIX}" \
+-e ACTIVE_DIRECTORY_ENDPOINT="${ACTIVE_DIRECTORY_ENDPOINT}" \
+-e GALLERY_ENDPOINT="${GALLERY_ENDPOINT}" \
+-e GRAPH_ENDPOINT="${GRAPH_ENDPOINT}" \
+-e SERVICE_MANAGEMENT_VM_DNS_SUFFIX="${SERVICE_MANAGEMENT_VM_DNS_SUFFIX}" \
+-e RESOURCE_MANAGER_VM_DNS_SUFFIX="${RESOURCE_MANAGER_VM_DNS_SUFFIX}" \
 "${DEV_IMAGE}" make test-kubernetes || exit 1
 
 if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n "$ADD_NODE_POOL_INPUT" ] || [ "${GET_CLUSTER_LOGS}" = "true" ]; then
@@ -123,7 +142,11 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
     /bin/bash -c "chmod -R 777 _output/$RESOURCE_GROUP _output/$RESOURCE_GROUP/apimodel.json" || exit 1
   # shellcheck disable=SC2012
   REGION=$(ls -dt1 _output/* | head -n 1 | cut -d/ -f2 | cut -d- -f2)
-
+  API_SERVER="$RESOURCE_GROUP.$REGION.cloudapp.azure.com"
+  if [ "${AZURE_ENV}" = "AzureStackCloud" ]; then
+    API_SERVER="$RESOURCE_GROUP.$REGION.$RESOURCE_MANAGER_VM_DNS_SUFFIX"
+  fi
+  
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
       docker run --rm \
       -v $(pwd):${WORK_DIR} \
@@ -134,7 +157,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
       ./bin/aks-engine get-logs \
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
-      --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+      --ssh-host $API_SERVER \
       --linux-ssh-private-key _output/$RESOURCE_GROUP-ssh \
       --linux-script ./scripts/collect-logs.sh
       # TODO remove --linux-script once collect-logs.sh is part of the VHD
@@ -168,11 +191,13 @@ fi
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
     ${DEV_IMAGE} \
     ./bin/aks-engine addpool \
+    --azure-env ${AZURE_ENV} \
     --subscription-id ${AZURE_SUBSCRIPTION_ID} \
     --api-model _output/$RESOURCE_GROUP/apimodel.json \
     --node-pool ${TMP_BASENAME}/addpool-input.json \
@@ -189,6 +214,7 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
     -w ${WORK_DIR} \
     -e CLIENT_ID=${AZURE_CLIENT_ID} \
     -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
@@ -211,6 +237,23 @@ if [ -n "$ADD_NODE_POOL_INPUT" ]; then
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_ADD_POOL} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
+    -e API_PROFILE="${API_PROFILE}" \
+    -e CUSTOM_CLOUD_NAME="${ENVIRONMENT_NAME}" \
+    -e IDENTITY_SYSTEM="${IDENTITY_SYSTEM}" \
+    -e AUTHENTICATION_METHOD="${AUTHENTICATION_METHOD}" \
+    -e LOCATION="${LOCATION}" \
+    -e CUSTOM_CLOUD_CLIENT_ID="${CUSTOM_CLOUD_CLIENT_ID}" \
+    -e CUSTOM_CLOUD_SECRET="${CUSTOM_CLOUD_SECRET}" \
+    -e PORTAL_ENDPOINT="${PORTAL_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_ENDPOINT="${SERVICE_MANAGEMENT_ENDPOINT}" \
+    -e RESOURCE_MANAGER_ENDPOINT="${RESOURCE_MANAGER_ENDPOINT}" \
+    -e STORAGE_ENDPOINT_SUFFIX="${STORAGE_ENDPOINT_SUFFIX}" \
+    -e KEY_VAULT_DNS_SUFFIX="${KEY_VAULT_DNS_SUFFIX}" \
+    -e ACTIVE_DIRECTORY_ENDPOINT="${ACTIVE_DIRECTORY_ENDPOINT}" \
+    -e GALLERY_ENDPOINT="${GALLERY_ENDPOINT}" \
+    -e GRAPH_ENDPOINT="${GRAPH_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_VM_DNS_SUFFIX="${SERVICE_MANAGEMENT_VM_DNS_SUFFIX}" \
+    -e RESOURCE_MANAGER_VM_DNS_SUFFIX="${RESOURCE_MANAGER_VM_DNS_SUFFIX}" \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
@@ -218,16 +261,18 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   for nodepool in $(jq -r  '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
       -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
       ./bin/aks-engine scale \
+      --azure-env ${AZURE_ENV} \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
       --resource-group $RESOURCE_GROUP \
-      --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+      --apiserver $API_SERVER \
       --node-pool $nodepool \
       --new-node-count 1 \
       --auth-method client_secret \
@@ -237,6 +282,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
     -w ${WORK_DIR} \
     -e CLIENT_ID=${AZURE_CLIENT_ID} \
     -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
@@ -259,6 +305,23 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_DOWN} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
+    -e API_PROFILE="${API_PROFILE}" \
+    -e CUSTOM_CLOUD_NAME="${ENVIRONMENT_NAME}" \
+    -e IDENTITY_SYSTEM="${IDENTITY_SYSTEM}" \
+    -e AUTHENTICATION_METHOD="${AUTHENTICATION_METHOD}" \
+    -e LOCATION="${LOCATION}" \
+    -e CUSTOM_CLOUD_CLIENT_ID="${CUSTOM_CLOUD_CLIENT_ID}" \
+    -e CUSTOM_CLOUD_SECRET="${CUSTOM_CLOUD_SECRET}" \
+    -e PORTAL_ENDPOINT="${PORTAL_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_ENDPOINT="${SERVICE_MANAGEMENT_ENDPOINT}" \
+    -e RESOURCE_MANAGER_ENDPOINT="${RESOURCE_MANAGER_ENDPOINT}" \
+    -e STORAGE_ENDPOINT_SUFFIX="${STORAGE_ENDPOINT_SUFFIX}" \
+    -e KEY_VAULT_DNS_SUFFIX="${KEY_VAULT_DNS_SUFFIX}" \
+    -e ACTIVE_DIRECTORY_ENDPOINT="${ACTIVE_DIRECTORY_ENDPOINT}" \
+    -e GALLERY_ENDPOINT="${GALLERY_ENDPOINT}" \
+    -e GRAPH_ENDPOINT="${GRAPH_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_VM_DNS_SUFFIX="${SERVICE_MANAGEMENT_VM_DNS_SUFFIX}" \
+    -e RESOURCE_MANAGER_VM_DNS_SUFFIX="${RESOURCE_MANAGER_VM_DNS_SUFFIX}" \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi
 
@@ -280,11 +343,13 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
   for ver_target in $UPGRADE_VERSIONS; do
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
       -w ${WORK_DIR} \
       -e RESOURCE_GROUP=$RESOURCE_GROUP \
       -e REGION=$REGION \
       ${DEV_IMAGE} \
       ./bin/aks-engine upgrade --force \
+      --azure-env ${AZURE_ENV} \
       --subscription-id ${AZURE_SUBSCRIPTION_ID} \
       --api-model _output/$RESOURCE_GROUP/apimodel.json \
       --location $REGION \
@@ -297,6 +362,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
 
     docker run --rm \
       -v $(pwd):${WORK_DIR} \
+      -v /etc/ssl/certs:/etc/ssl/certs \
       -w ${WORK_DIR} \
       -e CLIENT_ID=${AZURE_CLIENT_ID} \
       -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
@@ -319,6 +385,23 @@ if [ "${UPGRADE_CLUSTER}" = "true" ]; then
       -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
       -e SKIP_TEST=${SKIP_TESTS_AFTER_UPGRADE} \
       -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
+      -e API_PROFILE="${API_PROFILE}" \
+      -e CUSTOM_CLOUD_NAME="${ENVIRONMENT_NAME}" \
+      -e IDENTITY_SYSTEM="${IDENTITY_SYSTEM}" \
+      -e AUTHENTICATION_METHOD="${AUTHENTICATION_METHOD}" \
+      -e LOCATION="${LOCATION}" \
+      -e CUSTOM_CLOUD_CLIENT_ID="${CUSTOM_CLOUD_CLIENT_ID}" \
+      -e CUSTOM_CLOUD_SECRET="${CUSTOM_CLOUD_SECRET}" \
+      -e PORTAL_ENDPOINT="${PORTAL_ENDPOINT}" \
+      -e SERVICE_MANAGEMENT_ENDPOINT="${SERVICE_MANAGEMENT_ENDPOINT}" \
+      -e RESOURCE_MANAGER_ENDPOINT="${RESOURCE_MANAGER_ENDPOINT}" \
+      -e STORAGE_ENDPOINT_SUFFIX="${STORAGE_ENDPOINT_SUFFIX}" \
+      -e KEY_VAULT_DNS_SUFFIX="${KEY_VAULT_DNS_SUFFIX}" \
+      -e ACTIVE_DIRECTORY_ENDPOINT="${ACTIVE_DIRECTORY_ENDPOINT}" \
+      -e GALLERY_ENDPOINT="${GALLERY_ENDPOINT}" \
+      -e GRAPH_ENDPOINT="${GRAPH_ENDPOINT}" \
+      -e SERVICE_MANAGEMENT_VM_DNS_SUFFIX="${SERVICE_MANAGEMENT_VM_DNS_SUFFIX}" \
+      -e RESOURCE_MANAGER_VM_DNS_SUFFIX="${RESOURCE_MANAGER_VM_DNS_SUFFIX}" \
       ${DEV_IMAGE} make test-kubernetes || exit 1
   done
 fi
@@ -327,16 +410,18 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
   for nodepool in $(jq -r '.properties.agentPoolProfiles[].name' < _output/$RESOURCE_GROUP/apimodel.json); do
     docker run --rm \
     -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
     -w ${WORK_DIR} \
     -e RESOURCE_GROUP=$RESOURCE_GROUP \
     -e REGION=$REGION \
     ${DEV_IMAGE} \
     ./bin/aks-engine scale \
+    --azure-env ${AZURE_ENV} \
     --subscription-id ${AZURE_SUBSCRIPTION_ID} \
     --api-model _output/$RESOURCE_GROUP/apimodel.json \
     --location $REGION \
     --resource-group $RESOURCE_GROUP \
-    --apiserver "$RESOURCE_GROUP.$REGION.cloudapp.azure.com" \
+    --apiserver $API_SERVER \
     --node-pool $nodepool \
     --new-node-count $NODE_COUNT \
     --auth-method client_secret \
@@ -346,6 +431,7 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
 
   docker run --rm \
     -v $(pwd):${WORK_DIR} \
+    -v /etc/ssl/certs:/etc/ssl/certs \
     -w ${WORK_DIR} \
     -e CLIENT_ID=${AZURE_CLIENT_ID} \
     -e CLIENT_SECRET=${AZURE_CLIENT_SECRET} \
@@ -368,5 +454,22 @@ if [ "${SCALE_CLUSTER}" = "true" ]; then
     -e GINKGO_FOCUS="${GINKGO_FOCUS}" \
     -e SKIP_TEST=${SKIP_TESTS_AFTER_SCALE_UP} \
     -e ADD_NODE_POOL_INPUT=${ADD_NODE_POOL_INPUT} \
+    -e API_PROFILE="${API_PROFILE}" \
+    -e CUSTOM_CLOUD_NAME="${ENVIRONMENT_NAME}" \
+    -e IDENTITY_SYSTEM="${IDENTITY_SYSTEM}" \
+    -e AUTHENTICATION_METHOD="${AUTHENTICATION_METHOD}" \
+    -e LOCATION="${LOCATION}" \
+    -e CUSTOM_CLOUD_CLIENT_ID="${CUSTOM_CLOUD_CLIENT_ID}" \
+    -e CUSTOM_CLOUD_SECRET="${CUSTOM_CLOUD_SECRET}" \
+    -e PORTAL_ENDPOINT="${PORTAL_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_ENDPOINT="${SERVICE_MANAGEMENT_ENDPOINT}" \
+    -e RESOURCE_MANAGER_ENDPOINT="${RESOURCE_MANAGER_ENDPOINT}" \
+    -e STORAGE_ENDPOINT_SUFFIX="${STORAGE_ENDPOINT_SUFFIX}" \
+    -e KEY_VAULT_DNS_SUFFIX="${KEY_VAULT_DNS_SUFFIX}" \
+    -e ACTIVE_DIRECTORY_ENDPOINT="${ACTIVE_DIRECTORY_ENDPOINT}" \
+    -e GALLERY_ENDPOINT="${GALLERY_ENDPOINT}" \
+    -e GRAPH_ENDPOINT="${GRAPH_ENDPOINT}" \
+    -e SERVICE_MANAGEMENT_VM_DNS_SUFFIX="${SERVICE_MANAGEMENT_VM_DNS_SUFFIX}" \
+    -e RESOURCE_MANAGER_VM_DNS_SUFFIX="${RESOURCE_MANAGER_VM_DNS_SUFFIX}" \
     ${DEV_IMAGE} make test-kubernetes || exit 1
 fi

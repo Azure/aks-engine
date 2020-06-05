@@ -102,10 +102,10 @@ func (gc *generateCmd) validate(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
 			gc.apimodelPath = args[0]
 		} else if len(args) > 1 {
-			cmd.Usage()
+			_ = cmd.Usage()
 			return errors.New("too many arguments were provided to 'generate'")
 		} else {
-			cmd.Usage()
+			_ = cmd.Usage()
 			return errors.New("--api-model was not supplied, nor was one specified as a positional argument")
 		}
 	}
@@ -132,7 +132,7 @@ func (gc *generateCmd) mergeAPIModel() error {
 			return errors.Wrap(err, "error merging --set values with the api model")
 		}
 
-		log.Infoln(fmt.Sprintf("new api model file has been generated during merge: %s", gc.apimodelPath))
+		log.Infoln(fmt.Sprintf("new API model file has been generated during merge: %s", gc.apimodelPath))
 	}
 
 	return nil

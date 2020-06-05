@@ -52,8 +52,8 @@ type addPoolCmd struct {
 
 const (
 	addPoolName             = "addpool"
-	addPoolShortDescription = "Add a node pool to an existing Kubernetes cluster"
-	addPoolLongDescription  = "Add a node pool to an existing Kubernetes cluster by referencing a new agentpoolProfile spec"
+	addPoolShortDescription = "Add a node pool to an existing AKS Engine-created Kubernetes cluster"
+	addPoolLongDescription  = "Add a node pool to an existing AKS Engine-created Kubernetes cluster by referencing a new agentpoolProfile spec"
 )
 
 // newAddPoolCmd run a command to add an agent pool to a Kubernetes cluster
@@ -88,24 +88,24 @@ func (apc *addPoolCmd) validate(cmd *cobra.Command) error {
 	}
 
 	if apc.resourceGroupName == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--resource-group must be specified")
 	}
 
 	if apc.location == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--location must be specified")
 	}
 
 	apc.location = helpers.NormalizeAzureRegion(apc.location)
 
 	if apc.apiModelPath == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--api-model must be specified")
 	}
 
 	if apc.nodePoolPath == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--nodepool must be specified")
 	}
 	return nil
@@ -144,7 +144,9 @@ func (apc *addPoolCmd) load() error {
 	}
 
 	if apc.containerService.Properties.IsCustomCloudProfile() {
-		writeCustomCloudProfile(apc.containerService)
+		if err = writeCustomCloudProfile(apc.containerService); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
 		if err = apc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
 		}

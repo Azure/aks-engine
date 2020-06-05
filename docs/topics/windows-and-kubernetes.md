@@ -4,7 +4,7 @@ If you're trying to deploy Kubernetes with Windows the first time, be sure to ch
 
 ## Customizing Windows deployments
 
-AKS Engine allows a lot more customizations available in the [docs](../), but here are a few important ones you should know for Windows deployments. Each of these are extra parameters you can add into the AKS Engine apimodel file (such as `kubernetes-windows.json` from the quick start) before running `aks-engine generate`.
+AKS Engine allows a lot more customizations available in the [docs](../), but here are a few important ones you should know for Windows deployments. Each of these are extra parameters you can add into the AKS Engine API model file (such as `kubernetes-windows.json` from the quick start) before running `aks-engine generate`.
 
 ### Changing the OS disk size
 
@@ -63,6 +63,21 @@ If you want to disable automatic Windows updates, you can use the `enableAutomat
             "windowsOffer": "WindowsServerSemiAnnual",
             "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
             "enableAutomaticUpdates": false
+     },
+```
+
+### Enabling Azure Hybrid Benefit for Windows Server
+
+If you want to enable [Azure hybrid benefit for Windows server](https://docs.microsoft.com/azure/virtual-machines/virtual-machines-windows-hybrid-use-benefit-licensing?toc=%2fazure%2fvirtual-machines%2fwindows%2ftoc.json), you can use the `enableAHUB` option.
+
+```json
+"windowsProfile": {
+            "adminUsername": "azureuser",
+            "adminPassword": "...",
+            "windowsPublisher": "MicrosoftWindowsServer",
+            "windowsOffer": "WindowsServerSemiAnnual",
+            "windowsSku": "Datacenter-Core-1809-with-Containers-smalldisk",
+            "enableAHUB": true
      },
 ```
 
@@ -232,7 +247,7 @@ spec:
           - "$i=0; while ($true) { Start-Sleep -Seconds 10; $msg = 'Hello from the servercore container, count is {0}' -f $i; Set-Content -Path C:\\poddata\\iisstart.htm -Value $msg; $i++; }"
 
       nodeSelector:
-        beta.kubernetes.io/os: windows
+        kubernetes.io/os: windows
 ```
 
 ## Troubleshooting
@@ -345,7 +360,7 @@ Workaround:
 
 #### Pods cannot ping default route or internet IPs
 
-Affects: All clusters deployed by aks-engine
+Affects: All clusters created by AKS Engine
 
 ICMP traffic is not routed between private Azure vNETs or to the internet.
 

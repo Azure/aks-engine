@@ -1,0 +1,10 @@
+[Unit]
+Description=Untaint nodes when pre-scheduling conditions are fulfilled
+After=kubelet.service
+[Service]
+Restart=always
+RestartSec=60
+ExecStart=/bin/bash /opt/azure/containers/untaint-nodes.sh
+[Install]
+WantedBy=multi-user.target
+#EOF

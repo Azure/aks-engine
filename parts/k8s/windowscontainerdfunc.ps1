@@ -31,13 +31,21 @@ function Install-Containerd {
     [Parameter(Mandatory = $true)][string]
     $CNIConfDir
   )
+
+  $svc = Get-Service -Name containerd -ErrorAction SilentlyContinue
+  if ($null -ne $svc) {
+    Write-Log "Stoping containerd service"
+    $svc | Stop-Service
+  }
+
+  # TODO: check if containerd is already installed and is the same version before this.
   $zipfile = [Io.path]::Combine($ENV:TEMP, "containerd.zip")
   DownloadFileOverHttp -Url $ContainerdUrl -DestinationPath $zipfile
-  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation
+  Expand-Archive -path $zipfile -DestinationPath $global:ContainerdInstallLocation -Force
   del $zipfile
 
   Add-SystemPathEntry $global:ContainerdInstallLocation
-    
+
   # TODO: remove if the node comes up without this code
   # $configDir = [Io.Path]::Combine($ENV:ProgramData, "containerd")
   # if (-Not (Test-Path $configDir)) {
@@ -46,6 +54,9 @@ function Install-Containerd {
 
   # TODO: call containerd.exe dump config, then modify instead of starting with hardcoded
   $configFile = [Io.Path]::Combine($global:ContainerdInstallLocation, "config.toml")
+
+  $clusterConfig = ConvertFrom-Json ((Get-Content $global:KubeClusterConfigPath -ErrorAction Stop) | Out-String)
+  $pauseImage = $clusterConfig.Cri.Images.Pause
 
   @"
 version = 2
@@ -103,7 +114,7 @@ oom_score = 0
     stream_server_port = "0"
     stream_idle_timeout = "4h0m0s"
     enable_selinux = false
-    sandbox_image = "mcr.microsoft.com/k8s/core/pause:1.2.0"
+    sandbox_image = "$pauseImage"
     stats_collect_period = 10
     systemd_cgroup = false
     enable_tls_streaming = false
@@ -152,6 +163,6 @@ oom_score = 0
   [plugins."io.containerd.service.v1.diff-service"]
     default = ["windows", "windows-lcow"]
 "@ | Out-File -Encoding ascii $configFile
+
   RegisterContainerDService
-    
 }

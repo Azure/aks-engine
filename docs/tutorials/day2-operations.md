@@ -9,14 +9,14 @@ The steps listed on this page describe a way to modify a running Kubernetes clus
 These are the common steps (unless described otherwise) you'll have to run after modifying an existing `apimodel.json` file.
 
 * Modify the apimodel.json file located in the `_output/<clustername>` folder
-* Run `aks-engine generate --api-model _output/<clustername>/apimodel.json`. This wil update the `azuredeploy*` files needed for the new ARM deployment. These files are also located in the `_output` folder.
+* Run `aks-engine generate --api-model _output/<clustername>/apimodel.json`. This will update the `azuredeploy*` files needed for the new ARM deployment. These files are also located in the `_output` folder.
 * Apply the changes by manually starting an ARM deployment. From within the  `_output/<clustername>` run
 
-        az group deployment create --template-file azuredeploy.json --parameters azuredeploy.parameters.json --resource-group "<my-resource-group>"
+        az deployment group create --template-file azuredeploy.json --parameters azuredeploy.parameters.json --resource-group "<my-resource-group>"
 
   To use the `az` CLI tools you have to login. More info can be found here: https://docs.microsoft.com/en-us/cli/azure/authenticate-azure-cli?view=azure-cli-latest
 
-  _Note: I use `az group deployment` instead of `aks-engine deploy` because the latter seems to assume you are deploying a new cluster and as a result overwriting you private ssh keys located in the _ouput folder_
+  _Note: I use `az deployment group` instead of `aks-engine deploy` because the latter seems to assume you are deploying a new cluster and as a result overwriting your private ssh keys located in the _ouput folder_
 
 * Grab a coffee
 * Profit!

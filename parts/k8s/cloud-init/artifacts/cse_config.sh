@@ -5,6 +5,9 @@ PRIVATE_IP=$(hostname -I | cut -d' ' -f1)
 ETCD_PEER_URL="https://${PRIVATE_IP}:2380"
 ETCD_CLIENT_URL="https://${PRIVATE_IP}:2379"
 KUBECTL="/usr/local/bin/kubectl --kubeconfig=/home/$ADMINUSER/.kube/config"
+ADDONS_DIR=/etc/kubernetes/addons
+POD_SECURITY_POLICY_SPEC=$ADDONS_DIR/pod-security-policy.yaml
+ADDON_MANAGER_SPEC=/etc/kubernetes/manifests/kube-addon-manager.yaml
 
 systemctlEnableAndStart() {
   systemctl_restart 100 5 30 $1
@@ -14,6 +17,20 @@ systemctlEnableAndStart() {
     return 1
   fi
   if ! retrycmd 120 5 25 systemctl enable $1; then
+    return 1
+  fi
+}
+systemctlEtcd() {
+  for i in $(seq 1 60); do
+    timeout 30 systemctl daemon-reload
+    timeout 30 systemctl restart etcd && break ||
+      if [ $i -eq 60 ]; then
+        return 1
+      else
+        sleep 5
+      fi
+  done
+  if ! retrycmd 120 5 25 systemctl enable etcd; then
     return 1
   fi
 }
@@ -84,10 +101,8 @@ configureEtcd() {
     done
   fi
 
-  MOUNT_ETCD_FILE=/opt/azure/containers/mountetcd.sh
-  wait_for_file 1200 1 $MOUNT_ETCD_FILE || exit {{GetCSEErrorCode "ERR_ETCD_CONFIG_FAIL"}}
-  $MOUNT_ETCD_FILE || exit {{GetCSEErrorCode "ERR_ETCD_VOL_MOUNT_FAIL"}}
-  systemctlEnableAndStart etcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
+  chown -R etcd:etcd /var/lib/etcddisk
+  systemctlEtcd || exit {{GetCSEErrorCode "ERR_ETCD_START_TIMEOUT"}}
   for i in $(seq 1 600); do
     MEMBER="$(sudo -E etcdctl member list | grep -E ${NODE_NAME} | cut -d':' -f 1)"
     if [ "$MEMBER" != "" ]; then
@@ -246,23 +261,25 @@ configureCNI() {
 {{end}}
 }
 configureAzureCNI() {
-    if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
-        mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
-        chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
-        if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
-            echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
-        fi
+  if [[ "${NETWORK_PLUGIN}" == "azure" ]]; then
+    mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
+    chmod 600 $CNI_CONFIG_DIR/10-azure.conflist
+    if [[ "${IS_IPV6_DUALSTACK_FEATURE_ENABLED}" == "true" ]]; then
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq '.plugins[0].ipv6Mode="ipv6nat"') > "$CNI_CONFIG_DIR/10-azure.conflist"
+    fi
     if [[ {{GetKubeProxyMode}} == "ipvs" ]]; then
-        serviceCidrs={{GetServiceCidr}}
-        echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
+      serviceCidrs={{GetServiceCidr}}
+      echo $(cat "$CNI_CONFIG_DIR/10-azure.conflist" | jq  --arg serviceCidrs $serviceCidrs '.plugins[0]+={serviceCidrs: $serviceCidrs}') > /etc/cni/net.d/10-azure.conflist
     fi
     if [[ "${NETWORK_POLICY}" == "calico" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+    elif [[ "${NETWORK_POLICY}" == "antrea" ]]; then
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     elif [[ "${NETWORK_POLICY}" == "" || "${NETWORK_POLICY}" == "none" ]] && [[ "${NETWORK_MODE}" == "transparent" ]]; then
-        sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
+      sed -i 's#"mode":"bridge"#"mode":"transparent"#g' $CNI_CONFIG_DIR/10-azure.conflist
     fi
     /sbin/ebtables -t nat --list
-    fi
+  fi
 }
 {{- if NeedsContainerd}}
 installContainerd() {
@@ -278,8 +295,8 @@ installContainerd() {
       exit 25
     fi
     removeContainerd
-    echo "deb [arch=amd64,arm64,armhf] https://packages.microsoft.com/${url_path} testing main" >/tmp/microsoft-prod-testing.list
-    retrycmd 10 5 10 cp /tmp/microsoft-prod-testing.list /etc/apt/sources.list.d/ || exit 25
+    retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/config/ubuntu/${UBUNTU_RELEASE}/prod.list >/tmp/microsoft-prod.list || exit 25
+    retrycmd 10 5 10 cp /tmp/microsoft-prod.list /etc/apt/sources.list.d/ || exit 25
     retrycmd_no_stats 120 5 25 curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor >/tmp/microsoft.gpg || exit 26
     retrycmd 10 5 10 cp /tmp/microsoft.gpg /etc/apt/trusted.gpg.d/ || exit 26
     apt_get_update || exit 99
@@ -289,6 +306,9 @@ installContainerd() {
 ensureContainerd() {
   wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/exec_start.conf || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   wait_for_file 1200 1 /etc/containerd/config.toml || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  {{- if HasKubeReservedCgroup}}
+  wait_for_file 1200 1 /etc/systemd/system/containerd.service.d/kubereserved-slice.conf|| exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  {{- end}}
   systemctlEnableAndStart containerd || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 {{end}}
@@ -298,6 +318,10 @@ ensureDocker() {
   wait_for_file 1200 1 $DOCKER_SERVICE_EXEC_START_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   usermod -aG docker ${ADMINUSER}
   DOCKER_MOUNT_FLAGS_SYSTEMD_FILE=/etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
+  {{- if HasKubeReservedCgroup}}
+  DOCKER_SLICE_FILE=/etc/systemd/system/docker.service.d/kubereserved-slice.conf
+  wait_for_file 1200 1 $DOCKER_SLICE_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  {{- end}}
   DOCKER_JSON_FILE=/etc/docker/daemon.json
   for i in $(seq 1 1200); do
     if [ -s $DOCKER_JSON_FILE ]; then
@@ -340,16 +364,40 @@ ensureKubelet() {
   wait_for_file 1200 1 $KUBECONFIG_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   KUBELET_RUNTIME_CONFIG_SCRIPT_FILE=/opt/azure/containers/kubelet.sh
   wait_for_file 1200 1 $KUBELET_RUNTIME_CONFIG_SCRIPT_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  {{- if HasKubeReservedCgroup}}
+  KUBERESERVED_SLICE_FILE=/etc/systemd/system/{{- GetKubeReservedCgroup -}}.slice
+  wait_for_file 1200 1 $KUBERESERVED_SLICE_FILE || exit {{GetCSEErrorCode "ERR_KUBERESERVED_SLICE_SETUP_FAIL"}}
+  KUBELET_SLICE_FILE=/etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
+  wait_for_file 1200 1 $KUBELET_SLICE_FILE || exit {{GetCSEErrorCode "ERR_KUBELET_SLICE_SETUP_FAIL"}}
+  {{- end}}
   systemctlEnableAndStart kubelet || exit {{GetCSEErrorCode "ERR_KUBELET_START_FAIL"}}
+}
+
+ensureAddons() {
+  retrycmd 120 5 30 $KUBECTL get pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+{{- if not HasCustomPodSecurityPolicy}}
+  retrycmd 120 5 30 $KUBECTL get podsecuritypolicy privileged restricted || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  rm -Rf ${ADDONS_DIR}/init
+{{- end}}
+  wait_for_file 1200 1 $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  sed -i "s|${ADDONS_DIR}/init|${ADDONS_DIR}|g" $ADDON_MANAGER_SPEC || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  {{/* Force re-load all addons because we have changed the source location for addon specs */}}
+  retrycmd 120 5 30 ${KUBECTL} delete pods -l app=kube-addon-manager -n kube-system || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
   {{if HasCiliumNetworkPolicy}}
   while [ ! -f /etc/cni/net.d/05-cilium.conf ]; do
     sleep 3
   done
   {{end}}
   {{if HasAntreaNetworkPolicy}}
-  while [ ! -f /etc/cni/net.d/10-antrea.conf ]; do
-    sleep 3
-  done
+  if [[ "${NETWORK_PLUGIN}" = "azure" ]]; then
+    while ! $(grep -sq "antrea" $CNI_CONFIG_DIR/10-azure.conflist); do
+      sleep 3
+    done
+  else
+    while [ ! -f $CNI_CONFIG_DIR/10-antrea.conflist ]; do
+      sleep 3
+    done
+  fi
   {{end}}
   {{if HasFlannelNetworkPlugin}}
   while [ ! -f /etc/cni/net.d/10-flannel.conf ]; do
@@ -364,6 +412,13 @@ ensureLabelNodes() {
   wait_for_file 1200 1 $LABEL_NODES_SYSTEMD_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   systemctlEnableAndStart label-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
+{{- if IsAADPodIdentityAddonEnabled}}
+ensureTaints() {
+  wait_for_file 1200 1 /opt/azure/containers/untaint-nodes.sh || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  wait_for_file 1200 1 /etc/systemd/system/untaint-nodes.service || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  systemctlEnableAndStart untaint-nodes || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
+}
+{{end}}
 ensureJournal() {
   {
     echo "Storage=persistent"
@@ -414,6 +469,11 @@ createKubeManifestDir() {
 writeKubeConfig() {
   local DIR=/home/$ADMINUSER/.kube
   local FILE=$DIR/config
+{{- if HasBlockOutboundInternet}}
+  local SERVER=https://localhost
+{{else}}
+  local SERVER=$KUBECONFIG_SERVER
+{{- end}}
   mkdir -p $DIR
   touch $FILE
   chown $ADMINUSER:$ADMINUSER $DIR $FILE
@@ -426,7 +486,7 @@ apiVersion: v1
 clusters:
 - cluster:
     certificate-authority-data: \"$CA_CERTIFICATE\"
-    server: $KUBECONFIG_SERVER
+    server: $SERVER
   name: \"$MASTER_FQDN\"
 contexts:
 - context:
@@ -442,11 +502,10 @@ users:
     client-key-data: \"$KUBECONFIG_KEY\"
 " >$FILE
   set -x
-  KUBECTL="$KUBECTL --kubeconfig=$FILE"
 }
 {{- if IsClusterAutoscalerAddonEnabled}}
 configClusterAutoscalerAddon() {
-  CLUSTER_AUTOSCALER_ADDON_FILE=/etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
+  CLUSTER_AUTOSCALER_ADDON_FILE=$ADDONS_DIR/cluster-autoscaler.yaml
   wait_for_file 1200 1 $CLUSTER_AUTOSCALER_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|<clientID>|$(echo $SERVICE_PRINCIPAL_CLIENT_ID | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
   sed -i "s|<clientSec>|$(echo $SERVICE_PRINCIPAL_CLIENT_SECRET | base64)|g" $CLUSTER_AUTOSCALER_ADDON_FILE
@@ -463,7 +522,7 @@ configACIConnectorAddon() {
   ACI_CONNECTOR_KEY=$(base64 /etc/kubernetes/certs/aci-connector-key.pem -w0)
   ACI_CONNECTOR_CERT=$(base64 /etc/kubernetes/certs/aci-connector-cert.pem -w0)
 
-  ACI_CONNECTOR_ADDON_FILE=/etc/kubernetes/addons/aci-connector-deployment.yaml
+  ACI_CONNECTOR_ADDON_FILE=$ADDONS_DIR/aci-connector-deployment.yaml
   wait_for_file 1200 1 $ACI_CONNECTOR_ADDON_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
   sed -i "s|<creds>|$ACI_CONNECTOR_CREDENTIALS|g" $ACI_CONNECTOR_ADDON_FILE
   sed -i "s|<rgName>|$RESOURCE_GROUP|g" $ACI_CONNECTOR_ADDON_FILE
@@ -473,11 +532,10 @@ configACIConnectorAddon() {
 {{end}}
 {{- if IsAzurePolicyAddonEnabled}}
 configAzurePolicyAddon() {
-  AZURE_POLICY_ADDON_FILE=/etc/kubernetes/addons/azure-policy-deployment.yaml
+  AZURE_POLICY_ADDON_FILE=$ADDONS_DIR/azure-policy-deployment.yaml
   sed -i "s|<resourceId>|/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RESOURCE_GROUP|g" $AZURE_POLICY_ADDON_FILE
 }
 {{end}}
-{{- if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 configAddons() {
   {{if IsClusterAutoscalerAddonEnabled}}
   if [[ ${CLUSTER_AUTOSCALER_ADDON} == true ]]; then
@@ -492,8 +550,11 @@ configAddons() {
   {{if IsAzurePolicyAddonEnabled}}
   configAzurePolicyAddon
   {{end}}
+  {{- if not HasCustomPodSecurityPolicy}}
+  wait_for_file 1200 1 $POD_SECURITY_POLICY_SPEC || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
+  mkdir -p $ADDONS_DIR/init && cp $POD_SECURITY_POLICY_SPEC $ADDONS_DIR/init/ || exit {{GetCSEErrorCode "ERR_ADDONS_START_FAIL"}}
+  {{- end}}
 }
-{{end}}
 {{- if HasNSeriesSKU}}
 {{- /* installNvidiaDrivers is idempotent, it will uninstall itself if it is already installed, and then install anew */}}
 installNvidiaDrivers() {
@@ -556,8 +617,8 @@ installSGXDrivers() {
   retrycmd 10 10 120 curl -fsSL -O "https://download.01.org/intel-sgx/latest/version.xml" || exit 90
   dcap_version="$(grep dcap version.xml | grep -o -E "[.0-9]+")"
   sgx_driver_folder_url="https://download.01.org/intel-sgx/sgx-dcap/$dcap_version/linux"
-  retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version" || exit 90
-  matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version)"
+  retrycmd 10 10 120 curl -fsSL -O "$sgx_driver_folder_url/SHA256SUM_dcap_$dcap_version.cfg" || exit 90
+  matched_line="$(grep "distro/ubuntuServer$UBUNTU_RELEASE/sgx_linux_x64_driver_.*bin" SHA256SUM_dcap_$dcap_version.cfg)"
   read -ra tmp_array <<<"$matched_line"
   sgx_driver_sha256sum_expected="${tmp_array[0]}"
   sgx_driver_remote_path="${tmp_array[1]}"

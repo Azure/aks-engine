@@ -193,7 +193,9 @@ func TestCreateSSH(t *testing.T) {
 		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
 	}
 	pemBuffer := bytes.Buffer{}
-	pem.Encode(&pemBuffer, pemBlock)
+	if err = pem.Encode(&pemBuffer, pemBlock); err != nil {
+		t.Fatalf("failed to encode private key: %s", err)
+	}
 
 	if !strings.HasPrefix(pemBuffer.String(), "-----BEGIN RSA PRIVATE KEY-----") {
 		t.Fatalf("Private Key did not start with expected header")

@@ -89,7 +89,7 @@ var (
 		KubernetesImageBase:              "k8s.gcr.io/",
 		TillerImageBase:                  "mcr.microsoft.com/",
 		ACIConnectorImageBase:            "microsoft/",
-		NVIDIAImageBase:                  "nvidia/",
+		NVIDIAImageBase:                  "mcr.microsoft.com/",
 		CalicoImageBase:                  "calico/",
 		AzureCNIImageBase:                "mcr.microsoft.com/containernetworking/",
 		MCRKubernetesImageBase:           "mcr.microsoft.com/",
@@ -98,7 +98,7 @@ var (
 		WindowsTelemetryGUID:             "fb801154-36b9-41bc-89c2-f4d4f05472b0",
 		CNIPluginsDownloadURL:            "https://kubernetesartifacts.azureedge.net/cni-plugins/" + CNIPluginVer + "/binaries/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
 		VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+		VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.azureedge.net/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 		ContainerdDownloadURLBase:        "https://storage.googleapis.com/cri-containerd-release/",
 		CSIProxyDownloadURL:              "https://kubernetesartifacts.azureedge.net/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 	}
@@ -156,25 +156,25 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-engine-ubuntu-1604-202004",
+		ImageSku:       "aks-engine-ubuntu-1604-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.04.09",
+		ImageVersion:   "2020.06.02",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-engine-ubuntu-1804-202004",
+		ImageSku:       "aks-engine-ubuntu-1804-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.04.09",
+		ImageVersion:   "2020.06.02",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
 	AKSWindowsServer2019OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks-windows",
-		ImageSku:       "2019-datacenter-core-smalldisk-2004",
+		ImageSku:       "2019-datacenter-core-smalldisk-2006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "17763.1098.200409",
+		ImageVersion:   "17763.1217.200603",
 	}
 
 	// WindowsServer2019OSImageConfig is the 'vanilla' Windows Server 2019 image
@@ -182,7 +182,7 @@ var (
 		ImageOffer:     "WindowsServer",
 		ImageSku:       "2019-Datacenter-Core-with-Containers-smalldisk",
 		ImagePublisher: "MicrosoftWindowsServer",
-		ImageVersion:   "17763.1098.2003062342",
+		ImageVersion:   "17763.1217.2005081535",
 	}
 
 	// ACC1604OSImageConfig is the ACC image based on Ubuntu 16.04.
@@ -282,8 +282,8 @@ var (
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
 			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
 			CNIPluginsDownloadURL:            "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
-			VnetCNILinuxPluginsDownloadURL:   "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-			VnetCNIWindowsPluginsDownloadURL: "https://mirror.azk8s.cn/kubernetes/azure-container-networking/azure-vnet-cni-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+			VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+			VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 			ContainerdDownloadURLBase:        "https://mirror.azk8s.cn/kubernetes/containerd/",
 			CSIProxyDownloadURL:              "https://kubernetesartifacts.blob.core.chinacloudapi.cn/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 		},

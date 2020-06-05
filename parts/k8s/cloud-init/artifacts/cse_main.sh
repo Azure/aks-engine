@@ -197,11 +197,10 @@ time_metric "ConfigureAzureStackInterfaces" configureAzureStackInterfaces
 
 time_metric "ConfigureCNI" configureCNI
 
-{{if or IsClusterAutoscalerAddonEnabled IsACIConnectorAddonEnabled IsAzurePolicyAddonEnabled}}
 if [[ -n ${MASTER_NODE} ]]; then
   time_metric "ConfigAddons" configAddons
+  time_metric "WriteKubeConfig" writeKubeConfig
 fi
-{{end}}
 
 {{- if NeedsContainerd}}
 time_metric "EnsureContainerd" ensureContainerd
@@ -219,13 +218,18 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 {{end}}
 
 time_metric "EnsureKubelet" ensureKubelet
+if [[ -n ${MASTER_NODE} ]]; then
+  time_metric "EnsureAddons" ensureAddons
+fi
 time_metric "EnsureJournal" ensureJournal
 
 if [[ -n ${MASTER_NODE} ]]; then
   if version_gte ${KUBERNETES_VERSION} 1.16; then
     time_metric "EnsureLabelNodes" ensureLabelNodes
   fi
-  time_metric "WriteKubeConfig" writeKubeConfig
+{{- if IsAADPodIdentityAddonEnabled}}
+  time_metric "EnsureTaints" ensureTaints
+{{end}}
   if [[ -z ${COSMOS_URI} ]]; then
     if ! { [ "$FULL_INSTALL_REQUIRED" = "true" ] && [ ${UBUNTU_RELEASE} == "18.04" ]; }; then
       time_metric "EnsureEtcd" ensureEtcd
@@ -237,7 +241,6 @@ if [[ -n ${MASTER_NODE} ]]; then
   {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
-    retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml --server-dry-run=true || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
   fi
   {{end}}
@@ -265,7 +268,11 @@ fi
 VALIDATION_ERR=0
 
 {{- if IsHostedMaster }}
-RES=$(retrycmd 20 1 3 nslookup ${API_SERVER_NAME})
+API_SERVER_DNS_RETRIES=20
+if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
+  API_SERVER_DNS_RETRIES=200
+fi
+RES=$(retrycmd ${API_SERVER_DNS_RETRIES} 1 3 nslookup ${API_SERVER_NAME})
 STS=$?
 if [[ $STS != 0 ]]; then
     if [[ $RES == *"168.63.129.16"*  ]]; then
@@ -273,8 +280,14 @@ if [[ $STS != 0 ]]; then
     else
         VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_DNS_LOOKUP_FAIL"}}
     fi
+else
+    API_SERVER_CONN_RETRIES=50
+    if [[ $API_SERVER_NAME == *.privatelink.* ]]; then
+        API_SERVER_CONN_RETRIES=100
+    fi
+    retrycmd ${API_SERVER_CONN_RETRIES} 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
 fi
-retrycmd 50 1 3 nc -vz ${API_SERVER_NAME} 443 || VALIDATION_ERR={{GetCSEErrorCode "ERR_K8S_API_SERVER_CONN_FAIL"}}
+
 {{end}}
 
 if $REBOOTREQUIRED; then

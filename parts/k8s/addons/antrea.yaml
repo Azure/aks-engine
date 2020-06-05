@@ -88,6 +88,16 @@ rules:
   - system.antrea.tanzu.vmware.com
   resources:
   - controllerinfos
+  - agentinfos
+  verbs:
+  - get
+- nonResourceURLs:
+  - /agentinfo
+  - /addressgroups
+  - /appliedtogroups
+  - /networkpolicies
+  - /ovsflows
+  - /podinterfaces
   verbs:
   - get
 ---
@@ -127,6 +137,18 @@ rules:
   - get
   - watch
   - list
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -189,6 +211,23 @@ metadata:
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "Reconcile"
+  name: antrea-agent-authentication-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: antrea-agent
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: antrea
+    addonmanager.kubernetes.io/mode: "Reconcile"
   name: antrea-controller-authentication-reader
   namespace: kube-system
 roleRef:
@@ -215,9 +254,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: antctl
-  namespace: kube-system
-- kind: ServiceAccount
-  name: antrea-controller
   namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -296,24 +332,47 @@ data:
     # hybrid: noEncap if worker Nodes on same subnet, otherwise encap.
     # networkPolicyOnly: Antrea enforces NetworkPolicy only, and utilizes CNI chaining and delegates Pod IPAM and connectivity to primary CNI.
     #
-    #trafficEncapMode: encap
-  antrea-cni.conf: |
+    trafficEncapMode: {{ContainerConfig "trafficEncapMode"}}
+
+    # The port for the antrea-agent APIServer to serve on.
+    # Note that if it's set to another value, the `containerPort` of the `api` port of the
+    # `antrea-agent` container must be set to the same value.
+    #apiPort: 10350
+
+    # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
+    #enablePrometheusMetrics: false
+  antrea-cni.conflist: |
     {
         "cniVersion":"0.3.0",
         "name": "antrea",
-        "type": "antrea",
-        "ipam": {
-            "type": "host-local"
-        }
+        "plugins": [
+            {
+                "type": "antrea",
+                "ipam": {
+                    "type": "host-local"
+                }
+            },
+            {
+                "type": "portmap",
+                "capabilities": {"portMappings": true}
+            }
+        ]
     }
-  antrea-controller.conf: ""
+  antrea-controller.conf: |
+    # The port for the antrea-controller APIServer to serve on.
+    # Note that if it's set to another value, the `containerPort` of the `api` port of the
+    # `antrea-controller` container must be set to the same value.
+    #apiPort: 10349
+
+    # Enable metrics exposure via Prometheus. Initializes Prometheus metrics listener.
+    #enablePrometheusMetrics: false
 kind: ConfigMap
 metadata:
   annotations: {}
   labels:
     app: antrea
     addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: antrea-config-b2b5bdkh8t
+  name: antrea-config-m8cb9g82tf
   namespace: kube-system
 ---
 apiVersion: v1
@@ -328,7 +387,7 @@ spec:
   ports:
   - port: 443
     protocol: TCP
-    targetPort: 443
+    targetPort: api
   selector:
     app: antrea
     component: antrea-controller
@@ -360,6 +419,10 @@ spec:
       - args:
         - --config
         - /etc/antrea/antrea-controller.conf
+        - --logtostderr=false
+        - --log_dir
+        - /var/log/antrea
+        - --alsologtostderr
         command:
         - antrea-controller
         env:
@@ -378,23 +441,29 @@ spec:
         image: {{ContainerImage "antrea-controller"}}
         name: antrea-controller
         ports:
-        - containerPort: 443
+        - containerPort: 10349
+          name: api
           protocol: TCP
         readinessProbe:
           failureThreshold: 5
           httpGet:
             host: 127.0.0.1
             path: /healthz
-            port: 443
+            port: api
             scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "antrea-controller"}}
         volumeMounts:
         - mountPath: /etc/antrea/antrea-controller.conf
           name: antrea-config
           readOnly: true
           subPath: antrea-controller.conf
+        - mountPath: /var/log/antrea
+          name: host-var-log-antrea
       hostNetwork: true
       nodeSelector:
         kubernetes.io/os: linux
@@ -407,8 +476,12 @@ spec:
         key: node-role.kubernetes.io/master
       volumes:
       - configMap:
-          name: antrea-config-b2b5bdkh8t
+          name: antrea-config-m8cb9g82tf
         name: antrea-config
+      - hostPath:
+          path: /var/log/antrea
+          type: DirectoryOrCreate
+        name: host-var-log-antrea
 ---
 apiVersion: apiregistration.k8s.io/v1
 kind: APIService
@@ -468,6 +541,10 @@ spec:
       - args:
         - --config
         - /etc/antrea/antrea-agent.conf
+        - --logtostderr=false
+        - --log_dir
+        - /var/log/antrea
+        - --alsologtostderr
         command:
         - antrea-agent
         env:
@@ -495,16 +572,23 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
         name: antrea-agent
+        ports:
+        - containerPort: 10350
+          name: api
+          protocol: TCP
         readinessProbe:
           failureThreshold: 5
           httpGet:
             host: 127.0.0.1
             path: /healthz
-            port: 10443
+            port: api
             scheme: HTTPS
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 5
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "antrea-agent"}}
         securityContext:
           privileged: true
         volumeMounts:
@@ -520,6 +604,8 @@ spec:
         - mountPath: /var/lib/cni
           name: host-var-run-antrea
           subPath: cni
+        - mountPath: /var/log/antrea
+          name: host-var-log-antrea
         - mountPath: /host/proc
           name: host-proc
           readOnly: true
@@ -541,6 +627,9 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 5
         name: antrea-ovs
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "antrea-ovs"}}
         securityContext:
           capabilities:
             add:
@@ -561,15 +650,19 @@ spec:
         - install_cni
         image: {{ContainerImage "install-cni"}}
         name: install-cni
+        command: [{{ContainerConfig "installCniCmd"}}]
+        resources:
+          requests:
+            cpu: {{ContainerCPUReqs "install-cni"}}
         securityContext:
           capabilities:
             add:
             - SYS_MODULE
         volumeMounts:
-        - mountPath: /etc/antrea/antrea-cni.conf
+        - mountPath: /etc/antrea/antrea-cni.conflist
           name: antrea-config
           readOnly: true
-          subPath: antrea-cni.conf
+          subPath: antrea-cni.conflist
         - mountPath: /host/etc/cni/net.d
           name: host-cni-conf
         - mountPath: /host/opt/cni/bin
@@ -591,7 +684,7 @@ spec:
         operator: Exists
       volumes:
       - configMap:
-          name: antrea-config-b2b5bdkh8t
+          name: antrea-config-m8cb9g82tf
         name: antrea-config
       - hostPath:
           path: /etc/cni/net.d

@@ -6,6 +6,7 @@ package kubernetes
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -19,10 +20,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/api/common"
+	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
@@ -39,6 +42,8 @@ import (
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/storageclass"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/util"
 	"github.com/Azure/aks-engine/test/e2e/remote"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -46,12 +51,10 @@ import (
 const (
 	WorkloadDir                               = "workloads"
 	PolicyDir                                 = "workloads/policies"
-	retryCommandsTimeout                      = 5 * time.Minute
 	kubeSystemPodsReadinessChecks             = 6
 	sleepBetweenRetriesWhenWaitingForPodReady = 1 * time.Second
 	sleepBetweenRetriesRemoteSSHCommand       = 3 * time.Second
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
-	stabilityCommandTimeout                   = 3 * time.Second
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
@@ -73,6 +76,9 @@ var (
 	clusterAutoscalerAddon          api.KubernetesAddon
 	deploymentReplicasCount         int
 	dnsAddonName                    string
+	stabilityCommandTimeout         time.Duration
+	env                             azure.Environment
+	azureClient                     *armhelpers.AzureClient
 )
 
 var _ = BeforeSuite(func() {
@@ -153,12 +159,27 @@ var _ = BeforeSuite(func() {
 	if hasAddon, _ := eng.HasAddon("coredns"); hasAddon {
 		dnsAddonName = common.CoreDNSAddonName
 	}
+	stabilityCommandTimeout = 3 * time.Second
+	if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy == api.NetworkPolicyCalico {
+		stabilityCommandTimeout = 10 * time.Second
+	}
 	Expect(dnsAddonName).NotTo(Equal(""))
+
+	if !cfg.IsCustomCloudProfile() {
+		env, err = azure.EnvironmentFromName("AzurePublicCloud") // TODO get this programmatically
+		if err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		azureClient, err = armhelpers.NewAzureClientWithClientSecret(env, cfg.SubscriptionID, cfg.ClientID, cfg.ClientSecret)
+		if err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}
 })
 
 var _ = AfterSuite(func() {
 	if cfg.DebugAfterSuite {
-		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
+		cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 		out, err := cmd.CombinedOutput()
 		log.Printf("%s\n", out)
 		if err != nil {
@@ -187,6 +208,35 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(ready).To(Equal(true))
 			}
 		})
+
+		It("should validate filesystem config", func() {
+			if cfg.BlockSSHPort {
+				Skip("SSH port is blocked")
+			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
+				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				filesystemValidateScript := "host-os-fs.sh"
+				err = sshConn.CopyTo(filesystemValidateScript)
+				Expect(err).NotTo(HaveOccurred())
+				envString := fmt.Sprintf("MASTER_NODE=true")
+				filesystemValidationCommand := fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
+				err = sshConn.Execute(filesystemValidationCommand, false)
+				Expect(err).NotTo(HaveOccurred())
+				for _, n := range nodes {
+					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
+						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+filesystemValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{"k8s-master"}))
+						filesystemValidationCommand = fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
+						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, filesystemValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+					}
+				}
+			} else {
+				Skip("Skip per-node tests in low-priority VMSS cluster configuration scenario")
+			}
+		})
+
 		It("should validate host OS DNS", func() {
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
@@ -311,7 +361,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					dockerVersionCmd := fmt.Sprintf("\"docker version\"")
 					for _, n := range nodes {
 						if n.IsWindows() {
-							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+							if eng.ExpandedDefinition.Properties.WindowsProfile != nil && !eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 								log.Printf("Can't ssh into Windows node %s because there is no SSH listener", n.Metadata.Name)
 								continue
 							}
@@ -696,7 +746,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should print cluster resources", func() {
-			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses", "--all-namespaces", "-o", "wide")
+			cmd := exec.Command("k", "get", "deployments,pods,svc,daemonsets,configmaps,endpoints,jobs,clusterroles,clusterrolebindings,roles,rolebindings,storageclasses,podsecuritypolicy", "--all-namespaces", "-o", "wide")
 			out, err := cmd.CombinedOutput()
 			log.Printf("%s\n", out)
 			if err != nil {
@@ -757,10 +807,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			command := fmt.Sprintf("nc -vz bbc.co.uk 80 || nc -vz google.com 443 || nc -vz microsoft.com 80")
 			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to make external connections or resolve dns", command)
 			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
@@ -825,11 +875,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			command := fmt.Sprintf("nc -vz 8.8.8.8 53 || nc -vz 8.8.4.4 53")
 			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect externally against known listeners", command)
 			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 
@@ -838,11 +888,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			command = fmt.Sprintf("curl --head https://www.bing.com 1> /dev/null || curl --head https://google.com 1> /dev/null || curl --head https://microsoft.com 1> /dev/null")
 			deploymentCommand = fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to curl externally against known endpoints", command)
 			// Ensure across all nodes
-			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			successes, err = deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "byrnedo/alpine-curl", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "byrnedo/alpine-curl", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
@@ -852,11 +902,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			command := fmt.Sprintf("nc -vz kubernetes 443 && nc -vz kubernetes.default.svc 443 && nc -vz kubernetes.default.svc.cluster.local 443")
 			deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to reach internal kubernetes endpoints", command)
 			// Ensure across all nodes
-			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+			successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "alpine", name, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 			// Ensure responsiveness
-			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+			successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(successes).To(Equal(cfg.StabilityIterations))
 		})
@@ -887,11 +937,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				consumerPodName := fmt.Sprintf("consumer-pod-%s-%v", cfg.Name, r.Intn(99999))
 				deploymentCommand := fmt.Sprintf("%s && while true; do sleep 1; done || echo unable to connect to in-cluster web listener", commandString)
 				// Ensure across all nodes
-				successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "busybox", consumerPodName, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, retryCommandsTimeout)
+				successes, err := deployment.RunDeploymentMultipleTimes(deployment.RunLinuxDeploy, "busybox", consumerPodName, deploymentCommand, deploymentReplicasCount, cfg.StabilityIterations, 1*time.Second, timeoutWhenWaitingForPodOutboundAccess, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 				// Ensure responsiveness
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "busybox", consumerPodName, commandString, cfg.StabilityIterations, 1*time.Second, stabilityCommandTimeout, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 			} else {
@@ -912,6 +962,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					addonPods = []string{"omsagent"}
 				case "azure-npm-daemonset":
 					addonPods = []string{"azure-npm"}
+				case "kubernetes-dashboard":
+					addonPods = []string{"kubernetes-dashboard", "dashboard-metrics-scraper"}
+					addonNamespace = "kubernetes-dashboard"
 				}
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
@@ -924,6 +977,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						Expect(err).NotTo(HaveOccurred())
 						for i, c := range addon.Containers {
 							pod := pods[0]
+							if len(pod.Spec.Containers) == i {
+								break
+							}
 							container := pod.Spec.Containers[i]
 							err := container.ValidateResources(c)
 							Expect(err).NotTo(HaveOccurred())
@@ -1020,38 +1076,43 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else {
 				if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
 					By("Ensuring that the kubernetes-dashboard service is Running")
-					s, err := service.Get("kubernetes-dashboard", "kube-system")
+					s, err := service.Get("kubernetes-dashboard", "kubernetes-dashboard")
 					Expect(err).NotTo(HaveOccurred())
-					By("Ensuring that we can connect via HTTPS to the dashboard on any one node")
-					dashboardPort := 443
-					port := s.GetNodePort(dashboardPort)
-					nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
+					Expect(s).NotTo(BeNil())
+					By("Ensuring that the dashboard responds to requests")
+					// start `kubectl proxy` in the background on a random port
+					var proxyStdout io.ReadCloser
+					var proxyStdoutReader *bufio.Reader
+					proxyCmd := exec.Command("k", "proxy", "-p", "0")
+					proxyCmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+					proxyStdout, err = proxyCmd.StdoutPipe()
 					Expect(err).NotTo(HaveOccurred())
-					var success bool
-					for _, n := range nodes {
-						if success {
-							break
+					util.PrintCommand(proxyCmd)
+					err = proxyCmd.Start()
+					Expect(err).NotTo(HaveOccurred())
+					defer func() {
+						syscall.Kill(-proxyCmd.Process.Pid, syscall.SIGKILL)
+						if _, waiterr := proxyCmd.Process.Wait(); waiterr != nil {
+							log.Printf("kubectl proxy - wait returned err: %v\n", waiterr)
 						}
-						if n.IsLinux() {
-							// Allow 3 retries for each node
-							for i := 0; i < 3; i++ {
-								address := n.Status.GetAddressByType("InternalIP")
-								if address == nil {
-									log.Printf("One of our nodes does not have an InternalIP value!: %s\n", n.Metadata.Name)
-								}
-								Expect(address).NotTo(BeNil())
-								dashboardURL := fmt.Sprintf("http://%s:%v", address.Address, port)
-								curlCMD := fmt.Sprintf("curl --max-time 60 %s", dashboardURL)
-								err := sshConn.Execute(curlCMD, false)
-								if err == nil {
-									success = true
-									break
-								}
-								time.Sleep(1 * time.Second)
-							}
-						}
-					}
-					Expect(success).To(BeTrue())
+					}()
+					proxyStdoutReader = bufio.NewReader(proxyStdout)
+					proxyOutStr, outErr := proxyStdoutReader.ReadString('\n')
+					Expect(outErr).NotTo(HaveOccurred())
+					log.Printf("kubectl proxy stdout: %s\n", proxyOutStr)
+					serverStartPrefix := "Starting to serve on "
+					Expect(proxyOutStr).To(HavePrefix(serverStartPrefix))
+					dashboardHost := strings.TrimSpace(strings.TrimPrefix(proxyOutStr, serverStartPrefix))
+					// get an HTTP response from the dashboard login URL
+					url := fmt.Sprintf("http://%s/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login", dashboardHost)
+					cmd := exec.Command("curl", "--max-time", "60", "--retry", "10", "--retry-delay", "10", "--retry-max-time", "120", url)
+					util.PrintCommand(cmd)
+					var out []byte
+					out, err = cmd.CombinedOutput()
+					log.Printf("%s\n", out)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(out).To(ContainSubstring("<!doctype html>"))
+					Expect(out).To(ContainSubstring("<title>Kubernetes Dashboard</title>"))
 				} else {
 					Skip("kubernetes-dashboard disabled for this cluster, will not test")
 				}
@@ -1287,7 +1348,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		It("kubelet service should be able to recover when the docker service is stopped", func() {
 			if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				if eng.HasWindowsAgents() {
-					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.SSHEnabled {
+					if eng.ExpandedDefinition.Properties.WindowsProfile != nil && eng.ExpandedDefinition.Properties.WindowsProfile.GetSSHEnabled() {
 						nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						simulateDockerdCrashScript := "simulate-dockerd-crash.cmd"
@@ -1363,6 +1424,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can create an ELB service attachment")
 				sELB, err := service.CreateServiceFromFileDeleteIfExist(filepath.Join(WorkloadDir, "ingress-nginx-elb.yaml"), serviceName+"-elb", "default")
 				Expect(err).NotTo(HaveOccurred())
@@ -1372,9 +1434,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can connect to the ELB service on the service IP")
 				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				By("Ensuring we can connect to the ELB service from another pod")
 				elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
+				By("Ensuring we can donwnload files through the ELB")
+				pods, err := pod.GetAllByPrefixWithRetry(deploymentPrefix, "default", 3*time.Second, cfg.Timeout)
+				for _, p := range pods {
+					out, err := p.Exec("--", "/bin/bash", "-c", "base64 /dev/urandom | head -c 500000 | tee -a /usr/share/nginx/html/index.html > /dev/null")
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = sELB.ValidateWithRetry("(Welcome to nginx)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
 				err = sILB.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
 				err = sELB.Delete(util.DefaultDeleteRetries)
@@ -1534,7 +1608,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role = n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "master" {
 						By("Ensuring that we get zones for each master node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1554,7 +1633,12 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				nodes, err := node.GetReadyWithRetry(1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				for _, n := range nodes {
-					role := n.Metadata.Labels["kubernetes.io/role"]
+					var role string
+					if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+						role = n.Metadata.Labels["kubernetes.azure.com/role"]
+					} else {
+						role = n.Metadata.Labels["kubernetes.io/role"]
+					}
 					if role == "agent" {
 						By("Ensuring that we get zones for each agent node")
 						zones := n.Metadata.Labels["failure-domain.beta.kubernetes.io/zone"]
@@ -1826,6 +1910,16 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					Expect(pass).To(BeTrue())
 				}
 
+				By("Ensuring we can donwnload files through the ELB")
+				for _, iisPod := range iisPods {
+					fileGenCmd := "(1..(500kb/34)).foreach({-join ('4489bfc5648d4ab58c7129a1d5f2f061') }) | Add-Content C:\\inetpub\\wwwroot\\iisstart.htm"
+					out, err := iisPod.Exec("--", "powershell", "-command", fileGenCmd)
+					log.Printf("%s\n", string(out))
+					Expect(err).NotTo(HaveOccurred())
+				}
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", 30*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
 				By("Verifying pods & services can be deleted")
 				err = iisDeploy.Delete(util.DefaultDeleteRetries)
 				Expect(err).NotTo(HaveOccurred())
@@ -1878,21 +1972,21 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Connecting to Windows from another Windows deployment")
 				name := fmt.Sprintf("windows-2-windows-%s", cfg.Name)
 				command := fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", windowsService.Metadata.Name)
-				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
+				successes, err := pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Linux from Windows deployment")
 				name = fmt.Sprintf("windows-2-linux-%s", cfg.Name)
 				command = fmt.Sprintf("iwr -UseBasicParsing -TimeoutSec 60 %s", linuxService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunWindowsPod, windowsImages.ServerCore, name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
 				By("Connecting to Windows from Linux deployment")
 				name = fmt.Sprintf("linux-2-windows-%s", cfg.Name)
 				command = fmt.Sprintf("wget %s", windowsService.Metadata.Name)
-				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, retryCommandsTimeout)
+				successes, err = pod.RunCommandMultipleTimes(pod.RunLinuxPod, "alpine", name, command, cfg.StabilityIterations, 1*time.Second, singleCommandTimeout, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(successes).To(Equal(cfg.StabilityIterations))
 
@@ -1939,7 +2033,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				}
 			})*/
 		It("should be able to attach azure file", func() {
-			if eng.HasWindowsAgents() {
+			if eng.HasWindowsAgents() && !eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NeedsContainerd() {
 				orchestratorVersion := eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion
 				if orchestratorVersion == "1.11.0" {
 					// Failure in 1.11.0 - https://github.com/kubernetes/kubernetes/issues/65845, fixed in 1.11.1
@@ -1993,6 +2087,111 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				} else {
 					Skip("Kubernetes version needs to be 1.8 and up for Azure File test")
 				}
+			} else {
+				Skip("No windows agent was provisioned for this Cluster Definition")
+			}
+		})
+		// This test is not parallelizable due to tainting nodes with NoSchedule
+		It("should expect containers to be recreated after node restart", func() {
+			if eng.HasWindowsAgents() {
+				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
+					if profile.IsWindows() {
+						if profile.AvailabilityProfile == api.AvailabilitySet {
+							Skip("AvailabilitySet is configured for this Cluster Definition")
+						}
+					}
+				}
+
+				windowsImages, err := eng.GetWindowsTestImages()
+				Expect(err).NotTo(HaveOccurred())
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				deploymentPrefix := fmt.Sprintf("iis-%s", cfg.Name)
+				deploymentName := fmt.Sprintf("%s-%v", deploymentPrefix, r.Intn(99999))
+				By("Creating a deployment with 1 pod running IIS")
+				iisDeploy, err := deployment.CreateWindowsDeployWithHostportDeleteIfExist(deploymentPrefix, windowsImages.IIS, deploymentName, "default", 80, -1)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting on pod to be Ready")
+				running, err := pod.WaitOnSuccesses(deploymentName, "default", 4, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
+				By("Exposing a LoadBalancer for the pod")
+				err = iisDeploy.ExposeDeleteIfExist(deploymentPrefix, "default", "LoadBalancer", 80, 80)
+				Expect(err).NotTo(HaveOccurred())
+				iisService, err := service.Get(deploymentName, "default")
+				Expect(err).NotTo(HaveOccurred())
+				err = iisService.WaitForIngress(cfg.LBTimeout, 5*time.Second)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Verifying that the service is reachable and returns the default IIS start page")
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+
+				pods, err := iisDeploy.Pods()
+				Expect(err).NotTo(HaveOccurred())
+				nodeName := pods[0].Spec.NodeName
+				ctx, cancel := context.WithTimeout(context.Background(), 6000*time.Second)
+				defer cancel()
+
+				By("Adding taint to all other Windows nodes")
+				nodeList, err := node.Get()
+				for _, n := range nodeList.Nodes {
+					if n.IsWindows() && n.Metadata.Name != nodeName {
+						n.AddTaint(node.Taint{Key: "key", Value: "value", Effect: "NoSchedule"})
+					}
+				}
+
+				// Removing taints
+				defer func(nodeList *node.List, nodeName string) {
+					for _, n := range nodeList.Nodes {
+						if n.IsWindows() && n.Metadata.Name != nodeName {
+							n.RemoveTaint(node.Taint{Key: "key", Value: "value", Effect: "NoSchedule"})
+						}
+					}
+				}(nodeList, nodeName)
+
+				By("Restarting VM " + nodeName + " in resource group " + cfg.ResourceGroup)
+
+				// Getting vmss for the vm
+				vmssPage, err := azureClient.ListVirtualMachineScaleSets(ctx, cfg.ResourceGroup)
+				vmssList := vmssPage.Values()
+
+				// Name of VMSS of nodeName
+				var vmssName string
+				// InstanceID of VM in its VMSS
+				var instanceID string
+				for _, vmss := range vmssList {
+					if !strings.Contains(nodeName, *vmss.Name) {
+						continue
+					}
+					vmName := *vmss.Name + "_" + nodeName[len(nodeName)-1:]
+					vmPage, err := azureClient.ListVirtualMachineScaleSetVMs(ctx, cfg.ResourceGroup, *vmss.Name)
+					Expect(err).NotTo(HaveOccurred())
+
+					vmList := vmPage.Values()
+					for _, vm := range vmList {
+						if vmName == *vm.Name {
+							vmssName = *vmss.Name
+							instanceID = *vm.InstanceID
+							break
+						}
+					}
+					if instanceID != "" {
+						break
+					}
+				}
+				// TODO refactor to remove the "compute" usage so the test can be run on Azure Stack
+				instanceIDs := &compute.VirtualMachineScaleSetVMInstanceIDs{&[]string{instanceID}}
+				err = azureClient.RestartVirtualMachineScaleSets(ctx, cfg.ResourceGroup, vmssName, instanceIDs)
+				Expect(err).NotTo(HaveOccurred())
+
+				//Wait for VM to come up
+				time.Sleep(30 * time.Second)
+
+				By("Verifying that the service is still reachable and returns the default IIS start page")
+				err = iisService.ValidateWithRetry("(IIS Windows Server)", sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
 			} else {
 				Skip("No windows agent was provisioned for this Cluster Definition")
 			}

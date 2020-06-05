@@ -4,7 +4,7 @@ aks-engine supports creating a Kubernetes cluster with more than one node pool. 
 
 A cluster with multiple node pools can help you schedule CPU-intensive jobs to VM nodes with high processing power, or I/O intensive jobs to VMs with the fastest storage. Use [nodeSelectors][] or [resource requests][] to ensure that Pods are scheduled to nodes in the appropriate pool.
 
-A complete example is contained in the `multipool.json` apimodel in this directory. To add a node pool to an existing apimodel, just add another entry to the `agentPoolProfile` section:
+A complete example is contained in the `multipool.json` API model in this directory. To add a node pool to an existing apimodel, just add another entry to the `agentPoolProfile` section:
 
 ```json
     "agentPoolProfiles": [

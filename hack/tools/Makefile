@@ -4,7 +4,7 @@ LOCALBIN		= $(shell pwd)/bin
 all: install
 
 .PHONY: install
-install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/pub
+install: $(LOCALBIN)/go-bindata $(LOCALBIN)/gox $(LOCALBIN)/ginkgo $(LOCALBIN)/golangci-lint $(LOCALBIN)/pub $(LOCALBIN)/goveralls
 	@echo > /dev/null
 
 $(LOCALBIN)/go-bindata:
@@ -14,13 +14,16 @@ $(LOCALBIN)/gox:
 	GOBIN=$(LOCALBIN) $(GO) get github.com/mitchellh/gox/...@v1.0.1
 
 $(LOCALBIN)/ginkgo:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/onsi/ginkgo/ginkgo/...@v1.10.1
+	GOBIN=$(LOCALBIN) $(GO) get github.com/onsi/ginkgo/ginkgo/...@v1.12.2
 
 $(LOCALBIN)/golangci-lint:
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(LOCALBIN) v1.23.7
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) v1.25.1
 
 $(LOCALBIN)/pub:
-	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.0
+	GOBIN=$(LOCALBIN) $(GO) get github.com/devigned/pub/...@v0.2.3
+
+$(LOCALBIN)/goveralls:
+    GOBIN=$(LOCALBIN) $(GO) get github.com/mattn/goveralls
 
 .PHONY: reload
 reload: clean install
@@ -28,3 +31,7 @@ reload: clean install
 .PHONY: clean
 clean:
 	rm -rf $(LOCALBIN)
+
+.PHONY: tidy
+tidy:
+	$(GO) mod tidy

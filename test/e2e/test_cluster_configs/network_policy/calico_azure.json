@@ -1,8 +1,4 @@
 {
-	"env": {},
-	"options": {
-		"allowedOrchestratorVersions": ["1.14", "1.15", "1.16", "1.17"]
-	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
@@ -10,7 +6,16 @@
 				"orchestratorType": "Kubernetes",
 				"kubernetesConfig": {
 					"networkPolicy": "calico",
-					"networkPlugin": "azure"
+					"networkPlugin": "azure",
+					"addons": [
+						{
+							"name": "calico",
+							"enabled": true,
+							"config": {
+								"logSeverityScreen": "error"
+							}
+						}
+					]
 				}
 			},
 			"masterProfile": {

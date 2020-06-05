@@ -111,6 +111,7 @@ func Test_WindowsVMNameParts(t *testing.T) {
 		{"4506k8s010", "4506", "k8s", 1, 0},
 		{"2314k8s03000001", "2314", "k8s", 3, 1},
 		{"2314k8s0310", "2314", "k8s", 3, 10},
+		{"7472k8s010", "7472", "k8s", 1, 0},
 	}
 
 	for _, d := range data {

@@ -27,7 +27,7 @@ ifeq ($(GITTAG),)
 GITTAG := $(VERSION_SHORT)
 endif
 
-DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.25.0-go113
+DEV_ENV_IMAGE := quay.io/deis/go-dev:v1.27.0
 DEV_ENV_WORK_DIR := /aks-engine
 DEV_ENV_OPTS := --rm -v $(GOPATH)/pkg/mod:/go/pkg/mod -v $(CURDIR):$(DEV_ENV_WORK_DIR) -w $(DEV_ENV_WORK_DIR) $(DEV_ENV_VARS)
 DEV_ENV_CMD := docker run $(DEV_ENV_OPTS) $(DEV_ENV_IMAGE)
@@ -100,6 +100,8 @@ go-build:
 .PHONY: tidy
 tidy:
 	$(GO) mod tidy
+	make -C ./hack/tools tidy
+	make -C ./test/e2e tidy
 
 .PHONY: vendor
 vendor: tidy
@@ -114,10 +116,6 @@ build-cross: build
 build-cross: LDFLAGS += -extldflags "-static"
 build-cross:
 	CGO_ENABLED=0 gox -output="_dist/aks-engine-$(GITTAG)-{{.OS}}-{{.Arch}}/{{.Dir}}" -osarch='$(TARGETS)' $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'
-
-.PHONY: build-azs-windows-k8s
-build-azs-windows-k8s:
-	./scripts/build-windows-k8s.sh -v $(K8S_VERSION) -p $(PATCH_VERSION) -a $(BUILD_AZURE_STACK)
 
 .PHONY: dist
 dist: build-cross compress-binaries
@@ -193,9 +191,6 @@ tools-install:
 .PHONY: tools-clean
 tools-clean:
 	make -C hack/tools/ clean
-
-ci: bootstrap test-style build test lint
-	./scripts/coverage.sh --coveralls
 
 .PHONY: coverage
 coverage:

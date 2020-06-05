@@ -59,8 +59,8 @@ type scaleCmd struct {
 
 const (
 	scaleName             = "scale"
-	scaleShortDescription = "Scale an existing Kubernetes cluster"
-	scaleLongDescription  = "Scale an existing Kubernetes cluster by specifying increasing or decreasing the node count of an agentpool"
+	scaleShortDescription = "Scale an existing AKS Engine-created Kubernetes cluster"
+	scaleLongDescription  = "Scale an existing AKS Engine-created Kubernetes cluster by specifying increasing or decreasing the number of nodes in a node pool"
 	apiModelFilename      = "apimodel.json"
 )
 
@@ -85,8 +85,8 @@ func newScaleCmd() *cobra.Command {
 	f.StringVar(&sc.masterFQDN, "master-FQDN", "", "FQDN for the master load balancer that maps to the apiserver endpoint")
 	f.StringVar(&sc.masterFQDN, "apiserver", "", "apiserver endpoint (required to cordon and drain nodes)")
 
-	f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
-	f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
+	_ = f.MarkDeprecated("deployment-dir", "--deployment-dir is no longer required for scale or upgrade. Please use --api-model.")
+	_ = f.MarkDeprecated("master-FQDN", "--apiserver is preferred")
 
 	addAuthFlags(&sc.authArgs, f)
 
@@ -103,29 +103,29 @@ func (sc *scaleCmd) validate(cmd *cobra.Command) error {
 	}
 
 	if sc.resourceGroupName == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--resource-group must be specified")
 	}
 
 	if sc.location == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--location must be specified")
 	}
 
 	sc.location = helpers.NormalizeAzureRegion(sc.location)
 
 	if sc.newDesiredAgentCount == 0 {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--new-node-count must be specified")
 	}
 
 	if sc.apiModelPath == "" && sc.deploymentDirectory == "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("--api-model must be specified")
 	}
 
 	if sc.apiModelPath != "" && sc.deploymentDirectory != "" {
-		cmd.Usage()
+		_ = cmd.Usage()
 		return errors.New("ambiguous, please specify only one of --api-model and --deployment-dir")
 	}
 
@@ -160,7 +160,9 @@ func (sc *scaleCmd) load() error {
 	}
 
 	if sc.containerService.Properties.IsCustomCloudProfile() {
-		writeCustomCloudProfile(sc.containerService)
+		if err = writeCustomCloudProfile(sc.containerService); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
 
 		if err = sc.containerService.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
 			return errors.Wrap(err, "error parsing the api model")
@@ -291,12 +293,16 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			sc.printScaleTargetEqualsExisting(currentNodeCount)
 			return nil
 		}
-		highestUsedIndex = indexes[len(indexes)-1]
+		if currentNodeCount > 0 {
+			highestUsedIndex = indexes[currentNodeCount-1]
+		} else {
+			return errors.New("None of the VMs in the provided resource group contain any nodes")
+		}
 
 		// VMAS Scale down Scenario
 		if currentNodeCount > sc.newDesiredAgentCount {
 			if sc.apiserverURL == "" {
-				cmd.Usage()
+				_ = cmd.Usage()
 				return errors.New("--apiserver is required to scale down a kubernetes cluster's agent pool")
 			}
 
@@ -554,7 +560,11 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 		}
 	}
 
-	// Fall back to checking the VM name to see if it fits the naming pattern.
+	// For Windows, we rely upon the tags
+	if sc.agentPool.OSType == api.Windows {
+		return false
+	}
+	// Fall back to checking the VM name to see if it fits the naming pattern for Linux
 	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
 }
 

@@ -4,6 +4,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -27,6 +28,8 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		"--keep-terminated-pod-volumes": "false",
 		"--tls-cert-file":               "/etc/kubernetes/certs/kubeletserver.crt",
 		"--tls-private-key-file":        "/etc/kubernetes/certs/kubeletserver.key",
+		"--v":                           "2",
+		"--volume-plugin-dir":           "/etc/kubernetes/volumeplugins",
 	}
 
 	for key := range staticLinuxKubeletConfig {
@@ -127,6 +130,12 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 	}
 
+	if o.KubernetesConfig.NeedsContainerd() {
+		defaultKubeletConfig["--container-runtime"] = "remote"
+		defaultKubeletConfig["--runtime-request-timeout"] = "15m"
+		defaultKubeletConfig["--container-runtime-endpoint"] = "unix:///run/containerd/containerd.sock"
+	}
+
 	// If no user-configurable kubelet config values exists, use the defaults
 	setMissingKubeletValues(o.KubernetesConfig, defaultKubeletConfig)
 	addDefaultFeatureGates(o.KubernetesConfig.KubeletConfig, o.OrchestratorVersion, minVersionRotateCerts, "RotateKubeletServerCertificate=true")
@@ -199,6 +208,15 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		removeKubeletFlags(cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
+		if cs.Properties.AnyAgentIsLinux() {
+			if val, ok := cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"]; !ok {
+				cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] = common.MasterNodeTaint
+			} else {
+				if !strings.Contains(val, common.MasterNodeTaint) {
+					cs.Properties.MasterProfile.KubernetesConfig.KubeletConfig["--register-with-taints"] += fmt.Sprintf(",%s", common.MasterNodeTaint)
+				}
+			}
+		}
 	}
 
 	// Agent-specific kubelet config changes go here
@@ -208,7 +226,7 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 			profile.KubernetesConfig.KubeletConfig = make(map[string]string)
 		}
 
-		if profile.OSType == Windows {
+		if profile.IsWindows() {
 			for key, val := range staticWindowsKubeletConfig {
 				profile.KubernetesConfig.KubeletConfig[key] = val
 			}
@@ -246,6 +264,15 @@ func (cs *ContainerService) setKubeletConfig(isUpgrade bool) {
 		}
 
 		removeKubeletFlags(profile.KubernetesConfig.KubeletConfig, o.OrchestratorVersion)
+		if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) && !profile.IsWindows() {
+			if val, ok := profile.KubernetesConfig.KubeletConfig["--register-with-taints"]; !ok {
+				profile.KubernetesConfig.KubeletConfig["--register-with-taints"] = fmt.Sprintf("%s=true:NoSchedule", common.AADPodIdentityTaintKey)
+			} else {
+				if !strings.Contains(val, common.AADPodIdentityTaintKey) {
+					profile.KubernetesConfig.KubeletConfig["--register-with-taints"] += fmt.Sprintf(",%s=true:NoSchedule", common.AADPodIdentityTaintKey)
+				}
+			}
+		}
 	}
 }
 

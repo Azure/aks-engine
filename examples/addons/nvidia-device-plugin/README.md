@@ -1,6 +1,6 @@
 # NVIDIA Device Plugin
 
-This is the [NVIDIA Device Plugin](https://github.com/NVIDIA/k8s-device-plugin) add-on for Kubernetes. This add-on will be automatically enabled if you are using a Kubernetes cluster (v1.10+) with an N-series agent pool (which contains an NVIDIA GPU). You can use this add-on to your json file as shown below to enable or disable NVIDIA Device Plugin explicitly.
+This is the [NVIDIA Device Plugin](https://github.com/NVIDIA/k8s-device-plugin) add-on for Kubernetes. This add-on will be automatically enabled if you are using a Kubernetes cluster with an N-series node pool (which contains an NVIDIA GPU). You can use this add-on to your json file as shown below to enable or disable NVIDIA Device Plugin explicitly.
 
 ```json
 {

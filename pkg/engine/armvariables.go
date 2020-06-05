@@ -146,11 +146,15 @@ func getK8sMasterVars(cs *api.ContainerService) (map[string]interface{}, error) 
 		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
 		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
 		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 		"kubeletSystemdService":     getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+	}
+
+	if cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName) {
+		cloudInitFiles["untaintNodesScript"] = getBase64EncodedGzippedCustomScript(untaintNodesScript, cs)
+		cloudInitFiles["untaintNodesSystemdService"] = getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs)
 	}
 
 	if !cs.Properties.IsVHDDistroForAllNodes() {
@@ -613,8 +617,8 @@ func getK8sAgentVars(cs *api.ContainerService, profile *api.AgentPoolProfile) ma
 		agentVars[agentSubnetName] = fmt.Sprintf("[parameters('%s')]", agentVnetSubnetID)
 		agentVars[agentVnetParts] = fmt.Sprintf("[split(parameters('%sVnetSubnetID'),'/subnets/')]", agentName)
 	} else {
-		agentVars[agentVnetSubnetID] = fmt.Sprintf("[variables('vnetSubnetID')]")
-		agentVars[agentSubnetName] = fmt.Sprintf("[variables('subnetName')]")
+		agentVars[agentVnetSubnetID] = "[variables('vnetSubnetID')]"
+		agentVars[agentSubnetName] = "[variables('subnetName')]"
 	}
 
 	agentVars[agentSubnetResourceGroup] = fmt.Sprintf("[split(variables('%sVnetSubnetID'), '/')[4]]", agentName)
@@ -668,6 +672,6 @@ func getWindowsProfileVars(wp *api.WindowsProfile) map[string]interface{} {
 func getSizeMap() map[string]interface{} {
 	var sizeMap map[string]interface{}
 	sizeMapStr := fmt.Sprintf("{%s}", helpers.GetSizeMap())
-	json.Unmarshal([]byte(sizeMapStr), &sizeMap)
+	_ = json.Unmarshal([]byte(sizeMapStr), &sizeMap)
 	return sizeMap
 }

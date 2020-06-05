@@ -41,13 +41,14 @@ func main() {
 
 	if cfg.IsCustomCloudProfile() {
 		cccfg, err = config.ParseCustomCloudConfig()
-
 		if err != nil {
 			log.Fatalf("Error while trying to parse custom cloud configuration: %s\n", err)
 		}
-		err = cfg.UpdateCustomCloudClusterDefinition(cccfg)
-		if err != nil {
-			log.Fatalf("Error while trying to update  cluster definition: %s\n", cfg.ClusterDefinition)
+		if cfg.Name == "" {
+			err = cfg.UpdateCustomCloudClusterDefinition(cccfg)
+			if err != nil {
+				log.Fatalf("Error while trying to update  cluster definition: %s\n", cfg.ClusterDefinition)
+			}
 		}
 		cccfg.SetEnvironment()
 		if err != nil {
@@ -200,6 +201,22 @@ func main() {
 	}
 
 	if !cfg.SkipTest {
+		var resourceGroup string
+		if cliProvisioner.Account.ResourceGroup.Name != "" {
+			resourceGroup = cliProvisioner.Account.ResourceGroup.Name
+		} else {
+			resourceGroup = cfg.Name
+		}
+
+		if resourceGroup == "" {
+			if cfg.CleanUpIfFail {
+				teardown()
+			}
+			log.Fatalf("Resource Group is empty")
+		}
+
+		os.Setenv("RESOURCE_GROUP", resourceGroup)
+
 		g, err := runner.BuildGinkgoRunner(cfg, pt)
 		if err != nil {
 			if cfg.CleanUpIfFail {

@@ -22,11 +22,11 @@ All VMs are in the same private VNET and are fully accessible to each other.
 
 After completing this walkthrough you will know how to:
 
-* Access Kubernetes cluster via SSH,
+* Access the Azure VM(s) running the Kubernetes control plane via SSH,
 * Deploy a simple Docker application and expose to the world,
-* The location of the Kube config file and how to access the Kubernetes cluster remotely,
+* The location of the kubeconfig file and how to access the Kubernetes cluster remotely,
 * Use `kubectl exec` to run commands in a container,
-* And finally access the Kubernetes dashboard.
+* And finally access the Kubernetes Dashboard.
 
 Follow these steps:
 
@@ -83,8 +83,8 @@ Follow these steps:
     3. Try running a remote bash session. eg. `kubectl exec nginx-701339712-retbj -it bash`.
     The following screen shot shows these commands:
     ![Image of curl to podIP](../static/img/kubernetes-remote.png)
-1. The final step of this tutorial is to show you the dashboard:
-    1. Run `kubectl proxy` to directly connect to the proxy
-    2. In your browser browse to the dashboard at `http://127.0.0.1:8001/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard/#/workload?namespace=_all`
+1. The final step of this tutorial is to show you the Kubernetes Dashboard:
+    1. Run `kubectl proxy` to create a secure local proxy channel to your cluster.
+    2. In your browser, access the Dashboard at `http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/`
     3. Browse around and explore your pods and services.
     ![Image of Kubernetes dashboard](../static/img/kubernetes-dashboard.png)

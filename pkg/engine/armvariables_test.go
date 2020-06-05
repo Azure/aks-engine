@@ -17,7 +17,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/helpers"
 )
 
-var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false)
+var testK8sVersion = common.GetSupportedKubernetesVersion("1.12", false, false)
+var testK8sVersionAzureStack = common.GetSupportedKubernetesVersion("1.12", false, true)
 
 func TestSizeMap(t *testing.T) {
 	sizeMap := getSizeMap()
@@ -56,11 +57,14 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
@@ -148,7 +152,6 @@ func TestK8sVars(t *testing.T) {
 			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
 			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
@@ -196,6 +199,38 @@ func TestK8sVars(t *testing.T) {
 		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
 	}
 
+	// Test with AAD Pod Identity
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{
+		{
+			Name:    common.AADPodIdentityAddonName,
+			Enabled: to.BoolPtr(true),
+		},
+	}
+	varMap, err = GetKubernetesVariables(cs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectedMap["cloudInitFiles"] = map[string]interface{}{
+		"provisionScript":            getBase64EncodedGzippedCustomScript(kubernetesCSEMainScript, cs),
+		"provisionSource":            getBase64EncodedGzippedCustomScript(kubernetesCSEHelpersScript, cs),
+		"provisionInstalls":          getBase64EncodedGzippedCustomScript(kubernetesCSEInstall, cs),
+		"provisionConfigs":           getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
+		"customSearchDomainsScript":  getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
+		"generateProxyCertsScript":   getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
+		"etcdSystemdService":         getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
+		"dhcpv6ConfigurationScript":  getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
+		"dhcpv6SystemdService":       getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
+		"kubeletSystemdService":      getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
+		"untaintNodesScript":         getBase64EncodedGzippedCustomScript(untaintNodesScript, cs),
+		"untaintNodesSystemdService": getBase64EncodedGzippedCustomScript(untaintNodesSystemdService, cs),
+	}
+
+	diff = cmp.Diff(varMap, expectedMap)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
 	// Test with MSI
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
 	varMap, err = GetKubernetesVariables(cs)
@@ -215,6 +250,7 @@ func TestK8sVars(t *testing.T) {
 	}
 
 	// Test with ubuntu 16.04 distro
+	cs.Properties.OrchestratorProfile.KubernetesConfig.Addons = []api.KubernetesAddon{}
 	cs.Properties.AgentPoolProfiles[0].Distro = api.Ubuntu
 	cs.Properties.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = false
 	varMap, err = GetKubernetesVariables(cs)
@@ -235,7 +271,6 @@ func TestK8sVars(t *testing.T) {
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -386,7 +421,6 @@ func TestK8sVars(t *testing.T) {
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -487,7 +521,6 @@ func TestK8sVars(t *testing.T) {
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -527,7 +560,6 @@ func TestK8sVars(t *testing.T) {
 		"healthMonitorScript":              getBase64EncodedGzippedCustomScript(kubernetesHealthMonitorScript, cs),
 		"customSearchDomainsScript":        getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":         getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":                  getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"kubeletSystemdService":            getBase64EncodedGzippedCustomScript(kubeletSystemdService, cs),
 		"kmsSystemdService":                getBase64EncodedGzippedCustomScript(kmsSystemdService, cs),
 		"kubeletMonitorSystemdService":     getBase64EncodedGzippedCustomScript(kubernetesKubeletMonitorSystemdService, cs),
@@ -625,11 +657,14 @@ func TestK8sVars(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err = cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Errorf("expected no error from SetPropertiesDefaults, instead got %s", err)
+	}
 
 	varMap, err = GetKubernetesVariables(cs)
 	if err != nil {
@@ -709,7 +744,7 @@ func TestK8sVars(t *testing.T) {
 		"networkContributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', '4d97b98b-1d4f-4787-a291-c67834d212e7')]",
 		"nsgID":                              "[resourceId('Microsoft.Network/networkSecurityGroups',variables('nsgName'))]",
 		"nsgName":                            "[concat(variables('masterVMNamePrefix'), 'nsg')]",
-		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersion,
+		"orchestratorNameVersionTag":         "Kubernetes:" + testK8sVersionAzureStack,
 		"primaryAvailabilitySetName":         "",
 		"primaryScaleSetName":                cs.Properties.GetPrimaryScaleSetName(),
 		"cloudInitFiles": map[string]interface{}{
@@ -719,7 +754,6 @@ func TestK8sVars(t *testing.T) {
 			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
 			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
@@ -829,7 +863,6 @@ func TestK8sVars(t *testing.T) {
 		"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
 		"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 		"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-		"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 		"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 		"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 		"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),
@@ -887,11 +920,14 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 		},
 	}
 
-	cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err := cs.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	varMap, err := GetKubernetesVariables(cs)
 	if err != nil {
@@ -972,7 +1008,6 @@ func TestK8sVarsMastersOnly(t *testing.T) {
 			"provisionConfigs":          getBase64EncodedGzippedCustomScript(kubernetesCSEConfig, cs),
 			"customSearchDomainsScript": getBase64EncodedGzippedCustomScript(kubernetesCustomSearchDomainsScript, cs),
 			"generateProxyCertsScript":  getBase64EncodedGzippedCustomScript(kubernetesMasterGenerateProxyCertsScript, cs),
-			"mountEtcdScript":           getBase64EncodedGzippedCustomScript(kubernetesMountEtcd, cs),
 			"etcdSystemdService":        getBase64EncodedGzippedCustomScript(etcdSystemdService, cs),
 			"dhcpv6ConfigurationScript": getBase64EncodedGzippedCustomScript(dhcpv6ConfigurationScript, cs),
 			"dhcpv6SystemdService":      getBase64EncodedGzippedCustomScript(dhcpv6SystemdService, cs),

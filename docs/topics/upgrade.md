@@ -125,7 +125,7 @@ The upgrade operation is a long-running, successive set of ARM deployments, and 
 
 ### Cluster-autoscaler + Availability Set
 
-We don't recommend using `aks-engine upgrade` on clusters that have Availability Set (non-VMSS) agent pools `cluster-autoscaler` at this time.
+At this time, we don't recommend using `aks-engine upgrade` on clusters running the `cluster-autoscaler` addon that have Availability Set (non-VMSS) node pools.
 
 <a name="force-upgrade"></a>
 ## Forcing an upgrade
@@ -137,7 +137,7 @@ The upgrade operation takes an optional `--force` argument:
 force upgrading the cluster to desired version. Allows same version upgrades and downgrades.
 ```
 
-In some situations, you might want to bypass the AKS-Engine validation of your apimodel versions and cluster nodes versions. This is at your own risk and you should assess the potential harm of using this flag.
+In some situations, you might want to bypass the AKS-Engine validation of your API model versions and cluster nodes versions. This is at your own risk and you should assess the potential harm of using this flag.
 
 The `--force` parameter instructs the upgrade process to:
 

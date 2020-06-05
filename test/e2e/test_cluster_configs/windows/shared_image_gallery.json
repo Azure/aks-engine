@@ -1,9 +1,10 @@
 {
 	"env": {
-		"REGION_OPTIONS": "westus",
-		"WINDOWS_NODE_IMAGE_NAME": "AKS-Engine-WS2019",
+		"REGION_OPTIONS": "westus2",
+		"SKIP_TESTS": "true",
+		"WINDOWS_NODE_IMAGE_NAME": "aks-engine-ws2019",
 		"WINDOWS_NODE_IMAGE_RESOURCE_GROUP": "acse-test-infrastructure",
-		"WINDOWS_NODE_IMAGE_GALLERY": "akse_test_images",
+		"WINDOWS_NODE_IMAGE_GALLERY": "akse_test_images_westus2",
 		"WINDOWS_NODE_IMAGE_SUBSCRIPTION_ID": "3014546b-7d1c-4f80-8523-f24a9976fe6a",
 		"WINDOWS_NODE_IMAGE_VERSION": "17763.678.190826"
 	},

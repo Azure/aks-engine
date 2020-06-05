@@ -215,7 +215,7 @@ func convertVLabsAgentPoolOnlyWindowsProfile(vlabs *vlabs.WindowsProfile, api *W
 func convertV20170831AgentPoolOnlyOrchestratorProfile(kubernetesVersion string) *OrchestratorProfile {
 	return &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
-		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false),
+		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false, false),
 		KubernetesConfig: &KubernetesConfig{
 			EnableRbac:          to.BoolPtr(false),
 			EnableSecureKubelet: to.BoolPtr(false),
@@ -232,7 +232,7 @@ func convertV20170831AgentPoolOnlyOrchestratorProfile(kubernetesVersion string) 
 func convertVLabsAgentPoolOnlyOrchestratorProfile(kubernetesVersion string) *OrchestratorProfile {
 	return &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
-		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false),
+		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false, false),
 	}
 }
 
@@ -297,7 +297,9 @@ func isAgentPoolOnlyClusterJSON(contents []byte) bool {
 
 func propertiesAsMap(contents []byte) (map[string]interface{}, bool) {
 	var raw interface{}
-	json.Unmarshal(contents, &raw)
+	if err := json.Unmarshal(contents, &raw); err != nil {
+		return nil, false
+	}
 	jsonMap := raw.(map[string]interface{})
 	properties, propertiesPresent := jsonMap["properties"]
 	if !propertiesPresent {
@@ -460,7 +462,7 @@ func convertV20180331AgentPoolOnlyOrchestratorProfile(kubernetesVersion string, 
 
 	return &OrchestratorProfile{
 		OrchestratorType:    Kubernetes,
-		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false),
+		OrchestratorVersion: common.GetSupportedKubernetesVersion(kubernetesVersion, false, false),
 		KubernetesConfig:    kubernetesConfig,
 	}
 }

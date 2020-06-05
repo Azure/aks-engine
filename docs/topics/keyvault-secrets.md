@@ -6,7 +6,7 @@ AKS Engine enables you to source the following cluster configuration from Micros
 
 For official Azure Key Vault documentation go [here](https://docs.microsoft.com/en-us/azure/key-vault/basic-concepts).
 
-In order to use Key Vault as the source of cluster configuration secrets, you pass in a reference to the secret URI in your api model:
+In order to use Key Vault as the source of cluster configuration secrets, you pass in a reference to the secret URI in your API model:
 
 
 ```json
@@ -50,7 +50,7 @@ In order to use Key Vault as the source of cluster configuration secrets, you pa
 
 ## Certificate Profile
 
-For parameters referenced in the `properties.certificateProfile` section of the api model file, the value of each field should be formatted as:
+For parameters referenced in the `properties.certificateProfile` section of the API model file, the value of each field should be formatted as:
 
 ```json
 {

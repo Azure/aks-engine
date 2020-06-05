@@ -45,7 +45,7 @@ $ aks-engine deploy --subscription-id 51ac25de-afdg-9201-d923-8d8e8e8e8e8e \
     --location westus2 \
     --api-model examples/kubernetes.json
 
-INFO[0000] new api model file has been generated during merge: /tmp/mergedApiModel619868596
+INFO[0000] new API model file has been generated during merge: /tmp/mergedApiModel619868596
 WARN[0002] apimodel: missing masterProfile.dnsPrefix will use "contoso-apple"
 INFO[0025] Starting ARM Deployment contoso-apple-1423145182 in resource group contoso-apple. This will take some time...
 INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
@@ -56,19 +56,18 @@ INFO[0256] Finished ARM Deployment (contoso-apple-1423145182). Succeeded
 * `_output/contoso-apple-59769a59/azureuser_rsa`
 * `_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json`
 
-aks-engine generates kubeconfig files for each possible region. Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is `_output/<clustername>/kubeconfig/kubeconfig.westus2.json`:
+`aks-engine` generates kubeconfig files for each possible region. Access the new cluster by using the kubeconfig generated for the cluster's location. This example used `westus2`, so the kubeconfig is `_output/<clustername>/kubeconfig/kubeconfig.westus2.json`:
 
 ```sh
 $ KUBECONFIG=_output/contoso-apple-59769a59/kubeconfig/kubeconfig.westus2.json kubectl cluster-info
 Kubernetes master is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com
-Heapster is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/heapster
-KubeDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kube-dns
-kubernetes-dashboard is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/proxy/namespaces/kube-system/services/kubernetes-dashboard
+CoreDNS is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://contoso-apple-59769a59.westus2.cloudapp.azure.com/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
-Administrative note: By default, the directory where aks-engine stores cluster configuration (`_output/contoso-apple` above) won't be overwritten as a result of subsequent attempts to deploy a cluster using the same `--dns-prefix`) To re-use the same resource group name repeatedly, include the `--force-overwrite` command line option with your `aks-engine deploy` command. On a related note, include an `--auto-suffix` option to append a randomly generated suffix to the dns-prefix to form the resource group name, for example if your workflow requires a common prefix across multiple cluster deployments. Using the `--auto-suffix` pattern appends a compressed timestamp to ensure a unique cluster name (and thus ensure that each deployment's configuration artifacts will be stored locally under a discrete `_output/<resource-group-name>/` directory).
+Administrative note: By default, the directory where `aks-engine` stores cluster configuration (`_output/contoso-apple` above) won't be overwritten as a result of subsequent attempts to deploy a cluster using the same `--dns-prefix`) To re-use the same resource group name repeatedly, include the `--force-overwrite` command line option with your `aks-engine deploy` command. On a related note, include an `--auto-suffix` option to append a randomly generated suffix to the dns-prefix to form the resource group name, for example if your workflow requires a common prefix across multiple cluster deployments. Using the `--auto-suffix` pattern appends a compressed timestamp to ensure a unique cluster name (and thus ensure that each deployment's configuration artifacts will be stored locally under a discrete `_output/<resource-group-name>/` directory).
 
 **Note**: If the cluster is using an existing VNET please see the [Custom VNET](custom-vnet.md) feature documentation for additional steps that must be completed after cluster provisioning.
 
@@ -101,7 +100,7 @@ If you don't have an SSH key [cluster operators may generate a new one](https://
 
 ### Step 2: Create a Service Principal
 
-Kubernetes clusters have integrated support for various cloud providers as core functionality. On Azure, aks-engine uses a Service Principal to interact with Azure Resource Manager (ARM). Follow the [instructions](../topics/service-principals.md) to create a new service principal and grant it the necessary IAM role to create Azure resources.
+Kubernetes clusters have integrated support for various cloud providers as core functionality. On Azure, `aks-engine` uses a Service Principal to interact with Azure Resource Manager (ARM). Follow the [instructions](../topics/service-principals.md) to create a new service principal and grant it the necessary IAM role to create Azure resources.
 
 ### Step 3: Edit your Cluster Definition
 
@@ -164,7 +163,7 @@ k8s-master-22116803-0           XXXXXXXXXXXX                  southeastasia
 az vm show -g <resource group of cluster> -n <name of Master or agent VM> --query tags
 ```
 
-    Sample JSON out of this command is shown below. This command can also be used to check the aks-engine version which was used to create the cluster
+Sample JSON out of this command is shown below. This command can also be used to check the `aks-engine` version which was used to create the cluster
 
 ```json
 {

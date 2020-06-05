@@ -1,10 +1,10 @@
 # Planning Process
 
-aks-engine features a lightweight process that emphasizes openness and ensures every community member can see project goals for the future.
+AKS Engine features a lightweight process that emphasizes openness and ensures every community member can see project goals for the future.
 
 ## The Role of Maintainers
 
-[Maintainers][] lead the aks-engine project. Their duties include proposing the Roadmap, reviewing and integrating contributions and maintaining the vision of the project.
+[Maintainers][] lead the AKS Engine project. Their duties include proposing the Roadmap, reviewing and integrating contributions and maintaining the vision of the project.
 
 ## Open Roadmap
 

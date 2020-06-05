@@ -30,7 +30,7 @@ In the "Proximate Problem Statements" above, we observe that one of the three ex
 
 - quickly testing/validating specific container images across the set of Kubernetes components in a working cluster
 
-More specifically, the "addons" interface summarized above will allow for the required container image reference configuration across a large set of the Kubernetes components that either aren’t configurable, or which require non-generic, distinct flat properties. That would look like this in the api model:
+More specifically, the "addons" interface summarized above will allow for the required container image reference configuration across a large set of the Kubernetes components that either aren’t configurable, or which require non-generic, distinct flat properties. That would look like this in the API model:
 
 ```json
 {

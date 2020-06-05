@@ -70,11 +70,6 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 	k := o.KubernetesConfig
 	// TODO validate that each of these addons are actually wired in to the conveniences in getAddonFuncMap
 	return map[string]kubernetesComponentFileSpec{
-		common.HeapsterAddonName: {
-			sourceFile:      heapsterAddonSourceFilename,
-			base64Data:      k.GetAddonScript(common.HeapsterAddonName),
-			destinationFile: heapsterAddonDestinationFilename,
-		},
 		common.MetricsServerAddonName: {
 			sourceFile:      metricsServerAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.MetricsServerAddonName),
@@ -233,7 +228,7 @@ func kubernetesAddonSettingsInit(p *api.Properties) map[string]kubernetesCompone
 		common.ScheduledMaintenanceAddonName: {
 			sourceFile:      scheduledMaintenanceAddonSourceFilename,
 			base64Data:      k.GetAddonScript(common.ScheduledMaintenanceAddonName),
-			destinationFile: scheduledMaintenanceAddonSourceFilename,
+			destinationFile: scheduledMaintenanceAddonDestinationFilename,
 		},
 		common.SecretsStoreCSIDriverAddonName: {
 			sourceFile:      secretsStoreCSIDriverAddonSourceFileName,

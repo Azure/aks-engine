@@ -31,6 +31,7 @@ var cseErrorCodes = map[string]int{
 	"ERR_IMG_DOWNLOAD_TIMEOUT":                   33,
 	"ERR_KUBELET_START_FAIL":                     34,
 	"ERR_CONTAINER_IMG_PULL_TIMEOUT":             35,
+	"ERR_ADDONS_START_FAIL":                      36,
 	"ERR_CNI_DOWNLOAD_TIMEOUT":                   41,
 	"ERR_MS_PROD_DEB_DOWNLOAD_TIMEOUT":           42,
 	"ERR_MS_PROD_DEB_PKG_ADD_FAIL":               43,
@@ -73,6 +74,9 @@ var cseErrorCodes = map[string]int{
 	"ERR_BPFTRACE_BIN_DOWNLOAD_FAIL":             169,
 	"ERR_BPFTRACE_TOOLS_DOWNLOAD_FAIL":           170,
 	"ERR_CLUSTER_INIT_FAIL":                      180,
+	"ERR_KUBERESERVED_SLICE_SETUP_FAIL":          181,
+	"ERR_KUBELET_SLICE_SETUP_FAIL":               182,
+	"ERR_CRI_SLICE_SETUP_FAIL":                   183,
 }
 
 func GetCSEErrorCode(errorType string) int {

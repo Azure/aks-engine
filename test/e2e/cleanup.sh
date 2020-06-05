@@ -41,20 +41,20 @@ az account set -s $SUBSCRIPTION_ID_TO_CLEANUP
 # find resource groups created before our deadline
 echo "Looking for resource groups created over ${EXPIRATION_IN_HOURS} hours ago..."
 if [ -z "$RESOURCE_GROUP_SUBSTRING" ]; then
-  for resourceGroup in $(az group list | jq --arg dl $deadline '.[] | select(.name | contains("acse-test") | not) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
-    for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
+  for resourceGroup in $(az group list | jq --arg dl $deadline '.[] | select(.name | contains("acse-test") or contains("aksimages") or contains("NetworkWatcherRG") | not) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
+    for deployment in $(az deployment group list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
       echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
-      az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+      az deployment group delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
     done
     echo "Will delete resource group ${resourceGroup}..."
     # delete old resource groups
     az group delete -y -n $resourceGroup --no-wait >> delete.log || echo "unable to delete resource group ${resourceGroup}, will continue..."
   done
 else
-  for resourceGroup in $(az group list | jq --arg dl $deadline --arg rg $RESOURCE_GROUP_SUBSTRING '.[] | select(.name | contains("acse-test") | not) | select(.name | contains($rg)) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
-    for deployment in $(az group deployment list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
+  for resourceGroup in $(az group list | jq --arg dl $deadline --arg rg $RESOURCE_GROUP_SUBSTRING '.[] | select(.name | contains("acse-test") or contains("aksimages") or contains ("NetworkWatcherRG") | not) | select(.name | contains($rg)) | select(.tags.now < $dl).name' | tr -d '\"' || ""); do
+    for deployment in $(az deployment group list -g $resourceGroup | jq '.[] | .name' | tr -d '\"' || ""); do
       echo "Will delete deployment ${deployment} from resource group ${resourceGroup}..."
-      az group deployment delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
+      az deployment group delete -n $deployment -g $resourceGroup || echo "unable to delete deployment ${deployment}, will continue..."
     done
     echo "Will delete resource group ${resourceGroup}..."
     # delete old resource groups

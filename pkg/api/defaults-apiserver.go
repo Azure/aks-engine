@@ -29,7 +29,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--tls-cert-file":               "/etc/kubernetes/certs/apiserver.crt",
 		"--tls-private-key-file":        "/etc/kubernetes/certs/apiserver.key",
 		"--client-ca-file":              "/etc/kubernetes/certs/ca.crt",
-		"--repair-malformed-updates":    "false",
 		"--service-account-key-file":    "/etc/kubernetes/certs/apiserver.key",
 		"--kubelet-client-certificate":  "/etc/kubernetes/certs/client.crt",
 		"--kubelet-client-key":          "/etc/kubernetes/certs/client.key",
@@ -149,19 +148,11 @@ func (cs *ContainerService) setAPIServerConfig() {
 	}
 
 	// Enforce flags removal that don't work with specific versions, to accommodate upgrade
-	// Remove flags that are not compatible with 1.10
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.10.0") {
-		for _, key := range []string{"--admission-control"} {
-			delete(o.KubernetesConfig.APIServerConfig, key)
-		}
+	// Remove flags that are not compatible with any supported versions
+	for _, key := range []string{"--admission-control", "--repair-malformed-updates"} {
+		delete(o.KubernetesConfig.APIServerConfig, key)
 	}
-	// Enforce flags removal that don't work with specific versions, to accommodate upgrade
-	// Remove flags that are not compatible with 1.14
-	if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0-alpha.1") {
-		for _, key := range []string{"--repair-malformed-updates"} {
-			delete(o.KubernetesConfig.APIServerConfig, key)
-		}
-	}
+
 	// Set bind address to prefer IPv6 address for single stack IPv6 cluster
 	// Remove --advertise-address so that --bind-address will be used
 	if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {

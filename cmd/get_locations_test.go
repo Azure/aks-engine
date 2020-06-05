@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/Azure/aks-engine/pkg/armhelpers"
@@ -91,7 +92,10 @@ func ExampleLocationsCmd_run_humanOutput() {
 	args := []string{}
 
 	d.output = "human"
-	d.run(r, args)
+	if err := d.run(r, args); err != nil {
+		fmt.Printf("error running command: %s\n", err)
+	}
+
 	// Output:
 	// Location          Name                      Latitude  Longitude
 	// centraluseuap     Central US EUAP (Canary)  N/A       N/A
@@ -137,7 +141,9 @@ func ExampleLocationsCmd_run_jsonOutput() {
 	args := []string{}
 
 	d.output = "json"
-	d.run(r, args)
+	if err := d.run(r, args); err != nil {
+		fmt.Printf("error running command: %s\n", err)
+	}
 
 	// Output:
 	// [
@@ -269,7 +275,9 @@ func ExampleLocationsCmd_run_codeOutput() {
 	args := []string{}
 
 	d.output = "code"
-	d.run(r, args)
+	if err := d.run(r, args); err != nil {
+		fmt.Printf("error running command: %s\n", err)
+	}
 
 	// Output:
 	// // Copyright (c) Microsoft Corporation. All rights reserved.

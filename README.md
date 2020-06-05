@@ -17,13 +17,9 @@ Depending on how new you are to AKS Engine, you can try [a tutorial][tutorials],
 
 Please see the [FAQ][] for answers about AKS Engine and its progenitor ACS-Engine.
 
-## Sharpen your skills
-
-The official [AKS Engine documentation][docs] covers everything you need to know about AKS Engine (and then some).
-
 ## Join the community
 
-Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute.
+Want to get involved? The [community guide][community] covers everything you need to know about the AKS Engine community and how you can contribute. The [developer guide][developer-guide] will help you onboard as a developer.
 
 ## Support
 
@@ -40,6 +36,7 @@ For more information, please see the [telemetry documentation][telemetry].
 
 [ARM]: https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-overview
 [community]: docs/community/README.md
+[developer-guide]: docs/community/developer-guide.md
 [docs]: docs/README.md
 [FAQ]: docs/faq.md
 [tutorials]: docs/tutorials/README.md

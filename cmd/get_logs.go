@@ -61,7 +61,7 @@ func newGetLogsCmd() *cobra.Command {
 		Long:  getLogsLongDescription,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := glc.validateArgs(); err != nil {
-				cmd.Usage()
+				_ = cmd.Usage()
 				return errors.Wrap(err, "validating get-logs args")
 			}
 			if err := glc.loadAPIModel(); err != nil {
@@ -77,11 +77,11 @@ func newGetLogsCmd() *cobra.Command {
 	command.Flags().StringVar(&glc.linuxScriptPath, "linux-script", "", "path to the log collection script to execute on the cluster's Linux nodes (required)")
 	command.Flags().StringVarP(&glc.outputDirectory, "output-directory", "o", "", "collected logs destination directory, derived from --api-model if missing")
 	command.Flags().BoolVarP(&glc.controlPlaneOnly, "control-plane-only", "", false, "get logs from control plane VMs only")
-	command.MarkFlagRequired("location")
-	command.MarkFlagRequired("api-model")
-	command.MarkFlagRequired("ssh-host")
-	command.MarkFlagRequired("linux-ssh-private-key")
-	command.MarkFlagRequired("linux-script") // optional once in VHD
+	_ = command.MarkFlagRequired("location")
+	_ = command.MarkFlagRequired("api-model")
+	_ = command.MarkFlagRequired("ssh-host")
+	_ = command.MarkFlagRequired("linux-ssh-private-key")
+	_ = command.MarkFlagRequired("linux-script") // optional once in VHD
 	return command
 }
 
@@ -130,6 +130,15 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	if glc.cs, _, err = apiloader.LoadContainerServiceFromFile(glc.apiModelPath, false, false, nil); err != nil {
 		return errors.Wrap(err, "error parsing api-model")
 	}
+	if glc.cs.Properties.IsCustomCloudProfile() {
+		if err = writeCustomCloudProfile(glc.cs); err != nil {
+			return errors.Wrap(err, "error writing custom cloud profile")
+		}
+		if err = glc.cs.Properties.SetCustomCloudSpec(api.AzureCustomCloudSpecParams{IsUpgrade: false, IsScale: true}); err != nil {
+			return errors.Wrap(err, "error parsing the api model")
+		}
+	}
+
 	if glc.cs.Location == "" {
 		glc.cs.Location = glc.location
 	} else if glc.cs.Location != glc.location {
@@ -142,7 +151,7 @@ func (glc *getLogsCmd) loadAPIModel() (err error) {
 	}
 	glc.linuxSSHConfig = helpers.SSHClientConfig(glc.cs.Properties.LinuxProfile.AdminUsername, lauth)
 
-	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.SSHEnabled {
+	if glc.cs.Properties.WindowsProfile != nil && glc.cs.Properties.WindowsProfile.GetSSHEnabled() {
 		glc.windowsSSHConfig = helpers.SSHClientConfig(
 			glc.cs.Properties.WindowsProfile.AdminUsername,
 			ssh.Password(glc.cs.Properties.WindowsProfile.AdminPassword))
@@ -184,6 +193,7 @@ func (glc *getLogsCmd) run() (err error) {
 			log.Warnf("Error: %s", err)
 		}
 	}
+	log.Infof("Logs downloaded to %s", glc.outputDirectory)
 	return nil
 }
 
@@ -217,7 +227,6 @@ func (glc *getLogsCmd) getClusterNodes() error {
 			log.Warnf("skipping node %s, could not determine operating system", node.Name)
 		}
 	}
-	log.Debugf("Logs downloaded to %s", glc.outputDirectory)
 	return nil
 }
 
@@ -280,10 +289,10 @@ func (glc *getLogsCmd) executeScript(node v1.Node, client *ssh.Client) (string, 
 	if isLinuxNode(node) {
 		if glc.linuxScriptPath != "" {
 			script = "/tmp/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; sudo %s; rm %s\"", script, script, script)
+			cmd = fmt.Sprintf("bash -c \"sudo chmod +x %s; export AZURE_ENV=%s; sudo -E %s; rm %s\"", script, glc.getCloudName(), script, script)
 		} else {
 			script = "/opt/azure/containers/collect-logs.sh"
-			cmd = fmt.Sprintf("bash -c \"sudo %s\"", script)
+			cmd = fmt.Sprintf("bash -c \"export AZURE_ENV=%s; sudo -E %s\"", glc.getCloudName(), script)
 		}
 	} else {
 		script = "c:\\k\\debug\\collect-windows-logs.ps1"
@@ -333,6 +342,7 @@ func (glc *getLogsCmd) downloadLogs(node v1.Node, client *ssh.Client) (string, e
 		return "", errors.Wrap(err, "downloading logs")
 	}
 
+	fmt.Println("")
 	return "", nil
 }
 
@@ -342,6 +352,13 @@ func isLinuxNode(node v1.Node) bool {
 
 func isWindowsNode(node v1.Node) bool {
 	return strings.EqualFold(node.Status.NodeInfo.OperatingSystem, "windows")
+}
+
+func (glc *getLogsCmd) getCloudName() string {
+	if glc.cs.Properties.IsAzureStackCloud() {
+		return "AzureStackCloud"
+	}
+	return ""
 }
 
 type DownloadProgressWriter struct {

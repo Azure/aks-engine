@@ -15,6 +15,7 @@ import (
 
 	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/helpers"
+	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2019-12-01/compute"
 	"github.com/Azure/go-autorest/autorest/to"
 	"github.com/blang/semver"
 	"github.com/google/uuid"
@@ -35,9 +36,10 @@ var (
 		"3.0.0", "3.0.1", "3.0.2", "3.0.3", "3.0.4", "3.0.5", "3.0.6", "3.0.7", "3.0.8", "3.0.9", "3.0.10", "3.0.11", "3.0.12", "3.0.13", "3.0.14", "3.0.15", "3.0.16", "3.0.17",
 		"3.1.0", "3.1.1", "3.1.2", "3.1.2", "3.1.3", "3.1.4", "3.1.5", "3.1.6", "3.1.7", "3.1.8", "3.1.9", "3.1.10",
 		"3.2.0", "3.2.1", "3.2.2", "3.2.3", "3.2.4", "3.2.5", "3.2.6", "3.2.7", "3.2.8", "3.2.9", "3.2.11", "3.2.12",
-		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13", "3.3.15", "3.3.18", "3.3.19"}
+		"3.2.13", "3.2.14", "3.2.15", "3.2.16", "3.2.23", "3.2.24", "3.2.25", "3.2.26", "3.3.0", "3.3.1", "3.3.8", "3.3.9", "3.3.10", "3.3.13", "3.3.15", "3.3.18", "3.3.19", "3.3.22"}
 	containerdValidVersions              = [...]string{"1.3.2"}
 	kubernetesImageBaseTypeValidVersions = [...]string{"", common.KubernetesImageBaseTypeGCR, common.KubernetesImageBaseTypeMCR}
+	cachingTypesValidValues              = [...]string{"", string(compute.CachingTypesNone), string(compute.CachingTypesReadWrite), string(compute.CachingTypesReadOnly)}
 	networkPluginPlusPolicyAllowed       = []k8sNetworkConfig{
 		{
 			networkPlugin: "",
@@ -81,6 +83,10 @@ var (
 		},
 		{
 			networkPlugin: NetworkPluginAntrea,
+			networkPolicy: NetworkPolicyAntrea,
+		},
+		{
+			networkPlugin: "azure",
 			networkPolicy: NetworkPolicyAntrea,
 		},
 		{
@@ -167,7 +173,7 @@ func (a *Properties) validate(isUpdate bool) error {
 		return e
 	}
 
-	if e := a.validateWindowsProfile(); e != nil {
+	if e := a.validateWindowsProfile(isUpdate); e != nil {
 		return e
 	}
 	return nil
@@ -191,6 +197,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				isUpdate,
+				false,
 				false)
 			if version == "" {
 				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
@@ -211,11 +218,20 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				isUpdate,
-				a.HasWindows())
-			if version == "" && a.HasWindows() {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true))
-			} else if version == "" {
-				return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false))
+				a.HasWindows(),
+				a.IsAzureStackCloud())
+			if a.IsAzureStackCloud() {
+				if version == "" && a.HasWindows() {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, true))
+				} else if version == "" {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported on Azure Stack: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, true))
+				}
+			} else {
+				if version == "" && a.HasWindows() {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported with OsType \"Windows\": OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, true, false))
+				} else if version == "" {
+					return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: \"%s\", OrchestratorRelease: \"%s\", OrchestratorVersion: \"%s\". Please use one of the following versions: %v", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion, common.GetAllSupportedKubernetesVersions(false, false, false))
+				}
 			}
 
 			sv, err := semver.Make(version)
@@ -296,7 +312,7 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				}
 
 				if o.KubernetesConfig.LoadBalancerSku != "" {
-					if strings.ToLower(o.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) && strings.ToLower(o.KubernetesConfig.LoadBalancerSku) != strings.ToLower(BasicLoadBalancerSku) {
+					if !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) && !strings.EqualFold(o.KubernetesConfig.LoadBalancerSku, BasicLoadBalancerSku) {
 						return errors.Errorf("Invalid value for loadBalancerSku, only %s and %s are supported", StandardLoadBalancerSku, BasicLoadBalancerSku)
 					}
 				}
@@ -368,9 +384,10 @@ func (a *Properties) ValidateOrchestratorProfile(isUpdate bool) error {
 				o.OrchestratorRelease,
 				o.OrchestratorVersion,
 				false,
-				a.HasWindows())
+				a.HasWindows(),
+				a.IsAzureStackCloud())
 			if version == "" {
-				patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows())
+				patchVersion := common.GetValidPatchVersion(o.OrchestratorType, o.OrchestratorVersion, isUpdate, a.HasWindows(), a.IsAzureStackCloud())
 				// if there isn't a supported patch version for this version fail
 				if patchVersion == "" {
 					if a.HasWindows() {
@@ -450,6 +467,16 @@ func (a *Properties) validateMasterProfile(isUpdate bool) error {
 		if m.Distro != "" && !m.IsUbuntu() {
 			return errors.Errorf("You have enabled auditd for master vms, but you did not specify an Ubuntu-based distro.")
 		}
+	}
+
+	var validOSDiskCachingType bool
+	for _, valid := range cachingTypesValidValues {
+		if valid == m.OSDiskCachingType {
+			validOSDiskCachingType = true
+		}
+	}
+	if !validOSDiskCachingType {
+		return errors.Errorf("Invalid masterProfile osDiskCachingType value \"%s\", please use one of the following versions: %s", m.OSDiskCachingType, cachingTypesValidValues)
 	}
 
 	return common.ValidateDNSPrefix(m.DNSPrefix)
@@ -575,6 +602,26 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 		if e := validateProximityPlacementGroupID(agentPoolProfile.ProximityPlacementGroupID); e != nil {
 			return e
 		}
+		var validOSDiskCachingType, validDataDiskCachingType bool
+		for _, valid := range cachingTypesValidValues {
+			if valid == agentPoolProfile.OSDiskCachingType {
+				validOSDiskCachingType = true
+			}
+			if valid == agentPoolProfile.DataDiskCachingType {
+				validDataDiskCachingType = true
+			}
+		}
+		if !validOSDiskCachingType {
+			return errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", agentPoolProfile.OSDiskCachingType, agentPoolProfile.Name, cachingTypesValidValues)
+		}
+		if !validDataDiskCachingType {
+			return errors.Errorf("Invalid dataDiskCachingType value \"%s\" for agentPoolProfile \"%s\", please use one of the following versions: %s", agentPoolProfile.DataDiskCachingType, agentPoolProfile.Name, cachingTypesValidValues)
+		}
+		if agentPoolProfile.IsEphemeral() {
+			if agentPoolProfile.OSDiskCachingType != "" && agentPoolProfile.OSDiskCachingType != string(compute.CachingTypesReadOnly) {
+				return errors.Errorf("Invalid osDiskCachingType value \"%s\" for agentPoolProfile \"%s\" using Ephemeral Disk, you must use: %s", agentPoolProfile.OSDiskCachingType, agentPoolProfile.Name, string(compute.CachingTypesReadOnly))
+			}
+		}
 	}
 
 	return nil
@@ -620,7 +667,7 @@ func (a *Properties) validateZones() error {
 						return errors.New("Availability Zones are not supported with an AvailabilitySet. Please either remove availabilityProfile or set availabilityProfile to VirtualMachineScaleSets")
 					}
 				}
-				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && strings.ToLower(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku) != strings.ToLower(StandardLoadBalancerSku) {
+				if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != "" && !strings.EqualFold(a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku, StandardLoadBalancerSku) {
 					return errors.New("Availability Zones requires Standard LoadBalancer. Please set KubernetesConfig \"LoadBalancerSku\" to \"Standard\"")
 				}
 			}
@@ -942,6 +989,7 @@ func (a *Properties) validateManagedIdentity() error {
 				a.OrchestratorProfile.OrchestratorRelease,
 				a.OrchestratorProfile.OrchestratorVersion,
 				false,
+				false,
 				false)
 			if version == "" {
 				return errors.Errorf("the following user supplied OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", a.OrchestratorProfile.OrchestratorType, a.OrchestratorProfile.OrchestratorRelease, a.OrchestratorProfile.OrchestratorVersion)
@@ -1077,6 +1125,7 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
 			isUpdate,
+			false,
 			false)
 		if version == "" {
 			return errors.Errorf("the following OrchestratorProfile configuration is not supported: OrchestratorType: %s, OrchestratorRelease: %s, OrchestratorVersion: %s. Please check supported Release or Version for this build of aks-engine", o.OrchestratorType, o.OrchestratorRelease, o.OrchestratorVersion)
@@ -1110,7 +1159,7 @@ func validateVMSS(o *OrchestratorProfile, isUpdate bool, storageProfile string) 
 	return nil
 }
 
-func (a *Properties) validateWindowsProfile() error {
+func (a *Properties) validateWindowsProfile(isUpdate bool) error {
 	hasWindowsAgentPools := false
 	for _, profile := range a.AgentPoolProfiles {
 		if profile.OSType == Windows {
@@ -1137,8 +1186,9 @@ func (a *Properties) validateWindowsProfile() error {
 			o.OrchestratorType,
 			o.OrchestratorRelease,
 			o.OrchestratorVersion,
-			false,
-			true)
+			isUpdate,
+			true,
+			false)
 
 		if version == "" {
 			return errors.Errorf("Orchestrator %s version %s does not support Windows", o.OrchestratorType, o.OrchestratorVersion)
@@ -1928,6 +1978,9 @@ func (cs *ContainerService) Validate(isUpdate bool) error {
 func (cs *ContainerService) validateLocation() error {
 	if cs.Properties != nil && cs.Properties.IsCustomCloudProfile() && cs.Location == "" {
 		return errors.New("missing ContainerService Location")
+	}
+	if cs.Location == "" {
+		log.Warnf("No \"location\" value was specified, AKS Engine will generate an ARM template configuration valid for regions in public cloud only")
 	}
 	return nil
 }

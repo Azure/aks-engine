@@ -43,28 +43,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		}
 	}
 	workspaceDomain = base64.StdEncoding.EncodeToString([]byte(workspaceDomain))
-	defaultsHeapsterAddonsConfig := KubernetesAddon{
-		Name:    common.HeapsterAddonName,
-		Enabled: to.BoolPtr(DefaultHeapsterAddonEnabled),
-		Containers: []KubernetesContainerSpec{
-			{
-				Name:           common.HeapsterAddonName,
-				Image:          kubernetesImageBase + k8sComponents[common.HeapsterAddonName],
-				CPURequests:    "88m",
-				MemoryRequests: "204Mi",
-				CPULimits:      "88m",
-				MemoryLimits:   "204Mi",
-			},
-			{
-				Name:           "heapster-nanny",
-				Image:          kubernetesImageBase + k8sComponents[common.AddonResizerComponentName],
-				CPURequests:    "88m",
-				MemoryRequests: "204Mi",
-				CPULimits:      "88m",
-				MemoryLimits:   "204Mi",
-			},
-		},
-	}
 
 	defaultTillerAddonsConfig := KubernetesAddon{
 		Name:    common.TillerAddonName,
@@ -215,7 +193,15 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryRequests: "150Mi",
 				CPULimits:      "300m",
 				MemoryLimits:   "150Mi",
-				Image:          kubernetesImageBase + k8sComponents[common.DashboardAddonName],
+				Image:          k8sComponents[common.DashboardAddonName],
+			},
+			{
+				Name:           common.DashboardMetricsScraperContainerName,
+				CPURequests:    "300m",
+				MemoryRequests: "150Mi",
+				CPULimits:      "300m",
+				MemoryLimits:   "150Mi",
+				Image:          k8sComponents[common.DashboardMetricsScraperContainerName],
 			},
 		},
 	}
@@ -238,12 +224,17 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultMetricsServerAddonsConfig := KubernetesAddon{
 		Name:    common.MetricsServerAddonName,
 		Enabled: to.BoolPtr(DefaultMetricsServerAddonEnabled),
+		Mode:    AddonModeReconcile,
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.MetricsServerAddonName,
 				Image: kubernetesImageBase + k8sComponents[common.MetricsServerAddonName],
 			},
 		},
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultMetricsServerAddonsConfig.Mode = AddonModeEnsureExists
 	}
 
 	defaultNVIDIADevicePluginAddonsConfig := KubernetesAddon{
@@ -287,8 +278,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultIPMasqAgentAddonsConfig := KubernetesAddon{
 		Name: common.IPMASQAgentAddonName,
 		Enabled: to.BoolPtr(DefaultIPMasqAgentAddonEnabled &&
-			(o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
-				o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea)),
+			o.KubernetesConfig.NetworkPlugin != NetworkPluginCilium &&
+			o.KubernetesConfig.NetworkPlugin != NetworkPluginAntrea),
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.IPMASQAgentAddonName,
@@ -309,12 +300,18 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultAzureCNINetworkMonitorAddonsConfig := KubernetesAddon{
-		Name:    common.AzureCNINetworkMonitorAddonName,
-		Enabled: to.BoolPtr(o.IsAzureCNI() && o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico),
+		Name: common.AzureCNINetworkMonitorAddonName,
+		Enabled: to.BoolPtr(o.IsAzureCNI() &&
+			o.KubernetesConfig.NetworkPolicy != NetworkPolicyCalico &&
+			o.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea),
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AzureCNINetworkMonitorAddonName,
-				Image: specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+				Name:           common.AzureCNINetworkMonitorAddonName,
+				Image:          specConfig.AzureCNIImageBase + k8sComponents[common.AzureCNINetworkMonitorAddonName],
+				CPURequests:    "30m",
+				MemoryRequests: "25Mi",
+				CPULimits:      "200m",
+				MemoryLimits:   "256Mi",
 			},
 		},
 	}
@@ -322,6 +319,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultAzureNetworkPolicyAddonsConfig := KubernetesAddon{
 		Name:    common.AzureNetworkPolicyAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure && o.KubernetesConfig.NetworkPolicy == NetworkPolicyAzure),
+		Mode:    AddonModeReconcile,
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:           common.AzureNetworkPolicyAddonName,
@@ -332,6 +330,10 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 				MemoryLimits:   "200Mi",
 			},
 		},
+	}
+
+	if !common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.16.0") {
+		defaultAzureNetworkPolicyAddonsConfig.Mode = AddonModeEnsureExists
 	}
 
 	defaultCloudNodeManagerAddonsConfig := KubernetesAddon{
@@ -348,6 +350,9 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	defaultsCalicoDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.CalicoAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
+		Config: map[string]string{
+			"logSeverityScreen": "info",
+		},
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.CalicoTyphaComponentName,
@@ -397,28 +402,40 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 
 	defaultsAntreaDaemonSetAddonsConfig := KubernetesAddon{
 		Name:    common.AntreaAddonName,
-		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPlugin == NetworkPluginAntrea),
+		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea),
 		Config: map[string]string{
-			"serviceCidr": o.KubernetesConfig.ServiceCIDR,
+			"serviceCidr":      o.KubernetesConfig.ServiceCIDR,
+			"trafficEncapMode": common.AntreaDefaultTrafficEncapMode,
+			"installCniCmd":    common.AntreaDefaultInstallCniCmd,
 		},
 		Containers: []KubernetesContainerSpec{
 			{
-				Name:  common.AntreaControllerContainerName,
-				Image: k8sComponents[common.AntreaControllerContainerName],
+				Name:        common.AntreaControllerContainerName,
+				Image:       k8sComponents[common.AntreaControllerContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaAgentContainerName,
-				Image: k8sComponents[common.AntreaAgentContainerName],
+				Name:        common.AntreaAgentContainerName,
+				Image:       k8sComponents[common.AntreaAgentContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaOVSContainerName,
-				Image: k8sComponents[common.AntreaOVSContainerName],
+				Name:        common.AntreaOVSContainerName,
+				Image:       k8sComponents[common.AntreaOVSContainerName],
+				CPURequests: "200m",
 			},
 			{
-				Name:  common.AntreaInstallCNIContainerName,
-				Image: k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
+				Name:        common.AntreaInstallCNIContainerName,
+				Image:       k8sComponents["antrea"+common.AntreaInstallCNIContainerName],
+				CPURequests: "100m",
 			},
 		},
+	}
+
+	// Set NetworkPolicyOnly mode when azure cni is enabled
+	if o.KubernetesConfig.NetworkPolicy == NetworkPolicyAntrea && o.IsAzureCNI() {
+		defaultsAntreaDaemonSetAddonsConfig.Config["trafficEncapMode"] = common.AntreaNetworkPolicyOnlyMode
+		defaultsAntreaDaemonSetAddonsConfig.Config["installCniCmd"] = common.AntreaInstallCniChainCmd
 	}
 
 	defaultsAADPodIdentityAddonsConfig := KubernetesAddon{
@@ -478,7 +495,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 			"customPluginMonitor": "/config/kernel-monitor-counter.json,/config/systemd-monitor-counter.json",
 			"systemLogMonitor":    "/config/kernel-monitor.json,/config/docker-monitor.json,/config/systemd-monitor.json",
 			"systemStatsMonitor":  "/config/system-stats-monitor.json",
-			"versionLabel":        "v0.8.1",
+			"versionLabel":        "v0.8.2",
 		},
 		Containers: []KubernetesContainerSpec{
 			{
@@ -851,7 +868,6 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 	}
 
 	defaultAddons := []KubernetesAddon{
-		defaultsHeapsterAddonsConfig,
 		defaultTillerAddonsConfig,
 		defaultACIConnectorAddonsConfig,
 		defaultClusterAutoscalerAddonsConfig,
@@ -1152,14 +1168,11 @@ func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService
 	return ret
 }
 
-// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack and Kubernetes version is lower than v1.17.0.
-// Otherwise, it returns empty string.
+// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack. Otherwise, it returns empty string.
 // Azure Stack needs the '-azs' suffix so kube-proxy's manifests uses the custom hyperkube image present in the VHD
 func kubeProxyImageSuffix(cs ContainerService) string {
 	if cs.Properties.IsAzureStackCloud() {
-		if !common.IsKubernetesVersionGe(cs.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-			return common.AzureStackSuffix
-		}
+		return common.AzureStackSuffix
 	}
 	return ""
 }

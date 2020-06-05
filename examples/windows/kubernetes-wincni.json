@@ -21,15 +21,16 @@
         "osType": "Windows",
         "osDiskSizeGB": 128,
         "extensions": [
-            {
-                "name": "winrm"
-            }
+          {
+            "name": "winrm"
+          }
         ]
       }
     ],
     "windowsProfile": {
       "adminUsername": "azureuser",
-      "adminPassword": "replacepassword1234$"
+      "adminPassword": "replacepassword1234$",
+      "enableAHUB": true
     },
     "linuxProfile": {
       "adminUsername": "azureuser",

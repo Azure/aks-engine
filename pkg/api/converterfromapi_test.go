@@ -520,6 +520,7 @@ func getDefaultContainerService() *ContainerService {
 					ContainerRuntimeConfig: map[string]string{
 						common.ContainerDataDirKey: "/mnt/docker",
 					},
+					KubeReservedCgroup:              "kubesystem.slice",
 					MaxPods:                         3,
 					DockerBridgeSubnet:              "sampleDockerSubnet",
 					DNSServiceIP:                    "172.0.0.1",
@@ -548,7 +549,7 @@ func getDefaultContainerService() *ContainerService {
 					EtcdVersion:                     "3.0.0",
 					EtcdDiskSizeGB:                  "256",
 					EtcdEncryptionKey:               "sampleEncruptionKey",
-					AzureCNIVersion:                 "1.1.0",
+					AzureCNIVersion:                 "1.1.3",
 					AzureCNIURLLinux:                "https://mirror.azk8s.cn/kubernetes/azure-container-networking/linux",
 					AzureCNIURLWindows:              "https://mirror.azk8s.cn/kubernetes/azure-container-networking/windows",
 					KeyVaultSku:                     "Basic",
@@ -772,23 +773,25 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
+				EnableAHUB:             to.BoolPtr(true),
 			},
 			expected: vlabs.WindowsProfile{
 				AdminUsername:          "user",
 				AdminPassword:          "password",
 				EnableAutomaticUpdates: &falseVar,
 				ImageVersion:           "17763.615.1907121548",
-				SSHEnabled:             false,
+				SSHEnabled:             &falseVar,
 				WindowsPublisher:       "MicrosoftWindowsServer",
 				WindowsOffer:           "WindowsServer",
 				WindowsSku:             "2019-Datacenter-Core-smalldisk",
 				WindowsDockerVersion:   "18.09",
 				Secrets:                []vlabs.KeyVaultSecrets{},
+				EnableAHUB:             to.BoolPtr(true),
 			},
 		},
 		{
@@ -816,9 +819,9 @@ func TestConvertWindowsProfileToVlabs(t *testing.T) {
 	}
 
 	for _, c := range cases {
+		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
 			actual := vlabs.WindowsProfile{}
 			convertWindowsProfileToVLabs(&c.w, &actual)
 

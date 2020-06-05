@@ -286,7 +286,7 @@ func (a *Account) CreateDeployment(name string, e *engine.Engine) error {
 		}
 	}()
 
-	cmd := exec.Command("az", "group", "deployment", "create",
+	cmd := exec.Command("az", "deployment", "group", "create",
 		"--name", d.Name,
 		"--resource-group", a.ResourceGroup.Name,
 		"--template-file", e.Config.GeneratedTemplatePath,

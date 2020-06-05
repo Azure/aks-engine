@@ -83,7 +83,9 @@ const securityRuleBaseString string = `          {
 func TestExpected(t *testing.T) {
 	// Initialize locale for translation
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -120,7 +122,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+			certsGenerated, _ := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -150,7 +152,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+					certsGenerated, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -232,7 +234,7 @@ func TestExpected(t *testing.T) {
 				continue
 			}
 
-			certsGenerated, err := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+			certsGenerated, _ := containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 				IsScale:    false,
 				IsUpgrade:  false,
 				PkiKeySize: helpers.DefaultPkiKeySize,
@@ -262,7 +264,7 @@ func TestExpected(t *testing.T) {
 
 			for i := 0; i < 3; i++ {
 				if i > 0 {
-					certsGenerated, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+					certsGenerated, _ = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 						IsScale:    false,
 						IsUpgrade:  false,
 						PkiKeySize: helpers.DefaultPkiKeySize,
@@ -403,7 +405,9 @@ type OutputElement struct {
 
 func TestTemplateOutputPresence(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -427,11 +431,14 @@ func TestTemplateOutputPresence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load container service from file: %v", err)
 	}
-	containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
+	_, err = containerService.SetPropertiesDefaults(api.PropertiesDefaultsParams{
 		IsScale:    false,
 		IsUpgrade:  false,
 		PkiKeySize: helpers.DefaultPkiKeySize,
 	})
+	if err != nil {
+		t.Error(err)
+	}
 	armTemplate, _, err := templateGenerator.GenerateTemplateV2(containerService, DefaultGeneratorCode, TestAKSEngineVersion)
 	if err != nil {
 		t.Fatalf("Failed to generate arm template: %v", err)
@@ -635,7 +642,9 @@ func TestIsNSeriesSKU(t *testing.T) {
 
 func TestGenerateKubeConfig(t *testing.T) {
 	locale := gotext.NewLocale(path.Join("..", "..", "translations"), "en_US")
-	i18n.Initialize(locale)
+	if err := i18n.Initialize(locale); err != nil {
+		t.Error(err)
+	}
 
 	apiloader := &api.Apiloader{
 		Translator: &i18n.Translator{
@@ -1725,8 +1734,7 @@ func TestVerifyGetBase64EncodedGzippedCustomScriptIsTransparent(t *testing.T) {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-			for _, file := range []string{kubernetesMountEtcd,
-				etcdSystemdService,
+			for _, file := range []string{etcdSystemdService,
 				dhcpv6ConfigurationScript,
 				kubernetesCISScript,
 				kmsSystemdService,
@@ -1792,24 +1800,25 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 	specConfig := api.AzureCloudSpecEnvMap["AzurePublicCloud"].KubernetesSpecConfig
 	k8sComponentsByVersionMap := api.GetK8sComponentsByVersionMap(&api.KubernetesConfig{KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR})
 	cases := []struct {
-		name                       string
-		addon                      api.KubernetesAddon
-		cs                         *api.ContainerService
-		expectedImage              string
-		expectedCPUReqs            string
-		expectedCPULimits          string
-		expectedMemReqs            string
-		expectedMemLimits          string
-		expectedScanInterval       string
-		expectedVersion            string
-		expectedMode               string
-		expectedNodesConfig        string
-		expectedVMType             string
-		expectedVolumeMounts       string
-		expectedVolumes            string
-		expectedHostNetwork        string
-		expectedCloud              string
-		expectedUseManagedIdentity string
+		name                                              string
+		addon                                             api.KubernetesAddon
+		cs                                                *api.ContainerService
+		expectedImage                                     string
+		expectedCPUReqs                                   string
+		expectedCPULimits                                 string
+		expectedMemReqs                                   string
+		expectedMemLimits                                 string
+		expectedScanInterval                              string
+		expectedVersion                                   string
+		expectedMode                                      string
+		expectedNodesConfig                               string
+		expectedVMType                                    string
+		expectedVolumeMounts                              string
+		expectedVolumes                                   string
+		expectedHostNetwork                               string
+		expectedCloud                                     string
+		expectedUseManagedIdentity                        string
+		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
 	}{
 		{
 			name: "single pool",
@@ -1828,7 +1837,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 						MemoryRequests: "300Mi",
 						CPULimits:      "100m",
 						MemoryLimits:   "300Mi",
-						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+						Image:          specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.16.9"][common.ClusterAutoscalerAddonName],
 					},
 				},
 				Pools: []api.AddonNodePoolsConfig{
@@ -1845,7 +1854,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 				Properties: &api.Properties{
 					OrchestratorProfile: &api.OrchestratorProfile{
 						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.15.4",
+						OrchestratorVersion: "1.16.9",
 						KubernetesConfig: &api.KubernetesConfig{
 							NetworkPlugin: api.NetworkPluginAzure,
 							Addons: []api.KubernetesAddon{
@@ -1866,7 +1875,7 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 					},
 				},
 			},
-			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.4"][common.ClusterAutoscalerAddonName],
+			expectedImage:              specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.16.9"][common.ClusterAutoscalerAddonName],
 			expectedCPUReqs:            "100m",
 			expectedCPULimits:          "100m",
 			expectedMemReqs:            "300Mi",
@@ -1876,11 +1885,12 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
+			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
 		},
 		{
 			name: "multiple pools",
@@ -1959,9 +1969,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "        - --nodes=1:10:k8s-pool1-49584119-vmss\n        - --nodes=1:10:k8s-pool2-49584119-vmss",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -2026,9 +2036,9 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			expectedMode:               api.AddonModeEnsureExists,
 			expectedNodesConfig:        "",
 			expectedVMType:             "dm1zcw==", // base 64 encoding of vmss
-			expectedVolumeMounts:       fmt.Sprintf("\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true"),
-			expectedVolumes:            fmt.Sprintf("\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent"),
-			expectedHostNetwork:        fmt.Sprintf("\n      hostNetwork: true"),
+			expectedVolumeMounts:       "\n        - mountPath: /var/lib/waagent/\n          name: waagent\n          readOnly: true",
+			expectedVolumes:            "\n      - hostPath:\n          path: /var/lib/waagent/\n        name: waagent",
+			expectedHostNetwork:        "\n      hostNetwork: true",
 			expectedCloud:              "AzurePublicCloud",
 			expectedUseManagedIdentity: "true",
 		},
@@ -2450,6 +2460,11 @@ func TestGetClusterAutoscalerAddonFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedUseManagedIdentity {
 				t.Errorf("expected funcMap invocation of UseManagedIdentity to return %s, instead got %s", c.expectedUseManagedIdentity, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["IsKubernetesVersionGe"])
+			ret = v.Call([]reflect.Value{reflect.ValueOf("1.16.0")})
+			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
+				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
+			}
 		})
 	}
 }
@@ -2479,6 +2494,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 		expectedShouldEnableAzureDiskCSISnapshotFeature   bool
 		expectedShouldEnableAzureFileCSISnapshotFeature   bool
 		expectedIsKubernetesVersionGeOneDotSixteenDotZero bool
+		expectedMode                                      string
 	}{
 		{
 			name: "coredns as an example",
@@ -2557,6 +2573,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - Azure Stack",
@@ -2639,6 +2656,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - StorageAccount",
@@ -2717,6 +2735,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - CCM",
@@ -2796,6 +2815,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   false,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   true,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: false,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - Availability Zones",
@@ -2880,13 +2900,14 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+			expectedMode: api.AddonModeEnsureExists,
 		},
 		{
 			name: "coredns as an example - hybrid cluster",
 			addon: api.KubernetesAddon{
 				Name:    common.CoreDNSAddonName,
 				Enabled: to.BoolPtr(true),
-				Mode:    api.AddonModeEnsureExists,
+				Mode:    api.AddonModeReconcile,
 				Config: map[string]string{
 					"foo": "bar",
 				},
@@ -2963,6 +2984,7 @@ func TestGetAddonFuncMap(t *testing.T) {
 			expectedShouldEnableAzureDiskCSISnapshotFeature:   true,
 			expectedShouldEnableAzureFileCSISnapshotFeature:   false,
 			expectedIsKubernetesVersionGeOneDotSixteenDotZero: true,
+			expectedMode: api.AddonModeReconcile,
 		},
 	}
 
@@ -3061,6 +3083,16 @@ func TestGetAddonFuncMap(t *testing.T) {
 			if ret[0].Interface() != c.expectedIsKubernetesVersionGeOneDotSixteenDotZero {
 				t.Errorf("expected funcMap invocation of IsKubernetesVersionGe for 1.16.0 to return %t, instead got %t", c.expectedIsKubernetesVersionGeOneDotSixteenDotZero, ret[0].Interface())
 			}
+			v = reflect.ValueOf(funcMap["GetAADPodIdentityTaintKey"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != common.AADPodIdentityTaintKey {
+				t.Errorf("expected funcMap invocation of GetAADPodIdentityTaintKey to return %s, instead got %s", common.AADPodIdentityTaintKey, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["GetMode"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedMode {
+				t.Errorf("expected funcMap invocation of GetMode to return %s, instead got %s", c.expectedMode, ret[0].Interface())
+			}
 		})
 	}
 }
@@ -3106,7 +3138,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
 					},
 				},
 				{
@@ -3119,7 +3151,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
 					},
 				},
 				{
@@ -3132,7 +3164,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+						"command": "\"cloud-controller-manager\"",
 					},
 				},
 				{
@@ -3145,7 +3177,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
 					},
 				},
 				{
@@ -3192,17 +3224,17 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedIsAzureStackCloud: false,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
 			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
 			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
 			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
 			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
 			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 		{
@@ -3218,7 +3250,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
+						"command": "\"/hyperkube\", \"kube-apiserver\"",
 					},
 				},
 				{
@@ -3231,7 +3263,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
+						"command": "\"/hyperkube\", \"kube-controller-manager\"",
 					},
 				},
 				{
@@ -3244,7 +3276,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
+						"command": "\"cloud-controller-manager\"",
 					},
 				},
 				{
@@ -3257,7 +3289,7 @@ func TestGetComponentFuncMap(t *testing.T) {
 						},
 					},
 					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
+						"command": "\"/hyperkube\", \"kube-scheduler\"",
 					},
 				},
 				{
@@ -3309,129 +3341,17 @@ func TestGetComponentFuncMap(t *testing.T) {
 			expectedIsAzureStackCloud: true,
 			expectedIsKubernetesVersionGeOneDotFifteenDotZero: true,
 			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
+			expectedAPIServerCommand:                          "\"/hyperkube\", \"kube-apiserver\"",
+			expectedAPIServerArgs:                             "\"baz=bang\", \"foo=bar\"",
 			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
+			expectedControllerManagerCommand:                  "\"/hyperkube\", \"kube-controller-manager\"",
+			expectedControllerManagerArgs:                     "\"quid=ergo\", \"this=that\"",
 			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
+			expectedCloudControllerManagerCommand:             "\"cloud-controller-manager\"",
+			expectedCloudControllerManagerArgs:                "\"bugs=bunny\"",
 			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube] + common.AzureStackSuffix,
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
-			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
-		},
-		{
-			name: "1.14",
-			components: []api.KubernetesComponent{
-				{
-					Name:    common.APIServerComponentName,
-					Enabled: to.BoolPtr(true),
-					Containers: []api.KubernetesContainerSpec{
-						{
-							Name:  common.APIServerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-						},
-					},
-					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-					},
-				},
-				{
-					Name:    common.ControllerManagerComponentName,
-					Enabled: to.BoolPtr(true),
-					Containers: []api.KubernetesContainerSpec{
-						{
-							Name:  common.ControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-						},
-					},
-					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-					},
-				},
-				{
-					Name:    common.CloudControllerManagerComponentName,
-					Enabled: to.BoolPtr(true),
-					Containers: []api.KubernetesContainerSpec{
-						{
-							Name:  common.CloudControllerManagerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-						},
-					},
-					Config: map[string]string{
-						"command": fmt.Sprintf("\"cloud-controller-manager\""),
-					},
-				},
-				{
-					Name:    common.SchedulerComponentName,
-					Enabled: to.BoolPtr(true),
-					Containers: []api.KubernetesContainerSpec{
-						{
-							Name:  common.SchedulerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-						},
-					},
-					Config: map[string]string{
-						"command": fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-					},
-				},
-				{
-					Name:    common.AddonManagerComponentName,
-					Enabled: to.BoolPtr(true),
-					Containers: []api.KubernetesContainerSpec{
-						{
-							Name:  common.AddonManagerComponentName,
-							Image: specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
-						},
-					},
-				},
-			},
-			cs: &api.ContainerService{
-				Properties: &api.Properties{
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    api.Kubernetes,
-						OrchestratorVersion: "1.14.7",
-						KubernetesConfig: &api.KubernetesConfig{
-							APIServerConfig: map[string]string{
-								"foo": "bar",
-								"baz": "bang",
-							},
-							ControllerManagerConfig: map[string]string{
-								"this": "that",
-								"quid": "ergo",
-							},
-							CloudControllerManagerConfig: map[string]string{
-								"bugs": "bunny",
-							},
-							SchedulerConfig: map[string]string{
-								"daffy": "duck",
-								"porky": "pig",
-								"elmer": "fudd",
-							},
-						},
-					},
-				},
-			},
-			expectedCPUReqs:           "",
-			expectedCPULimits:         "",
-			expectedMemReqs:           "",
-			expectedMemLimits:         "",
-			expectedIsAzureStackCloud: false,
-			expectedIsKubernetesVersionGeOneDotFifteenDotZero: false,
-			expectedAPIServerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedAPIServerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-apiserver\""),
-			expectedAPIServerArgs:                             fmt.Sprintf("\"baz=bang\", \"foo=bar\""),
-			expectedControllerManagerImage:                    specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedControllerManagerCommand:                  fmt.Sprintf("\"/hyperkube\", \"kube-controller-manager\""),
-			expectedControllerManagerArgs:                     fmt.Sprintf("\"quid=ergo\", \"this=that\""),
-			expectedCloudControllerManagerImage:               specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.CloudControllerManagerComponentName],
-			expectedCloudControllerManagerCommand:             fmt.Sprintf("\"cloud-controller-manager\""),
-			expectedCloudControllerManagerArgs:                fmt.Sprintf("\"bugs=bunny\""),
-			expectedSchedulerImage:                            specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.Hyperkube],
-			expectedSchedulerCommand:                          fmt.Sprintf("\"/hyperkube\", \"kube-scheduler\""),
-			expectedSchedulerArgs:                             fmt.Sprintf("\"daffy=duck\", \"elmer=fudd\", \"porky=pig\""),
+			expectedSchedulerCommand:                          "\"/hyperkube\", \"kube-scheduler\"",
+			expectedSchedulerArgs:                             "\"daffy=duck\", \"elmer=fudd\", \"porky=pig\"",
 			expectedAddonManagerImage:                         specConfig.KubernetesImageBase + k8sComponentsByVersionMap["1.15.7"][common.AddonManagerComponentName],
 		},
 	}
