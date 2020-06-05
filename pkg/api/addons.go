@@ -258,7 +258,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Enabled: to.BoolPtr(DefaultContainerMonitoringAddonEnabled && !cs.Properties.IsAzureStackCloud()),
 		Config: map[string]string{
 			"omsAgentVersion":       "1.10.0.1",
-			"dockerProviderVersion": "8.0.0-3",
+			"dockerProviderVersion": "10.0.0-1",
 			"schema-versions":       "v1",
 			"clusterName":           clusterDNSPrefix,
 			"workspaceDomain":       workspaceDomain,
