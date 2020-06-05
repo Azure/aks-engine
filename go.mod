@@ -10,6 +10,7 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.2.0
 	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
+	github.com/BurntSushi/toml v0.3.1
 	github.com/Jeffail/gabs v1.1.1
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/davecgh/go-spew v1.1.1
@@ -57,6 +58,7 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.25.0
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.41.0
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471
 	k8s.io/apimachinery v0.0.0-20190221213512-86fb29eff628
 	k8s.io/client-go v10.0.0+incompatible
