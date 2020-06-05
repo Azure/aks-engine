@@ -5,15 +5,11 @@ package engine
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 	"text/template"
 
 	"github.com/Azure/aks-engine/pkg/api"
-	"github.com/Azure/aks-engine/pkg/api/common"
-	"github.com/google/go-cmp/cmp"
-
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/pkg/errors"
 )
@@ -753,7 +749,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			}
 			if len(c.cs.Properties.AgentPoolProfiles) > 0 {
 				v = reflect.ValueOf(funcMap["IsNSeriesSKU"])
-				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0].VMSize)})
+				ret = v.Call([]reflect.Value{reflect.ValueOf(c.cs.Properties.AgentPoolProfiles[0])})
 				if ret[0].Interface() != c.expectedIsNSeriesSKU {
 					t.Errorf("expected funcMap invocation of IsNSeriesSKU to return %t, instead got %t", c.expectedIsNSeriesSKU, ret[0].Interface())
 				}
@@ -1022,151 +1018,6 @@ func TestGetIdentitySystem(t *testing.T) {
 			ret := v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != test.expectedResult {
 				t.Fatalf("IsIdentitySystemADFS returned incorrect value")
-			}
-		})
-	}
-}
-
-func TestGetDockerConfig(t *testing.T) {
-	cases := []struct {
-		name          string
-		vmSKU         string
-		runtimeConfig map[string]string
-	}{
-		{
-			name:          "default",
-			vmSKU:         "Standard_D8s_v3",
-			runtimeConfig: nil,
-		},
-		{
-			name:          "gpu",
-			vmSKU:         "Standard_NC12s_v2",
-			runtimeConfig: nil,
-		},
-		{
-			name:  "reroot",
-			vmSKU: "Standard_D8s_v3",
-			runtimeConfig: map[string]string{
-				"dataDir": "/mnt/docker",
-			},
-		},
-		{
-			name:  "all",
-			vmSKU: "Standard_NC12s_v2",
-			runtimeConfig: map[string]string{
-				"dataDir": "/mnt/docker",
-			},
-		},
-	}
-	expectedOutputs := common.GetDockerConfigTestCases()
-
-	for _, c := range cases {
-		t.Run(fmt.Sprintf("docker %s", c.name), func(t *testing.T) {
-			cs := &api.ContainerService{
-				Properties: &api.Properties{
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:   "agentpool",
-							VMSize: c.vmSKU,
-							Count:  1,
-						},
-					},
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.12.2",
-						KubernetesConfig: &api.KubernetesConfig{
-							ContainerRuntime:       api.Docker,
-							ContainerRuntimeConfig: c.runtimeConfig,
-						},
-					},
-				},
-			}
-			isGPU := common.IsNvidiaEnabledSKU(cs.Properties.AgentPoolProfiles[0].VMSize)
-			got, err := getDockerConfig(cs, isGPU)
-			if err != nil {
-				t.Fatalf("Error gegetting containerd config: %v", err)
-
-			}
-			want := expectedOutputs[c.name]
-			diff := cmp.Diff(want, got)
-			if diff != "" {
-				t.Fatalf(diff)
-			}
-		})
-	}
-}
-
-func TestGetContainerdConfig(t *testing.T) {
-	cases := []struct {
-		name          string
-		vmSKU         string
-		runtimeConfig map[string]string
-		kubenet       bool
-	}{
-		{
-			name:          "default",
-			vmSKU:         "Standard_D8s_v3",
-			runtimeConfig: nil,
-		},
-		{
-			name:          "kubenet",
-			vmSKU:         "Standard_NC12s_v2", // No change for containerd
-			runtimeConfig: nil,
-			kubenet:       true,
-		},
-		{
-			name:  "reroot",
-			vmSKU: "Standard_D8s_v3",
-			runtimeConfig: map[string]string{
-				"dataDir": "/mnt/containerd",
-			},
-		},
-		{
-			name:  "all",
-			vmSKU: "Standard_NC12s_v2",
-			runtimeConfig: map[string]string{
-				"dataDir": "/mnt/containerd",
-			},
-			kubenet: true,
-		},
-	}
-	expectedOutputs := common.GetContainerdConfigTestCases()
-
-	for _, c := range cases {
-		t.Run(fmt.Sprintf("containerd %s", c.name), func(t *testing.T) {
-			cs := &api.ContainerService{
-				Properties: &api.Properties{
-					AgentPoolProfiles: []*api.AgentPoolProfile{
-						{
-							Name:   "agentpool",
-							VMSize: c.vmSKU,
-							Count:  1,
-						},
-					},
-					OrchestratorProfile: &api.OrchestratorProfile{
-						OrchestratorType:    Kubernetes,
-						OrchestratorVersion: "1.16.0",
-						KubernetesConfig: &api.KubernetesConfig{
-							MCRKubernetesImageBase: "foo/",
-							ContainerRuntime:       api.Containerd,
-							ContainerRuntimeConfig: c.runtimeConfig,
-						},
-					},
-				},
-			}
-			if c.kubenet {
-				cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
-			}
-
-			got, err := getContainerdConfig(cs)
-			if err != nil {
-				t.Fatalf("Error gegetting containerd config: %v", err)
-
-			}
-			want := expectedOutputs[c.name]
-			diff := cmp.Diff(want, got)
-			if diff != "" {
-				t.Fatalf(diff)
 			}
 		})
 	}

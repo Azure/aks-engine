@@ -88,11 +88,6 @@ const (
 	Containerd     = "containerd"
 )
 
-// Known container runtime configuration keys
-const (
-	ContainerDataDirKey = "dataDir"
-)
-
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
 	NetworkPluginValues = [...]string{"", "kubenet", "azure", NetworkPluginCilium, NetworkPluginAntrea, "flannel"}
