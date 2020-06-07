@@ -613,7 +613,7 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 | "--allow-privileged"                        | "true"                                                                                  |
 | "--anonymous-auth"                          | "false                                                                                  |
 | "--audit-log-path"                          | "/var/log/apiserver/audit.log"                                                          |
-| "--insecure-port"                           | "8080"                                                                                  |
+| "--insecure-port"                           | "0"                                                                                     |
 | "--secure-port"                             | "443"                                                                                   |
 | "--service-account-lookup"                  | "true"                                                                                  |
 | "--etcd-cafile"                             | "/etc/kubernetes/certs/ca.crt"                                                          |

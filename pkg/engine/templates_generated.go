@@ -23815,6 +23815,9 @@ spec:
   - name: kube-addon-manager
     image: {{ContainerImage "kube-addon-manager"}}
     imagePullPolicy: IfNotPresent
+    env:
+    - name: KUBECONFIG
+      value: "/var/lib/kubelet/kubeconfig"
     resources:
       requests:
         cpu: 5m
@@ -23826,6 +23829,12 @@ spec:
     - name: msi
       mountPath: /var/lib/waagent/ManagedIdentity-Settings
       readOnly: true
+    - name: var-lib-kubelet
+      mountPath: /var/lib/kubelet
+      readOnly: true
+    - name: etc-kubernetes
+      mountPath: /etc/kubernetes
+      readOnly: true
   volumes:
   - name: addons
     hostPath:
@@ -23833,6 +23842,12 @@ spec:
   - name: msi
     hostPath:
       path: /var/lib/waagent/ManagedIdentity-Settings
+  - name: var-lib-kubelet
+    hostPath:
+      path: /var/lib/kubelet
+  - name: etc-kubernetes
+    hostPath:
+      path: /etc/kubernetes
 #EOF
 `)
 
