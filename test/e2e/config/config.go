@@ -30,7 +30,7 @@ type Config struct {
 	Orchestrator        string        `envconfig:"ORCHESTRATOR" default:"kubernetes"`
 	Name                string        `envconfig:"NAME" default:""`                                                       // Name allows you to set the name of a cluster already created
 	Location            string        `envconfig:"LOCATION" default:""`                                                   // Location where you want to create the cluster
-	Regions             []string      `envconfig:"REGIONS" default:""`                                                    // A whitelist of availableregions
+	Regions             []string      `envconfig:"REGIONS" default:""`                                                    // A list of regions to instruct the runner to randomly choose when provisioning IaaS
 	ClusterDefinition   string        `envconfig:"CLUSTER_DEFINITION" required:"true" default:"examples/kubernetes.json"` // ClusterDefinition is the path on disk to the json template these are normally located in examples/
 	CleanUpOnExit       bool          `envconfig:"CLEANUP_ON_EXIT" default:"false"`                                       // if true the tests will clean up rgs when tests finish
 	CleanUpIfFail       bool          `envconfig:"CLEANUP_IF_FAIL" default:"false"`
