@@ -590,7 +590,7 @@ Below is a list of apiserver options that AKS Engine will configure by default:
 
 | apiserver option                | default value                                                                                                                                                                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "--anonymous-auth"                          | "false                                                                                  |
+| "--anonymous-auth"                          | "false"                                                                                  |
 | "--admission-control"           | "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota" (Kubernetes versions prior to 1.9.0)                                                                                                          |
 | "--enable-admission-plugins"`*` | "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration" (Kubernetes versions 1.9.0 and later) |
 | "--authorization-mode"          | "Node", "RBAC" (_the latter if enabledRbac is true_)                                                                                                                                                                            |
