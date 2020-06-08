@@ -143,7 +143,7 @@ The `--force` parameter instructs the upgrade process to:
 
 - bypass the usual version validation
 - include __all__ your cluster's nodes (masters and agents) in the upgrade process; nodes that are already on the target version will __not__ be skipped.
-- allow any Kubernetes versions, including the ones that have not been whitelisted, or deprecated
+- allow any Kubernetes versions, including the non-supported or deprecated versions
 - accept downgrade operations
 
 > Note: If you pass in a version that AKS-Engine literally cannot install (e.g., a version of Kubernetes that does not exist), you may break your cluster.
