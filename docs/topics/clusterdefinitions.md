@@ -590,6 +590,7 @@ Below is a list of apiserver options that AKS Engine will configure by default:
 
 | apiserver option                | default value                                                                                                                                                                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "--anonymous-auth"                          | "false"                                                                                  |
 | "--admission-control"           | "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota" (Kubernetes versions prior to 1.9.0)                                                                                                          |
 | "--enable-admission-plugins"`*` | "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,ExtendedResourceToleration" (Kubernetes versions 1.9.0 and later) |
 | "--authorization-mode"          | "Node", "RBAC" (_the latter if enabledRbac is true_)                                                                                                                                                                            |
@@ -611,7 +612,6 @@ Below is a list of apiserver options that are _not_ currently user-configurable,
 | "--bind-address"                            | "0.0.0.0"                                                                               |
 | "--advertise-address"                       | _calculated value that represents listening URI for API server_                         |
 | "--allow-privileged"                        | "true"                                                                                  |
-| "--anonymous-auth"                          | "false                                                                                  |
 | "--audit-log-path"                          | "/var/log/apiserver/audit.log"                                                          |
 | "--insecure-port"                           | "0"                                                                                     |
 | "--secure-port"                             | "443"                                                                                   |

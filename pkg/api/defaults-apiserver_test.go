@@ -506,3 +506,26 @@ func TestAPIServerIPv6Only(t *testing.T) {
 		}
 	}
 }
+
+func TestAPIServerAnonymousAuth(t *testing.T) {
+	// Validate anonymous-auth default is false
+	cs := CreateMockContainerService("testcluster", "1.15.12", 3, 2, false)
+	cs.setAPIServerConfig()
+	a := cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--anonymous-auth"] != "false" {
+		t.Fatalf("got unexpected '--anonymous-auth' API server config value for k8s v%s: %s",
+			"1.15.12", a["--anonymous-auth"])
+	}
+
+	// Validate anonymous-auth enabled
+	cs = CreateMockContainerService("testcluster", "1.15.12", 3, 2, false)
+	cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig = map[string]string{
+		"--anonymous-auth": "true",
+	}
+	cs.setAPIServerConfig()
+	a = cs.Properties.OrchestratorProfile.KubernetesConfig.APIServerConfig
+	if a["--anonymous-auth"] != "true" {
+		t.Fatalf("got unexpected '--anonymous-auth' API server config value for k8s v%s: %s",
+			"1.15.12", a["--anonymous-auth"])
+	}
+}

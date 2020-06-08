@@ -19,7 +19,6 @@ func (cs *ContainerService) setAPIServerConfig() {
 		"--bind-address":                "0.0.0.0",
 		"--advertise-address":           "<advertiseAddr>",
 		"--allow-privileged":            "true",
-		"--anonymous-auth":              "false",
 		"--audit-log-path":              "/var/log/kubeaudit/audit.log",
 		"--insecure-port":               "0",
 		"--secure-port":                 "443",
@@ -51,6 +50,7 @@ func (cs *ContainerService) setAPIServerConfig() {
 
 	// Default apiserver config
 	defaultAPIServerConfig := map[string]string{
+		"--anonymous-auth":      "false",
 		"--audit-log-maxage":    "30",
 		"--audit-log-maxbackup": "10",
 		"--audit-log-maxsize":   "100",
