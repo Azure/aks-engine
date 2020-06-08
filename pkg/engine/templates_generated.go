@@ -22348,13 +22348,20 @@ if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
 
 $env:KUBE_NETWORK = $KubeNetwork
 $global:HNSModule = "c:\k\hns.psm1"
-$KubeDir = $Global:ClusterConfiguration.Install.Destination
+$global:KubeDir = $Global:ClusterConfiguration.Install.Destination
+$global:KubeproxyArgList = @("--v=3", "--proxy-mode=kernelspace", "--hostname-override=$env:computername", "--kubeconfig=$KubeDir\config")
 
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 while (!$hnsNetwork) {
     Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
     Start-Sleep 10
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+}
+
+# add dualstack feature gate if dualstack enabled
+$isDualStackEnabled = ("--feature-gates=IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null
+if ($isDualStackEnabled) {
+    $global:KubeproxyArgList += @("--feature-gates=IPv6DualStack=true")
 }
 
 #
@@ -22365,12 +22372,9 @@ Import-Module $global:HNSModule
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
-if (("--feature-gates=IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null) {
-    .$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --feature-gates=IPv6DualStack=true --hostname-override=$env:computername --kubeconfig=$KubeDir\config
-}
-else {
-    .$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
-}`)
+$KubeproxyCmdline = "$global:KubeDir\kube-proxy.exe "+ ($global:KubeproxyArgList -join " ")
+Invoke-Expression $KubeproxyCmdline
+`)
 
 func k8sKubeproxystartPs1Bytes() ([]byte, error) {
 	return _k8sKubeproxystartPs1, nil
@@ -23368,6 +23372,7 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 # $global:NetworkPolicy = "{{WrapAsParameter "networkPolicy"}}" # BUG: unused
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
+$global:IsDualStackEnabled = {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
 # Telemetry settings
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
@@ -23593,7 +23598,7 @@ try
                 -VNetCIDR $global:VNetCIDR ` + "`" + `
                 {{- /* Azure Stack has discrete Azure CNI config requirements */}}
                 -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}} ` + "`" + `
-                -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
+                -IsDualStackEnabled $global:IsDualStackEnabled
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig ` + "`" + `
@@ -23618,7 +23623,7 @@ try
             }
         }
 
-        New-ExternalHnsNetwork -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
+        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
 
         Install-KubernetesServices ` + "`" + `
             -KubeDir $global:KubeDir

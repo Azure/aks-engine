@@ -133,6 +133,7 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 # $global:NetworkPolicy = "{{WrapAsParameter "networkPolicy"}}" # BUG: unused
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
+$global:IsDualStackEnabled = {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
 # Telemetry settings
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
@@ -358,7 +359,7 @@ try
                 -VNetCIDR $global:VNetCIDR `
                 {{- /* Azure Stack has discrete Azure CNI config requirements */}}
                 -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}} `
-                -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
+                -IsDualStackEnabled $global:IsDualStackEnabled
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig `
@@ -383,7 +384,7 @@ try
             }
         }
 
-        New-ExternalHnsNetwork -IsDualStackEnabled {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
+        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
 
         Install-KubernetesServices `
             -KubeDir $global:KubeDir
