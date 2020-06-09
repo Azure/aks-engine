@@ -429,11 +429,11 @@ ensureJournal() {
   systemctlEnableAndStart systemd-journald || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 installKubeletAndKubectl() {
-  path=/usr/local/bin
+  binPath=/usr/local/bin
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
-    path=/opt/bin
+    binPath=/opt/bin
   fi
-  if [[ ! -f "${path}/kubectl-${KUBERNETES_VERSION}" ]]; then
+  if [[ ! -f "${binPath}/kubectl-${KUBERNETES_VERSION}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then
       extractKubeBinaries
     else
@@ -444,10 +444,10 @@ installKubeletAndKubectl() {
       fi
     fi
   fi
-  mv "${path}/kubelet-${KUBERNETES_VERSION}" "${path}/kubelet"
-  mv "${path}/kubectl-${KUBERNETES_VERSION}" "${path}/kubectl"
-  chmod a+x ${path}/kubelet ${path}/kubectl
-  rm -rf ${path}/kubelet-* ${path}/kubectl-* /home/hyperkube-downloads &
+  mv "${binPath}/kubelet-${KUBERNETES_VERSION}" "${binPath}/kubelet"
+  mv "${binPath}/kubectl-${KUBERNETES_VERSION}" "${binPath}/kubectl"
+  chmod a+x ${binPath}/kubelet ${binPath}/kubectl
+  rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
   if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then

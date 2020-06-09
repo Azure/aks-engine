@@ -183,27 +183,27 @@ installImg() {
 }
 extractHyperkube() {
   CLI_TOOL=$1
-  path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  hyperkubePath="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
   targetpath="/usr/local/bin"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     targetpath="/opt/bin"
   fi
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
   if [[ $CLI_TOOL == "docker" ]]; then
-    mkdir -p "$path"
-    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
-      mv "${path}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-      mv "${path}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+    mkdir -p "$hyperkubePath"
+    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $targetpath/{kubelet,kubectl} $hyperkubePath"; then
+      mv "${hyperkubePath}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+      mv "${hyperkubePath}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
       return
     else
-      docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+      docker run --rm -v $hyperkubePath:$hyperkubePath ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $hyperkubePath"
     fi
   else
-    img unpack -o "$path" ${HYPERKUBE_URL}
+    img unpack -o "$hyperkubePath" ${HYPERKUBE_URL}
   fi
 
-  cp "${path}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
-  mv "${path}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  cp "${hyperkubePath}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+  mv "${hyperkubePath}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
   if [[ $OS == $FLATCAR_OS_NAME ]]; then
     chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
   fi
