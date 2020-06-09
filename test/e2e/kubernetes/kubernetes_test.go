@@ -2292,7 +2292,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						}
 						if coreDNSNodesOverhead >= 0 && coreDNSNodesOverhead < clusterAutoscalerNodesOverhead {
 							testCoreDNSScaleOut = true
-							By("Getting the number of coredns pods prior to scaling out")
+							By("Validating that coredns pods scale out with nodes")
 							log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
 						}
 					}
