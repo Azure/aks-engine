@@ -336,6 +336,12 @@ func CreateMasterVMSS(cs *api.ContainerService) VirtualMachineScaleSetARM {
 		ExtensionProfile: &extensionProfile,
 	}
 
+	if to.Bool(masterProfile.UltraSSDEnabled) {
+		vmProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
+		}
+	}
+
 	virtualMachine.VirtualMachineScaleSetProperties = vmProperties
 
 	return VirtualMachineScaleSetARM{
@@ -697,6 +703,12 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	if profile.DiskEncryptionSetID != "" {
 		osDisk.ManagedDisk = &compute.VirtualMachineScaleSetManagedDiskParameters{
 			DiskEncryptionSet: &compute.DiskEncryptionSetParameters{ID: to.StringPtr(profile.DiskEncryptionSetID)},
+		}
+	}
+
+	if to.Bool(profile.UltraSSDEnabled) {
+		vmssProperties.AdditionalCapabilities = &compute.AdditionalCapabilities{
+			UltraSSDEnabled: to.BoolPtr(true),
 		}
 	}
 

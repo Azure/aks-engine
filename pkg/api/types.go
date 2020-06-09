@@ -540,6 +540,7 @@ type MasterProfile struct {
 	AvailabilityZones         []string          `json:"availabilityZones,omitempty"`
 	SinglePlacementGroup      *bool             `json:"singlePlacementGroup,omitempty"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
+	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 	// Master LB public endpoint/FQDN with port
@@ -625,6 +626,7 @@ type AgentPoolProfile struct {
 	AuditDEnabled                       *bool                `json:"auditDEnabled,omitempty"`
 	CustomVMTags                        map[string]string    `json:"customVMTags,omitempty"`
 	DiskEncryptionSetID                 string               `json:"diskEncryptionSetID,omitempty"`
+	UltraSSDEnabled                     *bool                `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost                    *bool                `json:"encryptionAtHost,omitempty"`
 	ProximityPlacementGroupID           string               `json:"proximityPlacementGroupID,omitempty"`
 }
