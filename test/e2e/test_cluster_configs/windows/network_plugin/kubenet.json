@@ -1,5 +1,8 @@
 {
-	"env": {},
+	"env": {
+		"GINKGO_SKIP": "resolve DNS across windows and linux deployments|should expect containers to be recreated after node restart",
+		"GINKGO_FAIL_FAST": true
+	},
 	"options": {
 		"allowedOrchestratorVersions": [
 			"1.15",
