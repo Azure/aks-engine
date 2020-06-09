@@ -12,7 +12,6 @@ $global:NetworkMode = "L2Bridge"
 $global:ExternalNetwork = "ext"
 $global:CNIConfig = "$CNIConfig"
 $global:HNSModule = "c:\k\hns.psm1"
-#$global:VolumePluginDir = "$VolumePluginDir" TODO ksbrmnn remove as this seems to be calculated later 
 $global:NetworkPlugin = $Global:ClusterConfiguration.Cni.Name
 $global:KubeletNodeLabels = $Global:ClusterConfiguration.Kubernetes.Kubelet.NodeLabels
 $global:ContainerRuntime = $Global:ClusterConfiguration.Cri.Name
@@ -33,9 +32,9 @@ $KubeNetwork = "azure"
 #TODO ksbrmnn refactor to be sensical instead of if if if ...
 
 # Calculate some local paths
-$VolumePluginDir = [Io.path]::Combine($global:KubeDir, "volumeplugins")
+$global:VolumePluginDir = [Io.path]::Combine($global:KubeDir, "volumeplugins")
+mkdir $global:VolumePluginDir
 
-#mkdir $VolumePluginDir TODO ksbrmnn figure out how this is already created
 $KubeletArgList = $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs # This is the initial list passed in from aks-engine
 $KubeletArgList += "--node-labels=$global:KubeletNodeLabels"
 # $KubeletArgList += "--hostname-override=$global:AzureHostname" TODO: remove - dead code?
