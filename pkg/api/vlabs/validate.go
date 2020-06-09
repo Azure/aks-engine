@@ -1667,6 +1667,10 @@ func (k *KubernetesConfig) validateNetworkPlugin(hasWindows bool) error {
 		return errors.Errorf("networkPlugin '%s' is not supporting windows agents", networkPlugin)
 	}
 
+	if networkPlugin == NetworkPluginKubenet && hasWindows {
+		log.Warnf("Windows + Kubenet is for development and testing only, not recommended for production")
+	}
+
 	return nil
 }
 

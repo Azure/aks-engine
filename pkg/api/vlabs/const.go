@@ -95,7 +95,7 @@ const (
 
 var (
 	// NetworkPluginValues holds the valid values for network plugin implementation
-	NetworkPluginValues = [...]string{"", "kubenet", "azure", NetworkPluginCilium, NetworkPluginAntrea, "flannel"}
+	NetworkPluginValues = [...]string{"", NetworkPluginKubenet, "azure", NetworkPluginCilium, NetworkPluginAntrea, "flannel"}
 
 	// NetworkPolicyValues holds the valid values for a network policy
 	// "azure" and "none" are there for backwards-compatibility
@@ -142,6 +142,8 @@ const (
 	NetworkModeBridge = "bridge"
 	// NetworkModeTransparent is the string expression for transparent network mode config option
 	NetworkModeTransparent = "transparent"
+	// NetworkPluginKubenet is the string expression for kubenet network plugin config option
+	NetworkPluginKubenet = "kubenet"
 )
 
 const (
