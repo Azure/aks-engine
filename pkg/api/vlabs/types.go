@@ -423,7 +423,6 @@ type MasterProfile struct {
 	PlatformFaultDomainCount  *int              `json:"platformFaultDomainCount,omitEmpty"`
 	PlatformUpdateDomainCount *int              `json:"platformUpdateDomainCount"`
 	AuditDEnabled             *bool             `json:"auditDEnabled,omitempty"`
-	UltraSSDEnabled           *bool             `json:"ultraSSDEnabled,omitempty"`
 	EncryptionAtHost          *bool             `json:"encryptionAtHost,omitempty"`
 	CustomVMTags              map[string]string `json:"customVMTags,omitempty"`
 
@@ -513,7 +512,6 @@ type AgentPoolProfile struct {
 	EnableVMSSNodePublicIP            *bool             `json:"enableVMSSNodePublicIP,omitempty"`
 	LoadBalancerBackendAddressPoolIDs []string          `json:"loadBalancerBackendAddressPoolIDs,omitempty"`
 	SysctlDConfig                     map[string]string `json:"sysctldConfig,omitempty"`
-	UltraSSDEnabled                   *bool             `json:"ultraSSDEnabled,omitempty"`
 	ProximityPlacementGroupID         string            `json:"proximityPlacementGroupID,omitempty"`
 }
 

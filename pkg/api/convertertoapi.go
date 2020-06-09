@@ -557,7 +557,6 @@ func convertVLabsMasterProfile(vlabs *vlabs.MasterProfile, api *MasterProfile) {
 	api.PlatformUpdateDomainCount = vlabs.PlatformUpdateDomainCount
 	api.SinglePlacementGroup = vlabs.SinglePlacementGroup
 	api.CosmosEtcd = vlabs.CosmosEtcd
-	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
@@ -596,7 +595,6 @@ func convertVLabsAgentPoolProfile(vlabs *vlabs.AgentPoolProfile, api *AgentPoolP
 	api.LoadBalancerBackendAddressPoolIDs = vlabs.LoadBalancerBackendAddressPoolIDs
 	api.AuditDEnabled = vlabs.AuditDEnabled
 	api.DiskEncryptionSetID = vlabs.DiskEncryptionSetID
-	api.UltraSSDEnabled = vlabs.UltraSSDEnabled
 	api.EncryptionAtHost = vlabs.EncryptionAtHost
 	api.ProximityPlacementGroupID = vlabs.ProximityPlacementGroupID
 
