@@ -501,6 +501,7 @@ func convertMasterProfileToVLabs(api *MasterProfile, vlabsProfile *vlabs.MasterP
 	vlabsProfile.SinglePlacementGroup = api.SinglePlacementGroup
 	vlabsProfile.CosmosEtcd = api.CosmosEtcd
 	vlabsProfile.AuditDEnabled = api.AuditDEnabled
+	vlabsProfile.UltraSSDEnabled = api.UltraSSDEnabled
 	vlabsProfile.EncryptionAtHost = api.EncryptionAtHost
 	vlabsProfile.ProximityPlacementGroupID = api.ProximityPlacementGroupID
 	convertCustomFilesToVlabs(api, vlabsProfile)
@@ -548,6 +549,7 @@ func convertAgentPoolProfileToVLabs(api *AgentPoolProfile, p *vlabs.AgentPoolPro
 	p.EnableVMSSNodePublicIP = api.EnableVMSSNodePublicIP
 	p.LoadBalancerBackendAddressPoolIDs = api.LoadBalancerBackendAddressPoolIDs
 	p.AuditDEnabled = api.AuditDEnabled
+	p.UltraSSDEnabled = api.UltraSSDEnabled
 	p.DiskEncryptionSetID = api.DiskEncryptionSetID
 	p.EncryptionAtHost = api.EncryptionAtHost
 	p.ProximityPlacementGroupID = api.ProximityPlacementGroupID
