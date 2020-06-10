@@ -14685,6 +14685,96 @@ spec:
             name: container-azm-ms-agentconfig
             optional: true
 ---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: omsagent-win
+  namespace: kube-system
+  labels:
+  component: oms-agent
+  tier: node
+spec:
+  updateStrategy:
+  type: RollingUpdate
+  selector:
+  matchLabels:
+    component: oms-agent
+    tier: node
+  template:
+  metadata:
+    labels:
+      component: oms-agent
+      tier: node
+    annotations:
+      agentVersion: {{ContainerConfig "omsAgentVersion"}}
+      dockerProviderVersion: {{ContainerConfig "dockerProviderVersion"}}
+      schema-versions:  {{ContainerConfig "schema-versions"}}
+  spec:
+    serviceAccountName: omsagent
+    containers:
+      - name: omsagent-win
+        image: {{ContainerImage "omsagentWin"}}
+        imagePullPolicy: IfNotPresent
+        resources:
+        limits:
+          cpu: {{ContainerCPULimits "omsagentWin"}}
+          memory: {{ContainerMemLimits "omsagentWin"}}
+        requests:
+          cpu: {{ContainerCPUReqs "omsagentWin"}}
+          memory: {{ContainerMemReqs "omsagentWin"}}
+        env:
+        - name: ACS_RESOURCE_NAME
+          value: {{ContainerConfig "clusterName"}}
+        - name: CONTROLLER_TYPE
+          value: "DaemonSet"
+        - name: HOSTNAME
+          valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        volumeMounts:
+        - mountPath: C:\ProgramData\docker\containers
+          name: docker-windows-containers
+          readOnly: true
+        - mountPath: C:\var #Read + Write access on this for position file
+          name: docker-windows-kuberenetes-container-logs
+        - mountPath: C:\etc\config\settings
+          name: settings-vol-config
+          readOnly: true
+        - mountPath: C:\etc\omsagent-secret
+          name: omsagent-secret
+          readOnly: true
+        livenessProbe:
+        exec:
+          command:
+            - cmd
+            - /c
+            - C:\opt\omsagentwindows\scripts\cmd\livenessProbe.cmd
+        periodSeconds: 60
+        initialDelaySeconds: 180
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/os
+              operator: In
+              values:
+              - windows
+    volumes:
+    - name: docker-windows-kuberenetes-container-logs
+      hostPath:
+        path: C:\var
+    - name: docker-windows-containers
+      hostPath:
+        path: C:\ProgramData\docker\containers
+    - name: settings-vol-config
+      configMap:
+        name: container-azm-ms-agentconfig
+        optional: true
+    - name: omsagent-secret
+      secret:
+        secretName: omsagent-secret
+---
 kind: Service
 apiVersion: v1
 metadata:
