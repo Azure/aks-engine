@@ -397,6 +397,14 @@ func createAgentAvailabilitySetVM(cs *api.ContainerService, profile *api.AgentPo
 		Tags: tags,
 	}
 
+	if profile.IsFlatcar() {
+		virtualMachine.Plan = &compute.Plan{
+			Publisher: to.StringPtr(fmt.Sprintf("[parameters('%sosImagePublisher')]", profile.Name)),
+			Name:      to.StringPtr(fmt.Sprintf("[parameters('%sosImageSKU')]", profile.Name)),
+			Product:   to.StringPtr(fmt.Sprintf("[parameters('%sosImageOffer')]", profile.Name)),
+		}
+	}
+
 	addCustomTagsToVM(profile.CustomVMTags, &virtualMachine)
 
 	if useManagedIdentity {

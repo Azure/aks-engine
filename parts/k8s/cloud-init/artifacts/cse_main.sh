@@ -118,11 +118,13 @@ if [[ $FULL_INSTALL_REQUIRED == "true" ]]; then
 fi
 {{end}}
 
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   {{- if IsDockerContainerRuntime}}
@@ -150,7 +152,11 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 {{end}}
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
-time_metric "EnsureRPC" ensureRPC
+
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
+    time_metric "EnsureRPC" ensureRPC
+fi
+
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}

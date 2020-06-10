@@ -744,6 +744,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"HasDCSeriesSKU": func() bool {
 			return cs.Properties.HasDCSeriesSKU()
 		},
+		"HasFlatcar": func() bool {
+			return cs.Properties.HasFlatcar()
+		},
 		"RequiresDocker": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.RequiresDocker()
 		},

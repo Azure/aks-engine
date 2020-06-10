@@ -11960,6 +11960,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}
@@ -15419,6 +15428,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       tolerations:
       containers:
       - name: keyvault-flexvolume
@@ -17481,6 +17499,15 @@ spec:
 {{- end}}
     spec:
       containers:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
         imagePullPolicy: Always
@@ -18336,7 +18363,11 @@ ensureJournal() {
   systemctlEnableAndStart systemd-journald || exit {{GetCSEErrorCode "ERR_SYSTEMCTL_START_FAIL"}}
 }
 installKubeletAndKubectl() {
-  if [[ ! -f "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" ]]; then
+  binPath=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    binPath=/opt/bin
+  fi
+  if [[ ! -f "${binPath}/kubectl-${KUBERNETES_VERSION}" ]]; then
     if version_gte ${KUBERNETES_VERSION} 1.17; then
       extractKubeBinaries
     else
@@ -18347,10 +18378,10 @@ installKubeletAndKubectl() {
       fi
     fi
   fi
-  mv "/usr/local/bin/kubelet-${KUBERNETES_VERSION}" "/usr/local/bin/kubelet"
-  mv "/usr/local/bin/kubectl-${KUBERNETES_VERSION}" "/usr/local/bin/kubectl"
-  chmod a+x /usr/local/bin/kubelet /usr/local/bin/kubectl
-  rm -rf /usr/local/bin/kubelet-* /usr/local/bin/kubectl-* /home/hyperkube-downloads &
+  mv "${binPath}/kubelet-${KUBERNETES_VERSION}" "${binPath}/kubelet"
+  mv "${binPath}/kubectl-${KUBERNETES_VERSION}" "${binPath}/kubectl"
+  chmod a+x ${binPath}/kubelet ${binPath}/kubectl
+  rm -rf ${binPath}/kubelet-* ${binPath}/kubectl-* /home/hyperkube-downloads &
 }
 ensureK8sControlPlane() {
   if $REBOOTREQUIRED || [ "$NO_OUTBOUND" = "true" ]; then
@@ -18844,8 +18875,9 @@ var _k8sCloudInitArtifactsCse_helpersSh = []byte(`#!/bin/bash
 OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 UBUNTU_OS_NAME="UBUNTU"
 RHEL_OS_NAME="RHEL"
+FLATCAR_OS_NAME="FLATCAR"
 DEBIAN_OS_NAME="DEBIAN"
-if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
+if ! echo "${UBUNTU_OS_NAME} ${RHEL_OS_NAME} ${FLATCAR_OS_NAME} ${DEBIAN_OS_NAME}" | grep -q "${OS}"; then
   OS=$(sort -r /etc/*-release | gawk 'match($0, /^(ID_LIKE=(.*))$/, a) { print toupper(a[2] a[3]); exit }')
 fi
 if [[ ${OS} == "${UBUNTU_OS_NAME}" ]]; then
@@ -19214,6 +19246,10 @@ downloadAzureCNI() {
 ensureAPMZ() {
   local version=$1
   local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    apmz_filepath="/opt/bin/apmz"
+    export PATH="${PATH}:/opt/bin"
+  fi
   if [[ -f $apmz_filepath ]]; then
     installed_version=$($apmz_filepath version)
     if [[ $version == "$installed_version" ]]; then
@@ -19236,6 +19272,11 @@ installBpftrace() {
   local bpftrace_url="https://upstreamartifacts.azureedge.net/$bpftrace_bin/$version"
   local bpftrace_filepath="/usr/local/bin/$bpftrace_bin"
   local tools_filepath="/usr/local/share/$bpftrace_bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    bpftrace_filepath="/opt/bin/$bpftrace_bin"
+    tools_filepath="/opt/share/$bpftrace_bin"
+    export PATH="${PATH}:/opt/bin"
+  fi
   if [[ -f $bpftrace_filepath ]]; then
     installed_version="$($bpftrace_bin -V | cut -d' ' -f2)"
     if [[ $version == "$installed_version" ]]; then
@@ -19262,31 +19303,42 @@ installImg() {
 }
 extractHyperkube() {
   CLI_TOOL=$1
-  path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  hyperkubePath="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  targetpath="/usr/local/bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    targetpath="/opt/bin"
+  fi
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
   if [[ $CLI_TOOL == "docker" ]]; then
-    mkdir -p "$path"
-    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
-      mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-      mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+    mkdir -p "$hyperkubePath"
+    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $targetpath/{kubelet,kubectl} $hyperkubePath"; then
+      mv "${hyperkubePath}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+      mv "${hyperkubePath}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
       return
     else
-      docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+      docker run --rm -v $hyperkubePath:$hyperkubePath ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $hyperkubePath"
     fi
   else
-    img unpack -o "$path" ${HYPERKUBE_URL}
+    img unpack -o "$hyperkubePath" ${HYPERKUBE_URL}
   fi
 
-  cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-  mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  cp "${hyperkubePath}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+  mv "${hyperkubePath}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
+  fi
 }
 extractKubeBinaries() {
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
   K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
   mkdir -p "${K8S_DOWNLOADS_DIR}"
   retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
+  path=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    path=/opt/bin
+  fi
   tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
-    --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
+    --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
   rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
 }
 pullContainerImage() {
@@ -19441,11 +19493,13 @@ if [[ $FULL_INSTALL_REQUIRED == "true" ]]; then
 fi
 {{end}}
 
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
 {{- if NeedsContainerd}}
 time_metric "InstallContainerd" installContainerd
 {{else}}
 time_metric "installMoby" installMoby
 {{end}}
+fi
 
 if [[ -n ${MASTER_NODE} ]] && [[ -z ${COSMOS_URI} ]]; then
   {{- if IsDockerContainerRuntime}}
@@ -19473,7 +19527,11 @@ docker login -u $SERVICE_PRINCIPAL_CLIENT_ID -p $SERVICE_PRINCIPAL_CLIENT_SECRET
 {{end}}
 
 time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
-time_metric "EnsureRPC" ensureRPC
+
+if [[ $OS != $FLATCAR_OS_NAME ]]; then
+    time_metric "EnsureRPC" ensureRPC
+fi
+
 time_metric "CreateKubeManifestDir" createKubeManifestDir
 
 {{- if HasDCSeriesSKU}}
@@ -21647,7 +21705,7 @@ write_files:
     Requires=-.slice
     After=-.slice
     #EOF
-    
+
 - path: /etc/systemd/system/kubelet.service.d/kubereserved-slice.conf
   permissions: "0644"
   owner: root
@@ -21683,7 +21741,11 @@ write_files:
     {{CloudInitData "kubeletSystemdService"}}
 
 {{- if not .IsVHDDistro}}
+    {{- if .IsFlatcar}}
+- path: /opt/bin/health-monitor.sh
+    {{else}}
 - path: /usr/local/bin/health-monitor.sh
+    {{- end}}
   permissions: "0544"
   encoding: gzip
   owner: root
@@ -21752,14 +21814,16 @@ write_files:
 {{end}}
 
 {{- if .KubernetesConfig.RequiresDocker}}
-    {{if not .IsVHDDistro}}
+    {{- if not .IsFlatcar}}
+        {{- if not .IsVHDDistro}}
 - path: /etc/systemd/system/docker.service.d/clear_mount_propagation_flags.conf
   permissions: "0644"
   encoding: gzip
   owner: "root"
   content: !!binary |
     {{CloudInitData "dockerClearMountPropagationFlags"}}
-    {{end}}
+        {{- end}}
+    {{- end}}
 
 - path: /etc/systemd/system/docker.service.d/exec_start.conf
   permissions: "0644"
@@ -21767,7 +21831,11 @@ write_files:
   content: |
     [Service]
     ExecStart=
+    {{- if .IsFlatcar}}
+    ExecStart=/usr/bin/env PATH=${TORCX_BINDIR}:${PATH} ${TORCX_BINDIR}/dockerd --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}} $DOCKER_SELINUX $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+    {{else}}
     ExecStart=/usr/bin/dockerd -H fd:// --storage-driver=overlay2 --bip={{WrapAsParameter "dockerBridgeCidr"}}
+    {{- end}}
     ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
     #EOF
 
@@ -21945,10 +22013,58 @@ write_files:
     {{WrapAsVariable "environmentJSON"}}
 {{end}}
 
+{{- if .IsFlatcar}}
+- path: "/etc/kubernetes/manifests/.keep"
+
+  {{- if .KubernetesConfig.RequiresDocker}}
+groups:
+  - docker: [{{WrapAsParameter "linuxAdminUsername"}}]
+  {{end}}
+
+coreos:
+  units:
+    - name: kubelet.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            [Unit]
+            Requires=rpc-statd.service
+            ConditionPathExists=
+            ConditionPathExists=/opt/bin/kubelet
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/kubelet \
+              --enable-server \
+              --node-labels="${KUBELET_NODE_LABELS}" \
+              --v=2 \
+              --volume-plugin-dir=/etc/kubernetes/volumeplugins \
+              $KUBELET_CONFIG $KUBELET_OPTS \
+              $KUBELET_REGISTER_NODE $KUBELET_REGISTER_WITH_TAINTS
+    - name: kubelet-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh kubelet
+    - name: docker-monitor.service
+      enable: true
+      drop-ins:
+        - name: "10-flatcar.conf"
+          content: |
+            [Service]
+            ExecStart=
+            ExecStart=/opt/bin/health-monitor.sh container-runtime
+    - name: rpcbind.service
+      enable: true
+{{else}}
 runcmd:
 - set -x
 - . {{GetCSEHelpersScriptFilepath}}
 - aptmarkWALinuxAgent hold{{GetKubernetesAgentPreprovisionYaml .}}
+{{- end}}
 `)
 
 func k8sCloudInitNodecustomdataYmlBytes() ([]byte, error) {

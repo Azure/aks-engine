@@ -429,7 +429,7 @@ az ad sp list --spn <YOUR SERVICE PRINCIPAL appId>
 
 ## Use a Shared Image Gallery image
 
-This is possible by specifying `imageReference` under `masterProfile` or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (e.g., `ubuntu`). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
+This is possible by specifying `imageReference` under `masterProfile`, or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (`ubuntu`, or `flatcar` [note: flatcar is only supported on nodes via `agentPoolProfile`]). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
 
 ```json
 {

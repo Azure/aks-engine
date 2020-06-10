@@ -495,6 +495,9 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			if agentPoolProfile.OSType == Windows {
 				return errors.Errorf("Dual stack and single stack IPv6 feature is supported only with Linux, but agent pool '%s' is of os type %s", agentPoolProfile.Name, agentPoolProfile.OSType)
 			}
+			if agentPoolProfile.Distro == Flatcar {
+				return errors.Errorf("Dual stack and single stack IPv6 feature is currently supported only with Ubuntu, but agent pool '%s' is of distro type %s", agentPoolProfile.Name, agentPoolProfile.Distro)
+			}
 		}
 
 		// validate that each AgentPoolProfile Name is unique
@@ -688,7 +691,7 @@ func (a *Properties) validateLinuxProfile() error {
 func (a *Properties) validateAddons() error {
 	if a.OrchestratorProfile.KubernetesConfig != nil && a.OrchestratorProfile.KubernetesConfig.Addons != nil {
 		var isAvailabilitySets bool
-		var IsNSeriesSKU bool
+		var hasNSeriesSKU bool
 		var kubeDNSEnabled bool
 		var corednsEnabled bool
 		var keyvaultFlexvolumeEnabled, csiSecretsStoreEnabled bool
@@ -699,7 +702,7 @@ func (a *Properties) validateAddons() error {
 			}
 
 			if agentPool.IsNSeriesSKU() {
-				IsNSeriesSKU = true
+				hasNSeriesSKU = true
 			}
 		}
 		for _, addon := range a.OrchestratorProfile.KubernetesConfig.Addons {
@@ -757,7 +760,7 @@ func (a *Properties) validateAddons() error {
 					if err != nil {
 						return err
 					}
-					if IsNSeriesSKU && !isValidVersion {
+					if hasNSeriesSKU && !isValidVersion {
 						return errors.New("NVIDIA Device Plugin add-on can only be used Kubernetes 1.10 or above. Please specify \"orchestratorRelease\": \"1.10\"")
 					}
 				case "aad":
