@@ -22,8 +22,8 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
 	"github.com/Azure/go-autorest/autorest/to"
-	"github.com/leonelquinteros/gotext"
 	"github.com/blang/semver"
+	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
