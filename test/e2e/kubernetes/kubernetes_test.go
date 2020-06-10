@@ -1932,6 +1932,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 		It("should be able to resolve DNS across windows and linux deployments", func() {
 			if eng.HasWindowsAgents() {
+				if eng.HasNetworkPlugin(api.NetworkPluginKubenet) {
+					Skip("This tests is not enabled for kubenet CNI on windows")
+				}
+
 				windowsImages, err := eng.GetWindowsTestImages()
 				Expect(err).NotTo(HaveOccurred())
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -2100,6 +2104,10 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 							Skip("AvailabilitySet is configured for this Cluster Definition")
 						}
 					}
+				}
+
+				if eng.HasNetworkPlugin(api.NetworkPluginKubenet) {
+					Skip("This tests is not enabled for kubenet CNI on windows")
 				}
 
 				windowsImages, err := eng.GetWindowsTestImages()
