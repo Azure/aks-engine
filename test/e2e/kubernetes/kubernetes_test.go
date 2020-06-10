@@ -2244,22 +2244,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			var numCoreDNSPods int
 			var testCoreDNSScaleOut bool
 			if eng.AnyAgentIsLinux() && eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.EnableAggregatedAPIs {
-				numNodes, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
-				Expect(err).NotTo(HaveOccurred())
-				if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
-					nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
-					minReplicas, _ := strconv.Atoi(addon.Config["min-replicas"])
-					if nodesPerReplica >= (len(numNodes) * minReplicas) {
-						testCoreDNSScaleOut = true
-						By("Getting the number of coredns pods prior to scaling out")
-						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						pods, err := d.PodsRunning()
-						Expect(err).NotTo(HaveOccurred())
-						numCoreDNSPods = len(pods)
-						log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
-					}
-				}
 				// Inspired by http://blog.kubernetes.io/2016/07/autoscaling-in-kubernetes.html
 				r := rand.New(rand.NewSource(time.Now().UnixNano()))
 				By("Creating a php-apache deployment")
@@ -2288,6 +2272,30 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				// Apply autoscale characteristics to deployment
 				var cpuTarget, totalMaxPods int
 				if clusterAutoscalerEngaged {
+					nodeList, err := node.GetWithRetry(1*time.Second, cfg.Timeout)
+					Expect(err).NotTo(HaveOccurred())
+					if hasAddon, addon := eng.HasAddon("coredns"); hasAddon {
+						nodesPerReplica, _ := strconv.Atoi(addon.Config["nodes-per-replica"])
+						corednsPods, err := pod.GetAllByPrefixWithRetry("coredns", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						corednsAutoscalerPods, err := pod.GetAllByPrefixWithRetry("coredns-autoscaler", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						numCoreDNSPods = len(corednsPods) - len(corednsAutoscalerPods)
+						coreDNSNodesOverhead := nodesPerReplica - (len(nodeList) * numCoreDNSPods)
+						var clusterAutoscalerNodesOverhead int
+						for _, pool := range clusterAutoscalerAddon.Pools {
+							p := eng.ExpandedDefinition.Properties.GetAgentPoolIndexByName(pool.Name)
+							maxNodes, _ := strconv.Atoi(pool.Config["max-nodes"])
+							if maxNodes > eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count {
+								clusterAutoscalerNodesOverhead += (maxNodes - eng.ExpandedDefinition.Properties.AgentPoolProfiles[p].Count)
+							}
+						}
+						if coreDNSNodesOverhead >= 0 && coreDNSNodesOverhead < clusterAutoscalerNodesOverhead {
+							testCoreDNSScaleOut = true
+							By("Validating that coredns pods scale out with nodes")
+							log.Printf("%d coredns pods before scaling out\n", numCoreDNSPods)
+						}
+					}
 					cpuTarget = 50
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 						// TODO enable cluster-autoscaler tests for Windows
@@ -2339,15 +2347,20 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 						By("Ensuring at least one more coredns pod was added by coredns-autoscaler")
 						d, err := deployment.GetWithRetry("coredns", "kube-system", 5*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						_, err = d.WaitForReplicas(numCoreDNSPods+1, -1, 5*time.Second, cfg.Timeout)
+						numCoreDNSAutoscalerPods := 1
+						_, err = d.WaitForReplicas(numCoreDNSPods+numCoreDNSAutoscalerPods+1, -1, 5*time.Second, cfg.Timeout)
 						if err != nil {
 							pod.PrintPodsLogs("coredns-autoscaler", "kube-system", 5*time.Second, 1*time.Minute)
 						}
 						Expect(err).NotTo(HaveOccurred())
-						pods, err := d.PodsRunning()
-						log.Printf("%d coredns pods after scaling out\n", len(pods))
+						corednsPods, err := pod.GetAllByPrefixWithRetry("coredns", "kube-system", 3*time.Second, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(len(pods) > numCoreDNSPods).To(BeTrue())
+						corednsAutoscalerPods, err := pod.GetAllByPrefixWithRetry("coredns-autoscaler", "kube-system", 3*time.Second, cfg.Timeout)
+						Expect(err).NotTo(HaveOccurred())
+						newNumCoreDNSPods := len(corednsPods) - len(corednsAutoscalerPods)
+						log.Printf("%d coredns pods after scaling out\n", newNumCoreDNSPods)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(newNumCoreDNSPods > numCoreDNSPods).To(BeTrue())
 					}
 				}
 
