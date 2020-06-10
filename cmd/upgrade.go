@@ -22,6 +22,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/i18n"
 	"github.com/Azure/aks-engine/pkg/operations/kubernetesupgrade"
 	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/blang/semver"
 	"github.com/leonelquinteros/gotext"
 	"github.com/pkg/errors"
 
@@ -231,6 +232,12 @@ func (uc *upgradeCmd) initialize() error {
 		uc.containerService.Location = uc.location
 	} else if uc.containerService.Location != uc.location {
 		return errors.New("--location does not match api model location")
+	}
+
+	// Validate semver compatibility
+	_, err := semver.Make(uc.upgradeVersion)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("Invalid --upgrade-version value '%s', not a semver string", uc.upgradeVersion))
 	}
 
 	if !uc.force {
