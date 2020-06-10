@@ -906,6 +906,24 @@ func Test_Properties_ValidateNetworkPolicy(t *testing.T) {
 	}
 }
 
+func ExampleKubernetesConfig_validateNetworkPlugin() {
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors:    true,
+		DisableTimestamp: true,
+	})
+	cs := getK8sDefaultContainerService(true)
+
+	cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{}
+	cs.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = NetworkPluginKubenet
+	if err := cs.Properties.OrchestratorProfile.KubernetesConfig.validateNetworkPlugin(true); err != nil {
+		fmt.Printf("error in ValidateNetworkPlugin: %s", err)
+	}
+
+	// Output:
+	// level=warning msg="Windows + Kubenet is for development and testing only, not recommended for production"
+}
+
 func Test_Properties_ValidateNetworkPlugin(t *testing.T) {
 	p := &Properties{}
 	p.OrchestratorProfile = &OrchestratorProfile{}
