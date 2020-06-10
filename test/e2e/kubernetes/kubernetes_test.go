@@ -1465,27 +1465,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should be able to get nodes metrics", func() {
-			if eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.IsRBACEnabled() {
-				success := false
-				var err error
-				var out []byte
-				// TODO make a 1st class go func retry implementation of this
-				for i := 0; i < 10; i++ {
-					cmd := exec.Command("k", "top", "nodes")
-					util.PrintCommand(cmd)
-					out, err = cmd.CombinedOutput()
-					if err == nil {
-						success = true
-						break
-					}
-					time.Sleep(1 * time.Minute)
-				}
-				if err != nil {
-					pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
-					log.Println(string(out))
-				}
-				Expect(success).To(BeTrue())
-			}
+			err := node.TopNodesWithRetry(1*time.Second, cfg.Timeout)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should create a pv by deploying a pod that consumes a pvc", func() {
