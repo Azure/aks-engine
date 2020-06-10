@@ -470,6 +470,9 @@ installGPUDriversRun() {
     fi
     {{- /* we need to append the date to the end of the file because the retry will override the log file */}}
     local log_file_name="/var/log/nvidia-installer-$(date +%s).log"
+    if [ ! -f "${GPU_DEST}/nvidia-drivers-${GPU_DV}" ]; then
+        installGPUDrivers
+    fi
     sh $GPU_DEST/nvidia-drivers-$GPU_DV -s \
         -k=$KERNEL_NAME \
         --log-file-name=${log_file_name} \
