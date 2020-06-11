@@ -303,9 +303,9 @@ cleanUpContainerImages() {
         docker rmi "${images_to_delete[@]}"
       fi
     }
-    retrycmd_if_failure 10 5 120 cleanUpImagesRun
-    retrycmd_if_failure 10 5 120 cleanUpControllerManager
-    retrycmd_if_failure 10 5 120 cleanUpEtcdImagesRun
+    retrycmd_if_failure 10 5 120 bash -c cleanUpHyperkubeImagesRun
+    retrycmd_if_failure 10 5 120 bash -c cleanUpControllerManagerImagesRun
+    retrycmd_if_failure 10 5 120 bash -c cleanUpEtcdImagesRun
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &
