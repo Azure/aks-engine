@@ -2695,13 +2695,13 @@ func TestSetOrchestratorDefaultsVMAS(t *testing.T) {
 
 	cs.setOrchestratorDefaults(false, false)
 	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.12.8" {
-		t.Error("setMasterProfileDefaults should not adjust given OrchestratorVersion")
+		t.Error("setOrchestratorDefaults should not adjust given OrchestratorVersion")
 	}
 
 	cs.Properties.OrchestratorProfile.OrchestratorVersion = ""
 	cs.setOrchestratorDefaults(false, false)
-	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.13.12" {
-		t.Error("setMasterProfileDefaults should not adjust given OrchestratorVersion")
+	if cs.Properties.OrchestratorProfile.OrchestratorVersion == "" {
+		t.Error("setOrchestratorDefaults should provide a version if it is not given.")
 	}
 }
 
