@@ -18,7 +18,7 @@ while (!$hnsNetwork) {
 }
 
 # add dualstack feature gate if dualstack enabled
-$isDualStackEnabled = ("--feature-gates=IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null
+$isDualStackEnabled = ("IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null
 if ($isDualStackEnabled) {
     $global:KubeproxyArgList += @("--feature-gates=IPv6DualStack=true")
 }

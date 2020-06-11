@@ -280,6 +280,26 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
 				o.KubernetesConfig.ServiceCIDR = DefaultKubernetesServiceCIDRIPv6
 			}
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				o.KubernetesConfig.ServiceCIDR = strings.Join([]string{DefaultKubernetesServiceCIDR, DefaultKubernetesServiceCIDRIPv6}, ",")
+			}
+		} else {
+			if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") {
+				serviceAddrs := strings.Split(o.KubernetesConfig.ServiceCIDR, ",")
+				if len(serviceAddrs) == 1 {
+					ip, _, err := net.ParseCIDR(serviceAddrs[0])
+					if err == nil {
+						if ip.To4() != nil {
+							// the first cidr block is ipv4, so append ipv6
+							serviceAddrs = append(serviceAddrs, DefaultKubernetesServiceCIDRIPv6)
+						} else {
+							// first cidr has to be ipv4
+							serviceAddrs = append([]string{DefaultKubernetesServiceCIDR}, serviceAddrs...)
+						}
+					}
+					o.KubernetesConfig.ServiceCIDR = strings.Join(serviceAddrs, ",")
+				}
+			}
 		}
 
 		if common.IsKubernetesVersionGe(o.OrchestratorVersion, "1.14.0") {
