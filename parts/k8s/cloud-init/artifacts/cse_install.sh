@@ -287,7 +287,10 @@ pullContainerImage() {
 cleanUpContainerImages() {
     function cleanUpHyperkubeImagesRun() {
       images_to_delete=$(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}.[0-9]+$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube')
-      if [[ "${images_to_delete}" != "" ]]; then
+      local exit_code=$?
+      if [[ $exit_code != 0 ]]; then
+            exit $exit_code
+      elif [[ "${images_to_delete}" != "" ]]; then
         docker rmi ${images_to_delete[@]}
       fi
     }
