@@ -213,7 +213,14 @@ if ($global:NetworkPlugin -eq "azure") {
         if ((Test-Path $cnilock)) {
             Remove-Item $cnilock
         }
-
+        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
+        if ((Test-Path $cnijson)) {
+            Remove-Item $cnijson
+        }
+        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
+        if ((Test-Path $cnilock)) {
+            Remove-Item $cnilock
+        }
         $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
         if ((Test-Path $cnijson)) {
             Remove-Item $cnijson

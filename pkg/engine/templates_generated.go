@@ -22343,7 +22343,14 @@ if ($global:NetworkPlugin -eq "azure") {
         if ((Test-Path $cnilock)) {
             Remove-Item $cnilock
         }
-
+        $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json")
+        if ((Test-Path $cnijson)) {
+            Remove-Item $cnijson
+        }
+        $cnilock = [io.path]::Combine("$KubeDir", "azure-vnet-ipamv6.json.lock")
+        if ((Test-Path $cnilock)) {
+            Remove-Item $cnilock
+        }
         $cnijson = [io.path]::Combine("$KubeDir", "azure-vnet.json")
         if ((Test-Path $cnijson)) {
             Remove-Item $cnijson
@@ -22509,13 +22516,20 @@ if ($Global:ClusterConfiguration.Cni.Name -eq "kubenet") {
 
 $env:KUBE_NETWORK = $KubeNetwork
 $global:HNSModule = "c:\k\hns.psm1"
-$KubeDir = $Global:ClusterConfiguration.Install.Destination
+$global:KubeDir = $Global:ClusterConfiguration.Install.Destination
+$global:KubeproxyArgList = @("--v=3", "--proxy-mode=kernelspace", "--hostname-override=$env:computername", "--kubeconfig=$KubeDir\config")
 
 $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
 while (!$hnsNetwork) {
     Write-Host "$(Get-Date -Format o) Waiting for Network [$KubeNetwork] to be created . . ."
     Start-Sleep 10
     $hnsNetwork = Get-HnsNetwork | ? Name -EQ $KubeNetwork
+}
+
+# add dualstack feature gate if dualstack enabled
+$isDualStackEnabled = ("IPv6DualStack=true" | ? { $Global:ClusterConfiguration.Kubernetes.Kubelet.ConfigArgs -match $_ }) -ne $null
+if ($isDualStackEnabled) {
+    $global:KubeproxyArgList += @("--feature-gates=IPv6DualStack=true")
 }
 
 #
@@ -22526,7 +22540,8 @@ Import-Module $global:HNSModule
 # and https://github.com/kubernetes/kubernetes/pull/78612 for <= 1.15
 Get-HnsPolicyList | Remove-HnsPolicyList
 
-.$KubeDir\kube-proxy.exe --v=3 --proxy-mode=kernelspace --hostname-override=$env:computername --kubeconfig=$KubeDir\config
+$KubeproxyCmdline = "$global:KubeDir\kube-proxy.exe "+ ($global:KubeproxyArgList -join " ")
+Invoke-Expression $KubeproxyCmdline
 `)
 
 func k8sKubeproxystartPs1Bytes() ([]byte, error) {
@@ -23525,6 +23540,7 @@ $global:AzureCNIConfDir = [Io.path]::Combine("$global:AzureCNIDir", "netconf")
 # $global:NetworkPolicy = "{{WrapAsParameter "networkPolicy"}}" # BUG: unused
 $global:NetworkPlugin = "{{WrapAsParameter "networkPlugin"}}"
 $global:VNetCNIPluginsURL = "{{WrapAsParameter "vnetCniWindowsPluginsURL"}}"
+$global:IsDualStackEnabled = {{if IsIPv6DualStackFeatureEnabled}}$true{{else}}$false{{end}}
 
 # Telemetry settings
 $global:EnableTelemetry = "{{WrapAsVariable "enableTelemetry" }}";
@@ -23749,7 +23765,8 @@ try
                 -KubeServiceCIDR $global:KubeServiceCIDR ` + "`" + `
                 -VNetCIDR $global:VNetCIDR ` + "`" + `
                 {{- /* Azure Stack has discrete Azure CNI config requirements */}}
-                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}}
+                -IsAzureStack {{if IsAzureStackCloud}}$true{{else}}$false{{end}} ` + "`" + `
+                -IsDualStackEnabled $global:IsDualStackEnabled
 
             if ($TargetEnvironment -ieq "AzureStackCloud") {
                 GenerateAzureStackCNIConfig ` + "`" + `
@@ -23774,7 +23791,7 @@ try
             }
         }
 
-        New-ExternalHnsNetwork
+        New-ExternalHnsNetwork -IsDualStackEnabled $global:IsDualStackEnabled
 
         Install-KubernetesServices ` + "`" + `
             -KubeDir $global:KubeDir
@@ -24239,10 +24256,18 @@ Set-AzureCNIConfig
         [Parameter(Mandatory=$true)][string]
         $VNetCIDR,
         [Parameter(Mandatory=$true)][bool]
-        $IsAzureStack
+        $IsAzureStack,
+        [Parameter(Mandatory=$true)][bool]
+        $IsDualStackEnabled
     )
     # Fill in DNS information for kubernetes.
-    $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+    if ($IsDualStackEnabled){
+        $subnetToPass = $KubeClusterCIDR -split ","
+        $exceptionAddresses = @($subnetToPass[0], $MasterSubnet, $VNetCIDR)
+    }
+    else {
+        $exceptionAddresses = @($KubeClusterCIDR, $MasterSubnet, $VNetCIDR)
+    }
 
     $fileName  = [Io.path]::Combine("$AzureCNIConfDir", "10-azure.conflist")
     $configJson = Get-Content $fileName | ConvertFrom-Json
@@ -24263,7 +24288,25 @@ Set-AzureCNIConfig
         $configJson.plugins.AdditionalArgs[0].Value.ExceptionList = $exceptionAddresses
     }
 
-    $configJson.plugins.AdditionalArgs[1].Value.DestinationPrefix  = $KubeServiceCIDR
+    if ($IsDualStackEnabled){
+        $configJson.plugins[0]|Add-Member -Name "ipv6Mode" -Value "ipv6nat" -MemberType NoteProperty
+        $serviceCidr = $KubeServiceCIDR -split ","
+        $configJson.plugins[0].AdditionalArgs[1].Value.DestinationPrefix = $serviceCidr[0]
+        $valueObj = [PSCustomObject]@{
+            Type = 'ROUTE'
+            DestinationPrefix = $serviceCidr[1]
+            NeedEncap = $True
+        }
+
+        $jsonContent = [PSCustomObject]@{
+            Name = 'EndpointPolicy'
+            Value = $valueObj
+        }
+        $configJson.plugins[0].AdditionalArgs += $jsonContent
+    }
+    else {
+        $configJson.plugins[0].AdditionalArgs[1].Value.DestinationPrefix = $KubeServiceCIDR
+    }
 
     if ($IsAzureStack) {
         Add-Member -InputObject $configJson.plugins[0].ipam -MemberType NoteProperty -Name "environment" -Value "mas"
@@ -24425,7 +24468,13 @@ function GenerateAzureStackCNIConfig
     Set-ItemProperty -Path $azureCNIConfigFile -Name IsReadOnly -Value $true
 }
 
-function New-ExternalHnsNetwork {
+function New-ExternalHnsNetwork
+{
+    param (
+        [Parameter(Mandatory=$true)][bool]
+        $IsDualStackEnabled
+    )
+
     Write-Log "Creating new HNS network ` + "`" + `"ext` + "`" + `""
     $externalNetwork = "ext"
     $na = @(Get-NetAdapter -Physical)
@@ -24442,9 +24491,14 @@ function New-ExternalHnsNetwork {
 
     $stopWatch = New-Object System.Diagnostics.Stopwatch
     $stopWatch.Start()
-    # Fixme : use a smallest range possible, that will not collide with any pod space
-    New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
 
+    # Fixme : use a smallest range possible, that will not collide with any pod space
+    if ($IsDualStackEnabled) {
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix @("192.168.255.0/30","192:168:255::0/127") -Gateway @("192.168.255.1","192:168:255::1") -AdapterName $adapterName -Name $externalNetwork -Verbose
+    }
+    else {
+        New-HNSNetwork -Type $global:NetworkMode -AddressPrefix "192.168.255.0/30" -Gateway "192.168.255.1" -AdapterName $adapterName -Name $externalNetwork -Verbose
+    }
     # Wait for the switch to be created and the ip address to be assigned.
     for ($i = 0; $i -lt 60; $i++) {
         $mgmtIPAfterNetworkCreate = Get-NetIPAddress $managementIP -ErrorAction SilentlyContinue
@@ -25584,6 +25638,8 @@ if ($hnsNetwork) {
         "c:\k\azure-vnet.json.lock",
         "c:\k\azure-vnet-ipam.json",
         "c:\k\azure-vnet-ipam.json.lock"
+        "c:\k\azure-vnet-ipamv6.json",
+        "c:\k\azure-vnet-ipamv6.json.lock"
     )
 
     foreach ($file in $filesToRemove) {

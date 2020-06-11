@@ -1021,7 +1021,7 @@ func getIPConfigs(lbBackendAddresPoolID *string, isStandardLB, ipv6DualStackEnab
 		}
 		ipConfigs = append(ipConfigs, ipconfig)
 
-		if ipv6DualStackEnabled {
+		if i == 1 && ipv6DualStackEnabled {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
