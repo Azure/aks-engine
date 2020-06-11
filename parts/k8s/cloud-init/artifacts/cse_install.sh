@@ -285,9 +285,27 @@ pullContainerImage() {
 }
 
 cleanUpContainerImages() {
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}.[0-9]+$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}.[0-9]+$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager') &
-    docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd') &
+    function cleanUpHyperkubeImagesRun() {
+      images_to_delete=$(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}.[0-9]+$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'hyperkube')
+      if [[ "${images_to_delete}" != "" ]]; then
+        docker rmi "${images_to_delete[@]}"
+      fi
+    }
+    function cleanUpControllerManagerImagesRun() {
+      images_to_delete=$(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${KUBERNETES_VERSION}$|${KUBERNETES_VERSION}.[0-9]+$|${KUBERNETES_VERSION}-|${KUBERNETES_VERSION}_" | grep 'cloud-controller-manager')
+      if [[ "${images_to_delete}" != "" ]]; then
+        docker rmi "${images_to_delete[@]}"
+      fi
+    }
+    function cleanUpEtcdImagesRun() {
+      images_to_delete=$(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep -vE "${ETCD_VERSION}$|${ETCD_VERSION}-|${ETCD_VERSION}_" | grep 'etcd')
+      if [[ "${images_to_delete}" != "" ]]; then
+        docker rmi "${images_to_delete[@]}"
+      fi
+    }
+    retrycmd_if_failure 10 5 120 cleanUpImagesRun
+    retrycmd_if_failure 10 5 120 cleanUpControllerManager
+    retrycmd_if_failure 10 5 120 cleanUpEtcdImagesRun
     if [ "$IS_HOSTED_MASTER" = "false" ]; then
         echo "Cleaning up AKS container images, not an AKS cluster"
         docker rmi $(docker images --format '{{OpenBraces}}.Repository{{CloseBraces}}:{{OpenBraces}}.Tag{{CloseBraces}}' | grep 'hcp-tunnel-front') &

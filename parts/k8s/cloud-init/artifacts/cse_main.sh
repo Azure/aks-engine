@@ -63,7 +63,11 @@ fi
 VHD_LOGS_FILEPATH=/opt/azure/vhd-install.complete
 if [ -f $VHD_LOGS_FILEPATH ]; then
     echo "detected golden image pre-install"
-    cleanUpContainerImages
+    export -f retrycmd_if_failure
+    export -f cleanUpContainerImages
+    export KUBERNETES_VERSION
+    echo "start to clean up container images"
+    bash -c cleanUpContainerImages &
     FULL_INSTALL_REQUIRED=false
 else
     if [[ "${IS_VHD}" = true ]]; then
