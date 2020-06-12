@@ -153,6 +153,14 @@ var (
 		ImageVersion:   "latest",
 	}
 
+	//FlatcarImageConfig is the Flatcar Linux distribution.
+	FlatcarImageConfig = AzureOSImageConfig{
+		ImageOffer:     "flatcar-container-linux-free",
+		ImageSku:       "stable",
+		ImagePublisher: "kinvolk",
+		ImageVersion:   "latest",
+	}
+
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
@@ -211,6 +219,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
@@ -233,6 +242,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     Ubuntu1604OSImageConfig,
 			AKS1604Deprecated: Ubuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     Ubuntu1604OSImageConfig, // workaround for https://github.com/Azure/aks-engine/issues/761
@@ -254,6 +264,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,
@@ -271,21 +282,22 @@ var (
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:              "gcr.azk8s.cn/google_containers/",
-			TillerImageBase:                  "mcr.microsoft.com/",
-			ACIConnectorImageBase:            "dockerhub.azk8s.cn/microsoft/",
-			NVIDIAImageBase:                  "dockerhub.azk8s.cn/nvidia/",
-			AzureCNIImageBase:                "dockerhub.azk8s.cn/containernetworking/",
-			MCRKubernetesImageBase:           "mcr.microsoft.com/",
-			CalicoImageBase:                  "dockerhub.azk8s.cn/calico/",
-			EtcdDownloadURLBase:              "mcr.microsoft.com/oss/etcd-io/",
+			KubernetesImageBase:    "gcr.azk8s.cn/google_containers/",
+			TillerImageBase:        "mcr.microsoft.com/",
+			ACIConnectorImageBase:  "dockerhub.azk8s.cn/microsoft/",
+			NVIDIAImageBase:        "dockerhub.azk8s.cn/nvidia/",
+			AzureCNIImageBase:      "dockerhub.azk8s.cn/containernetworking/",
+			MCRKubernetesImageBase: "mcr.microsoft.com/",
+			CalicoImageBase:        "dockerhub.azk8s.cn/calico/",
+			EtcdDownloadURLBase:    "mcr.microsoft.com/oss/etcd-io/",
+			// Keep the global default value since mirror for AzureChinaCloud does not have the binaries
 			KubeBinariesSASURLBase:           DefaultKubernetesSpecConfig.KubeBinariesSASURLBase,
 			WindowsTelemetryGUID:             DefaultKubernetesSpecConfig.WindowsTelemetryGUID,
 			CNIPluginsDownloadURL:            "https://mirror.azk8s.cn/kubernetes/containernetworking-plugins/cni-plugins-linux-amd64-" + CNIPluginVer + ".tgz",
-			VnetCNILinuxPluginsDownloadURL:   "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
-			VnetCNIWindowsPluginsDownloadURL: "https://kubernetesartifacts.blob.core.chinacloudapi.cn/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
+			VnetCNILinuxPluginsDownloadURL:   "https://mirror.azk8s.cn/azure-cni/" + AzureCniPluginVerLinux + "/binaries/azure-vnet-cni-linux-amd64-" + AzureCniPluginVerLinux + ".tgz",
+			VnetCNIWindowsPluginsDownloadURL: "https://mirror.azk8s.cn/azure-cni/" + AzureCniPluginVerWindows + "/binaries/azure-vnet-cni-singletenancy-windows-amd64-" + AzureCniPluginVerWindows + ".zip",
 			ContainerdDownloadURLBase:        "https://mirror.azk8s.cn/kubernetes/containerd/",
-			CSIProxyDownloadURL:              "https://kubernetesartifacts.blob.core.chinacloudapi.cn/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
+			CSIProxyDownloadURL:              "https://mirror.azk8s.cn/csi-proxy/v0.1.0/binaries/csi-proxy.tar.gz",
 		},
 		DCOSSpecConfig: DCOSSpecConfig{
 			DCOS188BootstrapDownloadURL:     fmt.Sprintf(AzureChinaCloudDCOSBootstrapDownloadURL, "5df43052907c021eeb5de145419a3da1898c58a5"),
@@ -302,6 +314,7 @@ var (
 			Ubuntu1804:        Ubuntu1804OSImageConfig,
 			Ubuntu1804Gen2:    Ubuntu1804Gen2OSImageConfig,
 			RHEL:              RHELOSImageConfig,
+			Flatcar:           FlatcarImageConfig,
 			AKSUbuntu1604:     AKSUbuntu1604OSImageConfig,
 			AKS1604Deprecated: AKSUbuntu1604OSImageConfig, // for back-compat
 			AKSUbuntu1804:     AKSUbuntu1804OSImageConfig,

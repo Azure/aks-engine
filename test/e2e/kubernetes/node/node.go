@@ -7,6 +7,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/pod"
 	"log"
 	"os/exec"
 	"regexp"
@@ -93,6 +94,11 @@ type GetNodesResult struct {
 	Err   error
 }
 
+// TopNodesResult is the result type for TopNodesAsync
+type TopNodesResult struct {
+	Err   error
+}
+
 // GetNodesAsync wraps Get with a struct response for goroutine + channel usage
 func GetNodesAsync() GetNodesResult {
 	list, err := Get()
@@ -103,6 +109,14 @@ func GetNodesAsync() GetNodesResult {
 	}
 	return GetNodesResult{
 		Nodes: list.Nodes,
+		Err:   err,
+	}
+}
+
+// TopNodesAsync wraps TopNodes with a struct response for goroutine + channel usage
+func TopNodesAsync() TopNodesResult {
+	err := TopNodes()
+	return TopNodesResult{
 		Err:   err,
 	}
 }
@@ -405,6 +419,22 @@ func Get() (*List, error) {
 	return &nl, nil
 }
 
+// TopNodes prints nodes metrics
+func TopNodes() error {
+	cmd := exec.Command("k", "top", "nodes")
+	util.PrintCommand(cmd)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error trying to run 'kubectl top nodes':\n - %s", err)
+		if len(string(out)) > 0 {
+			log.Printf("\n - %s", string(out))
+		}
+		pod.PrintPodsLogs("metrics-server", "kube-system", 5*time.Second, 1*time.Minute)
+		return err
+	}
+	return nil
+}
+
 // GetReadyWithRetry gets nodes, allowing for retries
 func GetReadyWithRetry(sleep, timeout time.Duration) ([]Node, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -503,6 +533,36 @@ func GetByRegexWithRetry(regex string, sleep, timeout time.Duration) ([]Node, er
 			}
 		case <-ctx.Done():
 			return nil, errors.Errorf("GetByRegexWithRetry timed out: %s\n", mostRecentGetByRegexWithRetryError)
+		}
+	}
+}
+
+// TopNodesWithRetry gets nodes, allowing for retries
+func TopNodesWithRetry(sleep, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan TopNodesResult)
+	var mostRecentTopNodesWithRetryError error
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- TopNodesAsync()
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentTopNodesWithRetryError = result.Err
+			if mostRecentTopNodesWithRetryError == nil {
+				return nil
+			}
+		case <-ctx.Done():
+			return errors.Errorf("TopNodesWithRetry timed out: %s\n", mostRecentTopNodesWithRetryError)
 		}
 	}
 }

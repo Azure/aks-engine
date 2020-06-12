@@ -406,6 +406,14 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		Tags: tags,
 	}
 
+	if profile.IsFlatcar() {
+		virtualMachineScaleSet.Plan = &compute.Plan{
+			Publisher: to.StringPtr(fmt.Sprintf("[parameters('%sosImagePublisher')]", profile.Name)),
+			Name:      to.StringPtr(fmt.Sprintf("[parameters('%sosImageSKU')]", profile.Name)),
+			Product:   to.StringPtr(fmt.Sprintf("[parameters('%sosImageOffer')]", profile.Name)),
+		}
+	}
+
 	addCustomTagsToVMScaleSets(profile.CustomVMTags, &virtualMachineScaleSet)
 
 	if profile.HasAvailabilityZones() {
@@ -489,7 +497,6 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	}
 
 	var ipConfigurations []compute.VirtualMachineScaleSetIPConfiguration
-
 	for i := 1; i <= profile.IPAddressCount; i++ {
 		ipconfig := compute.VirtualMachineScaleSetIPConfiguration{
 			Name: to.StringPtr(fmt.Sprintf("ipconfig%d", i)),
@@ -551,7 +558,8 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		ipconfig.VirtualMachineScaleSetIPConfigurationProperties = &ipConfigProps
 		ipConfigurations = append(ipConfigurations, ipconfig)
 
-		if cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only") {
+		// multiple v6 configs are not supported. creating 1 IPv6 config.
+		if i == 1 && (cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6DualStack") || cs.Properties.FeatureFlags.IsFeatureEnabled("EnableIPv6Only")) {
 			ipconfigv6 := compute.VirtualMachineScaleSetIPConfiguration{
 				Name: to.StringPtr(fmt.Sprintf("ipconfig%dv6", i)),
 				VirtualMachineScaleSetIPConfigurationProperties: &compute.VirtualMachineScaleSetIPConfigurationProperties{
@@ -721,6 +729,9 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
+	if profile.IsFlatcar() {
+		ncBinary = "ncat"
+	}
 	featureFlags := cs.Properties.FeatureFlags
 
 	if !featureFlags.IsFeatureEnabled("BlockOutboundInternet") && cs.Properties.IsHostedMasterProfile() {

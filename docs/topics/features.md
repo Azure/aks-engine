@@ -429,7 +429,7 @@ az ad sp list --spn <YOUR SERVICE PRINCIPAL appId>
 
 ## Use a Shared Image Gallery image
 
-This is possible by specifying `imageReference` under `masterProfile` or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (e.g., `ubuntu`). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
+This is possible by specifying `imageReference` under `masterProfile`, or on a given `agentPoolProfile`. It also requires setting the distro to an appropriate value (`ubuntu`, or `flatcar` [note: flatcar is only supported on nodes via `agentPoolProfile`]). When using `imageReference` with Shared Image Galleries, provide an image name and version, as well as the resource group, subscription, and name of the gallery. Example:
 
 ```json
 {
@@ -514,7 +514,7 @@ We are investigating possible risks & mitigations for when VMs are deprovisioned
 
 Kubernetes 1.18 introduces alpha support for the ContainerD runtime on Windows Server 2019. This is still a work-in-progress tracked in [kubernetes/enhancements#1001](https://github.com/kubernetes/enhancements/issues/1001). This feature in AKS-Engine is for testing the in-development versions of ContainerD and Kubernetes, and is not for production use. Be sure to review [open issues](https://github.com/azure/aks-engine/issues?q=containerd+label%3Awindows+is%3Aopen) if you want to test or contribute to this effort.
 
-Currently it only supports the `kubenet` networking model, and requires URLs to custom ContainerD and CNI plugin builds.
+Currently it requires URLs to custom ContainerD and CNI plugin builds.
 
 ### Deploying multi-OS clusters with ContainerD
 

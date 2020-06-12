@@ -109,6 +109,9 @@ func createAgentVMASCustomScriptExtension(cs *api.ContainerService, profile *api
 	outBoundCmd := ""
 	registry := ""
 	ncBinary := "nc"
+	if profile.IsFlatcar() {
+		ncBinary = "ncat"
+	}
 	var userAssignedIDEnabled bool
 	if cs.Properties.OrchestratorProfile != nil && cs.Properties.OrchestratorProfile.KubernetesConfig != nil {
 		userAssignedIDEnabled = cs.Properties.OrchestratorProfile.KubernetesConfig.UserAssignedIDEnabled()

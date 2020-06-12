@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// AllKubernetesSupportedVersions is a whitelist map of all supported Kubernetes version strings
+// AllKubernetesSupportedVersions is a hash table of all supported Kubernetes version strings
 // The bool value indicates if creating new clusters with this version is allowed
 var AllKubernetesSupportedVersions = map[string]bool{
 	"1.6.6":          false,
@@ -199,7 +199,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.19.0-beta.1":  true,
 }
 
-// AllKubernetesSupportedVersionsAzureStack is a whitelist map of all supported Kubernetes version strings on Azure Stack
+// AllKubernetesSupportedVersionsAzureStack is a hash table of all supported Kubernetes version strings on Azure Stack
 // The bool value indicates if creating new clusters with this version is allowed
 var AllKubernetesSupportedVersionsAzureStack = map[string]bool{
 	"1.14.7":  false,

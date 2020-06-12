@@ -126,6 +126,10 @@ downloadAzureCNI() {
 ensureAPMZ() {
   local version=$1
   local apmz_url="https://upstreamartifacts.azureedge.net/apmz/$version/binaries/apmz_linux_amd64.tar.gz" apmz_filepath="/usr/local/bin/apmz"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    apmz_filepath="/opt/bin/apmz"
+    export PATH="${PATH}:/opt/bin"
+  fi
   if [[ -f $apmz_filepath ]]; then
     installed_version=$($apmz_filepath version)
     if [[ $version == "$installed_version" ]]; then
@@ -148,6 +152,11 @@ installBpftrace() {
   local bpftrace_url="https://upstreamartifacts.azureedge.net/$bpftrace_bin/$version"
   local bpftrace_filepath="/usr/local/bin/$bpftrace_bin"
   local tools_filepath="/usr/local/share/$bpftrace_bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    bpftrace_filepath="/opt/bin/$bpftrace_bin"
+    tools_filepath="/opt/share/$bpftrace_bin"
+    export PATH="${PATH}:/opt/bin"
+  fi
   if [[ -f $bpftrace_filepath ]]; then
     installed_version="$($bpftrace_bin -V | cut -d' ' -f2)"
     if [[ $version == "$installed_version" ]]; then
@@ -174,31 +183,42 @@ installImg() {
 }
 extractHyperkube() {
   CLI_TOOL=$1
-  path="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  hyperkubePath="/home/hyperkube-downloads/${KUBERNETES_VERSION}"
+  targetpath="/usr/local/bin"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    targetpath="/opt/bin"
+  fi
   pullContainerImage $CLI_TOOL ${HYPERKUBE_URL}
   if [[ $CLI_TOOL == "docker" ]]; then
-    mkdir -p "$path"
-    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /usr/local/bin/{kubelet,kubectl} $path"; then
-      mv "$path/kubelet" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-      mv "$path/kubectl" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+    mkdir -p "$hyperkubePath"
+    if docker run --rm --entrypoint "" -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp $targetpath/{kubelet,kubectl} $hyperkubePath"; then
+      mv "${hyperkubePath}/kubelet" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+      mv "${hyperkubePath}/kubectl" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
       return
     else
-      docker run --rm -v $path:$path ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $path"
+      docker run --rm -v $hyperkubePath:$hyperkubePath ${HYPERKUBE_URL} /bin/bash -c "cp /hyperkube $hyperkubePath"
     fi
   else
-    img unpack -o "$path" ${HYPERKUBE_URL}
+    img unpack -o "$hyperkubePath" ${HYPERKUBE_URL}
   fi
 
-  cp "$path/hyperkube" "/usr/local/bin/kubelet-${KUBERNETES_VERSION}"
-  mv "$path/hyperkube" "/usr/local/bin/kubectl-${KUBERNETES_VERSION}"
+  cp "${hyperkubePath}/hyperkube" "${targetpath}/kubelet-${KUBERNETES_VERSION}"
+  mv "${hyperkubePath}/hyperkube" "${targetpath}/kubectl-${KUBERNETES_VERSION}"
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    chmod a+x ${targetpath}/kubelet-${KUBERNETES_VERSION} ${targetpath}/kubectl-${KUBERNETES_VERSION}
+  fi
 }
 extractKubeBinaries() {
   KUBE_BINARY_URL=${KUBE_BINARY_URL:-"https://kubernetesartifacts.azureedge.net/kubernetes/v${KUBERNETES_VERSION}/binaries/kubernetes-node-linux-amd64.tar.gz"}
   K8S_TGZ_TMP=${KUBE_BINARY_URL##*/}
   mkdir -p "${K8S_DOWNLOADS_DIR}"
   retrycmd_get_tarball 120 5 "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" ${KUBE_BINARY_URL} || exit 31
+  path=/usr/local/bin
+  if [[ $OS == $FLATCAR_OS_NAME ]]; then
+    path=/opt/bin
+  fi
   tar --transform="s|.*|&-${KUBERNETES_VERSION}|" --show-transformed-names -xzvf "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}" \
-    --strip-components=3 -C /usr/local/bin kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
+    --strip-components=3 -C ${path} kubernetes/node/bin/kubelet kubernetes/node/bin/kubectl
   rm -f "$K8S_DOWNLOADS_DIR/${K8S_TGZ_TMP}"
 }
 pullContainerImage() {

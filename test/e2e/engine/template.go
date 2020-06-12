@@ -412,6 +412,11 @@ func (e *Engine) HasNetworkPolicy(name string) bool {
 	return strings.Contains(e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPolicy, name)
 }
 
+// HasNetworkPolicy will return true if the specified network policy is enabled
+func (e *Engine) HasNetworkPlugin(name string) bool {
+	return strings.Contains(e.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin, name)
+}
+
 // Write will write the cluster definition to disk
 func (e *Engine) Write() error {
 	json, err := helpers.JSONMarshal(e.ClusterDefinition, false)

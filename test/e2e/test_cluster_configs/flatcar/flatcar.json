@@ -1,0 +1,67 @@
+{
+	"options": {
+		"allowedOrchestratorVersions": [
+			"1.15",
+			"1.16",
+			"1.17",
+			"1.18"
+		]
+	},
+	"apiModel": {
+		"apiVersion": "vlabs",
+		"properties": {
+			"orchestratorProfile": {
+				"orchestratorType": "Kubernetes",
+				"kubernetesConfig": {
+					"addons": [
+						{
+							"name": "cluster-autoscaler",
+							"enabled": true,
+							"pools": [
+								{
+									"name": "pool1",
+									"config": {
+										"min-nodes": "3",
+										"max-nodes": "9"
+									}
+								}
+							],
+							"config": {
+								"scan-interval": "1m",
+								"scale-down-delay-after-add": "1m0s",
+								"scale-down-unneeded-time": "2m0s"
+							}
+						}
+					]
+				}
+			},
+			"masterProfile": {
+				"count": 1,
+				"dnsPrefix": "",
+				"vmSize": "Standard_D2_v3"
+			},
+			"agentPoolProfiles": [
+				{
+					"name": "pool1",
+					"count": 3,
+					"vmSize": "Standard_D2_v3",
+					"distro": "flatcar"
+				}
+			],
+			"linuxProfile": {
+				"adminUsername": "azureuser",
+				"ssh": {
+					"publicKeys": [
+						{
+							"keyData": ""
+						}
+					]
+				}
+			},
+			"servicePrincipalProfile": {
+				"clientId": "",
+				"secret": ""
+			}
+		}
+	}
+}
