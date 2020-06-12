@@ -9,7 +9,7 @@
 		"SKIP_TESTS_AFTER_SCALE_DOWN": "true",
 		"SKIP_TESTS_AFTER_UPGRADE": "true",
 		"SKIP_TESTS_AFTER_SCALE_UP": "false",
-		"STABILITY_ITERATIONS": 0
+		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
