@@ -18,7 +18,6 @@
                 "kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/",
                 "useInstanceMetadata": false,
                 "networkPlugin": "kubenet",
-                "networkPolicy": "",
                 "kubeletConfig": {
                     "--node-status-update-frequency": "1m"
                 },
@@ -50,15 +49,6 @@
                 "distro": "aks-ubuntu-16.04",
                 "availabilityProfile": "AvailabilitySet",
                 "AcceleratedNetworkingEnabled": false
-            },
-            {
-                "name": "windowspool",
-                "osDiskSizeGB": 128,
-                "count": 0,
-                "vmSize": "Standard_D2_v2",
-                "OSType": "Windows",
-                "availabilityProfile": "AvailabilitySet",
-                "AcceleratedNetworkingEnabled": false
             }
         ],
         "linuxProfile": {
@@ -71,15 +61,6 @@
                 ]
             }
         },
-        "windowsProfile": {
-            "adminUsername": "",
-            "adminPassword": "",
-            "sshEnabled": true,
-            "windowsPublisher": "microsoft-aks",
-            "windowsOffer": "aks-windows",
-            "windowsSku": "2019-datacenter-core-smalldisk-2005",
-            "imageVersion": "17763.1217.200513"
-          },
         "servicePrincipalProfile": {
             "clientId": "",
             "secret": ""

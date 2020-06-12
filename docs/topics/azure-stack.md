@@ -80,7 +80,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | addons                          | no       | A few addons are not supported on Azure Stack Hub. See the [complete list](#unsupported-addons) down below.|
 | kubernetesImageBase             | no       | For AKS Engine versions lower than v0.48.0, this is a required field. It specifies the default image base URL to be used for all Kubernetes-related containers such as hyperkube, cloud-controller-manager, pause, addon-manager, etc. This property should be set to `"mcr.microsoft.com/k8s/azurestack/core/"`. |
 | networkPlugin                   | yes      | Specifies the network plugin implementation for the cluster. Valid values are `"kubenet"` for Kubernetes software networking implementation, and `"azure"` for Azure CNI network plugin implementation. |
-| networkPolicy                   | no      | Specifies the network policy implementation for the cluster. Valid values are `"azure"` for Azure CNI network policy implementation. |
+| networkPolicy                   | no      | Specifies the network policy enforcement tool for the cluster (currently Linux-only). Valid values are: `"azure"` (experimental) for Azure CNI-compliant network policy (note: Azure CNI-compliant network policy requires explicit `"networkPlugin": "azure"` configuration as well). |
 | useInstanceMetadata             | no      | Use the Azure cloud provider instance metadata service for appropriate resource discovery operations. This property should be always set to `"false"`. |
 
 ### customCloudProfile
@@ -110,7 +110,7 @@ Unless otherwise specified down below, standard [cluster definition](../../docs/
 | Name                            | Required | Description|
 | ------------------------------- | -------- | ---------- |
 | vmsize                          | yes      | Describes a valid [Azure Stack Hub VM size](https://docs.microsoft.com/azure-stack/user/azure-stack-vm-sizes). |
-| OSType                          | no       | Specifies the Operation System type of the agent pool. The default OSType value is `"Linux"`, and supported value is `"Windows"` for Windows OS. |
+| osType                          | no       | Specifies the agent pool's Operating System. Supported values are `"Windows"` and `"Linux"`. Defaults to `"Linux"`. |
 | distro                          | yes      | Specifies the masters' Linux distribution. The supported value is `"aks-ubuntu-16.04"`. This is a custom image based on UbuntuServer 16.04 that comes with pre-installed software necessary for Kubernetes deployments. |
 | availabilityProfile             | yes      | Only `"AvailabilitySet"` is currently supported. |
 | acceleratedNetworkingEnabled    | yes      | Use `Azure Accelerated Networking` feature for Linux agents. This property should be always set to `"false"`. |
@@ -137,7 +137,7 @@ Each AKS Engine release is validated and tied to a specific version of the AKS B
 |----------------------------|--------------------|---------------------|-------|
 | [v0.43.1](https://github.com/Azure/aks-engine/releases/tag/v0.43.1)   | [AKS Base Ubuntu 16.04-LTS Image Distro, October 2019 (2019.10.24)](https://github.com/Azure/aks-engine/blob/v0.43.0/releases/vhd-notes/aks-ubuntu-1604/aks-ubuntu-1604-201910_2019.10.24.txt) | 1.15.5, 1.15.4, 1.14.8, 1.14.7 |  |
 | [v0.48.0](https://github.com/Azure/aks-engine/releases/tag/v0.48.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, March 2020 (2020.03.19)](https://github.com/Azure/aks-engine/blob/v0.48.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202003_2020.03.19.txt) | 1.15.10, 1.14.7 |  |
-| [v0.51.0](https://github.com/Azure/aks-engine/releases/tag/v0.51.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202005_2020.05.13.txt), [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1217.200513.txt)  | 1.15.11, 1.15.12, 1.16.9, 1.16.10, 1.17.5, 1.17.6 | [Template](../../examples/azure-stack/kubernetes-azurestack.json) |
+| [v0.51.0](https://github.com/Azure/aks-engine/releases/tag/v0.51.0)   | [AKS Base Ubuntu 16.04-LTS Image Distro, May 2020 (2020.05.13)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-engine-ubuntu-1604/aks-engine-ubuntu-1604-202005_2020.05.13.txt), [AKS Base Windows Image (17763.1217.200513)](https://github.com/Azure/aks-engine/blob/v0.51.0/vhd/release-notes/aks-windows/2019-datacenter-core-smalldisk-17763.1217.200513.txt)  | 1.15.11, 1.15.12, 1.16.9, 1.16.10, 1.17.5, 1.17.6 | [Template](../../examples/azure-stack/kubernetes-azurestack.json), [Template (Windows)](../../examples/azure-stack/kubernetes-windows.json) |
 
 
 ## Azure Monitor for containers
@@ -195,7 +195,7 @@ If a `LoadBalancer` service was already created in your cluster, you can find ou
 
 ### get-versions command
 
-The output of the `get-versions` command with `--azure-env AzureStackCloud` shows the Kubernetes version supported on Azure Stack Hub clouds. The upgrade paths can be found [here](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-upgrade#steps-to-upgrade-to-a-newer-kubernetes-version).
+The output of the `get-versions` command only pertains to Azure and not Azure Stack Hub clouds. The different upgrade paths can be found [here](https://docs.microsoft.com/azure-stack/user/azure-stack-kubernetes-aks-engine-upgrade#steps-to-upgrade-to-a-newer-kubernetes-version).
 
 ## Frequently Asked Questions
 
