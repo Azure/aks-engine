@@ -115,19 +115,19 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeGCR: {
 		"1.19": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
+			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
+			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.18.0",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.5",
+			common.MetricsServerAddonName:     "metrics-server-amd64:v0.3.6",
 			common.AddonManagerComponentName:  "kube-addon-manager-amd64:v9.1.1",
 			common.ClusterAutoscalerAddonName: "cluster-autoscaler:v1.17.1",
 		},
@@ -221,19 +221,19 @@ var kubernetesImageBaseVersionedImages = map[string]map[string]map[string]string
 	common.KubernetesImageBaseTypeMCR: {
 		"1.19": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.1",
 		},
 		"1.18": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.18.1",
 		},
 		"1.17": {
 			common.AddonResizerComponentName:  "oss/kubernetes/autoscaler/addon-resizer:1.8.7",
-			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.5",
+			common.MetricsServerAddonName:     "oss/kubernetes/metrics-server:v0.3.6",
 			common.AddonManagerComponentName:  "oss/kubernetes/kube-addon-manager:v9.1.1",
 			common.ClusterAutoscalerAddonName: "oss/kubernetes/autoscaler/cluster-autoscaler:v1.17.2",
 		},
