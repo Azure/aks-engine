@@ -119,7 +119,7 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 		},
 		OrchestratorVersion: "1.16.0",
 	}
-	expected := "foo/oss/kubernetes/pause:1.3.1"
+	expected := "foo/oss/kubernetes/pause:1.3.2"
 	actual := o.GetPodInfraContainerSpec()
 	if actual != expected {
 		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
@@ -145,6 +145,9 @@ func TestOSType(t *testing.T) {
 	if p.HasWindows() {
 		t.Fatalf("expected HasWindows() to return false but instead returned true")
 	}
+	if p.HasFlatcar() {
+		t.Fatalf("expected HasFlatcar() to return false but instead returned true")
+	}
 	if p.AgentPoolProfiles[0].IsWindows() {
 		t.Fatalf("expected IsWindows() to return false but instead returned true")
 	}
@@ -157,12 +160,55 @@ func TestOSType(t *testing.T) {
 		t.Fatalf("expected IsRHEL() to return false but instead returned true")
 	}
 
+	if p.AgentPoolProfiles[0].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
+	}
+
 	if !p.AgentPoolProfiles[1].IsRHEL() {
 		t.Fatalf("expected IsRHEL() to return true but instead returned false")
 	}
 
+	if p.AgentPoolProfiles[1].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
+	}
+
 	if !p.MasterProfile.IsRHEL() {
 		t.Fatalf("expected IsRHEL() to return true but instead returned false")
+	}
+
+	p.AgentPoolProfiles[0].OSType = Windows
+	p.AgentPoolProfiles[1].Distro = Flatcar
+
+	if !p.HasWindows() {
+		t.Fatalf("expected HasWindows() to return true but instead returned false")
+	}
+
+	if !p.HasFlatcar() {
+		t.Fatalf("expected HasFlatcar() to return true but instead returned false")
+	}
+
+	if !p.AgentPoolProfiles[0].IsWindows() {
+		t.Fatalf("expected IsWindows() to return true but instead returned false")
+	}
+
+	if p.AgentPoolProfiles[0].IsLinux() {
+		t.Fatalf("expected IsLinux() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[0].IsRHEL() {
+		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[0].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return false but instead returned true")
+	}
+
+	if p.AgentPoolProfiles[1].IsRHEL() {
+		t.Fatalf("expected IsRHEL() to return false but instead returned true")
+	}
+
+	if !p.AgentPoolProfiles[1].IsFlatcar() {
+		t.Fatalf("expected IsFlatcar() to return true but instead returned false")
 	}
 }
 
@@ -185,6 +231,13 @@ func TestAgentPoolProfileIsVHDDistro(t *testing.T) {
 				Distro: AKSUbuntu1804,
 			},
 			expected: true,
+		},
+		{
+			name: "flatcar distro",
+			ap: AgentPoolProfile{
+				Distro: Flatcar,
+			},
+			expected: false,
 		},
 		{
 			name: "ubuntu distro",
@@ -313,6 +366,13 @@ func TestAgentPoolProfileIsUbuntuNonVHD(t *testing.T) {
 			name: "ubuntu 18.04 VHD distro",
 			ap: AgentPoolProfile{
 				Distro: AKSUbuntu1804,
+			},
+			expected: false,
+		},
+		{
+			name: "flatcar distro",
+			ap: AgentPoolProfile{
+				Distro: Flatcar,
 			},
 			expected: false,
 		},
@@ -2072,6 +2132,17 @@ func TestAgentPoolIsUbuntu(t *testing.T) {
 				},
 			},
 			expected: true,
+		},
+		{
+			p: Properties{
+				AgentPoolProfiles: []*AgentPoolProfile{
+					{
+						Count:  1,
+						Distro: Flatcar,
+					},
+				},
+			},
+			expected: false,
 		},
 		{
 			p: Properties{

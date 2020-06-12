@@ -21,6 +21,15 @@ spec:
 {{- end}}
     spec:
       priorityClassName: system-cluster-critical
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       containers:
       - name: blobfuse-flexvol-installer
         image: {{ContainerImage "blobfuse-flexvolume"}}

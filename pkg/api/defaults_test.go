@@ -1831,6 +1831,89 @@ func TestMasterProfileDefaults(t *testing.T) {
 			properties.OrchestratorProfile.KubernetesConfig.ClusterSubnet, expectedClusterSubnet)
 	}
 
+	// this validates service cidr default configuration for dual stack feature when both ipv4 and ipv6 subnet provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "192.168.0.0/16,ace:cab:deca::/8"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	expectedServiceCIDR := strings.Join([]string{"192.168.0.0/16", "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != expectedServiceCIDR {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, expectedServiceCIDR)
+	}
+
+	// this validates service cidr default configuration for dual stack feature when ipv4 provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "192.168.0.0/16"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	expectedServiceCIDR = strings.Join([]string{"192.168.0.0/16", DefaultKubernetesServiceCIDRIPv6}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != expectedServiceCIDR {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, expectedServiceCIDR)
+	}
+
+	// this validates service cidr default configuration for dual stack feature when ipv6 provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR = "ace:cab:deca::/8"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	expectedServiceCIDR = strings.Join([]string{DefaultKubernetesServiceCIDR, "ace:cab:deca::/8"}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != expectedServiceCIDR {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, expectedServiceCIDR)
+	}
+
+	// this validates service cidr default configuration for dual stack feature when servicecidr not provided
+	mockCS = getMockBaseContainerService("1.16.0")
+	properties = mockCS.Properties
+	properties.OrchestratorProfile.OrchestratorType = Kubernetes
+	properties.OrchestratorProfile.KubernetesConfig.NetworkPlugin = "azure"
+	properties.FeatureFlags = &FeatureFlags{EnableIPv6DualStack: true}
+	_, err = mockCS.SetPropertiesDefaults(PropertiesDefaultsParams{
+		IsScale:    false,
+		IsUpgrade:  false,
+		PkiKeySize: helpers.DefaultPkiKeySize,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+	expectedServiceCIDR = strings.Join([]string{DefaultKubernetesServiceCIDR, DefaultKubernetesServiceCIDRIPv6}, ",")
+	if properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR != expectedServiceCIDR {
+		t.Fatalf("OrchestratorProfile.KubernetesConfig.ServiceCIDR did not have the expected configuration, got %s, expected %s",
+			properties.OrchestratorProfile.KubernetesConfig.ServiceCIDR, expectedServiceCIDR)
+	}
+
 	// this validates default configurations for OutboundRuleIdleTimeoutInMinutes.
 	mockCS = getMockBaseContainerService("1.18.2")
 	properties = mockCS.Properties

@@ -42,7 +42,10 @@ spec:
         - name: dev-sgx
           mountPath: /dev/sgx
         securityContext:
-          privileged: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
       volumes:
       - name: device-plugin
         hostPath:

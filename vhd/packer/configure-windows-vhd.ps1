@@ -47,7 +47,7 @@ function Get-ContainerImages
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/oss/kubernetes/pause:1.3.1")
+        "mcr.microsoft.com/oss/kubernetes/pause:1.3.2")
 
     if ($containerRuntime -eq 'containerd') {
         foreach ($image in $imagesToPull) {
@@ -184,7 +184,7 @@ function Install-WindowsPatches
     # then you can get download links by searching for specific KBs at http://www.catalog.update.microsoft.com/home.aspx
 
     # KB4551853 contains May 2020 cumulative updates for Windows Server 2019
-    $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2020/05/windows10.0-kb4551853-x64_ce1ea7def481ee2eb8bba6db49ddb42e45cba54f.msu")
+    $patchUrls = @("http://download.windowsupdate.com/c/msdownload/update/software/secu/2020/06/windows10.0-kb4561608-x64_31903b9b843877474d625e2b3beb5fed3b8abc3a.msu")
 
     foreach ($patchUrl in $patchUrls)
     {

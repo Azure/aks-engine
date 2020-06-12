@@ -851,6 +851,16 @@ type TelemetryProfile struct {
 	ApplicationInsightsKey string `json:"applicationInsightsKey,omitempty"`
 }
 
+// HasFlatcar returns true if the cluster contains flatcar nodes
+func (p *Properties) HasFlatcar() bool {
+	for _, agentPoolProfile := range p.AgentPoolProfiles {
+		if agentPoolProfile.Distro == Flatcar {
+			return true
+		}
+	}
+	return false
+}
+
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
@@ -1591,6 +1601,11 @@ func (a *AgentPoolProfile) IsLinux() bool {
 // IsRHEL returns true if the agent pool specified a RHEL distro
 func (a *AgentPoolProfile) IsRHEL() bool {
 	return a.OSType == Linux && a.Distro == RHEL
+}
+
+// IsFlatcar returns true if the agent specified a Flatcar distro
+func (a *AgentPoolProfile) IsFlatcar() bool {
+	return a.Distro == Flatcar
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs

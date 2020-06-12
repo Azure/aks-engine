@@ -367,6 +367,16 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
+			name:         "flatcar",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "flatcar hybrid",
+			apiModelPath: "../examples/flatcar/kubernetes-flatcar-hybrid.json",
+			setArgs:      defaultSet,
+		},
+		{
 			name:         "cosmos etcd",
 			apiModelPath: "../examples/cosmos-etcd/kubernetes-3-masters-cosmos.json",
 			setArgs:      defaultSet,
@@ -789,6 +799,11 @@ func TestExampleAPIModels(t *testing.T) {
 		{
 			name:         "containerd tmp dir",
 			apiModelPath: "../examples/kubernetes-config/kubernetes-containerd-tmpdir.json",
+			setArgs:      defaultSet,
+		},
+		{
+			name:         "e2e flatcar",
+			apiModelPath: "../examples/e2e-tests/kubernetes/flatcar/flatcar.json",
 			setArgs:      defaultSet,
 		},
 		{

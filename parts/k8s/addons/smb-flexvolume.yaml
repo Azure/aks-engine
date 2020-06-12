@@ -21,6 +21,15 @@ spec:
 {{- end}}
     spec:
       containers:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: agentpool
+                operator: NotIn
+                values:
+                - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
         imagePullPolicy: Always
