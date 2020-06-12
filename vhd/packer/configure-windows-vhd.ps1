@@ -47,7 +47,7 @@ function Get-ContainerImages
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/oss/kubernetes/pause:1.3.1")
+        "mcr.microsoft.com/oss/kubernetes/pause:1.3.2")
 
     if ($containerRuntime -eq 'containerd') {
         foreach ($image in $imagesToPull) {

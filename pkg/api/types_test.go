@@ -119,7 +119,7 @@ func TestOrchestratorProfile_GetPodInfraContainerSpec(t *testing.T) {
 		},
 		OrchestratorVersion: "1.16.0",
 	}
-	expected := "foo/oss/kubernetes/pause:1.3.1"
+	expected := "foo/oss/kubernetes/pause:1.3.2"
 	actual := o.GetPodInfraContainerSpec()
 	if actual != expected {
 		t.Fatalf("expected GetPodInfraContainerSpec to return %s, but got %s", expected, actual)
