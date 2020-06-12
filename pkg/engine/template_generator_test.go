@@ -1135,7 +1135,7 @@ func TestTemplateGenerator_FunctionMap(t *testing.T) {
 				cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 				return cs
 			},
-			ExpectedResult: "foo/oss/kubernetes/pause:1.3.1",
+			ExpectedResult: "foo/oss/kubernetes/pause:1.3.2",
 		},
 		{
 			Name:     "HasCiliumNetworkPolicy - cilium",

@@ -18,7 +18,7 @@ function DownloadFileOverHttp {
 
     # First check to see if a file with the same name is already cached on the VHD
     $fileName = [IO.Path]::GetFileName($Url)
-    
+
     $search = @()
     if (Test-Path $global:CacheDir) {
         $search = [IO.Directory]::GetFiles($global:CacheDir, $fileName, [IO.SearchOption]::AllDirectories)
@@ -31,14 +31,14 @@ function DownloadFileOverHttp {
     else {
         $secureProtocols = @()
         $insecureProtocols = @([System.Net.SecurityProtocolType]::SystemDefault, [System.Net.SecurityProtocolType]::Ssl3)
-    
+
         foreach ($protocol in [System.Enum]::GetValues([System.Net.SecurityProtocolType])) {
             if ($insecureProtocols -notcontains $protocol) {
                 $secureProtocols += $protocol
             }
         }
         [System.Net.ServicePointManager]::SecurityProtocol = $secureProtocols
-    
+
         $oldProgressPreference = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
 
@@ -219,10 +219,10 @@ function Register-NodeResetScriptTask {
 
 # TODO ksubrmnn parameterize this fully
 function Write-KubeClusterConfig {
-    param(		
-        [Parameter(Mandatory = $true)][string]	
+    param(
+        [Parameter(Mandatory = $true)][string]
         $MasterIP,
-        [Parameter(Mandatory = $true)][string]	
+        [Parameter(Mandatory = $true)][string]
         $KubeDnsServiceIp
     )
 
@@ -231,7 +231,7 @@ function Write-KubeClusterConfig {
     $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Cri -Value @{
         Name   = $global:ContainerRuntime;
         Images = @{
-            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.1"
+            "Pause" = "mcr.microsoft.com/oss/kubernetes/pause:1.3.2"
         }
     }
 
@@ -266,10 +266,10 @@ function Write-KubeClusterConfig {
         };
     }
 
-    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{ 
+    $Global:ClusterConfiguration | Add-Member -MemberType NoteProperty -Name Install -Value @{
         Destination = "c:\k";
     }
-    
+
     $Global:ClusterConfiguration | ConvertTo-Json -Depth 10 | Out-File -FilePath $global:KubeClusterConfigPath
 }
 
@@ -278,7 +278,7 @@ function Assert-FileExists {
         [Parameter(Mandatory = $true, Position = 0)][string]
         $Filename
     )
-    
+
     if (-Not (Test-Path $Filename)) {
         throw "$Filename does not exist"
     }
