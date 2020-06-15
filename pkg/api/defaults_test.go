@@ -2670,6 +2670,41 @@ func TestSetCertDefaultsVMSS(t *testing.T) {
 	}
 }
 
+func TestSetOrchestratorDefaultsVMAS(t *testing.T) {
+	cs := &ContainerService{
+		Properties: &Properties{
+			ServicePrincipalProfile: &ServicePrincipalProfile{
+				ClientID: "barClientID",
+				Secret:   "bazSecret",
+			},
+			MasterProfile: &MasterProfile{
+				Count:               3,
+				DNSPrefix:           "myprefix1",
+				VMSize:              "Standard_DS2_v2",
+				AvailabilityProfile: AvailabilitySet,
+			},
+			OrchestratorProfile: &OrchestratorProfile{
+				OrchestratorType:    Kubernetes,
+				OrchestratorVersion: "1.12.8",
+				KubernetesConfig: &KubernetesConfig{
+					NetworkPlugin: NetworkPluginAzure,
+				},
+			},
+		},
+	}
+
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.OrchestratorVersion != "1.12.8" {
+		t.Error("setOrchestratorDefaults should not adjust given OrchestratorVersion")
+	}
+
+	cs.Properties.OrchestratorProfile.OrchestratorVersion = ""
+	cs.setOrchestratorDefaults(false, false)
+	if cs.Properties.OrchestratorProfile.OrchestratorVersion == "" {
+		t.Error("setOrchestratorDefaults should provide a version if it is not given.")
+	}
+}
+
 func TestProxyModeDefaults(t *testing.T) {
 	// Test that default is what we expect
 	mockCS := getMockBaseContainerService("1.10.12")
