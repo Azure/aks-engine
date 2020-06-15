@@ -830,9 +830,6 @@ func (a *Properties) validateAddons() error {
 					if !isValidVersion {
 						return errors.New("Azure Policy add-on can only be used with Kubernetes v1.14 and above. Please specify a compatible version")
 					}
-					if a.ServicePrincipalProfile == nil || a.OrchestratorProfile.KubernetesConfig.UseManagedIdentity {
-						return errors.New("Azure Policy add-on requires service principal profile to be specified")
-					}
 				case common.KubeDNSAddonName:
 					kubeDNSEnabled = true
 				case common.CoreDNSAddonName:

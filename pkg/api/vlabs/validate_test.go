@@ -2021,9 +2021,9 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 			},
 		},
 	}
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should error on azure-policy when ServicePrincipalProfile is empty",
+			"should not error on azure-policy when ServicePrincipalProfile is empty",
 		)
 	}
 	p.ServicePrincipalProfile = &ServicePrincipalProfile{
@@ -2050,9 +2050,9 @@ func Test_Properties_ValidateAddons(t *testing.T) {
 	}
 
 	p.OrchestratorProfile.KubernetesConfig.UseManagedIdentity = true
-	if err := p.validateAddons(); err == nil {
+	if err := p.validateAddons(); err != nil {
 		t.Errorf(
-			"should error on azure-policy with managed identity",
+			"should not error on azure-policy with managed identity",
 		)
 	}
 
