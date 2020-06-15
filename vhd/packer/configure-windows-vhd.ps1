@@ -47,7 +47,9 @@ function Get-ContainerImages
     $imagesToPull = @(
         "mcr.microsoft.com/windows/servercore:ltsc2019",
         "mcr.microsoft.com/windows/nanoserver:1809",
-        "mcr.microsoft.com/oss/kubernetes/pause:1.3.2")
+        "mcr.microsoft.com/oss/kubernetes/pause:1.3.2",
+        "mcr.microsoft.com/oss/kubernetes-csi/livenessprobe:v2.0.1-alpha.1-windows-1809-amd64",
+        "mcr.microsoft.com/oss/kubernetes-csi/csi-node-driver-registrar:v1.2.1-alpha.1-windows-1809-amd64")
 
     if ($containerRuntime -eq 'containerd') {
         foreach ($image in $imagesToPull) {
