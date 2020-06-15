@@ -47,6 +47,10 @@
               "min-replicas": "1",
               "nodes-per-replica": "10"
             }
+          },
+          {
+            "name": "azure-policy",
+            "enabled": true
           }
         ]
       }
