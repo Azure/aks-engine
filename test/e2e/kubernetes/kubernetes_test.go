@@ -137,7 +137,7 @@ var _ = BeforeSuite(func() {
 		Expect(success).To(BeTrue())
 		firstMasterRegexp, err = regexp.Compile(firstMasterRegexStr)
 		Expect(err).NotTo(HaveOccurred())
-		if hasAddon, addon := eng.HasAddon("cluster-autoscaler"); hasAddon {
+		if hasAddon, addon := eng.HasAddon(common.ClusterAutoscalerAddonName); hasAddon {
 			clusterAutoscalerAddon = addon
 			if len(addon.Pools) > 0 {
 				for _, pool := range addon.Pools {
@@ -695,27 +695,6 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if to.Bool(eng.ExpandedDefinition.Properties.OrchestratorProfile.KubernetesConfig.UseCloudControllerManager) {
 				coreComponents = append(coreComponents, common.CloudControllerManagerComponentName)
 			}
-			if hasAddon, _ := eng.HasAddon(common.AzureDiskCSIDriverAddonName); hasAddon {
-				coreComponents = append(coreComponents, "csi-azuredisk-controller", "csi-azuredisk-node")
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, "csi-azuredisk-node-windows")
-				}
-				if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
-					coreComponents = append(coreComponents, "csi-snapshot-controller")
-				}
-			}
-			if hasAddon, _ := eng.HasAddon(common.AzureFileCSIDriverAddonName); hasAddon {
-				coreComponents = append(coreComponents, "csi-azurefile-controller", "csi-azurefile-node")
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, "csi-azurefile-node-windows")
-				}
-			}
-			if hasAddon, _ := eng.HasAddon(common.CloudNodeManagerAddonName); hasAddon {
-				coreComponents = append(coreComponents, common.CloudNodeManagerAddonName)
-				if eng.HasWindowsAgents() {
-					coreComponents = append(coreComponents, common.CloudNodeManagerAddonName+"-windows")
-				}
-			}
 			for _, componentName := range coreComponents {
 				By(fmt.Sprintf("Ensuring that %s is Running", componentName))
 				running, err := pod.WaitOnSuccesses(componentName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
@@ -734,7 +713,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					log.Printf("Checking %s - ready: %t, restarts: %d", currentPod.Metadata.Name, currentPod.Status.ContainerStatuses[0].Ready, currentPod.Status.ContainerStatuses[0].RestartCount)
 					Expect(currentPod.Status.ContainerStatuses[0].Ready).To(BeTrue())
 					tooManyRestarts := 5
-					if strings.Contains(currentPod.Metadata.Name, "cluster-autoscaler") {
+					if strings.Contains(currentPod.Metadata.Name, common.ClusterAutoscalerAddonName) {
 						log.Print("need to investigate cluster-autoscaler restarts!")
 						tooManyRestarts = 10
 					}
@@ -754,7 +733,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have DNS pod running", func() {
+		It("should have DNS resolver pod running", func() {
 			By(fmt.Sprintf("Ensuring that %s is running", dnsAddonName))
 			running, err := pod.WaitOnSuccesses(dnsAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			pod.PrintPodsLogs(dnsAddonName, "kube-system", 5*time.Second, 1*time.Minute)
@@ -949,41 +928,82 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			}
 		})
 
-		It("should have addons running", func() {
-			for _, addonName := range []string{"tiller", "aci-connector", "cluster-autoscaler", "blobfuse-flexvolume", "smb-flexvolume", "keyvault-flexvolume", "kubernetes-dashboard", "rescheduler", "metrics-server", "nvidia-device-plugin", "container-monitoring", "azure-cni-networkmonitor", "azure-npm-daemonset", "ip-masq-agent", "azure-policy", "node-problem-detector"} {
+		It("should have addon pods running", func() {
+			for _, addonName := range []string{common.CoreDNSAddonName, common.TillerAddonName, common.AADPodIdentityAddonName, common.ACIConnectorAddonName,
+				common.AzureDiskCSIDriverAddonName, common.AzureFileCSIDriverAddonName, common.CloudNodeManagerAddonName, common.ClusterAutoscalerAddonName,
+				common.BlobfuseFlexVolumeAddonName, common.SMBFlexVolumeAddonName, common.KeyVaultFlexVolumeAddonName, common.DashboardAddonName,
+				common.ReschedulerAddonName, common.MetricsServerAddonName, common.NVIDIADevicePluginAddonName, common.ContainerMonitoringAddonName,
+				common.AzureCNINetworkMonitorAddonName, common.CalicoAddonName, common.AzureNetworkPolicyAddonName, common.IPMASQAgentAddonName,
+				common.AzurePolicyAddonName, common.NodeProblemDetectorAddonName, common.AntreaAddonName, common.FlannelAddonName,
+				common.ScheduledMaintenanceAddonName, common.SecretsStoreCSIDriverAddonName} {
 				var addonPods = []string{addonName}
 				var addonNamespace = "kube-system"
 				switch addonName {
-				case "blobfuse-flexvolume":
+				case common.BlobfuseFlexVolumeAddonName:
 					addonPods = []string{"blobfuse-flexvol-installer"}
-				case "smb-flexvolume":
+				case common.SMBFlexVolumeAddonName:
 					addonPods = []string{"smb-flexvol-installer"}
-				case "container-monitoring":
-					addonPods = []string{"omsagent"}
-				case "azure-npm-daemonset":
+				case common.ContainerMonitoringAddonName:
+					addonPods = []string{"omsagent", "omsagent-rs"}
+					if eng.HasWindowsAgents() {
+						addonPods = append(addonPods, "omsagent-win")
+					}
+				case common.AzureNetworkPolicyAddonName:
 					addonPods = []string{"azure-npm"}
-				case "kubernetes-dashboard":
-					addonPods = []string{"kubernetes-dashboard", "dashboard-metrics-scraper"}
-					addonNamespace = "kubernetes-dashboard"
+				case common.DashboardAddonName:
+					addonPods = []string{common.DashboardAddonName, "dashboard-metrics-scraper"}
+					addonNamespace = common.DashboardAddonName
+				case common.AADPodIdentityAddonName:
+					addonPods = []string{"nmi", "mic"}
+				case common.AzureDiskCSIDriverAddonName:
+					addonPods = []string{"csi-azuredisk-node", "csi-azuredisk-controller"}
+					if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+						addonPods = append(addonPods, "csi-azuredisk-node-windows")
+					}
+					if eng.AnyAgentIsLinux() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+						addonPods = append(addonPods, "csi-snapshot-controller")
+					}
+				case common.AzureFileCSIDriverAddonName:
+					addonPods = []string{"csi-azurefile-node", "csi-azurefile-controller"}
+					if eng.HasWindowsAgents() && common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.18.0") {
+						addonPods = append(addonPods, "csi-azurefile-node-windows")
+					}
+				case common.CloudNodeManagerAddonName:
+					addonPods = []string{common.CloudNodeManagerAddonName}
+					if eng.HasWindowsAgents() {
+						addonPods = append(addonPods, common.CloudNodeManagerAddonName+"-windows")
+					}
+				case common.CoreDNSAddonName:
+					addonPods = []string{common.CoreDNSAddonName, common.CoreDNSAddonName + "-autoscaler"}
+				case common.IPMASQAgentAddonName:
+					addonPods = []string{"azure-ip-masq-agent"}
+				case common.CalicoAddonName:
+					addonPods = []string{"calico-node", "calico-typha", "calico-typha-horizontal-autoscaler"}
+				case common.AzurePolicyAddonName:
+					addonPods = []string{common.AzurePolicyAddonName, "gatekeeper-controller-manager"}
+				case common.AntreaAddonName:
+					addonPods = []string{common.AntreaAddonName + "-agent", common.AntreaAddonName + "-controller"}
+				case common.FlannelAddonName:
+					addonPods = []string{"kube-flannel-ds"}
+				case common.ScheduledMaintenanceAddonName:
+					addonPods = []string{"drainsafe-controller-manager", "drainsafe-controller-scheduledevent-manager"}
+				case common.SecretsStoreCSIDriverAddonName:
+					addonPods = []string{"csi-secrets-store", "csi-secrets-store-provider-azure"}
 				}
 				if hasAddon, addon := eng.HasAddon(addonName); hasAddon {
 					for _, addonPod := range addonPods {
-						By(fmt.Sprintf("Ensuring that the %s addon is Running", addonName))
+						if addon.Name == common.AzurePolicyAddonName {
+							switch addonPod {
+							case common.AzurePolicyAddonName:
+								addonNamespace = "kube-system"
+							case "gatekeeper-controller-manager":
+								addonNamespace = "gatekeeper-system"
+							}
+						}
+						By(fmt.Sprintf("Ensuring that the %s pod(s) in the %s addon is Running", addonPod, addonName))
 						running, err := pod.WaitOnSuccesses(addonPod, addonNamespace, kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(running).To(Equal(true))
-						By(fmt.Sprintf("Ensuring that the correct resources have been applied for %s", addonPod))
-						pods, err := pod.GetAllRunningByPrefixWithRetry(addonPod, addonNamespace, 3*time.Second, cfg.Timeout)
-						Expect(err).NotTo(HaveOccurred())
-						for i, c := range addon.Containers {
-							pod := pods[0]
-							if len(pod.Spec.Containers) == i {
-								break
-							}
-							container := pod.Spec.Containers[i]
-							err := container.ValidateResources(c)
-							Expect(err).NotTo(HaveOccurred())
-						}
 					}
 				} else {
 					fmt.Printf("%s disabled for this cluster, will not test\n", addonName)
@@ -992,11 +1012,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have a working node-problem-detector configuration", func() {
-			if hasNpd, _ := eng.HasAddon("node-problem-detector"); hasNpd {
-				running, err := pod.WaitOnSuccesses("node-problem-detector", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			if hasNpd, _ := eng.HasAddon(common.NodeProblemDetectorAddonName); hasNpd {
+				running, err := pod.WaitOnSuccesses(common.NodeProblemDetectorAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
-				pods, err := pod.GetAllRunningByPrefixWithRetry("node-problem-detector", "kube-system", 3*time.Second, cfg.Timeout)
+				pods, err := pod.GetAllRunningByPrefixWithRetry(common.NodeProblemDetectorAddonName, "kube-system", 3*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pods).NotTo(BeEmpty())
 				nodeName := pods[0].Spec.NodeName
@@ -1018,8 +1038,8 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the correct tiller configuration", func() {
-			if hasTiller, tillerAddon := eng.HasAddon("tiller"); hasTiller {
-				running, err := pod.WaitOnSuccesses("tiller", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+			if hasTiller, tillerAddon := eng.HasAddon(common.TillerAddonName); hasTiller {
+				running, err := pod.WaitOnSuccesses(common.TillerAddonName, "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(running).To(Equal(true))
 				pods, err := pod.GetAllRunningByPrefixWithRetry("tiller-deploy", "kube-system", 3*time.Second, cfg.Timeout)
@@ -1036,7 +1056,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 		})
 
 		It("should have the expected omsagent cluster footprint", func() {
-			if hasContainerMonitoring, _ := eng.HasAddon("container-monitoring"); hasContainerMonitoring {
+			if hasContainerMonitoring, _ := eng.HasAddon(common.ContainerMonitoringAddonName); hasContainerMonitoring {
 				By("Validating the omsagent replicaset")
 				running, err := pod.WaitOnSuccesses("omsagent-rs", "kube-system", kubeSystemPodsReadinessChecks, sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
@@ -1074,9 +1094,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			if cfg.BlockSSHPort {
 				Skip("SSH port is blocked")
 			} else {
-				if hasDashboard, _ := eng.HasAddon("kubernetes-dashboard"); hasDashboard {
+				if hasDashboard, _ := eng.HasAddon(common.DashboardAddonName); hasDashboard {
 					By("Ensuring that the kubernetes-dashboard service is Running")
-					s, err := service.Get("kubernetes-dashboard", "kubernetes-dashboard")
+					s, err := service.Get(common.DashboardAddonName, common.DashboardAddonName)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(s).NotTo(BeNil())
 					By("Ensuring that the dashboard responds to requests")
