@@ -117,11 +117,9 @@ func (cs *ContainerService) setOrchestratorDefaults(isUpgrade, isScale bool) {
 		return
 	}
 	o := a.OrchestratorProfile
-	if o.OrchestratorVersion == "" {
-		o.OrchestratorVersion = common.GetValidPatchVersion(
-			o.OrchestratorType,
-			o.OrchestratorVersion, isUpdate, a.HasWindows())
-	}
+	o.OrchestratorVersion = common.GetValidPatchVersion(
+		o.OrchestratorType,
+		o.OrchestratorVersion, isUpdate, a.HasWindows())
 
 	switch o.OrchestratorType {
 	case Kubernetes:
