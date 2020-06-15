@@ -19,6 +19,8 @@ curl -L "$package_url" -o "$temp_dir/scripts.zip"
 echo "Extracting files to $temp_dir/scripts"
 unzip "$temp_dir/scripts.zip" -d "$temp_dir/scripts"
 
-diff "$temp_dir/scripts" "./staging/provisioning/windows/"
+# Perform a recursive diff of the two directories but ignore comments since checked in powershell files
+# will not container signature blocks at the end of the files.
+diff -bBr --ignore-matching-lines='^#' "$temp_dir/scripts" "./staging/provisioning/windows/"
 
 echo "Files match"

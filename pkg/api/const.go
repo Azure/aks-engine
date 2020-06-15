@@ -488,8 +488,7 @@ const (
 // WindowsProfile defaults
 // TODO: Move other values defined in WindowsProfiles (like DefaultWindowsSSHEnabled) here.
 const (
-	// For testing only!
-	DefaultWindowsProvisioningScriptsPackageURL = "https://marosset.blob.core.windows.net/pub/provisioningscripts.zip"
+	DefaultWindowsProvisioningScriptsPackageURL = "https://kubernetesartifacts.azureedge.net/aks-engine/windows/provisioning/signedscripts-v0.0.1.zip"
 )
 
 const (
