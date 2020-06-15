@@ -136,7 +136,7 @@ var (
 	//Ubuntu1804Gen2OSImageConfig is Gen2 flavor the Ubunutu 18.04-LTS Linux distribution.
 	Ubuntu1804Gen2OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-gen2-202005",
+		ImageSku:       "aks-ubuntu-1804-gen2-202006",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "2020.06.10",
 	}
@@ -160,7 +160,7 @@ var (
 	// AKSUbuntu1604OSImageConfig is the AKS image based on Ubuntu 16.04-LTS.
 	AKSUbuntu1604OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1604-202005",
+		ImageSku:       "aks-ubuntu-1604-202006",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "2020.06.10",
 	}
@@ -168,7 +168,7 @@ var (
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
 	AKSUbuntu1804OSImageConfig = AzureOSImageConfig{
 		ImageOffer:     "aks",
-		ImageSku:       "aks-ubuntu-1804-202005",
+		ImageSku:       "aks-ubuntu-1804-202006",
 		ImagePublisher: "microsoft-aks",
 		ImageVersion:   "2020.06.10",
 	}
