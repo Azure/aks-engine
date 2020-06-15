@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -299,12 +300,12 @@ func TestUpdateKubeconfig(t *testing.T) {
 		masterNodes: []v1.Node{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "k8s-master-1234-0",
+					Name: fmt.Sprintf("%s-1234-0", common.LegacyControlPlaneVMPrefix),
 				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "k8s-master-1234-2",
+					Name: fmt.Sprintf("%s-1234-2", common.LegacyControlPlaneVMPrefix),
 				},
 			},
 		},
@@ -340,17 +341,17 @@ func TestRotateCerts(t *testing.T) {
 		masterNodes: []v1.Node{
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "k8s-master-1234-0",
+					Name: fmt.Sprintf("%s-1234-0", common.LegacyControlPlaneVMPrefix),
 				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "k8s-master-1234-1",
+					Name: fmt.Sprintf("%s-1234-1", common.LegacyControlPlaneVMPrefix),
 				},
 			},
 			{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "k8s-master-1234-2",
+					Name: fmt.Sprintf("%s-1234-2", common.LegacyControlPlaneVMPrefix),
 				},
 			},
 		},

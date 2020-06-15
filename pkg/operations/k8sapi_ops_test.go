@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 )
 
@@ -28,7 +29,7 @@ func TestGetNodes_ShouldReturnAResultSetWithNodes(t *testing.T) {
 	g := NewGomegaWithT(t)
 	g.Expect(result.err).To(BeNil())
 	g.Expect(result.nodes).To(HaveLen(2))
-	g.Expect(result.nodes[0].Name).To(Equal("k8s-master-1234"))
+	g.Expect(result.nodes[0].Name).To(Equal(fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)))
 	g.Expect(result.nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeReady))
 	g.Expect(result.nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(result.nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
@@ -87,7 +88,7 @@ func TestGetNodes_ShouldReturnNodes(t *testing.T) {
 	g := NewGomegaWithT(t)
 	g.Expect(err).To(BeNil())
 	g.Expect(nodes).To(HaveLen(2))
-	g.Expect(nodes[0].Name).To(Equal("k8s-master-1234"))
+	g.Expect(nodes[0].Name).To(Equal(fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)))
 	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeReady))
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
@@ -134,7 +135,7 @@ func TestGetNodes_ShouldRespectTheWaitForNumNodesArg(t *testing.T) {
 	g := NewGomegaWithT(t)
 	g.Expect(err).To(BeNil())
 	g.Expect(nodes).To(HaveLen(2))
-	g.Expect(nodes[0].Name).To(Equal("k8s-master-1234"))
+	g.Expect(nodes[0].Name).To(Equal(fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)))
 	g.Expect(nodes[0].Status.Conditions[0].Type).To(Equal(v1.NodeReady))
 	g.Expect(nodes[0].Status.Conditions[0].Status).To(Equal(v1.ConditionTrue))
 	g.Expect(nodes[0].Status.NodeInfo.KubeletVersion).To(Equal("1.9.10"))
@@ -206,7 +207,7 @@ func TestGetNodes_ShouldReturnAVanillaTimeoutErrorIfOccursBeforeASingleRequest(t
 func ExamplePrintNodes() {
 	var nodes []v1.Node
 	node := v1.Node{}
-	node.Name = "k8s-master-1234"
+	node.Name = fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
 	node.Status.NodeInfo.KubeletVersion = "1.10.0"
 	node.Status.NodeInfo.OSImage = "my-os"

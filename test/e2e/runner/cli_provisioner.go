@@ -18,6 +18,7 @@ import (
 
 	"github.com/Azure/go-autorest/autorest/to"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/test/e2e/azure"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
@@ -326,7 +327,7 @@ func (cli *CLIProvisioner) waitForNodes() error {
 			}
 			if !cli.Engine.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				for _, n := range nodes {
-					exp, err := regexp.Compile("k8s-master")
+					exp, err := regexp.Compile(common.LegacyControlPlaneVMPrefix)
 					if err != nil {
 						return err
 					}

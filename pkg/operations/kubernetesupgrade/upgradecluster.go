@@ -5,11 +5,13 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/i18n"
@@ -77,9 +79,6 @@ type UpgradeCluster struct {
 	Force              bool
 	ControlPlaneOnly   bool
 }
-
-// MasterVMNamePrefix is the prefix for all master VM names for Kubernetes clusters
-const MasterVMNamePrefix = "k8s-master-"
 
 // MasterPoolName pool name
 const MasterPoolName = "master"
@@ -437,7 +436,7 @@ func (uc *UpgradeCluster) addVMToAgentPool(vm compute.VirtualMachine, isUpgradab
 }
 
 func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentVersion string) {
-	if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+	if strings.Contains(*(vm.Name), fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (MasterVMs)", *vm.Name, currentVersion)
 		*uc.MasterVMs = append(*uc.MasterVMs, vm)
 	} else {
@@ -448,7 +447,7 @@ func (uc *UpgradeCluster) addVMToUpgradeSets(vm compute.VirtualMachine, currentV
 }
 
 func (uc *UpgradeCluster) addVMToFinishedSets(vm compute.VirtualMachine, currentVersion string) {
-	if strings.Contains(*(vm.Name), MasterVMNamePrefix) {
+	if strings.Contains(*(vm.Name), fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 		uc.Logger.Infof("Master VM name: %s, orchestrator: %s (UpgradedMasterVMs)", *vm.Name, currentVersion)
 		*uc.UpgradedMasterVMs = append(*uc.UpgradedMasterVMs, vm)
 	} else {
