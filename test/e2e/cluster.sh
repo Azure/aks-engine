@@ -29,6 +29,9 @@ fi
 if [ "$LB_TEST_TIMEOUT" == "" ]; then
   LB_TEST_TIMEOUT="${E2E_TEST_TIMEOUT}"
 fi
+if [ "$STABILITY_ITERATIONS" == "" ]; then
+  STABILITY_ITERATIONS=3
+fi
 
 if [ -n "$ADD_NODE_POOL_INPUT" ]; then
   cat > ${TMP_DIR}/addpool-input.json <<END
