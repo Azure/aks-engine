@@ -5,6 +5,7 @@ package kubernetesupgrade
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -591,7 +592,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should skip master VMS that are already on desired version", func() {
 			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 				return []compute.VirtualMachine{
-					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachine(fmt.Sprintf("%s-12345678-0", common.LegacyControlPlaneVMPrefix), "Kubernetes:1.9.10"),
 				}
 			}
 			uc.Force = false
@@ -605,7 +606,7 @@ var _ = Describe("Upgrade Kubernetes cluster tests", func() {
 		It("Should not skip master VMS that are already on desired version when Force is true", func() {
 			mockClient.FakeListVirtualMachineResult = func() []compute.VirtualMachine {
 				return []compute.VirtualMachine{
-					mockClient.MakeFakeVirtualMachine("k8s-master-12345678-0", "Kubernetes:1.9.10"),
+					mockClient.MakeFakeVirtualMachine(fmt.Sprintf("%s-12345678-0", common.LegacyControlPlaneVMPrefix), "Kubernetes:1.9.10"),
 				}
 			}
 			uc.Force = true

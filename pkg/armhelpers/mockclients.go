@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/Azure/azure-sdk-for-go/services/authorization/mgmt/2015-07-01/authorization"
@@ -308,7 +309,7 @@ func (mkc *MockKubernetesClient) ListNodes() (*v1.NodeList, error) {
 		return nil, errors.New("ListNodes failed")
 	}
 	node := &v1.Node{}
-	node.Name = "k8s-master-1234"
+	node.Name = fmt.Sprintf("%s-1234", common.LegacyControlPlaneVMPrefix)
 	node.Status.Conditions = append(node.Status.Conditions, v1.NodeCondition{Type: v1.NodeReady, Status: v1.ConditionTrue})
 	node.Status.NodeInfo.KubeletVersion = "1.9.10"
 	node2 := &v1.Node{}

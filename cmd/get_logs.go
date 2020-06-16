@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Azure/aks-engine/pkg/api"
+	"github.com/Azure/aks-engine/pkg/api/common"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -212,7 +213,7 @@ func (glc *getLogsCmd) getClusterNodes() error {
 	}
 	for _, node := range nodeList.Items {
 		if isLinuxNode(node) {
-			if strings.HasPrefix(node.Name, "k8s-master") {
+			if strings.HasPrefix(node.Name, common.LegacyControlPlaneVMPrefix) {
 				glc.masterNodes = append(glc.masterNodes, node)
 			} else {
 				glc.linuxNodes = append(glc.linuxNodes, node)

@@ -58,7 +58,6 @@ const (
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
 	validateDNSTimeout                        = 2 * time.Minute
-	firstMasterRegexStr                       = "^k8s-master-"
 	podLookupRetries                          = 5
 )
 
@@ -79,6 +78,7 @@ var (
 	stabilityCommandTimeout         time.Duration
 	env                             azure.Environment
 	azureClient                     *armhelpers.AzureClient
+	firstMasterRegexStr             = fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix)
 )
 
 var _ = BeforeSuite(func() {
@@ -109,7 +109,7 @@ var _ = BeforeSuite(func() {
 
 	if !cfg.BlockSSHPort {
 		var err error
-		masterNodes, err = node.GetByRegexWithRetry("^k8s-master-", 3*time.Minute, cfg.Timeout)
+		masterNodes, err = node.GetByRegexWithRetry(fmt.Sprintf("^%s-", common.LegacyControlPlaneVMPrefix), 3*time.Minute, cfg.Timeout)
 		Expect(err).NotTo(HaveOccurred())
 		masterName := masterNodes[0].Metadata.Name
 		if strings.Contains(masterName, "vmss") {
@@ -226,7 +226,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					if n.IsUbuntu() && !firstMasterRegexp.MatchString(n.Metadata.Name) {
 						err := sshConn.CopyToRemoteWithRetry(n.Metadata.Name, "/tmp/"+filesystemValidateScript, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
-						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{"k8s-master"}))
+						envString = fmt.Sprintf("MASTER_NODE=%t", n.HasSubstring([]string{common.LegacyControlPlaneVMPrefix}))
 						filesystemValidationCommand = fmt.Sprintf("%s /tmp/%s", envString, filesystemValidateScript)
 						err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, filesystemValidationCommand, false, sleepBetweenRetriesRemoteSSHCommand, cfg.Timeout)
 						Expect(err).NotTo(HaveOccurred())
@@ -289,7 +289,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			} else if !eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 				var cloudproviderEnabledPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
-					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, "k8s-master-")
+					cloudproviderEnabledPrefixes = append(cloudproviderEnabledPrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
 					if profile.RequiresCloudproviderConfig() {
@@ -407,7 +407,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Expect(err).NotTo(HaveOccurred())
 				for key, val := range eng.ExpandedDefinition.Properties.MasterProfile.SysctlDConfig {
 					for _, n := range nodes {
-						if n.HasSubstring([]string{"k8s-master"}) && n.IsUbuntu() {
+						if n.HasSubstring([]string{common.LegacyControlPlaneVMPrefix}) && n.IsUbuntu() {
 							err = sshConn.ExecuteRemoteWithRetry(n.Metadata.Name, fmt.Sprintf("sysctl %s | grep '= %s'", key, val), false, sleepBetweenRetriesRemoteSSHCommand, singleCommandTimeout)
 							Expect(err).NotTo(HaveOccurred())
 						}
@@ -436,7 +436,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					var largeSKUPrefixes []string
 					if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 						if util.IsLargeVMSKU(eng.ExpandedDefinition.Properties.MasterProfile.VMSize) {
-							largeSKUPrefixes = append(largeSKUPrefixes, "k8s-master-")
+							largeSKUPrefixes = append(largeSKUPrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 						}
 					}
 					for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
@@ -620,7 +620,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				var nonRegularPriVMSSPrefixes []string
 				if eng.ExpandedDefinition.Properties.MasterProfile != nil {
 					if to.Bool(eng.ExpandedDefinition.Properties.MasterProfile.AuditDEnabled) {
-						auditDNodePrefixes = append(auditDNodePrefixes, "k8s-master-")
+						auditDNodePrefixes = append(auditDNodePrefixes, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix))
 					}
 				}
 				for _, profile := range eng.ExpandedDefinition.Properties.AgentPoolProfiles {
@@ -2430,7 +2430,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			Expect(err).NotTo(HaveOccurred())
 			for _, n := range nodes {
 				role := "master"
-				if !strings.HasPrefix(n.Metadata.Name, "k8s-master-") {
+				if !strings.HasPrefix(n.Metadata.Name, fmt.Sprintf("%s-", common.LegacyControlPlaneVMPrefix)) {
 					if eng.ExpandedDefinition.Properties.HasNonRegularPriorityScaleset() {
 						continue
 					} else {

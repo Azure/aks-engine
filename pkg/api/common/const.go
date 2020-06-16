@@ -74,6 +74,8 @@ const (
 	KubernetesDefaultReleaseWindowsAzureStack string = "1.17"
 )
 
+const LegacyControlPlaneVMPrefix string = "k8s-master"
+
 const (
 	// DCOSVersion1Dot11Dot2 is the major.minor.patch string for 1.11.0 versions of DCOS
 	DCOSVersion1Dot11Dot2 string = "1.11.2"
