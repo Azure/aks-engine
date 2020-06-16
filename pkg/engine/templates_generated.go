@@ -9411,6 +9411,8 @@ spec:
         secret:
           defaultMode: 420
           secretName: gatekeeper-webhook-server-cert
+      nodeSelector:
+        kubernetes.io/os: linux
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
@@ -9711,6 +9713,8 @@ spec:
           path: /etc/kubernetes/azure.json
           type: File
         name: acs-credential
+      nodeSelector:
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsAzurePolicyDeploymentYamlBytes() ([]byte, error) {
