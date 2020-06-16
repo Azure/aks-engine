@@ -570,11 +570,14 @@ func (sc *scaleCmd) vmInAgentPool(vmName string, tags map[string]*string) bool {
 		}
 	}
 
-	// For Windows, we rely upon the tags
-	if sc.agentPool.OSType == api.Windows {
+	// Fall back to checking the VM name to see if it fits the naming pattern
+	if sc.agentPool.OSType == api.Windows && strings.HasPrefix(vmName, sc.containerService.Properties.GetClusterID()[:4]) {
+		_, _, winPoolIndex, _, err := utils.WindowsVMNameParts(vmName)
+		if err == nil {
+			return vmName[:9] == sc.containerService.Properties.GetAgentVMPrefix(sc.agentPool, winPoolIndex)[:9]
+		}
 		return false
 	}
-	// Fall back to checking the VM name to see if it fits the naming pattern for Linux
 	return strings.Contains(vmName, sc.nameSuffix[:5]) && strings.Contains(vmName, sc.agentPoolToScale)
 }
 
