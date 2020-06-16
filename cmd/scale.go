@@ -15,9 +15,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
+
 	"github.com/Azure/aks-engine/pkg/api"
 	"github.com/Azure/aks-engine/pkg/armhelpers"
-	"github.com/Azure/aks-engine/pkg/armhelpers/utils"
 	"github.com/Azure/aks-engine/pkg/engine"
 	"github.com/Azure/aks-engine/pkg/engine/transform"
 	"github.com/Azure/aks-engine/pkg/helpers"
@@ -259,30 +260,38 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 	}
 
 	if sc.agentPool.IsAvailabilitySets() {
-		for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
-			if err != nil {
-				return errors.Wrap(err, "failed to get VMs in the resource group")
-			} else if len(vmsListPage.Values()) < 1 {
-				return errors.New("The provided resource group does not contain any VMs")
-			}
-			for _, vm := range vmsListPage.Values() {
-				vmName := *vm.Name
-				if !sc.vmInAgentPool(vmName, vm.Tags) {
-					continue
-				}
-
-				if sc.agentPool.OSType == api.Windows {
-					_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
-				} else {
-					_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
-				}
+		for i := 0; i < 10; i++ {
+			for vmsListPage, err := sc.client.ListVirtualMachines(ctx, sc.resourceGroupName); vmsListPage.NotDone(); err = vmsListPage.Next() {
 				if err != nil {
-					return err
+					return errors.Wrap(err, "failed to get VMs in the resource group")
+				} else if len(vmsListPage.Values()) < 1 {
+					return errors.New("The provided resource group does not contain any VMs")
 				}
+				for _, vm := range vmsListPage.Values() {
+					vmName := *vm.Name
+					if !sc.vmInAgentPool(vmName, vm.Tags) {
+						continue
+					}
 
-				indexToVM[index] = vmName
-				indexes = append(indexes, index)
+					if sc.agentPool.OSType == api.Windows {
+						_, _, winPoolIndex, index, err = utils.WindowsVMNameParts(vmName)
+					} else {
+						_, _, index, err = utils.K8sLinuxVMNameParts(vmName)
+					}
+					if err != nil {
+						return err
+					}
+
+					indexToVM[index] = vmName
+					indexes = append(indexes, index)
+				}
 			}
+			// If we get zero VMs that match our api model pool name, then
+			// Retry every 30 seconds for up to 5 minutes to accommodate temporary issues connecting to the VM API
+			if len(indexes) > 0 {
+				break
+			}
+			time.Sleep(30 * time.Second)
 		}
 		sortedIndexes := sort.IntSlice(indexes)
 		sortedIndexes.Sort()
@@ -613,9 +622,9 @@ func (sc *scaleCmd) printScaleTargetEqualsExisting(currentNodeCount int) {
 	log.Infof("Node pool %s is already at the desired count %d%s", sc.agentPoolToScale, sc.newDesiredAgentCount, trailingChar)
 	if printNodes {
 		operations.PrintNodes(sc.nodes)
-	}
-	numNodesFromK8sAPI := len(sc.nodes)
-	if currentNodeCount != numNodesFromK8sAPI {
-		sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
+		numNodesFromK8sAPI := len(sc.nodes)
+		if currentNodeCount != numNodesFromK8sAPI {
+			sc.logger.Warnf("There are %d nodes named \"*%s*\" in the Kubernetes cluster, but there are %d VMs named \"*%s*\" in the resource group %s\n", numNodesFromK8sAPI, sc.agentPoolToScale, currentNodeCount, sc.agentPoolToScale, sc.resourceGroupName)
+		}
 	}
 }
