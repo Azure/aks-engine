@@ -457,15 +457,6 @@ ensureK8sControlPlane() {
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  GATEKEEPER_NAMESPACE="gatekeeper-system"
-  NS_YAML="/opt/kubernetes/gatekeeper-system.yaml"
-cat <<EOF >"${NS_YAML}"
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: ${GATEKEEPER_NAMESPACE}
-EOF
-  retrycmd 120 5 25 $KUBECTL apply -f ${NS_YAML} 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
   retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{end}}

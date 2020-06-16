@@ -193,6 +193,7 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 		expectedHasKubeReservedCgroup         bool
 		expectedGetKubeReservedCgroup         string
 		expectedHasCustomPodSecurityPolicy    bool
+		expectedIsDashboardAddonEnabled       bool
 	}{
 		{
 			name: "1.15 release",
@@ -907,6 +908,47 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			expectedHasCustomPodSecurityPolicy:   true,
 		},
 		{
+			name: "kubernetes-dashboard addon enabled",
+			cs: &api.ContainerService{
+				Properties: &api.Properties{
+					OrchestratorProfile: &api.OrchestratorProfile{
+						OrchestratorType:    api.Kubernetes,
+						OrchestratorVersion: "1.15.4",
+						KubernetesConfig: &api.KubernetesConfig{
+							ContainerRuntime:        api.Docker,
+							KubernetesImageBaseType: common.KubernetesImageBaseTypeGCR,
+							Addons: []api.KubernetesAddon{
+								{
+									Name:    common.DashboardAddonName,
+									Enabled: to.BoolPtr(true),
+								},
+							},
+						},
+					},
+					AgentPoolProfiles: []*api.AgentPoolProfile{
+						{
+							Name:                "pool1",
+							Count:               1,
+							AvailabilityProfile: api.VirtualMachineScaleSets,
+						},
+					},
+				},
+			},
+			expectedHasCustomSearchDomain:        false,
+			expectedGetSearchDomainName:          "",
+			expectedGetSearchDomainRealmUser:     "",
+			expectedGetSearchDomainRealmPassword: "",
+			expectedHasCustomNodesDNS:            false,
+			expectedGetHyperkubeImageReference:   "hyperkube-amd64:v1.15.4",
+			expectedGetTargetEnvironment:         "AzurePublicCloud",
+			expectedIsNSeriesSKU:                 false,
+			expectedIsDockerContainerRuntime:     true,
+			expectedGetSysctlDConfigKeyVals:      "",
+			expectedGetCSEErrorCodeVals:          []int{-1},
+			expectedIsVirtualMachineScaleSets:    true,
+			expectedIsDashboardAddonEnabled:      true,
+		},
+		{
 			name: "deprecated custom pod-security-policy",
 			cs: &api.ContainerService{
 				Properties: &api.Properties{
@@ -1101,6 +1143,11 @@ func TestGetContainerServiceFuncMap(t *testing.T) {
 			ret = v.Call(make([]reflect.Value, 0))
 			if ret[0].Interface() != c.expectedHasCustomPodSecurityPolicy {
 				t.Errorf("expected funcMap invocation of HasCustomPodSecurityPolicy to return %t, instead got %t", c.expectedHasCustomPodSecurityPolicy, ret[0].Interface())
+			}
+			v = reflect.ValueOf(funcMap["IsDashboardAddonEnabled"])
+			ret = v.Call(make([]reflect.Value, 0))
+			if ret[0].Interface() != c.expectedIsDashboardAddonEnabled {
+				t.Errorf("expected funcMap invocation of HasCustomPodSecurityPolicy to return %t, instead got %t", c.expectedIsDashboardAddonEnabled, ret[0].Interface())
 			}
 		})
 	}
