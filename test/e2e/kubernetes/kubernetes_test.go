@@ -57,7 +57,6 @@ const (
 	timeoutWhenWaitingForPodOutboundAccess    = 1 * time.Minute
 	singleCommandTimeout                      = 1 * time.Minute
 	validateNetworkPolicyTimeout              = 3 * time.Minute
-	validateDNSTimeout                        = 2 * time.Minute
 	podLookupRetries                          = 5
 )
 
@@ -747,7 +746,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 			validateDNSLinuxNamespace := "default"
 			j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, fmt.Sprintf("%s.yaml", validateDNSLinuxName)), validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
 			Expect(err).NotTo(HaveOccurred())
-			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, validateDNSTimeout)
+			ready, err := j.WaitOnSucceeded(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
 			if err != nil {
 				pod.PrintPodsLogs(validateDNSLinuxName, validateDNSLinuxNamespace, 5*time.Second, 1*time.Minute)
 				pods, err := pod.GetAllByPrefixWithRetry(validateDNSLinuxName, validateDNSLinuxNamespace, 3*time.Second, cfg.Timeout)
