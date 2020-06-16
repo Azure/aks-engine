@@ -291,6 +291,7 @@ func (sc *scaleCmd) run(cmd *cobra.Command, args []string) error {
 			if len(indexes) > 0 {
 				break
 			}
+			log.Warnf("Found no VMs in resource group %s that match pool name %s\n", sc.resourceGroupName, sc.agentPool.Name)
 			time.Sleep(30 * time.Second)
 		}
 		sortedIndexes := sort.IntSlice(indexes)
