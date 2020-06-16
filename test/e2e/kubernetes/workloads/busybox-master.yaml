@@ -24,9 +24,10 @@ spec:
         command: ['sh', '-c', '[ $(echo "Hello, World!" | sha256sum | cut -d" " -f1) = "c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31" ]']
       restartPolicy: Never
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
-        operator: "Exists"
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
       - operator: "Exists"
         effect: NoExecute
       - operator: "Exists"
