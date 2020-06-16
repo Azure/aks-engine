@@ -16,6 +16,8 @@ spec:
     env:
     - name: KUBECONFIG
       value: "/var/lib/kubelet/kubeconfig"
+    - name: ADDON_PATH
+      value: "/etc/kubernetes/addons/init"
     resources:
       requests:
         cpu: 5m
