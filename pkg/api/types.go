@@ -208,6 +208,8 @@ type CustomNodesDNS struct {
 const (
 	// WindowsLicenseTypeServer specifies that the image or disk that is being used was licensed server on-premises.
 	WindowsLicenseTypeServer string = "Windows_Server"
+	// WindowsLicenseTypeNone specifies that the image or disk that is being used was not licensed on-premises.
+	WindowsLicenseTypeNone string = "None"
 )
 
 // WindowsProfile represents the windows parameters passed to the cluster
@@ -1832,6 +1834,11 @@ func (w *WindowsProfile) GetEnableAHUB() bool {
 		return *w.EnableAHUB
 	}
 	return false
+}
+
+// HasEnableAHUB returns true if EnableAHUB is not nil
+func (w *WindowsProfile) HasEnableAHUB() bool {
+	return w.EnableAHUB != nil
 }
 
 // HasSecrets returns true if the customer specified secrets to install

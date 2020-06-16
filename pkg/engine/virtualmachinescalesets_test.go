@@ -857,6 +857,7 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 
 	// Now Test AgentVMSS with windows
 	trueVar := true
+	falseVar := false
 	cs.Properties.AgentPoolProfiles[0].OSType = "Windows"
 	cs.Properties.AgentPoolProfiles[0].AcceleratedNetworkingEnabledWindows = to.BoolPtr(true)
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
@@ -925,6 +926,21 @@ func TestCreateAgentVMSSHostedMasterProfile(t *testing.T) {
 	cs.Properties.WindowsProfile = &api.WindowsProfile{
 		SSHEnabled: &trueVar,
 		EnableAHUB: &trueVar,
+	}
+
+	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
+	expected.VirtualMachineProfile.LicenseType = &licenseType
+
+	diff = cmp.Diff(actual, expected)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	licenseType = api.WindowsLicenseTypeNone
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		SSHEnabled: &trueVar,
+		EnableAHUB: &falseVar,
 	}
 
 	actual = CreateAgentVMSS(cs, cs.Properties.AgentPoolProfiles[0])
