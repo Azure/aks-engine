@@ -192,6 +192,7 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 
 	// Test with OSDiskSize specified, Windows, StorageAccount, and DiskSizes
 	trueVar := true
+	falseVar := false
 	profile := cs.Properties.AgentPoolProfiles[0]
 	profile.OSType = api.Windows
 	profile.DiskSizesGB = []int{256, 256, 256}
@@ -307,6 +308,21 @@ func TestCreateAgentAvailabilitySetVM(t *testing.T) {
 
 	actualVM = createAgentAvailabilitySetVM(cs, profile)
 	licenseType := api.WindowsLicenseTypeServer
+	expectedVM.VirtualMachine.VirtualMachineProperties.LicenseType = &licenseType
+
+	diff = cmp.Diff(actualVM, expectedVM)
+
+	if diff != "" {
+		t.Errorf("unexpected diff while expecting equal structs: %s", diff)
+	}
+
+	cs.Properties.WindowsProfile = &api.WindowsProfile{
+		SSHEnabled: &trueVar,
+		EnableAHUB: &falseVar,
+	}
+
+	actualVM = createAgentAvailabilitySetVM(cs, profile)
+	licenseType = api.WindowsLicenseTypeNone
 	expectedVM.VirtualMachine.VirtualMachineProperties.LicenseType = &licenseType
 
 	diff = cmp.Diff(actualVM, expectedVM)
