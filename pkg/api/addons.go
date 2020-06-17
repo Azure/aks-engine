@@ -362,7 +362,8 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Name:    common.CalicoAddonName,
 		Enabled: to.BoolPtr(o.KubernetesConfig.NetworkPolicy == NetworkPolicyCalico),
 		Config: map[string]string{
-			"logSeverityScreen": "info",
+			"logSeverityScreen":     "info",
+			"usageReportingEnabled": "true",
 		},
 		Containers: []KubernetesContainerSpec{
 			{

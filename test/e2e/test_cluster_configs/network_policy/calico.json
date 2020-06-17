@@ -1,6 +1,7 @@
 {
 	"env": {
-		"CREATE_VNET": true
+		"CREATE_VNET": true,
+		"STABILITY_ITERATIONS": "0"
 	},
 	"apiModel": {
 		"apiVersion": "vlabs",
@@ -15,7 +16,8 @@
 							"name": "calico",
 							"enabled": true,
 							"config": {
-								"logSeverityScreen": "error"
+								"logSeverityScreen": "error",
+								"usageReportingEnabled": "false"
 							}
 						}
 					]
