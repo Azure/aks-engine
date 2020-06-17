@@ -379,6 +379,9 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 	// tip: curl -L https://mcr.microsoft.com/v2/windows/servercore/tags/list
 	//      curl -L https://mcr.microsoft.com/v2/windows/servercore/iis/tags/list
 	switch {
+	case strings.Contains(windowsSku, "2004"):
+		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-2004",
+			ServerCore: "mcr.microsoft.com/windows/servercore:2004"}, nil
 	case strings.Contains(windowsSku, "1909"):
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1909",
 			ServerCore: "mcr.microsoft.com/windows/servercore:1909"}, nil
@@ -389,8 +392,7 @@ func (e *Engine) GetWindowsTestImages() (*WindowsTestImages, error) {
 		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:20191112-windowsservercore-ltsc2019",
 			ServerCore: "mcr.microsoft.com/windows/servercore:ltsc2019"}, nil
 	case strings.Contains(windowsSku, "1803"):
-		return &WindowsTestImages{IIS: "mcr.microsoft.com/windows/servercore/iis:windowsservercore-1803",
-			ServerCore: "mcr.microsoft.com/windows/servercore:1803"}, nil
+		return nil, errors.New("Windows Server version 1803 is out of support")
 	case strings.Contains(windowsSku, "1709"):
 		return nil, errors.New("Windows Server version 1709 is out of support")
 	}
