@@ -612,8 +612,11 @@ func CreateAgentVMSS(cs *api.ContainerService, profile *api.AgentPoolProfile) Vi
 		}
 		vmssVMProfile.OsProfile = &windowsOsProfile
 
-		if cs.Properties.WindowsProfile.GetEnableAHUB() {
-			licenseType := api.WindowsLicenseTypeServer
+		if cs.Properties.WindowsProfile.HasEnableAHUB() {
+			licenseType := api.WindowsLicenseTypeNone
+			if cs.Properties.WindowsProfile.GetEnableAHUB() {
+				licenseType = api.WindowsLicenseTypeServer
+			}
 			vmssVMProfile.LicenseType = &licenseType
 		}
 	} else {
