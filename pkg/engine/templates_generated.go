@@ -9411,6 +9411,8 @@ spec:
         secret:
           defaultMode: 420
           secretName: gatekeeper-webhook-server-cert
+      nodeSelector:
+        kubernetes.io/os: linux
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
@@ -9711,6 +9713,8 @@ spec:
           path: /etc/kubernetes/azure.json
           type: File
         name: acs-credential
+      nodeSelector:
+        kubernetes.io/os: linux
 `)
 
 func k8sAddonsAzurePolicyDeploymentYamlBytes() ([]byte, error) {
@@ -16045,9 +16049,7 @@ metadata:
   labels:
     addonmanager.kubernetes.io/mode: Reconcile
   name: kubernetes-dashboard
-
 ---
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -16056,9 +16058,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
-
 ---
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -16073,9 +16073,7 @@ spec:
       targetPort: 8443
   selector:
     k8s-app: kubernetes-dashboard
-
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -16085,9 +16083,7 @@ metadata:
   name: kubernetes-dashboard-certs
   namespace: kubernetes-dashboard
 type: Opaque
-
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -16099,9 +16095,7 @@ metadata:
 type: Opaque
 data:
   csrf: ""
-
 ---
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -16111,9 +16105,7 @@ metadata:
   name: kubernetes-dashboard-key-holder
   namespace: kubernetes-dashboard
 type: Opaque
-
 ---
-
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -16122,9 +16114,7 @@ metadata:
     addonmanager.kubernetes.io/mode: EnsureExists
   name: kubernetes-dashboard-settings
   namespace: kubernetes-dashboard
-
 ---
-
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -16134,17 +16124,17 @@ metadata:
   name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 rules:
-  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+  {{- /* Allow Dashboard to get, update and delete Dashboard exclusive secrets. */}}
   - apiGroups: [""]
     resources: ["secrets"]
     resourceNames: ["kubernetes-dashboard-key-holder", "kubernetes-dashboard-certs", "kubernetes-dashboard-csrf"]
     verbs: ["get", "update", "delete"]
-    # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+    {{- /* Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map. */}}
   - apiGroups: [""]
     resources: ["configmaps"]
     resourceNames: ["kubernetes-dashboard-settings"]
     verbs: ["get", "update"]
-    # Allow Dashboard to get metrics.
+    {{- /* Allow Dashboard to get metrics. */}}
   - apiGroups: [""]
     resources: ["services"]
     resourceNames: ["heapster", "dashboard-metrics-scraper"]
@@ -16153,9 +16143,7 @@ rules:
     resources: ["services/proxy"]
     resourceNames: ["heapster", "http:heapster:", "https:heapster:", "dashboard-metrics-scraper", "http:dashboard-metrics-scraper"]
     verbs: ["get"]
-
 ---
-
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -16164,13 +16152,11 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
   name: kubernetes-dashboard
 rules:
-  # Allow Metrics Scraper to get metrics from the Metrics server
+  {{- /* Allow Metrics Scraper to get metrics from the Metrics server */}}
   - apiGroups: ["metrics.k8s.io"]
     resources: ["pods", "nodes"]
     verbs: ["get", "list", "watch"]
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
@@ -16187,9 +16173,7 @@ subjects:
   - kind: ServiceAccount
     name: kubernetes-dashboard
     namespace: kubernetes-dashboard
-
 ---
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -16204,9 +16188,7 @@ subjects:
   - kind: ServiceAccount
     name: kubernetes-dashboard
     namespace: kubernetes-dashboard
-
 ---
-
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -16236,10 +16218,10 @@ spec:
           args:
             - --auto-generate-certificates
             - --namespace=kubernetes-dashboard
-            # Uncomment the following line to manually specify Kubernetes API server Host
-            # If not specified, Dashboard will attempt to auto discover the API server and connect
-            # to it. Uncomment only if the default does not work.
-            # - --apiserver-host=http://my-address:port
+            {{- /* Uncomment the following line to manually specify Kubernetes API server Host */}}
+            {{- /* If not specified, Dashboard will attempt to auto discover the API server and connect */}}
+            {{- /* to it. Uncomment only if the default does not work. */}}
+            {{- /* - --apiserver-host=http://my-address:port */}}
           resources:
             requests:
               cpu: {{ContainerCPUReqs "kubernetes-dashboard"}}
@@ -16250,7 +16232,7 @@ spec:
           volumeMounts:
             - name: kubernetes-dashboard-certs
               mountPath: /certs
-              # Create on-disk volume to store exec logs
+              {{- /* Create on-disk volume to store exec logs */}}
             - mountPath: /tmp
               name: tmp-volume
           livenessProbe:
@@ -16274,13 +16256,11 @@ spec:
       serviceAccountName: kubernetes-dashboard
       nodeSelector:
         kubernetes.io/os: linux
-      # Comment the following tolerations if Dashboard must not be deployed on master
+      {{/* Comment the following tolerations if Dashboard must not be deployed on master */}}
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
-
 ---
-
 kind: Service
 apiVersion: v1
 metadata:
@@ -16295,9 +16275,7 @@ spec:
       targetPort: 8000
   selector:
     k8s-app: dashboard-metrics-scraper
-
 ---
-
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -16350,7 +16328,7 @@ spec:
       serviceAccountName: kubernetes-dashboard
       nodeSelector:
         kubernetes.io/os: linux
-      # Comment the following tolerations if Dashboard must not be deployed on master
+        {{- /* Comment the following tolerations if Dashboard must not be deployed on master */}}
       tolerations:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
@@ -18494,10 +18472,7 @@ ensureK8sControlPlane() {
 }
 {{- if IsAzurePolicyAddonEnabled}}
 ensureLabelExclusionForAzurePolicyAddon() {
-  GATEKEEPER_NAMESPACE="gatekeeper-system"
-  retrycmd 120 5 25 $KUBECTL create ns --save-config $GATEKEEPER_NAMESPACE 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
-
-  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
+  retrycmd 120 5 25 $KUBECTL label ns kube-system control-plane=controller-manager --overwrite 2>/dev/null || exit {{GetCSEErrorCode "ERR_K8S_RUNNING_TIMEOUT"}}
 }
 {{end}}
 ensureEtcd() {
@@ -19703,6 +19678,9 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 
 time_metric "EnsureKubelet" ensureKubelet
 if [[ -n ${MASTER_NODE} ]]; then
+{{if IsAzurePolicyAddonEnabled}}
+  time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
+{{end}}
   time_metric "EnsureAddons" ensureAddons
 fi
 time_metric "EnsureJournal" ensureJournal
@@ -19720,9 +19698,6 @@ if [[ -n ${MASTER_NODE} ]]; then
     fi
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
-  {{if IsAzurePolicyAddonEnabled}}
-  time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
-  {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
@@ -21550,6 +21525,30 @@ MASTER_MANIFESTS_CONFIG_PLACEHOLDER
 MASTER_CUSTOM_FILES_PLACEHOLDER
 
 MASTER_CONTAINER_ADDONS_PLACEHOLDER
+
+{{- if or (IsDashboardAddonEnabled) (IsAzurePolicyAddonEnabled)}}
+- path: /etc/kubernetes/addons/init/namespaces.yaml
+  permissions: "0644"
+  owner: root
+  content: |
+  {{- if IsDashboardAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: kubernetes-dashboard
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+    ---
+  {{- end}}
+  {{- if IsAzurePolicyAddonEnabled}}
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: gatekeeper-system
+      labels:
+        addonmanager.kubernetes.io/mode: EnsureExists
+  {{- end}}
+{{- end}}
 
 - path: /etc/default/kubelet
   permissions: "0644"
@@ -24056,6 +24055,8 @@ spec:
     env:
     - name: KUBECONFIG
       value: "/var/lib/kubelet/kubeconfig"
+    - name: ADDON_PATH
+      value: "/etc/kubernetes/addons/init"
     resources:
       requests:
         cpu: 5m

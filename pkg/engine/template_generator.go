@@ -762,6 +762,9 @@ func getContainerServiceFuncMap(cs *api.ContainerService) template.FuncMap {
 		"IsAADPodIdentityAddonEnabled": func() bool {
 			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.AADPodIdentityAddonName)
 		},
+		"IsDashboardAddonEnabled": func() bool {
+			return cs.Properties.OrchestratorProfile.KubernetesConfig.IsAddonEnabled(common.DashboardAddonName)
+		},
 		"GetAADPodIdentityTaintKey": func() string {
 			return common.AADPodIdentityTaintKey
 		},

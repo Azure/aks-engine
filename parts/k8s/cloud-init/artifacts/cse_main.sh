@@ -225,6 +225,9 @@ time_metric "EnsureDHCPv6" ensureDHCPv6
 
 time_metric "EnsureKubelet" ensureKubelet
 if [[ -n ${MASTER_NODE} ]]; then
+{{if IsAzurePolicyAddonEnabled}}
+  time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
+{{end}}
   time_metric "EnsureAddons" ensureAddons
 fi
 time_metric "EnsureJournal" ensureJournal
@@ -242,9 +245,6 @@ if [[ -n ${MASTER_NODE} ]]; then
     fi
   fi
   time_metric "EnsureK8sControlPlane" ensureK8sControlPlane
-  {{if IsAzurePolicyAddonEnabled}}
-  time_metric "EnsureLabelExclusionForAzurePolicyAddon" ensureLabelExclusionForAzurePolicyAddon
-  {{end}}
   {{- if HasClusterInitComponent}}
   if [[ $NODE_INDEX == 0 ]]; then
     retrycmd 120 5 30 $KUBECTL apply -f /opt/azure/containers/cluster-init.yaml || exit {{GetCSEErrorCode "ERR_CLUSTER_INIT_FAIL"}}
