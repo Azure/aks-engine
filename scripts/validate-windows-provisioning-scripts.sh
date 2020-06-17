@@ -1,7 +1,8 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
+set -euo pipefail
 
 echo "Validating content of Windows provisioning scripts..."
 package_url=$(grep  "DefaultWindowsProvisioningScriptsPackageURL" ./pkg/api/const.go  | cut -d ' ' -f 3 | cut -d '"' -f2)

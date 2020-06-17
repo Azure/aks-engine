@@ -2,7 +2,7 @@
 
 ## Overview
 
-Due to requirements around signing executable code on Windows nodes some powershell scripts are are delivered via a .zip file during node provisioning.
+Due to requirements around signing executable code on Windows nodes some powershell scripts are delivered via a .zip file during node provisioning.
 This document details how to update and test changes to these files.
 
 ## Testing
@@ -26,4 +26,4 @@ Changes to the provisioning scripts packaged in the .zip can be tested by:
 Before creating a new aks-engine release
 
 - Run [scripts/validate-windows-provisioning-scripts.sh](../../scripts/validate-windows-provisioning-scripts.sh) to verify the contents in the staging directory match the the contents of the zip used in default cluster deployments.
-- Perform a no-outbound-connections deployement to verify the zip used in default cluster deployments is cached on the Windows VHD.
+- Perform a no-outbound-connections deployment to verify the zip used in default cluster deployments is cached on the Windows VHD.

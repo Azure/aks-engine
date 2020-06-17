@@ -1,7 +1,10 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license.
+set -o errexit
+set -o nounset
+set -o pipefail
 
 required_env_vars=(
     "CLIENT_ID"
@@ -13,13 +16,19 @@ required_env_vars=(
     "TENANT_ID"
 )
 
+unset_vars=()
 for v in "${required_env_vars[@]}"
 do
     if [ -z "${!v}" ]; then
-        echo "$v was not set!"
-        exit 1
+        unset_vars+=(${v})
     fi
 done
+
+if (( ${#unset_vars[@]} )); then
+    echo "Required environment variables: ${required_env_vars[@]}"
+    echo "Unset environment variables: ${unset_vars[@]}"
+    exit 1
+fi
 
 CREATE_TIME="$(date +%s)"
 az login --service-principal -u $CLIENT_ID -p $CLIENT_SECRET --tenant $TENANT_ID

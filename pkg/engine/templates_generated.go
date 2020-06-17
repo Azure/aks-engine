@@ -22821,7 +22821,7 @@ function DownloadFileOverHttp {
 }
 
 function Get-ProvisioningScripts {
-    Write-Log "Getting privioning scripts"
+    Write-Log "Getting provisioning scripts"
     DownloadFileOverHttp -Url $global:ProvisioningScriptsPackageUrl -DestinationPath 'c:\k\provisioningscripts.zip'
     Expand-Archive -Path 'c:\k\provisioningscripts.zip' -DestinationPath 'c:\k' -Force
     Remove-Item -Path 'c:\k\provisioningscripts.zip' -Force

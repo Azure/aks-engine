@@ -858,7 +858,7 @@ func (p *Properties) setWindowsProfileDefaults(isUpgrade, isScale bool) {
 		}
 	} else if isUpgrade {
 		// Always set windowsProfile.ProvisioningScriptsPackerURL to the default value during upgrade.
-		// This content on this package must stay in sync with other powershell code in /parts/k8s and the best way to ensure that is to update the value here.
+		// The contents on this package must stay in sync with other powershell code in /parts/k8s and the best way to ensure that is to update the value here.
 		windowsProfile.ProvisioningScriptsPackageURL = DefaultWindowsProvisioningScriptsPackageURL
 
 		// Image reference publisher and offer only can be set when you create the scale set so we keep the old values.
