@@ -15,7 +15,8 @@
 							"name": "calico",
 							"enabled": true,
 							"config": {
-								"logSeverityScreen": "error"
+								"logSeverityScreen": "error",
+								"usageReportingEnabled": "false"
 							}
 						}
 					]

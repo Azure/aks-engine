@@ -1708,7 +1708,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"logSeverityScreen": "info",
+						"logSeverityScreen":     "info",
+						"usageReportingEnabled": "true",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
@@ -1736,7 +1737,7 @@ func TestSetAddonsConfig(t *testing.T) {
 			}, "1.15.4")),
 		},
 		{
-			name: "calico addon enabled with configurable log severity",
+			name: "calico addon enabled with user configuration",
 			cs: &ContainerService{
 				Properties: &Properties{
 					OrchestratorProfile: &OrchestratorProfile{
@@ -1756,7 +1757,8 @@ func TestSetAddonsConfig(t *testing.T) {
 									Name:    common.CalicoAddonName,
 									Enabled: to.BoolPtr(true),
 									Config: map[string]string{
-										"logSeverityScreen": "error",
+										"logSeverityScreen":     "error",
+										"usageReportingEnabled": "false",
 									},
 								},
 							},
@@ -1770,7 +1772,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"logSeverityScreen": "error",
+						"logSeverityScreen":     "error",
+						"usageReportingEnabled": "false",
 					},
 					Containers: []KubernetesContainerSpec{
 						{
@@ -1818,7 +1821,8 @@ func TestSetAddonsConfig(t *testing.T) {
 									Name:    common.CalicoAddonName,
 									Enabled: to.BoolPtr(false),
 									Config: map[string]string{
-										"logSeverityScreen": "info",
+										"logSeverityScreen":     "info",
+										"usageReportingEnabled": "true",
 									},
 									Containers: []KubernetesContainerSpec{
 										{
@@ -1854,7 +1858,8 @@ func TestSetAddonsConfig(t *testing.T) {
 					Name:    common.CalicoAddonName,
 					Enabled: to.BoolPtr(true),
 					Config: map[string]string{
-						"logSeverityScreen": "info",
+						"logSeverityScreen":     "info",
+						"usageReportingEnabled": "true",
 					},
 					Containers: []KubernetesContainerSpec{
 						{

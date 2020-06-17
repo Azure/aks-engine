@@ -12561,6 +12561,8 @@ spec:
           value: "off"
         - name: FELIX_INTERFACEPREFIX
           value: "azv"
+        - name: FELIX_USAGEREPORTINGENABLED
+          value: {{ContainerConfig "usageReportingEnabled"}}
         securityContext:
           privileged: true
         resources:
