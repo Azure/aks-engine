@@ -1,4 +1,7 @@
 {
+	"env": {
+		"STABILITY_ITERATIONS": "0"
+	},
 	"apiModel": {
 		"apiVersion": "vlabs",
 		"properties": {
