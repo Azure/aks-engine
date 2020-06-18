@@ -227,7 +227,7 @@ spec:
       containers:
 
         - name: iis-container
-          image: microsoft/iis:windowsservercore-1803
+          image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
           volumeMounts:
           - name: shared-data
             mountPath: /wwwcache
@@ -237,7 +237,7 @@ spec:
           - "while ($true) { Start-Sleep -Seconds 10; Copy-Item -Path C:\\wwwcache\\iisstart.htm -Destination C:\\inetpub\\wwwroot\\iisstart.htm; }"
 
         - name: servercore-container
-          image: microsoft/windowsservercore:1803
+          image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
           volumeMounts:
           - name: shared-data
             mountPath: /poddata

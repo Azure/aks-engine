@@ -21,7 +21,7 @@
             "adminPassword": "replacepassword1234$",
             "windowsPublisher": "MicrosoftWindowsServer",
             "windowsOffer": "WindowsServerSemiAnnual",
-            "windowsSku": "Datacenter-Core-1803-with-Containers-smalldisk",
+            "windowsSku": "2019-datacenter-core-smalldisk-2006",
             "enableAutomaticUpdates": false
         },
         "linuxProfile": {
