@@ -327,7 +327,7 @@ func (a *KubernetesAddon) IsDisabled() bool {
 // GetAddonContainersIndexByName returns the KubernetesAddon containers index with the name `containerName`
 func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int {
 	for i := range a.Containers {
-		if a.Containers[i].Name == containerName {
+		if strings.EqualFold(a.Containers[i].Name, containerName) {
 			return i
 		}
 	}
@@ -337,7 +337,7 @@ func (a KubernetesAddon) GetAddonContainersIndexByName(containerName string) int
 // GetAddonPoolIndexByName returns the KubernetesAddon pools index with the name `poolName`
 func (a KubernetesAddon) GetAddonPoolIndexByName(poolName string) int {
 	for i := range a.Pools {
-		if a.Pools[i].Name == poolName {
+		if strings.EqualFold(a.Pools[i].Name, poolName) {
 			return i
 		}
 	}
@@ -816,7 +816,7 @@ type TelemetryProfile struct {
 // HasCoreOS returns true if the cluster contains coreos nodes
 func (p *Properties) HasCoreOS() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.Distro == CoreOS {
+		if strings.EqualFold(string(agentPoolProfile.Distro), string(CoreOS)) {
 			return true
 		}
 	}
@@ -826,7 +826,7 @@ func (p *Properties) HasCoreOS() bool {
 // HasWindows returns true if the cluster contains windows
 func (p *Properties) HasWindows() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.OSType == Windows {
+		if strings.EqualFold(string(agentPoolProfile.OSType), string(Windows)) {
 			return true
 		}
 	}
@@ -835,15 +835,15 @@ func (p *Properties) HasWindows() bool {
 
 // HasManagedDisks returns true if the cluster contains Managed Disks
 func (p *Properties) HasManagedDisks() bool {
-	if p.MasterProfile != nil && p.MasterProfile.StorageProfile == ManagedDisks {
+	if p.MasterProfile != nil && strings.EqualFold(p.MasterProfile.StorageProfile, ManagedDisks) {
 		return true
 	}
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.StorageProfile == ManagedDisks {
+		if strings.EqualFold(agentPoolProfile.StorageProfile, ManagedDisks) {
 			return true
 		}
 	}
-	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && p.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == ManagedDisks {
+	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile, ManagedDisks) {
 		return true
 	}
 	return false
@@ -851,15 +851,15 @@ func (p *Properties) HasManagedDisks() bool {
 
 // HasStorageAccountDisks returns true if the cluster contains Storage Account Disks
 func (p *Properties) HasStorageAccountDisks() bool {
-	if p.MasterProfile != nil && p.MasterProfile.StorageProfile == StorageAccount {
+	if p.MasterProfile != nil && strings.EqualFold(p.MasterProfile.StorageProfile, StorageAccount) {
 		return true
 	}
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.StorageProfile == StorageAccount {
+		if strings.EqualFold(agentPoolProfile.StorageProfile, StorageAccount) {
 			return true
 		}
 	}
-	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && p.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile == StorageAccount {
+	if p.OrchestratorProfile != nil && p.OrchestratorProfile.KubernetesConfig != nil && p.OrchestratorProfile.KubernetesConfig.PrivateJumpboxProvision() && strings.EqualFold(p.OrchestratorProfile.KubernetesConfig.PrivateCluster.JumpboxProfile.StorageProfile, StorageAccount) {
 		return true
 	}
 	return false
@@ -868,7 +868,7 @@ func (p *Properties) HasStorageAccountDisks() bool {
 // HasStorageAccountDisks returns true if the cluster contains agent pools with Ephemeral Disks
 func (p *Properties) HasEphemeralDisks() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.StorageProfile == Ephemeral {
+		if strings.EqualFold(agentPoolProfile.StorageProfile, Ephemeral) {
 			return true
 		}
 	}
@@ -890,7 +890,7 @@ func (p *Properties) TotalNodes() int {
 // HasVMSSAgentPool returns true if the cluster contains Virtual Machine Scale Sets agent pools
 func (p *Properties) HasVMSSAgentPool() bool {
 	for _, agentPoolProfile := range p.AgentPoolProfiles {
-		if agentPoolProfile.AvailabilityProfile == VirtualMachineScaleSets {
+		if strings.EqualFold(agentPoolProfile.AvailabilityProfile, VirtualMachineScaleSets) {
 			return true
 		}
 	}
@@ -911,7 +911,7 @@ func (p *Properties) K8sOrchestratorName() string {
 // GetAgentPoolByName returns the pool in the AgentPoolProfiles array that matches a name, nil if no match
 func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
 	for _, profile := range p.AgentPoolProfiles {
-		if profile.Name == name {
+		if strings.EqualFold(profile.Name, name) {
 			return profile
 		}
 	}
@@ -922,7 +922,7 @@ func (p *Properties) GetAgentPoolByName(name string) *AgentPoolProfile {
 func (p *Properties) GetAgentPoolIndexByName(name string) int {
 	index := -1
 	for i, profile := range p.AgentPoolProfiles {
-		if profile.Name == name {
+		if strings.EqualFold(profile.Name, name) {
 			index = i
 			break
 		}
@@ -936,7 +936,7 @@ func (p *Properties) GetAgentVMPrefix(a *AgentPoolProfile, index int) string {
 	vmPrefix := ""
 	if index != -1 {
 		if a.IsWindows() {
-			if a.WindowsNameVersion == "v2" {
+			if strings.EqualFold(a.WindowsNameVersion, "v2") {
 				vmPrefix = p.K8sOrchestratorName() + a.Name
 			} else {
 				vmPrefix = nameSuffix[:4] + p.K8sOrchestratorName() + fmt.Sprintf("%02d", index)
@@ -1006,7 +1006,7 @@ func (p *Properties) GetNSGName() string {
 // GetPrimaryAvailabilitySetName returns the name of the primary availability set of the cluster
 func (p *Properties) GetPrimaryAvailabilitySetName() string {
 	if len(p.AgentPoolProfiles) > 0 {
-		if p.AgentPoolProfiles[0].AvailabilityProfile == AvailabilitySet {
+		if strings.EqualFold(p.AgentPoolProfiles[0].AvailabilityProfile, AvailabilitySet) {
 			return p.AgentPoolProfiles[0].Name + "-availabilitySet-" + p.GetClusterID()
 		}
 	}
@@ -1016,7 +1016,7 @@ func (p *Properties) GetPrimaryAvailabilitySetName() string {
 // GetPrimaryScaleSetName returns the name of the primary scale set node of the cluster
 func (p *Properties) GetPrimaryScaleSetName() string {
 	if len(p.AgentPoolProfiles) > 0 {
-		if p.AgentPoolProfiles[0].AvailabilityProfile == VirtualMachineScaleSets {
+		if strings.EqualFold(p.AgentPoolProfiles[0].AvailabilityProfile, VirtualMachineScaleSets) {
 			return p.GetAgentVMPrefix(p.AgentPoolProfiles[0], 0)
 		}
 	}
@@ -1216,13 +1216,13 @@ func (p *Properties) HasUbuntuDistroNodes() bool {
 func (p *Properties) HasUbuntu1604DistroNodes() bool {
 	if len(p.AgentPoolProfiles) > 0 {
 		for _, ap := range p.AgentPoolProfiles {
-			if ap.Distro == Ubuntu {
+			if strings.EqualFold(string(ap.Distro), string(Ubuntu)) {
 				return true
 			}
 		}
 	}
 	if p.MasterProfile != nil {
-		return p.MasterProfile.Distro == Ubuntu
+		return strings.EqualFold(string(p.MasterProfile.Distro), string(Ubuntu))
 	}
 	return false
 }
@@ -1382,27 +1382,27 @@ func (m *MasterProfile) IsCustomVNET() bool {
 
 // IsManagedDisks returns true if the master specified managed disks
 func (m *MasterProfile) IsManagedDisks() bool {
-	return m.StorageProfile == ManagedDisks
+	return strings.EqualFold(m.StorageProfile, ManagedDisks)
 }
 
 // IsStorageAccount returns true if the master specified storage account
 func (m *MasterProfile) IsStorageAccount() bool {
-	return m.StorageProfile == StorageAccount
+	return strings.EqualFold(m.StorageProfile, StorageAccount)
 }
 
 // IsRHEL returns true if the master specified a RHEL distro
 func (m *MasterProfile) IsRHEL() bool {
-	return m.Distro == RHEL
+	return strings.EqualFold(string(m.Distro), string(RHEL))
 }
 
 // IsCoreOS returns true if the master specified a CoreOS distro
 func (m *MasterProfile) IsCoreOS() bool {
-	return m.Distro == CoreOS
+	return strings.EqualFold(string(m.Distro), string(CoreOS))
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (m *MasterProfile) IsVHDDistro() bool {
-	return m.Distro == AKSUbuntu1604 || m.Distro == AKSUbuntu1804
+	return strings.EqualFold(string(m.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(m.Distro), string(AKSUbuntu1804))
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
@@ -1412,12 +1412,12 @@ func (m *MasterProfile) IsAuditDEnabled() bool {
 
 // IsVirtualMachineScaleSets returns true if the master availability profile is VMSS
 func (m *MasterProfile) IsVirtualMachineScaleSets() bool {
-	return m.AvailabilityProfile == VirtualMachineScaleSets
+	return strings.EqualFold(m.AvailabilityProfile, VirtualMachineScaleSets)
 }
 
 // IsAvailabilitySet returns true if the master availability profile is availability set
 func (m *MasterProfile) IsAvailabilitySet() bool {
-	return m.AvailabilityProfile == AvailabilitySet
+	return strings.EqualFold(m.AvailabilityProfile, AvailabilitySet)
 }
 
 // GetFirstConsecutiveStaticIPAddress returns the first static IP address of the given subnet.
@@ -1521,27 +1521,27 @@ func (a *AgentPoolProfile) IsCustomVNET() bool {
 
 // IsWindows returns true if the agent pool is windows
 func (a *AgentPoolProfile) IsWindows() bool {
-	return a.OSType == Windows
+	return strings.EqualFold(string(a.OSType), string(Windows))
 }
 
 // IsLinux returns true if the agent pool is linux
 func (a *AgentPoolProfile) IsLinux() bool {
-	return a.OSType == Linux
+	return strings.EqualFold(string(a.OSType), string(Linux))
 }
 
 // IsRHEL returns true if the agent pool specified a RHEL distro
 func (a *AgentPoolProfile) IsRHEL() bool {
-	return a.OSType == Linux && a.Distro == RHEL
+	return strings.EqualFold(string(a.OSType), string(Linux)) && strings.EqualFold(string(a.Distro), string(RHEL))
 }
 
 // IsCoreOS returns true if the agent specified a CoreOS distro
 func (a *AgentPoolProfile) IsCoreOS() bool {
-	return a.OSType == Linux && a.Distro == CoreOS
+	return strings.EqualFold(string(a.OSType), string(Linux)) && strings.EqualFold(string(a.Distro), string(CoreOS))
 }
 
 // IsVHDDistro returns true if the distro uses VHD SKUs
 func (a *AgentPoolProfile) IsVHDDistro() bool {
-	return a.Distro == AKSUbuntu1604 || a.Distro == AKSUbuntu1804
+	return strings.EqualFold(string(a.Distro), string(AKSUbuntu1604)) || strings.EqualFold(string(a.Distro), string(AKSUbuntu1804))
 }
 
 // IsAuditDEnabled returns true if the master profile is configured for auditd
@@ -1551,37 +1551,37 @@ func (a *AgentPoolProfile) IsAuditDEnabled() bool {
 
 // IsAvailabilitySets returns true if the customer specified disks
 func (a *AgentPoolProfile) IsAvailabilitySets() bool {
-	return a.AvailabilityProfile == AvailabilitySet
+	return strings.EqualFold(a.AvailabilityProfile, AvailabilitySet)
 }
 
 // IsVirtualMachineScaleSets returns true if the agent pool availability profile is VMSS
 func (a *AgentPoolProfile) IsVirtualMachineScaleSets() bool {
-	return a.AvailabilityProfile == VirtualMachineScaleSets
+	return strings.EqualFold(a.AvailabilityProfile, VirtualMachineScaleSets)
 }
 
 // IsLowPriorityScaleSet returns true if the VMSS is Low Priority
 func (a *AgentPoolProfile) IsLowPriorityScaleSet() bool {
-	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPriorityLow
+	return strings.EqualFold(a.AvailabilityProfile, VirtualMachineScaleSets) && strings.EqualFold(a.ScaleSetPriority, ScaleSetPriorityLow)
 }
 
 // IsSpotScaleSet returns true if the VMSS is Spot Scale Set
 func (a *AgentPoolProfile) IsSpotScaleSet() bool {
-	return a.AvailabilityProfile == VirtualMachineScaleSets && a.ScaleSetPriority == ScaleSetPrioritySpot
+	return strings.EqualFold(a.AvailabilityProfile, VirtualMachineScaleSets) && strings.EqualFold(a.ScaleSetPriority, ScaleSetPrioritySpot)
 }
 
 // IsManagedDisks returns true if the customer specified disks
 func (a *AgentPoolProfile) IsManagedDisks() bool {
-	return a.StorageProfile == ManagedDisks
+	return strings.EqualFold(a.StorageProfile, ManagedDisks)
 }
 
 // IsStorageAccount returns true if the customer specified storage account
 func (a *AgentPoolProfile) IsStorageAccount() bool {
-	return a.StorageProfile == StorageAccount
+	return strings.EqualFold(a.StorageProfile, StorageAccount)
 }
 
 // IsStorageAccount returns true if the customer specified ephemeral disks
 func (a *AgentPoolProfile) IsEphemeral() bool {
-	return a.StorageProfile == Ephemeral
+	return strings.EqualFold(a.StorageProfile, Ephemeral)
 }
 
 // HasDisks returns true if the customer specified disks
@@ -1596,7 +1596,7 @@ func (a *AgentPoolProfile) HasAvailabilityZones() bool {
 
 // IsUbuntu1604 returns true if the agent pool profile distro is based on Ubuntu 16.04
 func (a *AgentPoolProfile) IsUbuntu1604() bool {
-	if a.OSType != Windows {
+	if !strings.EqualFold(string(a.OSType), string(Windows)) {
 		switch a.Distro {
 		case AKSUbuntu1604, Ubuntu, ACC1604:
 			return true
@@ -1609,7 +1609,7 @@ func (a *AgentPoolProfile) IsUbuntu1604() bool {
 
 // IsUbuntu1804 returns true if the agent pool profile distro is based on Ubuntu 16.04
 func (a *AgentPoolProfile) IsUbuntu1804() bool {
-	if a.OSType != Windows {
+	if !strings.EqualFold(string(a.OSType), string(Windows)) {
 		switch a.Distro {
 		case AKSUbuntu1804, Ubuntu1804, Ubuntu1804Gen2:
 			return true
@@ -1639,7 +1639,7 @@ func (a *AgentPoolProfile) GetKubernetesLabels(rg string, deprecated bool) strin
 		buf.WriteString(",kubernetes.io/role=agent")
 	}
 	buf.WriteString(fmt.Sprintf(",agentpool=%s", a.Name))
-	if a.StorageProfile == ManagedDisks {
+	if strings.EqualFold(a.StorageProfile, ManagedDisks) {
 		storagetier, _ := common.GetStorageAccountType(a.VMSize)
 		buf.WriteString(fmt.Sprintf(",storageprofile=managed,storagetier=%s", storagetier))
 	}
@@ -1767,30 +1767,30 @@ func (l *LinuxProfile) HasCustomNodesDNS() bool {
 
 // IsSwarmMode returns true if this template is for Swarm Mode orchestrator
 func (o *OrchestratorProfile) IsSwarmMode() bool {
-	return o.OrchestratorType == SwarmMode
+	return strings.EqualFold(o.OrchestratorType, SwarmMode)
 }
 
 // IsKubernetes returns true if this template is for Kubernetes orchestrator
 func (o *OrchestratorProfile) IsKubernetes() bool {
-	return o.OrchestratorType == Kubernetes
+	return strings.EqualFold(o.OrchestratorType, Kubernetes)
 }
 
 // IsDCOS returns true if this template is for DCOS orchestrator
 func (o *OrchestratorProfile) IsDCOS() bool {
-	return o.OrchestratorType == DCOS
+	return strings.EqualFold(o.OrchestratorType, DCOS)
 }
 
 // IsDCOS19 returns true if this is a DCOS 1.9 orchestrator using the latest version
 func (o *OrchestratorProfile) IsDCOS19() bool {
-	return o.OrchestratorType == DCOS &&
-		(o.OrchestratorVersion == common.DCOSVersion1Dot9Dot0 ||
-			o.OrchestratorVersion == common.DCOSVersion1Dot9Dot8)
+	return strings.EqualFold(o.OrchestratorType, DCOS) &&
+		(strings.EqualFold(o.OrchestratorVersion, common.DCOSVersion1Dot9Dot0) ||
+			strings.EqualFold(o.OrchestratorVersion, common.DCOSVersion1Dot9Dot8))
 }
 
 // IsAzureCNI returns true if Azure CNI network plugin is enabled
 func (o *OrchestratorProfile) IsAzureCNI() bool {
 	if o.KubernetesConfig != nil {
-		return o.KubernetesConfig.NetworkPlugin == NetworkPluginAzure
+		return strings.EqualFold(o.KubernetesConfig.NetworkPlugin, NetworkPluginAzure)
 	}
 	return false
 }
@@ -1800,9 +1800,9 @@ func (o *OrchestratorProfile) RequireRouteTable() bool {
 	switch o.OrchestratorType {
 	case Kubernetes:
 		if o.IsAzureCNI() ||
-			NetworkPolicyCilium == o.KubernetesConfig.NetworkPolicy ||
-			"flannel" == o.KubernetesConfig.NetworkPlugin ||
-			NetworkPluginAntrea == o.KubernetesConfig.NetworkPlugin {
+			strings.EqualFold(NetworkPolicyCilium, o.KubernetesConfig.NetworkPolicy) ||
+			strings.EqualFold("flannel", o.KubernetesConfig.NetworkPlugin) ||
+			strings.EqualFold(NetworkPluginAntrea, o.KubernetesConfig.NetworkPlugin) {
 			return false
 		}
 		return true
@@ -1843,7 +1843,7 @@ func (o *OrchestratorProfile) GetAPIServerEtcdAPIVersion() string {
 func (k *KubernetesConfig) GetAddonByName(addonName string) KubernetesAddon {
 	var kubeAddon KubernetesAddon
 	for _, addon := range k.Addons {
-		if addon.Name == addonName {
+		if strings.EqualFold(addon.Name, addonName) {
 			kubeAddon = addon
 			break
 		}
@@ -1976,7 +1976,7 @@ func (k *KubernetesConfig) GetOrderedKubeletConfigStringForPowershell() string {
 // NeedsContainerd returns whether or not we need the containerd runtime configuration
 // E.g., kata configuration requires containerd config
 func (k *KubernetesConfig) NeedsContainerd() bool {
-	return k.ContainerRuntime == KataContainers || k.ContainerRuntime == Containerd
+	return strings.EqualFold(k.ContainerRuntime, KataContainers) || strings.EqualFold(k.ContainerRuntime, Containerd)
 }
 
 // IsNSeriesSKU returns true if the agent pool contains an N-series (NVIDIA GPU) VM
@@ -2158,8 +2158,7 @@ func (k *KubernetesConfig) RequiresDocker() bool {
 		return false
 	}
 
-	runtime := strings.ToLower(k.ContainerRuntime)
-	return runtime == Docker || runtime == ""
+	return strings.EqualFold(k.ContainerRuntime, Docker) || k.ContainerRuntime == ""
 }
 
 // SetCloudProviderBackoffDefaults sets default cloudprovider backoff config
@@ -2170,7 +2169,7 @@ func (k *KubernetesConfig) SetCloudProviderBackoffDefaults() {
 	if k.CloudProviderBackoffRetries == 0 {
 		k.CloudProviderBackoffRetries = DefaultKubernetesCloudProviderBackoffRetries
 	}
-	if k.CloudProviderBackoffMode != CloudProviderBackoffModeV2 {
+	if !strings.EqualFold(k.CloudProviderBackoffMode, CloudProviderBackoffModeV2) {
 		if k.CloudProviderBackoffExponent == 0 {
 			k.CloudProviderBackoffExponent = DefaultKubernetesCloudProviderBackoffExponent
 		}
@@ -2228,7 +2227,7 @@ func (cs *ContainerService) GetCloudSpecConfig() AzureEnvironmentSpecConfig {
 // IsAKSBillingEnabled checks if the AKS Billing Extension should be enabled for a cloud environment.
 func (cs *ContainerService) IsAKSBillingEnabled() bool {
 	cloudSpecConfig := cs.GetCloudSpecConfig()
-	return cloudSpecConfig.CloudName == AzurePublicCloud || cloudSpecConfig.CloudName == AzureChinaCloud || cloudSpecConfig.CloudName == AzureUSGovernmentCloud
+	return strings.EqualFold(cloudSpecConfig.CloudName, AzurePublicCloud) || strings.EqualFold(cloudSpecConfig.CloudName, AzureChinaCloud) || strings.EqualFold(cloudSpecConfig.CloudName, AzureUSGovernmentCloud)
 }
 
 // GetAzureProdFQDN returns the formatted FQDN string for a given apimodel.
