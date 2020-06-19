@@ -99,12 +99,15 @@ function Get-FilesToCacheOnVHD
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.9/windowszip/v1.16.9-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.10/windowszip/v1.16.10-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.11/windowszip/v1.16.11-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.16.11-hotfix.20200617/windowszip/v1.16.11-hotfix.20200617-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.5/windowszip/v1.17.5-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.6/windowszip/v1.17.6-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.7/windowszip/v1.17.7-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.17.7-hotfix.20200617/windowszip/v1.17.7-hotfix.20200617-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.2/windowszip/v1.18.2-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.3/windowszip/v1.18.3-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.4/windowszip/v1.18.4-1int.zip",
+            "https://kubernetesartifacts.azureedge.net/kubernetes/v1.18.4-hotfix.20200617/windowszip/v1.18.4-hotfix.20200617-1int.zip",
             "https://kubernetesartifacts.azureedge.net/kubernetes/v1.19.0-beta.2/windowszip/v1.19.0-beta.2-1int.zip"
         );
         "c:\akse-cache\win-vnet-cni\" = @(
