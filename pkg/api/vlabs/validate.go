@@ -1795,8 +1795,11 @@ func (a *Properties) validateContainerRuntime(isUpdate bool) error {
 		if a.OrchestratorProfile.KubernetesConfig.WindowsContainerdURL == "" {
 			return errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd")
 		}
-		if a.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
-			return errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd")
+
+		if a.OrchestratorProfile.KubernetesConfig.NetworkPlugin == "kubenet" {
+			if a.OrchestratorProfile.KubernetesConfig.WindowsSdnPluginURL == "" {
+				return errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd and networkPlugin=kubenet")
+			}
 		}
 	}
 

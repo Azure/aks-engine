@@ -1574,17 +1574,118 @@ func Test_Properties_ValidateContainerRuntime(t *testing.T) {
 			"%s containerRuntime has been deprecated, you will not be able to update this cluster with this version of aks-engine", KataContainers,
 		)
 	}
+}
 
-	p.OrchestratorProfile.KubernetesConfig.ContainerRuntime = Containerd
-	p.AgentPoolProfiles = []*AgentPoolProfile{
+func TestProperties_ValidateContainerRuntime_Windows(t *testing.T) {
+	tests := []struct {
+		name        string
+		p           *Properties
+		expectedErr error
+	}{
 		{
-			OSType: Windows,
+			name: "Docker",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime: Docker,
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "ContainerD-AzureCNI",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:     Docker,
+						NetworkPlugin:        "Azure",
+						WindowsContainerdURL: "http://some/url",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "ContainerD-AzureCNI-NoWindowsContainerdURL",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:     Containerd,
+						NetworkPlugin:        "Azure",
+						WindowsContainerdURL: "",
+					},
+				},
+			},
+			expectedErr: errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd"),
+		},
+		{
+			name: "ContainerD-kubenet",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:     Containerd,
+						NetworkPlugin:        "kubenet",
+						WindowsContainerdURL: "http://some/url",
+						WindowsSdnPluginURL:  "http://some/url",
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "ContainerD-kubenet-NoWindowsContainerdURL",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:     Containerd,
+						NetworkPlugin:        "kubenet",
+						WindowsContainerdURL: "",
+					},
+				},
+			},
+			expectedErr: errors.Errorf("WindowsContainerdURL must be provided when using Windows with ContainerRuntime=containerd"),
+		},
+		{
+			name: "ContainerD-kubenet-NoWindowsSdnPluginURL",
+			p: &Properties{
+				OrchestratorProfile: &OrchestratorProfile{
+					OrchestratorType: Kubernetes,
+					KubernetesConfig: &KubernetesConfig{
+						ContainerRuntime:     Containerd,
+						NetworkPlugin:        "kubenet",
+						WindowsContainerdURL: "http://some/url",
+						WindowsSdnPluginURL:  "",
+					},
+				},
+			},
+			expectedErr: errors.Errorf("WindowsSdnPluginURL must be provided when using Windows with ContainerRuntime=containerd and networkPlugin=kubenet"),
 		},
 	}
-	if err := p.validateContainerRuntime(false); err == nil {
-		t.Errorf(
-			"should error on containerd for windows clusters",
-		)
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			//	t.Parallel()
+
+			// Add a Windows agent pool
+			test.p.AgentPoolProfiles = []*AgentPoolProfile{
+				{
+					OSType: Windows,
+				},
+			}
+
+			returnedErr := test.p.validateContainerRuntime(false)
+
+			if !helpers.EqualError(returnedErr, test.expectedErr) {
+				t.Errorf("Expected error: %v, Got error: %v", test.expectedErr, returnedErr)
+			}
+		})
 	}
 }
 
