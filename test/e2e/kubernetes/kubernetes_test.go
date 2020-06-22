@@ -1463,7 +1463,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				By("Ensuring we can create a curl pod to connect to the service")
 				Expect(err).NotTo(HaveOccurred())
 				for i := 0; i < 100; i++ {
-					ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
+					ilbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-ilb", "default", fmt.Sprintf("curl %s", sILB.Status.LoadBalancer.Ingress[0]["ip"]), true, 1*time.Minute, 1*time.Second, 30*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 					err = ilbCurlPod.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
@@ -1481,7 +1481,7 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				By("Ensuring we can connect to the ELB service from another pod")
 				for i := 0; i < 100; i++ {
-					elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), false, 1*time.Minute, cfg.Timeout)
+					elbCurlPod, err := pod.RunLinuxWithRetry("byrnedo/alpine-curl", "curl-to-elb", "default", fmt.Sprintf("curl %s", sELB.Status.LoadBalancer.Ingress[0]["ip"]), true, 1*time.Minute, 1*time.Second, 30*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 					err = elbCurlPod.Delete(util.DefaultDeleteRetries)
 					Expect(err).NotTo(HaveOccurred())
