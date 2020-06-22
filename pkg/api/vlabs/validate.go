@@ -814,12 +814,8 @@ func (a *Properties) validateAddons() error {
 						return errors.Errorf("%s add-on can only be used Kubernetes %s or above", addon.Name, minVersion)
 					}
 				case common.CiliumAddonName:
-					if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
-						if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyCilium {
-							return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
-						}
-					} else {
-						return errors.Errorf("%s addon is not supported on Kubernetes v1.16.0 or greater", common.CiliumAddonName)
+					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyCilium {
+						return errors.Errorf("%s addon may only be enabled if the networkPolicy=%s", common.CiliumAddonName, NetworkPolicyCilium)
 					}
 				case common.AntreaAddonName:
 					if a.OrchestratorProfile.KubernetesConfig.NetworkPolicy != NetworkPolicyAntrea {

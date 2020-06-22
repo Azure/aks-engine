@@ -1,3 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+  name: cilium
 ---
 # Source: cilium/charts/agent/templates/serviceaccount.yaml
 apiVersion: v1
@@ -5,6 +11,8 @@ kind: ServiceAccount
 metadata:
   name: cilium
   namespace: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 ---
 # Source: cilium/charts/operator/templates/serviceaccount.yaml
 apiVersion: v1
@@ -12,6 +20,8 @@ kind: ServiceAccount
 metadata:
   name: cilium-operator
   namespace: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 ---
 # Source: cilium/charts/config/templates/configmap.yaml
 apiVersion: v1
@@ -19,6 +29,8 @@ kind: ConfigMap
 metadata:
   name: cilium-config
   namespace: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
 
   # Identity allocation mode selects how identities are shared between cilium
@@ -167,6 +179,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -242,6 +256,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - ""
@@ -303,6 +319,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -317,6 +335,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -332,6 +352,7 @@ kind: DaemonSet
 metadata:
   labels:
     k8s-app: cilium
+    addonmanager.kubernetes.io/mode: "EnsureExists"
   name: cilium
   namespace: cilium
 spec:
@@ -573,9 +594,9 @@ spec:
       - configMap:
           name: cilium-config
         name: cilium-config-path
-      - name: cni-configuration
-        configMap:
+      - configMap:
           name: cni-configuration
+        name: cni-configuration
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
@@ -589,6 +610,7 @@ metadata:
   namespace: cilium
   labels:
     app: cilium-node-init
+    addonmanager.kubernetes.io/mode: "EnsureExists"
 spec:
   selector:
     matchLabels:
@@ -687,6 +709,7 @@ metadata:
   labels:
     io.cilium/app: operator
     name: cilium-operator
+    addonmanager.kubernetes.io/mode: "EnsureExists"
   name: cilium-operator
   namespace: cilium
 spec:
