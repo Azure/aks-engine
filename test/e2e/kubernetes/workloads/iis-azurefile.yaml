@@ -7,7 +7,7 @@ metadata:
     name: storage
 spec:
   containers:
-  - image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-1809
+  - image: mcr.microsoft.com/windows/servercore/iis:windowsservercore-ltsc2019
     name: iis-azurefile
     volumeMounts:
     - name: azurefilevol
