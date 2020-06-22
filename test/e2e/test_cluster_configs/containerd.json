@@ -8,8 +8,7 @@
                 "kubernetesConfig": {
                     "networkPlugin": "azure",
                     "containerRuntime": "containerd",
-                    "windowsContainerdURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cri-containerd.zip",
-                    "windowsSdnPluginURL": "https://aksenginee2etestimages.blob.core.windows.net/test-content/windows-cni-containerd.zip"
+                    "windowsContainerdURL": "https://github.com/marosset/windows-cri-containerd/releases/download/nightly/windows-cri-containerd.zip"
                 }
             },
             "masterProfile": {
