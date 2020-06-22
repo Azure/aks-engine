@@ -747,11 +747,6 @@ func TestExampleAPIModels(t *testing.T) {
 			setArgs:      defaultSet,
 		},
 		{
-			name:         "windows automatic updates",
-			apiModelPath: "../examples/windows/kubernetes-windows-automatic-update.json",
-			setArgs:      defaultSet,
-		},
-		{
 			name:         "windows windowsDockerVersion",
 			apiModelPath: "../examples/windows/kubernetes-windows-docker-version.json",
 			setArgs:      defaultSet,

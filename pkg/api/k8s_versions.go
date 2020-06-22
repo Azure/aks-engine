@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	pauseImageReference                               string = "oss/kubernetes/pause:1.3.2"
+	pauseImageReference                               string = "oss/kubernetes/pause:1.4.0"
 	blobfuseFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/blobfuse-flexvolume:1.0.8"
 	smbFlexVolumeImageReference                       string = "mcr.microsoft.com/k8s/flexvolume/smb-flexvolume:1.0.2"
 	keyvaultFlexVolumeImageReference                  string = "mcr.microsoft.com/k8s/flexvolume/keyvault-flexvolume:v0.0.16"
