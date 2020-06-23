@@ -37,7 +37,7 @@
 				"sshEnabled": true,
 				"windowsPublisher": "MicrosoftWindowsServer",
 				"windowsOffer": "WindowsServer",
-				"windowsSku": "Datacenter-Core-1903-with-Containers-smalldisk",
+				"windowsSku": "Datacenter-Core-2004-with-Containers-smalldisk",
 				"imageVersion": "latest"
 			},
 			"linuxProfile": {
