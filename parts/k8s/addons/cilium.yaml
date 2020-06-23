@@ -1,9 +1,34 @@
+---
 apiVersion: v1
-kind: Namespace
+kind: ConfigMap
 metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
-  name: cilium
+  name: cni-configuration
+  namespace: cilium
+data:
+  cni-config: |-
+    {
+      "cniVersion": "0.3.0",
+      "name": "azure",
+      "plugins": [
+        {
+          "type": "azure-vnet",
+          "mode": "transparent",
+          "bridge": "azure0",
+          "ipam": {
+             "type": "azure-vnet-ipam"
+           }
+        },
+        {
+          "type": "portmap",
+          "capabilities": {"portMappings": true},
+          "snat": true
+        },
+        {
+           "name": "cilium",
+           "type": "cilium-cni"
+        }
+      ]
+    }
 ---
 # Source: cilium/charts/agent/templates/serviceaccount.yaml
 apiVersion: v1
@@ -11,8 +36,6 @@ kind: ServiceAccount
 metadata:
   name: cilium
   namespace: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 ---
 # Source: cilium/charts/operator/templates/serviceaccount.yaml
 apiVersion: v1
@@ -20,8 +43,6 @@ kind: ServiceAccount
 metadata:
   name: cilium-operator
   namespace: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 ---
 # Source: cilium/charts/config/templates/configmap.yaml
 apiVersion: v1
@@ -29,8 +50,6 @@ kind: ConfigMap
 metadata:
   name: cilium-config
   namespace: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 data:
 
   # Identity allocation mode selects how identities are shared between cilium
@@ -179,8 +198,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -256,8 +273,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium-operator
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - ""
@@ -319,8 +334,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -335,8 +348,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cilium-operator
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -352,7 +363,6 @@ kind: DaemonSet
 metadata:
   labels:
     k8s-app: cilium
-    addonmanager.kubernetes.io/mode: "EnsureExists"
   name: cilium
   namespace: cilium
 spec:
@@ -453,8 +463,8 @@ spec:
               key: custom-cni-conf
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
@@ -500,8 +510,8 @@ spec:
       initContainers:
       - name: wait-for-node-init
         command: ['sh', '-c', 'until stat /tmp/cilium-bootstrap-time > /dev/null 2>&1; do echo "Waiting on node-init to run..."; sleep 1; done']
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /tmp/cilium-bootstrap-time
           name: cilium-bootstrap-file
@@ -526,8 +536,8 @@ spec:
               key: wait-bpf-mount
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         name: clean-cilium-state
         securityContext:
           capabilities:
@@ -594,9 +604,9 @@ spec:
       - configMap:
           name: cilium-config
         name: cilium-config-path
-      - configMap:
+      - name: cni-configuration
+        configMap:
           name: cni-configuration
-        name: cni-configuration
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
@@ -610,7 +620,6 @@ metadata:
   namespace: cilium
   labels:
     app: cilium-node-init
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 spec:
   selector:
     matchLabels:
@@ -709,7 +718,6 @@ metadata:
   labels:
     io.cilium/app: operator
     name: cilium-operator
-    addonmanager.kubernetes.io/mode: "EnsureExists"
   name: cilium-operator
   namespace: cilium
 spec:
@@ -771,8 +779,8 @@ spec:
               key: AWS_DEFAULT_REGION
               name: cilium-aws
               optional: true
-        image: "docker.io/cilium/operator-generic:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/operator-generic:v1.8.0"
+        imagePullPolicy: IfNotPresent
         name: cilium-operator
         livenessProbe:
           httpGet:
