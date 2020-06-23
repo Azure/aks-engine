@@ -1,7 +1,5 @@
 {
-	"env": {
-		"REGION_OPTIONS": "westus2"
-	},
+	"env": {},
 	"options": {
 		"allowedOrchestratorVersions": ["latestReleasedVersion"]
 	},
