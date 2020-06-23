@@ -18144,6 +18144,15 @@ ensureAuditD() {
     apt_get_purge auditd mlocate &
   fi
 }
+ensureCron() {
+  local CRON_SERVICE=/lib/systemd/system/cron.service
+  if [[ -f ${CRON_SERVICE} ]]; then
+    if ! grep -q 'Restart=' ${CRON_SERVICE}; then
+      sed -i 's/\[Service\]/[Service]\nRestart=always/' ${CRON_SERVICE}
+      systemctlEnableAndStart cron
+    fi
+  fi
+}
 generateAggregatedAPICerts() {
   AGGREGATED_API_CERTS_SETUP_FILE=/etc/kubernetes/generate-proxy-certs.sh
   wait_for_file 1200 1 $AGGREGATED_API_CERTS_SETUP_FILE || exit {{GetCSEErrorCode "ERR_FILE_WATCH_TIMEOUT"}}
@@ -19610,6 +19619,7 @@ time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
 if [[ $OS != $FLATCAR_OS_NAME ]]; then
     time_metric "EnsureRPC" ensureRPC
+    time_metric "EnsureCron" ensureCron
 fi
 
 time_metric "CreateKubeManifestDir" createKubeManifestDir

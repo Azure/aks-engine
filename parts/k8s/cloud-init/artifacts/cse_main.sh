@@ -155,6 +155,7 @@ time_metric "InstallKubeletAndKubectl" installKubeletAndKubectl
 
 if [[ $OS != $FLATCAR_OS_NAME ]]; then
     time_metric "EnsureRPC" ensureRPC
+    time_metric "EnsureCron" ensureCron
 fi
 
 time_metric "CreateKubeManifestDir" createKubeManifestDir
