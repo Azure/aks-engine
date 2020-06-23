@@ -310,10 +310,10 @@ const (
 	DefaultAzureStackKubernetesCloudProviderBackoffJitter        = 1.0
 	DefaultAzureStackKubernetesCloudProviderBackoffDuration      = 30
 	DefaultAzureStackKubernetesCloudProviderBackoffExponent      = 1.5
-	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 3.0
-	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 3.0
-	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 10
-	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 10
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPS         = 100.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitQPSWrite    = 25.0
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucket      = 150
+	DefaultAzureStackKubernetesCloudProviderRateLimitBucketWrite = 30
 	DefaultAzureStackKubernetesNodeStatusUpdateFrequency         = "1m"
 	DefaultAzureStackKubernetesCtrlMgrRouteReconciliationPeriod  = "1m"
 	DefaultAzureStackKubernetesCtrlMgrNodeMonitorGracePeriod     = "5m"
