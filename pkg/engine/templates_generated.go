@@ -12926,6 +12926,39 @@ metadata:
     addonmanager.kubernetes.io/mode: "EnsureExists"
   name: cilium
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cni-configuration
+  namespace: cilium
+  labels:
+    addonmanager.kubernetes.io/mode: "EnsureExists"
+data:
+  cni-config: |-
+    {
+      "cniVersion": "0.3.0",
+      "name": "azure",
+      "plugins": [
+        {
+          "type": "azure-vnet",
+          "mode": "transparent",
+          "bridge": "azure0",
+          "ipam": {
+             "type": "azure-vnet-ipam"
+           }
+        },
+        {
+          "type": "portmap",
+          "capabilities": {"portMappings": true},
+          "snat": true
+        },
+        {
+           "name": "cilium",
+           "type": "cilium-cni"
+        }
+      ]
+    }
+---
 # Source: cilium/charts/agent/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -13100,8 +13133,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cilium
-  labels:
-    addonmanager.kubernetes.io/mode: "EnsureExists"
 rules:
 - apiGroups:
   - networking.k8s.io
@@ -13374,8 +13405,8 @@ spec:
               key: custom-cni-conf
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
@@ -13421,8 +13452,8 @@ spec:
       initContainers:
       - name: wait-for-node-init
         command: ['sh', '-c', 'until stat /tmp/cilium-bootstrap-time > /dev/null 2>&1; do echo "Waiting on node-init to run..."; sleep 1; done']
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /tmp/cilium-bootstrap-time
           name: cilium-bootstrap-file
@@ -13447,8 +13478,8 @@ spec:
               key: wait-bpf-mount
               name: cilium-config
               optional: true
-        image: "docker.io/cilium/cilium:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/cilium:v1.8.0"
+        imagePullPolicy: IfNotPresent
         name: clean-cilium-state
         securityContext:
           capabilities:
@@ -13515,9 +13546,9 @@ spec:
       - configMap:
           name: cilium-config
         name: cilium-config-path
-      - configMap:
+      - name: cni-configuration
+        configMap:
           name: cni-configuration
-        name: cni-configuration
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
@@ -13692,8 +13723,8 @@ spec:
               key: AWS_DEFAULT_REGION
               name: cilium-aws
               optional: true
-        image: "docker.io/cilium/operator-generic:latest"
-        imagePullPolicy: Always
+        image: "docker.io/cilium/operator-generic:v1.8.0"
+        imagePullPolicy: IfNotPresent
         name: cilium-operator
         livenessProbe:
           httpGet:
