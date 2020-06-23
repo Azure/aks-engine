@@ -4129,6 +4129,21 @@ func TestAgentPoolProfile_ValidateVirtualMachineScaleSet(t *testing.T) {
 		}
 	})
 
+	t.Run("Should fail for invalid LB + Enable VMSS node public IP config", func(t *testing.T) {
+		t.Parallel()
+		cs := getK8sDefaultContainerService(false)
+		cs.Properties.OrchestratorProfile.KubernetesConfig = &KubernetesConfig{
+			LoadBalancerSku: StandardLoadBalancerSku,
+		}
+		agentPoolProfiles := cs.Properties.AgentPoolProfiles
+		agentPoolProfiles[0].AvailabilityProfile = VirtualMachineScaleSets
+		agentPoolProfiles[0].EnableVMSSNodePublicIP = to.BoolPtr(true)
+		expectedMsg := fmt.Sprintf("You have enabled VMSS node public IP in agent pool %s, but you did not specify Basic Load Balancer SKU", agentPoolProfiles[0].Name)
+		if err := cs.Properties.validateAgentPoolProfiles(false); err.Error() != expectedMsg {
+			t.Errorf("expected error with message : %s, but got %s", expectedMsg, err.Error())
+		}
+	})
+
 	t.Run("Should fail for invalid VMSS + VnetSubnetID + FirstConsecutiveStaticIP config", func(t *testing.T) {
 		t.Parallel()
 		cs := getK8sDefaultContainerService(false)

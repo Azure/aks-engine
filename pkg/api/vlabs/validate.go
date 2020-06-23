@@ -536,6 +536,9 @@ func (a *Properties) validateAgentPoolProfiles(isUpdate bool) error {
 			if agentPoolProfile.AvailabilityProfile != VirtualMachineScaleSets {
 				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify VMSS", agentPoolProfile.Name)
 			}
+			if a.OrchestratorProfile.KubernetesConfig.LoadBalancerSku != BasicLoadBalancerSku {
+				return errors.Errorf("You have enabled VMSS node public IP in agent pool %s, but you did not specify Basic Load Balancer SKU", agentPoolProfile.Name)
+			}
 		}
 
 		if e := agentPoolProfile.validateOrchestratorSpecificProperties(a.OrchestratorProfile.OrchestratorType); e != nil {
