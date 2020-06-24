@@ -2235,7 +2235,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 			"defaults in creating",
 			WindowsProfile{},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
@@ -2257,7 +2257,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsOffer:     AKSWindowsServer2019OSImageConfig.ImageOffer,
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
@@ -2280,7 +2280,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsSku:       "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "override",
@@ -2303,7 +2303,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
@@ -2325,7 +2325,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsOffer:     WindowsServer2019OSImageConfig.ImageOffer,
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    WindowsServer2019OSImageConfig.ImageSku,
@@ -2348,7 +2348,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsSku:       "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "override",
@@ -2371,7 +2371,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    WindowsServer2019OSImageConfig.ImageSku,
@@ -2395,7 +2395,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    WindowsServer2019OSImageConfig.ImageSku,
@@ -2418,7 +2418,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				WindowsSku:       "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              "override",
 				WindowsOffer:                  "override",
 				WindowsSku:                    "override",
@@ -2442,7 +2442,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              "override",
 				WindowsOffer:                  "override",
 				WindowsSku:                    "override",
@@ -2466,7 +2466,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
@@ -2490,7 +2490,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "override",
@@ -2514,7 +2514,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    WindowsServer2019OSImageConfig.ImageSku,
@@ -2538,7 +2538,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "override",
@@ -2562,7 +2562,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              WindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "override",
@@ -2586,7 +2586,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:     "override",
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  WindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    "",
@@ -2632,7 +2632,7 @@ func TestWindowsProfileDefaults(t *testing.T) {
 				ImageVersion:                  AKSWindowsServer2019OSImageConfig.ImageVersion,
 			},
 			WindowsProfile{
-				ProvisioningScriptsPackageURL: DefaultWindowsProvisioningScriptsPackageURL,
+				ProvisioningScriptsPackageURL: DefaultKubernetesSpecConfig.WindowsProvisioningScriptsPackageURL,
 				WindowsPublisher:              AKSWindowsServer2019OSImageConfig.ImagePublisher,
 				WindowsOffer:                  AKSWindowsServer2019OSImageConfig.ImageOffer,
 				WindowsSku:                    AKSWindowsServer2019OSImageConfig.ImageSku,
@@ -2678,14 +2678,14 @@ func TestWindowsProfileDefaults(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			mockAPI := getMockAPIProperties("1.16.0")
-			mockAPI.WindowsProfile = &test.windowsProfile
+			mockCS := getMockBaseContainerService("1.16.0")
+			mockCS.Properties.WindowsProfile = &test.windowsProfile
 			if test.isAzureStack {
-				mockAPI.CustomCloudProfile = &CustomCloudProfile{}
+				mockCS.Properties.CustomCloudProfile = &CustomCloudProfile{}
 			}
-			mockAPI.setWindowsProfileDefaults(test.isUpgrade, test.isScale)
+			mockCS.setWindowsProfileDefaults(test.isUpgrade, test.isScale)
 
-			actual := mockAPI.WindowsProfile
+			actual := mockCS.Properties.WindowsProfile
 			expected := &test.expectedWindowsProfile
 
 			diff := cmp.Diff(actual, expected)
@@ -3381,22 +3381,23 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			AzureTelemetryPID:                "AzureTelemetryPID",
-			KubernetesImageBase:              "KubernetesImageBase",
-			MCRKubernetesImageBase:           "MCRKubernetesImageBase",
-			TillerImageBase:                  "TillerImageBase",
-			ACIConnectorImageBase:            "ACIConnectorImageBase",
-			NVIDIAImageBase:                  "NVIDIAImageBase",
-			AzureCNIImageBase:                "AzureCNIImageBase",
-			CalicoImageBase:                  "CalicoImageBase",
-			EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-			KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-			WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-			VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-			ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
-			CSIProxyDownloadURL:              "CSIProxyDownloadURL",
+			AzureTelemetryPID:                    "AzureTelemetryPID",
+			KubernetesImageBase:                  "KubernetesImageBase",
+			MCRKubernetesImageBase:               "MCRKubernetesImageBase",
+			TillerImageBase:                      "TillerImageBase",
+			ACIConnectorImageBase:                "ACIConnectorImageBase",
+			NVIDIAImageBase:                      "NVIDIAImageBase",
+			AzureCNIImageBase:                    "AzureCNIImageBase",
+			CalicoImageBase:                      "CalicoImageBase",
+			EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+			KubeBinariesSASURLBase:               "KubeBinariesSASURLBase",
+			WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+			VnetCNIWindowsPluginsDownloadURL:     "VnetCNIWindowsPluginsDownloadURL",
+			ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
+			WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{
@@ -3425,10 +3426,12 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 
 	if diff := cmp.Diff(AzureCloudSpecEnvMap[AzureStackCloud], customCloudSpec); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set AzureStackCloudSpec as default when azureEnvironmentSpecConfig is empty in api model JSON file")
+		t.Errorf(diff)
 	}
 
 	if diff := cmp.Diff(mockCSCustom.Properties.CustomCloudProfile.AzureEnvironmentSpecConfig, &customCloudSpec); diff != "" {
 		t.Errorf("setCustomCloudProfileDefaults(): did not set CustomCloudProfile.AzureEnvironmentSpecConfig with customer input")
+		t.Errorf(diff)
 	}
 
 	// Test that default assignment flow set the value if the field is partially  missing in user-provided config
@@ -3444,17 +3447,18 @@ func TestSetCustomCloudProfileDefaults(t *testing.T) {
 		},
 		//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 		KubernetesSpecConfig: KubernetesSpecConfig{
-			KubernetesImageBase:            "KubernetesImageBase",
-			TillerImageBase:                "TillerImageBase",
-			NVIDIAImageBase:                "NVIDIAImageBase",
-			AzureCNIImageBase:              "AzureCNIImageBase",
-			CalicoImageBase:                "CalicoImageBase",
-			EtcdDownloadURLBase:            "EtcdDownloadURLBase",
-			WindowsTelemetryGUID:           "WindowsTelemetryGUID",
-			CNIPluginsDownloadURL:          "CNIPluginsDownloadURL",
-			VnetCNILinuxPluginsDownloadURL: "VnetCNILinuxPluginsDownloadURL",
-			ContainerdDownloadURLBase:      "ContainerdDownloadURLBase",
-			CSIProxyDownloadURL:            "CSIProxyDownloadURL",
+			KubernetesImageBase:                  "KubernetesImageBase",
+			TillerImageBase:                      "TillerImageBase",
+			NVIDIAImageBase:                      "NVIDIAImageBase",
+			AzureCNIImageBase:                    "AzureCNIImageBase",
+			CalicoImageBase:                      "CalicoImageBase",
+			EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+			WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+			CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+			VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+			ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+			CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
+			WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
 		},
 		DCOSSpecConfig: DefaultDCOSSpecConfig,
 		EndpointConfig: AzureEndpointConfig{

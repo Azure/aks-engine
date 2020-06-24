@@ -331,22 +331,23 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 					},
 					//KubernetesSpecConfig - Due to Chinese firewall issue, the default containers from google is blocked, use the Chinese local mirror instead
 					KubernetesSpecConfig: vlabs.KubernetesSpecConfig{
-						AzureTelemetryPID:                "AzureTelemetryPID",
-						KubernetesImageBase:              "KubernetesImageBase",
-						MCRKubernetesImageBase:           "MCRKubernetesImageBase",
-						TillerImageBase:                  "TillerImageBase",
-						ACIConnectorImageBase:            "ACIConnectorImageBase",
-						NVIDIAImageBase:                  "NVIDIAImageBase",
-						AzureCNIImageBase:                "AzureCNIImageBase",
-						CalicoImageBase:                  "CalicoImageBase",
-						EtcdDownloadURLBase:              "EtcdDownloadURLBase",
-						KubeBinariesSASURLBase:           "KubeBinariesSASURLBase",
-						WindowsTelemetryGUID:             "WindowsTelemetryGUID",
-						CNIPluginsDownloadURL:            "CNIPluginsDownloadURL",
-						VnetCNILinuxPluginsDownloadURL:   "VnetCNILinuxPluginsDownloadURL",
-						VnetCNIWindowsPluginsDownloadURL: "VnetCNIWindowsPluginsDownloadURL",
-						ContainerdDownloadURLBase:        "ContainerdDownloadURLBase",
-						CSIProxyDownloadURL:              "CSIProxyDownloadURL",
+						AzureTelemetryPID:                    "AzureTelemetryPID",
+						KubernetesImageBase:                  "KubernetesImageBase",
+						MCRKubernetesImageBase:               "MCRKubernetesImageBase",
+						TillerImageBase:                      "TillerImageBase",
+						ACIConnectorImageBase:                "ACIConnectorImageBase",
+						NVIDIAImageBase:                      "NVIDIAImageBase",
+						AzureCNIImageBase:                    "AzureCNIImageBase",
+						CalicoImageBase:                      "CalicoImageBase",
+						EtcdDownloadURLBase:                  "EtcdDownloadURLBase",
+						KubeBinariesSASURLBase:               "KubeBinariesSASURLBase",
+						WindowsTelemetryGUID:                 "WindowsTelemetryGUID",
+						CNIPluginsDownloadURL:                "CNIPluginsDownloadURL",
+						VnetCNILinuxPluginsDownloadURL:       "VnetCNILinuxPluginsDownloadURL",
+						VnetCNIWindowsPluginsDownloadURL:     "VnetCNIWindowsPluginsDownloadURL",
+						ContainerdDownloadURLBase:            "ContainerdDownloadURLBase",
+						CSIProxyDownloadURL:                  "CSIProxyDownloadURL",
+						WindowsProvisioningScriptsPackageURL: "WindowsProvisioningScriptsPackageURL",
 					},
 					DCOSSpecConfig: vlabs.DCOSSpecConfig{
 						DCOS188BootstrapDownloadURL:     "DCOS188BootstrapDownloadURL",
@@ -435,6 +436,9 @@ func TestConvertAzureEnvironmentSpecConfig(t *testing.T) {
 	}
 	if csSpec.KubernetesSpecConfig.CSIProxyDownloadURL != vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL {
 		t.Errorf("incorrect CSIProxyDownloadURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.CSIProxyDownloadURL, csSpec.KubernetesSpecConfig.CSIProxyDownloadURL)
+	}
+	if csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL != vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL {
+		t.Errorf("incorrect WindowsProvisioningScriptsPackageURL, expect: '%s', actual: '%s'", vlabscsSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL, csSpec.KubernetesSpecConfig.WindowsProvisioningScriptsPackageURL)
 	}
 
 	//DockerSpecConfig
