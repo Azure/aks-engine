@@ -159,3 +159,7 @@ read and **write** permissions to the target Subscription.
 ## Failed upgrade
 
 Please review the [upgrade documentation](../topics/upgrade.md) for a guide on upgrading AKS Engine-created Kubernetes clusters.
+
+## Azure API Throttling
+
+See this [document](../topics/azure-api-throttling.md) for help with troubleshooting Kubernetes clusters affected by Azure API throttling.
