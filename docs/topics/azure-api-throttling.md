@@ -192,7 +192,11 @@ logout
 Connection to k8s-master-31453872-2 closed.
 ```
 
-Now, let's update the controller-manager spec so that it refers to 1.15.12 instead of 1.15.7, so that it gets the improvements to the Azure cloudprovider runtime:
+## Update controller-manager runtime
+
+Depending on the time window (5 minute or one hour) of your API throttling violation, you may have to wait at least 30 minutes to reliably restart your control plane runtime without being throttled once again. If you're unsure about the nature of your throttling violations (it can be opaque to debug, but log entries in the active controller-manager pod can show you some practical throttling evidence; you'll have to do that prior to shutting down the kubelet systemd job as demonstrated above) then waiting the full 30 minutes is the most likely, though conservative, tactic to take, to prevent yourself from thrashing around this process many times, re-engaging API throttling behaviors *while* you're remediating.
+
+So, assuming we've waited 30 minutes or so, let's update the controller-manager spec so that it refers to 1.15.12 instead of 1.15.7 (using our example), so that it gets the improvements to the Azure cloudprovider runtime:
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 1.15.7 /etc/kubernetes/manifests/kube-controller-manager.yaml
@@ -268,7 +272,9 @@ logout
 Connection to k8s-master-31453872-2 closed.
 ```
 
-Now, are we running the `cluster-autoscaler` addon on this cluster? If so, let's make sure it's using the latest release for 1.15 (at the time of this document, the latest `cluster-autoscaler` release for Kubernetes 1.15 is `1.15.1`):
+## Update cluster-autoscaler runtime
+
+Now, are we running the `cluster-autoscaler` addon on this cluster? If so, let's make sure it's using the latest release for 1.15 (at the time of this document, the latest `cluster-autoscaler` release for Kubernetes 1.15 is `1.15.5`):
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 'cluster-autoscaler:v' /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
@@ -278,7 +284,9 @@ azureuser@k8s-master-31453872-0:~$ grep 'cluster-autoscaler:v' /etc/kubernetes/a
       - image: k8s.gcr.io/cluster-autoscaler:v1.15.5
 ```
 
-And, again, to the remaining control plane VMs:
+The above validated that we *weren't* using the latest `cluster-autoscaler`, and so we changed the addon spec so that we would load 1.15.5 instead.
+
+And, again, we do the same to the remaining control plane VMs:
 
 ```
 azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-1
@@ -344,7 +352,9 @@ logout
 Connection to k8s-master-31453872-2 closed.
 ```
 
-(Note: if you're managing your own cluster-autoscaler installation, for example using a Helm chart, do the equivalent to the above.)
+(Note: if you're managing your own cluster-autoscaler installation, for example using a Helm chart, do the equivalent steps as demonstrated above to your self-managed cluster-autoscaler spec.)
+
+## Restart control plane runtime
 
 Now, we should restart kubelet on all control plane VMs:
 
@@ -492,6 +502,8 @@ logout
 Connection to k8s-master-31453872-2 closed.
 ```
 
+## Verify controller-manager is running the desired, upgraded version
+
 Now, you can verify that v1.15.12 is the running `controller-manager` version:
 
 ```
@@ -500,6 +512,8 @@ I0624 18:32:18.102332       1 controllermanager.go:164] Version: v1.15.12
 I0624 18:32:45.174767       1 controllermanager.go:164] Version: v1.15.12
 I0624 18:33:05.825467       1 controllermanager.go:164] Version: v1.15.12
 ```
+
+## Reload cluster-autoscaler addon
 
 If you also are running (and have updated) `cluster-autoscaler`, note that the prior version is still running:
 
@@ -523,6 +537,10 @@ And then delete the loaded cluster-autoscaler *deployment* to force `kube-addon-
 azureuser@k8s-master-31453872-0:~$ kubectl delete deployment cluster-autoscaler -n kube-system
 deployment.extensions "cluster-autoscaler" deleted
 ```
+
+Again, the above restart process assumes you're running the AKS Engine-provided cluster-autoscaler. Reloading a new cluster-autoscaler runtime using helm would require a different process, but the same idea.
+
+## Verify cluster-autoscaler is running the desired, upgraded version
 
 Once the new cluster-autoscaler deployment has replicated a pod, and the new container image has been downloaded and run, you should be able to verify the new version:
 
