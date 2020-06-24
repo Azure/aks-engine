@@ -2,7 +2,7 @@
 
 ## Overview
 
-Azure has hard limits on the number of read and write requests against Azure APIs *per subscription*. Running lots of clusters in a single subscription, or running a single large, dynamic cluster in a subscription can produce side effects that exceed the number of calls permitted within a given time window for a particular category of requests. See the following documents for more detail on Azure API throttling in general:
+Azure has hard limits on the number of read and write requests against Azure APIs *per subscription, per region*. Running lots of clusters in a single subscription, or running a single large, dynamic cluster in a subscription can produce side effects that exceed the number of calls permitted within a given time window for a particular category of requests. See the following documents for more detail on Azure API throttling in general:
 
 - https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling
 - https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/troubleshooting-throttling-errors
@@ -16,11 +16,11 @@ Over time, the Azure cloudprovider runtime has optimized its behaviors to reconc
 - 1.17.5
 - 1.18.2
 
-If you are running a cluster older than the above versions, you may use [`aks-engine upgrade`](upgrade.md) if your cluster lifecycle workflow has been validated to successfully use `aks-engine upgrade`. In practice, `aks-engine upgrade` takes ~10 minutes per node in sequence (and may in fact have issues due to active subscription throttling), and so it's not the best option for real time, responsive remediation. The best, quick path forward, will be to stop all active Kubernetes components that interface with Azure APIs (e.g., controller-manager, cluster-autoscaler), update those component specs so that they use a newer, optimized version of the Azure cloudprovider, wait ~15-30 minutes, and then restart those components.
+We will demonstrate a real-time, in place remediation that updates the Azure cloudprovider runtimes to a newer version. This requires that we stop all active Kubernetes components that interface with Azure APIs (e.g., controller-manager, cluster-autoscaler), update those component specs so that they use a newer, optimized version of the Azure cloudprovider, wait ~15-30 minutes, and then restart those components.
 
 ## Stop controller-manager
 
-The easiest way to do this is to hop onto every control plane VM and stop the kubelet systemd job. Assuming that they all share the same SSH keypair, and that the `azureuser` system user permits that SSH keypair for login:
+The easiest way to stop the controller-manager is to stop the kubelet systemd job on every control plane VM. Assuming that they all share the same SSH keypair, and that the `azureuser` system user permits that SSH keypair for login:
 
 ```
 $ ssh-add -D && ssh-add <path to SSH private key>
@@ -28,15 +28,6 @@ $ ssh -A -i <path to SSH private key> azureuser@kubernetes-westus2-84461.westus2
 
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
 
 124 packages can be updated.
 102 updates are security updates.
@@ -92,15 +83,6 @@ Warning: Permanently added 'k8s-master-31453872-1,10.239.255.240' (ECDSA) to the
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
-
 0 packages can be updated.
 0 updates are security updates.
 
@@ -145,15 +127,6 @@ Warning: Permanently added 'k8s-master-31453872-2,10.239.255.241' (ECDSA) to the
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
-
 32 packages can be updated.
 0 updates are security updates.
 
@@ -194,7 +167,7 @@ Connection to k8s-master-31453872-2 closed.
 
 ## Update controller-manager runtime
 
-Depending on the time window (5 minute or one hour) of your API throttling violation, you may have to wait at least 30 minutes to reliably restart your control plane runtime without being throttled once again. If you're unsure about the nature of your throttling violations (it can be opaque to debug, but log entries in the active controller-manager pod can show you some practical throttling evidence; you'll have to do that prior to shutting down the kubelet systemd job as demonstrated above) then waiting the full 30 minutes is the most likely, though conservative, tactic to take, to prevent yourself from thrashing around this process many times, re-engaging API throttling behaviors *while* you're remediating.
+Depending on the time window (5 minute or one hour) of the API throttling violation, we may have to wait at least 30 minutes to reliably restart the control plane runtime without being throttled once again. If unsure about the nature of throttling violations, then waiting the full 30 minutes is the most conservative tactic to take.
 
 So, assuming we've waited 30 minutes or so, let's update the controller-manager spec so that it refers to 1.15.12 instead of 1.15.7 (using our example), so that it gets the improvements to the Azure cloudprovider runtime:
 
@@ -213,15 +186,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-1
 
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
 
 0 packages can be updated.
 0 updates are security updates.
@@ -243,15 +207,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-2
 
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
 
 32 packages can be updated.
 0 updates are security updates.
@@ -294,15 +249,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-1
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
-
 0 packages can be updated.
 0 updates are security updates.
 
@@ -324,15 +270,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-2
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
-
 32 packages can be updated.
 0 updates are security updates.
 
@@ -352,7 +289,7 @@ logout
 Connection to k8s-master-31453872-2 closed.
 ```
 
-(Note: if you're managing your own cluster-autoscaler installation, for example using a Helm chart, do the equivalent steps as demonstrated above to your self-managed cluster-autoscaler spec.)
+(Note: if managing a cluster-autoscaler installation outside of AKS Engine addons, for example using a Helm chart, do the equivalent version update steps as demonstrated above to the self-managed cluster-autoscaler spec.)
 
 ## Restart control plane runtime
 
@@ -389,15 +326,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-1
 
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
 
 0 packages can be updated.
 0 updates are security updates.
@@ -441,15 +369,6 @@ azureuser@k8s-master-31453872-0:~$ ssh k8s-master-31453872-2
 
 Authorized uses only. All activity may be monitored and reported.
 Welcome to Ubuntu 16.04.6 LTS (GNU/Linux 4.15.0-1064-azure x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
- * "If you've been waiting for the perfect Kubernetes dev solution for
-   macOS, the wait is over. Learn how to install Microk8s on macOS."
-
-   https://www.techrepublic.com/article/how-to-install-microk8s-on-macos/
 
 32 packages can be updated.
 0 updates are security updates.
@@ -504,7 +423,7 @@ Connection to k8s-master-31453872-2 closed.
 
 ## Verify controller-manager is running the desired, upgraded version
 
-Now, you can verify that v1.15.12 is the running `controller-manager` version:
+Now, we can verify that v1.15.12 is the running `controller-manager` version:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for pod in $(kubectl get pods -n kube-system | grep kube-controller-manager | awk '{print $1}'); do kubectl logs $pod -n kube-system | grep "v1.15.12"; done
@@ -515,7 +434,7 @@ I0624 18:33:05.825467       1 controllermanager.go:164] Version: v1.15.12
 
 ## Reload cluster-autoscaler addon
 
-If you also are running (and have updated) `cluster-autoscaler`, note that the prior version is still running:
+If also running (and have updated) `cluster-autoscaler`, note that the prior version is still running:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for pod in $(kubectl get pods -n kube-system | grep cluster-autoscaler | awk '{print $1}'); do kubectl logs $pod -n kube-system | grep "1.15"; done
@@ -538,11 +457,11 @@ azureuser@k8s-master-31453872-0:~$ kubectl delete deployment cluster-autoscaler 
 deployment.extensions "cluster-autoscaler" deleted
 ```
 
-Again, the above restart process assumes you're running the AKS Engine-provided cluster-autoscaler. Reloading a new cluster-autoscaler runtime using helm would require a different process, but the same idea.
+Again, the above restart process assumes we're running the AKS Engine-provided cluster-autoscaler. Reloading a new cluster-autoscaler runtime using helm would require a different process, but the same idea.
 
 ## Verify cluster-autoscaler is running the desired, upgraded version
 
-Once the new cluster-autoscaler deployment has replicated a pod, and the new container image has been downloaded and run, you should be able to verify the new version:
+Once the new cluster-autoscaler deployment has replicated a pod, and the new container image has been downloaded and run, we should be able to verify the new version:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for pod in $(kubectl get pods -n kube-system | grep cluster-autoscaler | awk '{print $1}'); do kubectl logs $pod -n kube-system | grep "1.15"; done

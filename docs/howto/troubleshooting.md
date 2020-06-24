@@ -162,4 +162,4 @@ Please review the [upgrade documentation](../topics/upgrade.md) for a guide on u
 
 ## Azure API Throttling
 
-See this [document](../topics/azure-api-throttling.md) for troubleshooting Kubernetes clusters dealing with Azure API throttling.
+See this [document](../topics/azure-api-throttling.md) for help with troubleshooting Kubernetes clusters affected by Azure API throttling.
