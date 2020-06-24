@@ -675,7 +675,7 @@ func getK8sVersionComponents(version, kubernetesImageBaseType string, overrides 
 	case "1.16":
 		ret = map[string]string{
 			common.Hyperkube:                                  getDefaultImage(common.Hyperkube, kubernetesImageBaseType) + ":v" + version,
-			common.KubeProxyAddonName:                         getDefaultImage(common.Hyperkube, kubernetesImageBaseType) + ":v" + version,
+			common.KubeProxyAddonName:                         getDefaultImage(common.KubeProxyAddonName, kubernetesImageBaseType) + ":v" + version,
 			common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 			common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 			common.WindowsArtifactComponentName:               "v" + version + "/windowszip/v" + version + "-1int.zip",
