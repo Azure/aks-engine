@@ -7,16 +7,16 @@ Azure has hard limits on the number of read and write requests against Azure API
 - https://docs.microsoft.com/en-us/azure/azure-resource-manager/management/request-limits-and-throttling
 - https://docs.microsoft.com/en-us/azure/virtual-machines/troubleshooting/troubleshooting-throttling-errors
 
-## Running older versions of the Azure cloudprovider runtime
+## Running older versions of the Azure cloud provider runtime
 
-Over time, the Azure cloudprovider runtime has optimized its behaviors to reconcile Azure resource requests (network, compute, storage) with a minimum number of calls to the Azure APIs in order to prevent Azure API throttling. In practice, running versions of Kubernetes prior to the below list has known issues with generating excess Azure API requests for clusters with VMSS node pools:
+Over time, the Azure cloud provider runtime has optimized its behaviors to reconcile Azure resource requests (network, compute, storage) with a minimum number of calls to the Azure APIs in order to prevent Azure API throttling. In practice, running versions of Kubernetes prior to the below list has known issues with generating excess Azure API requests for clusters with VMSS node pools:
 
 - 1.15.12
 - 1.16.9
 - 1.17.5
 - 1.18.2
 
-We will demonstrate a real-time, in place remediation that updates the Azure cloudprovider runtimes to a newer version. This requires that we stop all active Kubernetes components that interface with Azure APIs (e.g., controller-manager, cluster-autoscaler), update those component specs so that they use a newer, optimized version of the Azure cloudprovider, wait ~15-30 minutes, and then restart those components.
+We will demonstrate a real-time, in place remediation that updates the Azure cloud provider runtimes to a newer version. This requires that we stop all active Kubernetes components that interface with Azure APIs (e.g., controller-manager, cluster-autoscaler), update those component specs so that they use a newer, optimized version of the Azure cloud provider, wait ~15-30 minutes, and then restart those components.
 
 ## Stop controller-manager
 
@@ -40,7 +40,7 @@ Last login: Wed Jun 24 17:38:37 2020 from 75.164.224.176
 azureuser@k8s-master-31453872-0:~$
 ```
 
-AKS Engine will set up your control plane VMs with a working `kubectl` context that can connect to the cluster. So, let's get the list of control plane VMs in the cluster (in this example we'll be updating a 1.15.7 cluster's cloudprovider to 1.15.12):
+AKS Engine will set up your control plane VMs with a working `kubectl` context that can connect to the cluster. So, let's get the list of control plane VMs in the cluster (in this example we'll be updating a 1.15.7 cluster's cloud provider to 1.15.12):
 
 ```
 azureuser@k8s-master-31453872-0:~$ kubectl get nodes | grep k8s-master
@@ -169,7 +169,7 @@ Connection to k8s-master-31453872-2 closed.
 
 Depending on the time window (5 minute or one hour) of the API throttling violation, we may have to wait at least 30 minutes to reliably restart the control plane runtime without being throttled once again. If unsure about the nature of throttling violations, then waiting the full 30 minutes is the most conservative tactic to take.
 
-So, assuming we've waited 30 minutes or so, let's update the controller-manager spec so that it refers to 1.15.12 instead of 1.15.7 (using our example), so that it gets the improvements to the Azure cloudprovider runtime:
+So, assuming we've waited 30 minutes or so, let's update the controller-manager spec so that it refers to 1.15.12 instead of 1.15.7 (using our example), so that it gets the improvements to the Azure cloud provider runtime:
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 1.15.7 /etc/kubernetes/manifests/kube-controller-manager.yaml
