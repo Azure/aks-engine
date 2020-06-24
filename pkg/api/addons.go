@@ -768,7 +768,7 @@ func (cs *ContainerService) setAddonsConfig(isUpgrade bool) {
 		Containers: []KubernetesContainerSpec{
 			{
 				Name:  common.KubeProxyAddonName,
-				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName] + kubeProxyImageSuffix(*cs),
+				Image: kubernetesImageBase + k8sComponents[common.KubeProxyAddonName],
 			},
 		},
 	}
@@ -1178,15 +1178,6 @@ func GetClusterAutoscalerNodesConfig(addon KubernetesAddon, cs *ContainerService
 		ret = strings.TrimRight(ret, "\n")
 	}
 	return ret
-}
-
-// kubeProxyImageSuffix returns '-azs' if target cloud is Azure Stack. Otherwise, it returns empty string.
-// Azure Stack needs the '-azs' suffix so kube-proxy's manifests uses the custom hyperkube image present in the VHD
-func kubeProxyImageSuffix(cs ContainerService) string {
-	if cs.Properties.IsAzureStackCloud() {
-		return common.AzureStackSuffix
-	}
-	return ""
 }
 
 func getCSISidecarComponent(csiDriverName, csiSidecarName string, k8sComponents map[string]string) string {
