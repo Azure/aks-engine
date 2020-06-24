@@ -342,7 +342,6 @@ func convertVLabsKubernetesConfig(vlabs *vlabs.KubernetesConfig, api *Kubernetes
 	api.OutboundRuleIdleTimeoutInMinutes = vlabs.OutboundRuleIdleTimeoutInMinutes
 	api.CloudProviderDisableOutboundSNAT = vlabs.CloudProviderDisableOutboundSNAT
 	api.KubeReservedCgroup = vlabs.KubeReservedCgroup
-	convertComponentsToAPI(vlabs, api)
 	convertAddonsToAPI(vlabs, api)
 	convertKubeletConfigToAPI(vlabs, api)
 	convertControllerManagerConfigToAPI(vlabs, api)
