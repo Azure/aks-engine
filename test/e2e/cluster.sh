@@ -110,6 +110,7 @@ docker run --rm \
 -e CONTAINER_RUNTIME=$CONTAINER_RUNTIME \
 -e LOG_ANALYTICS_WORKSPACE_KEY="${LOG_ANALYTICS_WORKSPACE_KEY}" \
 -e CUSTOM_HYPERKUBE_IMAGE="${CUSTOM_HYPERKUBE_IMAGE}" \
+-e CUSTOM_KUBE_PROXY_IMAGE="${CUSTOM_KUBE_PROXY_IMAGE}" \
 -e IS_JENKINS="${IS_JENKINS}" \
 -e SKIP_TEST="${SKIP_TESTS}" \
 -e GINKGO_FAIL_FAST=true \
@@ -150,7 +151,7 @@ if [ "${UPGRADE_CLUSTER}" = "true" ] || [ "${SCALE_CLUSTER}" = "true" ] || [ -n 
   if [ "${AZURE_ENV}" = "AzureStackCloud" ]; then
     API_SERVER="$RESOURCE_GROUP.$REGION.$RESOURCE_MANAGER_VM_DNS_SUFFIX"
   fi
-  
+
   if [ "${GET_CLUSTER_LOGS}" = "true" ]; then
       docker run --rm \
       -v $(pwd):${WORK_DIR} \

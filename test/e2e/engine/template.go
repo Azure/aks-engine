@@ -64,6 +64,7 @@ type Config struct {
 	ImageResourceGroup             string `envconfig:"IMAGE_RESOURCE_GROUP" default:""`
 	DebugCrashingPods              bool   `envconfig:"DEBUG_CRASHING_PODS" default:"false"`
 	CustomHyperKubeImage           string `envconfig:"CUSTOM_HYPERKUBE_IMAGE" default:""`
+	CustomKubeProxyImage           string `envconfig:"CUSTOM_KUBE_PROXY_IMAGE" default:""`
 	EnableTelemetry                bool   `envconfig:"ENABLE_TELEMETRY" default:"true"`
 	KubernetesImageBase            string `envconfig:"KUBERNETES_IMAGE_BASE" default:""`
 	KubernetesImageBaseType        string `envconfig:"KUBERNETES_IMAGE_BASE_TYPE" default:""`
@@ -297,6 +298,10 @@ func Build(cfg *config.Config, masterSubnetID string, agentSubnetIDs []string, i
 
 	if config.CustomHyperKubeImage != "" {
 		prop.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = config.CustomHyperKubeImage
+	}
+
+	if config.CustomKubeProxyImage != "" {
+		prop.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = config.CustomKubeProxyImage
 	}
 
 	if config.EnableTelemetry == true {
