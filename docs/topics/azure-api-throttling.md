@@ -12,9 +12,9 @@ Azure has hard limits on the number of read and write requests against Azure API
 Over time, the Azure cloudprovider runtime has optimized its behaviors to reconcile Azure resource requests (network, compute, storage) with a minimum number of calls to the Azure APIs in order to prevent Azure API throttling. In practice, running versions of Kubernetes prior to the below list has known issues with generating excess Azure API requests for clusters with VMSS node pools:
 
 - 1.15.12
-- // TODO 1.16 version
-- // TODO 1.17 version
-- 1.18.0
+- 1.16.9
+- 1.17.5
+- 1.18.2
 
 If you are running a cluster older than the above versions, you may use [`aks-engine upgrade`](upgrade.md) if your cluster lifecycle workflow has been validated to successfully use `aks-engine upgrade`. In practice, `aks-engine upgrade` takes ~10 minutes per node in sequence (and may in fact have issues due to active subscription throttling), and so it's not the best option for real time, responsive remediation. The best, quick path forward, will be to stop all active Kubernetes components that interface with Azure APIs (e.g., controller-manager, cluster-autoscaler), update those component specs so that they use a newer, optimized version of the Azure cloudprovider, wait ~15-30 minutes, and then restart those components.
 
