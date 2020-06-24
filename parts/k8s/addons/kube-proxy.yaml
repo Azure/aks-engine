@@ -82,7 +82,7 @@ spec:
         operator: Exists
       containers:
       - command:
-{{- if not (IsKubernetesVersionGe "1.17.0")}}
+{{- if not (IsKubernetesVersionGe "1.16.0")}}
         - /hyperkube
 {{- end}}
         - kube-proxy

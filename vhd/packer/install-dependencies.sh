@@ -384,6 +384,16 @@ for KUBERNETES_VERSION in ${K8S_VERSIONS}; do
   fi
 done
 
+# Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
+KUBE_PROXY_VERSIONS="
+1.16.11
+"
+for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
+  CONTAINER_IMAGE="mcr.microsoft.com/oss/kubernetes/kube-proxy:v${KUBE_PROXY_VERSION}"
+  pullContainerImage "docker" ${CONTAINER_IMAGE}
+  echo "  - ${CONTAINER_IMAGE}" >> ${VHD_LOGS_FILEPATH}
+done
+
 # Starting with 1.16 we pull cloud-controller-manager and cloud-node-manager
 CLOUD_MANAGER_VERSIONS="
 0.5.0

@@ -198,7 +198,7 @@ func TestGetK8sVersionComponents(t *testing.T) {
 	k8sComponent = kubernetesImageBaseVersionedImages[kubernetesImageBaseType]["1.16"]
 	expected = map[string]string{
 		common.Hyperkube:                                  "hyperkube-amd64:v1.16.0",
-		common.KubeProxyAddonName:                         "hyperkube-amd64:v1.16.0",
+		common.KubeProxyAddonName:                         getDefaultImage(common.KubeProxyAddonName, kubernetesImageBaseType) + ":v1.16.0",
 		common.CloudControllerManagerComponentName:        azureCloudControllerManagerImageReference,
 		common.CloudNodeManagerAddonName:                  azureCloudNodeManagerImageReference,
 		common.WindowsArtifactComponentName:               "v1.16.0/windowszip/v1.16.0-1int.zip",
