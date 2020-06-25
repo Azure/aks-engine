@@ -20,7 +20,7 @@ We will demonstrate a real-time, in place remediation that updates the Azure clo
 
 ## Stop kube-controller-manager (or cloud-controller-manager) component
 
-The easiest way to stop the `kube-controller-manager` (or `cloud-controller-manager` if you're using the Azure cloud provider controller as a separate component) is to move its pod spec out of the directory where the kubelet process continually processes control plane manifests (`/etc/kubernetes/manifests`). The running kubelet on the control plane VM will detect the missing controller-manager spec, and automatically delete the pod scheduled on that node. This has the effect of removing that particular Azure API client runtime from operation, reducing calls against you subscription request limits. Below we will demonstrate how to do that from a control plane VM.
+The easiest way to stop the `kube-controller-manager` (or `cloud-controller-manager` if you're using the Azure cloud provider controller as a separate component) is to move its pod spec out of the directory where the kubelet process continually processes control plane manifests (`/etc/kubernetes/manifests`). The running kubelet on the control plane VM will detect the missing controller-manager spec, and automatically delete the pod scheduled on that node. This has the effect of removing that particular Azure API client runtime from operation, reducing calls that count against subscription + region request limits. Below we will demonstrate how to do that from a control plane VM.
 
 In this example the `azureuser` system user has SSH access:
 
