@@ -178,7 +178,7 @@ I0624 18:33:05.825467       1 controllermanager.go:164] Version: v1.15.12
 
 ## Reload cluster-autoscaler addon
 
-If also using (and we have stopped, and/or updated) `cluster-autoscaler`, remember to reload it, and/or verify that it's running the desired version. For example, restore the replica count to its original value:
+If we're also using (and have stopped, and/or updated) `cluster-autoscaler`, remember to reload it, and/or verify that it's running the desired version. For example, restore the replica count to its original value:
 
 ```
 azureuser@k8s-master-31453872-0:~$ kubectl edit deployment cluster-autoscaler -n kube-system
