@@ -365,7 +365,7 @@ func getVersionOverridesMCR(v string) map[string]string {
 		return nil
 	}
 }
-q
+
 func getVersionOverridesGCR(v string) map[string]string {
 	switch v {
 	case "1.18.4":
