@@ -70,7 +70,7 @@ azureuser@k8s-master-31453872-0:~$ k get pods --all-namespaces -o wide | grep ku
        0
 ```
 
-If we're running the Azure `cloud-controller-manager` component (`"useCloudControllerManager": true` in the cluster api model), then instead we would run this command instead:
+If we're running the Azure `cloud-controller-manager` component (`"useCloudControllerManager": true` in the cluster api model), then we would run this command instead:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for control_plane_vm in $(kubectl get nodes | grep k8s-master | awk '{print $1}'); do ssh $control_plane_vm "sudo mv /etc/kubernetes/manifests/cloud-controller-manager.yaml /opt/azure/cloud-controller-manager.yaml"; done
