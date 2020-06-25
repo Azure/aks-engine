@@ -82,7 +82,7 @@ Authorized uses only. All activity may be monitored and reported.
 Authorized uses only. All activity may be monitored and reported.
 ```
 
-At this point, the Azure controller-manager component will no longer be running on any nodes in the cluster, and no Azure API requests will be sent from this source.
+At this point, the Azure controller-manager component will no longer be running on any control plane nodes in the cluster, and no Azure API requests will be generated from this source.
 
 ## Stop cluster-autoscaler component
 
