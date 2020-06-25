@@ -153,7 +153,7 @@ The above validated that we *weren't* using the latest `cluster-autoscaler`, and
 
 ## Restart kube-controller-manager (or cloud-controller-manager) component
 
-Again, we assume our ~30 minute cool down window has passed, and we're ready to restart the controller-manager control plane component:
+Again, we assume our ~30 minute cool down window has passed, and we're ready to restart the controller-manager control plane component by moving the pod spec back to the original `/etc/kubernetes/manifests/` location:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for control_plane_vm in $(kubectl get nodes | grep k8s-master | awk '{print $1}'); do ssh $control_plane_vm "sudo mv /opt/azure/kube-controller-manager.yaml /etc/kubernetes/manifests/kube-controller-manager.yaml"; done
