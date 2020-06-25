@@ -131,7 +131,7 @@ azureuser@k8s-master-31453872-0:~$ grep 1.15.12 /opt/azure/kube-controller-manag
 
 ## Update cluster-autoscaler runtime
 
-Now, if we running the `cluster-autoscaler` addon on this cluster let's make sure it's using the latest release for 1.15 (at the time of this document, the latest `cluster-autoscaler` release for Kubernetes 1.15 is `1.15.6`):
+Now, if we're running the `cluster-autoscaler` addon on this cluster let's make sure it's using the latest release for 1.15 (at the time of this document, the latest `cluster-autoscaler` release for Kubernetes 1.15 is `1.15.6`):
 
 ```
 azureuser@k8s-master-31453872-0:~$ grep 'cluster-autoscaler:v' /etc/kubernetes/addons/cluster-autoscaler-deployment.yaml
