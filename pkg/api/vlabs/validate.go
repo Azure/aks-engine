@@ -1761,7 +1761,7 @@ func (k *KubernetesConfig) validateKubernetesImageBaseType() error {
 }
 
 func (k *KubernetesConfig) isUsingCustomKubeComponent() bool {
-	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeProxyImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
+	return k.CustomKubeAPIServerImage != "" || k.CustomKubeControllerManagerImage != "" || k.CustomKubeSchedulerImage != "" || k.CustomKubeBinaryURL != ""
 }
 
 func (a *Properties) validateContainerRuntime(isUpdate bool) error {
@@ -1821,7 +1821,12 @@ func (a *Properties) validateCustomKubeComponent() error {
 		}
 	} else {
 		if k.isUsingCustomKubeComponent() {
-			return errors.New("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
+			return errors.New("customKubeAPIServerImage, customKubeControllerManagerImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier")
+		}
+	}
+	if !common.IsKubernetesVersionGe(a.OrchestratorProfile.OrchestratorVersion, "1.16.0") {
+		if k.CustomKubeProxyImage != "" {
+			return errors.New("customKubeProxyImage has no effect in Kubernetes version 1.15 or earlier")
 		}
 	}
 

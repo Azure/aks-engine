@@ -730,20 +730,28 @@ func Test_Properties_ValidateCustomKubeComponent(t *testing.T) {
 
 	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
 	err = p.validateCustomKubeComponent()
-	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeProxyImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier"
+	expectedMsg = "customKubeAPIServerImage, customKubeControllerManagerImage, customKubeSchedulerImage or customKubeBinaryURL have no effect in Kubernetes version 1.16 or earlier"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
 	}
 
+	p.OrchestratorProfile.OrchestratorVersion = "1.15.0"
 	p.OrchestratorProfile.KubernetesConfig.CustomHyperkubeImage = "example.azurecr.io/hyperkube-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeAPIServerImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeControllerManagerImage = ""
-	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = ""
+	p.OrchestratorProfile.KubernetesConfig.CustomKubeProxyImage = "example.azurecr.io/kube-proxy-amd64:tag"
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeSchedulerImage = ""
 	p.OrchestratorProfile.KubernetesConfig.CustomKubeBinaryURL = ""
 	err = p.validateCustomKubeComponent()
+	expectedMsg = "customKubeProxyImage has no effect in Kubernetes version 1.15 or earlier"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message : %s to be thrown, but got : %s", expectedMsg, err.Error())
+	}
+
+	p.OrchestratorProfile.OrchestratorVersion = "1.16.0"
+	err = p.validateCustomKubeComponent()
 	if err != nil {
-		t.Errorf("should not error because custom hyperkube image can be used in 1.16, got error : %s", err.Error())
+		t.Errorf("should not error because custom kube-proxy and hyperkube components can be used in 1.16, got error : %s", err.Error())
 	}
 }
 
