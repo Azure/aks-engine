@@ -5240,7 +5240,7 @@ func TestValidateAzureStackSupport(t *testing.T) {
 					break
 				}
 			}
-			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.10"
+			cs.Properties.OrchestratorProfile.OrchestratorVersion = "1.16.11"
 			if err := cs.Validate(false); !helpers.EqualError(err, test.expectedErr) {
 				t.Logf("scenario %q", test.name)
 				t.Errorf("expected error: %v, got: %v", test.expectedErr, err)
