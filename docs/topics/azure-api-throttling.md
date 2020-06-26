@@ -20,7 +20,7 @@ We will demonstrate a real-time, in place remediation that updates the Azure clo
 
 ## Stop kube-controller-manager (or cloud-controller-manager) component
 
-The easiest way to stop the `kube-controller-manager` (or `cloud-controller-manager` if you're using the Azure cloud provider controller as a separate component) is to move its pod spec out of the directory where the kubelet process continually processes control plane manifests (`/etc/kubernetes/manifests`). The running kubelet on the control plane VM will detect the missing controller-manager spec, and automatically delete the pod scheduled on that node. This has the effect of removing that particular Azure API client runtime from operation, reducing calls that count against subscription + region request limits. Below we will demonstrate how to do that from a control plane VM.
+The easiest way to stop the `kube-controller-manager` (or `cloud-controller-manager` if you're using the Azure cloud provider controller as a separate component) is to move its pod spec out of the directory where the kubelet process continually processes control plane manifests (`/etc/kubernetes/manifests`). The running kubelet on the control plane VM will detect the missing controller-manager spec, and automatically delete the pod scheduled on that node. This has the effect of removing that particular Azure API client runtime from operation, reducing calls that count against subscription-wide regional request limits. Below we will demonstrate how to do that from a control plane VM.
 
 In this example the `azureuser` system user has SSH access:
 
@@ -165,7 +165,7 @@ Authorized uses only. All activity may be monitored and reported.
 Authorized uses only. All activity may be monitored and reported.
 ```
 
-## Verify controller-manager is re-loaded, running the desired, upgraded version
+## Verify controller-manager is re-loaded and running the desired, upgraded version
 
 Now, we can verify that v1.15.12 is the running `controller-manager` version:
 
@@ -185,11 +185,11 @@ azureuser@k8s-master-31453872-0:~$ kubectl edit deployment cluster-autoscaler -n
 ...
 ```
 
-Now you can validate that it's running, and using the desired version. E.g.:
+Now you can validate that it's running with the desired version. For example:
 
 ```
 azureuser@k8s-master-31453872-0:~$ for pod in $(kubectl get pods -n kube-system -l app=cluster-autoscaler | awk '{print $1}'); do kubectl logs $pod -n kube-system | grep "1.15"; done
 I0624 18:32:40.458155       1 main.go:354] Cluster Autoscaler 1.15.6
 ```
 
-Again, there are a variety of `cluster-autoscaler` implementations that our cluster may be using, either a user-configured AKS Engine-provided cluster-autoscaler, or a Helm chart, as two examples.
+Again, there are a variety of `cluster-autoscaler` implementations that our cluster may be using. Two examples are the user-configurable cluster-autoscaler addon provided by AKS Engine and a user-defined Helm chart that is installed and maintained _after_ the cluster has been created by AKS Engine.
