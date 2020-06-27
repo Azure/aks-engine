@@ -166,7 +166,7 @@ var AllKubernetesSupportedVersions = map[string]bool{
 	"1.16.5":         false, // disabled because of https://github.com/kubernetes/release/issues/1020
 	"1.16.6":         true,
 	"1.16.7":         true,
-	"1.16.8":         true,
+	"1.16.8":         false,
 	"1.16.9":         true,
 	"1.16.10":        true,
 	"1.17.0-alpha.1": false,
