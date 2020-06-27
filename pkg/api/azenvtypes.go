@@ -138,7 +138,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-gen2-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.18",
+		ImageVersion:   "2020.06.25",
 	}
 
 	//RHELOSImageConfig is the RHEL Linux distribution.
@@ -162,7 +162,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1604-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.18",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSUbuntu1804OSImageConfig is the AKS image based on Ubuntu 18.04-LTS.
@@ -170,7 +170,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-1804-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.18",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSUbuntuGPU1804OSImageConfig is the AKS image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
@@ -179,7 +179,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-gpu-1804-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.18",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSUbuntuGPU1804Gen2OSImageConfig is the AKS gen2 image with GPU drivers and device plugin based on Ubuntu 18.04-LTS.
@@ -188,7 +188,7 @@ var (
 		ImageOffer:     "aks",
 		ImageSku:       "aks-ubuntu-gpu-1804-gen2-202006",
 		ImagePublisher: "microsoft-aks",
-		ImageVersion:   "2020.06.18",
+		ImageVersion:   "2020.06.25",
 	}
 
 	// AKSWindowsServer2019OSImageConfig is the AKS image based on Windows Server 2019
