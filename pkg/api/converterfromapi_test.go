@@ -589,7 +589,8 @@ func getDefaultContainerService() *ContainerService {
 						"sampleSchedulerKey": "sampleSchedulerVal",
 					},
 					PrivateCluster: &PrivateCluster{
-						Enabled: to.BoolPtr(true),
+						Enabled:                to.BoolPtr(true),
+						EnableHostsConfigAgent: to.BoolPtr(true),
 						JumpboxProfile: &PrivateJumpboxProfile{
 							Name:           "sampleJumpboxProfile",
 							VMSize:         "Standard_DS1_v2",

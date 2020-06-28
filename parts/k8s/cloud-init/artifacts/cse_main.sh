@@ -206,6 +206,10 @@ fi
 time_metric "EnsureContainerd" ensureContainerd
 {{end}}
 
+{{- if and IsHostedMaster EnableHostsConfigAgent}}
+time_metric "ConfigPrivateClusterHosts" configPrivateClusterHosts
+{{end}}
+
 {{- if EnableEncryptionWithExternalKms}}
 if [[ -n ${MASTER_NODE} && ${KMS_PROVIDER_VAULT_NAME} != "" ]]; then
   time_metric "EnsureKMS" ensureKMS

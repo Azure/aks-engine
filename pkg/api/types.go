@@ -373,8 +373,9 @@ func (c KubernetesComponent) GetContainersIndexByName(containerName string) int 
 
 // PrivateCluster defines the configuration for a private cluster
 type PrivateCluster struct {
-	Enabled        *bool                  `json:"enabled,omitempty"`
-	JumpboxProfile *PrivateJumpboxProfile `json:"jumpboxProfile,omitempty"`
+	Enabled                *bool                  `json:"enabled,omitempty"`
+	EnableHostsConfigAgent *bool                  `json:"enableHostsConfigAgent,omitempty"`
+	JumpboxProfile         *PrivateJumpboxProfile `json:"jumpboxProfile,omitempty"`
 }
 
 // PrivateJumpboxProfile represents a jumpbox definition
