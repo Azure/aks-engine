@@ -1620,6 +1620,37 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 				Skip("This cluster does not have a DC-series SKU agent pool")
 			}
 		})
+
+		It("should be able to run an SGX job with sgx-device-plugin", func() {
+			if eng.ExpandedDefinition.Properties.HasDCSeriesSKU() {
+
+				sgx_device_plugin := ""
+				if common.IsKubernetesVersionGe(eng.ExpandedDefinition.Properties.OrchestratorProfile.OrchestratorVersion, "1.17.0") {
+					sgx_device_plugin = "sgx-device-plugin.yaml"
+				} else {
+					sgx_device_plugin = "sgx-device-plugin-before-k8s-1-17.yaml"
+				}
+
+				p, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, sgx_device_plugin), "sgx-device-plugin", "default", 1*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				running, err := p.WaitOnReady(sleepBetweenRetriesWhenWaitingForPodReady, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(running).To(Equal(true))
+
+				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 3*time.Second, cfg.Timeout)
+				Expect(err).NotTo(HaveOccurred())
+				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
+				delErr := j.Delete(util.DefaultDeleteRetries)
+				if delErr != nil {
+					fmt.Printf("could not delete job %s\n", j.Metadata.Name)
+					fmt.Println(delErr)
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ready).To(Equal(true))
+			} else {
+				Skip("This cluster does not have a DC-series SKU agent pool")
+			}
+		})
 	})
 
 	Describe("with zoned master profile", func() {
