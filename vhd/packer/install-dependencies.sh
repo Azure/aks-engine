@@ -384,6 +384,7 @@ done
 
 # Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
 KUBE_PROXY_VERSIONS="
+1.16.12
 1.16.11
 "
 for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
