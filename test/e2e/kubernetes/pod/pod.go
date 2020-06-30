@@ -599,6 +599,67 @@ func GetAllByPrefix(prefix, namespace string) ([]Pod, error) {
 	return pods, nil
 }
 
+// GetAllByLabelAsync wraps GetAllByLabel with a struct response for goroutine + channel usage
+func GetAllByLabelAsync(labelKey, labelVal, namespace string) GetAllByPrefixResult {
+	pods, err := GetAllByLabel(labelKey, labelVal, namespace)
+	return GetAllByPrefixResult{
+		Pods: pods,
+		Err:  err,
+	}
+}
+
+// GetAllByLabelWithRetry will return all pods in a given namespace that match a prefix, retrying if error up to a timeout
+func GetAllByLabelWithRetry(labelKey, labelVal, namespace string, sleep, timeout time.Duration) ([]Pod, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	ch := make(chan GetAllByPrefixResult)
+	var mostRecentGetAllByLabelWithRetryError error
+	var pods []Pod
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				ch <- GetAllByLabelAsync(labelKey, labelVal, namespace)
+				time.Sleep(sleep)
+			}
+		}
+	}()
+	for {
+		select {
+		case result := <-ch:
+			mostRecentGetAllByLabelWithRetryError = result.Err
+			pods = result.Pods
+			if mostRecentGetAllByLabelWithRetryError == nil {
+				return pods, nil
+			}
+		case <-ctx.Done():
+			return pods, errors.Errorf("GetAllByLabelWithRetry timed out: %s\n", mostRecentGetAllByLabelWithRetryError)
+		}
+	}
+}
+
+// GetAllByLabel will return all pods in a given namespace that match a label
+func GetAllByLabel(labelKey, labelVal, namespace string) ([]Pod, error) {
+	cmd := exec.Command("k", "get", "pods", "-n", namespace, "-l", fmt.Sprintf("%s=%s", labelKey, labelVal), "-o", "json")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Error getting pod:\n")
+		util.PrintCommand(cmd)
+		return nil, err
+	}
+	pl := List{}
+	err = json.Unmarshal(out, &pl)
+	if err != nil {
+		log.Printf("Error unmarshalling pods json:%s\n", err)
+		return nil, err
+	}
+	pods := []Pod{}
+	pods = append(pods, pl.Pods...)
+	return pods, nil
+}
+
 // GetAllRunningByPrefixAsync wraps GetAllRunningByPrefix with a struct response for goroutine + channel usage
 func GetAllRunningByPrefixAsync(prefix, namespace string) GetAllByPrefixResult {
 	pods, err := GetAllRunningByPrefix(prefix, namespace)
