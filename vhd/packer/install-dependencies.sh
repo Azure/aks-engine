@@ -353,10 +353,9 @@ K8S_VERSIONS="
 1.18.4
 1.17.8
 1.17.7
+1.16.12
 1.16.11
 1.16.11-azs
-1.16.10
-1.16.10-azs
 1.15.12
 1.15.12-azs
 1.15.11
@@ -385,6 +384,7 @@ done
 
 # Use kube-proxy image instead of hyperkube for kube-proxy container. Fixes #3529.
 KUBE_PROXY_VERSIONS="
+1.16.12
 1.16.11
 "
 for KUBE_PROXY_VERSION in ${KUBE_PROXY_VERSIONS}; do
