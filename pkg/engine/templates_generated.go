@@ -7629,7 +7629,7 @@ spec:
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBELET_PORT
           value: "10250"
@@ -9372,7 +9372,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "gatekeeper"}}
             memory: {{ContainerMemLimits "gatekeeper"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz
@@ -9683,7 +9683,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "azure-policy"}}
             memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: K8S_POLICY_PREFIX
           value: azurepolicy
@@ -12998,7 +12998,7 @@ spec:
               name: cilium-config
               optional: true
         image: {{ContainerImage "cilium-agent"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         lifecycle:
           postStart:
             exec:
@@ -13233,7 +13233,7 @@ spec:
               name: cilium-aws
               optional: true
         image: {{ContainerImage "cilium-operator"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: cilium-operator
         volumeMounts:
         - mountPath: /var/lib/etcd-config
@@ -14465,7 +14465,7 @@ spec:
       containers:
         - name: omsagent
           image: {{ContainerImage "omsagent"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             limits:
               cpu: {{ContainerCPULimits "omsagent"}}
@@ -16213,7 +16213,7 @@ spec:
       containers:
         - name: kubernetes-dashboard
           image: {{ContainerImage "kubernetes-dashboard"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
               protocol: TCP
@@ -17404,7 +17404,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
@@ -17432,7 +17432,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: spec.nodeName
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
           ports:
@@ -17464,7 +17464,7 @@ spec:
               memory: {{ContainerMemReqs "secrets-store"}}
         - name: liveness-probe
           image: {{ContainerImage "livenessprobe"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           args:
           - --csi-address=/csi/csi.sock
           - --probe-timeout=3s
@@ -17522,7 +17522,7 @@ spec:
       containers:
         - name: provider-azure-installer
           image: {{ContainerImage "provider-azure-installer"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           env:
             - name: TARGET_DIR
               value: "/etc/kubernetes/secrets-store-csi-providers"
@@ -17593,7 +17593,7 @@ spec:
                 - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: {{ContainerCPUReqs "smb-flexvolume"}}

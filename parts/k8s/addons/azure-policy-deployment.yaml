@@ -352,7 +352,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "gatekeeper"}}
             memory: {{ContainerMemLimits "gatekeeper"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz
@@ -663,7 +663,7 @@ spec:
           limits:
             cpu: {{ContainerCPULimits "azure-policy"}}
             memory: {{ContainerMemLimits "azure-policy"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: K8S_POLICY_PREFIX
           value: azurepolicy
