@@ -28,6 +28,7 @@ import (
 	"github.com/Azure/aks-engine/pkg/armhelpers"
 	"github.com/Azure/aks-engine/test/e2e/config"
 	"github.com/Azure/aks-engine/test/e2e/engine"
+	"github.com/Azure/aks-engine/test/e2e/kubernetes/daemonset"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/deployment"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/event"
 	"github.com/Azure/aks-engine/test/e2e/kubernetes/hpa"
@@ -1634,8 +1635,9 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 					sgx_device_plugin = "sgx-device-plugin-before-k8s-1-17.yaml"
 				}
 
-				_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
+				_, err := daemonset.CreateDaemonsetFromFile(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
+
 				pods, err := pod.GetAllRunningByPrefixWithRetry(sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pods).NotTo(BeEmpty())
