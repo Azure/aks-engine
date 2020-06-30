@@ -89,7 +89,7 @@ spec:
       containers:
       - name: aci-connector
         image: {{ContainerImage "aci-connector"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: KUBELET_PORT
           value: "10250"

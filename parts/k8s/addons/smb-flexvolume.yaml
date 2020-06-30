@@ -32,7 +32,7 @@ spec:
                 - flatcar
       - name: smb-flexvol-installer
         image: {{ContainerImage "smb-flexvolume"}}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             cpu: {{ContainerCPUReqs "smb-flexvolume"}}

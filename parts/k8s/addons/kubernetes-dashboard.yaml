@@ -167,7 +167,7 @@ spec:
       containers:
         - name: kubernetes-dashboard
           image: {{ContainerImage "kubernetes-dashboard"}}
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8443
               protocol: TCP
