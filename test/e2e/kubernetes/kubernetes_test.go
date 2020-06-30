@@ -1636,13 +1636,11 @@ var _ = Describe("Azure Container Cluster using the Kubernetes Orchestrator", fu
 
 				_, err := pod.CreatePodFromFileIfNotExist(filepath.Join(WorkloadDir, sgx_device_plugin), sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
-
 				pods, err := pod.GetAllRunningByPrefixWithRetry(sgx_device_plugin_name, sgx_device_plugin_namespace, 1*time.Second, cfg.Timeout)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(pods).NotTo(BeEmpty())
 
 				j, err := job.CreateJobFromFileDeleteIfExists(filepath.Join(WorkloadDir, "sgx-test-with-plugin.yaml"), "sgx-test-with-plugin", "default", 1*time.Second, cfg.Timeout)
-
 				Expect(err).NotTo(HaveOccurred())
 				ready, err := j.WaitOnSucceeded(30*time.Second, cfg.Timeout)
 				delErr := j.Delete(util.DefaultDeleteRetries)
